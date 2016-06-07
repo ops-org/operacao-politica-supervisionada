@@ -11,23 +11,33 @@ namespace OPS.Controllers
 	/// </summary>
 	public class AppController : Controller
 	{
-		public ActionResult Register()
+		public ActionResult Load(string folder, string page)
 		{
-			return PartialView();
-		}
-		public ActionResult SignIn()
-		{
-			return PartialView();
-		}
-		public ActionResult Home()
-		{
-			return PartialView();
-		}
+			string partialUrl;
+			if (string.IsNullOrEmpty(folder))
+			{
+				partialUrl = page;
+			}
+			else
+			{
+				partialUrl = folder + "/" + page;
+			}
 
-		[Authorize]
-		public ActionResult TodoManager()
-		{
-			return PartialView();
+			ViewEngineResult result = ViewEngines.Engines.FindView(ControllerContext, partialUrl, null);
+			if (result.View != null)
+			{
+				switch (partialUrl.ToLower())
+				{
+					case "deputado/lista":
+						ViewBag.dtUltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+						break;
+				}
+				return PartialView(partialUrl);
+			}
+			else
+			{
+				return PartialView("erro/404");
+			}
 		}
 	}
 }

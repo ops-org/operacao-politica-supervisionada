@@ -36,7 +36,7 @@ namespace OPS.Models
 
 	public class DBContext : IdentityDbContext<User>
 	{
-		public DBContext() : base("applicationDB")
+		public DBContext() : base("AuditoriaContext")
 		{
 
 		}

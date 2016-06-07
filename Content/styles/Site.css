@@ -1,0 +1,16 @@
+﻿#loading-modal #loading-modal-text { width: 200px; line-height: 30px; position: absolute; top: 50%; left: 50%; background-color: #FFF; z-index: 9999; text-align: center; margin-left: -100px; margin-top: -30px; padding: 15px; }
+	#loading-modal #loading-modal-text .loader-facebook { margin-right: 10px; margin-bottom: 2px; }
+
+/* Membros */
+div.mapa-brasil-selecao { max-height: 400px; max-width: 400px; margin: 0 auto; }
+div.mapa-brasil-svg.clicavel polygon:hover { fill: #888; }
+div.mapa-brasil-selecao.clicavel polygon:hover { fill: #888; }
+div.mapa-brasil-svg { height: 265px; }
+	div.mapa-brasil-svg .active polygon, div.mapa-brasil-svg polygon.active { fill: #888 !important; }
+div.mapa-brasil-selecao .active polygon, div.mapa-brasil-selecao polygon.active { fill: #888 !important; }
+
+.rodape { display: block; text-align: center; background: #fbfbfc; line-height: 40px; border-top: 1px dashed #d6dbe1; }
+	.rodape a { color: #5d6266; padding-left: 20px; }
+
+.bootstrap-select .dropdown-menu > li > a { white-space: normal; }
+.bootstrap-select.btn-group.show-tick .dropdown-menu li a span.text { margin-right: 20px; }

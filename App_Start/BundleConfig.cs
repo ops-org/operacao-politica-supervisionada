@@ -8,29 +8,37 @@ namespace OPS
 		// For more information on bundling, visit http://go.microsoft.com/fwlink/?LinkId=301862
 		public static void RegisterBundles(BundleCollection bundles)
 		{
+			bundles.Add(new ScriptBundle("~/bundles/vendor")
+				.Include("~/Content/scripts/jquery/jquery-{version}.js")
+				.Include("~/Content/scripts/ng/angular.js")
+				.Include("~/Content/scripts/ng/angular-route.js")
+				.Include("~/Content/scripts/ng/angular-cookies.js")
+				.Include("~/Content/scripts/ng/angular-sanitize.js")
+				.Include("~/Content/scripts/ng/angular-resource.js")
+				.Include("~/Content/scripts/bootstrap/bootstrap.js")
+				.Include("~/Content/scripts/misc/ui-bootstrap.js")
+				.Include("~/Content/scripts/jquery/select2.js")
+				.Include("~/Content/scripts/ng/ng-table.js"));
 
-			bundles.Add(new ScriptBundle("~/bootstrap").Include(
-					 "~/Assets/Bootstrap/js/bootstrap.js"));
+			bundles.Add(new ScriptBundle("~/bundles/app")
+				.Include("~/Content/scripts/app/app.js")
+				.IncludeDirectory("~/Content/scripts/app/controllers/", "*.js", true));
 
-			//Moved bootstrap css to own style tag in the _layout page.  This is to remove it from the optimizations which was breaking the fonts and icons.
-			bundles.Add(new StyleBundle("~/styles").IncludeDirectory("~/Assets", "*.css", true));
+			//bundles.Add(new ScriptBundle("~/bundles/fiscalize")
+			//	.Include("~/Content/scripts/app/app.js")
+			//	.IncludeDirectory("~/Content/scripts/app/controllers/", "*.js", true));
 
-
-			bundles.Add(new ScriptBundle("~/ng").Include(
-						"~/Assets/ng/angular.min.js",
-						"~/Assets/ng/angular-route.min.js",
-						"~/Assets/ng/angular-cookies.min.js"));
-
-			bundles.Add(new ScriptBundle("~/app").IncludeDirectory("~/Assets/app", "*.js", true));
-
-			bundles.Add(new ScriptBundle("~/jquery").Include(
-						"~/Assets/jquery/jquery.min.js"));
-
-			bundles.Add(new ScriptBundle("~/misc").IncludeDirectory("~/Assets/misc", "*.js", true));
+			bundles.Add(new StyleBundle("~/bundles/styles")
+				.Include("~/Content/styles/bootstrap.css")
+				.Include("~/Content/styles/ui-bootstrap-csp.css")
+				.Include("~/Content/styles/ng-table.css")
+				.Include("~/Content/styles/landing-page.css")
+				.Include("~/Content/styles/select2.css")
+				.Include("~/Content/styles/Site.css"));
 
 			// Set EnableOptimizations to false for debugging. For more information,
 			// visit http://go.microsoft.com/fwlink/?LinkId=301862
-			BundleTable.EnableOptimizations = true;
+			BundleTable.EnableOptimizations = false;
 		}
 	}
 }

@@ -1,19 +1,18 @@
 ﻿<!DOCTYPE html>
-<html ng-app="app">
+<html lang="pt-br" data-ng-app="app">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
-    @Styles.Render("~/Assets/Bootstrap/css/bootstrap.css")
-    @Styles.Render("~/styles")
+	<base href="~/" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width" />
+	<title>@ViewBag.Title</title>
+	@*<link rel="shortcut icon" type="image/ico" href="~/favicon.ico" />*@
+
+	@Styles.Render("~/bundles/styles")
 </head>
 <body>
-    @RenderBody()
+	@RenderBody()
 
-    @Scripts.Render("~/ng")
-    @Scripts.Render("~/app")
-    @Scripts.Render("~/jquery")
-    @Scripts.Render("~/bootstrap")
-    @Scripts.Render("~/misc")
+	@Scripts.Render("~/bundles/vendor")
+	@Scripts.Render("~/bundles/app")
 </body>
 </html>

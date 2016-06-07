@@ -14,6 +14,12 @@ namespace OPS
 			routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
 			routes.MapRoute(
+				name: "SPA",
+				url: "app/{folder}/{page}",
+				defaults: new { controller = "App", action = "Load", folder = "", page = "" }
+			);
+
+			routes.MapRoute(
 				name: "Default",
 				url: "{controller}/{action}/{id}",
 				defaults: new { controller = "Main", action = "Index", id = UrlParameter.Optional }
