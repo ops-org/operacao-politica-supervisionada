@@ -8,3 +8,7 @@ div#conteudo { overflow: hidden; height: 100%; }
 
 iframe { height: 100%; width: 100%; overflow: hidden; }
 div#tab-content { height: 100%; overflow: hidden; padding-bottom: 60px; }
+
+#sobre-page .style2 { text-indent: 30px; text-align: justify; }
+#sobre-page .bs-callout { padding: 20px; margin: 20px 0; border: 1px solid #eee; border-left-width: 5px; border-radius: 3px; }
+#sobre-page .bs-callout-info { border-left-color: #1b809e; }

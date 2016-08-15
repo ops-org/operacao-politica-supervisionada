@@ -13,6 +13,11 @@ namespace OPS.Core
 		public string q { get; set; }
 
 		/// <summary>
+		/// Filtro para carregamento especial (navegação/URL)
+		/// </summary>
+		public string qs { get; set; }
+
+		/// <summary>
 		/// Pagina pesquisada
 		/// </summary>
 		public int? page { get; set; }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace OPS.Core
+﻿namespace OPS.Core
 {
 	public class FiltroParlamentarDTO
 	{
@@ -11,18 +9,25 @@ namespace OPS.Core
 
 		public string IdParlamentar { get; set; }
 
-		public string SgUF { get; set; }
+		public string Despesa { get; set; }
 
-		public string SgPartido { get; set; }
+		public string Uf { get; set; }
+
+		public string Partido { get; set; }
+
+		public string Fornecedor { get; set; }
 
 		public string Periodo { get; set; }
 
-		public string CnpjCpf { get; set; }
+		public string Documento { get; set; }
+
+		public eAgrupamentoAuditoria Agrupamento { get; set; }
 
 		public FiltroParlamentarDTO()
 		{
-			count = 1;
-			page = 1;
+			this.count = 100;
+			this.page = 1;
+			this.Agrupamento = eAgrupamentoAuditoria.Parlamentar; 
 		}
 	}
 }

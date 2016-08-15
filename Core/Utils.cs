@@ -1,20 +1,48 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OPS.Core
 {
 	public static class Utils
 	{
-		internal static string FormataValor(object v)
+		internal static string FormataValor(object value)
 		{
-			if (!Convert.IsDBNull(v))
+			if (!Convert.IsDBNull(value))
 			{
 				try
 				{
-					return Convert.ToDecimal(v).ToString("#,##0.00");
+					return Convert.ToDecimal(value).ToString("#,##0.00");
+				}
+				catch (Exception)
+				{
+					throw;
+				}
+			}
+			return "";
+		}
+
+		internal static string FormataData(object value)
+		{
+			if (!Convert.IsDBNull(value))
+			{
+				try
+				{
+					return Convert.ToDateTime(value).ToString("dd/MM/yyyy");
+				}
+				catch (Exception)
+				{
+					throw;
+				}
+			}
+			return "";
+		}
+
+		internal static string FormataDataHora(object value)
+		{
+			if (!Convert.IsDBNull(value))
+			{
+				try
+				{
+					return Convert.ToDateTime(value).ToString("dd/MM/yyyy HH:mm");
 				}
 				catch (Exception)
 				{

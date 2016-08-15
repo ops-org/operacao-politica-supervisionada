@@ -7,43 +7,70 @@ var $EditError = function (ex) {
 };
 
 var OPS = function ($) {
-	var select = function (selector, apiUrl) {
-		$(selector).select2({
-			ajax: {
-				url: apiUrl,
-				dataType: 'json',
-				delay: 250,
-				data: function (params) {
-					return {
-						q: params.term, // search term
-						page: params.page
-					};
-				},
-				processResults: function (data, params) {
-					// parse the results into the format expected by Select2
-					// since we are using custom formatting functions we do not need to
-					// alter the remote JSON data, except to indicate that infinite
-					// scrolling can be used
-					params.page = params.page || 1;
+	var select = function (selector, apiUrl, defaultValues) {
+		var $select = $(selector);
 
-					return {
-						results: data.results,
-						pagination: {
-							more: (params.page * 30) < data.total_count
-						}
-					};
+		var bindSelect2 = function () {
+			$select.select2({
+				ajax: {
+					url: apiUrl,
+					dataType: 'json',
+					delay: 250,
+					data: function (params) {
+						return {
+							q: params.term, // search term
+							page: params.page
+						};
+					},
+					processResults: function (data, params) {
+						// parse the results into the format expected by Select2
+						// since we are using custom formatting functions we do not need to
+						// alter the remote JSON data, except to indicate that infinite
+						// scrolling can be used
+						params.page = params.page || 1;
+
+						return {
+							results: data.results,
+							pagination: {
+								more: (params.page * 30) < data.total_count
+							}
+						};
+					},
+					cache: true
 				},
-				cache: true
-			},
-			//escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
-			////minimumInputLength: 1,
-			//templateResult: formatRepo, // omitted for brevity, see the source of this page
-			//templateSelection: formatRepoSelection // omitted for brevity, see the source of this page
-		});
+				allowClear: true,
+				placeholder: "Selecione",
+				selectOnClose: false
+				//escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
+				////minimumInputLength: 1,
+				//templateResult: formatRepo, // omitted for brevity, see the source of this page
+				//templateSelection: formatRepoSelection // omitted for brevity, see the source of this page
+			});
+		}
+
+		if (defaultValues) {
+			$.ajax({
+				dataType: "json",
+				url: apiUrl,
+				data: { 'qs': defaultValues },
+				success: function (data) {
+					var $lstOption = [];
+					for (var i = 0; i < data.results.length; i++) {
+						var item = data.results[i];
+						$lstOption.push($('<option selected></option>').val(item.id).text(item.text));
+					}
+					$select.append($lstOption);
+
+					bindSelect2();
+				}
+			});
+		} else {
+			bindSelect2();
+		}
 	}
 
-	var param = function (obj) {
-		var s = [];
+	var objectToQueryString = function (obj, s) {
+		s = s || [];
 		var r20 = /%20/g
 		var lstkeys = Object.keys(obj);
 
@@ -58,7 +85,7 @@ var OPS = function ($) {
 
 	return {
 		select: select,
-		param: param
+		objectToQueryString: objectToQueryString
 	};
 }(jQuery);
 
@@ -66,8 +93,10 @@ var OPS = function ($) {
 
 var app = angular.module('app', ['ngRoute', 'ui.bootstrap', 'ngTable', 'ngResource', 'ngSanitize', 'ngCookies']);
 
-app.config(['$provide', '$routeProvider', '$httpProvider', '$interpolateProvider',
-	function ($provide, $routeProvider, $httpProvider, $interpolateProvider) {
+app.config(['$provide', '$routeProvider', '$httpProvider', '$interpolateProvider', '$compileProvider',
+	function ($provide, $routeProvider, $httpProvider, $interpolateProvider, $compileProvider) {
+
+		$compileProvider.debugInfoEnabled(false);
 
 		//================================================
 		// Ignore Template Request errors if a page that was requested was not found or unauthorized.  The GET operation could still show up in the browser debugger, but it shouldn't show a $compile:tpload error.
@@ -96,15 +125,23 @@ app.config(['$provide', '$routeProvider', '$httpProvider', '$interpolateProvider
 		//$httpProvider.interceptors.push('$httpRequestInterceptor');
 
 		$routeProvider
-			.when("/inicio", { templateUrl: "app/geral/inicio" })
-			.when('/:folder/:page/:id?',
-				{
-					templateUrl: function (rp) {
-						return "app/" + rp.folder + "/" + rp.page;
-					},
-					reloadOnSearch: false
-				})
-		.otherwise({ redirectTo: '/inicio' });
+			.when("/inicio", { templateUrl: "app/inicio" })
+			.when("/sobre", { templateUrl: "app/sobre" })
+			.when("/deputado-federal/documento/:id", { templateUrl: "app/auditoria/deputado-federal-documento" })
+			.when("/deputado-federal/secretario/:id", { templateUrl: "app/auditoria/deputado-federal-secretario-detalhes" })
+			.when("/deputado-federal/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-lista" })
+			.when("/deputado-federal/:id", { templateUrl: "app/auditoria/deputado-federal-detalhes" })
+			.when("/deputado-federal", { templateUrl: "app/auditoria/deputado-federal-lista", reloadOnSearch: false })
+
+			.when("/senador/:id", { templateUrl: "app/auditoria/senador-detalhes" })
+			.when("/senador", { templateUrl: "app/auditoria/senador-lista", reloadOnSearch: false })
+
+			.when("/fornecedor/:id", { templateUrl: "app/auditoria/fornecedor" })
+
+			.when("/fiscalize", { templateUrl: "app/fiscalize/nota-fiscal-lista" })
+			.when("/fiscalize/:id", { templateUrl: "app/fiscalize/nota-fiscal-detalhes" })
+
+			.otherwise({ redirectTo: '/inicio' });
 	}]);
 
 app.run(['$http', '$cookies', '$cookieStore', function ($http, $cookies, $cookieStore) {
@@ -391,18 +428,19 @@ app.factory('$box', ['$rootScope', '$modal', 'toastr', function ($rootScope, $mo
 
 app.factory('$tabela', ["$rootScope", "$resource", "NgTableParams", "$location",
 	function ($rootScope, $resource, NgTableParams, $location) {
+		var page_load = true;
+		var params = { page: 1, count: 100 };
+
 		return {
-			databind: function (url, qs) {
-				var _$resource = $resource('./api/' + url, qs || {}, {
+			params: params,
+			databind: function (url, filter) {
+				var _$resource = $resource('./api/' + url, filter || {}, {
 					query: {
 						method: "GET"
 					}
 				});
 
-				return new NgTableParams({
-					page: 1, // show first page
-					count: 50 // count per page					
-				}, {
+				return new NgTableParams(params, {
 					counts: false,
 					filterDelay: 300,
 					getData: function (params) {
@@ -413,27 +451,86 @@ app.factory('$tabela', ["$rootScope", "$resource", "NgTableParams", "$location",
 
 						var paramsSorting = params.sorting();
 						var sorting = '';
-						if (Object.keys(paramsSorting).length == 1) {
+						if (Object.keys(paramsSorting).length > 0) {
 							var key = Object.keys(paramsSorting)[0];
 							sorting = key + ' ' + paramsSorting[key];
 						}
 
 						return _$resource.query({
-							filter: params.filter(),
+							//filter: params.filter(),
 							sorting: sorting,
 							count: params.count(),
 							page: params.page()
-						}).$promise.then(function (data) {
-							//salvar a pesquisa atual na URL, para histórico e compartlhamento.
-							//TODO: Impementar o load dos filtros na tela
-							//$location.search(OPS.param(qs));
+						})
+						.$promise
+						.then(function (data) {
+							if (!page_load) {
+								//salvar a pesquisa atual na URL, para histórico e compartlhamento.
+								filter['sorting'] = sorting;
+								//filter['count'] = params.count();
+								filter['page'] = params.page();
+
+								$location.search(OPS.objectToQueryString(filter));
+							}
+
+							if (data.valor_total) {
+								setTimeout(LoadPopoverAuditoria, 100);
+
+								if (!page_load) {
+									// Esperar carregar o grid e levar para o grid, util quando paginando e filtrando.
+									setTimeout(function () {
+										$('body').animate({ scrollTop: $('#table-auditoria').offset().top }, 600);
+									}, 50);
+								}
+
+								$rootScope.ValorTotal = data.valor_total;
+								page_load = false;
+							}
 
 							$rootScope.countRequest--;
-							params.total(data.TotalCount);
-							return data.Results;
+							params.total(data.total_count);
+							return data.results;
+						})
+						.catch(function (response) {
+							$rootScope.countRequest--;
+							alert(response.data.ExceptionMessage);
 						});
 					}
 				});
 			}
 		};
 	}]);
+
+
+app.factory("$queryString", ["$window", "$location", function ($window, $location) {
+	function search() {
+
+		var left = $window.location.search
+			.split(/[&||?]/)
+			.filter(function (x) { return x.indexOf("=") > -1; })
+			.map(function (x) { return x.split(/=/); })
+			.map(function (x) {
+				x[1] = x[1].replace(/\+/g, " ");
+				return x;
+			})
+			.reduce(function (acc, current) {
+				acc[current[0]] = current[1];
+				return acc;
+			}, {});
+
+		var right = $location.search() || {};
+
+		var leftAndRight = Object.keys(right)
+			.reduce(function (acc, current) {
+				acc[current] = right[current];
+				return acc;
+			}, left);
+
+		return leftAndRight;
+	}
+
+	return {
+		search: search
+	};
+
+}]);

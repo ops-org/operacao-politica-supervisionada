@@ -1,0 +1,94 @@
+﻿<div class="container" data-ng-controller="FiscalizeNotaFiscalController">
+	<fieldset>
+		<legend>Detalhes da Nota Fiscal - {{nota.notaFiscalId}}</legend>
+		<div class="row">
+			<div class="col-md-4">
+				<div class="form-group">
+					<div class="thumbnail" style="height: 160px; width: 120px; display: block;">
+						<img src="http://104.131.229.175/fiscalize/parlamentar/{{nota.ideCadastro}}.jpg" alt="{{nota.parlamentar}}" width="120">
+					</div>
+				</div>
+			</div>
+			<div class="col-md-8">
+				<div class="form-group">
+					<label class="control-label">Parlamentar</label>
+					<span class="control-label show" data-ng-bind="nota.parlamentar"></span>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">Partido</label>
+					<span class="control-label show" data-ng-bind="nota.partido"></span>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">UF</label>
+					<span class="control-label show" data-ng-bind="nota.uf"></span>
+				</div>
+			</div>
+		</div>
+		<hr />
+		<div class="row">
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">Valor da Nota</label>
+					<span class="control-label show" data-ng-bind="nota.valor"></span>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">Data de Emissão</label>
+					<span class="control-label show" data-ng-bind="nota.dataEmissao"></span>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">Data de Inclusão</label>
+					<span class="control-label show" data-ng-bind="nota.dataInclusao"></span>
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">Sub-Cota</label>
+					<span class="control-label show" data-ng-bind="nota.descricaoSubCota"></span>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group">
+					<label class="control-label">Cota</label>
+					<span class="control-label show" data-ng-bind="nota.cota"></span>
+				</div>
+			</div>
+		</div>
+		<hr />
+		<div class="row">
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">CPF/CPNJ</label>
+					<span class="control-label show" data-ng-bind="nota.cpfCnpj"></span>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group">
+					<label class="control-label">Beneficiário</label>
+					<span class="control-label show" data-ng-bind="nota.beneficiario"></span>
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<div class="form-group">
+					<label class="control-label">Nome Passageiro</label>
+					<span class="control-label show" data-ng-bind="nota.nomePassageiro"></span>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group">
+					<label class="control-label">Trecho Viagem</label>
+					<span class="control-label show" data-ng-bind="nota.trechoViagem"></span>
+				</div>
+			</div>
+		</div>
+	</fieldset>
+</div>

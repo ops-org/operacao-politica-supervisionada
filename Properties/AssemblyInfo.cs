@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("OPS - Operação Politica Supervisionada")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Operação Politica Supervisionada")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("ops.net.br")]
 [assembly: AssemblyProduct("Operação Politica Supervisionada")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]

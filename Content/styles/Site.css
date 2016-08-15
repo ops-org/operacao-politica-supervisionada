@@ -14,3 +14,13 @@ div.mapa-brasil-selecao .active polygon, div.mapa-brasil-selecao polygon.active 
 
 .bootstrap-select .dropdown-menu > li > a { white-space: normal; }
 .bootstrap-select.btn-group.show-tick .dropdown-menu li a span.text { margin-right: 20px; }
+
+.deputado-header { margin: 10px auto; background-color: #f8f8f8; border: 1px solid #e7e7e7; border-radius: 3px; }
+	.box-deputado a:hover, .deputado-header .box a:active { text-decoration: none; }
+.box-deputado .box-item { margin: 10px auto; }
+	.box-deputado .box-item .box-item-title { font-size: 30px; }
+	.box-deputado .box-item .box-item-text { }
+
+.img-parlamentar { margin: 0 auto; margin-top: 15px; }
+
+.margin-bottom-0 { margin-bottom: 0; }

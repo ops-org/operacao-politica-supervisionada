@@ -1,0 +1,33 @@
+﻿<div class="container-fluid" data-ng-controller="FiscalizeNotasFiscaisController">
+	<fieldset>
+		<legend>Fiscalize App - Lista de Notas Fiscais Mais Suspeitas</legend>
+		<div class="table-responsive">
+			<table class="table table-striped table-hover">
+				<tr>
+					<th></th>
+					<th>Nota Fiscal</th>
+					<th>Parlamentar</th>
+					<th>Valor</th>
+					<th>Votos Suspeita</th>
+					<th>Votos Confiável</th>
+					<th>Total de Votos</th>
+					<th title="Razão dos Votos Suspeitas/Confiaveis">Razão</th>
+				</tr>
+				<tr data-ng-repeat="nota in notas">
+					<td>
+						<a class="btn btn-primary btn-sm" href="./#/fiscalize/{{nota.notaFiscalId}}">Ver Nota</a>
+					</td>
+					<td>{{nota.notaFiscalId}}</td>
+					<td>{{nota.parlamentar}}</td>
+					<td>{{nota.valor}}</td>
+					<td>{{nota.somaSuspeitas}}</td>
+					<td>{{nota.somaConfiaveis}}</td>
+					<td>{{nota.somaFiscalizacoes}}</td>
+					<td>{{nota.razaoConfiaveis}}</td>
+				</tr>
+			</table>
+		</div>
+	</fieldset>
+</div>
+
+

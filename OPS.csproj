@@ -12,7 +12,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>OPS</RootNamespace>
-    <AssemblyName>Operação Politica Supervisionada</AssemblyName>
+    <AssemblyName>Operacao_Politica_Supervisionada</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>false</UseIISExpress>
@@ -31,6 +31,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PublishDatabases>false</PublishDatabases>
+    <ExcludeGeneratedDebugSymbol>true</ExcludeGeneratedDebugSymbol>
+    <FilesToIncludeForPublish>AllFilesInTheProject</FilesToIncludeForPublish>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -39,6 +42,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <FilesToIncludeForPublish>AllFilesInTheProject</FilesToIncludeForPublish>
+    <PublishDatabases>false</PublishDatabases>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
@@ -110,6 +115,7 @@
       <HintPath>packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -175,7 +181,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api\DeputadoController.cs" />
+    <Compile Include="Dao\ComandoSqlDao.cs" />
+    <Compile Include="Core\eAgrupamentoAuditoria.cs" />
+    <Compile Include="Core\FiltroUsuarioDTO.cs" />
+    <Compile Include="Core\MemoryCacheHelper.cs" />
+    <Compile Include="Dao\FornecedorDao.cs" />
+    <Compile Include="Dao\ParametrosDao.cs" />
+    <Compile Include="Dao\PartidoDao.cs" />
+    <Compile Include="Dao\UfDao.cs" />
+    <Compile Include="Dao\UsuarioDao.cs" />
+    <Compile Include="Models\Fornecedor.cs" />
+    <Compile Include="Models\FornecedorQuadroSocietario.cs" />
+    <Compile Include="WebApi\DeputadoController.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\IdentityConfig.cs" />
@@ -235,28 +252,36 @@
     <Compile Include="Providers\RefreshTokenProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="WebApi\FiscalizeController.cs" />
+    <Compile Include="WebApi\FornecedorController.cs" />
+    <Compile Include="WebApi\IndicadoresController.cs" />
+    <Compile Include="WebApi\PartidoController.cs" />
+    <Compile Include="WebApi\UfController.cs" />
+    <Compile Include="WebApi\UsuarioController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\scripts\app\app.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-lista.js" />
-    <Content Include="Content\scripts\app\controllers\deputado.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-lista.js" />
+    <Content Include="Content\scripts\app\controllers\fiscalize-nota-fiscal.js" />
+    <Content Include="Content\scripts\app\controllers\fiscalize-notas-fiscais.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-lista.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor-lista.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
-    <Content Include="Content\scripts\app\controllers\homeCtrl.js" />
+    <Content Include="Content\scripts\app\controllers\membros.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
     <Content Include="Content\scripts\app\controllers\registerCtrl.js" />
     <Content Include="Content\scripts\app\controllers\signInCtrl.js" />
-    <Content Include="Content\scripts\app\app-fiscalize.js" />
     <Content Include="Content\scripts\app\main.js" />
+    <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
     <Content Include="Content\scripts\jquery\select2.js" />
     <Content Include="Content\scripts\jquery\select2.min.js" />
     <Content Include="Content\scripts\ng\angular-cookies.js" />
     <Content Include="Content\styles\bootstrap.css" />
-    <Content Include="Content\styles\bootstrap.min.css" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Content\scripts\bootstrap\bootstrap.js" />
-    <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
     <Content Include="Content\images\ajax-loader-facebook.gif" />
     <Content Include="Content\images\logo200x200.jpg" />
     <Content Include="Content\images\logo_fiscalize.png" />
@@ -265,6 +290,7 @@
     <Content Include="Content\images\logo_opaca.png" />
     <Content Include="Content\images\logo_ops.png" />
     <Content Include="Content\images\ops_fiscalize.png" />
+    <Content Include="Content\fonts\glyphicons-halflings-regular.woff2" />
     <None Include="Content\scripts\jquery\jquery-2.2.3.intellisense.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.js" />
@@ -307,30 +333,31 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.map" />
-    <Content Include="Views\App\Deputado\Visualizar.cshtml" />
-    <Content Include="Views\App\Deputado\Lista.cshtml" />
-    <Content Include="Views\App\Fornecedor\Visualizar.cshtml" />
-    <Content Include="Views\App\Senador\Visualizar.cshtml" />
-    <Content Include="Views\App\Fornecedor\Lista.cshtml" />
-    <Content Include="Views\App\Senador\Lista.cshtml" />
-    <Content Include="Views\App\Revisao\Relatorio.cshtml" />
-    <Content Include="Views\App\Revisao\Revisao.cshtml" />
-    <Content Include="Views\App\Usuario\Denuncias.cshtml" />
-    <Content Include="Views\App\Geral\Sobre.cshtml" />
-    <Content Include="Views\App\Geral\Membros.cshtml" />
-    <Content Include="Views\App\Usuario\Perfil.cshtml" />
+    <Content Include="Views\App\Auditoria\deputado-federal-detalhes.cshtml" />
+    <Content Include="Views\App\Auditoria\deputado-federal-lista.cshtml" />
+    <Content Include="Views\App\Auditoria\senador-detalhes.cshtml" />
+    <Content Include="Views\App\Auditoria\senador-lista.cshtml" />
+    <Content Include="Views\App\sobre.cshtml" />
+    <Content Include="Views\App\membros.cshtml" />
     <Content Include="Views\App\Login\RecuperarSenha.cshtml" />
-    <Content Include="Views\App\Geral\Pendencias.cshtml" />
+    <Content Include="Views\App\Auditoria\deputado-federal-documento.cshtml" />
+    <Content Include="Views\App\Auditoria\deputado-federal-secretario-detalhes.cshtml" />
+    <Content Include="Views\App\Auditoria\deputado-federal-secretario-lista.cshtml" />
+    <Content Include="Views\App\Fiscalize\nota-fiscal-lista.cshtml" />
+    <Content Include="Views\App\Fiscalize\nota-fiscal-detalhes.cshtml" />
+    <Content Include="Views\App\Auditoria\fornecedor.cshtml" />
+    <Content Include="Views\App\Erro\_404.cshtml" />
+    <None Include="Properties\PublishProfiles\ops.net.br.pubxml" />
     <None Include="_references.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Dto\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\styles\bootstrap.css.map" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.eot" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.woff" />
@@ -339,7 +366,7 @@
     <Content Include="Content\scripts\ng\angular-route.min.js.map" />
     <Content Include="Content\scripts\ng\angular.min.js.map" />
     <Content Include="Views\Main\Index.cshtml" />
-    <Content Include="Views\App\Geral\Inicio.cshtml" />
+    <Content Include="Views\App\inicio.cshtml" />
     <Content Include="Views\App\Login\Registrar.cshtml" />
     <Content Include="Views\App\Login\Entrar.cshtml" />
   </ItemGroup>

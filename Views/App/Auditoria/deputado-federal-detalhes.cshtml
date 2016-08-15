@@ -1,0 +1,45 @@
+﻿<div class="container-fluid" data-ng-controller="DeputadoVisualizarController">
+	<fieldset>
+		<legend>Deputado Federal</legend>
+		<form id="form" autocomplete="off">
+			<div class="row box-deputado">
+				<div class="col-xs-12 col-sm-8">
+					<div class="row deputado-header">
+						<div class="col-xs-12 col-md-4 col-lg-3 form-group">
+							<div class="avatar">
+								<img src="./Content/Images/Parlamentares/DEPFEDERAL/{{::deputado_federal.IdCadastro}}.jpg" alt="{{::deputado_federal.NomeParlamentar}}">
+							</div>
+						</div>
+						<div class="col-xs-12 col-md-8 col-lg-9 form-group">
+							<h3>Dep. {{::deputado_federal.NomeParlamentar}}</h3>
+							<p class="text-muted" data-ng-bind="::deputado_federal.Nome"></p>
+							<h4>{{::deputado_federal.SgPartido}} / {{::deputado_federal.SgUf}}</h4>
+							<p><a href="mailto:{{::deputado_federal.Email}}" data-ng-bind="::deputado_federal.Email"></a></p>
+							<p><a href="http://www.camara.leg.br/internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.IdCadastro}}" target="_blank" rel="nofollow">Perfil na Camâra</a></p>
+						</div>
+					</div>
+				</div>
+				<div class="col-xs-12 col-sm-4">
+					@*<a href="./#/deputado-federal?parlamentar=0000" title="Clique para ver o detalhamento das despesas">*@
+					<div class="box-item form-group alert alert-info text-center">
+						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalGastoCEAP"></div>
+						<div class="box-item-text">Gastos com Cota Parlamentar (CEAP)</div>
+					</div>
+					@*</a>*@
+					<a href="./#/deputado-federal/secretario/{{::deputado_federal.IdCadastro}}" title="Clique para ver a lista de secretários">
+						<div class="box-item form-group alert alert-info text-center">
+							<div class="box-item-title" data-ng-bind="::deputado_federal.TotalSecretarios"></div>
+							<div class="box-item-text">Secretários parlamentares</div>
+						</div>
+					</a>
+				</div>
+			</div>
+
+			<div class="well text-center">
+				Gráfico de Gastos por Ano<br /> Em Breve!
+			</div>
+		</form>
+	</fieldset>
+</div>
+
+

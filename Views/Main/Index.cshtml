@@ -13,19 +13,25 @@
 				</a>
 			</div>
 			<div id="navbar" class="navbar-collapse collapse">
-				<ul class="nav navbar-nav">
+				<ul class="nav navbar-nav navbar-right">
+					
 					<li class="dropdown">
-						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Auditar<span class="caret"></span></a>
+						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Fiscalizar<span class="caret"></span></a>
 						<ul class="dropdown-menu">
-							<li><a href="./#/deputado/lista">Deputado Federal (CEAP)</a></li>
-							<li><a href="./#/senadore/lista">Senador (CEAPS)</a></li>
-							<li><a href="./#/deputado/secretarios">Secretários (Deputado Federal)</a></li>
+							<li class="dropdown-header">Deputados Federais</li>
+							<li><a href="./#/deputado-federal">Cota parlamentar (CEAP)</a></li>
+							<li><a href="./#/deputado-federal/secretario">Secretários</a></li>
 							<li role="separator" class="divider"></li>
-							<li class="dropdown-header">Link Externo</li>
+							<li class="dropdown-header">Senadores</li>
+							<li><a href="./#/senador">Cota Parlamentar (CEAPS)</a></li>
+							<li role="separator" class="divider"></li>
+							<li class="dropdown-header">Presidência da República</li>
 							<li><a href="https://web-cpgf.rhcloud.com" target="_blank">Cartão Corporativo (CPGF)</a></li>
 						</ul>
 					</li>
-					<li class="dropdown">
+					<li><a href="./#/fiscalize">Resumo App</a></li>
+
+					@*<li class="dropdown">
 						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Revisar<span class="caret"></span></a>
 						<ul class="dropdown-menu">
 							<li><a href="./#/revisao/revisao">Revisão</a></li>
@@ -33,16 +39,17 @@
 						</ul>
 					</li>
 					<li><a href="./#/geral/pendecias">Pendências</a></li>
-					<li><a href="./#/usuario/denuncias">Denúncias</a></li>
-					<li class="dropdown">
+					<li><a href="./#/usuario/denuncias">Denúncias</a></li>*@
+					<li><a href="./#/sobre">Sobre</a></li>
+					@*<li class="dropdown">
 						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Mais<span class="caret"></span></a>
 						<ul class="dropdown-menu">
-							<li><a href="./#/geral/membros">Auditores</a></li>
+							<li><a href="./#/geral/membros">Membros</a></li>
 							<li><a href="./#/geral/sobre">Sobre a OPS</a></li>
 						</ul>
-					</li>
+					</li>*@
 				</ul>
-				<ul class="nav navbar-nav navbar-right">
+				@*<ul class="nav navbar-nav navbar-right">
 					<li ng-show="loggedIn">
 						<a href="" ng-click="logout()">{{username}} | Sign Out</a>
 					</li>
@@ -53,14 +60,14 @@
 						<a href="./#/login/registrar">Register</a>
 					</li>
 
-					@*<li><a href="./#/login/entrar"><i class="glyphicon glyphicon-log-in"></i>&nbsp;Entrar</a></li>
+					<li><a href="./#/login/entrar"><i class="glyphicon glyphicon-log-in"></i>&nbsp;Entrar</a></li>
 					<li>
 						<a href="./#/usuario/perfil" title="Visualizar Perfil"><i class='glyphicon glyphicon-user'></i>[Nome do Usuário]</a>
 					</li>
 					<li>
 						<a href="./sair" title="Sair"><i class='glyphicon glyphicon-log-in'></i>&nbsp;Sair</a>
-					</li>*@
-				</ul>
+					</li>
+				</ul>*@
 			</div>
 		</div>
 	</nav>
@@ -74,8 +81,8 @@
 			<span>OPS - Operação Política Supervisionada</span>
 		</div>
 		<div class="pull-right">
-			<a href="./#/geral/sobre">Sobre</a>
-			<a href="https://github.com/ops-org/ops.net.br" target="_blank" rel="nofolow">Repositório no GitHub</a>
+			<a href="./#/sobre">Sobre</a>
+			<a href="https://github.com/ops-org/operacao-politica-supervisionada" target="_blank" rel="nofolow">Repositório no GitHub</a>
 			<a href="javascript:;" id="btnReportarErro">Reportar um erro</a>
 		</div>
 	</div>

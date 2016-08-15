@@ -1,16 +1,17 @@
 ﻿'use strict';
 
-app.controller('FornecedorController', ['$scope', "$odataresource", '$routeParams',
-    function ($scope, $odataresource, $routeParams) {
+app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams",
+	function ($scope, $api, $routeParams) {
 
-    	var $oDataQuery = $odataresource("/odata/fornecedor", {}, {}, {
-    		//odatakey: 'id',
-    		isodatav4: true
-    	}).odata();
+		//TODO: Corrigir rota
+		$api.get('fornecedor/?value=' + $routeParams.id).success(function (response) {
+			$scope.fornecedor = response;
+		});
 
-    	$oDataQuery.get($routeParams.id, function (data) {
-    		$scope.fornecedor = data;
-    	}, function (error) {
-    		console.log(error);
-    	});
-    }]);
+		//TODO: Corrigir rota
+		$api.get('fornecedor/QuadroSocietario/?value=' + $routeParams.id).success(function (response) {
+			$scope.fornecedorQuadroSocietario = response;
+		});
+
+		loadAuditoriaFornecedor();
+	}]);

@@ -14,6 +14,8 @@ namespace OPS.Controllers
 		/// <returns></returns>
 		public ActionResult Index()
 		{
+			ViewBag.Title = "OPS - Operação Política Supoervisionada";
+
 			return View();
 		}
 	}

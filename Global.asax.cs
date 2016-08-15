@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OPS.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -18,6 +19,16 @@ namespace OPS
 			FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
 			RouteConfig.RegisterRoutes(RouteTable.Routes);
 			BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+			new Dao.ParametrosDao().CarregarPadroes();
 		}
+
+		//protected void Session_Start(object sender, EventArgs e)
+		//{
+		//	if (Padrao.DeputadoFederalMenorAno == 0)
+		//	{
+		//		new Dao.ParametrosDao().CarregarPadroes();
+		//	}
+		//}
 	}
 }

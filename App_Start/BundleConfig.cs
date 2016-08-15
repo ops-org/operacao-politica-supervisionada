@@ -8,27 +8,30 @@ namespace OPS
 		// For more information on bundling, visit http://go.microsoft.com/fwlink/?LinkId=301862
 		public static void RegisterBundles(BundleCollection bundles)
 		{
-			bundles.Add(new ScriptBundle("~/bundles/vendor")
-				.Include("~/Content/scripts/jquery/jquery-{version}.js")
-				.Include("~/Content/scripts/ng/angular.js")
-				.Include("~/Content/scripts/ng/angular-route.js")
-				.Include("~/Content/scripts/ng/angular-cookies.js")
-				.Include("~/Content/scripts/ng/angular-sanitize.js")
-				.Include("~/Content/scripts/ng/angular-resource.js")
-				.Include("~/Content/scripts/bootstrap/bootstrap.js")
-				.Include("~/Content/scripts/misc/ui-bootstrap.js")
-				.Include("~/Content/scripts/jquery/select2.js")
-				.Include("~/Content/scripts/ng/ng-table.js"));
+			// Vai apenas unificar os arquivos em 1
+			bundles.Add(new Bundle("~/Content/vendor")
+				.Include("~/Content/scripts/jquery/jquery-2.2.3.min.js")
+				.Include("~/Content/scripts/ng/angular.min.js")
+				.Include("~/Content/scripts/ng/angular-route.min.js")
+				.Include("~/Content/scripts/ng/angular-cookies.min.js")
+				.Include("~/Content/scripts/ng/angular-sanitize.min.js")
+				.Include("~/Content/scripts/ng/angular-resource.min.js")
+				.Include("~/Content/scripts/bootstrap/bootstrap.min.js")
+				.Include("~/Content/scripts/misc/ui-bootstrap.min.js")
+				.Include("~/Content/scripts/jquery/select2.min.js"));
 
-			bundles.Add(new ScriptBundle("~/bundles/app")
+			// Vai unificar e minificar
+			bundles.Add(new ScriptBundle("~/Content/app")
+				.Include("~/Content/scripts/ng/ng-table.js")
 				.Include("~/Content/scripts/app/app.js")
+				.Include("~/Content/scripts/app/main.js")
 				.IncludeDirectory("~/Content/scripts/app/controllers/", "*.js", true));
 
 			//bundles.Add(new ScriptBundle("~/bundles/fiscalize")
 			//	.Include("~/Content/scripts/app/app.js")
 			//	.IncludeDirectory("~/Content/scripts/app/controllers/", "*.js", true));
 
-			bundles.Add(new StyleBundle("~/bundles/styles")
+			bundles.Add(new StyleBundle("~/Content/style/css")
 				.Include("~/Content/styles/bootstrap.css")
 				.Include("~/Content/styles/ui-bootstrap-csp.css")
 				.Include("~/Content/styles/ng-table.css")
@@ -38,7 +41,9 @@ namespace OPS
 
 			// Set EnableOptimizations to false for debugging. For more information,
 			// visit http://go.microsoft.com/fwlink/?LinkId=301862
+#if DEBUG
 			BundleTable.EnableOptimizations = false;
+#endif
 		}
 	}
 }

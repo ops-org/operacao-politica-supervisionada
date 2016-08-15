@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OPS.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -14,9 +15,9 @@ namespace OPS.Controllers
 		public ActionResult Load(string folder, string page)
 		{
 			string partialUrl;
-			if (string.IsNullOrEmpty(folder))
+			if (string.IsNullOrEmpty(page))
 			{
-				partialUrl = page;
+				partialUrl = folder;
 			}
 			else
 			{
@@ -28,15 +29,15 @@ namespace OPS.Controllers
 			{
 				switch (partialUrl.ToLower())
 				{
-					case "deputado/lista":
-						ViewBag.dtUltimaAtualizacao = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+					case "auditoria/deputado-federal-lista":
+						ViewBag.dtUltimaAtualizacao = Padrao.DeputadoFederalUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
 						break;
 				}
 				return PartialView(partialUrl);
 			}
 			else
 			{
-				return PartialView("erro/404");
+				return PartialView("Erro/_404");
 			}
 		}
 	}
