@@ -6,7 +6,7 @@ namespace OPS.Core
 	{
 		internal static string FormataValor(object value)
 		{
-			if (!Convert.IsDBNull(value))
+			if (!Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
 			{
 				try
 				{
@@ -17,28 +17,26 @@ namespace OPS.Core
 					throw;
 				}
 			}
-			return "";
+			return "0,00";
 		}
 
 		internal static string FormataData(object value)
 		{
-			if (!Convert.IsDBNull(value))
+			if (!Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
 			{
 				try
 				{
 					return Convert.ToDateTime(value).ToString("dd/MM/yyyy");
 				}
 				catch (Exception)
-				{
-					throw;
-				}
+				{ }
 			}
 			return "";
 		}
 
 		internal static string FormataDataHora(object value)
 		{
-			if (!Convert.IsDBNull(value))
+			if (!Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
 			{
 				try
 				{

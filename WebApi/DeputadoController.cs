@@ -49,5 +49,29 @@ namespace OPS.WebApi
 		{
 			return dao.SecretariosPorDeputado(id);
 		}
+
+		[HttpGet]
+		public dynamic GastosMensaisPorAno(int id)
+		{
+			return dao.GastosMensaisPorAno(id);
+		}
+
+		[HttpGet]
+		public dynamic Documento(int id)
+		{
+			return dao.Documento(id);
+		}
+
+		[HttpGet]
+		public dynamic MaioresNotas(int id)
+		{
+			return dao.MaioresNotas(id);
+		}
+
+		[HttpGet]
+		public dynamic MaioresFornecedores(int id)
+		{
+			return dao.MaioresFornecedores(id);
+		}
 	}
 }

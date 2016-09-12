@@ -1,45 +1,91 @@
 ﻿<div class="container-fluid" data-ng-controller="DeputadoVisualizarController">
 	<fieldset>
 		<legend>Deputado Federal</legend>
-		<form id="form" autocomplete="off">
-			<div class="row box-deputado">
-				<div class="col-xs-12 col-sm-8">
-					<div class="row deputado-header">
-						<div class="col-xs-12 col-md-4 col-lg-3 form-group">
-							<div class="avatar">
-								<img src="./Content/Images/Parlamentares/DEPFEDERAL/{{::deputado_federal.IdCadastro}}.jpg" alt="{{::deputado_federal.NomeParlamentar}}">
-							</div>
+		<div class="row box-deputado form-group">
+			<div class="col-xs-12 col-sm-8">
+				<div class="row deputado-header form-group">
+					<div class="form-group">
+						<div class="col-xs-12 col-md-4 col-lg-3 text-center">
+							<img class="img-thumbnail img-responsive img-parlamentar" src="./Content/Images/Parlamentares/DEPFEDERAL/{{::deputado_federal.IdCadastro}}.jpg" alt="{{::deputado_federal.NomeParlamentar}}" />
 						</div>
-						<div class="col-xs-12 col-md-8 col-lg-9 form-group">
+						<div class="col-xs-12 col-md-8 col-lg-9 text-left">
 							<h3>Dep. {{::deputado_federal.NomeParlamentar}}</h3>
 							<p class="text-muted" data-ng-bind="::deputado_federal.Nome"></p>
 							<h4>{{::deputado_federal.SgPartido}} / {{::deputado_federal.SgUf}}</h4>
 							<p><a href="mailto:{{::deputado_federal.Email}}" data-ng-bind="::deputado_federal.Email"></a></p>
 							<p><a href="http://www.camara.leg.br/internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.IdCadastro}}" target="_blank" rel="nofollow">Perfil na Camâra</a></p>
 						</div>
+						<div class="clearfix"></div>
 					</div>
 				</div>
-				<div class="col-xs-12 col-sm-4">
-					@*<a href="./#/deputado-federal?parlamentar=0000" title="Clique para ver o detalhamento das despesas">*@
+			</div>
+			<div class="col-xs-12 col-sm-4">
+				<a href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=8&Agrupamento=2" title="Clique para ver o detalhamento das despesas na legislatura atual">
 					<div class="box-item form-group alert alert-info text-center">
 						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalGastoCEAP"></div>
-						<div class="box-item-text">Gastos com Cota Parlamentar (CEAP)</div>
+						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
+						@*<div class="box-item-text "><small class="text-muted">2015 - 2018</small></div>*@
 					</div>
-					@*</a>*@
-					<a href="./#/deputado-federal/secretario/{{::deputado_federal.IdCadastro}}" title="Clique para ver a lista de secretários">
-						<div class="box-item form-group alert alert-info text-center">
-							<div class="box-item-title" data-ng-bind="::deputado_federal.TotalSecretarios"></div>
-							<div class="box-item-text">Secretários parlamentares</div>
-						</div>
-					</a>
-				</div>
+				</a>
+				<a href="./#/deputado-federal/secretario/{{::deputado_federal.IdCadastro}}" title="Clique para ver a lista de secretários">
+					<div class="box-item form-group alert alert-info text-center">
+						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalSecretarios"></div>
+						<div class="box-item-text">Secretários parlamentares</div>
+					</div>
+				</a>
 			</div>
-
-			<div class="well text-center">
-				Gráfico de Gastos por Ano<br /> Em Breve!
-			</div>
-		</form>
+		</div>
 	</fieldset>
+
+	<fieldset class="form-group">
+		<legend>Comparativo de gastos mensais com a cota parlamentar</legend>
+
+		<div id="deputados-gastos-por-mes" class="form-group" style="padding-right: 10px"></div>
+	</fieldset>
+
+	<div class="row form-group">
+		<div class="col-xs-12 col-sm-6">
+			<fieldset>
+				<legend>Maiores Notas/Recibos</legend>
+
+				<div class="table-responsive">
+					<table class="table table-striped table-hover">
+						<tr>
+							<th style="width:80%">Beneficiário</th>
+							<th style="width:20%">Valor</th>
+						</tr>
+						<tr ng-repeat="row in MaioresNotas">
+							<td><a data-ng-href="{{::row.CnpjCpf ? './#/fornecedor/'+row.CnpjCpf : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.CnpjCpf}">{{::row.NomeBeneficiario}}</a></td>
+							<td ><a href="./#/deputado-federal/documento/{{::row.Id}}">{{::row.VlrLiquido}}</a></td>
+						</tr>
+					</table>
+				</div>
+			</fieldset>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<fieldset>
+				<legend>Maiores fornecedores</legend>
+
+				<div class="table-responsive">
+					<table class="table table-striped table-hover">
+						<tr>
+							<th style="width:80%">Beneficiário</th>
+							<th style="width:20%">Valor</th>
+						</tr>
+						<tr ng-repeat="row in MaioresFornecedores">
+							<td><a data-ng-href="{{::row.CnpjCpf ? './#/fornecedor/'+row.CnpjCpf : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.CnpjCpf}">{{::row.NomeBeneficiario}}</a></td>
+							<td>{{::row.VlrLiquido}}</td>
+						</tr>
+					</table>
+				</div>
+			</fieldset>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<dir-disqus config="disqusConfig"></dir-disqus>
+	</div>
+
 </div>
 
 

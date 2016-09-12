@@ -12,7 +12,7 @@ namespace OPS.Core
 		/// <summary>
 		/// Versão do Site
 		/// </summary>
-		public static readonly int VERSAO = 160814;
+		public static readonly int VERSAO = 160908;
 
 		/// <summary>
 		/// Ano Inicial dos Dados de Auditoria dos Senadores

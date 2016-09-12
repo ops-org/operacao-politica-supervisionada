@@ -46,10 +46,6 @@
     <PublishDatabases>false</PublishDatabases>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
-      <HintPath>packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
       <Private>True</Private>
@@ -58,53 +54,21 @@
       <HintPath>packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.Identity.EntityFramework, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.AspNet.Identity.EntityFramework.2.2.1\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.Identity.Owin, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.AspNet.Identity.Owin.2.2.1\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    <Reference Include="MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>packages\MySql.Data.6.9.9\lib\net45\MySql.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    <Reference Include="MySql.Data.Entity.EF6, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>packages\MySql.Data.Entity.6.9.9\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security.Cookies, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Owin.Security.Cookies.3.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.OAuth, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Owin.Security.OAuth.3.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <HintPath>packages\MySql.Data.6.9.8\lib\net45\MySql.Data.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MySql.Data.Entity.EF6, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <HintPath>packages\MySql.Data.Entity.6.9.8\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
-      <HintPath>packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -127,10 +91,6 @@
     </Reference>
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Web.Http.Owin, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Http.WebHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -181,6 +141,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\CacheHelper.cs" />
+    <Compile Include="Core\CookieAwareWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Core\FormatarDados.cs" />
     <Compile Include="Dao\ComandoSqlDao.cs" />
     <Compile Include="Core\eAgrupamentoAuditoria.cs" />
     <Compile Include="Core\FiltroUsuarioDTO.cs" />
@@ -195,43 +160,10 @@
     <Compile Include="WebApi\DeputadoController.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
-    <Compile Include="App_Start\IdentityConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
-    <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.cs" />
-    <Compile Include="Areas\HelpPage\Controllers\HelpController.cs" />
-    <Compile Include="Areas\HelpPage\HelpPageAreaRegistration.cs" />
-    <Compile Include="Areas\HelpPage\HelpPageConfigurationExtensions.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\CollectionModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ComplexTypeModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\DictionaryModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumTypeModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumValueDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\IModelDocumentationProvider.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\KeyValuePairModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescriptionGenerator.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameAttribute.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameHelper.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterAnnotation.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterDescription.cs" />
-    <Compile Include="Areas\HelpPage\ModelDescriptions\SimpleTypeModelDescription.cs" />
-    <Compile Include="Areas\HelpPage\Models\HelpPageApiModel.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleGenerator.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleKey.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\ImageSample.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\InvalidSample.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\ObjectGenerator.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
-    <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
-    <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
-    <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\AppController.cs" />
     <Compile Include="Controllers\MainController.cs" />
-    <Compile Include="Controllers\WS_AccountController.cs" />
-    <Compile Include="Controllers\WS_TodoController.cs" />
     <Compile Include="Core\Banco.cs" />
     <Compile Include="Core\DropDownDTO.cs" />
     <Compile Include="Core\FiltroDropDownDTO.cs" />
@@ -242,16 +174,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\AccountBindingModels.cs" />
-    <Compile Include="Models\AccountViewModels.cs" />
-    <Compile Include="Models\DataModels.cs" />
-    <Compile Include="Models\TodoItemViewModel.cs" />
-    <Compile Include="Controllers\Utility\ModelErrorChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Providers\ApplicationOAuthProvider.cs" />
-    <Compile Include="Providers\RefreshTokenProvider.cs" />
-    <Compile Include="Results\ChallengeResult.cs" />
-    <Compile Include="Startup.cs" />
     <Compile Include="WebApi\FiscalizeController.cs" />
     <Compile Include="WebApi\FornecedorController.cs" />
     <Compile Include="WebApi\IndicadoresController.cs" />
@@ -260,25 +183,23 @@
     <Compile Include="WebApi\UsuarioController.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\scripts\app\app.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-lista.js" />
     <Content Include="Content\scripts\app\controllers\fiscalize-nota-fiscal.js" />
     <Content Include="Content\scripts\app\controllers\fiscalize-notas-fiscais.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-lista.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\fornecedor-lista.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
-    <Content Include="Content\scripts\app\controllers\membros.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
-    <Content Include="Content\scripts\app\controllers\registerCtrl.js" />
-    <Content Include="Content\scripts\app\controllers\signInCtrl.js" />
-    <Content Include="Content\scripts\app\main.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
     <Content Include="Content\scripts\jquery\select2.js" />
     <Content Include="Content\scripts\jquery\select2.min.js" />
+    <Content Include="Content\scripts\misc\highcharts.js" />
     <Content Include="Content\scripts\ng\angular-cookies.js" />
+    <Content Include="Content\scripts\ng\angular-ui-router.min.js" />
+    <Content Include="Content\scripts\ng\dirDiscus.js" />
     <Content Include="Content\styles\bootstrap.css" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Content\scripts\bootstrap\bootstrap.js" />
@@ -296,10 +217,10 @@
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.js" />
     <Content Include="Content\scripts\misc\modernizr.min.js" />
     <Content Include="Content\scripts\misc\respond.min.js" />
-    <Content Include="Content\scripts\misc\ui-bootstrap-tpls.js" />
-    <Content Include="Content\scripts\misc\ui-bootstrap-tpls.min.js" />
-    <Content Include="Content\scripts\misc\ui-bootstrap.js" />
-    <Content Include="Content\scripts\misc\ui-bootstrap.min.js" />
+    <Content Include="Content\scripts\ng\ui-bootstrap-tpls.js" />
+    <Content Include="Content\scripts\ng\ui-bootstrap-tpls.min.js" />
+    <Content Include="Content\scripts\ng\ui-bootstrap.js" />
+    <Content Include="Content\scripts\ng\ui-bootstrap.min.js" />
     <Content Include="Content\scripts\ng\angular-cookies.min.js" />
     <Content Include="Content\scripts\ng\angular-resource.js" />
     <Content Include="Content\scripts\ng\angular-resource.min.js" />
@@ -311,9 +232,10 @@
     <Content Include="Content\scripts\ng\angular.min.js" />
     <Content Include="Content\scripts\ng\ng-table.js" />
     <Content Include="Content\styles\auditoria.css" />
-    <Content Include="Content\styles\landing-page.css" />
     <Content Include="Content\styles\ng-table.css" />
     <Content Include="Content\styles\select2.css" />
+    <Content Include="Content\styles\selectize.bootstrap3.css" />
+    <Content Include="Content\styles\selectize.css" />
     <Content Include="Content\styles\Site.css" />
     <Content Include="Content\styles\styles.css" />
     <Content Include="Content\styles\ui-bootstrap-csp.css" />
@@ -369,66 +291,6 @@
     <Content Include="Views\App\inicio.cshtml" />
     <Content Include="Views\App\Login\Registrar.cshtml" />
     <Content Include="Views\App\Login\Entrar.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Web.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\Index.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\TextSample.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\SimpleTypeModelDescription.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Samples.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Parameters.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ModelDescriptionLink.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\KeyValuePairModelDescription.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\InvalidSample.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ImageSample.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\HelpPageApiModel.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\EnumTypeModelDescription.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\DictionaryModelDescription.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ComplexTypeModelDescription.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\scripts\ng\angular-sanitize.min.js.map" />

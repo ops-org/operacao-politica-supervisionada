@@ -8,6 +8,7 @@
 		public int page { get; set; }
 
 		public string IdParlamentar { get; set; }
+		public string NomeParlamentar { get; set; }
 
 		public string Despesa { get; set; }
 

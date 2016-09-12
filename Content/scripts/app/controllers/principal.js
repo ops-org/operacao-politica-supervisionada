@@ -2,13 +2,17 @@
 
 app.controller('PrincipalController', ['$scope', '$api',
     function ($scope, $api) {
+
+    	document.title = "OPS :: Operação Politica Supervisionada";
+    	$scope.disqusConfig = {
+    		disqus_identifier: 'Pagina Inicial',
+    	};
+
     	$api.get('Indicadores/ParlamentarResumoGastos').success(function (response) {
-    		var data = JSON.parse(response);
-    		$scope.MaioresGastos = data.filter(function (obj) { return obj.tipoCartao == 'MAIOR' });
-    		$scope.MenosresGastos = data.filter(function (obj) { return obj.tipoCartao == 'MENOR' });
+    		$scope.CampeoesGastos = response;
     	});
 
-    	$api.get('Indicadores/ResumoAuditoria').success(function (response) {
-    		$scope.ResumoAuditoria = JSON.parse(response);
-    	});
+    	//$api.get('Indicadores/ResumoAuditoria').success(function (response) {
+    	//	$scope.ResumoAuditoria = JSON.parse(response);
+    	//});
     }]);

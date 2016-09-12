@@ -7,19 +7,24 @@ namespace OPS.WebApi
 	public class IndicadoresController : ApiController
 	{
 		[HttpGet]
-		public string ParlamentarResumoGastos()
+		public dynamic ParlamentarResumoGastos()
 		{
-			var dt = ComandoSqlDao.RecuperarCardsIndicadores();
-
-			return JsonConvert.SerializeObject(dt, Formatting.None);
+			return ComandoSqlDao.RecuperarCardsIndicadores();
 		}
 
 		[HttpGet]
 		public string ResumoAuditoria()
 		{
-			var dt = ComandoSqlDao.ExecutarConsultaSimples(ComandoSqlDao.eGrupoComandoSQL.ResumoAuditoria);
+			//var dt = ComandoSqlDao.ExecutarConsultaSimples(ComandoSqlDao.eGrupoComandoSQL.ResumoAuditoria);
 
-			return JsonConvert.SerializeObject(dt, Formatting.None);
+			//return JsonConvert.SerializeObject(dt, Formatting.None);
+
+			return
+				@"[
+					{""Nome"":""Parlamentares denunciados ao MPF e/ou TCU"",""Resultado"":""194""},
+					{""Nome"":""Valor recuperado"",""Resultado"":""R$ 5.500.000,00""},
+					{""Nome"":""Valor em denuncias em andamento"",""Resultado"":""R$ 580.000,00""}
+				]";
 		}
 	}
 }

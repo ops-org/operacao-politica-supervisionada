@@ -30,31 +30,34 @@ namespace OPS.Models
 		public String Telefone { get; set; }
 		public String EnteFederativoResponsavel { get; set; }
 		public string AtividadeSecundaria { get; set; }
-
-		//public String AtividadeSecundaria01 { get; set; }
-		//public String AtividadeSecundaria02 { get; set; }
-		//public String AtividadeSecundaria03 { get; set; }
-		//public String AtividadeSecundaria04 { get; set; }
-		//public String AtividadeSecundaria05 { get; set; }
-		//public String AtividadeSecundaria06 { get; set; }
-		//public String AtividadeSecundaria07 { get; set; }
-		//public String AtividadeSecundaria08 { get; set; }
-		//public String AtividadeSecundaria09 { get; set; }
-		//public String AtividadeSecundaria10 { get; set; }
-		//public String AtividadeSecundaria11 { get; set; }
-		//public String AtividadeSecundaria12 { get; set; }
-		//public String AtividadeSecundaria13 { get; set; }
-		//public String AtividadeSecundaria14 { get; set; }
-		//public String AtividadeSecundaria15 { get; set; }
-		//public String AtividadeSecundaria16 { get; set; }
-		//public String AtividadeSecundaria17 { get; set; }
-		//public String AtividadeSecundaria18 { get; set; }
-		//public String AtividadeSecundaria19 { get; set; }
-		//public String AtividadeSecundaria20 { get; set; }
 		public Boolean Doador { get; set; }
 		public String UsuarioInclusao { get; set; }
 		public string DataInclusao { get; set; }
 		public int Matriz { get; internal set; }
 		public String CapitalSocial { get; set; }
+
+		//TODO: Refatorar
+		public String AtividadeSecundaria01 { get; set; }
+		public String AtividadeSecundaria02 { get; set; }
+		public String AtividadeSecundaria03 { get; set; }
+		public String AtividadeSecundaria04 { get; set; }
+		public String AtividadeSecundaria05 { get; set; }
+		public String AtividadeSecundaria06 { get; set; }
+		public String AtividadeSecundaria07 { get; set; }
+		public String AtividadeSecundaria08 { get; set; }
+		public String AtividadeSecundaria09 { get; set; }
+		public String AtividadeSecundaria10 { get; set; }
+		public String AtividadeSecundaria11 { get; set; }
+		public String AtividadeSecundaria12 { get; set; }
+		public String AtividadeSecundaria13 { get; set; }
+		public String AtividadeSecundaria14 { get; set; }
+		public String AtividadeSecundaria15 { get; set; }
+		public String AtividadeSecundaria16 { get; set; }
+		public String AtividadeSecundaria17 { get; set; }
+		public String AtividadeSecundaria18 { get; set; }
+		public String AtividadeSecundaria19 { get; set; }
+		public String AtividadeSecundaria20 { get; set; }
+
+		public List<FornecedorQuadroSocietario> lstFornecedorQuadroSocietario { get; internal set; }
 	}
 }

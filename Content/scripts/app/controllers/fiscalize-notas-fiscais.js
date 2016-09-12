@@ -2,10 +2,9 @@
 
 app.controller('FiscalizeNotasFiscaisController', ["$scope", "$api",
     function ($scope, $api) {
-    	$loading.show();
-
+    	document.title = "OPS :: Fiscalize - Notas mais suspeitas";
+    	
     	$api.get('Fiscalize').then(function (response) {
-    		$loading.hide();
-    		$scope.notas = JSON.parse(response.data);
+    		$scope.notas = response.data;
     	});
     }]);

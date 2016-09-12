@@ -1,8 +1,11 @@
 ﻿'use strict';
 
-app.controller('DeputadoListaController', ["$scope", "$tabela", "$api", "$queryString",
-    function ($scope, $tabela, $api, $queryString) {
+app.controller('DeputadoListaController', ["$rootScope", "$scope", "$tabela", "$api", "$queryString",
+    function ($rootScope, $scope, $tabela, $api, $queryString) {
+
     	var init = function () {
+    		document.title = "OPS :: Deputado Federal";
+
     		$scope.filtro = {};
 
     		var qs = $queryString.search();
@@ -28,7 +31,7 @@ app.controller('DeputadoListaController', ["$scope", "$tabela", "$api", "$queryS
     		$("#lstUF").select2({
     			data: lstEstadosBrasileiros,
     			allowClear: true,
-    			placeholder: "Selecione",
+    			placeholder: "Todos",
     			selectOnClose: false
     		});
     		if (qs.Uf) $("#lstUF").val(qs.Uf.split(','));
@@ -38,7 +41,7 @@ app.controller('DeputadoListaController', ["$scope", "$tabela", "$api", "$queryS
     		$("#lstPartido").select2({
     			data: lstPartidosBrasileiros,
     			allowClear: true,
-    			placeholder: "Selecione",
+    			placeholder: "Todos",
     			selectOnClose: false
     		});
     		$scope.filtro.Partido = qs.Partido;
@@ -46,10 +49,12 @@ app.controller('DeputadoListaController', ["$scope", "$tabela", "$api", "$queryS
     		$("#txtDocumento").val(qs.Documento);
     		$scope.filtro.Documento = qs.Documento || null;
 
-    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "3").val();
-    		$scope.filtro.Agrupamento = $("#lstAgrupamento").val(qs.Agrupamento || "1").val();
+    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "3").trigger('change').val();
+    		$scope.filtro.Agrupamento = $("#lstAgrupamento").val(qs.Agrupamento || "1").trigger('change').val();
 
     		$scope.Pesquisar(true);
+
+    		$('#lstPerido,#lstAgrupamento').select2();
     	}
 
     	$scope.Pesquisar = function (page_load) {
@@ -85,8 +90,8 @@ app.controller('DeputadoListaController', ["$scope", "$tabela", "$api", "$queryS
     	$scope.LimparFiltros = function () {
     		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido, #lstFornecedor").val([]).trigger('change');
     		$("#txtDocumento").val('');
-    		$("#lstPerido").val('3');
-    		$("#lstAgrupamento").val('1');
+    		$("#lstPerido").val('3').trigger('change');;
+    		$("#lstAgrupamento").val('1').trigger('change');;
     	}
 
     	init();

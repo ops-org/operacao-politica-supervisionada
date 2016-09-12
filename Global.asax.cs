@@ -30,5 +30,19 @@ namespace OPS
 		//		new Dao.ParametrosDao().CarregarPadroes();
 		//	}
 		//}
+
+		protected void Application_PostAuthorizeRequest()
+		{
+			//if (IsWebApiRequest())
+			//{
+			//	//Habilitar o SessionState na WebAPI
+			//	HttpContext.Current.SetSessionStateBehavior(System.Web.SessionState.SessionStateBehavior.Required);
+			//}
+		}
+
+		//private bool IsWebApiRequest()
+		//{
+		//	return HttpContext.Current.Request.AppRelativeCurrentExecutionFilePath.StartsWith(WebApiConfig.UrlPrefixRelative);
+		//}
 	}
 }

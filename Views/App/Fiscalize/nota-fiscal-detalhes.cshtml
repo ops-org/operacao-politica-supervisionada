@@ -1,94 +1,123 @@
 ﻿<div class="container" data-ng-controller="FiscalizeNotaFiscalController">
-	<fieldset>
-		<legend>Detalhes da Nota Fiscal - {{nota.notaFiscalId}}</legend>
+	<div class="row deputado-header form-group">
+		<div class="form-group">
+			<div class="col-md-2 text-center">
+				<img class="img-thumbnail img-responsive img-parlamentar" src="http://104.131.229.175/fiscalize/parlamentar/{{::nota.IdCadastro}}.jpg" alt="{{::nota.NomeParlamentar}}" />
+			</div>
+			<div class="col-md-10 text-left">
+				<h1 data-ng-bind="::nota.NomeParlamentar"></h1>
+				<h4>Deputado Federal</h4>
+				<h3>{{::nota.Partido}} / {{::nota.Uf}}</h3>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+	</div>
+
+	<fieldset class="form-group">
+		<legend>Detalhes da Nota Fiscal - {{::nota.NotaFiscalId}}</legend>
 		<div class="row">
 			<div class="col-md-4">
-				<div class="form-group">
-					<div class="thumbnail" style="height: 160px; width: 120px; display: block;">
-						<img src="http://104.131.229.175/fiscalize/parlamentar/{{nota.ideCadastro}}.jpg" alt="{{nota.parlamentar}}" width="120">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="::nota.Valor"></h3>
+						<span>Valor da Nota/Recibo</span>
+					</div>
+					<span class="clearfix"></span>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-calendar"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="::nota.DataEmissao"></h3>
+						<span>Data de Emissão</span>
 					</div>
 				</div>
 			</div>
+			<div class="col-md-4">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-calendar"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="::nota.DataInclusao"></h3>
+						<span>Data de Inclusão</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
 			<div class="col-md-8">
-				<div class="form-group">
-					<label class="control-label">Parlamentar</label>
-					<span class="control-label show" data-ng-bind="nota.parlamentar"></span>
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-tag"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="nota.Cota"></h3>
+						<span>Cota</span>
+					</div>
+					<span class="clearfix"></span>
 				</div>
 			</div>
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">Partido</label>
-					<span class="control-label show" data-ng-bind="nota.partido"></span>
-				</div>
-			</div>
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">UF</label>
-					<span class="control-label show" data-ng-bind="nota.uf"></span>
-				</div>
-			</div>
-		</div>
-		<hr />
-		<div class="row">
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">Valor da Nota</label>
-					<span class="control-label show" data-ng-bind="nota.valor"></span>
-				</div>
-			</div>
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">Data de Emissão</label>
-					<span class="control-label show" data-ng-bind="nota.dataEmissao"></span>
-				</div>
-			</div>
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">Data de Inclusão</label>
-					<span class="control-label show" data-ng-bind="nota.dataInclusao"></span>
-				</div>
-			</div>
-
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">Sub-Cota</label>
-					<span class="control-label show" data-ng-bind="nota.descricaoSubCota"></span>
-				</div>
-			</div>
-			<div class="col-md-6">
-				<div class="form-group">
-					<label class="control-label">Cota</label>
-					<span class="control-label show" data-ng-bind="nota.cota"></span>
-				</div>
-			</div>
-		</div>
-		<hr />
-		<div class="row">
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">CPF/CPNJ</label>
-					<span class="control-label show" data-ng-bind="nota.cpfCnpj"></span>
-				</div>
-			</div>
-			<div class="col-md-6">
-				<div class="form-group">
-					<label class="control-label">Beneficiário</label>
-					<span class="control-label show" data-ng-bind="nota.beneficiario"></span>
-				</div>
-			</div>
-
-			<div class="col-md-4">
-				<div class="form-group">
-					<label class="control-label">Nome Passageiro</label>
-					<span class="control-label show" data-ng-bind="nota.nomePassageiro"></span>
-				</div>
-			</div>
-			<div class="col-md-6">
-				<div class="form-group">
-					<label class="control-label">Trecho Viagem</label>
-					<span class="control-label show" data-ng-bind="nota.trechoViagem"></span>
+			<div class="col-md-4" data-ng-if="::nota.DescricaoSubCota">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-tags"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="::nota.DescricaoSubCota"></h3>
+						<span>Sub-Cota</span>
+					</div>
+					<span class="clearfix"></span>
 				</div>
 			</div>
 		</div>
 	</fieldset>
+
+	<fieldset class="form-group">
+		<legend>Dados do Beneficiário</legend>
+		<div class="row">
+			<div class="col-md-4">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="nota.CpfCnpj"></h3>
+						<span>CPF/CPNJ</span>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-8">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="nota.Beneficiario"></h3>
+						<span>Beneficiário</span>
+					</div>
+					<span class="clearfix"></span>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6" data-ng-if="::nota.NomePassageiro">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-btc"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="nota.NomePassageiro"></h3>
+						<span>Nome Passageiro</span>
+					</div>
+					<span class="clearfix"></span>
+				</div>
+			</div>
+			<div class="col-md-6" data-ng-if="::nota.TrechoViagem">
+				<div class="dvg-painel-info-etiqueta">
+					<div class="icon"><i class="glyphicon glyphicon-btc"></i></div>
+					<div class="text">
+						<h3 data-ng-bind="nota.TrechoViagem"></h3>
+						<span>Trecho Viagem</span>
+					</div>
+					<span class="clearfix"></span>
+				</div>
+			</div>
+		</div>
+	</fieldset>
+
+	<div class="form-group">
+		<dir-disqus config="disqusConfig"></dir-disqus>
+	</div>
 </div>

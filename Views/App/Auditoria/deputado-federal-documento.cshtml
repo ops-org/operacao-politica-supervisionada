@@ -1,1 +1,182 @@
-﻿http://www.camara.gov.br/cota-parlamentar/documentos/publ/" + e.Row.Cells[8].Text + "/" + e.Row.Cells[9].Text + "/" + e.Row.Cells[10].Text + ".pdf
+﻿<div class="container-fluid" data-ng-controller="DeputadoDocumentoVisualizarController">
+	<fieldset>
+		<legend>Nota Fiscal: {{::documento.Numero || documento.Id}}</legend>
+
+		<div class="form-group" data-ng-if="::documento.IdDocumento">
+			<div class="row">
+				<div class="col-xs-12 text-center">
+					<a class="btn btn-success" href="#" data-ng-href="http://www.camara.gov.br/cota-parlamentar/documentos/publ/{{documento.IdDeputado}}/{{documento.Ano}}/{{documento.IdDocumento}}.pdf" target="_blank">Visualizar nota fiscal na câmara</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="form-group">
+			<div class="row">
+				<div class="col-md-8">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.NomeParlamentar"></h3>
+							<span>Nome Parlamentar</span>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-tags"></i></div>
+						<div class="text">
+							<h3>{{::documento.Partido}} / {{::documento.Uf}}</h3>
+							<span>Partido / UF</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-8">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.NomeBeneficiario"></h3>
+							<span>Befeficiario/Fornecedor</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.CnpjCpf"></h3>
+							<span>CNPJ</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-8">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-list"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.Descricao"></h3>
+							<span>Despesa</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-calendar"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.DataEmissao"></h3>
+							<span>Data Emissão</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.VlrDocumento"></h3>
+							<span>Valor do Documento</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.VlrGlosa"></h3>
+							<span>Valor da Glosa</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.VlrLiquido"></h3>
+							<span>Valor Líquido</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.VlrRestituicao"></h3>
+							<span>Valor de Restituição</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-4">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.TipoDocumento"></h3>
+							<span>Tipo de Documento</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.NomePassageiro"></h3>
+							<span>Nome do Passageiro</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="dvg-painel-info-etiqueta">
+						<div class="icon"><i class="glyphicon glyphicon-map-marker"></i></div>
+						<div class="text">
+							<h3 data-ng-bind="::documento.TrechoViagem"></h3>
+							<span>Trecho da Viagem</span>
+						</div>
+						<span class="clearfix"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<ul class="list-group">
+			<li class="list-group-item active">
+				<strong>Entenda os valores</strong>
+			</li>
+
+			<li class="list-group-item">
+				<strong>Valor do Documento:</strong>
+				É o valor de face do documento fiscal ou o valor do documento que deu causa à despesa. Quando se tratar de bilhete aéreo, esse valor poderá ser negativo, significando que o referido bilhete é um bilhete de compensação, pois compensa um outro bilhete emitido e não utilizado pelo deputado (idem para o dado 'Valor Líquido' abaixo).
+			</li>
+			<li class="list-group-item">
+				<strong>Valor da Glosa:</strong>
+				Representa o valor da glosa do documento fiscal que incidirá sobre o Valor do Documento, ou o valor da glosa do documento que deu causa à despesa.
+			</li>
+			<li class="list-group-item">
+				<strong>Valor Líquido:</strong>
+				Representa o valor líquido do documento fiscal ou do documento que deu causa à despesa e será calculado pela diferença entre o Valor do Documento e o Valor da Glosa. É este valor que será debitado da cota do deputado. Caso o débito seja do Tipo Telefonia e o valor seja igual a zero, significa que a despesa foi franqueada.
+			</li>
+			<li class="list-group-item">
+				<strong>Valor da Restituição:</strong>
+				Rrepresenta o valor restituído do documento fiscal que incidirá sobre o Valor do Documento.
+			</li>
+		</ul>
+
+		<div class="form-group">
+			<dir-disqus config="disqusConfig"></dir-disqus>
+		</div>
+
+	</fieldset>
+</div>

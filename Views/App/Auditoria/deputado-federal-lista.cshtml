@@ -66,7 +66,7 @@
 							<input type="button" value="Limpar Filtros" class="btn btn-default btn-sm" data-ng-click="LimparFiltros();" />
 						</div>
 						@*<div class="btn-group" role="group">
-								<a href="./deputado/exportar" class="btn btn-default btn-sm" onclick="setTimeout($loading.hide, 1000);">Exportar CSV</a>
+								<a href="./deputado/exportar" class="btn btn-default btn-sm">Exportar CSV</a>
 							</div>*@
 					</div>
 				</div>
@@ -79,7 +79,7 @@
 					<small class="help-block margin-bottom-0">Valor total consideramndo os filtros aplicados acima</small>
 				</div>
 
-				<div id="table-auditoria" class="table-responsive" ng-include="visao"></div>
+				<div id="table-auditoria" class="table-responsive scroll-mark" ng-include="visao"></div>
 
 				<div class="alert alert-info text-center">
 					Última Atualização: @ViewBag.dtUltimaAtualizacao
@@ -104,7 +104,7 @@
 	<table ng-table="tableParams" class="table table-striped table-hover">
 		<tr ng-repeat="row in $data">
 			<td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.IdCadastro}}" data-descricao="{{::row.NomeParlamentar}}">Detalhar</a></td>
-			<td data-title="'Parlamentar'" style="width:50%" sortable="'NomeParlamentar'"><a href="#/deputado-federal/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
+			<td data-title="'Parlamentar'" style="width:50%" sortable="'NomeParlamentar'"><a href="./#/deputado-federal/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
 			<td data-title="'UF'" style="width:10%" sortable="'SgUf'">{{::row.SgUf}}</td>
 			<td data-title="'Partido'" style="width:5%" sortable="'NomePartido'">{{::row.SgPartido}}</td>
 			<td data-title="'Total NF/Recibos'" style="width:15%" sortable="'TotalNotas'">{{::row.TotalNotas}}</td>
@@ -128,7 +128,7 @@
 	<table ng-table="tableParams" class="table table-striped table-hover">
 		<tr ng-repeat="row in $data">
 			<td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.Codigo}}" data-descricao="{{::row.NomeBeneficiario}}">Detalhar</a></td>
-			<td data-title="'Beneficiário'" style="width:40%" sortable="'NomeParlamentar'"><a href="#/fornecedor/{{::row.Codigo}}">{{::row.NomeBeneficiario}}</a></td>
+			<td data-title="'Beneficiário'" style="width:40%" sortable="'NomeBeneficiario'"><a data-ng-href="{{::row.Codigo ? './#/fornecedor/'+row.Codigo : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.Codigo}">{{::row.NomeBeneficiario}}</a></td>
 			<td data-title="'CNPJ/CPF'" style="width:15%" sortable="'Codigo'">{{::row.Codigo}}</td>
 			<td data-title="'UF'" style="width:5%" sortable="'SgUf'">{{::row.SgUf}}</td>
 			@*<td data-title="'Auditei'" style="width:5%" sortable="'Auditei'">{{::row.Auditei}}</td>*@
@@ -164,12 +164,11 @@
 <script type="text/ng-template" id="documento.html">
 	<table ng-table="tableParams" class="table table-striped table-hover">
 		<tr ng-repeat="row in $data">
-			<td data-title="'NF/Recibo'" style="width:10%" sortable="'NomeParlamentar'"><a href="#/documento/{{::row.IdDocumento}}">{{::row.Numero}}</a></td>
 			<td data-title="'Emissão'" style="width:10%" sortable="'DataEmissao'">{{::row.DataEmissao}}</td>
 			<td data-title="'CNPJ/CPF'" style="width:10%" sortable="'Codigo'">{{::row.Codigo}}</td>
-			<td data-title="'Beneficiário'" style="width:40%" sortable="'NomeParlamentar'"><a href="#/fornecedor/{{::row.Codigo}}">{{::row.NomeBeneficiario}}</a></td>
-			<td data-title="'Parlamentar'" style="width:30%" sortable="'NomeParlamentar'"><a href="#/deputado-federal/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
-			<td data-title="'Valor Total'" style="width:10%" sortable="'VlrTotal'">{{::row.VlrTotal}}</td>
+			<td data-title="'Beneficiário'" style="width:40%" sortable="'NomeBeneficiario'"><a data-ng-href="{{::row.Codigo ? './#/fornecedor/'+row.Codigo : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.Codigo}">{{::row.NomeBeneficiario}}</a></td>
+			<td data-title="'Parlamentar'" style="width:30%" sortable="'NomeParlamentar'"><a href="./#/deputado-federal/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
+			<td data-title="'Valor Total'" style="width:10%" sortable="'VlrTotal'"><a href="./#/deputado-federal/documento/{{::row.Id}}">{{::row.VlrTotal}}</a></td>
 		</tr>
 	</table>
 </script>
