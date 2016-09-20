@@ -169,6 +169,7 @@ namespace OPS.Dao
 				strSql.Append(", l.ideDocumento as IdDocumento");
 				strSql.Append(", l.vlrRestituicao as VlrRestituicao");
 				strSql.Append(", l.numAno as Ano");
+				strSql.Append(", l.numMes as Mes");
 				strSql.Append(", p.ideCadastro as IdCadastro");
 				strSql.Append(", p.nuDeputadoId as IdDeputado");
 				strSql.Append(" FROM lancamentos l");
@@ -217,6 +218,7 @@ namespace OPS.Dao
 							IdDocumento = reader["IdDocumento"],
 							VlrRestituicao = Utils.FormataValor(reader["VlrRestituicao"]),
 							Ano = reader["Ano"].ToString(),
+							Mes = reader["Mes"].ToString(),
 							CnpjCpf = reader["CnpjCpf"].ToString(),
 							IdCadastro = reader["IdCadastro"],
 							IdDeputado = reader["IdDeputado"],
@@ -262,6 +264,7 @@ namespace OPS.Dao
 								});
 
 								lstValoresMensais = new decimal?[12];
+								existeGastoNoAno = false;
 							}
 
 							anoControle = reader[0].ToString();
@@ -272,6 +275,15 @@ namespace OPS.Dao
 							lstValoresMensais[Convert.ToInt32(reader[1]) - 1] = Convert.ToDecimal(reader[2]);
 							existeGastoNoAno = true;
 						}
+					}
+
+					if (existeGastoNoAno)
+					{
+						lstRetorno.Add(new
+						{
+							name = anoControle.ToString(),
+							data = lstValoresMensais
+						});
 					}
 
 					return lstRetorno;
@@ -454,16 +466,16 @@ namespace OPS.Dao
 						banco.AddParameter("anoMesFim", dataFim.ToString("yyyyMM"));
 						break;
 
-					case "6": //PERIODO_MANDATO_53
-						sqlWhere.Append(" AND l.anoMes BETWEEN 200702 AND 201101");
+					case "6": //PERIODO_MANDATO_55
+						sqlWhere.Append(" AND l.anoMes BETWEEN 201502 AND 201901");
 						break;
 
 					case "7": //PERIODO_MANDATO_54
 						sqlWhere.Append(" AND l.anoMes BETWEEN 201102 AND 201501");
 						break;
 
-					case "8": //PERIODO_MANDATO_55
-						sqlWhere.Append(" AND l.anoMes BETWEEN 201502 AND 201901");
+					case "8": //PERIODO_MANDATO_53
+						sqlWhere.Append(" AND l.anoMes BETWEEN 200702 AND 201101");
 						break;
 
 						//case PERIODO_INFORMAR:

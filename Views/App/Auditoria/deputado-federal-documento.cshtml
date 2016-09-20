@@ -5,7 +5,8 @@
 		<div class="form-group" data-ng-if="::documento.IdDocumento">
 			<div class="row">
 				<div class="col-xs-12 text-center">
-					<a class="btn btn-success" href="#" data-ng-href="http://www.camara.gov.br/cota-parlamentar/documentos/publ/{{documento.IdDeputado}}/{{documento.Ano}}/{{documento.IdDocumento}}.pdf" target="_blank">Visualizar nota fiscal na câmara</a>
+					<a class="btn btn-success" href="#" data-ng-href="http://www.camara.gov.br/cota-parlamentar/documentos/publ/{{documento.IdDeputado}}/{{documento.Ano}}/{{documento.IdDocumento}}.pdf" target="_blank">Visualizar nota fiscal na câmara&nbsp;<i class="glyphicon glyphicon-new-window"></i></a>
+					<a class="btn btn-default" href="#" data-ng-href="http://www.camara.gov.br/cota-parlamentar/analitico?nuDeputadoId={{documento.IdDeputado}}&dataInicio={{documento.Mes}}/{{documento.Ano}}&dataFim={{documento.Mes}}/{{documento.Ano}}&despesa=&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=" target="_blank">Visualizar outras notas fiscais no mês&nbsp;<i class="glyphicon glyphicon-new-window"></i></a>
 				</div>
 			</div>
 		</div>
@@ -13,13 +14,15 @@
 		<div class="form-group">
 			<div class="row">
 				<div class="col-md-8">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.NomeParlamentar"></h3>
-							<span>Nome Parlamentar</span>
+					<a href="#" data-ng-href="./#/deputado-federal/{{::documento.IdCadastro}}">
+						<div class="dvg-painel-info-etiqueta">
+							<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+							<div class="text">
+								<h3 data-ng-bind="::documento.NomeParlamentar"></h3>
+								<span>Nome Parlamentar</span>
+							</div>
 						</div>
-					</div>
+					</a>
 				</div>
 				<div class="col-md-4">
 					<div class="dvg-painel-info-etiqueta">
@@ -33,24 +36,28 @@
 			</div>
 			<div class="row">
 				<div class="col-md-8">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.NomeBeneficiario"></h3>
-							<span>Befeficiario/Fornecedor</span>
+					<a href="#" data-ng-href="./#/fornecedor/{{::documento.CnpjCpf}}">
+						<div class="dvg-painel-info-etiqueta">
+							<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+							<div class="text">
+								<h3 data-ng-bind="::documento.NomeBeneficiario"></h3>
+								<span>Befeficiario/Fornecedor</span>
+							</div>
+							<span class="clearfix"></span>
 						</div>
-						<span class="clearfix"></span>
-					</div>
+					</a>
 				</div>
 				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.CnpjCpf"></h3>
-							<span>CNPJ</span>
+					<a href="#" data-ng-href="./#/fornecedor/{{::documento.CnpjCpf}}">
+						<div class="dvg-painel-info-etiqueta">
+							<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+							<div class="text">
+								<h3 data-ng-bind="::documento.CnpjCpf"></h3>
+								<span>CNPJ</span>
+							</div>
+							<span class="clearfix"></span>
 						</div>
-						<span class="clearfix"></span>
-					</div>
+					</a>
 				</div>
 			</div>
 			<div class="row">

@@ -20,7 +20,7 @@
 				</div>
 			</div>
 			<div class="col-xs-12 col-sm-4">
-				<a href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=8&Agrupamento=2" title="Clique para ver o detalhamento das despesas na legislatura atual">
+				<a href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=6&Agrupamento=2" title="Clique para ver o detalhamento das despesas na legislatura atual">
 					<div class="box-item form-group alert alert-info text-center">
 						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalGastoCEAP"></div>
 						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
@@ -74,7 +74,7 @@
 						</tr>
 						<tr ng-repeat="row in MaioresFornecedores">
 							<td><a data-ng-href="{{::row.CnpjCpf ? './#/fornecedor/'+row.CnpjCpf : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.CnpjCpf}">{{::row.NomeBeneficiario}}</a></td>
-							<td>{{::row.VlrLiquido}}</td>
+							<td><a href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Fornecedor={{::row.CnpjCpf}}&Periodo=6&Agrupamento=6">{{::row.VlrLiquido}}</a></td>
 						</tr>
 					</table>
 				</div>

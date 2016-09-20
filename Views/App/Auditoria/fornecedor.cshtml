@@ -365,13 +365,13 @@
 								</tr>
 							</thead>
 							<tbody>
-								<tr data-ng-repeat="row in fornecedorQuadroSocietario" data-ng-show="::fornecedorQuadroSocietario.length>0">
+								<tr data-ng-repeat="row in fornecedorQuadroSocietario" data-ng-show="fornecedorQuadroSocietario.length>0">
 									<td data-ng-bind="row.Nome"></td>
 									<td data-ng-bind="row.Qualificacao"></td>
 									<td data-ng-bind="row.NomeRepresentanteLegal"></td>
 									<td data-ng-bind="row.QualificacaoRepresentanteLegal"></td>
 								</tr>
-								<tr data-ng-hide="::fornecedorQuadroSocietario.length>0">
+								<tr data-ng-hide="fornecedorQuadroSocietario.length>0">
 									<td colspan="4" class="text-center">A natureza jurídica não permite o preenchimento do QSA</td>
 								</tr>
 							</tbody>
@@ -401,7 +401,7 @@
 						</tr>
 						<tr ng-repeat="row in DeputadoFederalMaioresGastos">
 							<td><a href="./#/deputado-federal/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
-							<td>{{::row.VlrLiquido}}</td>
+							<td><a href="./#/deputado-federal?IdParlamentar={{::row.IdCadastro}}&Fornecedor={{fornecedor.CnpjCpf}}&Periodo=6&Agrupamento=6">{{::row.VlrLiquido}}</a></td>
 						</tr>
 					</table>
 					<table class="table table-striped table-hover" data-ng-show="DeputadoFederalMaioresGastos.length===0">
@@ -414,7 +414,7 @@
 		</div>
 		<div class="col-xs-12 col-sm-6">
 			<fieldset>
-				<legend><a href="#" data-ng-href="./#/senador?Fornecedor={{fornecedor.CnpjCpf}}&Periodo=8&Agrupamento=6">Senadores</a></legend>
+				<legend><a href="#" data-ng-href="./#/senador?Fornecedor={{fornecedor.CnpjCpf}}&Periodo=6&Agrupamento=6">Senadores</a></legend>
 
 				<div class="table-responsive">
 					<table class="table table-striped table-hover" data-ng-hide="SenadoresMaioresGastos.length===0">
@@ -423,8 +423,8 @@
 							<th style="width:20%">Valor</th>
 						</tr>
 						<tr ng-repeat="row in SenadoresMaioresGastos">
-							<td><a href="./#/deputado-federal/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
-							<td>{{::row.VlrLiquido}}</td>
+							<td><a href="./#/senador/{{::row.IdCadastro}}">{{::row.NomeParlamentar}}</a></td>
+							<td><a href="./#/senador?IdParlamentar={{::row.IdCadastro}}&Fornecedor={{fornecedor.CnpjCpf}}&Periodo=6&Agrupamento=6">{{::row.VlrLiquido}}</a></td>
 						</tr>
 					</table>
 					<table class="table table-striped table-hover" data-ng-show="SenadoresMaioresGastos.length===0">
