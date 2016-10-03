@@ -88,7 +88,9 @@ var OPS = function ($) {
 
 var app;
 (function (angular, $) {
-	app = angular.module('app', ['ngRoute', 'ui.bootstrap', 'ngTable', 'ngResource', 'ngSanitize', 'ngCookies', 'ui.router', 'angularUtils.directives.dirDisqus']);
+	'use strict';
+
+	app = angular.module('app', ['ngRoute', 'ngTable', 'ngResource', 'ngSanitize', 'ngCookies', 'angularUtils.directives.dirDisqus']);
 
 	app.config(['$provide', '$routeProvider', '$httpProvider', '$interpolateProvider', '$compileProvider', '$locationProvider',
 		function ($provide, $routeProvider, $httpProvider, $interpolateProvider, $compileProvider, $locationProvider) {
@@ -99,7 +101,7 @@ var app;
 				.when("/", { templateUrl: "app/inicio" })
 				.when("/sobre", { templateUrl: "app/sobre" })
 				.when("/deputado-federal/documento/:id", { templateUrl: "app/auditoria/deputado-federal-documento" })
-				.when("/deputado-federal/secretario/:id", { templateUrl: "app/auditoria/deputado-federal-secretario-detalhes" })
+				.when("/deputado-federal/:id/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-detalhes" })
 				.when("/deputado-federal/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-lista" })
 				.when("/deputado-federal/:id", { templateUrl: "app/auditoria/deputado-federal-detalhes" })
 				.when("/deputado-federal", { templateUrl: "app/auditoria/deputado-federal-lista" })
@@ -117,13 +119,29 @@ var app;
 			$locationProvider.html5Mode(true);
 		}]);
 
-	app.run(['$rootScope', '$http', '$location', '$templateCache', function ($rootScope, $http, $location, $templateCache) {
-		$http.get('app/inicio', { cache: $templateCache });
+	app.run(['$rootScope', '$http', '$location', '$templateCache', '$route',
+		function ($rootScope, $http, $location, $templateCache, $route) {
+			$http.get('app/inicio', { cache: $templateCache });
 
-		$rootScope.$on('$locationChangeSuccess', function (event) {
-			ga('send', 'pageview', { 'page': $location.path() });
-		});
-	}]);
+			// https://www.consolelog.io/angularjs-change-path-without-reloading
+			var original = $location.path;
+			$location.path = function (path, reload) {
+				if (reload === false) {
+					var lastRoute = $route.current;
+					var un = $rootScope.$on('$locationChangeSuccess', function () {
+						$route.current = lastRoute;
+						un();
+					});
+				}
+				return original.apply($location, [path]);
+			};
+
+			$rootScope.$on('$locationChangeSuccess', function (event) {
+				setTimeout(function () {
+					ga('send', 'pageview', { 'page': $location.path() });
+				}, 1000);
+			});
+		}]);
 
 	app.factory('$api', ['$http', '$rootScope', '$cacheFactory', '$q', function ($http, $rootScope, $cacheFactory, $q) {
 		//URL's que estão salvas em cache
@@ -233,100 +251,8 @@ var app;
 		};
 	}]);
 
-	app.factory('$box', ['$rootScope', '$modal', 'toastr', function ($rootScope, $modal, toastr) {
-
-		//https://github.com/Foxandxss/angular-toastr
-		var _toastr = function (title, message, type) {
-			return toastr[type](message, title);
-		};
-
-		//http://t4t5.github.io/sweetalert/
-		var _swal = function (title, message, type) {
-			window.swal(title, message, type);
-		}
-
-		return {
-			error: function (title, message) {
-				_swal(title, message, 'error');
-			},
-			info: function (title, message) {
-				_swal(title, message, 'info');
-			},
-			success: function (title, message) {
-				_toastr(title, message, 'success');
-			},
-			warning: function (title, message) {
-				_toastr(title, message, 'warning');
-			},
-			confirm: function (title, text, callback) {
-				$rootScope.$evalAsync(function () {
-					swal({
-						title: title,
-						text: text,
-						type: "warning",
-						showCancelButton: true,
-						confirmButtonColor: "#DD6B55",
-						confirmButtonText: "Sim",
-						cancelButtonText: "Não",
-						closeOnConfirm: false
-					}, function () {
-						try {
-							callback();
-						} catch (e) {
-							alert(e.Message);
-						}
-						swal.close();
-					});
-				});
-			},
-			warningCallBack: function (title, text, callback) {
-				$rootScope.$evalAsync(function () {
-					swal({
-						title: title,
-						text: text,
-						type: "warning",
-						showCancelButton: false,
-						confirmButtonColor: "#DD6B55",
-						confirmButtonText: "Ok",
-						closeOnConfirm: false
-					}, function () {
-						try {
-							callback();
-						} catch (e) {
-							alert(e.Message);
-						}
-						swal.close();
-					});
-				});
-			},
-			modal: function (controller, templateUrl, $modalParameters, closeCallback, cancelCallback, size) {
-
-				var modalInstance = $modal.open({
-					templateUrl: './partials/' + templateUrl,
-					controller: controller,
-					size: size || 'lg',
-					backdrop: false,
-					resolve: {
-						$modalParameters: function () {
-							return $modalParameters;
-						}
-					}
-				});
-
-				modalInstance.result.then(closeCallback, cancelCallback);
-
-				//if (!window.ga) { return; }
-				//var base = $('base').attr('href').replace(/\/$/, "");
-
-				//window.ga('send', 'pageview', {
-				//    page: base + '/' + templateUrl
-				//});
-			}
-		};
-	}]);
-
-	app.factory('$tabela', ["$rootScope", "$resource", "NgTableParams", "$location", "$state", "$timeout",
-		function ($rootScope, $resource, NgTableParams, $location, $state, $timeout) {
+	app.factory('$tabela', ["$rootScope", "$resource", "NgTableParams", "$location", "$route", "$timeout",
+		function ($rootScope, $resource, NgTableParams, $location, $route, $timeout) {
 			//Controle da pagina atual
 			var location_path;
 			var params = { page: 1, count: 100 };
@@ -369,19 +295,16 @@ var app;
 							return _$resource.query(ngTableFilter)
 							.$promise
 							.then(function (data) {
-								if (location_path == $location.path()) { //page_load??
+
+								if (location_path == window.location.pathname) { //page_load??
 									//salvar a pesquisa atual na URL, para histórico e compartlhamento.
-									filter['sorting'] = sorting;
+									filter['sorting'] = sorting || undefined;
 									//filter['count'] = params.count();
 									if (params.page() > 1) {
 										filter['page'] = params.page();
 									}
 
-									$state.current.reloadOnSearch = false;
-									$location.search(OPS.objectToQueryString(filter));
-									$timeout(function () {
-										$state.current.reloadOnSearch = undefined;
-									});
+									$location.path($location.path(), false).search(filter);
 
 									// Esperar carregar o grid e levar para o grid, util quando paginando e filtrando.
 									setTimeout(function () {
@@ -394,7 +317,7 @@ var app;
 									$rootScope.ValorTotal = data.valor_total;
 								}
 
-								location_path = $location.path();
+								location_path = window.location.pathname;
 								$rootScope.countRequest--;
 								params.total(data.total_count);
 								return data.results;
@@ -538,31 +461,42 @@ function LoadPopoverAuditoria() {
 
 var _urq = _urq || [];
 function loadSiteMaster() {
-	_urq.push(['setGACode', 'UA-38537890-5']);
-	_urq.push(['setPerformInitialShorctutAnimation', false]);
-	_urq.push(['initSite', '9cf4c59a-d438-48b0-aa5e-e16f549b9c8c']);
+	setTimeout(function () {
+		_urq.push(['setGACode', 'UA-38537890-5']);
+		_urq.push(['setPerformInitialShorctutAnimation', false]);
+		_urq.push(['initSite', '9cf4c59a-d438-48b0-aa5e-e16f549b9c8c']);
 
-	(function () {
-		var ur = document.createElement('script'); ur.type = 'text/javascript'; ur.async = true;
-		ur.src = ('https:' == document.location.protocol ? 'https://cdn.userreport.com/userreport.js' : 'http://cdn.userreport.com/userreport.js');
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ur, s);
-	})();
+		(function () {
+			var ur = document.createElement('script'); ur.type = 'text/javascript'; ur.async = true;
+			ur.src = ('https:' == document.location.protocol ? 'https://cdn.userreport.com/userreport.js' : 'http://cdn.userreport.com/userreport.js');
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ur, s);
+		})();
 
-	var interval = setInterval(function () {
-		if ($('#crowd-shortcut').length == 1) {
-			clearInterval(interval);
+		var interval = setInterval(function () {
+			if ($('#crowd-shortcut').length == 1) {
+				clearInterval(interval);
 
-			$('#crowd-shortcut').parent().css('top', '54px');
-		}
-	}, 100);
+				$('#crowd-shortcut').parent().css('top', '54px');
+			}
+		}, 100);
 
-	$('#btnReportarErro').click(function () {
-		if ($('#crowd-shortcut').length > 0) {
-			_urq.push(['Feedback_Open', 'submit/bug']);
-		} else {
-			window.open('https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug')
-		}
-	});
+		$('#btnReportarErro').click(function () {
+			if ($('#crowd-shortcut').length > 0) {
+				_urq.push(['Feedback_Open', 'submit/bug']);
+			} else {
+				window.open('https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug')
+			}
+		});
+
+		/* Facebook */
+		(function (d, s, id) {
+			var js, fjs = d.getElementsByTagName(s)[0];
+			if (d.getElementById(id)) return;
+			js = d.createElement(s); js.id = id;
+			js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=1033624573364106";
+			fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));
+	}, 1000);
 }
 
 // https://github.com/felipefdl/cidades-estados-brasil-json/blob/master/Estados.json
@@ -645,7 +579,7 @@ try {
 	})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
 	ga('create', 'UA-38537890-4', 'auto');
-	ga('send', 'pageview');
+	//ga('send', 'pageview');
 } catch (e) { }
 
 /**

@@ -153,6 +153,7 @@
     <Compile Include="Dao\FornecedorDao.cs" />
     <Compile Include="Dao\ParametrosDao.cs" />
     <Compile Include="Dao\PartidoDao.cs" />
+    <Compile Include="Dao\SenadorDao.cs" />
     <Compile Include="Dao\UfDao.cs" />
     <Compile Include="Dao\UsuarioDao.cs" />
     <Compile Include="Models\Fornecedor.cs" />
@@ -179,12 +180,16 @@
     <Compile Include="WebApi\FornecedorController.cs" />
     <Compile Include="WebApi\IndicadoresController.cs" />
     <Compile Include="WebApi\PartidoController.cs" />
+    <Compile Include="WebApi\SenadorController.cs" />
     <Compile Include="WebApi\UfController.cs" />
     <Compile Include="WebApi\UsuarioController.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\images\patrocine.png" />
     <Content Include="Content\scripts\app\app.js" />
+    <Content Include="Content\scripts\app\controllers\senador-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
+    <Content Include="Content\scripts\app\controllers\senador-lista.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-lista.js" />
     <Content Include="Content\scripts\app\controllers\fiscalize-nota-fiscal.js" />
@@ -198,7 +203,6 @@
     <Content Include="Content\scripts\jquery\select2.min.js" />
     <Content Include="Content\scripts\misc\highcharts.js" />
     <Content Include="Content\scripts\ng\angular-cookies.js" />
-    <Content Include="Content\scripts\ng\angular-ui-router.min.js" />
     <Content Include="Content\scripts\ng\dirDiscus.js" />
     <Content Include="Content\styles\bootstrap.css" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.svg" />
@@ -215,12 +219,7 @@
     <None Include="Content\scripts\jquery\jquery-2.2.3.intellisense.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.js" />
-    <Content Include="Content\scripts\misc\modernizr.min.js" />
     <Content Include="Content\scripts\misc\respond.min.js" />
-    <Content Include="Content\scripts\ng\ui-bootstrap-tpls.js" />
-    <Content Include="Content\scripts\ng\ui-bootstrap-tpls.min.js" />
-    <Content Include="Content\scripts\ng\ui-bootstrap.js" />
-    <Content Include="Content\scripts\ng\ui-bootstrap.min.js" />
     <Content Include="Content\scripts\ng\angular-cookies.min.js" />
     <Content Include="Content\scripts\ng\angular-resource.js" />
     <Content Include="Content\scripts\ng\angular-resource.min.js" />
@@ -241,6 +240,7 @@
     <Content Include="Content\styles\ui-bootstrap-csp.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="SQL\161002 - Campeões de Gastos.sql" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>

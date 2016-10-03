@@ -2,15 +2,6 @@
 	<fieldset>
 		<legend>Nota Fiscal: {{::documento.Numero || documento.Id}}</legend>
 
-		<div class="form-group" data-ng-if="::documento.IdDocumento">
-			<div class="row">
-				<div class="col-xs-12 text-center">
-					<a class="btn btn-success" href="#" data-ng-href="http://www.camara.gov.br/cota-parlamentar/documentos/publ/{{documento.IdDeputado}}/{{documento.Ano}}/{{documento.IdDocumento}}.pdf" target="_blank">Visualizar nota fiscal na câmara&nbsp;<i class="glyphicon glyphicon-new-window"></i></a>
-					<a class="btn btn-default" href="#" data-ng-href="http://www.camara.gov.br/cota-parlamentar/analitico?nuDeputadoId={{documento.IdDeputado}}&dataInicio={{documento.Mes}}/{{documento.Ano}}&dataFim={{documento.Mes}}/{{documento.Ano}}&despesa=&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=" target="_blank">Visualizar outras notas fiscais no mês&nbsp;<i class="glyphicon glyphicon-new-window"></i></a>
-				</div>
-			</div>
-		</div>
-
 		<div class="form-group">
 			<div class="row">
 				<div class="col-md-8">
@@ -153,6 +144,21 @@
 							<span>Trecho da Viagem</span>
 						</div>
 						<span class="clearfix"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="form-group">
+			<div class="panel panel-default">
+				<div class="panel-heading">Dados na câmara</div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-xs-12 text-center">
+							<a data-ng-if="::documento.IdDocumento" class="btn btn-success" href="#" data-ng-href="{{documento.UrlDocumento}}" target="_blank">Nota/Recibo&nbsp;<i class="glyphicon glyphicon-download-alt"></i></a>
+							<a data-ng-if="::documento.IdDocumento" class="btn btn-default" href="#" data-ng-href="{{documento.UrlDetalhesDocumento}}" target="_blank">Detalhes da nota/recibo&nbsp;<i class="glyphicon glyphicon-plus"></i></a>
+							<a class="btn btn-default" href="#" data-ng-href="{{documento.UrlDemaisDocumentosMes}}" target="_blank">Demais Notas do mês&nbsp;<i class="glyphicon glyphicon-plus"></i></a>
+						</div>
 					</div>
 				</div>
 			</div>

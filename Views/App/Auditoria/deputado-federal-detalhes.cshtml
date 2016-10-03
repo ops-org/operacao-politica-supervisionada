@@ -20,17 +20,16 @@
 				</div>
 			</div>
 			<div class="col-xs-12 col-sm-4">
-				<a href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=6&Agrupamento=2" title="Clique para ver o detalhamento das despesas na legislatura atual">
-					<div class="box-item form-group alert alert-info text-center">
-						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalGastoCEAP"></div>
-						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
-						@*<div class="box-item-text "><small class="text-muted">2015 - 2018</small></div>*@
-					</div>
-				</a>
-				<a href="./#/deputado-federal/secretario/{{::deputado_federal.IdCadastro}}" title="Clique para ver a lista de secretários">
+				<a href="./#/deputado-federal/{{::deputado_federal.IdCadastro}}/secretario" title="Clique para ver a lista de secretários">
 					<div class="box-item form-group alert alert-info text-center">
 						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalSecretarios"></div>
 						<div class="box-item-text">Secretários parlamentares</div>
+					</div>
+				</a>
+				<a href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=0&Agrupamento=6">
+					<div class="box-item form-group alert alert-info text-center">
+						<div class="box-item-title" data-ng-bind="::deputado_federal.TotalGastoCEAP"></div>
+						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
 					</div>
 				</a>
 			</div>
@@ -56,10 +55,12 @@
 						</tr>
 						<tr ng-repeat="row in MaioresNotas">
 							<td><a data-ng-href="{{::row.CnpjCpf ? './#/fornecedor/'+row.CnpjCpf : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.CnpjCpf}">{{::row.NomeBeneficiario}}</a></td>
-							<td ><a href="./#/deputado-federal/documento/{{::row.Id}}">{{::row.VlrLiquido}}</a></td>
+							<td><a href="./#/deputado-federal/documento/{{::row.Id}}">{{::row.VlrLiquido}}</a></td>
 						</tr>
 					</table>
 				</div>
+
+				<a class="btn btn-default btn-sm pull-right" href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=0&Agrupamento=6">Ver todas as notas</a>
 			</fieldset>
 		</div>
 		<div class="col-xs-12 col-sm-6">
@@ -78,6 +79,8 @@
 						</tr>
 					</table>
 				</div>
+
+				<a class="btn btn-default btn-sm pull-right" href="./#/deputado-federal?IdParlamentar={{::deputado_federal.IdCadastro}}&Periodo=0&Agrupamento=3">Ver todos os fornecedores</a>
 			</fieldset>
 		</div>
 	</div>

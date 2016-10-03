@@ -391,7 +391,7 @@
 	<div class="row form-group">
 		<div class="col-xs-12 col-sm-6">
 			<fieldset>
-				<legend><a href="#" data-ng-href="./#/deputado-federal?Fornecedor={{fornecedor.CnpjCpf}}&Periodo=8&Agrupamento=6">Deputados Federais</a></legend>
+				<legend>Deputados Federais</legend>
 
 				<div class="table-responsive">
 					<table class="table table-striped table-hover" data-ng-hide="DeputadoFederalMaioresGastos.length===0">
@@ -410,11 +410,13 @@
 						</tr>
 					</table>
 				</div>
+
+				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#/deputado-federal?Fornecedor={{fornecedor.CnpjCpf}}&Periodo=8&Agrupamento=6">Ver todos os deputados</a>
 			</fieldset>
 		</div>
 		<div class="col-xs-12 col-sm-6">
 			<fieldset>
-				<legend><a href="#" data-ng-href="./#/senador?Fornecedor={{fornecedor.CnpjCpf}}&Periodo=6&Agrupamento=6">Senadores</a></legend>
+				<legend>Senadores</legend>
 
 				<div class="table-responsive">
 					<table class="table table-striped table-hover" data-ng-hide="SenadoresMaioresGastos.length===0">
@@ -433,6 +435,8 @@
 						</tr>
 					</table>
 				</div>
+
+				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#/senador?Fornecedor={{fornecedor.CnpjCpf}}&Periodo=6&Agrupamento=6">Ver todos os senadores</a>
 			</fieldset>
 		</div>
 	</div>

@@ -1,1 +1,88 @@
-﻿
+﻿<div class="container-fluid" data-ng-controller="SenadorVisualizarController">
+	<fieldset>
+		<legend>Senador</legend>
+		<div class="row box-deputado form-group">
+			<div class="col-xs-12 col-sm-8">
+				<div class="row deputado-header form-group">
+					<div class="form-group">
+						<div class="col-xs-12 col-md-4 col-lg-3 text-center">
+							<img class="img-thumbnail img-responsive img-parlamentar" src="./Content/Images/Parlamentares/SENADOR/{{::senador.IdCadastro}}.jpg" alt="{{::senador.NomeParlamentar}}" />
+						</div>
+						<div class="col-xs-12 col-md-8 col-lg-9 text-left">
+							<h3>Sen. {{::senador.NomeParlamentar}}</h3>
+							@*<p class="text-muted" data-ng-bind="::senador.Nome"></p>*@
+							<h4>{{::senador.SiglaPartido}} / {{::senador.SiglaUf}}</h4>
+							@*<p><a href="mailto:{{::senador.Email}}" data-ng-bind="::senador.Email"></a></p>*@
+							<p><a href="#" data-ng-href="{{::senador.Url}}" target="_blank" rel="nofollow">Perfil no Senado</a></p>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xs-12 col-sm-4">
+				<a href="./#/senador?IdParlamentar={{::senador.IdCadastro}}&Periodo=0&Agrupamento=6">
+					<div class="box-item form-group alert alert-info text-center">
+						<div class="box-item-title" data-ng-bind="::senador.TotalGastoCEAPS"></div>
+						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
+					</div>
+				</a>
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset class="form-group">
+		<legend>Comparativo de gastos mensais com a cota parlamentar</legend>
+
+		<div id="senadores-gastos-por-mes" class="form-group" style="padding-right: 10px"></div>
+	</fieldset>
+
+	<div class="row form-group">
+		<div class="col-xs-12 col-sm-6">
+			<fieldset>
+				<legend>Maiores Notas/Recibos</legend>
+
+				<div class="table-responsive">
+					<table class="table table-striped table-hover">
+						<tr>
+							<th style="width:80%">Beneficiário</th>
+							<th style="width:20%">Valor</th>
+						</tr>
+						<tr ng-repeat="row in MaioresNotas">
+							<td><a data-ng-href="{{::row.CnpjCpf ? './#/fornecedor/'+row.CnpjCpf : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.CnpjCpf}">{{::row.NomeBeneficiario}}</a></td>
+							<td>{{::row.VlrLiquido}}</td>
+						</tr>
+					</table>
+				</div>
+
+				<a class="btn btn-default btn-sm pull-right" href="./#/senador?IdParlamentar={{::senador.IdCadastro}}&Periodo=0&Agrupamento=6">Ver todas as notas</a>
+			</fieldset>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<fieldset>
+				<legend>Maiores fornecedores</legend>
+
+				<div class="table-responsive">
+					<table class="table table-striped table-hover">
+						<tr>
+							<th style="width:80%">Beneficiário</th>
+							<th style="width:20%">Valor</th>
+						</tr>
+						<tr ng-repeat="row in MaioresFornecedores">
+							<td><a data-ng-href="{{::row.CnpjCpf ? './#/fornecedor/'+row.CnpjCpf : 'javascript:void(0)'}}" data-ng-class="{'no-link':!row.CnpjCpf}">{{::row.NomeBeneficiario}}</a></td>
+							<td><a href="./#/senador?IdParlamentar={{::senador.IdCadastro}}&Fornecedor={{::row.CnpjCpf}}&Periodo=6&Agrupamento=6">{{::row.VlrLiquido}}</a></td>
+						</tr>
+					</table>
+				</div>
+
+				<a class="btn btn-default btn-sm pull-right" href="./#/senador?IdParlamentar={{::senador.IdCadastro}}&Periodo=0&Agrupamento=3">Ver todos os fornecedores</a>
+			</fieldset>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<dir-disqus config="disqusConfig"></dir-disqus>
+	</div>
+
+</div>
+
+

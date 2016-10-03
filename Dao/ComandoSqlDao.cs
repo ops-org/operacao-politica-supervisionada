@@ -58,68 +58,52 @@ namespace OPS.Dao
 		/// <returns></returns>
 		internal static object RecuperarCardsIndicadores()
 		{
-			var result = CacheHelper.Get<dynamic>("CampeoesDeGastos");
-
-			if (result == null)
+			using (Banco banco = new Banco())
 			{
-				using (Banco banco = new Banco())
+				var strSql = new StringBuilder();
+
+				strSql.Append("SELECT idParlamentar as Id, nomeParlamentar as NomeParlamentar, vlrTotal as ValorTotal, sgPartido as Partido, sgUf as Uf ");
+				strSql.Append("FROM deputado_campeao_gasto ");
+				strSql.Append("order by 3 desc; ");
+
+				strSql.Append("SELECT idParlamentar as Id, nomeParlamentar as NomeParlamentar, vlrTotal as ValorTotal, sgPartido as Partido, sgUf as Uf ");
+				strSql.Append("FROM senador_campeao_gasto ");
+				strSql.Append("order by 3 desc; ");
+
+				var lstDeputados = new List<dynamic>();
+				var lstSenadores = new List<dynamic>();
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
 				{
-					var strSql = new StringBuilder();
-					strSql.Append("SELECT l.ideCadastro as Id, p.txNomeParlamentar as NomeParlamentar, sum(l.vlrLiquido) as ValorTotal, p.Partido, p.Uf ");
-					strSql.Append("FROM lancamentos l ");
-					strSql.Append("INNER JOIN parlamentares p on p.ideCadastro = l.ideCadastro ");
-					strSql.Append("where l.AnoMes >= 201502 ");
-					strSql.Append("group by 1, 2 ");
-					strSql.Append("order by 3 desc ");
-					strSql.AppendLine("limit 4; ");
-
-					strSql.Append("SELECT l.CodigoParlamentar as Id, s.NomeParlamentar as NomeParlamentar, sum(l.Valor) as ValorTotal, s.SiglaPartido as Partido, s.siglaUf as Uf ");
-					strSql.Append("FROM lancamentos_senadores l ");
-					strSql.Append("INNER JOIN senadores s on s.CodigoParlamentar = l.CodigoParlamentar ");
-					strSql.Append("where l.AnoMes >= 201002 ");
-					strSql.Append("group by 1, 2 ");
-					strSql.Append("order by 3 desc ");
-					strSql.AppendLine("limit 4; ");
-
-					var lstDeputados = new List<dynamic>();
-					var lstSenadores = new List<dynamic>();
-					using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+					while (reader.Read())
 					{
-						while (reader.Read())
+						lstDeputados.Add(new
 						{
-							lstDeputados.Add(new
-							{
-								Id = reader[0].ToString(),
-								NomeParlamentar = reader[1].ToString(),
-								ValorTotal = "R$ " + Utils.FormataValor(reader[2]),
-								PartidoEstado = string.Format("{0} / {1}", reader[3], reader[4])
-							});
-						}
-
-						reader.NextResult();
-						while (reader.Read())
-						{
-							lstSenadores.Add(new
-							{
-								Id = reader[0].ToString(),
-								NomeParlamentar = reader[1].ToString(),
-								ValorTotal = "R$ " + Utils.FormataValor(reader[2]),
-								PartidoEstado = string.Format("{0} / {1}", reader[3], reader[4])
-							});
-						}
-
-						result = new
-						{
-							CamaraFederal = lstDeputados,
-							Senado = lstSenadores
-						};
+							Id = reader[0].ToString(),
+							NomeParlamentar = reader[1].ToString(),
+							ValorTotal = "R$ " + Utils.FormataValor(reader[2]),
+							PartidoEstado = string.Format("{0} / {1}", reader[3], reader[4])
+						});
 					}
 
-					CacheHelper.Add<dynamic>("CampeoesDeGastos", result);
+					reader.NextResult();
+					while (reader.Read())
+					{
+						lstSenadores.Add(new
+						{
+							Id = reader[0].ToString(),
+							NomeParlamentar = reader[1].ToString(),
+							ValorTotal = "R$ " + Utils.FormataValor(reader[2]),
+							PartidoEstado = string.Format("{0} / {1}", reader[3], reader[4])
+						});
+					}
+
+					return new
+					{
+						CamaraFederal = lstDeputados,
+						Senado = lstSenadores
+					};
 				}
 			}
-
-			return result;
 		}
 	}
 }
