@@ -243,4 +243,12 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-/Content/images/Parlamentares
+
+# Custom
+*.suo
+*/bin
+*/obj/
+*.pubxml
+/OPS/.vs/config
+/OPS/Content/images/Parlamentares
+
