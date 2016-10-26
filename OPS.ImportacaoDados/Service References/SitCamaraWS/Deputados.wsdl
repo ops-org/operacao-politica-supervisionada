@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:tns="http://www.camara.gov.br/SitCamaraWS/Deputados" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" targetNamespace="http://www.camara.gov.br/SitCamaraWS/Deputados" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.camara.gov.br/SitCamaraWS/Deputados">
+      <s:element name="ObterDeputados">
+        <s:complexType />
+      </s:element>
+      <s:element name="ObterDeputadosResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObterDeputadosResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterPartidosCD">
+        <s:complexType />
+      </s:element>
+      <s:element name="ObterPartidosCDResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObterPartidosCDResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterPartidosBlocoCD">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="idBloco" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="numLegislatura" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterPartidosBlocoCDResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObterPartidosBlocoCDResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterDetalhesDeputado">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ideCadastro" type="s:string" />
+            <s:element minOccurs="0" maxOccurs="1" name="numLegislatura" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterDetalhesDeputadoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObterDetalhesDeputadoResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterLideresBancadas">
+        <s:complexType />
+      </s:element>
+      <s:element name="ObterLideresBancadasResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObterLideresBancadasResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ObterIdCadastroOrcamento">
+        <s:complexType />
+      </s:element>
+      <s:element name="ObterIdCadastroOrcamentoResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ObterIdCadastroOrcamentoResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="ObterDeputadosSoapIn">
+    <wsdl:part name="parameters" element="tns:ObterDeputados" />
+  </wsdl:message>
+  <wsdl:message name="ObterDeputadosSoapOut">
+    <wsdl:part name="parameters" element="tns:ObterDeputadosResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosCDSoapIn">
+    <wsdl:part name="parameters" element="tns:ObterPartidosCD" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosCDSoapOut">
+    <wsdl:part name="parameters" element="tns:ObterPartidosCDResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosBlocoCDSoapIn">
+    <wsdl:part name="parameters" element="tns:ObterPartidosBlocoCD" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosBlocoCDSoapOut">
+    <wsdl:part name="parameters" element="tns:ObterPartidosBlocoCDResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObterDetalhesDeputadoSoapIn">
+    <wsdl:part name="parameters" element="tns:ObterDetalhesDeputado" />
+  </wsdl:message>
+  <wsdl:message name="ObterDetalhesDeputadoSoapOut">
+    <wsdl:part name="parameters" element="tns:ObterDetalhesDeputadoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObterLideresBancadasSoapIn">
+    <wsdl:part name="parameters" element="tns:ObterLideresBancadas" />
+  </wsdl:message>
+  <wsdl:message name="ObterLideresBancadasSoapOut">
+    <wsdl:part name="parameters" element="tns:ObterLideresBancadasResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObterIdCadastroOrcamentoSoapIn">
+    <wsdl:part name="parameters" element="tns:ObterIdCadastroOrcamento" />
+  </wsdl:message>
+  <wsdl:message name="ObterIdCadastroOrcamentoSoapOut">
+    <wsdl:part name="parameters" element="tns:ObterIdCadastroOrcamentoResponse" />
+  </wsdl:message>
+  <wsdl:message name="ObterDeputadosHttpGetIn" />
+  <wsdl:message name="ObterDeputadosHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosCDHttpGetIn" />
+  <wsdl:message name="ObterPartidosCDHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosBlocoCDHttpGetIn">
+    <wsdl:part name="idBloco" type="s:string" />
+    <wsdl:part name="numLegislatura" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosBlocoCDHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterDetalhesDeputadoHttpGetIn">
+    <wsdl:part name="ideCadastro" type="s:string" />
+    <wsdl:part name="numLegislatura" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="ObterDetalhesDeputadoHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterLideresBancadasHttpGetIn" />
+  <wsdl:message name="ObterLideresBancadasHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterIdCadastroOrcamentoHttpGetIn" />
+  <wsdl:message name="ObterIdCadastroOrcamentoHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterDeputadosHttpPostIn" />
+  <wsdl:message name="ObterDeputadosHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosCDHttpPostIn" />
+  <wsdl:message name="ObterPartidosCDHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosBlocoCDHttpPostIn">
+    <wsdl:part name="idBloco" type="s:string" />
+    <wsdl:part name="numLegislatura" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="ObterPartidosBlocoCDHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterDetalhesDeputadoHttpPostIn">
+    <wsdl:part name="ideCadastro" type="s:string" />
+    <wsdl:part name="numLegislatura" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="ObterDetalhesDeputadoHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterLideresBancadasHttpPostIn" />
+  <wsdl:message name="ObterLideresBancadasHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="ObterIdCadastroOrcamentoHttpPostIn" />
+  <wsdl:message name="ObterIdCadastroOrcamentoHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:portType name="DeputadosSoap">
+    <wsdl:operation name="ObterDeputados">
+      <wsdl:input message="tns:ObterDeputadosSoapIn" />
+      <wsdl:output message="tns:ObterDeputadosSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosCD">
+      <wsdl:input message="tns:ObterPartidosCDSoapIn" />
+      <wsdl:output message="tns:ObterPartidosCDSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosBlocoCD">
+      <wsdl:input message="tns:ObterPartidosBlocoCDSoapIn" />
+      <wsdl:output message="tns:ObterPartidosBlocoCDSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterDetalhesDeputado">
+      <wsdl:input message="tns:ObterDetalhesDeputadoSoapIn" />
+      <wsdl:output message="tns:ObterDetalhesDeputadoSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterLideresBancadas">
+      <wsdl:input message="tns:ObterLideresBancadasSoapIn" />
+      <wsdl:output message="tns:ObterLideresBancadasSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterIdCadastroOrcamento">
+      <wsdl:input message="tns:ObterIdCadastroOrcamentoSoapIn" />
+      <wsdl:output message="tns:ObterIdCadastroOrcamentoSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="DeputadosHttpGet">
+    <wsdl:operation name="ObterDeputados">
+      <wsdl:input message="tns:ObterDeputadosHttpGetIn" />
+      <wsdl:output message="tns:ObterDeputadosHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosCD">
+      <wsdl:input message="tns:ObterPartidosCDHttpGetIn" />
+      <wsdl:output message="tns:ObterPartidosCDHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosBlocoCD">
+      <wsdl:input message="tns:ObterPartidosBlocoCDHttpGetIn" />
+      <wsdl:output message="tns:ObterPartidosBlocoCDHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterDetalhesDeputado">
+      <wsdl:input message="tns:ObterDetalhesDeputadoHttpGetIn" />
+      <wsdl:output message="tns:ObterDetalhesDeputadoHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterLideresBancadas">
+      <wsdl:input message="tns:ObterLideresBancadasHttpGetIn" />
+      <wsdl:output message="tns:ObterLideresBancadasHttpGetOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterIdCadastroOrcamento">
+      <wsdl:input message="tns:ObterIdCadastroOrcamentoHttpGetIn" />
+      <wsdl:output message="tns:ObterIdCadastroOrcamentoHttpGetOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="DeputadosHttpPost">
+    <wsdl:operation name="ObterDeputados">
+      <wsdl:input message="tns:ObterDeputadosHttpPostIn" />
+      <wsdl:output message="tns:ObterDeputadosHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosCD">
+      <wsdl:input message="tns:ObterPartidosCDHttpPostIn" />
+      <wsdl:output message="tns:ObterPartidosCDHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosBlocoCD">
+      <wsdl:input message="tns:ObterPartidosBlocoCDHttpPostIn" />
+      <wsdl:output message="tns:ObterPartidosBlocoCDHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterDetalhesDeputado">
+      <wsdl:input message="tns:ObterDetalhesDeputadoHttpPostIn" />
+      <wsdl:output message="tns:ObterDetalhesDeputadoHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterLideresBancadas">
+      <wsdl:input message="tns:ObterLideresBancadasHttpPostIn" />
+      <wsdl:output message="tns:ObterLideresBancadasHttpPostOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ObterIdCadastroOrcamento">
+      <wsdl:input message="tns:ObterIdCadastroOrcamentoHttpPostIn" />
+      <wsdl:output message="tns:ObterIdCadastroOrcamentoHttpPostOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="DeputadosSoap" type="tns:DeputadosSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="ObterDeputados">
+      <soap:operation soapAction="http://www.camara.gov.br/SitCamaraWS/Deputados/ObterDeputados" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosCD">
+      <soap:operation soapAction="http://www.camara.gov.br/SitCamaraWS/Deputados/ObterPartidosCD" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosBlocoCD">
+      <soap:operation soapAction="http://www.camara.gov.br/SitCamaraWS/Deputados/ObterPartidosBlocoCD" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterDetalhesDeputado">
+      <soap:operation soapAction="http://www.camara.gov.br/SitCamaraWS/Deputados/ObterDetalhesDeputado" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterLideresBancadas">
+      <soap:operation soapAction="http://www.camara.gov.br/SitCamaraWS/Deputados/ObterLideresBancadas" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterIdCadastroOrcamento">
+      <soap:operation soapAction="http://www.camara.gov.br/SitCamaraWS/Deputados/ObterIdCadastroOrcamento" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DeputadosHttpGet" type="tns:DeputadosHttpGet">
+    <http:binding verb="GET" />
+    <wsdl:operation name="ObterDeputados">
+      <http:operation location="/ObterDeputados" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosCD">
+      <http:operation location="/ObterPartidosCD" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosBlocoCD">
+      <http:operation location="/ObterPartidosBlocoCD" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterDetalhesDeputado">
+      <http:operation location="/ObterDetalhesDeputado" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterLideresBancadas">
+      <http:operation location="/ObterLideresBancadas" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterIdCadastroOrcamento">
+      <http:operation location="/ObterIdCadastroOrcamento" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DeputadosHttpPost" type="tns:DeputadosHttpPost">
+    <http:binding verb="POST" />
+    <wsdl:operation name="ObterDeputados">
+      <http:operation location="/ObterDeputados" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosCD">
+      <http:operation location="/ObterPartidosCD" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterPartidosBlocoCD">
+      <http:operation location="/ObterPartidosBlocoCD" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterDetalhesDeputado">
+      <http:operation location="/ObterDetalhesDeputado" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterLideresBancadas">
+      <http:operation location="/ObterLideresBancadas" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ObterIdCadastroOrcamento">
+      <http:operation location="/ObterIdCadastroOrcamento" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Deputados">
+    <wsdl:port name="DeputadosSoap" binding="tns:DeputadosSoap">
+      <soap:address location="http://www.camara.leg.br/SitCamaraWS/Deputados.asmx" />
+    </wsdl:port>
+    <wsdl:port name="DeputadosHttpGet" binding="tns:DeputadosHttpGet">
+      <http:address location="http://www.camara.leg.br/SitCamaraWS/Deputados.asmx" />
+    </wsdl:port>
+    <wsdl:port name="DeputadosHttpPost" binding="tns:DeputadosHttpPost">
+      <http:address location="http://www.camara.leg.br/SitCamaraWS/Deputados.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
