@@ -1,17 +1,18 @@
 ﻿using MySql.Data.MySqlClient;
 using OPS.Core;
 using System.Collections.Generic;
+using System.Text;
 
 namespace OPS.Dao
 {
-	public class PartidoDao
+	public class EstadoDao
 	{
 		internal dynamic Consultar()
 		{
 			using (Banco banco = new Banco())
 			{
 				var lstRetorno = new List<dynamic>();
-				using (MySqlDataReader reader = banco.ExecuteReader("SELECT id, sigla, nome FROM partido order by nome;"))
+				using (MySqlDataReader reader = banco.ExecuteReader("SELECT id, sigla, nome FROM estado order by nome;"))
 				{
 					while (reader.Read())
 					{

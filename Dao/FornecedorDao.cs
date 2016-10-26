@@ -9,136 +9,163 @@ namespace OPS.Dao
 {
 	public class FornecedorDao
 	{
-		internal dynamic Pesquisa(FiltroDropDownDTO filtro)
+		//internal dynamic Pesquisa(FiltroDropDownDTO filtro)
+		//{
+		//	using (Banco banco = new Banco())
+		//	{
+		//		var strSql = new StringBuilder();
+		//		strSql.Append("SELECT SQL_CALC_FOUND_ROWS txtCNPJCPF, txtBeneficiario FROM fornecedores ");
+
+		//		if (!string.IsNullOrEmpty(filtro.q))
+		//		{
+		//			strSql.AppendFormat("WHERE txtBeneficiario LIKE @q OR txtCNPJCPF LIKE @q ", filtro.q);
+		//			banco.AddParameter("@q", "%" + filtro.q + "%");
+		//		}
+		//		else if (!string.IsNullOrEmpty(filtro.qs))
+		//		{
+		//			strSql.AppendFormat("WHERE txtCNPJCPF IN({0}) ", "'" + filtro.qs.Replace(",", "','") + "'");
+		//		}
+
+		//		strSql.AppendFormat("ORDER BY txtBeneficiario, Uf ");
+		//		strSql.AppendFormat("LIMIT {0},{1}; ", ((filtro.page ?? 1) - 1) * filtro.count, filtro.count);
+
+		//		strSql.Append("SELECT FOUND_ROWS(); ");
+
+		//		var lstRetorno = new List<dynamic>();
+		//		using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+		//		{
+		//			while (reader.Read())
+		//			{
+		//				lstRetorno.Add(new
+		//				{
+		//					id = reader[0].ToString(),
+		//					text = string.Format("{0} ({1})", reader[1].ToString(), reader[0].ToString()),
+		//				});
+		//			}
+
+		//			reader.NextResult();
+		//			reader.Read();
+
+		//			return new
+		//			{
+		//				total_count = reader[0],
+		//				results = lstRetorno
+		//			};
+		//		}
+		//	}
+		//}
+
+		internal dynamic Consulta(int id)
 		{
 			using (Banco banco = new Banco())
 			{
-				var strSql = new StringBuilder();
-				strSql.Append("SELECT SQL_CALC_FOUND_ROWS txtCNPJCPF, txtBeneficiario FROM fornecedores ");
+				banco.AddParameter("id", id);
 
-				if (!string.IsNullOrEmpty(filtro.q))
+				using (MySqlDataReader reader = banco.ExecuteReader(
+						@"SELECT 
+							pj.id as id_fornecedor
+							, pj.cnpj_cpf
+							, pj.nome
+							, pj.doador
+							, pji.data_de_abertura
+							, pji.nome_fantasia
+							, CONCAT(a.codigo,' - ',a.descricao) as atividade_principal
+							, CONCAT(nj.codigo,' - ',nj.descricao) as natureza_juridica
+							, pji.logradouro
+							, pji.numero
+							, pji.complemento
+							, pji.cep
+							, pji.bairro
+							, pji.municipio as cidade
+							, pji.estado
+							, pji.situacao_cadastral
+							, pji.data_da_situacao_cadastral
+							, pji.motivo_situacao_cadastral
+							, pji.situacao_especial
+							, pji.data_situacao_especial
+							, pji.endereco_eletronico
+							, pji.telefone
+							, pji.ente_federativo_responsavel
+							, pji.obtido_em
+							, pji.capital_social
+						FROM fornecedor pj
+						LEFT JOIN fornecedor_info pji on pji.id_fornecedor = pj.id
+						LEFT JOIN fornecedor_atividade a on a.id = pji.id_fornecedor_atividade_principal
+						LEFT JOIN fornecedor_natureza_juridica nj on nj.id = pji.id_fornecedor_natureza_juridica
+						WHERE pj.id = @id"
+					))
 				{
-					strSql.AppendFormat("WHERE txtBeneficiario LIKE @q OR txtCNPJCPF LIKE @q ", filtro.q);
-					banco.AddParameter("@q", "%" + filtro.q + "%");
-				}
-				else if (!string.IsNullOrEmpty(filtro.qs))
-				{
-					strSql.AppendFormat("WHERE txtCNPJCPF IN({0}) ", "'" + filtro.qs.Replace(",", "','") + "'");
-				}
-
-				strSql.AppendFormat("ORDER BY txtBeneficiario, Uf ");
-				strSql.AppendFormat("LIMIT {0},{1}; ", ((filtro.page ?? 1) - 1) * filtro.count, filtro.count);
-
-				strSql.Append("SELECT FOUND_ROWS(); ");
-
-				var lstRetorno = new List<dynamic>();
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
-				{
-					while (reader.Read())
-					{
-						lstRetorno.Add(new
-						{
-							id = reader[0].ToString(),
-							text = string.Format("{0} ({1})", reader[1].ToString(), reader[0].ToString()),
-						});
-					}
-
-					reader.NextResult();
-					reader.Read();
-
-					return new
-					{
-						total_count = reader[0],
-						results = lstRetorno
-					};
-				}
-			}
-		}
-
-		internal Fornecedor Consulta(string cnpj)
-		{
-			using (Banco banco = new Banco())
-			{
-				banco.AddParameter("Cnpj", cnpj);
-
-				using (MySqlDataReader reader = banco.ExecuteReader("SELECT * FROM fornecedores WHERE txtCNPJCPF = @Cnpj"))
-				{
-					var fornecedor = new Fornecedor();
 					if (reader.Read())
 					{
-						fornecedor.CnpjCpf = reader["txtCNPJCPF"].ToString();
-						fornecedor.DataAbertura = Utils.FormataData(reader["DataAbertura"]);
-						fornecedor.RazaoSocial = reader["txtBeneficiario"].ToString();
-						fornecedor.NomeFantasia = reader["NomeFantasia"].ToString();
-						fornecedor.AtividadePrincipal = reader["AtividadePrincipal"].ToString();
-						fornecedor.NaturezaJuridica = reader["NaturezaJuridica"].ToString();
-						fornecedor.Logradouro = reader["Logradouro"].ToString();
-						fornecedor.Numero = reader["Numero"].ToString();
-						fornecedor.Complemento = reader["Complemento"].ToString();
-						fornecedor.Cep = reader["Cep"].ToString();
-						fornecedor.Bairro = reader["Bairro"].ToString();
-						fornecedor.Cidade = reader["Cidade"].ToString();
-						fornecedor.Uf = reader["Uf"].ToString();
-						fornecedor.Situacao = reader["Situacao"].ToString();
-						fornecedor.DataSituacao = reader["DataSituacao"].ToString();
-						fornecedor.MotivoSituacao = reader["MotivoSituacao"].ToString();
-						fornecedor.SituacaoEspecial = reader["SituacaoEspecial"].ToString();
-						fornecedor.Email = reader["Email"].ToString();
-						fornecedor.Telefone = reader["Telefone"].ToString();
-						fornecedor.EnteFederativoResponsavel = reader["EnteFederativoResponsavel"].ToString();
-						fornecedor.Doador = !Convert.IsDBNull(reader["Doador"]) ? Convert.ToBoolean(reader["Doador"]) : false;
-						fornecedor.DataSituacaoEspecial = reader["DataSituacaoEspecial"].ToString();
-						fornecedor.DataInclusao = Utils.FormataDataHora(reader["DataInclusao"]);
-						fornecedor.CapitalSocial = reader["CapitalSocial"].ToString();
-
-						var lstAtividadeSecundaria = new List<string>();
-						for (int i = 1; i <= 20; i++)
+						return new
 						{
-							if (!string.IsNullOrEmpty(reader["AtividadeSecundaria" + i.ToString("00")].ToString()))
-							{
-								lstAtividadeSecundaria.Add(reader["AtividadeSecundaria" + i.ToString("00")].ToString());
-							}
-						}
-						fornecedor.AtividadeSecundaria = string.Join("<br/>", lstAtividadeSecundaria);
+							id_fornecedor = reader["id_fornecedor"].ToString(),
+							cnpj_cpf = reader["cnpj_cpf"].ToString(),
+							data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
+							nome = reader["nome"].ToString(),
+							nome_fantasia = reader["nome_fantasia"].ToString(),
+							atividade_principal = reader["atividade_principal"].ToString(),
+							natureza_juridica = reader["natureza_juridica"].ToString(),
+							logradouro = reader["logradouro"].ToString(),
+							numero = reader["numero"].ToString(),
+							complemento = reader["complemento"].ToString(),
+							cep = reader["cep"].ToString(),
+							bairro = reader["bairro"].ToString(),
+							cidade = reader["cidade"].ToString(),
+							estado = reader["estado"].ToString(),
+							situacao_cadastral = reader["situacao_cadastral"].ToString(),
+							data_da_situacao_cadastral = reader["data_da_situacao_cadastral"].ToString(),
+							motivo_situacao_cadastral = reader["motivo_situacao_cadastral"].ToString(),
+							situacao_especial = reader["situacao_especial"].ToString(),
+							data_situacao_especial = reader["data_situacao_especial"].ToString(),
+							endereco_eletronico = reader["endereco_eletronico"].ToString(),
+							telefone = reader["telefone"].ToString(),
+							ente_federativo_responsavel = reader["ente_federativo_responsavel"].ToString(),
+							obtido_em = Utils.FormataDataHora(reader["obtido_em"]),
+							capital_social = Utils.FormataValor(reader["capital_social"]),
+							doador = reader["doador"]
+						};
 					}
 
-					return fornecedor;
+					return null; ;
 				}
 			}
 		}
 
-		internal List<FornecedorQuadroSocietario> QuadroSocietario(string cnpj)
+		internal dynamic QuadroSocietario(int id)
 		{
 			try
 			{
-				var lstFornecedorQuadroSocietario = new List<FornecedorQuadroSocietario>();
-
 				using (Banco banco = new Banco())
 				{
-					banco.AddParameter("Cnpj", cnpj);
+					string strSql =
+						@"SELECT
+							fs.nome
+							, fsq1.descricao as qualificacao
+							, fs.nome_representante as nome_representante_legal
+							, fsq2.descricao as qualificacao_representante_legal
+						FROM fornecedor_socio fs
+						LEFT JOIN fornecedor_socio_qualificacao fsq1 on fsq1.id = fs.id_fornecedor_socio_qualificacao
+						LEFT JOIN fornecedor_socio_qualificacao fsq2 on fsq2.id = fs.id_fornecedor_socio_representante_qualificacao
+						where fs.id_fornecedor = @id";
 
-					using (MySqlDataReader reader = banco.ExecuteReader("SELECT * FROM FornecedorQuadroSocietario WHERE txtCNPJCPF = @Cnpj"))
+					banco.AddParameter("id", id);
+
+					using (MySqlDataReader reader = banco.ExecuteReader(strSql))
 					{
+						List<dynamic> lstRetorno = new List<dynamic>();
 						while (reader.Read())
 						{
-							var fornecedorQuadroSocietario = new FornecedorQuadroSocietario();
-
-							try { fornecedorQuadroSocietario.Nome = Convert.ToString(reader["Nome"]); }
-							catch { fornecedorQuadroSocietario.Nome = ""; }
-
-							try { fornecedorQuadroSocietario.Qualificacao = Convert.ToString(reader["Qualificacao"]); }
-							catch { fornecedorQuadroSocietario.Qualificacao = ""; }
-
-							try { fornecedorQuadroSocietario.NomeRepresentanteLegal = Convert.ToString(reader["NomeRepresentanteLegal"]); }
-							catch { fornecedorQuadroSocietario.NomeRepresentanteLegal = ""; }
-
-							try { fornecedorQuadroSocietario.QualificacaoRepresentanteLegal = Convert.ToString(reader["QualificacaoRepresentanteLegal"]); }
-							catch { fornecedorQuadroSocietario.QualificacaoRepresentanteLegal = ""; }
-
-							lstFornecedorQuadroSocietario.Add(fornecedorQuadroSocietario);
+							lstRetorno.Add(new
+							{
+								nome = reader["nome"].ToString(),
+								qualificacao = reader["qualificacao"].ToString(),
+								nome_representante_legal = reader["nome_representante_legal"].ToString(),
+								qualificacao_representante_legal = reader["qualificacao_representante_legal"].ToString()
+							});
 						}
 
-						return lstFornecedorQuadroSocietario;
+						return lstRetorno;
 					}
 				}
 			}
@@ -148,161 +175,39 @@ namespace OPS.Dao
 			return null;
 		}
 
-		public Boolean AtualizaDados(Fornecedor fornecedor)
+		internal dynamic SenadoresMaioresGastos(int id)
 		{
 			using (Banco banco = new Banco())
 			{
-				banco.AddParameter("DataAbertura", fornecedor.DataAbertura);
-				banco.AddParameter("RazaoSocial", fornecedor.RazaoSocial);
-				banco.AddParameter("NomeFantasia", fornecedor.NomeFantasia);
-				banco.AddParameter("AtividadePrincipal", fornecedor.AtividadePrincipal);
-				banco.AddParameter("NaturezaJuridica", fornecedor.NaturezaJuridica);
-				banco.AddParameter("Logradouro", fornecedor.Logradouro);
-				banco.AddParameter("Numero", fornecedor.Numero);
-				banco.AddParameter("Complemento", fornecedor.Complemento);
-				banco.AddParameter("Cep", fornecedor.Cep);
-				banco.AddParameter("Bairro", fornecedor.Bairro);
-				banco.AddParameter("Cidade", fornecedor.Cidade);
-				banco.AddParameter("Uf", fornecedor.Uf);
-				banco.AddParameter("Situacao", fornecedor.Situacao);
-				banco.AddParameter("DataSituacao", fornecedor.DataSituacao);
-				banco.AddParameter("MotivoSituacao", fornecedor.MotivoSituacao);
-				banco.AddParameter("SituacaoEspecial", fornecedor.SituacaoEspecial);
-				banco.AddParameter("DataSituacaoEspecial", fornecedor.DataSituacaoEspecial);
+				var strSql =
+					@"SELECT
+						l1.id_sf_senador
+						, p.nome as nome_parlamentar
+						, l1.valor_total
+					FROM (
+						select 
+							SUM(l.valor) AS valor_total
+							, l.id_sf_senador
+						from sf_despesa l
+						WHERE l.id_fornecedor = @id
+						GROUP BY l.id_sf_senador
+						ORDER BY valor_total desc
+						LIMIT 10
+					) l1
+					LEFT JOIN sf_senador p ON p.id = l1.id_sf_senador";
 
-				banco.AddParameter("Email", fornecedor.Email);
-				banco.AddParameter("Telefone", fornecedor.Telefone);
-				banco.AddParameter("EnteFederativoResponsavel", fornecedor.EnteFederativoResponsavel);
+				banco.AddParameter("@id", id);
 
-				banco.AddParameter("AtividadeSecundaria01", fornecedor.AtividadeSecundaria01);
-				banco.AddParameter("AtividadeSecundaria02", fornecedor.AtividadeSecundaria02);
-				banco.AddParameter("AtividadeSecundaria03", fornecedor.AtividadeSecundaria03);
-				banco.AddParameter("AtividadeSecundaria04", fornecedor.AtividadeSecundaria04);
-				banco.AddParameter("AtividadeSecundaria05", fornecedor.AtividadeSecundaria05);
-				banco.AddParameter("AtividadeSecundaria06", fornecedor.AtividadeSecundaria06);
-				banco.AddParameter("AtividadeSecundaria07", fornecedor.AtividadeSecundaria07);
-				banco.AddParameter("AtividadeSecundaria08", fornecedor.AtividadeSecundaria08);
-				banco.AddParameter("AtividadeSecundaria09", fornecedor.AtividadeSecundaria09);
-				banco.AddParameter("AtividadeSecundaria10", fornecedor.AtividadeSecundaria10);
-				banco.AddParameter("AtividadeSecundaria11", fornecedor.AtividadeSecundaria11);
-				banco.AddParameter("AtividadeSecundaria12", fornecedor.AtividadeSecundaria12);
-				banco.AddParameter("AtividadeSecundaria13", fornecedor.AtividadeSecundaria13);
-				banco.AddParameter("AtividadeSecundaria14", fornecedor.AtividadeSecundaria14);
-				banco.AddParameter("AtividadeSecundaria15", fornecedor.AtividadeSecundaria15);
-				banco.AddParameter("AtividadeSecundaria16", fornecedor.AtividadeSecundaria16);
-				banco.AddParameter("AtividadeSecundaria17", fornecedor.AtividadeSecundaria17);
-				banco.AddParameter("AtividadeSecundaria18", fornecedor.AtividadeSecundaria18);
-				banco.AddParameter("AtividadeSecundaria19", fornecedor.AtividadeSecundaria19);
-				banco.AddParameter("AtividadeSecundaria20", fornecedor.AtividadeSecundaria20);
-				banco.AddParameter("CapitalSocial", fornecedor.CapitalSocial);
-				banco.AddParameter("UsuarioInclusao", fornecedor.UsuarioInclusao);
-				banco.AddParameter("Cnpj", fornecedor.CnpjCpf);
-
-				System.Text.StringBuilder sql = new System.Text.StringBuilder();
-
-				sql.Append("UPDATE fornecedores");
-				sql.Append("   SET txtBeneficiario       = @RazaoSocial,");
-				sql.Append("       NomeFantasia          = @NomeFantasia,");
-				sql.Append("       AtividadePrincipal    = @AtividadePrincipal,");
-				sql.Append("       NaturezaJuridica      = @NaturezaJuridica,");
-				sql.Append("       Logradouro            = @Logradouro,");
-				sql.Append("       Numero                = @Numero,");
-				sql.Append("       Complemento           = @Complemento,");
-				sql.Append("       Cep                   = @Cep,");
-				sql.Append("       Bairro                = @Bairro,");
-				sql.Append("       Cidade                = @Cidade,");
-				sql.Append("       Uf                    = @Uf,");
-				sql.Append("       Situacao              = @Situacao,");
-				sql.Append("       DataSituacao          = @DataSituacao,");
-				sql.Append("       MotivoSituacao        = @MotivoSituacao,");
-				sql.Append("       SituacaoEspecial      = @SituacaoEspecial,");
-				sql.Append("       DataSituacaoEspecial  = @DataSituacaoEspecial,");
-				sql.Append("       DataAbertura          = @DataAbertura,");
-
-				sql.Append("       Email                = @Email,");
-				sql.Append("       Telefone             = @Telefone,");
-				sql.Append("       EnteFederativoResponsavel = @EnteFederativoResponsavel,");
-
-				sql.Append("       AtividadeSecundaria01 = @AtividadeSecundaria01,");
-				sql.Append("       AtividadeSecundaria02 = @AtividadeSecundaria02,");
-				sql.Append("       AtividadeSecundaria03 = @AtividadeSecundaria03,");
-				sql.Append("       AtividadeSecundaria04 = @AtividadeSecundaria04,");
-				sql.Append("       AtividadeSecundaria05 = @AtividadeSecundaria05,");
-				sql.Append("       AtividadeSecundaria05 = @AtividadeSecundaria06,");
-				sql.Append("       AtividadeSecundaria07 = @AtividadeSecundaria07,");
-				sql.Append("       AtividadeSecundaria08 = @AtividadeSecundaria08,");
-				sql.Append("       AtividadeSecundaria09 = @AtividadeSecundaria09,");
-				sql.Append("       AtividadeSecundaria10 = @AtividadeSecundaria10,");
-				sql.Append("       AtividadeSecundaria11 = @AtividadeSecundaria11,");
-				sql.Append("       AtividadeSecundaria12 = @AtividadeSecundaria12,");
-				sql.Append("       AtividadeSecundaria13 = @AtividadeSecundaria13,");
-				sql.Append("       AtividadeSecundaria14 = @AtividadeSecundaria14,");
-				sql.Append("       AtividadeSecundaria15 = @AtividadeSecundaria15,");
-				sql.Append("       AtividadeSecundaria15 = @AtividadeSecundaria16,");
-				sql.Append("       AtividadeSecundaria17 = @AtividadeSecundaria17,");
-				sql.Append("       AtividadeSecundaria18 = @AtividadeSecundaria18,");
-				sql.Append("       AtividadeSecundaria19 = @AtividadeSecundaria19,");
-				sql.Append("       AtividadeSecundaria20 = @AtividadeSecundaria20,");
-				sql.Append("       CapitalSocial         = @CapitalSocial,");
-				sql.Append("       UsuarioInclusao       = @UsuarioInclusao,");
-				sql.Append("       DataInclusao          = NOW()");
-				sql.Append(" WHERE txtCNPJCPF            = @Cnpj");
-
-				if (banco.ExecuteNonQuery(sql.ToString()) == false)
-				{
-					return false;
-				}
-
-				if (fornecedor.lstFornecedorQuadroSocietario != null)
-				{
-					banco.AddParameter("txtCNPJCPF", fornecedor.CnpjCpf);
-					banco.ExecuteScalar("DELETE FROM fornecedorquadrosocietario WHERE txtCNPJCPF = @txtCNPJCPF");
-
-					foreach (var qas in fornecedor.lstFornecedorQuadroSocietario)
-					{
-						banco.AddParameter("txtCNPJCPF", fornecedor.CnpjCpf);
-						banco.AddParameter("Nome", qas.Nome);
-						banco.AddParameter("Qualificacao", qas.Qualificacao);
-						banco.AddParameter("NomeRepresentanteLegal", qas.NomeRepresentanteLegal);
-						banco.AddParameter("QualificacaoRepresentanteLegal", qas.QualificacaoRepresentanteLegal);
-
-						banco.ExecuteNonQuery(
-							"INSERT fornecedorquadrosocietario (txtCNPJCPF, Nome, Qualificacao, NomeRepresentanteLegal, QualificacaoRepresentanteLegal) VALUES " +
-							"(@txtCNPJCPF, @Nome, @Qualificacao, @NomeRepresentanteLegal, @QualificacaoRepresentanteLegal)");
-					}
-				}
-			}
-
-			return true;
-		}
-
-		internal dynamic SenadoresMaioresGastos(string value)
-		{
-			using (Banco banco = new Banco())
-			{
-				var strSql = new StringBuilder();
-				strSql.Append("SELECT");
-				strSql.Append(" SUM(l.Valor) AS VlrLiquido");
-				strSql.Append(", l.CodigoParlamentar AS IdCadastro");
-				strSql.Append(", p.NomeParlamentar");
-				strSql.Append(" FROM lancamentos_senadores l ");
-				strSql.Append(" LEFT JOIN senadores p ON p.CodigoParlamentar = l.CodigoParlamentar");
-				strSql.Append(" WHERE l.CnpjCpf = @value");
-				strSql.Append(" GROUP BY IdCadastro, NomeParlamentar");
-				strSql.Append(" ORDER BY VlrLiquido desc");
-				strSql.Append(" LIMIT 10");
-				banco.AddParameter("@value", value);
-
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql))
 				{
 					List<dynamic> lstRetorno = new List<dynamic>();
 					while (reader.Read())
 					{
 						lstRetorno.Add(new
 						{
-							IdCadastro = reader["IdCadastro"].ToString(),
-							NomeParlamentar = reader["NomeParlamentar"].ToString(),
-							VlrLiquido = Utils.FormataValor(reader["VlrLiquido"])
+							id_sf_senador = reader["id_sf_senador"].ToString(),
+							nome_parlamentar = reader["nome_parlamentar"].ToString(),
+							valor_total = Utils.FormataValor(reader["valor_total"])
 						});
 					}
 
@@ -311,22 +216,29 @@ namespace OPS.Dao
 			}
 		}
 
-		internal dynamic DeputadoFederalMaioresGastos(string value)
+		internal dynamic DeputadoFederalMaioresGastos(int id)
 		{
 			using (Banco banco = new Banco())
 			{
 				var strSql = new StringBuilder();
-				strSql.Append("SELECT");
-				strSql.Append(" SUM(l.VlrLiquido) AS VlrLiquido");
-				strSql.Append(", l.ideCadastro AS IdCadastro");
-				strSql.Append(", p.txNomeParlamentar as NomeParlamentar");
-				strSql.Append(" FROM lancamentos l ");
-				strSql.Append(" LEFT JOIN parlamentares p ON p.ideCadastro = l.ideCadastro");
-				strSql.Append(" WHERE l.txtCNPJCPF = @value");
-				strSql.Append(" GROUP BY IdCadastro, NomeParlamentar");
-				strSql.Append(" ORDER BY VlrLiquido desc");
-				strSql.Append(" LIMIT 10");
-				banco.AddParameter("@value", value);
+				strSql.Append(
+					@"SELECT
+						l1.id_cf_deputado
+						, p.nome_parlamentar
+						, l1.valor_total
+					FROM (
+						select 
+							SUM(l.valor_liquido) AS valor_total
+							, l.id_cf_deputado
+						from cf_despesa l
+						WHERE l.id_fornecedor = @id
+						GROUP BY l.id_cf_deputado
+						ORDER BY valor_total desc
+						LIMIT 10
+					) l1
+					LEFT JOIN cf_deputado p ON p.id = l1.id_cf_deputado");
+
+				banco.AddParameter("@id", id);
 
 				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
 				{
@@ -335,9 +247,9 @@ namespace OPS.Dao
 					{
 						lstRetorno.Add(new
 						{
-							IdCadastro = reader["IdCadastro"].ToString(),
-							NomeParlamentar = reader["NomeParlamentar"].ToString(),
-							VlrLiquido = Utils.FormataValor(reader["VlrLiquido"])
+							id_cf_deputado = reader["id_cf_deputado"].ToString(),
+							nome_parlamentar = reader["nome_parlamentar"].ToString(),
+							valor_total = Utils.FormataValor(reader["valor_total"])
 						});
 					}
 
@@ -346,17 +258,19 @@ namespace OPS.Dao
 			}
 		}
 
-		internal dynamic RecebimentosMensaisPorAno(string value)
+		internal dynamic RecebimentosMensaisPorAnoDeputados(int id)
 		{
 			using (Banco banco = new Banco())
 			{
-				var strSql = new StringBuilder();
-				strSql.Append("SELECT l.numAno, l.numMes, SUM(l.VlrLiquido) AS VlrTotal ");
-				strSql.Append("FROM lancamentos l ");
-				strSql.Append("WHERE l.txtCNPJCPF = @value ");
-				strSql.Append("group by l.numAno, l.numMes ");
-				strSql.Append("order by l.numAno, l.numMes ");
-				banco.AddParameter("@value", value);
+				string strSql = @"
+					SELECT l.mes, l.ano, SUM(l.valor_liquido) AS valor_total
+					FROM cf_despesa l
+					WHERE l.id_fornecedor = @id
+					group by l.ano, l.mes
+					order by l.ano, l.mes;
+				";
+
+				banco.AddParameter("@id", id);
 
 				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
 				{
@@ -367,7 +281,7 @@ namespace OPS.Dao
 
 					while (reader.Read())
 					{
-						if (reader[0].ToString() != anoControle)
+						if (reader["ano"].ToString() != anoControle)
 						{
 							if (existeGastoNoAno)
 							{
@@ -381,12 +295,12 @@ namespace OPS.Dao
 								existeGastoNoAno = false;
 							}
 
-							anoControle = reader[0].ToString();
+							anoControle = reader["ano"].ToString();
 						}
 
-						if (Convert.ToDecimal(reader[2]) > 0)
+						if (Convert.ToDecimal(reader["valor_total"]) > 0)
 						{
-							lstValoresMensais[Convert.ToInt32(reader[1]) - 1] = Convert.ToDecimal(reader[2]);
+							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
 							existeGastoNoAno = true;
 						}
 					}
@@ -401,25 +315,357 @@ namespace OPS.Dao
 
 
 					return lstRetorno;
-					// Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
 				}
 			}
 		}
 
-		public void MarcaVisitado(string Cnpj, string UserName)
+		internal dynamic RecebimentosMensaisPorAnoSenadores(int id)
 		{
 			using (Banco banco = new Banco())
 			{
-				banco.AddParameter("txtCNPJCPF", Cnpj);
-				banco.AddParameter("UserName", UserName);
+				string strSql = @"
+					SELECT l.mes, l.ano, SUM(l.valor) AS valor_total
+					FROM sf_despesa l
+					WHERE l.id_fornecedor = @id
+					group by l.ano, l.mes
+					order by l.ano, l.mes;
+				";
+
+				banco.AddParameter("@id", id);
+
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				{
+					List<dynamic> lstRetorno = new List<dynamic>();
+					var lstValoresMensais = new decimal?[12];
+					string anoControle = string.Empty;
+					bool existeGastoNoAno = false;
+
+					while (reader.Read())
+					{
+						if (reader["ano"].ToString() != anoControle)
+						{
+							if (existeGastoNoAno)
+							{
+								lstRetorno.Add(new
+								{
+									name = anoControle.ToString(),
+									data = lstValoresMensais
+								});
+
+								lstValoresMensais = new decimal?[12];
+								existeGastoNoAno = false;
+							}
+
+							anoControle = reader["ano"].ToString();
+						}
+
+						if (Convert.ToDecimal(reader["valor_total"]) > 0)
+						{
+							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
+							existeGastoNoAno = true;
+						}
+					}
+					if (existeGastoNoAno)
+					{
+						lstRetorno.Add(new
+						{
+							name = anoControle.ToString(),
+							data = lstValoresMensais
+						});
+					}
+
+
+					return lstRetorno;
+				}
+			}
+		}
+
+		public int AtualizaDados(Fornecedor fornecedor)
+		{
+			int id_fornecedor = 0;
+
+			using (Banco banco = new Banco())
+			{
+				bool fornecedor_existente = false;
+
+				string strSqlLocaliza = @"
+					SELECT f.id, fi.id_fornecedor
+					FROM fornecedor f
+					LEFT JOIN fornecedor_info fi on fi.id_fornecedor = f.id
+					where f.cnpj_cpf = @cnpj_cpf
+				";
+				banco.AddParameter("cnpj_cpf", fornecedor.CnpjCpf);
+
+				using (var dReader = banco.ExecuteReader(strSqlLocaliza))
+				{
+					if (dReader.Read())
+					{
+						id_fornecedor = Convert.ToInt32(dReader["id"]);
+						fornecedor_existente = !Convert.IsDBNull(dReader["id_fornecedor"]);
+					}
+					else
+					{
+						throw new Exception("Fornecedor inexistente.");
+					}
+				}
+
+				object id_fornecedor_atividade_principal;
+				object id_fornecedor_natureza_juridica;
 
 				try
 				{
-					banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
+					banco.AddParameter("codigo", fornecedor.AtividadePrincipal.Split(' ')[0]);
+					id_fornecedor_atividade_principal = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
 				}
-				catch { }
+				catch (Exception)
+				{
+					id_fornecedor_atividade_principal = DBNull.Value;
+				}
+
+				try
+				{
+					banco.AddParameter("codigo", fornecedor.NaturezaJuridica.Split(' ')[0]);
+					id_fornecedor_natureza_juridica = banco.ExecuteScalar("select id from fornecedor_natureza_juridica where codigo=@codigo");
+				}
+				catch (Exception)
+				{
+					id_fornecedor_natureza_juridica = DBNull.Value;
+				}
+
+				banco.AddParameter("nome", fornecedor.RazaoSocial);
+				banco.AddParameter("data_de_abertura", Utils.ParseDateTime(fornecedor.DataAbertura));
+				banco.AddParameter("nome_fantasia", fornecedor.NomeFantasia);
+				banco.AddParameter("id_fornecedor_atividade_principal", id_fornecedor_atividade_principal);
+				banco.AddParameter("id_fornecedor_natureza_juridica", id_fornecedor_natureza_juridica);
+				banco.AddParameter("logradouro", fornecedor.Logradouro);
+				banco.AddParameter("numero", fornecedor.Numero);
+				banco.AddParameter("complemento", fornecedor.Complemento);
+				banco.AddParameter("cep", fornecedor.Cep);
+				banco.AddParameter("bairro", fornecedor.Bairro);
+				banco.AddParameter("municipio", fornecedor.Cidade);
+				banco.AddParameter("estado", fornecedor.Uf);
+				banco.AddParameter("situacao_cadastral", fornecedor.Situacao);
+				banco.AddParameter("data_da_situacao_cadastral", Utils.ParseDateTime(fornecedor.DataSituacao));
+				banco.AddParameter("motivo_situacao_cadastral", fornecedor.MotivoSituacao);
+				banco.AddParameter("situacao_especial", fornecedor.SituacaoEspecial);
+				banco.AddParameter("data_situacao_especial", Utils.ParseDateTime(fornecedor.DataSituacaoEspecial));
+				banco.AddParameter("endereco_eletronico", fornecedor.Email);
+				banco.AddParameter("telefone", fornecedor.Telefone);
+				banco.AddParameter("ente_federativo_responsavel", fornecedor.EnteFederativoResponsavel);
+				banco.AddParameter("capital_social", ObterValor(fornecedor.CapitalSocial));
+				//banco.AddParameter("ip_colaborador", fornecedor.UsuarioInclusao);
+				banco.AddParameter("id_fornecedor", id_fornecedor);
+
+				string sql;
+				if (!fornecedor_existente)
+				{
+					banco.AddParameter("cnpj", fornecedor.CnpjCpf);
+
+					sql =
+						@"INSERT INTO fornecedor_info (
+							nome,
+							data_de_abertura,
+							nome_fantasia,
+							id_fornecedor_atividade_principal,
+							id_fornecedor_natureza_juridica,
+							logradouro,
+							numero,
+							complemento,
+							cep,
+							bairro,
+							municipio,
+							estado,
+							situacao_cadastral,
+							data_da_situacao_cadastral,
+							motivo_situacao_cadastral,
+							situacao_especial,
+							data_situacao_especial,
+							endereco_eletronico,
+							telefone,
+							ente_federativo_responsavel,
+							capital_social,
+							obtido_em,
+							id_fornecedor,
+							cnpj
+						) VALUES (
+							@nome,
+							@data_de_abertura,
+							@nome_fantasia,
+							@id_fornecedor_atividade_principal,
+							@id_fornecedor_natureza_juridica,
+							@logradouro,
+							@numero,
+							@complemento,
+							@cep,
+							@bairro,
+							@municipio,
+							@estado,
+							@situacao_cadastral,
+							@data_da_situacao_cadastral,
+							@motivo_situacao_cadastral,
+							@situacao_especial,
+							@data_situacao_especial,
+							@endereco_eletronico,
+							@telefone,
+							@ente_federativo_responsavel,
+							@capital_social,
+							NOW(),
+							@id_fornecedor,
+							@cnpj
+						)
+					";
+				}
+				else
+				{
+					sql =
+						@"UPDATE fornecedor_info SET
+							nome								= @nome,
+							data_de_abertura					= @data_de_abertura,
+							nome_fantasia						= @nome_fantasia,
+							id_fornecedor_atividade_principal	= @id_fornecedor_atividade_principal,
+							id_fornecedor_natureza_juridica		= @id_fornecedor_natureza_juridica,
+							logradouro							= @logradouro,
+							numero								= @numero,
+							complemento							= @complemento,
+							cep									= @cep,
+							bairro								= @bairro,
+							municipio							= @municipio,
+							estado								= @estado,
+							situacao_cadastral					= @situacao_cadastral,
+							data_da_situacao_cadastral			= @data_da_situacao_cadastral,
+							motivo_situacao_cadastral			= @motivo_situacao_cadastral,
+							situacao_especial					= @situacao_especial,
+							data_situacao_especial				= @data_situacao_especial,
+							endereco_eletronico					= @endereco_eletronico,
+							telefone							= @telefone,
+							ente_federativo_responsavel			= @ente_federativo_responsavel,
+							capital_social						= @capital_social,
+							obtido_em							= NOW()
+						WHERE id_fornecedor						= @id_fornecedor
+					";
+				}
+
+				banco.ExecuteNonQuery(sql.ToString());
+
+				banco.AddParameter("id_fornecedor", id_fornecedor);
+				banco.ExecuteScalar("DELETE FROM fornecedor_atividade_secundaria WHERE id_fornecedor = @id_fornecedor");
+
+				if (fornecedor.lstFornecedorQuadroSocietario != null)
+				{
+					foreach (var atividade in fornecedor.AtividadeSecundaria)
+					{
+						if (string.IsNullOrEmpty(atividade)) continue;
+
+						object id_fornecedor_atividade;
+
+						try
+						{
+							banco.AddParameter("codigo", atividade.Split(' ')[0]);
+							id_fornecedor_atividade = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
+						}
+						catch (Exception)
+						{
+							continue;
+						}
+
+						banco.AddParameter("id_fornecedor", id_fornecedor);
+						banco.AddParameter("id_fornecedor_atividade", id_fornecedor_atividade);
+
+						banco.ExecuteNonQuery(
+							@"INSERT fornecedor_atividade_secundaria (
+								id_fornecedor, 
+								id_fornecedor_atividade
+							) VALUES (
+								@id_fornecedor, 
+								@id_fornecedor_atividade
+							)");
+					}
+				}
+
+				banco.AddParameter("id_fornecedor", id_fornecedor);
+				banco.ExecuteScalar("DELETE FROM fornecedor_socio WHERE id_fornecedor = @id_fornecedor");
+
+				if (fornecedor.lstFornecedorQuadroSocietario != null)
+				{
+					foreach (var qas in fornecedor.lstFornecedorQuadroSocietario)
+					{
+						banco.AddParameter("id_fornecedor", id_fornecedor);
+						banco.AddParameter("nome", qas.Nome);
+
+						if (!string.IsNullOrEmpty(qas.Qualificacao))
+						{
+							banco.AddParameter("id_fornecedor_socio_qualificacao", Convert.ToInt32(qas.Qualificacao.Split('-')[0]));
+						}
+						else
+						{
+							banco.AddParameter("id_fornecedor_socio_qualificacao", DBNull.Value);
+						}
+
+						banco.AddParameter("nome_representante", qas.NomeRepresentanteLegal);
+
+						if (!string.IsNullOrEmpty(qas.QualificacaoRepresentanteLegal))
+						{
+							banco.AddParameter("id_fornecedor_socio_representante_qualificacao", Convert.ToInt32(qas.QualificacaoRepresentanteLegal.Split('-')[0]));
+						}
+						else
+						{
+							banco.AddParameter("id_fornecedor_socio_representante_qualificacao", DBNull.Value);
+						}
+
+						banco.ExecuteNonQuery(
+							@"INSERT fornecedor_socio (
+								id_fornecedor, 
+								nome, 
+								id_fornecedor_socio_qualificacao, 
+								nome_representante, 
+								id_fornecedor_socio_representante_qualificacao
+							) VALUES (
+								@id_fornecedor, 
+								@nome, 
+								@id_fornecedor_socio_qualificacao, 
+								@nome_representante, 
+								@id_fornecedor_socio_representante_qualificacao
+							)");
+					}
+				}
+			}
+
+			return id_fornecedor;
+		}
+
+		private object ObterValor(object d)
+		{
+			if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()))
+			{
+				return DBNull.Value;
+			}
+			else
+			{
+				try
+				{
+					return Convert.ToDecimal(d.ToString().Split(' ')[1]);
+				}
+				catch (Exception ex)
+				{
+					return DBNull.Value;
+				}
 			}
 		}
+
+		//public void MarcaVisitado(string Cnpj, string UserName)
+		//{
+		//	using (Banco banco = new Banco())
+		//	{
+		//		banco.AddParameter("txtCNPJCPF", Cnpj);
+		//		banco.AddParameter("UserName", UserName);
+
+		//		try
+		//		{
+		//			banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
+		//		}
+		//		catch { }
+		//	}
+		//}
 
 	}
 }

@@ -17,7 +17,7 @@ namespace OPS
 				.Include("~/Content/scripts/ng/angular-sanitize.min.js")
 				.Include("~/Content/scripts/ng/angular-resource.min.js")
 				.Include("~/Content/scripts/bootstrap/bootstrap.min.js")
-				.Include("~/Content/scripts/jquery/select2.min.js")
+				.Include("~/Content/scripts/bootstrap/bootstrap-select.min.js")
 				.Include("~/Content/scripts/misc/highcharts.js"));
 
 			// Vai unificar e minificar
@@ -31,8 +31,8 @@ namespace OPS
 			bundles.Add(new StyleBundle("~/Content/style/css")
 				.Include("~/Content/styles/bootstrap.css")
 				.Include("~/Content/styles/ng-table.css")
-				.Include("~/Content/styles/select2.css")
-				.Include("~/Content/styles/Site.css"));
+				.Include("~/Content/styles/bootstrap-select.css")
+				.Include("~/Content/styles/site.css"));
 
 			// Set EnableOptimizations to false for debugging. For more information,
 			// visit http://go.microsoft.com/fwlink/?LinkId=301862

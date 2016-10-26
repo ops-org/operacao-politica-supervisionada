@@ -32,6 +32,9 @@ namespace OPS.Controllers
 					case "auditoria/deputado-federal-lista":
 						ViewBag.dtUltimaAtualizacao = Padrao.DeputadoFederalUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
 						break;
+					case "auditoria/senador-lista":
+						ViewBag.dtUltimaAtualizacao = Padrao.SenadorUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
+						break;
 				}
 				return PartialView(partialUrl);
 			}

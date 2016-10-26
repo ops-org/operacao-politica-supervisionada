@@ -1,16 +1,15 @@
-﻿using OPS.Core;
-using OPS.Dao;
+﻿using OPS.Dao;
 using System.Web.Http;
 
 namespace OPS.WebApi
 {
-	public class PartidoController : ApiController
+    public class EstadoController : ApiController
     {
-		PartidoDao dao;
+		EstadoDao dao;
 
-		public PartidoController()
+		public EstadoController()
 		{
-			dao = new PartidoDao();
+			dao = new EstadoDao();
 		}
 
 		[HttpGet]

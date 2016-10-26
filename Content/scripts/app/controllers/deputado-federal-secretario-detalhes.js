@@ -12,9 +12,9 @@ app.controller('DeputadoFederalSecretariosDetalhesController', ["$scope", "$rout
     	$api.get('Deputado/SecretariosPorDeputado', $routeParams.id).success(function (response) {
     		$scope.deputado_federal_secretarios = response;
 
-    		$scope.IdCadastro = $routeParams.id;
-    		$scope.NomeParlamentar = response.length > 0 ? response[0].NomeParlamentar : null;
-    		document.title = "OPS :: Secretários parlamentares do dep. " + $scope.NomeParlamentar;
+    		$scope.id_cf_deputado = $routeParams.id;
+    		$scope.nome_parlamentar = response.length > 0 ? response[0].nome_parlamentar : null;
+    		document.title = "OPS :: Secretários parlamentares do dep. " + $scope.nome_parlamentar;
     	});
 
     }]);

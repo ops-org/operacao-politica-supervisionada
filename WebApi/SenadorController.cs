@@ -21,9 +21,9 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-		public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
+		public dynamic Pesquisa()
 		{
-			return dao.Pesquisa(filtro);
+			return dao.Pesquisa();
 		}
 
 		[HttpGet]
@@ -33,21 +33,9 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-		public dynamic TipoDespesa([FromUri]FiltroDropDownDTO filtro)
+		public dynamic TipoDespesa()
 		{
-			return dao.TipoDespesa(filtro);
-		}
-
-		[HttpGet]
-		public dynamic Secretarios([FromUri]FiltroParlamentarDTO filtro)
-		{
-			return dao.Secretarios(filtro);
-		}
-
-		[HttpGet]
-		public dynamic SecretariosPorDeputado(int id)
-		{
-			return dao.SecretariosPorDeputado(id);
+			return dao.TipoDespesa();
 		}
 
 		[HttpGet]

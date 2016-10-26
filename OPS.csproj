@@ -46,22 +46,10 @@
     <PublishDatabases>false</PublishDatabases>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+    <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>packages\MySql.Data.6.9.9\lib\net45\MySql.Data.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MySql.Data.Entity.EF6, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <HintPath>packages\MySql.Data.Entity.6.9.9\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -126,10 +114,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net.Http">
     </Reference>
     <Reference Include="System.Net.Http.WebRequest">
@@ -141,23 +125,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\CacheHelper.cs" />
-    <Compile Include="Core\CookieAwareWebClient.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Core\FormatarDados.cs" />
     <Compile Include="Dao\ComandoSqlDao.cs" />
-    <Compile Include="Core\eAgrupamentoAuditoria.cs" />
-    <Compile Include="Core\FiltroUsuarioDTO.cs" />
-    <Compile Include="Core\MemoryCacheHelper.cs" />
     <Compile Include="Dao\FornecedorDao.cs" />
     <Compile Include="Dao\ParametrosDao.cs" />
     <Compile Include="Dao\PartidoDao.cs" />
     <Compile Include="Dao\SenadorDao.cs" />
-    <Compile Include="Dao\UfDao.cs" />
-    <Compile Include="Dao\UsuarioDao.cs" />
+    <Compile Include="Dao\EstadoDao.cs" />
+    <Compile Include="Models\FormatarDados.cs" />
     <Compile Include="Models\Fornecedor.cs" />
     <Compile Include="Models\FornecedorQuadroSocietario.cs" />
+    <Compile Include="WebApi\ContatoController.cs" />
     <Compile Include="WebApi\DeputadoController.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
@@ -165,12 +142,6 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\AppController.cs" />
     <Compile Include="Controllers\MainController.cs" />
-    <Compile Include="Core\Banco.cs" />
-    <Compile Include="Core\DropDownDTO.cs" />
-    <Compile Include="Core\FiltroDropDownDTO.cs" />
-    <Compile Include="Core\FiltroParlamentarDTO.cs" />
-    <Compile Include="Core\Padrao.cs" />
-    <Compile Include="Core\Utils.cs" />
     <Compile Include="Dao\DeputadoDao.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -181,12 +152,12 @@
     <Compile Include="WebApi\IndicadoresController.cs" />
     <Compile Include="WebApi\PartidoController.cs" />
     <Compile Include="WebApi\SenadorController.cs" />
-    <Compile Include="WebApi\UfController.cs" />
-    <Compile Include="WebApi\UsuarioController.cs" />
+    <Compile Include="WebApi\EstadoController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\images\patrocine.png" />
     <Content Include="Content\scripts\app\app.js" />
+    <Content Include="Content\scripts\app\controllers\contato.js" />
     <Content Include="Content\scripts\app\controllers\senador-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
     <Content Include="Content\scripts\app\controllers\senador-lista.js" />
@@ -198,12 +169,13 @@
     <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
+    <Content Include="Content\scripts\bootstrap\bootstrap-select.js" />
+    <Content Include="Content\scripts\bootstrap\bootstrap-select.min.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
-    <Content Include="Content\scripts\jquery\select2.js" />
-    <Content Include="Content\scripts\jquery\select2.min.js" />
     <Content Include="Content\scripts\misc\highcharts.js" />
     <Content Include="Content\scripts\ng\angular-cookies.js" />
     <Content Include="Content\scripts\ng\dirDiscus.js" />
+    <Content Include="Content\styles\bootstrap-select.css" />
     <Content Include="Content\styles\bootstrap.css" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Content\scripts\bootstrap\bootstrap.js" />
@@ -216,6 +188,7 @@
     <Content Include="Content\images\logo_ops.png" />
     <Content Include="Content\images\ops_fiscalize.png" />
     <Content Include="Content\fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="Content\scripts\bootstrap\bootstrap-select.js.map" />
     <None Include="Content\scripts\jquery\jquery-2.2.3.intellisense.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.js" />
@@ -230,14 +203,8 @@
     <Content Include="Content\scripts\ng\angular.js" />
     <Content Include="Content\scripts\ng\angular.min.js" />
     <Content Include="Content\scripts\ng\ng-table.js" />
-    <Content Include="Content\styles\auditoria.css" />
     <Content Include="Content\styles\ng-table.css" />
-    <Content Include="Content\styles\select2.css" />
-    <Content Include="Content\styles\selectize.bootstrap3.css" />
-    <Content Include="Content\styles\selectize.css" />
-    <Content Include="Content\styles\Site.css" />
-    <Content Include="Content\styles\styles.css" />
-    <Content Include="Content\styles\ui-bootstrap-csp.css" />
+    <Content Include="Content\styles\site.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="SQL\161002 - Campeões de Gastos.sql" />
@@ -274,7 +241,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Dto\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">
@@ -294,6 +260,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\scripts\ng\angular-sanitize.min.js.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OPS.Core\OPS.Core.csproj">
+      <Project>{64bdceaf-f494-4c55-bbf3-16c28c718fe0}</Project>
+      <Name>OPS.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OPS.ImportacaoDados\OPS.ImportacaoDados.csproj">
+      <Project>{aaa3dd94-d680-4c3d-a442-3c4d9e230afc}</Project>
+      <Name>OPS.ImportacaoDados</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

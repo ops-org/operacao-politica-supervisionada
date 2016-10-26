@@ -1,8 +1,8 @@
 ﻿'use strict';
 
-app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams",
+app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	function ($scope, $api, $routeParams) {
-		document.title = "OPS :: Fornecedor";
+		document.title = "OPS :: Beneficiario";
 
 		function init() {
 			$scope.disqusConfig = {
@@ -10,18 +10,33 @@ app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams"
 				disqus_url: base_url + '/fornecedor/' + $routeParams.id.toString()
 			};
 
-			$("#buscar-captcha-btn").on("click", function (e) {
-				e.preventDefault();
+			setTimeout(function () {
+				$("#buscar-captcha-btn").on("click", function (e) {
+					e.preventDefault();
 
-				$("#captcha_img").fadeOut(1000, function () {
-					$(this).attr('src', "");
-					$scope.BuscarCaptcha();
+					$("#captcha_img").fadeOut(1000, function () {
+						$(this).attr('src', "");
+						$scope.BuscarCaptcha();
+					});
+
 				});
 
-			});
+				$("#img-input").keydown(function (e) {
+					if (e.keyCode == 13) {
+						e.preventDefault();
 
-			$("#img-input").keydown(function (e) {
-				if (e.keyCode == 13) {
+						if ($("#img-input").val()) {
+							$scope.ObterDados();
+						} else {
+							alert('Digite o texto da imagem!');
+							$("#img-input").focus();
+						}
+
+						return false;
+					}
+				});
+
+				$("#buscarDados-btn").on("click", function (e) {
 					e.preventDefault();
 
 					if ($("#img-input").val()) {
@@ -30,110 +45,102 @@ app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams"
 						alert('Digite o texto da imagem!');
 						$("#img-input").focus();
 					}
+				});
 
-					return false;
+				$('#ButtonMaps').click(function (e) {
+					e.preventDefault();
+					window.open("http://maps.google.com/?q=" +
+						$scope.fornecedor.Logradouro + ',' +
+						$scope.fornecedor.Numero + ',' +
+						$scope.fornecedor.Cep.replace(".", "") + ',' +
+						$scope.fornecedor.Uf + ',Brasil');
+				});
+
+				$('#ButtonPesquisa').click(function (e) {
+					e.preventDefault();
+					window.open("http://www.google.com.br/search?q=" +
+						$scope.fornecedor.RazaoSocial + ',' +
+						$scope.fornecedor.Cidade + ',' +
+						$scope.fornecedor.Uf);
+				});
+
+				$('#ButtonAtualizar').click(function (e) {
+					e.preventDefault();
+
+					$scope.ReconsultarDadosReceita();
+				});
+
+				//$('#ButtonDenunciar').click(function (e) {
+				//	e.preventDefault();
+				//	window.parent.TabDenuncia($("#lblCNPJ").text(), $("#lblRazaoSocial").text());
+				//});
+
+				//$('#ButtonListarDoacoes').click(function (e) {
+				//	e.preventDefault();
+				//	window.parent.TabDoacoes($("#lblCNPJ").text(), $("#lblRazaoSocial").text());
+				//});
+
+				//$('#ButtonListarDeputados').click(function (e) {
+				//	e.preventDefault();
+				//	window.parent.addTabDocumentos($("#lblCNPJ").text(), $("#lblRazaoSocial").text(), 0);
+				//});
+
+				//$('#ButtonListarDocumentos').click(function (e) {
+				//	e.preventDefault();
+				//	window.parent.addTabDocumentos($("#lblCNPJ").text(), $("#lblRazaoSocial").text(), 1);
+				//});
+
+				$('#btCollapseDadosEmpresaAdicional').click(function () {
+					if ($('#collapseDadosEmpresaAdicional').is(':visible')) {
+						$(this).text('Ver mais');
+						$('#collapseDadosEmpresaAdicional').hide();
+					} else {
+						$(this).text('Ver menos');
+						$('#collapseDadosEmpresaAdicional').show();
+					}
+
+				});
+			}, 1000);
+
+			Highcharts.setOptions({
+				lang: {
+					decimalPoint: ',',
+					thousandsSep: ' '
 				}
 			});
 
-			$("#buscarDados-btn").on("click", function (e) {
-				e.preventDefault();
+			CarregaGraficoRecebimentosPorMesDeputados();
+			CarregaGraficoRecebimentosPorMesSenadores();
 
-				if ($("#img-input").val()) {
-					$scope.ObterDados();
-				} else {
-					alert('Digite o texto da imagem!');
-					$("#img-input").focus();
-				}
-			});
-
-			$('#ButtonMaps').click(function (e) {
-				e.preventDefault();
-				window.open("http://maps.google.com/?q=" +
-					$scope.fornecedor.Logradouro + ',' +
-					$scope.fornecedor.Numero + ',' +
-					$scope.fornecedor.Cep.replace(".", "") + ',' +
-					$scope.fornecedor.Uf + ',Brasil');
-			});
-
-			$('#ButtonPesquisa').click(function (e) {
-				e.preventDefault();
-				window.open("http://www.google.com.br/search?q=" +
-					$scope.fornecedor.RazaoSocial + ',' +
-					$scope.fornecedor.Cidade + ',' +
-					$scope.fornecedor.Uf);
-			});
-
-			$('#ButtonAtualizar').click(function (e) {
-				e.preventDefault();
-
-				$scope.ReconsultarDadosReceita();
-			});
-
-			//$('#ButtonDenunciar').click(function (e) {
-			//	e.preventDefault();
-			//	window.parent.TabDenuncia($("#lblCNPJ").text(), $("#lblRazaoSocial").text());
-			//});
-
-			//$('#ButtonListarDoacoes').click(function (e) {
-			//	e.preventDefault();
-			//	window.parent.TabDoacoes($("#lblCNPJ").text(), $("#lblRazaoSocial").text());
-			//});
-
-			//$('#ButtonListarDeputados').click(function (e) {
-			//	e.preventDefault();
-			//	window.parent.addTabDocumentos($("#lblCNPJ").text(), $("#lblRazaoSocial").text(), 0);
-			//});
-
-			//$('#ButtonListarDocumentos').click(function (e) {
-			//	e.preventDefault();
-			//	window.parent.addTabDocumentos($("#lblCNPJ").text(), $("#lblRazaoSocial").text(), 1);
-			//});
-
-			$('#btCollapseDadosEmpresaAdicional').click(function () {
-				if ($('#collapseDadosEmpresaAdicional').is(':visible')) {
-					$(this).text('Ver mais');
-					$('#collapseDadosEmpresaAdicional').hide();
-				} else {
-					$(this).text('Ver menos');
-					$('#collapseDadosEmpresaAdicional').show();
-				}
-
-			})
-
-			CarregaGraficoRecebimentosPorMes();
-
-			$api.get('Fornecedor/DeputadoFederalMaioresGastos/?value=' + $routeParams.id).success(function (response) {
+			$api.get('Fornecedor/DeputadoFederalMaioresGastos', $routeParams.id).success(function (response) {
 				$scope.DeputadoFederalMaioresGastos = response
 			});
 
-			$api.get('Fornecedor/SenadoresMaioresGastos/?value=' + $routeParams.id).success(function (response) {
+			$api.get('Fornecedor/SenadoresMaioresGastos', $routeParams.id).success(function (response) {
 				$scope.SenadoresMaioresGastos = response
 			});
 		};
 
-		var CarregaGraficoRecebimentosPorMes = function () {
-			$api.get('Fornecedor/RecebimentosMensaisPorAno?value=' + $routeParams.id).success(function (response) {
-				Highcharts.setOptions({
-					lang: {
-						decimalPoint: ',',
-						thousandsSep: ' '
-					}
-				});
+		var CarregaGraficoRecebimentosPorMesDeputados = function () {
+			$api.get('Fornecedor/RecebimentosMensaisPorAnoDeputados', $routeParams.id).success(function (response) {
+				if (!response) return;
 
-				$('#fornecedor-recebimentos-por-mes').highcharts({
+				var chart = new Highcharts.Chart({
 					chart: {
-						type: 'column'
+						renderTo: 'fornecedor-recebimentos-por-mes-deputados',
+						type: 'bar'
 					},
 
 					title: {
-						text: null //'Recebibentos por mês pela cota parlamentar'
+						text: null
 					},
 
 					xAxis: {
 						categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
 					},
 
-					yAxis: [{ // left y axis
+					yAxis: [{
+						tickAmount: 10,
 						title: {
 							text: "Valor (em reais)"
 						},
@@ -152,6 +159,81 @@ app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams"
 						pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>'
 					},
 
+					plotOptions: {
+						series: {
+							stacking: 'normal'
+						}
+					},
+
+					legend: {
+						layout: 'vertical',
+						align: 'right',
+						verticalAlign: 'top',
+						floating: true,
+						borderWidth: 1,
+						backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+						shadow: true
+					},
+
+					series: response
+				});
+			});
+		}
+
+		var CarregaGraficoRecebimentosPorMesSenadores = function () {
+			$api.get('Fornecedor/RecebimentosMensaisPorAnoSenadores', $routeParams.id).success(function (response) {
+				if (!response) return;
+
+				var chart = new Highcharts.Chart({
+					chart: {
+						renderTo: 'fornecedor-recebimentos-por-mes-senadores',
+						type: 'bar'
+					},
+
+					title: {
+						text: null
+					},
+
+					xAxis: {
+						categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+					},
+
+					yAxis: [{
+						tickAmount: 10,
+						title: {
+							text: "Valor (em reais)"
+						},
+						labels: {
+							align: 'left',
+							x: 3,
+							y: 16,
+							format: '{value:.,0f}'
+						},
+						showFirstLabel: false
+					}],
+
+					tooltip: {
+						shared: true,
+						crosshairs: true,
+						pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>'
+					},
+
+					plotOptions: {
+						series: {
+							stacking: 'normal'
+						}
+					},
+
+					legend: {
+						layout: 'vertical',
+						align: 'right',
+						verticalAlign: 'top',
+						floating: true,
+						borderWidth: 1,
+						backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+						shadow: true
+					},
+
 					series: response
 				});
 			});
@@ -166,7 +248,7 @@ app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams"
 		var $loader = $('<img class="loader-facebook" src="./Content/images/ajax-loader-facebook.gif"/> <em>Buscando ...</em>');
 
 		$scope.BuscarCaptcha = function () {
-			var strUrl = 'Api/Fornecedor/Captcha?value=' + $scope.fornecedor.CnpjCpf;
+			var strUrl = 'Api/Fornecedor/Captcha?value=' + $scope.fornecedor.cnpj_cpf;
 			$.ajax({
 				type: 'GET',
 				url: strUrl,
@@ -189,41 +271,13 @@ app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams"
 		};
 
 		$scope.ObterDados = function () {
-			$api.post('Fornecedor/ConsultarDadosCnpj', { "cnpj": $scope.fornecedor.CnpjCpf, "captcha": $("#img-input").val() }).success(function (data) {
-				if (data.erro.length > 0) {
-					$("#msgErro-span").text(data.erro).closest("p").removeClass("hidden");
-					$("#captcha_img").fadeOut(1000, function () {
-						$(this).attr('src', "");
-						$scope.BuscarCaptcha();
-						$("#img-input").focus();
-					});
-					setTimeout(function () {
-						$("#msgErro-span").closest("p").addClass("hidden");
-					}, 2000);
-				} else {
-					if (data.dados != null) {
-					debugger
-						$scope.fornecedor = data.dados;
-						$scope.fornecedorQuadroSocietario = data.dados.lstFornecedorQuadroSocietario;
+			$api.post('Fornecedor/ConsultarDadosCnpj', { "cnpj": $scope.fornecedor.cnpj_cpf, "captcha": $("#img-input").val() }).success(function (response) {
+				AtualizarTipoFornecedor(response);
 
-						$("#buscar-modal").modal("hide");
+				$("#buscar-modal").modal("hide");
 
-						$("#fsConsultaReceita, #dvInfoDataConsultaCNPJ").hide();
-						$("#fsDadosReceita, #fsQuadroSocietario, #dvBotoesAcao").show();
-
-					} else {
-						$("#msgErro-span").text("erro de comunicação com a receita.").closest("p").removeClass("hidden");
-						$("#captcha_img").fadeOut(1000, function () {
-							$(this).attr('src', "");
-							$scope.BuscarCaptcha();
-							$("#img-input").focus();
-						});
-						setTimeout(function () {
-							$("#msgErro-span").closest("p").addClass("hidden");
-						}, 5000);
-					}
-
-				}
+				$("#fsConsultaReceita, #dvInfoDataConsultaCNPJ").hide();
+				$("#fsDadosReceita, #fsQuadroSocietario, #dvBotoesAcao").show();
 			}).error(function (data) {
 				//$loading.hide();
 				if (data.responseJSON && data.responseJSON.ExceptionMessage) {
@@ -239,21 +293,32 @@ app.controller('FornecedorDetalhesController', ["$scope", "$api", "$routeParams"
 			});
 		};
 
-		//TODO: Corrigir rota
-		$api.get('Fornecedor/?value=' + $routeParams.id).success(function (response) {
-			$scope.fornecedor = response;
+		$api.get('Fornecedor', $routeParams.id).success(AtualizarTipoFornecedor);
 
-			document.title = "OPS :: Fornecedor - " + response.RazaoSocial;
+		function AtualizarTipoFornecedor(response) {
+			$scope.fornecedor = response.fornecedor;
+			$scope.quadro_societario = response.quadro_societario;
 
-			if (!response.DataAbertura) {
-				$scope.ReconsultarDadosReceita();
+			document.title = "OPS :: Beneficiario - " + response.fornecedor.nome;
+
+			if (response.fornecedor.cnpj_cpf.length == 14) {
+				$scope.fornecedor.tipo = 'pj';
+
+				if (!response.fornecedor.data_de_abertura) {
+					setTimeout(function () {
+						$scope.ReconsultarDadosReceita();
+					}, 100);
+				}
+
+				//$api.get('Fornecedor/QuadroSocietario', $routeParams.id).success(function (response) {
+				//	$scope.fornecedorQuadroSocietario = response;
+				//});
+			} else if (response.fornecedor.cnpj_cpf.length == 11) {
+				$scope.fornecedor.tipo = 'pf';
+			} else {
+				$scope.fornecedor.tipo = 'nd'; //fornecedor interno / sem cnpj
 			}
-		});
-
-		//TODO: Corrigir rota
-		$api.get('Fornecedor/QuadroSocietario/?value=' + $routeParams.id).success(function (response) {
-			$scope.fornecedorQuadroSocietario = response;
-		});
+		}
 
 		init();
 	}]);

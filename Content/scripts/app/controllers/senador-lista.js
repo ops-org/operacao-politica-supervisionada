@@ -24,48 +24,41 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     		OPS.select("#lstDespesa", "./Api/Senador/TipoDespesa", qs.Despesa);
     		$scope.filtro.Despesa = qs.Despesa;
 
-    		OPS.select("#lstFornecedor", "./Api/Fornecedor/Pesquisa", qs.Fornecedor);
+    		//OPS.select("#lstFornecedor", "./Api/Fornecedor/Pesquisa", qs.Fornecedor);
+    		$('#txtBeneficiario').val(qs.Fornecedor);
     		$scope.filtro.Fornecedor = qs.Fornecedor;
 
-    		//OPS.select("#lstUF", "./Api/Uf/Pesquisa", qs.Uf);
-    		$("#lstUF").select2({
-    			data: lstEstadosBrasileiros,
-    			allowClear: true,
-    			placeholder: "Todos",
-    			selectOnClose: false
-    		});
-    		if (qs.Uf) $("#lstUF").val(qs.Uf.split(','));
+    		OPS.select("#lstUF", "./Api/Estado", qs.Uf);
     		$scope.filtro.Uf = qs.Uf;
 
-    		//OPS.select("#lstPartido", "./Api/Partido/Pesquisa", qs.Partido);
-    		$("#lstPartido").select2({
-    			data: lstPartidosBrasileiros,
-    			allowClear: true,
-    			placeholder: "Todos",
-    			selectOnClose: false
-    		});
+    		OPS.select("#lstPartido", "./Api/Partido", qs.Partido);
     		$scope.filtro.Partido = qs.Partido;
 
     		$("#txtDocumento").val(qs.Documento);
     		$scope.filtro.Documento = qs.Documento || null;
 
     		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "3").trigger('change').val();
-    		$scope.filtro.Agrupamento = $("#lstAgrupamento").val(qs.Agrupamento || "1").trigger('change').val();
+    		$scope.TrocaAba(null, parseInt(qs.Agrupamento || '1'));
 
     		$scope.Pesquisar(true);
 
-    		$('#lstPerido,#lstAgrupamento').select2();
+    		$('#lstPerido').selectpicker({
+    			width: '100%',
+    			actionsBox: true,
+    			liveSearch: true,
+    			liveSearchNormalize: true
+    		});
     	}
 
     	$scope.Pesquisar = function (page_load) {
-    		switch ($("#lstAgrupamento").val()) {
-    			case '2': $scope.visao = 'despesa.html'; break;
-    			case '3': $scope.visao = 'fornecedor.html'; break;
-    			case '4': $scope.visao = 'partido.html'; break;
-    			case '5': $scope.visao = 'uf.html'; break;
-    			case '6': $scope.visao = 'documento.html'; break;
-    			default: $scope.visao = 'parlamentar.html';
-    		}
+    		//switch ($("#lstAgrupamento").val()) {
+    		//	case '2': $scope.visao = 'despesa.html'; break;
+    		//	case '3': $scope.visao = 'fornecedor.html'; break;
+    		//	case '4': $scope.visao = 'partido.html'; break;
+    		//	case '5': $scope.visao = 'uf.html'; break;
+    		//	case '6': $scope.visao = 'documento.html'; break;
+    		//	default: $scope.visao = 'parlamentar.html';
+    		//}
 
     		if (!page_load) {
     			$scope.filtro.IdParlamentar = $("#lstParlamentar").val();
@@ -88,10 +81,47 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     	}
 
     	$scope.LimparFiltros = function () {
-    		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido, #lstFornecedor").val([]).trigger('change');
-    		$("#txtDocumento").val('');
-    		$("#lstPerido").val('3').trigger('change');;
-    		$("#lstAgrupamento").val('1').trigger('change');;
+    		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido").selectpicker('deselectAll');
+    		$("#txtBeneficiario, #txtDocumento").val('');
+    		$("#lstPerido").val('3').selectpicker('refresh');
+    		$scope.TrocaAba(null, 1);
+    	}
+
+    	$scope.TrocaAba = function ($event, id) {
+    		if ($event) {
+    			$event.preventDefault();
+    		}
+
+    		$rootScope.valor_total = null;
+    		$scope.tableParams = null;
+
+    		$('#dvDocumento').hide();
+    		$('.nav-tabs li').removeClass('active')
+    		$('.aba-' + id).addClass('active');
+
+    		switch (id) {
+    			case 1:
+    				$scope.visao = 'parlamentar.html';
+    				break;
+    			case 2:
+    				$scope.visao = 'despesa.html';
+    				break;
+    			case 3:
+    				$scope.visao = 'fornecedor.html';
+    				break;
+    			case 4:
+    				$scope.visao = 'partido.html';
+    				break;
+    			case 5:
+    				$scope.visao = 'uf.html';
+    				break;
+    			case 6:
+    				$scope.visao = 'documento.html';
+    				$('#dvDocumento').show();
+    				break;
+    		}
+
+    		$scope.filtro.Agrupamento = id;
     	}
 
     	init();

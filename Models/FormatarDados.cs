@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Web;
 
 namespace OPS.Core
 {
@@ -41,38 +40,13 @@ namespace OPS.Core
 					fornecedor.AtividadePrincipal = "";
 
 				textoHTML = textoHTML.Substring(textoHTML.IndexOf("CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS")).Replace("CÓDIGO E DESCRIÇÃO DAS ATIVIDADES ECONÔMICAS SECUNDÁRIAS", "").Trim();
-				fornecedor.AtividadeSecundaria01 = textoHTML.Substring(0, textoHTML.IndexOf("CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA")).Trim();
-				if (fornecedor.AtividadeSecundaria01.Equals("Não informada"))
-					fornecedor.AtividadeSecundaria01 = "";
+				var sAtividadeSecundaria = textoHTML.Substring(0, textoHTML.IndexOf("CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA")).Trim();
+				if (sAtividadeSecundaria.Equals("Não informada"))
+					fornecedor.AtividadeSecundaria = new string[0];
 				else
 				{
-					fornecedor.AtividadeSecundaria01 = fornecedor.AtividadeSecundaria01.Replace("  ", "").Replace("\t", "").Replace("\r\n\r\n\r\n\r\n", "");
-					var atividadeSecundaria = fornecedor.AtividadeSecundaria01.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-					try
-					{
-						fornecedor.AtividadeSecundaria01 = atividadeSecundaria[0];
-						fornecedor.AtividadeSecundaria02 = atividadeSecundaria[1];
-						fornecedor.AtividadeSecundaria03 = atividadeSecundaria[2];
-						fornecedor.AtividadeSecundaria04 = atividadeSecundaria[3];
-						fornecedor.AtividadeSecundaria05 = atividadeSecundaria[4];
-						fornecedor.AtividadeSecundaria06 = atividadeSecundaria[5];
-						fornecedor.AtividadeSecundaria07 = atividadeSecundaria[6];
-						fornecedor.AtividadeSecundaria08 = atividadeSecundaria[7];
-						fornecedor.AtividadeSecundaria09 = atividadeSecundaria[8];
-						fornecedor.AtividadeSecundaria10 = atividadeSecundaria[9];
-						fornecedor.AtividadeSecundaria11 = atividadeSecundaria[10];
-						fornecedor.AtividadeSecundaria12 = atividadeSecundaria[11];
-						fornecedor.AtividadeSecundaria13 = atividadeSecundaria[12];
-						fornecedor.AtividadeSecundaria14 = atividadeSecundaria[13];
-						fornecedor.AtividadeSecundaria15 = atividadeSecundaria[14];
-						fornecedor.AtividadeSecundaria16 = atividadeSecundaria[15];
-						fornecedor.AtividadeSecundaria17 = atividadeSecundaria[16];
-						fornecedor.AtividadeSecundaria18 = atividadeSecundaria[17];
-						fornecedor.AtividadeSecundaria19 = atividadeSecundaria[18];
-						fornecedor.AtividadeSecundaria20 = atividadeSecundaria[19];
-					}
-					catch (IndexOutOfRangeException)
-					{ }
+					sAtividadeSecundaria = sAtividadeSecundaria.Replace("  ", "").Replace("\t", "").Replace("\r\n\r\n\r\n\r\n", "");
+					fornecedor.AtividadeSecundaria = sAtividadeSecundaria.Split(new string[] { "\r\n" }, StringSplitOptions.None);
 				}
 
 				textoHTML = textoHTML.Substring(textoHTML.IndexOf("CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA")).Replace("CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA", "").Trim();

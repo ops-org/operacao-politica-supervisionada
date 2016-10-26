@@ -44,7 +44,7 @@
 
 #img-patrocinar { min-width: 100px; max-width: 300px; }
 
-#loading-modal #loading-modal-text { width: 200px; line-height: 30px; position: absolute; top: 50%; left: 50%; background-color: #FFF; z-index: 9999; text-align: center; margin-left: -100px; margin-top: -30px; padding: 15px; }
+#loading-modal #loading-modal-text { width: 200px; line-height: 30px; position: fixed; background-color: #FFF; z-index: 9999; text-align: center; padding: 15px; right: 10px; bottom: 10px; border: 1px solid #CCC; }
 	#loading-modal #loading-modal-text .loader-facebook { margin-right: 10px; margin-bottom: 2px; }
 
 footer { padding: 0 0 15px; background-color: #f8f8f8; }

@@ -66,24 +66,27 @@
                         }
                     };
 
-                    // Get the remote Disqus script and insert it into the DOM, but only if it not already loaded (as that will cause warnings)
-                    if (!$window.DISQUS) {
-                        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                        dsq.src = '//' + scope.config.disqus_shortname + '.disqus.com/embed.js';
-                        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-                    } else {
-                        $window.DISQUS.reset({
-                            reload: true,
-                            config: function () {
-                                this.page.identifier = scope.config.disqus_identifier;
-                                this.page.url = scope.config.disqus_url;
-                                this.page.title = scope.config.disqus_title;
-                                this.language = scope.config.disqus_config_language;
-                                this.page.remote_auth_s3 = scope.config.disqus_remote_auth_s3;
-                                this.page.api_key = scope.config.disqus_api_key;
-                            }
-                        });
-                    }
+                    setTimeout(function () {
+                    	// Get the remote Disqus script and insert it into the DOM, but only if it not already loaded (as that will cause warnings)
+                    	if (!$window.DISQUS) {
+
+                    		var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                    		dsq.src = '//' + scope.config.disqus_shortname + '.disqus.com/embed.js';
+                    		(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                    	} else {
+                    		$window.DISQUS.reset({
+                    			reload: true,
+                    			config: function () {
+                    				this.page.identifier = scope.config.disqus_identifier;
+                    				this.page.url = scope.config.disqus_url;
+                    				this.page.title = scope.config.disqus_title;
+                    				this.language = scope.config.disqus_config_language;
+                    				this.page.remote_auth_s3 = scope.config.disqus_remote_auth_s3;
+                    				this.page.api_key = scope.config.disqus_api_key;
+                    			}
+                    		});
+                    	}
+                    }, 3000); //Não bloquear a carga da tela
                 }
             }
         };

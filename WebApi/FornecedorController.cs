@@ -12,8 +12,8 @@ using System.Web.Http;
 
 namespace OPS.WebApi
 {
-    public class FornecedorController : ApiController
-    {
+	public class FornecedorController : ApiController
+	{
 		FornecedorDao dao;
 
 		public FornecedorController()
@@ -23,21 +23,49 @@ namespace OPS.WebApi
 
 		[HttpGet]
 		[ActionName("Get")]
-		public Fornecedor Consulta(string value)
+		public dynamic Consulta(int id)
 		{
-			return dao.Consulta(value);
+			var _fornecedor = dao.Consulta(id);
+			var _quadro_societario = dao.QuadroSocietario(id);
+
+			return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
+
+		}
+
+		//[HttpGet]
+		//public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
+		//{
+		//	return dao.Pesquisa(filtro);
+		//}
+
+		//[HttpGet]
+		//public dynamic QuadroSocietario(int id)
+		//{
+		//	return dao.QuadroSocietario(id);
+		//}
+
+		[HttpGet]
+		public dynamic RecebimentosMensaisPorAnoDeputados(int id)
+		{
+			return dao.RecebimentosMensaisPorAnoDeputados(id);
 		}
 
 		[HttpGet]
-		public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
+		public dynamic RecebimentosMensaisPorAnoSenadores(int id)
 		{
-			return dao.Pesquisa(filtro);
+			return dao.RecebimentosMensaisPorAnoSenadores(id);
 		}
 
 		[HttpGet]
-		public List<FornecedorQuadroSocietario> QuadroSocietario(string value)
+		public dynamic DeputadoFederalMaioresGastos(int id)
 		{
-			return dao.QuadroSocietario(value);
+			return dao.DeputadoFederalMaioresGastos(id);
+		}
+
+		[HttpGet]
+		public dynamic SenadoresMaioresGastos(int id)
+		{
+			return dao.SenadoresMaioresGastos(id);
 		}
 
 		private const string urlBaseReceitaFederal = "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/";
@@ -77,78 +105,10 @@ namespace OPS.WebApi
 		[HttpPost]
 		public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
 		{
-			var msg = string.Empty;
-			Fornecedor fornecedor = ObterDados(jsonData["cnpj"].ToString(), jsonData["captcha"].ToString());
-
-			if (fornecedor != null)
-			{
-				if (fornecedor.AtividadeSecundaria02 != "" && fornecedor.AtividadeSecundaria02 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria02;
-
-				if (fornecedor.AtividadeSecundaria03 != "" && fornecedor.AtividadeSecundaria03 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria03;
-
-				if (fornecedor.AtividadeSecundaria04 != "" && fornecedor.AtividadeSecundaria04 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria04;
-
-				if (fornecedor.AtividadeSecundaria05 != "" && fornecedor.AtividadeSecundaria05 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria05;
-
-				if (fornecedor.AtividadeSecundaria06 != "" && fornecedor.AtividadeSecundaria06 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria06;
-
-				if (fornecedor.AtividadeSecundaria07 != "" && fornecedor.AtividadeSecundaria07 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria07;
-
-				if (fornecedor.AtividadeSecundaria08 != "" && fornecedor.AtividadeSecundaria08 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria08;
-
-				if (fornecedor.AtividadeSecundaria09 != "" && fornecedor.AtividadeSecundaria09 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria09;
-
-				if (fornecedor.AtividadeSecundaria10 != "" && fornecedor.AtividadeSecundaria10 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria10;
-
-				if (fornecedor.AtividadeSecundaria11 != "" && fornecedor.AtividadeSecundaria11 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria11;
-
-				if (fornecedor.AtividadeSecundaria12 != "" && fornecedor.AtividadeSecundaria12 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria12;
-
-				if (fornecedor.AtividadeSecundaria13 != "" && fornecedor.AtividadeSecundaria13 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria13;
-
-				if (fornecedor.AtividadeSecundaria14 != "" && fornecedor.AtividadeSecundaria14 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria14;
-
-				if (fornecedor.AtividadeSecundaria15 != "" && fornecedor.AtividadeSecundaria15 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria15;
-
-				if (fornecedor.AtividadeSecundaria16 != "" && fornecedor.AtividadeSecundaria16 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria16;
-
-				if (fornecedor.AtividadeSecundaria17 != "" && fornecedor.AtividadeSecundaria17 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria17;
-
-				if (fornecedor.AtividadeSecundaria18 != "" && fornecedor.AtividadeSecundaria18 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria18;
-
-				if (fornecedor.AtividadeSecundaria19 != "" && fornecedor.AtividadeSecundaria19 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria19;
-
-				if (fornecedor.AtividadeSecundaria20 != "" && fornecedor.AtividadeSecundaria20 != null)
-					fornecedor.AtividadeSecundaria01 += "<br />" + fornecedor.AtividadeSecundaria20;
-			}
-
-			return
-				new
-				{
-					erro = msg,
-					dados = fornecedor
-				};
+			return ObterDados(jsonData["cnpj"].ToString(), jsonData["captcha"].ToString());
 		}
 
-		private static Fornecedor ObterDados(string aCNPJ, string aCaptcha)
+		private dynamic ObterDados(string aCNPJ, string aCaptcha)
 		{
 			string cnpj = new Regex(@"[^\d]").Replace(aCNPJ, string.Empty);
 			CookieContainer _cookies = CacheHelper.Get<CookieContainer>("CookieReceitaFederal_" + aCNPJ);
@@ -198,48 +158,33 @@ namespace OPS.WebApi
 				{
 					formataDados.MontarObjFornecedorQuadroSocietario(fornecedor, strHtmlQuadroSocietario);
 
-					string UserName;
-					try
-					{
-						UserName = HttpContext.Current.User.Identity.Name;
-					}
-					catch (Exception)
-					{
-						UserName = "anonymous";
-					}
+					//string UserName;
+					//try
+					//{
+					//	UserName = HttpContext.Current.User.Identity.Name;
+					//}
+					//catch (Exception)
+					//{
+					//	UserName = "anonymous";
+					//}
 
-					fornecedor.UsuarioInclusao = UserName;
-					fornecedor.DataInclusao = DateTime.Now.ToString();
-
+					//fornecedor.UsuarioInclusao = UserName;
+					//fornecedor.DataInclusao = DateTime.Now.ToString();
 
 					var fornecedorDao = new FornecedorDao();
-					fornecedorDao.AtualizaDados(fornecedor);
+					var id = fornecedorDao.AtualizaDados(fornecedor);
 
-					fornecedorDao.MarcaVisitado(fornecedor.CnpjCpf, UserName);
+					var _fornecedor = dao.Consulta(id);
+					var _quadro_societario = dao.QuadroSocietario(id);
+
+					return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
+					// fornecedorDao.MarcaVisitado(fornecedor.CnpjCpf, UserName);
 				}
 
-				return fornecedor;
+				//return fornecedor;
 			}
 
 			return null;
-		}
-
-		[HttpGet]
-		public dynamic RecebimentosMensaisPorAno(string value)
-		{
-			return dao.RecebimentosMensaisPorAno(value);
-		}
-
-		[HttpGet]
-		public dynamic DeputadoFederalMaioresGastos(string value)
-		{
-			return dao.DeputadoFederalMaioresGastos(value);
-		}
-
-		[HttpGet]
-		public dynamic SenadoresMaioresGastos(string value)
-		{
-			return dao.SenadoresMaioresGastos(value);
 		}
 	}
 }

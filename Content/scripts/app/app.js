@@ -9,61 +9,44 @@ var $EditError = function (ex) {
 
 var OPS = function ($) {
 	var select = function (selector, apiUrl, defaultValues) {
-		var $select = $(selector);
+		var $select = $(selector).selectpicker({
+			width: '100%',
+			actionsBox: true,
+			liveSearch: true,
+			liveSearchNormalize: true,
+			selectOnTab: true,
+			selectedTextFormat: "count > 3"
+		});
 
-		var bindSelect2 = function () {
-			$select.select2({
-				ajax: {
-					url: apiUrl,
-					dataType: 'json',
-					delay: 250,
-					data: function (params) {
-						return {
-							q: params.term, // search term
-							page: params.page
-						};
-					},
-					processResults: function (data, params) {
-						// parse the results into the format expected by Select2
-						// since we are using custom formatting functions we do not need to
-						// alter the remote JSON data, except to indicate that infinite
-						// scrolling can be used
-						params.page = params.page || 1;
-
-						return {
-							results: data.results,
-							pagination: {
-								more: (params.page * 30) < data.total_count
-							}
-						};
-					},
-					cache: true
-				},
-				allowClear: true,
-				placeholder: "Todos"
-			});
+		if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+			$select.selectpicker('mobile');
 		}
 
-		if (defaultValues) {
-			$.ajax({
-				dataType: "json",
-				url: apiUrl,
-				data: { 'qs': defaultValues },
-				success: function (data) {
-					var lstSelected = defaultValues.split(',');
-					var $lstOption = [];
-					for (var i = 0; i < data.results.length; i++) {
-						var item = data.results[i];
-						$lstOption.push($('<option></option>').val(item.id).text(item.text).attr('selected', lstSelected.indexOf(item.id.toString()) !== -1));
+		$.ajax({
+			dataType: "json",
+			url: apiUrl,
+			data: {},
+			success: function (data) {
+				var $lstOption = [];
+				if (defaultValues) {
+					var lstDefaultValues = defaultValues.split(',')
+					for (var i = 0; i < data.length; i++) {
+						var item = data[i];
+						$lstOption.push($('<option></option>').val(item.id).text(item.text)
+							.data('tokens', item.tokens)
+							.attr('selected', lstDefaultValues.indexOf(item.id.toString()) !== -1));
 					}
-					$select.append($lstOption);
-
-					bindSelect2();
+				} else {
+					for (var i = 0; i < data.length; i++) {
+						var item = data[i];
+						$lstOption.push($('<option></option>').val(item.id).text(item.text)
+							.data('tokens', item.tokens));
+					}
 				}
-			});
-		} else {
-			bindSelect2();
-		}
+
+				$select.append($lstOption).selectpicker('refresh');
+			}
+		});
 	}
 
 	var objectToQueryString = function (obj, s) {
@@ -137,6 +120,17 @@ var app;
 			};
 
 			$rootScope.$on('$locationChangeSuccess', function (event) {
+				$('body').animate({ scrollTop: 0 }, 0);
+
+				if (!$rootScope.countRequest)
+					$rootScope.countRequest = 0;
+
+				$rootScope.countRequest++;
+			});
+
+			$rootScope.$on('$locationChangeSuccess', function (event) {
+				$rootScope.countRequest--;
+
 				setTimeout(function () {
 					ga('send', 'pageview', { 'page': $location.path() });
 				}, 1000);
@@ -149,9 +143,6 @@ var app;
 
 		//http://stackoverflow.com/questions/28669537/angularjs-abort-cancel-running-http-calls
 		var promiseCanceller = $q.defer();
-
-		if (!$rootScope.countRequest)
-			$rootScope.countRequest = 0;
 
 		var _$http = function (method, url, params, data, cache) {
 			$rootScope.countRequest++;
@@ -270,9 +261,6 @@ var app;
 						counts: false,
 						filterDelay: 300,
 						getData: function (params) {
-							if (!$rootScope.countRequest)
-								$rootScope.countRequest = 0;
-
 							$rootScope.countRequest++;
 
 							var paramsSorting = params.sorting();
@@ -314,7 +302,7 @@ var app;
 
 								if (data.valor_total) {
 									setTimeout(LoadPopoverAuditoria, 100);
-									$rootScope.ValorTotal = data.valor_total;
+									$rootScope.valor_total = data.valor_total;
 								}
 
 								location_path = window.location.pathname;
@@ -419,7 +407,8 @@ function LoadPopoverAuditoria() {
 					var descricao = $buttonDetalhar.data('descricao');
 
 					var $select;
-					switch (parseInt($('#lstAgrupamento').val())) {
+					var Agrupamento = parseInt($('#lstAgrupamento').val());
+					switch (Agrupamento) {
 						case 1:
 							$select = $('#lstParlamentar');
 							break;
@@ -427,7 +416,7 @@ function LoadPopoverAuditoria() {
 							$select = $('#lstDespesa');
 							break;
 						case 3:
-							$select = $('#lstFornecedor');
+							$select = $('#txtBeneficiario');
 							break;
 						case 4:
 							$select = $('#lstPartido');
@@ -439,17 +428,20 @@ function LoadPopoverAuditoria() {
 							$select = $('#txtDocumento');
 							break;
 					}
-					var $selectItens = $('#lstDespesa option[value="' + valor + '"]');
-					if ($selectItens.length > 0) {
-						$selectItens.attr('selected', 'selected');
+					if (Agrupamento != 3) {
+						var $selectItens = $select.find('option[value="' + valor + '"]');
+						if ($selectItens.length > 0) {
+							$selectItens.attr('selected', 'selected').selectpicker('refresh');
+						} else {
+							var $option = $('<option selected></option>').val(valor).text(descricao);
+							$select.append($option);
+						}
+						$select.selectpicker('refresh');
 					} else {
-						var $option = $('<option selected></option>').val(valor).text(descricao);
-						$select.append($option);
+						$select.val(valor); //input
 					}
-					$select.trigger('change');
 
-					$('#lstAgrupamento').val(agrupamento);
-
+					angular.element('.aba-' + agrupamento + ' a').trigger('click'); //call ngClick
 					angular.element('#ButtonPesquisar').trigger('click'); //call ngClick
 				}
 
@@ -489,85 +481,23 @@ function loadSiteMaster() {
 		});
 
 		/* Facebook */
-		(function (d, s, id) {
-			var js, fjs = d.getElementsByTagName(s)[0];
-			if (d.getElementById(id)) return;
-			js = d.createElement(s); js.id = id;
-			js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=1033624573364106";
-			fjs.parentNode.insertBefore(js, fjs);
-		}(document, 'script', 'facebook-jssdk'));
-	}, 1000);
+		//window.fbAsyncInit = function () {
+		//	FB.init({
+		//		appId: '1033624573364106',
+		//		xfbml: true,
+		//		version: 'v2.8'
+		//	});
+		//};
+
+		//(function (d, s, id) {
+		//	var js, fjs = d.getElementsByTagName(s)[0];
+		//	if (d.getElementById(id)) { return; }
+		//	js = d.createElement(s); js.id = id;
+		//	js.src = "//connect.facebook.net/en_US/sdk.js";
+		//	fjs.parentNode.insertBefore(js, fjs);
+		//}(document, 'script', 'facebook-jssdk'));
+	}, 3000); //Não bloquear a carga da tela
 }
-
-// https://github.com/felipefdl/cidades-estados-brasil-json/blob/master/Estados.json
-var lstEstadosBrasileiros = [
-	{ "$id": "1", "id": "AC", "text": "Acre" },
-	{ "$id": "2", "id": "AL", "text": "Alagoas" },
-	{ "$id": "3", "id": "AM", "text": "Amazonas" },
-	{ "$id": "4", "id": "AP", "text": "Amapá" },
-	{ "$id": "5", "id": "BA", "text": "Bahia" },
-	{ "$id": "6", "id": "CE", "text": "Ceará" },
-	{ "$id": "7", "id": "DF", "text": "Distrito Federal" },
-	{ "$id": "8", "id": "ES", "text": "Espírito Santo" },
-	{ "$id": "9", "id": "GO", "text": "Goiás" },
-	{ "$id": "10", "id": "MA", "text": "Maranhão" },
-	{ "$id": "11", "id": "MG", "text": "Minas Gerais" },
-	{ "$id": "12", "id": "MS", "text": "Mato Grosso do Sul" },
-	{ "$id": "13", "id": "MT", "text": "Mato Grosso" },
-	{ "$id": "14", "id": "PA", "text": "Pará" },
-	{ "$id": "15", "id": "PB", "text": "Paraíba" },
-	{ "$id": "16", "id": "PE", "text": "Pernambuco" },
-	{ "$id": "17", "id": "PI", "text": "Piauí" },
-	{ "$id": "18", "id": "PR", "text": "Paraná" },
-	{ "$id": "19", "id": "RJ", "text": "Rio de Janeiro" },
-	{ "$id": "20", "id": "RN", "text": "Rio Grande do Norte" },
-	{ "$id": "21", "id": "RO", "text": "Rondônia" },
-	{ "$id": "22", "id": "RR", "text": "Roraima" },
-	{ "$id": "23", "id": "RS", "text": "Rio Grande do Sul" },
-	{ "$id": "24", "id": "SC", "text": "Santa Catarina" },
-	{ "$id": "25", "id": "SE", "text": "Sergipe" },
-	{ "$id": "26", "id": "SP", "text": "São Paulo" },
-	{ "$id": "27", "id": "TO", "text": "Tocantins" }
-];
-
-// http://www.tse.jus.br/partidos/partidos-politicos/registrados-no-tse
-var lstPartidosBrasileiros = [
-	{ "$id": "1", "id": "PMDB", "text": "PARTIDO DO MOVIMENTO DEMOCRÁTICO BRASILEIRO" },
-	{ "$id": "2", "id": "PTB", "text": "PARTIDO TRABALHISTA BRASILEIRO" },
-	{ "$id": "3", "id": "PDT", "text": "PARTIDO DEMOCRÁTICO TRABALHISTA" },
-	{ "$id": "4", "id": "PT", "text": "PARTIDO DOS TRABALHADORES" },
-	{ "$id": "5", "id": "DEM", "text": "DEMOCRATAS" },
-	{ "$id": "6", "id": "PCdoB", "text": "PARTIDO COMUNISTA DO BRASIL" },
-	{ "$id": "7", "id": "PSB", "text": "PARTIDO SOCIALISTA BRASILEIRO" },
-	{ "$id": "8", "id": "PSDB", "text": "PARTIDO DA SOCIAL DEMOCRACIA BRASILEIRA" },
-	{ "$id": "9", "id": "PTC", "text": "PARTIDO TRABALHISTA CRISTÃO" },
-	{ "$id": "10", "id": "PSC", "text": "PARTIDO SOCIAL CRISTÃO" },
-	{ "$id": "11", "id": "PMN", "text": "PARTIDO DA MOBILIZAÇÃO NACIONAL" },
-	{ "$id": "12", "id": "PRP", "text": "PARTIDO REPUBLICANO PROGRESSISTA" },
-	{ "$id": "13", "id": "PPS", "text": "PARTIDO POPULAR SOCIALISTA" },
-	{ "$id": "14", "id": "PV", "text": "PARTIDO VERDE" },
-	{ "$id": "15", "id": "PTdoB", "text": "PARTIDO TRABALHISTA DO BRASIL" },
-	{ "$id": "16", "id": "PP", "text": "PARTIDO PROGRESSISTA" },
-	{ "$id": "17", "id": "PSTU", "text": "PARTIDO SOCIALISTA DOS TRABALHADORES UNIFICADO" },
-	{ "$id": "18", "id": "PCB", "text": "PARTIDO COMUNISTA BRASILEIRO" },
-	{ "$id": "19", "id": "PRTB", "text": "PARTIDO RENOVADOR TRABALHISTA BRASILEIRO" },
-	{ "$id": "20", "id": "PHS", "text": "PARTIDO HUMANISTA DA SOLIDARIEDADE" },
-	{ "$id": "21", "id": "PSDC", "text": "PARTIDO SOCIAL DEMOCRATA CRISTÃO" },
-	{ "$id": "22", "id": "PCO", "text": "PARTIDO DA CAUSA OPERÁRIA" },
-	{ "$id": "23", "id": "PTN", "text": "PARTIDO TRABALHISTA NACIONAL" },
-	{ "$id": "24", "id": "PSL", "text": "PARTIDO SOCIAL LIBERAL" },
-	{ "$id": "25", "id": "PRB", "text": "PARTIDO REPUBLICANO BRASILEIRO" },
-	{ "$id": "26", "id": "PSOL", "text": "PARTIDO SOCIALISMO E LIBERDADE" },
-	{ "$id": "27", "id": "PR", "text": "PARTIDO DA REPÚBLICA" },
-	{ "$id": "28", "id": "PSD", "text": "PARTIDO SOCIAL DEMOCRÁTICO" },
-	{ "$id": "29", "id": "PPL", "text": "PARTIDO PÁTRIA LIVRE" },
-	{ "$id": "30", "id": "PEN", "text": "PARTIDO ECOLÓGICO NACIONAL" },
-	{ "$id": "31", "id": "PROS", "text": "PARTIDO REPUBLICANO DA ORDEM SOCIAL" },
-	{ "$id": "32", "id": "SD", "text": "SOLIDARIEDADE" },
-	{ "$id": "33", "id": "NOVO", "text": "PARTIDO NOVO" },
-	{ "$id": "34", "id": "REDE", "text": "REDE SUSTENTABILIDADE" },
-	{ "$id": "35", "id": "PMB", "text": "PARTIDO DA MULHER BRASILEIRA" }
-];
 
 /* Google Analytics */
 try {

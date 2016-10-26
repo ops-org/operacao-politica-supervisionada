@@ -31,17 +31,17 @@
 			<h4>Deputados Federais <small>(Desde fevereiro de 2015)</small></h4>
 			<div class="row">
 				<div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.CamaraFederal track by $index">
-					<a href="./#/deputado-federal/{{::gasto.Id}}">
+					<a href="./#/deputado-federal/{{::gasto.id_cf_deputado}}">
 						<div class="media ">
 							<div class="media-left media-middle">
 								<span class="media-thumbnail">
-									<img src="" data-ng-src='./Content/Images/Parlamentares/DEPFEDERAL/{{::gasto.Id}}.jpg' alt='{{::gasto.NomeParlamentar}}' height="100">
+									<img src="" data-ng-src='./Content/Images/Parlamentares/DEPFEDERAL/{{::gasto.id_cadastro}}.jpg' alt='{{::gasto.nome_parlamentar}}' height="100">
 								</span>
 							</div>
 							<div class="media-left media-middle">
-								<h5 class="media-heading" data-ng-bind="::gasto.NomeParlamentar"></h5>
-								<h5 class="media-heading text-muted" data-ng-bind="::gasto.PartidoEstado"></h5>
-								<h4 class="media-heading text-danger" data-ng-bind="::gasto.ValorTotal"></h4>
+								<h5 class="media-heading" data-ng-bind="::gasto.nome_parlamentar"></h5>
+								<h5 class="media-heading text-muted" data-ng-bind="::gasto.sigla_partido_estado"></h5>
+								<h4 class="media-heading text-danger" data-ng-bind="::gasto.valor_total"></h4>
 							</div>
 						</div>
 					</a>
@@ -51,17 +51,17 @@
 			<h4>Senadores <small>(Desde fevereiro de 2010)</small></h4>
 			<div class="row">
 				<div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.Senado track by $index">
-					<a href="./#/senador/{{::gasto.Id}}">
+					<a href="./#/senador/{{::gasto.id_sf_senador}}">
 						<div class="media ">
 							<div class="media-left media-middle">
 								<span class="media-thumbnail">
-									<img src="" data-ng-src='./Content/Images/Parlamentares/SENADOR/{{::gasto.Id}}.jpg' alt='{{::gasto.NomeParlamentar}}' height="100">
+									<img src="" data-ng-src='./Content/Images/Parlamentares/SENADOR/{{::gasto.id_sf_senador}}.jpg' alt='{{::gasto.nome_parlamentar}}' height="100">
 								</span>
 							</div>
 							<div class="media-left media-middle">
-								<h5 class="media-heading" title="Nome do parlamentar" data-ng-bind="::gasto.NomeParlamentar"></h5>
-								<h5 class="media-heading text-muted" title="Partido/Estado" data-ng-bind="::gasto.PartidoEstado"></h5>
-								<h4 class="media-heading text-danger" title="Valor gasto acumulado no mandato" data-ng-bind="::gasto.ValorTotal"></h4>
+								<h5 class="media-heading" title="Nome do parlamentar" data-ng-bind="::gasto.nome_parlamentar"></h5>
+								<h5 class="media-heading text-muted" title="Partido/Estado" data-ng-bind="::gasto.sigla_partido_estado"></h5>
+								<h4 class="media-heading text-danger" title="Valor gasto acumulado no mandato" data-ng-bind="::gasto.valor_total"></h4>
 							</div>
 						</div>
 					</a>
@@ -79,44 +79,33 @@
 		</div>
 	</div>
 
-	<div class="container-fluid">
-		<div class="media">
-			<div class="media-body">
-				<div class="box form-group">
-					<div class="media ">
-						<div class="media-left media-top">
-							<span class="media-thumbnail">
-								<img src="./Content/images/ops_fiscalize.png" alt="OPS Fiscalize" />
-							</span>
-						</div>
-						<div class="media-left media-top">
-							<h4 class="margin-top-5">OPS Fiscalize</h4>
-							<p class="text-justify">Já está disponível o OPS Fiscalize, aplicativo que permite fiscalizar os gastos realizados por deputados federais com a verba indenizatória, dinheiro público destinado à reposição de despesas feitas pelos parlamentares no exercício do mandato.</p>
-							<p class="text-justify">Disponível para Android e IOS, o OPS Fiscalize reúne, atualizadamente, os custos gerados por deputados da 55ª legislatura.</p>
-							<div class="ops-fiscalize-button margin-bottom-0">
-								<a href="https://play.google.com/store/apps/details?id=br.net.ops.fiscalize" class="btn btn-primary" target="_blank" rel="nofollow">Android&nbsp;<i class="glyphicon glyphicon-menu-right"></i></a>
-								<a href="https://itunes.apple.com/br/app/ops-fiscalize/id1016302793?l=en&mt=8" class="btn btn-primary" target="_blank" rel="nofollow">IOS&nbsp;<i class="glyphicon glyphicon-menu-right"></i></a>
-								<a href="https://www.microsoft.com/pt-br/store/apps/ops-fiscalize/9nblggh686vc" class="btn btn-primary" target="_blank" rel="nofollow">Windows Phone&nbsp;<i class="glyphicon glyphicon-menu-right"></i></a>
-							</div>
-						</div>
-					</div>
-				</div>
+	<div class="container-fluid form-group">
+		<div class="media ">
+			<div class="media-left media-top">
+				<span class="media-thumbnail">
+					<img src="./Content/images/ops_fiscalize.png" alt="OPS Fiscalize" />
+				</span>
 			</div>
-			<div class="media-right">
-				<a href="https://luciobig.com.br/pagina-para-doacoes_16-html/" class="media-thumbnail">
-					<img id="img-patrocinar" src="~/Content/images/patrocine.png" style="max-width: 200px">
-				</a>
+			<div class="media-left media-top">
+				<h4 class="margin-top-5">OPS Fiscalize</h4>
+				<p class="text-justify">Já está disponível o OPS Fiscalize, aplicativo que permite fiscalizar os gastos realizados por deputados federais com a verba indenizatória, dinheiro público destinado à reposição de despesas feitas pelos parlamentares no exercício do mandato.</p>
+				<p class="text-justify">Disponível para Android e IOS, o OPS Fiscalize reúne, atualizadamente, os custos gerados por deputados da 55ª legislatura.</p>
+				<div class="ops-fiscalize-button margin-bottom-0">
+					<a href="https://play.google.com/store/apps/details?id=br.net.ops.fiscalize" class="btn btn-primary" target="_blank" rel="nofollow">Android&nbsp;<i class="glyphicon glyphicon-menu-right"></i></a>
+					<a href="https://itunes.apple.com/br/app/ops-fiscalize/id1016302793?l=en&mt=8" class="btn btn-primary" target="_blank" rel="nofollow">IOS&nbsp;<i class="glyphicon glyphicon-menu-right"></i></a>
+					<a href="https://www.microsoft.com/pt-br/store/apps/ops-fiscalize/9nblggh686vc" class="btn btn-primary" target="_blank" rel="nofollow">Windows Phone&nbsp;<i class="glyphicon glyphicon-menu-right"></i></a>
+				</div>
 			</div>
 		</div>
 	</div>
-
+	
 	<div class="container-fluid">
-		<h3 class="text-center">Deixe seu comentário</h3>
+		@*<h3 class="text-center">Deixe seu comentário</h3>*@
 		<div class="row">
-			<div class="col-xs-12 col-sm-6">
-				<div class="fb-comments" data-href="http://ops.net.br" data-numposts="5" data-width="100%"></div>
-			</div>
-			<div class="col-xs-12 col-sm-6">
+			@*<div class="col-xs-12 col-sm-6">
+				<div class="fb-comments" data-href="http://ops.net.br" data-numposts="10" data-order-by="reverse_time" data-width="100%"></div>
+			</div>*@
+			<div class="col-xs-12">
 				<dir-disqus config="disqusConfig"></dir-disqus>
 			</div>
 		</div>
@@ -126,9 +115,9 @@
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-lg-12">
-					<div class="text-center" style="margin-top: 15px;">
+					@*<div class="text-center" style="margin-top: 15px;">
 						<div class="fb-like" data-href="http://ops.net.br" data-layout="button_count" data-action="like" data-show-faces="true" data-share="true" data-order-by="social"></div>
-					</div>
+					</div>*@
 					<p style="margin: 10px 0 0;" class="text-muted text-center">O controle social é indispensável para combatermos a corrupção em nosso país.</p>
 				</div>
 			</div>
@@ -136,4 +125,4 @@
 	</footer>
 </div>
 
-<div id="fb-root"></div>
+@*<div id="fb-root"></div>*@
