@@ -5,10 +5,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-	public class FiscalizeController : ApiController
+    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    public class FiscalizeController : ApiController
 	{
 		private const string fiscalizeUrl = "http://104.131.229.175/fiscalize/pro/";
 

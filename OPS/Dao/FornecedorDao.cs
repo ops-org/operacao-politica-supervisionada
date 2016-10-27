@@ -645,7 +645,7 @@ namespace OPS.Dao
 				{
 					return Convert.ToDecimal(d.ToString().Split(' ')[1]);
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
 					return DBNull.Value;
 				}

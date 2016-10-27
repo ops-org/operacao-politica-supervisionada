@@ -1,10 +1,12 @@
 ﻿using OPS.Core;
 using OPS.Dao;
 using System.Web.Http;
+using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-	public class DeputadoController : ApiController
+    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    public class DeputadoController : ApiController
 	{
 		DeputadoDao dao;
 

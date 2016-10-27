@@ -9,7 +9,9 @@ namespace OPS
 	{
 		protected void Application_Start()
 		{
-			AreaRegistration.RegisterAllAreas();
+            Core.Padrao.ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["AuditoriaContext"].ToString();
+
+            AreaRegistration.RegisterAllAreas();
 			GlobalConfiguration.Configure(WebApiConfig.Register);
 			FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
 			RouteConfig.RegisterRoutes(RouteTable.Routes);

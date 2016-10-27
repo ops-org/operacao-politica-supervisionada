@@ -2,17 +2,17 @@
 using OPS.Dao;
 using OPS.Models;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Web;
 using System.Web.Http;
+using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-	public class FornecedorController : ApiController
+    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    public class FornecedorController : ApiController
 	{
 		FornecedorDao dao;
 
@@ -22,8 +22,10 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-		[ActionName("Get")]
-		public dynamic Consulta(int id)
+        [ActionName("Get")]
+        //[CacheOutput(ClientTimeSpan = 0 /* sem cache no cliente */, ServerTimeSpan = 21600 /* 6h */)]
+        [IgnoreCacheOutput]
+        public dynamic Consulta(int id)
 		{
 			var _fornecedor = dao.Consulta(id);
 			var _quadro_societario = dao.QuadroSocietario(id);
@@ -75,7 +77,8 @@ namespace OPS.WebApi
 		private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 
 		[HttpGet]
-		public string Captcha(string value)
+        [IgnoreCacheOutput]
+        public string Captcha(string value)
 		{
 			CookieContainer _cookies = new CookieContainer();
 			var htmlResult = string.Empty;
@@ -103,10 +106,19 @@ namespace OPS.WebApi
 		}
 
 		[HttpPost]
-		public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
+        [IgnoreCacheOutput]
+        public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
 		{
-			return ObterDados(jsonData["cnpj"].ToString(), jsonData["captcha"].ToString());
-		}
+            var ret = ObterDados(jsonData["cnpj"].ToString(), jsonData["captcha"].ToString());
+
+            // Testar
+            ////now get cache instance
+            //var cache = Configuration.CacheOutputConfiguration().GetCacheOutputProvider(Request);
+            ////and invalidate cache for method "Get" of "FornecedorController"
+            //cache.RemoveStartsWith(Configuration.CacheOutputConfiguration().MakeBaseCachekey("FornecedorController", "Get"));
+
+            return ret;
+        }
 
 		private dynamic ObterDados(string aCNPJ, string aCaptcha)
 		{

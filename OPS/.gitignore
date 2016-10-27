@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/.suo
+/.pubxmlc
+/bin
+/obj
+/.vs/config
+/Content/images/Parlamentares
+/Properties/PublishProfiles

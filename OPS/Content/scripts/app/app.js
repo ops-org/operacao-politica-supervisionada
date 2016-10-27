@@ -22,31 +22,42 @@ var OPS = function ($) {
 			$select.selectpicker('mobile');
 		}
 
-		$.ajax({
-			dataType: "json",
-			url: apiUrl,
-			data: {},
-			success: function (data) {
-				var $lstOption = [];
-				if (defaultValues) {
-					var lstDefaultValues = defaultValues.split(',')
-					for (var i = 0; i < data.length; i++) {
-						var item = data[i];
-						$lstOption.push($('<option></option>').val(item.id).text(item.text)
-							.data('tokens', item.tokens)
-							.attr('selected', lstDefaultValues.indexOf(item.id.toString()) !== -1));
-					}
-				} else {
-					for (var i = 0; i < data.length; i++) {
-						var item = data[i];
-						$lstOption.push($('<option></option>').val(item.id).text(item.text)
-							.data('tokens', item.tokens));
-					}
-				}
+		var onSuccess = function (data) {
+		    var $lstOption = [];
+		    if (defaultValues) {
+		        var lstDefaultValues = defaultValues.split(',')
+		        for (var i = 0; i < data.length; i++) {
+		            var item = data[i];
+		            $lstOption.push($('<option></option>').val(item.id).text(item.text)
+                        .data('tokens', item.tokens)
+                        .attr('selected', lstDefaultValues.indexOf(item.id.toString()) !== -1));
+		        }
+		    } else {
+		        for (var i = 0; i < data.length; i++) {
+		            var item = data[i];
+		            $lstOption.push($('<option></option>').val(item.id).text(item.text)
+                        .data('tokens', item.tokens));
+		        }
+		    }
 
-				$select.append($lstOption).selectpicker('refresh');
-			}
-		});
+		    $select.append($lstOption).selectpicker('refresh');
+		}
+
+		var json = localStorage.getItem(apiUrl);
+		if (json) {
+		    onSuccess(JSON.parse(json));
+		} else {
+		    $.ajax({
+		        dataType: "json",
+		        url: apiUrl,
+		        data: {},
+		        success: function (data) {
+		            localStorage.setItem(apiUrl, JSON.stringify(data));
+
+		            onSuccess(data);
+		        }
+		    });
+		}
 	}
 
 	var objectToQueryString = function (obj, s) {
@@ -119,9 +130,7 @@ var app;
 				return original.apply($location, [path]);
 			};
 
-			$rootScope.$on('$locationChangeSuccess', function (event) {
-				$('body').animate({ scrollTop: 0 }, 0);
-
+			$rootScope.$on('$locationChangeStart', function (event) {
 				if (!$rootScope.countRequest)
 					$rootScope.countRequest = 0;
 
@@ -134,6 +143,8 @@ var app;
 				setTimeout(function () {
 					ga('send', 'pageview', { 'page': $location.path() });
 				}, 1000);
+
+				$('body').animate({ scrollTop: 0 }, 0);
 			});
 		}]);
 

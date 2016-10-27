@@ -92,10 +92,10 @@
 		<div class="row form-group" id="dvBotoesAcao">
 			<div class="col-md-12 text-center">
 				<a class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dvQueProcurar">O Que Procurar?</a>
-				<input type="button" id="ButtonAtualizar" value="Atualizar Dados" title="Reconsultar dados a partir da Receita Federal" class="btn btn-primary btn-sm" />
+				<input type="button" data-ng-click="ReconsultarDadosReceita()" value="Atualizar Dados" title="Reconsultar dados a partir da Receita Federal" class="btn btn-primary btn-sm" />
 				@*<input type="button" id="ButtonDenunciar" value="Denunciar" title="Denunciar esse Fornecedor" class="btn btn-success btn-sm" />*@
-				<input type="button" id="ButtonMaps" value="Pesquisar no Maps" title="Pesquisar Fornecedor no Maps" class="btn btn-default btn-sm" />
-				<input type="button" id="ButtonPesquisa" value="Pesquisar no Google" title="Pesquisar Fornecedor no Google" class="btn btn-default btn-sm" />
+				<input type="button" data-ng-click="PesquisarNoMaps(fornecedor)" value="Pesquisar no Maps" title="Pesquisar Fornecedor no Maps" class="btn btn-default btn-sm" />
+				<input type="button" data-ng-click="PesquisarNoGoogle(fornecedor)" value="Pesquisar no Google" title="Pesquisar Fornecedor no Google" class="btn btn-default btn-sm" />
 				@*<input type="button" id="ButtonListarDeputados" value="Listar Parlamentares" title="Listar Todos os Parlamentares que Contrataram esse Fornecedor" class="btn btn-default btn-sm" />
 					<input type="button" id="ButtonListarDocumentos" value="Solicitar/Listar Documentos" class="btn btn-default btn-sm" />
 					<input type="button" id="ButtonListarDoacoes" value="Listar Doações Eleitorais" title="Listar Doações Eleitorais do Fornecedor" class="btn btn-primary btn-sm" />*@
@@ -193,7 +193,7 @@
 		</fieldset>
 
 		<div class="form-group text-center">
-			<button class="btn btn-primary" type="button" id="btCollapseDadosEmpresaAdicional">Ver mais</button>
+			<button class="btn btn-primary" type="button" data-ng-click="ExpandirContrairInformacoesAdicional($event)">Ver mais</button>
 		</div>
 		<div id="collapseDadosEmpresaAdicional" style="display:none" class="form-group">
 			<div class="row">
@@ -425,7 +425,7 @@
 										<td data-ng-bind="row.nome_representante_legal"></td>
 										<td data-ng-bind="row.qualificacao_representante_legal"></td>
 									</tr>
-									<tr data-ng-hide="fornecedorQuadroSocietario.length>0">
+									<tr data-ng-hide="quadro_societario.length>0">
 										<td colspan="4" class="text-center">A natureza jurídica não permite o preenchimento do QSA</td>
 									</tr>
 								</tbody>
