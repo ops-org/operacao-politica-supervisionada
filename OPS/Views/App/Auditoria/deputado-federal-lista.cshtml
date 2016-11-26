@@ -19,7 +19,7 @@
 
 	<form id="form" autocomplete="off">
 		<div class="row">
-			<div class="col-md-4 form-group">
+			<div class="col-md-4">
 				<label>Período</label>
 				<select id="lstPerido" class="form-control input-sm">
 					<option value="1">Mês Atual</option>
@@ -27,29 +27,29 @@
 					<option value="3">Últimos 4 Meses</option>
 					<option value="4">Ano Atual</option>
 					<option value="5">Ano Anterior</option>
-					<option value="8">Legislatura 2015-2019</option>
-					<option value="7">Legislatura 2011-2015</option>
-					<option value="6">Legislatura 2007-2011</option>
+					<option value="8">Legislatura 55 (2015-2019)</option>
+					<option value="7">Legislatura 54 (2011-2015)</option>
+					<option value="6">Legislatura 53 (2007-2011)</option>
 					<option value="0">Todas as Legislaturas</option>
 				</select>
 			</div>
-			<div class="col-md-4 form-group form-group-sm">
+			<div class="col-md-4">
 				<label>Deputado</label>
 				<select id="lstParlamentar" class="form-control input-sm" multiple></select>
 			</div>
-			<div class="col-md-4 form-group">
+			<div class="form-group col-md-4">
 				<label>Despesa</label>
 				<select id="lstDespesa" class="form-control input-sm" multiple></select>
 			</div>
-			<div class="col-md-4 form-group">
+			<div class="form-group col-md-4">
 				<label>Estado</label>
 				<select id="lstUF" class="form-control input-sm" multiple></select>
 			</div>
-			<div class="col-md-4 form-group">
+			<div class="form-group col-md-4">
 				<label>Partido</label>
 				<select id="lstPartido" class="form-control input-sm" multiple></select>
 			</div>
-			<div class="col-md-4 form-group">
+			<div class="form-group col-md-4">
 				<label>Beneficiário</label>
 				<input type="text" id="txtBeneficiario" class="form-control input-sm" placeholder="CNPJ / CPF" />
 				@*<div class="input-group">
@@ -61,12 +61,12 @@
 						</div>
 					</div>*@
 			</div>
-			<div class="col-md-4 form-group" id="dvDocumento">
+			<div class="form-group col-md-4" id="dvDocumento">
 				<label>Nota Fiscal</label>
 				<input type="text" id="txtDocumento" class="form-control input-sm" />
 			</div>
 
-			<div class="col-md-12 form-group">
+			<div class="form-group col-md-12">
 				<input type="button" id="ButtonPesquisar" data-ng-click="Pesquisar();" value="Pesquisar" class="btn btn-success btn-sm" />
 				<input type="button" value="Limpar filtros" class="btn btn-default btn-sm" data-ng-click="LimparFiltros();" />
 
@@ -78,7 +78,7 @@
 	</form>
 
 	<div class="row">
-		<div class="col-md-12">
+		<div class="form-group col-md-12">
 			<div class="alert alert-warning text-center" data-ng-show="valor_total">
 				<b>Valor Total no Período: R$ {{valor_total}}</b>
 				<small class="help-block margin-bottom-0">Valor total considerando os filtros aplicados acima</small>
@@ -200,9 +200,10 @@
 		<tr ng-repeat="row in $data">
 			<td data-title="'Emissão'" style="width:10%" sortable="'data_emissao'">{{::row.data_emissao}}</td>
 			<td data-title="'CNPJ/CPF'" style="width:10%" sortable="'id'">{{::row.cnpj_cpf}}</td>
-			<td data-title="'Beneficiário'" style="width:40%" sortable="'nome_fornecedor'"><a data-ng-href="./#/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
+			<td data-title="'Beneficiário'" style="width:30%" sortable="'nome_fornecedor'"><a data-ng-href="./#/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
 			<td data-title="'Parlamentar'" style="width:30%" sortable="'nome_parlamentar'"><a href="./#/deputado-federal/{{::row.id_deputado}}">{{::row.nome_parlamentar}}</a></td>
-			<td data-title="'Valor Total'" style="width:10%" sortable="'valor_total'"><a href="./#/deputado-federal/documento/{{::row.id_cf_despesa}}">{{::row.valor_total}}</a></td>
+            <td data-title="'Nº Nota Fiscal'" style="width:10%" sortable="'numero_documento'">{{::row.numero_documento}}</td>
+			<td data-title="'Valor'" style="width:10%" sortable="'valor_liquido'"><a href="./#/deputado-federal/documento/{{::row.id_cf_despesa}}">{{::row.valor_liquido}}</a></td>
 		</tr>
 	</table>
 </script>

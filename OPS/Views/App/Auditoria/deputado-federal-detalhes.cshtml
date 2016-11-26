@@ -1,6 +1,6 @@
 ﻿<div class="container-fluid" data-ng-controller="DeputadoVisualizarController">
 	<fieldset>
-		<legend>Deputado Federal</legend>
+		<legend>Deputado(a) Federal</legend>
 		<div class="row box-deputado form-group">
 			<div class="col-xs-12 col-sm-8">
 				<div class="row deputado-header form-group">
@@ -12,8 +12,12 @@
 							<h3>Dep. {{::deputado_federal.nome_parlamentar}}</h3>
 							<p class="text-muted" data-ng-bind="::deputado_federal.nome_civil"></p>
 							<h4>{{::deputado_federal.sigla_partido}} / {{::deputado_federal.sigla_estado}} / {{::deputado_federal.condicao}}</h4>
-							<p><a href="mailto:{{::deputado_federal.email}}" data-ng-bind="::deputado_federal.email"></a></p>
-							<p><a href="http://www.camara.leg.br/internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cadastro}}" target="_blank" rel="nofollow">Perfil na Camâra</a></p>
+							<p><a href="mailto:{{::deputado_federal.email}}" data-ng-bind="::deputado_federal.email"
+                                  onclick="return trackOutboundLink(this, true);"
+                                  target="_blank"></a></p>
+							<p><a href="http://www.camara.leg.br/internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cadastro}}" 
+                                  onclick="return trackOutboundLink(this, true);"
+                                  target="_blank" rel="nofollow">Perfil na Camâra</a></p>
 						</div>
 						<div class="clearfix"></div>
 					</div>

@@ -1,0 +1,13 @@
+﻿<script type="text/javascript">
+    function AjustarTamanho(self) {
+        var height = Math.max($(document).height() - 170, 400);
+
+        $('#frame').height(height);
+        clearInterval();
+    }
+</script>
+
+<div class="container-fluid">
+    <iframe id="frame" style="border: none; width: 100%; height: 400px;" onload="AjustarTamanho(this);"
+            src='https://groups.google.com/forum/embed/?place=forum/como-salvar-o-brasil-educacao&showsearch=true&showpopout=true&showtabs=false&parenturl=http://ops.net.br#!forum/como-salvar-o-brasil-educacao' />
+</div>

@@ -9,7 +9,7 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class FiscalizeController : ApiController
 	{
 		private const string fiscalizeUrl = "http://104.131.229.175/fiscalize/pro/";

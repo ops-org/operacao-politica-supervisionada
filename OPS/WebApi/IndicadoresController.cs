@@ -5,7 +5,7 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class IndicadoresController : ApiController
 	{
 		[HttpGet]

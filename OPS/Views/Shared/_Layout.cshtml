@@ -1,22 +1,80 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-br" data-ng-app="app">
 <head>
-	<base href="~/" />
-	<meta charset="utf-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>@ViewBag.Title</title>
-	@*<link rel="shortcut icon" type="image/ico" href="~/favicon.ico" />*@
+    <base href="~/" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewBag.Title</title>
+    @*<link rel="shortcut icon" type="image/ico" href="~/favicon.ico" />*@
 
-	@Styles.Render("~/Content/style/css")
+    @Styles.Render("~/Content/style/css")
 </head>
 <body>
-	@RenderBody()
+    <nav class="navbar navbar-default navbar-static-top topnav" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Alternar Navegação</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand topnav" href="./#/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
+                    <img src="~/Content/images/logo_ops.png" width="64" height="40" alt="OPS" />
+                </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
 
-	@Scripts.Render("~/Content/vendor")
-	@Scripts.Render("~/Content/app")
-	<script type="text/javascript">
-		$(loadSiteMaster);
-	</script>
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Explorar<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header">Câmara dos Deputados</li>
+                            <li><a href="./#/deputado-federal">Cota parlamentar (CEAP)</a></li>
+                            <li><a href="./#/deputado-federal/secretario">Secretários</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li class="dropdown-header">Senado Federal</li>
+                            <li><a href="./#/senador">Cota Parlamentar (CEAPS)</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li class="dropdown-header">Presidência da República</li>
+                            <li><a href="https://web-cpgf.rhcloud.com" onclick="return trackOutboundLink(this, true);" target="_blank">Cartão Corporativo (CPGF)</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="./#/forum">Forum</a></li>
+                    <li><a href="./#/fiscalize">Resumo App</a></li>
+                    <li><a href="./#/sobre">Sobre</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    @RenderBody()
+
+    @Scripts.Render("~/Content/vendor")
+    @Scripts.Render("~/Content/app")
+
+    <footer class="footer">
+        <div class="content-section text-muted text-center">
+            O controle social é indispensável para combatermos a corrupção em nosso país.
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 text-xs-center text-left">
+                    OPS - Operação Política Supervisionada
+                </div>
+                <div class="col-sm-6 text-xs-center text-right">
+                    <a href="./#/sobre">Sobre</a>
+                    <a href="https://github.com/ops-org/operacao-politica-supervisionada" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofolow">Repositório no GitHub</a>
+                    <a href="javascript:;" id="btnReportarErro">Reportar um erro</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="text/javascript">
+        $(loadSiteMaster);
+    </script>
 </body>
 </html>

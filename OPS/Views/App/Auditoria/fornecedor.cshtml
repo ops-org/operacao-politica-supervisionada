@@ -69,7 +69,7 @@
 							<div class="input-group">
 								<input type="text" id="img-input" value="" class="form-control input-sm input-sm" />
 								<span class="input-group-btn">
-									<button type="button" id="buscarDados-btn" class="btn btn-success btn-sm">Buscar</button>
+									<button type="button" id="buscarDados-btn" class="btn btn-success btn-sm" data-ng-click="ConsultarCNPJ();">Buscar</button>
 								</span>
 							</div>
 							<p class="bg-danger pull-left hidden msg" style="padding: 10px 20px;">
@@ -244,7 +244,9 @@
 					<div class="dvg-painel-info-etiqueta">
 						<div class="icon"><i class="glyphicon glyphicon-list"></i></div>
 						<div class="text">
-							<h3 data-ng-bind-html="fornecedor.atividade_secundaria"></h3>
+							<h3>
+                                <p data-ng-repeat="row in fornecedor.atividade_secundaria" data-ng-bind="row"></p>
+                            </h3>
 							<span>Código e descrição das atividades econômicas secundárias</span>
 						</div>
 						<span class="clearfix"></span>

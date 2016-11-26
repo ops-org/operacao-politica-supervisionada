@@ -1,42 +1,47 @@
-﻿.bg-landing-page { background: url(../images/logo_opaca.jpg) no-repeat top 1px center; }
+﻿/* Sticky footer styles
+-------------------------------------------------- */
+html { position: relative; min-height: 100%; }
+body { /* Margin bottom by footer height */ margin-bottom: 92px; }
+
+.bg-landing-page { background: url(../images/logo_opaca.jpg) no-repeat top 1px center; }
 
 .text-black { color: #000; }
 
 .topnav { font-size: 14px; }
 
-.intro-header { margin-top: -10px; padding: 10px 0; text-align: center; color: #f8f8f8; }
+.intro-header { padding: 10px 0; text-align: center; }
 
 .intro-message { color: #000; }
-	.intro-message > h1 { font-size: 2.5em; }
-.intro-message a:hover { text-decoration: none; }
+    .intro-message > h1 { font-size: 2.5em; }
+    .intro-message a:hover { text-decoration: none; }
 
 .intro-divider { width: 400px; border-top: 1px solid #f8f8f8; border-bottom: 1px solid rgba(0,0,0,0.2); }
 
 @media(max-width:768px) {
-	.bg { background-position: top 34px center; }
+    .bg { background-position: top 34px center; }
 
-	.intro-message > h1 { font-size: 1.6em; }
+    .intro-message > h1 { font-size: 1.6em; }
 
-	.intro-message > h3 { font-size: 1.2em; }
+    .intro-message > h3 { font-size: 1.2em; }
 
-	.intro-divider { width: 100%; }
+    .intro-divider { width: 100%; }
 }
 
 @media(max-width:650px) {
-	.bg { background-size: contain; }
+    .bg { background-size: contain; }
 
-	.intro-header { padding: 10px 0; }
+    .intro-header { padding: 10px 0; }
 
-	.list-inline > li { padding-right: 4px; padding-left: 4px; }
+    .list-inline > li { padding-right: 4px; padding-left: 4px; }
 
-	.btn-group-lg > .btn, .btn-lg { padding: 7px 10px; font-size: 13px; }
+    .btn-group-lg > .btn, .btn-lg { padding: 7px 10px; font-size: 13px; }
 }
 
-.content-section { padding: 0 0 10px; background-color: #f8f8f8; border-top: 1px solid #e7e7e7; border-bottom: 1px solid #e7e7e7; }
+.content-section { background-color: #f8f8f8; border-top: 1px solid #e7e7e7; border-bottom: 1px solid #e7e7e7; }
 
 .box { border: 1px solid #ddd; border-radius: 3px; padding: 10px; background-color: #FFF; }
 .resumo-gastos a { color: inherit; }
-	.resumo-gastos a:hover { text-decoration: none; }
+    .resumo-gastos a:hover { text-decoration: none; }
 .resumo-gastos .media-thumbnail { display: block; padding: 4px; line-height: 1.42857143; background-color: #fff; border: 1px solid #ddd; border-radius: 4px; -webkit-transition: border .2s ease-in-out; -o-transition: border .2s ease-in-out; transition: border .2s ease-in-out; width: 100px; text-align: center; }
 .resumo-gastos .page-header { padding-bottom: 0; margin: 0 0 10px; }
 .resumo-gastos .media { margin-top: 10px; }
@@ -45,32 +50,31 @@
 #img-patrocinar { min-width: 100px; max-width: 300px; }
 
 #loading-modal #loading-modal-text { width: 200px; line-height: 30px; position: fixed; background-color: #FFF; z-index: 9999; text-align: center; padding: 15px; right: 10px; bottom: 10px; border: 1px solid #CCC; }
-	#loading-modal #loading-modal-text .loader-facebook { margin-right: 10px; margin-bottom: 2px; }
+    #loading-modal #loading-modal-text .loader-facebook { margin-right: 10px; margin-bottom: 2px; }
 
-footer { padding: 0 0 15px; background-color: #f8f8f8; }
-.rodape { display: block; text-align: center; background: #fbfbfc; line-height: 40px; border-top: 1px dashed #d6dbe1; }
-	.rodape a { color: #5d6266; padding-left: 20px; }
+.footer { position: absolute; bottom: 0; width: 100%; height: 92px; line-height: 45px; }
+    .footer a { color: #5d6266; padding-left: 20px; }
 
 .bootstrap-select .dropdown-menu > li > a { white-space: normal; }
 .bootstrap-select.btn-group.show-tick .dropdown-menu li a span.text { margin-right: 20px; }
 
 .deputado-header { margin: 10px auto; background-color: #f8f8f8; border: 1px solid #e7e7e7; border-radius: 3px; }
-	.box-deputado a:hover, .deputado-header .box a:active { text-decoration: none; }
+    .box-deputado a:hover, .deputado-header .box a:active { text-decoration: none; }
 .box-deputado .box-item { margin: 10px auto; }
-	.box-deputado .box-item .box-item-title { font-size: 30px; }
+    .box-deputado .box-item .box-item-title { font-size: 30px; }
 
 .img-parlamentar { margin: 0 auto; margin-top: 15px; height: 160px; width: 120px; display: block; }
-	.img-parlamentar img { width: 120px; }
+    .img-parlamentar img { width: 120px; }
 
 .margin-bottom-0 { margin-bottom: 0; }
 
 .dvg-painel-info-etiqueta { position: relative; text-align: center; background-color: #FFF; border: 1px solid #dee1e7; color: #596679; margin: 5px; padding-top: 10px; padding-bottom: 10px; min-height: 58px; display: block; }
-	.dvg-painel-info-etiqueta > div.icon { float: left; width: 36px; height: 36px; border-radius: 50px; font-size: 20px; color: #fff; line-height: 40px; text-align: center; background: #6DC6CD; }
-	.dvg-painel-info-etiqueta > div.icon, .dvg-painel-info-etiqueta > div.text { margin-left: 10px; position: relative; }
-	.dvg-painel-info-etiqueta > div.text { width: calc(100% - 65px); }
-		.dvg-painel-info-etiqueta > div.text > h3 { font-size: 16px; font-weight: 700; margin-top: 2px !important; margin-bottom: 0 !important; text-align: left; padding-left: 0; min-height: 17px; }
-		.dvg-painel-info-etiqueta > div.text > span { font-size: 12px; width: 100%; text-align: left; padding-left: 0; display: block; }
-	.dvg-painel-info-etiqueta > div { float: left; }
+    .dvg-painel-info-etiqueta > div.icon { float: left; width: 36px; height: 36px; border-radius: 50px; font-size: 20px; color: #fff; line-height: 40px; text-align: center; background: #6DC6CD; }
+    .dvg-painel-info-etiqueta > div.icon, .dvg-painel-info-etiqueta > div.text { margin-left: 10px; position: relative; }
+    .dvg-painel-info-etiqueta > div.text { width: calc(100% - 65px); }
+        .dvg-painel-info-etiqueta > div.text > h3 { font-size: 16px; font-weight: 700; margin-top: 2px !important; margin-bottom: 0 !important; text-align: left; padding-left: 0; min-height: 17px; }
+        .dvg-painel-info-etiqueta > div.text > span { font-size: 12px; width: 100%; text-align: left; padding-left: 0; display: block; }
+    .dvg-painel-info-etiqueta > div { float: left; }
 
 a.no-link { color: inherit; cursor: default; }
-	a.no-link:hover, a.no-link:active { text-decoration: none; }
+    a.no-link:hover, a.no-link:active { text-decoration: none; }

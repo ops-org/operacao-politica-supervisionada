@@ -732,11 +732,11 @@ namespace OPS.Dao
 						, l.id_fornecedor
 						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
-						, d.id as id_deputado
+						, d.id as id_senador
 						, d.nome as nome_parlamentar
 						, l.valor as valor_total
 					FROM sf_despesa l
-					INNER JOIN sf_senador d on d.id = l.id_sf_senador
+					LEFT JOIN sf_senador d on d.id = l.id_sf_senador
 					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
 					WHERE (1=1)
 				");
@@ -770,7 +770,7 @@ namespace OPS.Dao
 							id_fornecedor = reader["id_fornecedor"],
 							cnpj_cpf = reader["cnpj_cpf"],
 							nome_fornecedor = reader["nome_fornecedor"].ToString(),
-							id_deputado = reader["id_deputado"],
+							id_senador = reader["id_senador"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							valor_total = Utils.FormataValor(reader["valor_total"])
 						});

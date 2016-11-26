@@ -11,7 +11,7 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class FornecedorController : ApiController
 	{
 		FornecedorDao dao;
@@ -23,7 +23,7 @@ namespace OPS.WebApi
 
 		[HttpGet]
         [ActionName("Get")]
-        //[CacheOutput(ClientTimeSpan = 0 /* sem cache no cliente */, ServerTimeSpan = 21600 /* 6h */)]
+        //[CacheOutput(ClientTimeSpan = 0 /* sem cache no cliente */, ServerTimeSpan = 43200 /* 12h */)]
         [IgnoreCacheOutput]
         public dynamic Consulta(int id)
 		{
@@ -152,7 +152,7 @@ namespace OPS.WebApi
 			if (strHtmlFornecedor.Contains("Verifique se o mesmo foi digitado corretamente"))
 				throw new Exception("O número do CNPJ não foi localizado na Receita Federal");
 
-			if (strHtmlFornecedor.Contains("Erro na Consulta"))
+			if (strHtmlFornecedor.Contains("0,0"))
 				throw new Exception("Os caracteres não conferem com a imagem");
 
 			if (strHtmlFornecedor.Length > 0)

@@ -61,11 +61,11 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     		//}
 
     		if (!page_load) {
-    			$scope.filtro.IdParlamentar = $("#lstParlamentar").val();
-    			$scope.filtro.Despesa = $("#lstDespesa").val();
-    			$scope.filtro.Uf = $("#lstUF").val();
-    			$scope.filtro.Partido = $("#lstPartido").val();
-    			$scope.filtro.Fornecedor = $("#lstFornecedor").val();
+    		    $scope.filtro.IdParlamentar = ($("#lstParlamentar").val() || []).join(',') || null;
+    		    $scope.filtro.Despesa = ($("#lstDespesa").val() || []).join(',') || null;
+    		    $scope.filtro.Uf = ($("#lstUF").val() || []).join(',') || null;
+    		    $scope.filtro.Partido = ($("#lstPartido").val() || []).join(',') || null;
+    		    $scope.filtro.Fornecedor = $("#txtBeneficiario").val() || null;
     			$scope.filtro.Documento = $("#txtDocumento").val() || null;
     			$scope.filtro.Periodo = $("#lstPerido").val();
     			$scope.filtro.Agrupamento = $("#lstAgrupamento").val();

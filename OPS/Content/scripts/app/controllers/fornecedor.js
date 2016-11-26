@@ -36,16 +36,16 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	                }
 	            });
 
-	            $("#buscarDados-btn").on("click", function (e) {
-	                e.preventDefault();
+	            //$("#buscarDados-btn").on("click", function (e) {
+	            //    e.preventDefault();
 
-	                if ($("#img-input").val()) {
-	                    $scope.ObterDados();
-	                } else {
-	                    alert('Digite o texto da imagem!');
-	                    $("#img-input").focus();
-	                }
-	            });
+	            //    if ($("#img-input").val()) {
+	            //        $scope.ObterDados();
+	            //    } else {
+	            //        alert('Digite o texto da imagem!');
+	            //        $("#img-input").focus();
+	            //    }
+	            //});
 
 	            //$('#ButtonDenunciar').click(function (e) {
 	            //	e.preventDefault();
@@ -255,6 +255,15 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	            }
 	        });
 	    };
+
+	    $scope.ConsultarCNPJ = function () {
+	        if ($("#img-input").val()) {
+	            $scope.ObterDados();
+	        } else {
+	            alert('Digite o texto da imagem!');
+	            $("#img-input").focus();
+	        }
+	    }
 
 	    $scope.ObterDados = function () {
 	        $api.post('Fornecedor/ConsultarDadosCnpj', { "cnpj": $scope.fornecedor.cnpj_cpf, "captcha": $("#img-input").val() }).success(function (response) {

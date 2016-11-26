@@ -82,7 +82,7 @@ namespace OPS.Core
 				command.CommandText = sql;
 				command.CommandTimeout = timeOut;
 
-				retorno = command.ExecuteScalar();
+                retorno = command.ExecuteScalar();
 			}
 
 			return retorno;

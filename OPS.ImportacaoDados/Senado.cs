@@ -1,6 +1,7 @@
 ﻿using OPS.Core;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,169 +10,266 @@ using System.Threading.Tasks;
 
 namespace OPS.ImportacaoDados
 {
-	public class Senado
-	{
-		public static void ImportarDespesas(string atualDir, int ano)
-		{
-			string downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
-			string fullFileNameCsv = atualDir + @"\" + ano + ".csv";
+    public class Senado
+    {
+        public static void CarregaSenadores()
+        {
+            //StringBuilder email = new StringBuilder();
 
-			//if (!Directory.Exists(atualDir))
-			//{
-			//	Directory.CreateDirectory(atualDir);
-			//}
+            try
+            {
+                using (Banco banco = new Banco())
+                {
+                    banco.ExecuteNonQuery("UPDATE sf_senador SET ativo = 'N'");
 
-			//HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+                    using (DataSet senado = new DataSet())
+                    {
+                        senado.ReadXml("http://legis.senado.gov.br/dadosabertos/senador/lista/atual");
 
-			//request.UserAgent = "Other";
-			//request.Method = "HEAD";
-			//request.ContentType = "application/json;charset=UTF-8";
-			//request.Timeout = 1000000;
+                        using (DataTable senadores = senado.Tables["IdentificacaoParlamentar"])
+                        {
+                            foreach (DataRow senador in senadores.Rows)
+                            {
+                                //email.Append(Convert.ToString(senador["EnderecoEletronico"]) + ";");
 
-			//using (System.Net.WebResponse resp = request.GetResponse())
-			//{
-			//	long ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
-			//	long ContentLengthLocal = 0;
+                                try
+                                {
+                                    banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
+                                    banco.AddParameter("NomeParlamentar", Convert.ToString(senador["NomeParlamentar"]).ToUpper());
+                                    banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
+                                    banco.AddParameter("Foto", Convert.ToString(senador["UrlFotoParlamentar"]));
+                                    banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
+                                    banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
+                                    // Ao invés de gravar o fim do mandato grava o início
+                                    //banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
+                                    banco.ExecuteNonQuery("INSERT INTO sf_senador (id, nome, Url, foto, id_partido, id_estado, ativo) VALUES (@CodigoParlamentar, @NomeParlamentar, @Url, @Foto, (SELECT id FROM partido where sigla like @SiglaPartido), (SELECT id FROM estado where sigla like @SiglaUf), 'S')");
+                                }
+                                catch
+                                {
+                                    banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
+                                    banco.AddParameter("Foto", Convert.ToString(senador["UrlFotoParlamentar"]));
+                                    banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
+                                    banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
+                                    banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
+                                    // Ao invés de gravar o fim do mandato grava o início
+                                    //banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
+                                    banco.ExecuteNonQuery("UPDATE sf_senador SET url = @Url, foto = @Foto, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido), id_estado = (SELECT id FROM estado where sigla like @SiglaUf), ativo = 'S' WHERE id = @CodigoParlamentar");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
 
-			//	if (File.Exists(fullFileNameCsv))
-			//	{
-			//		ContentLengthLocal = new System.IO.FileInfo(fullFileNameCsv).Length;
-			//	}
+        public static void ImportarDespesas(string atualDir, int ano)
+        {
+            string downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
+            string fullFileNameCsv = atualDir + @"\" + ano + ".csv";
 
-			//	if (ContentLength == ContentLengthLocal)
-			//	{
-			//		//Do something useful with ContentLength here 
-			//		return;
-			//	}
+            if (!Directory.Exists(atualDir))
+            {
+                Directory.CreateDirectory(atualDir);
+            }
 
-			//	using (WebClient client = new WebClient())
-			//	{
-			//		client.Headers.Add("User-Agent: Other");
-			//		client.DownloadFile(downloadUrl, fullFileNameCsv);
-			//	}
-			//}
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadUrl);
 
-			CarregaDadosCsv(fullFileNameCsv);
-			
-			//File.Delete(fullFileNameCsv);
-		}
+            request.UserAgent = "Other";
+            request.Method = "HEAD";
+            request.ContentType = "application/json;charset=UTF-8";
+            request.Timeout = 1000000;
 
-		private static void CarregaDadosCsv(String file)
-		{
-			try
-			{
-				using (Banco banco = new Banco())
-				{
-					LimpaDespesaTemporaria(banco);
+            using (System.Net.WebResponse resp = request.GetResponse())
+            {
+                long ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                long ContentLengthLocal = 0;
 
-					using (StreamReader reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
-					{
-						Int16 count = 0;
+                if (File.Exists(fullFileNameCsv))
+                {
+                    ContentLengthLocal = new System.IO.FileInfo(fullFileNameCsv).Length;
+                }
 
-						while (!reader.EndOfStream)
-						{
-							count++;
+                if (ContentLength == ContentLengthLocal)
+                {
+                    //Do something useful with ContentLength here 
+                    return;
+                }
 
-							String line = reader.ReadLine();
-							if (string.IsNullOrEmpty(line))
-							{
-								// Ignorar registros vazios no meio doo arquivo
-								continue;
-							}
-							else if (!line.EndsWith("\""))
-							{
-								// O arquivo pode vir com quebra de linha quando o texto no detalhamento é muito grande
-								line += reader.ReadLine();
-							}
+                using (WebClient client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent: Other");
+                    client.DownloadFile(downloadUrl, fullFileNameCsv);
+                }
+            }
 
-							List<String> values = ParseRowToList(line);
+            CarregaDadosCsv(fullFileNameCsv, false);
 
-							if (count == 1) //Pula primeira linha
-								continue;
+            //File.Delete(fullFileNameCsv);
+        }
 
-							if (count == 2)
-							{
-								if (values[0] != "ANO" ||
-									values[1] != "MES" ||
-									values[2] != "SENADOR" ||
-									values[3] != "TIPO_DESPESA" ||
-									values[4] != "CNPJ_CPF" ||
-									values[5] != "FORNECEDOR" ||
-									values[6] != "DOCUMENTO" ||
-									values[7] != "DATA" ||
-									values[8] != "DETALHAMENTO" ||
-									values[9] != "VALOR_REEMBOLSADO")
-								{
-									return;
-								}
+        private static void CarregaDadosCsv(String file, bool completo)
+        {
+            //try
+            //{
+            int linhaAtual = 0;
 
-								continue;
-							}
+            using (Banco banco = new Banco())
+            {
+                //         if (!completo)
+                //         {
+                //             banco.ExecuteNonQuery(@"
+                // delete from sf_despesa where ano=2016;
 
-							String cnpj;
+                //             -- select max(id)+1 from sf_despesa;
+                //             ALTER TABLE sf_despesa AUTO_INCREMENT = 141807;
+                //");
+                //         }
 
-							banco.AddParameter("ano", Convert.ToInt32(values[0]));
-							banco.AddParameter("mes", Convert.ToInt32(values[1]));
-							banco.AddParameter("senador", values[2]);
-							banco.AddParameter("tipo_despesa", values[3]);
-							banco.AddParameter("fornecedor", values[5]);
-							banco.AddParameter("documento", values[6]);
-							banco.AddParameter("detalhamento", values[8]);
-							banco.AddParameter("valor_reembolsado", Convert.ToDouble(values[9]));
+                LimpaDespesaTemporaria(banco);
 
-							try { banco.AddParameter("data", Convert.ToDateTime(values[7])); }
-							catch { banco.AddParameter("data", DBNull.Value); }
+                using (StreamReader reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
+                {
+                    Int16 count = 0;
 
-							try
-							{
-								if (values[4].IndexOf("/") > 0)
-									cnpj = Convert.ToInt64(values[4].Replace(".", "").Replace("-", "").Replace("/", "")).ToString("00000000000000");
-								else
-									cnpj = Convert.ToInt64(values[4].Replace(".", "").Replace("-", "")).ToString("00000000000");
-							}
-							catch
-							{
-								cnpj = "";
-							}
+                    while (!reader.EndOfStream)
+                    {
+                        count++;
 
-							banco.AddParameter("cnpj_cpf", cnpj);
+                        String line = reader.ReadLine();
+                        if (string.IsNullOrEmpty(line))
+                        {
+                            // Ignorar registros vazios no meio doo arquivo
+                            continue;
+                        }
+                        else if (!line.EndsWith("\""))
+                        {
+                            // O arquivo pode vir com quebra de linha quando o texto no detalhamento é muito grande
+                            line += reader.ReadLine();
+                        }
 
-							banco.ExecuteNonQuery(
-								@"INSERT INTO sf_despesa_temp (
+                        List<String> values = ParseRowToList(line);
+
+                        if (count == 1) //Pula primeira linha
+                            continue;
+
+                        if (count == 2)
+                        {
+                            if (values[0] != "ANO" ||
+                                values[1] != "MES" ||
+                                values[2] != "SENADOR" ||
+                                values[3] != "TIPO_DESPESA" ||
+                                values[4] != "CNPJ_CPF" ||
+                                values[5] != "FORNECEDOR" ||
+                                values[6] != "DOCUMENTO" ||
+                                values[7] != "DATA" ||
+                                values[8] != "DETALHAMENTO" ||
+                                values[9] != "VALOR_REEMBOLSADO")
+                            {
+                                return;
+                            }
+
+                            continue;
+                        }
+
+                        String cnpj;
+
+                        banco.AddParameter("ano", Convert.ToInt32(values[0]));
+                        banco.AddParameter("mes", Convert.ToInt32(values[1]));
+                        banco.AddParameter("senador", values[2]);
+                        banco.AddParameter("tipo_despesa", values[3]);
+                        banco.AddParameter("fornecedor", values[5]);
+                        banco.AddParameter("documento", values[6]);
+                        banco.AddParameter("detalhamento", values[8]);
+                        banco.AddParameter("valor_reembolsado", Convert.ToDouble(values[9]));
+
+                        try { banco.AddParameter("data", Convert.ToDateTime(values[7])); }
+                        catch { banco.AddParameter("data", DBNull.Value); }
+
+                        try
+                        {
+                            if (values[4].IndexOf("/") > 0)
+                                cnpj = Convert.ToInt64(values[4].Replace(".", "").Replace("-", "").Replace("/", "")).ToString("00000000000000");
+                            else
+                                cnpj = Convert.ToInt64(values[4].Replace(".", "").Replace("-", "")).ToString("00000000000");
+                        }
+                        catch
+                        {
+                            cnpj = "";
+                        }
+
+                        banco.AddParameter("cnpj_cpf", cnpj);
+
+                        banco.ExecuteNonQuery(
+                            @"INSERT INTO sf_despesa_temp (
 								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado
 							) VALUES (
 								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado
 							)");
-						}
+                    }
 
-						CorrigeDespesas(banco);
-						InsereFornecedorFaltante(banco);
-						InsereDespesaFinal(banco);
-						LimpaDespesaTemporaria(banco);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				var x = 1;
-			}
-		}
+                    if (completo && ++linhaAtual == 10000)
+                    {
+                        linhaAtual = 0;
 
-		private static List<String> ParseRowToList(String row)
-		{
-			try
-			{
-				return row.Substring(1, row.Length - 2).Split(new string[] { @""";""" }, StringSplitOptions.None).ToList();
-			}
-			catch (Exception e)
-			{
-				return null;
-			}
-		}
+                        ProcessarDespesasTemp(banco, completo);
+                    }
+                }
+            }
 
-		private static void CorrigeDespesas(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+            using (Banco banco = new Banco())
+            {
+                ProcessarDespesasTemp(banco, completo);
+
+                banco.ExecuteNonQuery(@"
+				        UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
+			        ");
+
+                AtualizaSenadorValores();
+            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    //var x = ex.Message;
+            //}
+        }
+
+        private static List<String> ParseRowToList(String row)
+        {
+            try
+            {
+                return row.Substring(1, row.Length - 2).Split(new string[] { @""";""" }, StringSplitOptions.None).ToList();
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        private static void ProcessarDespesasTemp(Banco banco, bool completo)
+        {
+            CorrigeDespesas(banco);
+            InsereSenadorFaltante(banco);
+            InsereFornecedorFaltante(banco);
+
+            if (completo)
+            {
+                InsereDespesaFinal(banco);
+            }
+            else
+            {
+                InsereDespesaFinalParcial(banco);
+            }
+
+            LimpaDespesaTemporaria(banco);
+        }
+
+        private static void CorrigeDespesas(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 				UPDATE sf_despesa_temp 
 				SET tipo_despesa = 'Aquisição de material de consumo para uso no escritório político' 
 				WHERE tipo_despesa LIKE 'Aquisição de material de consumo para uso no escritório político%';
@@ -180,11 +278,23 @@ namespace OPS.ImportacaoDados
 				SET tipo_despesa = 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços' 
 				WHERE tipo_despesa LIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';	
 			");
-		}
+        }
 
-		private static void InsereFornecedorFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static void InsereSenadorFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
+				INSERT INTO sf_senador (nome)
+				select distinct senador
+				from sf_despesa_temp
+				where senador  not in (
+					select nome from sf_senador
+				);
+			");
+        }
+
+        private static void InsereFornecedorFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 				INSERT INTO fornecedor (nome, cnpj_cpf)
 				select MAX(dt.fornecedor), dt.cnpj_cpf
 				from sf_despesa_temp dt
@@ -193,11 +303,11 @@ namespace OPS.ImportacaoDados
 				and f.id is null
 				GROUP BY dt.cnpj_cpf;
 			");
-		}
+        }
 
-		private static void InsereDespesaFinal(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static void InsereDespesaFinal(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 				ALTER TABLE sf_despesa DISABLE KEYS;
 
 				INSERT INTO sf_despesa (
@@ -230,13 +340,109 @@ namespace OPS.ImportacaoDados
     
 				ALTER TABLE sf_despesa ENABLE KEYS;
 			", 3600);
-		}
+        }
 
-		private static void LimpaDespesaTemporaria(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static void InsereDespesaFinalParcial(Banco banco)
+        {
+            var dt = banco.GetTable(
+                @"DROP TABLE IF EXISTS table_in_memory_d;
+                CREATE TEMPORARY TABLE table_in_memory_d
+                AS (
+	                select id_sf_senador, mes, sum(valor) as total
+	                from sf_despesa d
+	                where ano = 2016
+	                GROUP BY id_sf_senador, mes
+                );
+
+                DROP TABLE IF EXISTS table_in_memory_dt;
+                CREATE TEMPORARY TABLE table_in_memory_dt
+                AS (
+	                select p.id as id_sf_senador, mes, sum(valor_reembolsado) as total
+	                from sf_despesa_temp d
+                    inner join sf_senador p on p.nome = d.senador
+	                GROUP BY p.id, mes
+                );
+
+                select dt.id_sf_senador, dt.mes
+                from table_in_memory_dt dt
+                left join table_in_memory_d d on dt.id_sf_senador = d.id_sf_senador and dt.mes = d.mes
+                where (d.id_sf_senador is null or d.total <> dt.total)
+                order by d.id_sf_senador, d.mes;
+			    ", 3600);
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                banco.AddParameter("id_sf_senador", dr["id_sf_senador"]);
+                banco.AddParameter("mes", dr["mes"]);
+                banco.ExecuteNonQuery(@"DELETE FROM sf_despesa WHERE id_sf_senador=@id_sf_senador and mes=@mes");
+
+                banco.AddParameter("id_sf_senador", dr["id_sf_senador"]);
+                banco.AddParameter("mes", dr["mes"]);
+                banco.ExecuteNonQuery(@"
+				        INSERT INTO sf_despesa (
+					        id_sf_senador,
+					        id_sf_despesa_tipo,
+					        id_fornecedor,
+					        ano_mes,
+					        ano,
+					        mes,
+					        documento,
+					        data_documento,
+					        detalhamento,
+					        valor
+				        )
+				        SELECT 
+					        d.id,
+					        dt.id,
+					        f.id,
+					        concat(ano, LPAD(mes, 2, '0')),
+					        d.ano,
+					        d.mes,
+					        d.documento,
+					        d.`data`,
+					        d.detalhamento,
+					        d.valor_reembolsado
+					    from (
+						    select d.*, p.id					        
+						    from sf_despesa_temp d
+                            inner join sf_senador p on p.nome = d.senador
+						    WHERE p.id=@id_sf_senador and mes=@mes
+					    ) d
+				        inner join sf_despesa_tipo dt on dt.descricao = d.tipo_despesa
+				        inner join fornecedor f on f.cnpj_cpf = d.cnpj_cpf;
+			        ", 3600);
+            }
+        }
+
+        private static void LimpaDespesaTemporaria(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 				truncate table sf_despesa_temp;
 			");
-		}
-	}
+        }
+
+        public static void AtualizaSenadorValores()
+        {
+            using (Banco banco = new Banco())
+            {
+                var dt = banco.GetTable("select id from sf_senador");
+                object valor_total_ceaps;
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    banco.AddParameter("id_sf_senador", dr["id"]);
+                    valor_total_ceaps = banco.ExecuteScalar("select sum(valor) from sf_despesa where id_sf_senador=@id_sf_senador;");
+
+                    banco.AddParameter("valor_total_ceaps", valor_total_ceaps);
+                    banco.AddParameter("id_sf_senador", dr["id"]);
+                    banco.ExecuteNonQuery(
+                        @"update sf_senador set 
+						valor_total_ceaps=@valor_total_ceaps
+						where id=@id_sf_senador"
+                    );
+                }
+
+            }
+        }
+    }
 }

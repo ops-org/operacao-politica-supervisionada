@@ -18,8 +18,8 @@ namespace OPS.Dao
 						lstRetorno.Add(new
 						{
 							id = reader["id"].ToString(),
-							tokens = reader["sigla"].ToString(),
-							text = reader["nome"].ToString()
+                            tokens = new[] { reader["sigla"].ToString(), reader["nome"].ToString() },
+                            text = reader["nome"].ToString()
 						});
 					}
 				}

@@ -1,195 +1,213 @@
 ﻿<div class="container-fluid" data-ng-controller="DeputadoDocumentoVisualizarController">
-	<fieldset>
-		<legend>Nota Fiscal: {{::documento.numero_documento || documento.id_documento}}</legend>
+    <div class="alert alert-warning" role="alert">
+        Atenção: Essa URL é dinâmica e pode mudar, portanto não a utilize para compartilhamento.
+        Para compartilhamento utilize esse <a href="#" data-ng-href="{{::documento.url_documentos_Deputado_beneficiario}}">link</a>.
+    </div>
 
-		<div class="form-group">
-			<div class="row">
-				<div class="col-md-8">
-					<a href="#" data-ng-href="./#/deputado-federal/{{::documento.id_cf_deputado}}">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="::documento.nome_parlamentar"></h3>
-								<span>Nome Parlamentar</span>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-tags"></i></div>
-						<div class="text">
-							<h3>{{::documento.sigla_partido}} / {{::documento.sigla_estado}}</h3>
-							<span>Partido / UF</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-8">
-					<a href="#" data-ng-href="{{::documento.url_beneficiario}}">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="::documento.nome_fornecedor"></h3>
-								<span>Befeficiario/Fornecedor</span>
-							</div>
-							<span class="clearfix"></span>
-						</div>
-					</a>
-				</div>
-				<div class="col-md-4">
-					<a href="#" data-ng-href="{{::documento.url_beneficiario}}">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="::documento.cnpj_cpf"></h3>
-								<span>CNPJ</span>
-							</div>
-							<span class="clearfix"></span>
-						</div>
-					</a>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-8">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-list"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.descricao_despesa"></h3>
-							<span>Despesa</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-calendar"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.data_emissao"></h3>
-							<span>Data Emissão</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-3">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.valor_documento"></h3>
-							<span>Valor do Documento</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.valor_glosa"></h3>
-							<span>Valor da Glosa</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.valor_liquido"></h3>
-							<span>Valor Líquido</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.valor_restituicao"></h3>
-							<span>Valor de Restituição</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.tipo_documento"></h3>
-							<span>Tipo de Documento</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-user"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.nome_passageiro"></h3>
-							<span>Nome do Passageiro</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="glyphicon glyphicon-map-marker"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.trecho_viagem"></h3>
-							<span>Trecho da Viagem</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-		</div>
+    <fieldset>
+        <legend>Nota Fiscal: {{::documento.numero_documento || documento.id_documento}}</legend>
 
-		<div class="form-group">
-			<div class="panel panel-default">
-				<div class="panel-heading">Dados na câmara</div>
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-12 text-center">
-							<a data-ng-if="::documento.id_documento" class="btn btn-success" href="#" data-ng-href="{{documento.url_documento}}" target="_blank">Nota/Recibo&nbsp;<i class="glyphicon glyphicon-download-alt"></i></a>
-							<a data-ng-if="::documento.id_documento" class="btn btn-default" href="#" data-ng-href="{{documento.url_detalhes_documento}}" target="_blank">Detalhes da nota/recibo&nbsp;<i class="glyphicon glyphicon-plus"></i></a>
-							<a class="btn btn-default" href="#" data-ng-href="{{documento.url_demais_documentos_mes}}" target="_blank">Demais Notas do mês&nbsp;<i class="glyphicon glyphicon-plus"></i></a>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-8">
+                    <a href="#" data-ng-href="./#/deputado-federal/{{::documento.id_cf_deputado}}">
+                        <div class="dvg-painel-info-etiqueta">
+                            <div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+                            <div class="text">
+                                <h3 data-ng-bind="::documento.nome_parlamentar"></h3>
+                                <span>Nome Parlamentar</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-tags"></i></div>
+                        <div class="text">
+                            <h3>{{::documento.sigla_partido}} / {{::documento.sigla_estado}}</h3>
+                            <span>Partido / UF</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <a href="#" data-ng-href="{{::documento.url_beneficiario}}">
+                        <div class="dvg-painel-info-etiqueta">
+                            <div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+                            <div class="text">
+                                <h3 data-ng-bind="::documento.nome_fornecedor"></h3>
+                                <span>Befeficiario/Fornecedor</span>
+                            </div>
+                            <span class="clearfix"></span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="#" data-ng-href="{{::documento.url_beneficiario}}">
+                        <div class="dvg-painel-info-etiqueta">
+                            <div class="icon"><i class="glyphicon glyphicon-briefcase"></i></div>
+                            <div class="text">
+                                <h3 data-ng-bind="::documento.cnpj_cpf"></h3>
+                                <span>CNPJ</span>
+                            </div>
+                            <span class="clearfix"></span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-list"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.descricao_despesa"></h3>
+                            <span>Despesa</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-calendar"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.data_emissao"></h3>
+                            <span>Data Emissão</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.valor_documento"></h3>
+                            <span>Valor do Documento</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.valor_glosa"></h3>
+                            <span>Valor da Glosa</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.valor_liquido"></h3>
+                            <span>Valor Líquido</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-usd"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.valor_restituicao"></h3>
+                            <span>Valor de Restituição</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.tipo_documento"></h3>
+                            <span>Tipo de Documento</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-user"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.nome_passageiro"></h3>
+                            <span>Nome do Passageiro</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="glyphicon glyphicon-map-marker"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="::documento.trecho_viagem"></h3>
+                            <span>Trecho da Viagem</span>
+                        </div>
+                        <span class="clearfix"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-		<ul class="list-group">
-			<li class="list-group-item active">
-				<strong>Entenda os valores</strong>
-			</li>
+        <div class="form-group text-center">
+            <a href="#" data-ng-href="{{::documento.url_documentos_Deputado_beneficiario}}" class="btn btn-primary">Ver todas as notas do deputado para o beneficiário.</a>
+        </div>
 
-			<li class="list-group-item">
-				<strong>Valor do Documento:</strong>
-				É o valor de face do documento fiscal ou o valor do documento que deu causa à despesa. Quando se tratar de bilhete aéreo, esse valor poderá ser negativo, significando que o referido bilhete é um bilhete de compensação, pois compensa um outro bilhete emitido e não utilizado pelo deputado (idem para o dado 'Valor Líquido' abaixo).
-			</li>
-			<li class="list-group-item">
-				<strong>Valor da Glosa:</strong>
-				Representa o valor da glosa do documento fiscal que incidirá sobre o Valor do Documento, ou o valor da glosa do documento que deu causa à despesa.
-			</li>
-			<li class="list-group-item">
-				<strong>Valor Líquido:</strong>
-				Representa o valor líquido do documento fiscal ou do documento que deu causa à despesa e será calculado pela diferença entre o Valor do Documento e o Valor da Glosa. É este valor que será debitado da cota do deputado. Caso o débito seja do Tipo Telefonia e o valor seja igual a zero, significa que a despesa foi franqueada.
-			</li>
-			<li class="list-group-item">
-				<strong>Valor da Restituição:</strong>
-				Rrepresenta o valor restituído do documento fiscal que incidirá sobre o Valor do Documento.
-			</li>
-		</ul>
+        <div class="form-group">
+            <div class="panel panel-default">
+                <div class="panel-heading">Dados na câmara</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12 text-center">
+                            <a data-ng-if="::documento.id_documento" class="btn btn-success" href="#" 
+                               data-ng-href="{{documento.url_documento}}"
+                               onclick="return trackOutboundLink(this, true);"
+                               target="_blank" rel="nofollow">Nota/Recibo&nbsp;<i class="glyphicon glyphicon-download-alt"></i></a>
+                            <a data-ng-if="::documento.id_documento" class="btn btn-default" href="#" 
+                               data-ng-href="{{documento.url_detalhes_documento}}" 
+                               onclick="return trackOutboundLink(this, true);"
+                               target="_blank" rel="nofollow">Detalhes da nota/recibo&nbsp;<i class="glyphicon glyphicon-plus"></i></a>
+                            <a class="btn btn-default" href="#" 
+                               data-ng-href="{{documento.url_demais_documentos_mes}}" 
+                               onclick="return trackOutboundLink(this, true);"
+                               target="_blank" rel="nofollow">Demais Notas do mês&nbsp;<i class="glyphicon glyphicon-plus"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-		<div class="form-group">
-			<dir-disqus config="disqusConfig"></dir-disqus>
-		</div>
+        <ul class="list-group">
+            <li class="list-group-item active">
+                <strong>Entenda os valores</strong>
+            </li>
 
-	</fieldset>
+            <li class="list-group-item">
+                <strong>Valor do Documento:</strong>
+                É o valor de face do documento fiscal ou o valor do documento que deu causa à despesa. Quando se tratar de bilhete aéreo, esse valor poderá ser negativo, significando que o referido bilhete é um bilhete de compensação, pois compensa um outro bilhete emitido e não utilizado pelo deputado (idem para o dado 'Valor Líquido' abaixo).
+            </li>
+            <li class="list-group-item">
+                <strong>Valor da Glosa:</strong>
+                Representa o valor da glosa do documento fiscal que incidirá sobre o Valor do Documento, ou o valor da glosa do documento que deu causa à despesa.
+            </li>
+            <li class="list-group-item">
+                <strong>Valor Líquido:</strong>
+                Representa o valor líquido do documento fiscal ou do documento que deu causa à despesa e será calculado pela diferença entre o Valor do Documento e o Valor da Glosa. É este valor que será debitado da cota do deputado. Caso o débito seja do Tipo Telefonia e o valor seja igual a zero, significa que a despesa foi franqueada.
+            </li>
+            <li class="list-group-item">
+                <strong>Valor da Restituição:</strong>
+                Rrepresenta o valor restituído do documento fiscal que incidirá sobre o Valor do Documento.
+            </li>
+        </ul>
+
+        @*<div class="form-group">
+                <dir-disqus config="disqusConfig"></dir-disqus>
+            </div>*@
+
+    </fieldset>
 </div>

@@ -4,10 +4,10 @@ app.controller('DeputadoDocumentoVisualizarController', ["$scope", "$api", "$rou
     function ($scope, $api, $routeParams) {
     	document.title = "OPS :: Deputado Federal - NF:" + $routeParams.id;
 
-    	$scope.disqusConfig = {
-    		disqus_identifier: 'deputado-federal-' + $routeParams.id.toString(),
-    		disqus_url: base_url + '/deputado-federal/' + $routeParams.id.toString()
-    	};
+    	//$scope.disqusConfig = {
+    	//	disqus_identifier: 'deputado-federal-' + $routeParams.id.toString(),
+    	//	disqus_url: base_url + '/deputado-federal/' + $routeParams.id.toString()
+    	//};
 
     	$api.get('Deputado/Documento', $routeParams.id).success(function (response) {
     		$scope.documento = response;
@@ -20,5 +20,6 @@ app.controller('DeputadoDocumentoVisualizarController', ["$scope", "$api", "$rou
     		$scope.documento.url_detalhes_documento = url_camara + 'documento?nuDeputadoId=' + doc.id_cf_deputado + '&numMes=' + doc.mes + '&numAno=' + doc.ano + '&despesa=' + doc.id_cf_despesa_tipo + '&cnpjFornecedor=' + doc.cnpj_cpf + '&idDocumento=' + doc.numero_documento
 
     		$scope.documento.url_beneficiario = './#/fornecedor/' + doc.id_fornecedor;
+    		$scope.documento.url_documentos_Deputado_beneficiario = './#/deputado-federal?IdParlamentar=' + doc.id_cf_deputado + '&Fornecedor=' + doc.id_fornecedor + '&Periodo=0&Agrupamento=6'
     	});
     }]);

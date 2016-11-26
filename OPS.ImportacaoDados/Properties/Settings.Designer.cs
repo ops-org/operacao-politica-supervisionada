@@ -22,15 +22,5 @@ namespace OPS.ImportacaoDados.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.WebServiceUrl)]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx")]
-        public string OPS_ImportacaoDados_CamaraWS_Deputados {
-            get {
-                return ((string)(this["OPS_ImportacaoDados_CamaraWS_Deputados"]));
-            }
-        }
     }
 }

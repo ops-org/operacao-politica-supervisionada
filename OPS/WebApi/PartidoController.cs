@@ -5,21 +5,22 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class PartidoController : ApiController
     {
-		PartidoDao dao;
+        PartidoDao dao;
 
-		public PartidoController()
-		{
-			dao = new PartidoDao();
-		}
+        public PartidoController()
+        {
+            dao = new PartidoDao();
+        }
 
-		[HttpGet]
-		[ActionName("Get")]
-		public dynamic Consultar()
-		{
-			return dao.Consultar();
-		}
-	}
+        [HttpGet]
+        [ActionName("Get")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public dynamic Consultar()
+        {
+            return dao.Consultar();
+        }
+    }
 }

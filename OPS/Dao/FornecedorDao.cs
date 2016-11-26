@@ -62,7 +62,7 @@ namespace OPS.Dao
 				banco.AddParameter("id", id);
 
 				using (MySqlDataReader reader = banco.ExecuteReader(
-						@"SELECT 
+                        @"SELECT 
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
 							, pj.nome
@@ -92,40 +92,54 @@ namespace OPS.Dao
 						LEFT JOIN fornecedor_info pji on pji.id_fornecedor = pj.id
 						LEFT JOIN fornecedor_atividade a on a.id = pji.id_fornecedor_atividade_principal
 						LEFT JOIN fornecedor_natureza_juridica nj on nj.id = pji.id_fornecedor_natureza_juridica
-						WHERE pj.id = @id"
-					))
+						WHERE pj.id = @id;
+
+                        SELECT fa.codigo, fa.descricao
+                        FROM fornecedor_atividade_secundaria fas 
+                        INNER JOIN fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
+                        where id_fornecedor = @id;"
+                    ))
 				{
 					if (reader.Read())
 					{
-						return new
-						{
-							id_fornecedor = reader["id_fornecedor"].ToString(),
-							cnpj_cpf = reader["cnpj_cpf"].ToString(),
-							data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
-							nome = reader["nome"].ToString(),
-							nome_fantasia = reader["nome_fantasia"].ToString(),
-							atividade_principal = reader["atividade_principal"].ToString(),
-							natureza_juridica = reader["natureza_juridica"].ToString(),
-							logradouro = reader["logradouro"].ToString(),
-							numero = reader["numero"].ToString(),
-							complemento = reader["complemento"].ToString(),
-							cep = reader["cep"].ToString(),
-							bairro = reader["bairro"].ToString(),
-							cidade = reader["cidade"].ToString(),
-							estado = reader["estado"].ToString(),
-							situacao_cadastral = reader["situacao_cadastral"].ToString(),
-							data_da_situacao_cadastral = reader["data_da_situacao_cadastral"].ToString(),
-							motivo_situacao_cadastral = reader["motivo_situacao_cadastral"].ToString(),
-							situacao_especial = reader["situacao_especial"].ToString(),
-							data_situacao_especial = reader["data_situacao_especial"].ToString(),
-							endereco_eletronico = reader["endereco_eletronico"].ToString(),
-							telefone = reader["telefone"].ToString(),
-							ente_federativo_responsavel = reader["ente_federativo_responsavel"].ToString(),
-							obtido_em = Utils.FormataDataHora(reader["obtido_em"]),
-							capital_social = Utils.FormataValor(reader["capital_social"]),
-							doador = reader["doador"]
-						};
-					}
+                        var fornecedor = new
+                        {
+                            id_fornecedor = reader["id_fornecedor"].ToString(),
+                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
+                            nome = reader["nome"].ToString(),
+                            nome_fantasia = reader["nome_fantasia"].ToString(),
+                            atividade_principal = reader["atividade_principal"].ToString(),
+                            natureza_juridica = reader["natureza_juridica"].ToString(),
+                            logradouro = reader["logradouro"].ToString(),
+                            numero = reader["numero"].ToString(),
+                            complemento = reader["complemento"].ToString(),
+                            cep = reader["cep"].ToString(),
+                            bairro = reader["bairro"].ToString(),
+                            cidade = reader["cidade"].ToString(),
+                            estado = reader["estado"].ToString(),
+                            situacao_cadastral = reader["situacao_cadastral"].ToString(),
+                            data_da_situacao_cadastral = reader["data_da_situacao_cadastral"].ToString(),
+                            motivo_situacao_cadastral = reader["motivo_situacao_cadastral"].ToString(),
+                            situacao_especial = reader["situacao_especial"].ToString(),
+                            data_situacao_especial = reader["data_situacao_especial"].ToString(),
+                            endereco_eletronico = reader["endereco_eletronico"].ToString(),
+                            telefone = reader["telefone"].ToString(),
+                            ente_federativo_responsavel = reader["ente_federativo_responsavel"].ToString(),
+                            obtido_em = Utils.FormataDataHora(reader["obtido_em"]),
+                            capital_social = Utils.FormataValor(reader["capital_social"]),
+                            doador = reader["doador"],
+                            atividade_secundaria = new List<string>()
+                        };
+
+                        reader.NextResult();
+                        while (reader.Read())
+                        {
+                            fornecedor.atividade_secundaria.Add(string.Format("{0} - {1}", reader["codigo"], reader["descricao"]));
+                        }
+
+                        return fornecedor;
+                    }
 
 					return null; ;
 				}

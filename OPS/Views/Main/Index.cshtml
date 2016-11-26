@@ -1,95 +1,12 @@
 ﻿<div id="app">
-	<nav class="navbar navbar-default navbar-static-top topnav" role="navigation">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-					<span class="sr-only">Alternar Navegação</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand topnav" href="./#/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
-					<img src="~/Content/images/logo_ops.png" width="64" height="40" alt="OPS" />
-				</a>
-			</div>
-			<div id="navbar" class="navbar-collapse collapse">
-				<ul class="nav navbar-nav navbar-right">
+    <div id="container">
+        <div data-ng-view></div>
+    </div>
 
-					<li class="dropdown">
-						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Explorar<span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li class="dropdown-header">Deputados Federais</li>
-							<li><a href="./#/deputado-federal">Cota parlamentar (CEAP)</a></li>
-							<li><a href="./#/deputado-federal/secretario">Secretários</a></li>
-							<li role="separator" class="divider"></li>
-							<li class="dropdown-header">Senadores</li>
-							<li><a href="./#/senador">Cota Parlamentar (CEAPS)</a></li>
-							<li role="separator" class="divider"></li>
-							<li class="dropdown-header">Presidência da República</li>
-							<li><a href="https://web-cpgf.rhcloud.com" target="_blank">Cartão Corporativo (CPGF)</a></li>
-						</ul>
-					</li>
-					<li><a href="./#/fiscalize">Resumo App</a></li>
-
-					@*<li class="dropdown">
-							<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Revisar<span class="caret"></span></a>
-							<ul class="dropdown-menu">
-								<li><a href="./#/revisao/revisao">Revisão</a></li>
-								<li><a href="./#/revisao/relatorio">Relatórios</a></li>
-							</ul>
-						</li>
-						<li><a href="./#/geral/pendecias">Pendências</a></li>
-						<li><a href="./#/usuario/denuncias">Denúncias</a></li>*@
-					<li><a href="./#/sobre">Sobre</a></li>
-					@*<li class="dropdown">
-							<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Mais<span class="caret"></span></a>
-							<ul class="dropdown-menu">
-								<li><a href="./#/geral/membros">Membros</a></li>
-								<li><a href="./#/geral/sobre">Sobre a OPS</a></li>
-							</ul>
-						</li>*@
-				</ul>
-				@*<ul class="nav navbar-nav navbar-right">
-						<li ng-show="loggedIn">
-							<a href="" ng-click="logout()">{{username}} | Sign Out</a>
-						</li>
-						<li ng-hide="loggedIn">
-							<a href="./#/login/entrar">Sign In</a>
-						</li>
-						<li ng-hide="loggedIn">
-							<a href="./#/login/registrar">Register</a>
-						</li>
-
-						<li><a href="./#/login/entrar"><i class="glyphicon glyphicon-log-in"></i>&nbsp;Entrar</a></li>
-						<li>
-							<a href="./#/usuario/perfil" title="Visualizar Perfil"><i class='glyphicon glyphicon-user'></i>[Nome do Usuário]</a>
-						</li>
-						<li>
-							<a href="./sair" title="Sair"><i class='glyphicon glyphicon-log-in'></i>&nbsp;Sair</a>
-						</li>
-					</ul>*@
-			</div>
-		</div>
-	</nav>
-
-	<div class="wrap-content" id="container">
-		<div data-ng-view></div>
-	</div>
-
-	<div class="container-fluid rodape">
-		<div class="pull-left">
-			<span>OPS - Operação Política Supervisionada</span>
-		</div>
-		<div class="pull-right">
-			<a href="./#/sobre">Sobre</a>
-			<a href="https://github.com/ops-org/operacao-politica-supervisionada" target="_blank" rel="nofolow">Repositório no GitHub</a>
-			<a href="javascript:;" id="btnReportarErro">Reportar um erro</a>
-		</div>
-	</div>
-
-	<div id="loading-modal" data-ng-show="countRequest > 0">
-		<div id="loading-modal-text">
-			<img class="loader-facebook" src="~/Content/images/ajax-loader-facebook.gif" />Processando
-		</div>
-	</div>
+    <div id="loading-modal" data-ng-init="countRequest=1" data-ng-show="countRequest > 0">
+        <div class="modal-backdrop fade in"></div>
+        <div id="loading-modal-text">
+            <img class="loader-facebook" src="~/Content/images/ajax-loader-facebook.gif" />Processando
+        </div>
+    </div>
 </div>

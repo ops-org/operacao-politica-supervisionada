@@ -5,7 +5,7 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ClientTimeSpan = 3600 /* 1h */, ServerTimeSpan = 21600 /* 6h */)]
+    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoController : ApiController
 	{
 		DeputadoDao dao;
@@ -23,7 +23,8 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-		public dynamic Pesquisa()
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public dynamic Pesquisa()
 		{
 			return dao.Pesquisa();
 		}
@@ -35,7 +36,8 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-		public dynamic TipoDespesa()
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public dynamic TipoDespesa()
 		{
 			return dao.TipoDespesa();
 		}
