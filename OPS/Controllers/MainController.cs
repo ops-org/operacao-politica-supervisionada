@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using OPS.Core;
 
 namespace OPS.Controllers
 {
@@ -16,7 +17,10 @@ namespace OPS.Controllers
 		{
 			ViewBag.Title = "OPS - Operação Política Supervisionada";
 
-			return View();
+            ViewBag.DeputadoFederalUltimaAtualizacao = Padrao.DeputadoFederalUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
+            ViewBag.SenadorUltimaAtualizacao = Padrao.SenadorUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
+
+            return View();
 		}
 	}
 }

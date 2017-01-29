@@ -78,3 +78,5 @@ body { /* Margin bottom by footer height */ margin-bottom: 92px; }
 
 a.no-link { color: inherit; cursor: default; }
     a.no-link:hover, a.no-link:active { text-decoration: none; }
+
+form.ng-submitted .form-control.ng-invalid { border: 1px solid red; }

@@ -1,194 +1,193 @@
-﻿using MySql.Data.MySqlClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
 
 namespace OPS.Core
 {
-	public class Banco : IDisposable
-	{
-		private Boolean mBeginTransaction;
-		private MySqlConnection mConnection;
-		private MySqlTransaction mTransaction;
+    public class Banco : IDisposable
+    {
+        private bool _mBeginTransaction;
+        private MySqlConnection _mConnection;
 
-		private List<MySqlParameter> mParametros;
+        private List<MySqlParameter> _mParametros;
+        private MySqlTransaction _mTransaction;
 
-		public Banco()
-		{
-			//MySqlConnectionStringBuilder conn_string = new MySqlConnectionStringBuilder();
-			//conn_string.Server = "mysql873.umbler.com";
-			//conn_string.Port = 41890;
-			//conn_string.UserID = "ops-auditoria";
-			//conn_string.Password = "W5dv2nU*{W";
-			//conn_string.Database = "ops-auditoria";
+        public Banco()
+        {
+            Initializer(Padrao.ConnectionString);
+        }
 
-			//var x = conn_string.ToString();
+        public Banco(string connectionString)
+        {
+            Initializer(connectionString);
+        }
 
-			mParametros = new List<MySqlParameter>();
-			mConnection = new MySqlConnection(Padrao.ConnectionString);
-			mConnection.Open();
+        public long Rows { get; set; }
+        public long LastInsertedId { get; set; }
 
-			//ExecuteNonQuery("set @@session.time_zone = '-02:00'"); //Horário de verão
-			//ExecuteNonQuery("set @@session.time_zone = '-03:00'");
+        public void Dispose()
+        {
+            try
+            {
+                if (_mBeginTransaction)
+                    _mTransaction.Rollback();
+            }
+            catch
+            {
+                // ignored
+            }
 
-			mBeginTransaction = false;
-		}
+            _mConnection.Close();
+            _mConnection.Dispose();
+            _mConnection = null;
+        }
 
-		public Int64 Rows { get; set; }
-		public Int64 LastInsertedId { get; set; }
+        private void Initializer(string connectionString)
+        {
+            _mParametros = new List<MySqlParameter>();
+            _mConnection = new MySqlConnection(connectionString);
+            _mConnection.Open();
 
-		public Boolean ExecuteNonQuery(String sql, Int32 timeOut = 60)
-		{
-			using (MySqlCommand command = mConnection.CreateCommand())
-			{
-				if (mBeginTransaction)
-					command.Transaction = mTransaction;
+            //ExecuteNonQuery("set @@session.time_zone = '-02:00'"); //Horário de verão
+            //ExecuteNonQuery("set @@session.time_zone = '-03:00'");
 
-				if (mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(mParametros.ToArray());
-					mParametros.Clear();
-				}
+            _mBeginTransaction = false;
+        }
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+        public bool ExecuteNonQuery(string sql, int timeOut = 60)
+        {
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
 
-				Rows = command.ExecuteNonQuery();
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                    _mParametros.Clear();
+                }
 
-				LastInsertedId = command.LastInsertedId;
-			}
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
-			return true;
-		}
+                Rows = command.ExecuteNonQuery();
 
-		public Object ExecuteScalar(String sql, Int32 timeOut = 60)
-		{
-			Object retorno = null;
+                LastInsertedId = command.LastInsertedId;
+            }
 
-			using (MySqlCommand command = mConnection.CreateCommand())
-			{
-				if (mBeginTransaction)
-					command.Transaction = mTransaction;
+            return true;
+        }
 
-				if (mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(mParametros.ToArray());
-					mParametros.Clear();
-				}
+        public object ExecuteScalar(string sql, int timeOut = 60)
+        {
+            object retorno;
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
+
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                    _mParametros.Clear();
+                }
+
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
                 retorno = command.ExecuteScalar();
-			}
+            }
 
-			return retorno;
-		}
+            return retorno;
+        }
 
-		public MySqlDataReader ExecuteReader(String sql, Int32 timeOut = 60)
-		{
-			MySqlDataReader reader;
+        public MySqlDataReader ExecuteReader(string sql, int timeOut = 60)
+        {
+            MySqlDataReader reader;
 
-			using (MySqlCommand command = mConnection.CreateCommand())
-			{
-				if (mBeginTransaction)
-					command.Transaction = mTransaction;
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
 
-				if (mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(mParametros.ToArray());
-					mParametros.Clear();
-				}
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                    _mParametros.Clear();
+                }
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
-				reader = command.ExecuteReader();
-			}
+                reader = command.ExecuteReader();
+            }
 
-			return reader;
-		}
+            return reader;
+        }
 
-		public DataTable GetTable(String sql, Int32 timeOut = 60)
-		{
-			DataTable table = null;
+        public DataTable GetTable(string sql, int timeOut = 60)
+        {
+            DataTable table;
 
-			using (MySqlCommand command = mConnection.CreateCommand())
-			{
-				if (mBeginTransaction)
-					command.Transaction = mTransaction;
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
 
-				if (mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(mParametros.ToArray());
-					mParametros.Clear();
-				}
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                    _mParametros.Clear();
+                }
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
-				using (MySqlDataAdapter adaper = new MySqlDataAdapter(command))
-				{
-					using (DataSet data = new DataSet())
-					{
-						data.EnforceConstraints = false;
-						adaper.Fill(data);
-						table = data.Tables[0];
-					}
-				}
-			}
+                using (var adaper = new MySqlDataAdapter(command))
+                {
+                    using (var data = new DataSet())
+                    {
+                        data.EnforceConstraints = false;
+                        adaper.Fill(data);
+                        table = data.Tables[0];
+                    }
+                }
+            }
 
-			return table;
-		}
+            return table;
+        }
 
-		public void BeginTransaction()
-		{
-			mBeginTransaction = true;
-			mTransaction = mConnection.BeginTransaction();
-		}
+        public void BeginTransaction()
+        {
+            _mBeginTransaction = true;
+            _mTransaction = _mConnection.BeginTransaction();
+        }
 
-		public void CommitTransaction()
-		{
-			mBeginTransaction = false;
+        public void CommitTransaction()
+        {
+            _mBeginTransaction = false;
 
-			try
-			{
-				mTransaction.Commit();
-			}
-			catch
-			{
-				mTransaction.Rollback();
-			}
-		}
+            try
+            {
+                _mTransaction.Commit();
+            }
+            catch
+            {
+                _mTransaction.Rollback();
+            }
+        }
 
-		public void RollBackTransaction()
-		{
-			mBeginTransaction = false;
-			mTransaction.Rollback();
-		}
+        public void RollBackTransaction()
+        {
+            _mBeginTransaction = false;
+            _mTransaction.Rollback();
+        }
 
-		public void AddParameter(String name, Object value)
-		{
-			mParametros.Add(new MySqlParameter(name, value));
-		}
-
-		public void Dispose()
-		{
-			try
-			{
-				if (mBeginTransaction)
-				{
-					mTransaction.Rollback();
-				}
-			}
-			catch { }
-
-			mConnection.Close();
-			mConnection.Dispose();
-			mConnection = null;
-		}
-	}
+        public void AddParameter(string name, object value)
+        {
+            _mParametros.Add(new MySqlParameter(name, value));
+        }
+    }
 }

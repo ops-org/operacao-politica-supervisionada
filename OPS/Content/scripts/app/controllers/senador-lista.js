@@ -48,7 +48,9 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     			liveSearch: true,
     			liveSearchNormalize: true
     		});
-    	}
+
+	        $('#lblSenadorUltimaAtualizacao').text(window.SenadorUltimaAtualizacao);
+	    }
 
     	$scope.Pesquisar = function (page_load) {
     		//switch ($("#lstAgrupamento").val()) {
@@ -122,6 +124,42 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     		}
 
     		$scope.filtro.Agrupamento = id;
+    	}
+
+    	$scope.AbreModalConsultaFornecedor = function () {
+    	    $('#dvConsultaFornecedor').modal('show');
+    	}
+
+    	$scope.ConsultaFornecedor = function () {
+    	    if ($scope.formFornecedor && ($scope.formFornecedor.nome || $scope.formFornecedor.cnpj)) {
+    	        $api.post('Fornecedor/Consulta', $scope.formFornecedor)
+	                .success(function (data) {
+	                    if (!data || data.length === 0) {
+	                        $scope.fornecedores = null;
+	                        alert('Nenhum Beneficiário Encontrado com o Filtro Informado.');
+	                    } else {
+	                        $scope.fornecedores = data;
+	                    }
+	                });
+    	    } else {
+    	        alert('Favor Informe o Nome ou CPF/CNPJ do Beneficiário.');
+    	    }
+    	}
+
+    	$scope.LimparFornecedor = function () {
+    	    $scope.formFornecedor = null;
+    	    $scope.fornecedores = null;
+    	}
+
+    	$scope.LimparFiltroFornecedor = function () {
+    	    $('#txtBeneficiario').val('');
+    	}
+
+    	$scope.SelecionarFornecedor = function (fornecedor) {
+    	    $('#txtBeneficiario').val(fornecedor.cnpj_cpf);
+
+    	    $('#dvConsultaFornecedor').modal('hide');
+    	    $scope.LimparFornecedor();
     	}
 
     	init();

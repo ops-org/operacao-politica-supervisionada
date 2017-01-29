@@ -649,7 +649,7 @@ namespace OPS.Dao
 
 		private object ObterValor(object d)
 		{
-			if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()))
+			if (string.IsNullOrEmpty(d as string) || Convert.IsDBNull(d))
 			{
 				return DBNull.Value;
 			}
@@ -666,20 +666,66 @@ namespace OPS.Dao
 			}
 		}
 
-		//public void MarcaVisitado(string Cnpj, string UserName)
-		//{
-		//	using (Banco banco = new Banco())
-		//	{
-		//		banco.AddParameter("txtCNPJCPF", Cnpj);
-		//		banco.AddParameter("UserName", UserName);
+        internal dynamic Consulta(string cnpj, string nome)
+        {
+            string sSql = @"SELECT 
+							id as id_fornecedor
+							, cnpj_cpf
+							, nome
+							, doador
+						FROM fornecedor
+                        WHERE (1=1)";
 
-		//		try
-		//		{
-		//			banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
-		//		}
-		//		catch { }
-		//	}
-		//}
+            using (Banco banco = new Banco())
+            {
+                if (!string.IsNullOrEmpty(cnpj))
+                {
+                    banco.AddParameter("cnpj", Utils.RemoveCaracteresNaoNumericos(cnpj));
+                    sSql += " AND cnpj_cpf = @cnpj";
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(nome))
+                    {
+                        banco.AddParameter("nome", "%" + nome + "%");
+                        sSql += " AND nome like @nome";
+                    }
+                }
 
-	}
+                sSql += " order by nome limit 100;";
+
+                var lstFornecedor = new List<dynamic>();
+                using (MySqlDataReader reader = banco.ExecuteReader(sSql))
+                {
+                    while (reader.Read())
+                    {
+                        lstFornecedor.Add(new
+                        {
+                            id_fornecedor = reader["id_fornecedor"].ToString(),
+                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            nome = reader["nome"].ToString(),
+                        });
+                    }
+
+                    return lstFornecedor;
+                }
+            }
+        }
+
+        //public void MarcaVisitado(string Cnpj, string UserName)
+        //{
+        //	using (Banco banco = new Banco())
+        //	{
+        //		banco.AddParameter("txtCNPJCPF", Cnpj);
+        //		banco.AddParameter("UserName", UserName);
+
+        //		try
+        //		{
+        //			banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
+        //		}
+        //		catch { }
+        //	}
+        //}
+
+    }
 }

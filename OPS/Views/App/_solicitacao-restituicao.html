@@ -1,0 +1,85 @@
+﻿<div class="container" id="sobre-page">
+    <div class="well well-sm">
+        Preencha os campos no final da página com os seus dados pessoais e clique em 'Enviar mensagem ao parlamentar'.
+    </div>
+    <fieldset class="form-group">
+        <legend>Solicitação de restituição de valor indevidamente reembolsado</legend>
+        <div data-ng-controller="SolicitacaoRestituicaoController">
+            <div class="text-justify">
+                <p>Prezado deputado Beto Rosado.</p>
+                <p>Como cidadão brasileiro e colaborador da Operação Política Supervisionada (OPS), informo que o seu escritório político, sediado em Mossoró, abasteceu veículos no posto de combustíveis Laser. As despesas, que perfazem o valor de R$ 58.885,36, foram pagas pelo senhor e lhes foram reembolsadas pela Câmara dos Deputados com dinheiro da verba indenizatória.</p>
+                <p>Esta é a relação das notas fiscais emitidas pelo Posto Laser:</p>
+                <p>
+                    <table style="width: 250px;">
+                        <tr><th>Emissão</th><th>NF</th><th>Valor</th></tr>
+                        <tr><td>06/06/2016</td><td>5040</td><td>R$ 3.981,42<td></tr>
+                        <tr><td>09/05/2016</td><td>4930</td><td>R$ 3.733,97<td></tr>
+                        <tr><td>08/04/2016</td><td>4813</td><td>R$ 3.822,50<td></tr>
+                        <tr><td>14/03/2016</td><td>4735</td><td>R$ 3.980,88<td></tr>
+                        <tr><td>15/02/2016</td><td>4663</td><td>R$ 3.502,00<td></tr>
+                        <tr><td>22/12/2015</td><td>4496</td><td>R$ 3.621,78<td></tr>
+                        <tr><td>25/11/2015</td><td>4386</td><td>R$ 3.350,75<td></tr>
+                        <tr><td>27/10/2015</td><td>4282</td><td>R$ 3.830,41<td></tr>
+                        <tr><td>28/09/2015</td><td>4153</td><td>R$ 3.708,13<td></tr>
+                        <tr><td>26/08/2015</td><td>4040</td><td>R$ 3.122,06<td></tr>
+                        <tr><td>24/07/2015</td><td>3920</td><td>R$ 3.764,15<td></tr>
+                        <tr><td>29/06/2015</td><td>3757</td><td>R$ 3.629,50<td></tr>
+                        <tr><td>29/05/2015</td><td>3580</td><td>R$ 3.570,35<td></tr>
+                        <tr><td>28/04/2015</td><td>3442</td><td>R$ 3.728,53<td></tr>
+                        <tr><td>27/03/2015</td><td>3335</td><td>R$ 3.620,02<td></tr>
+                        <tr><td>26/02/2015</td><td>3214</td><td>R$ 3.918,91<td></tr>
+                    </table>
+                </p>
+                <p>O posto é de propriedade de Carlos Jerônimo Dix-Sept Rosado Maia, seu tio – parente consanguíneo de terceiro grau, em linha colateral. De acordo com o Ato da Mesa 43/2009, em seu Art. 4º, § 13, não é permitido o uso da verba indenizatória para pagar despesas de bens fornecidos ou de serviços prestados por empresa ou entidade da qual o proprietário ou detentor de qualquer participação seja o deputado ou parente seu até o terceiro grau.</p>
+                <p>Diante deste fato, venho por intermédio deste e-mail solicitar ao senhor que restitua aos cofres públicos todo o valor acima descrito. Para isso, entre em contato com o Departamento Financeiro da Câmara dos Deputados (Defin), informe o ocorrido e solicite uma GRU – Guia de Recolhimento da União – no valor em questão e em seguida efetue o pagamento.</p>
+                <p>Peço ainda que publique em suas redes sociais e site este equívoco e também as providências tomadas.</p>
+                <p>O contribuinte brasileiro está cada vez mais insatisfeito com a classe política brasileira por razões públicas e notórias. Certo de poder contar com a sua lisura, com o respeito aos seus eleitores, com o cumprimento ao que determina o Decreto Presidencial Nº 7.203 e com o que dispõe o Art. 4º, §13, do Ato da Mesa 43/2009 da Câmara dos Deputados antecipadamente agradeço pela resolução deste problema.</p>
+            </div>
+            <br />
+
+            <div id="messages" class="alert alert-success" data-ng-show="messages" data-ng-bind="messages"></div>
+
+            <form name="helpForm" novalidate role="form">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="nome">Nome</label>
+                            <span class="label label-danger" data-ng-show="submitted && helpForm.nome.$error.required">Obrigatório!</span>
+                            <input type="text" id="nome" name="nome" data-ng-model="nome" class="form-control input-sm" placeholder="Seu nome completo" required />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <span class="label label-danger" data-ng-show="submitted && helpForm.email.$error.required">Obrigatório!</span>
+                            <span class="label label-danger" data-ng-show="submitted && helpForm.$error.email">Invalid email!</span>
+                            <input type="email" id="email" name="email" data-ng-model="email" class="form-control input-sm" placeholder="Seu e-mail para resposta" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cidade">Cidade</label>
+                            <span class="label label-danger" data-ng-show="submitted && helpForm.cidade.$error.required">Obrigatório!</span>
+                            <input type="text" id="cidade" name="cidade" data-ng-model="cidade" class="form-control input-sm" placeholder="Sua cidade" required />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="estado">Estado</label>
+                            <span class="label label-danger" data-ng-show="submitted && helpForm.estado.$error.required">Obrigatório!</span>
+                            <input type="text" id="estado" name="estado" data-ng-model="estado" class="form-control input-sm" placeholder="Sigla do seu estado" required />
+                        </div>
+                    </div>
+                </div>
+
+                <button data-ng-disabled="submitted" data-ng-click="submit(helpForm)" class="btn btn-primary btn-sm">{{ submitted ? 'Enviando&hellip;' : 'Enviar mensagem ao parlamentar'}}</button>
+            </form>
+        </div>
+    </fieldset>
+</div>

@@ -8,36 +8,35 @@
  */
 
 using System;
-using System.IO;
-using System.Text;
-using System.Xml;
-using OPS.Core;
 using System.Collections.Generic;
-using System.Net;
-using RestSharp;
-using System.Xml.Serialization;
-using System.Threading;
 using System.Data;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Xml;
+using ICSharpCode.SharpZipLib.Zip;
+using OPS.Core;
+using RestSharp;
 
 namespace OPS.ImportacaoDados
 {
     public static class Camara
     {
         /// <summary>
-        /// 
         /// </summary>
         public static void ImportarMandatos()
         {
             // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
             // http://www.camara.leg.br/internet/deputado/DeputadosXML_52a55.zip
 
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
             doc.Load(@"C:\GitHub\operacao-politica-supervisionada\OPS\temp\DeputadosXML_52a55\Deputados.xml");
             XmlNode deputados = doc.DocumentElement;
 
-            XmlNodeList deputado = deputados.SelectNodes("Deputados/Deputado");
-            StringBuilder sqlFields = new StringBuilder();
-            StringBuilder sqlValues = new StringBuilder();
+            var deputado = deputados.SelectNodes("Deputados/Deputado");
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
             using (var banco = new Banco())
             {
@@ -56,7 +55,8 @@ namespace OPS.ImportacaoDados
                         banco.AddParameter(item.Name, item.InnerText.ToUpper());
                     }
 
-                    banco.ExecuteNonQuery("INSERT cf_mandato_temp (" + sqlFields.ToString().Substring(1) + ")  values (" + sqlValues.ToString().Substring(1) + ")");
+                    banco.ExecuteNonQuery("INSERT cf_mandato_temp (" + sqlFields.ToString().Substring(1) + ")  values (" +
+                                          sqlValues.ToString().Substring(1) + ")");
                 }
 
                 //TODO: Ver onde encontro uma lista de deputados com o nuDeputadoId
@@ -114,22 +114,22 @@ namespace OPS.ImportacaoDados
         }
 
         /// <summary>
-        /// Atualiza informações dos deputados em exercício na Câmara dos Deputados
+        ///     Atualiza informações dos deputados em exercício na Câmara dos Deputados
         /// </summary>
         public static void AtualizaInfoDeputados()
         {
             // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
 
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
             var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx");
             var request = new RestRequest("ObterDeputados", Method.GET);
-            IRestResponse response = client.Execute(request);
+            var response = client.Execute(request);
             doc.LoadXml(response.Content);
             XmlNode deputados = doc.DocumentElement;
 
-            XmlNodeList deputado = deputados.SelectNodes("*");
-            StringBuilder sqlFields = new StringBuilder();
-            StringBuilder sqlValues = new StringBuilder();
+            var deputado = deputados.SelectNodes("*");
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
             using (var banco = new Banco())
             {
@@ -141,7 +141,6 @@ namespace OPS.ImportacaoDados
                     sqlValues.Clear();
 
                     foreach (XmlNode item in fileNode.SelectNodes("*"))
-                    {
                         if (item.Name != "comissoes")
                         {
                             sqlFields.Append(string.Format(",{0}", item.Name));
@@ -149,9 +148,9 @@ namespace OPS.ImportacaoDados
                             sqlValues.Append(string.Format(",@{0}", item.Name));
                             banco.AddParameter(item.Name, item.InnerText.ToUpper());
                         }
-                    }
 
-                    banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) + ")  values (" + sqlValues.ToString().Substring(1) + ")");
+                    banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) +
+                                          ")  values (" + sqlValues.ToString().Substring(1) + ")");
                 }
 
 
@@ -187,33 +186,40 @@ namespace OPS.ImportacaoDados
         }
 
         /// <summary>
-        /// Atualiza informações dos deputados em exercício na Câmara dos Deputados
+        ///     Atualiza informações dos deputados em exercício na Câmara dos Deputados
         /// </summary>
         public static void AtualizaInfoDeputadosCompleto()
         {
             // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
 
-            StringBuilder sqlFields = new StringBuilder();
-            StringBuilder sqlValues = new StringBuilder();
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
             using (var banco = new Banco())
             {
                 banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
 
-                using (var dReader = banco.ExecuteReader("SELECT * from cf_deputado where nome_civil is null and id_cadastro is not null and id_cadastro <> 0"))
+                using (
+                    var dReader =
+                        banco.ExecuteReader(
+                            "SELECT * from cf_deputado where nome_civil is null and id_cadastro is not null and id_cadastro <> 0")
+                )
                 {
                     using (var banco2 = new Banco())
                     {
                         while (dReader.Read())
                         {
                             // Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
-                            XmlDocument doc = new XmlDocument();
+                            var doc = new XmlDocument();
                             var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
-                            var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=&ideCadastro=" + dReader["id_cadastro"].ToString(), Method.GET);
+                            var request =
+                                new RestRequest(
+                                    "ObterDetalhesDeputado?numLegislatura=&ideCadastro=" + dReader["id_cadastro"],
+                                    Method.GET);
 
                             try
                             {
-                                IRestResponse response = client.Execute(request);
+                                var response = client.Execute(request);
                                 doc.LoadXml(response.Content);
                             }
                             catch (Exception)
@@ -222,7 +228,7 @@ namespace OPS.ImportacaoDados
 
                                 try
                                 {
-                                    IRestResponse response = client.Execute(request);
+                                    var response = client.Execute(request);
                                     doc.LoadXml(response.Content);
                                 }
                                 catch (Exception)
@@ -232,7 +238,7 @@ namespace OPS.ImportacaoDados
                             }
 
                             XmlNode deputados = doc.DocumentElement;
-                            XmlNodeList deputado = deputados.SelectNodes("*");
+                            var deputado = deputados.SelectNodes("*");
 
                             foreach (XmlNode fileNode in deputado)
                             {
@@ -242,24 +248,16 @@ namespace OPS.ImportacaoDados
                                 foreach (XmlNode item in fileNode.ChildNodes)
                                 {
                                     if (item.Name == "comissoes") break;
-                                    if (item.Name != "partidoAtual" && item.Name != "gabinete")
+                                    if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
                                     {
                                         object value;
                                         if (item.Name.StartsWith("data"))
-                                        {
                                             if (!string.IsNullOrEmpty(item.InnerText))
-                                            {
                                                 value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
-                                            }
                                             else
-                                            {
                                                 value = DBNull.Value;
-                                            }
-                                        }
                                         else
-                                        {
                                             value = item.InnerText;
-                                        }
 
                                         sqlFields.Append(string.Format(",{0}", item.Name));
                                         sqlValues.Append(string.Format(",@{0}", item.Name));
@@ -269,8 +267,7 @@ namespace OPS.ImportacaoDados
                                     {
                                         foreach (XmlNode item2 in item.ChildNodes)
                                         {
-                                            if (item2.Name == "idPartido" || item2.Name == "nome") continue;
-
+                                            if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
 
 
                                             sqlFields.Append(string.Format(",{0}", item2.Name));
@@ -282,11 +279,13 @@ namespace OPS.ImportacaoDados
 
                                 try
                                 {
-                                    banco2.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" + sqlFields.ToString().Substring(1) + ")  values (" + sqlValues.ToString().Substring(1) + ")");
+                                    banco2.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
+                                                           sqlFields.ToString().Substring(1) + ")  values (" +
+                                                           sqlValues.ToString().Substring(1) + ")");
                                 }
-                                catch (Exception ex)
+                                catch
                                 {
-                                    continue;
+                                    // ignored
                                 }
                             }
                         }
@@ -344,34 +343,30 @@ namespace OPS.ImportacaoDados
             // http://www.camara.gov.br/cotas/AnoAnterior.zip
             // http://www.camara.gov.br/cotas/AnoAtual.zip
 
-            string downloadUrl = "http://www.camara.leg.br/cotas/AnoAtual.zip";
-            string fullFileNameZip = atualDir + @"\AnoAtual.zip";
-            string fullFileNameXml = atualDir + @"\AnoAtual.xml";
+            var downloadUrl = "http://www.camara.leg.br/cotas/AnoAtual.zip";
+            var fullFileNameZip = atualDir + @"\AnoAtual.zip";
+            var fullFileNameXml = atualDir + @"\AnoAtual.xml";
 
             if (!Directory.Exists(atualDir))
-            {
                 Directory.CreateDirectory(atualDir);
-            }
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+            var request = (HttpWebRequest) WebRequest.Create(downloadUrl);
 
             request.UserAgent = "Other";
             request.Method = "HEAD";
             request.ContentType = "application/json;charset=UTF-8";
             request.Timeout = 1000000;
 
-            using (System.Net.WebResponse resp = request.GetResponse())
+            using (var resp = request.GetResponse())
             {
-                long ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
-                long ContentLengthLocal = new System.IO.FileInfo(fullFileNameZip).Length;
+                var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                var ContentLengthLocal = new FileInfo(fullFileNameZip).Length;
                 if (ContentLength != ContentLengthLocal)
-                {
-                    using (WebClient client = new WebClient())
+                    using (var client = new WebClient())
                     {
                         client.Headers.Add("User-Agent: Other");
                         client.DownloadFile(downloadUrl, fullFileNameZip);
                     }
-                }
 
                 //if (ContentLength == ContentLengthLocal)
                 //{
@@ -386,16 +381,14 @@ namespace OPS.ImportacaoDados
                 //}
             }
 
-            ICSharpCode.SharpZipLib.Zip.ZipFile file = null;
+            ZipFile file = null;
 
             try
             {
-                file = new ICSharpCode.SharpZipLib.Zip.ZipFile(fullFileNameZip);
+                file = new ZipFile(fullFileNameZip);
 
                 if (file.TestArchive(true) == false)
-                {
                     throw new Exception("<script>alert('Erro no Zip. Faça o upload novamente.')</script>");
-                }
             }
             finally
             {
@@ -403,7 +396,7 @@ namespace OPS.ImportacaoDados
                     file.Close();
             }
 
-            ICSharpCode.SharpZipLib.Zip.FastZip zip = new ICSharpCode.SharpZipLib.Zip.FastZip();
+            var zip = new FastZip();
             zip.ExtractZip(fullFileNameZip, atualDir, null);
 
             CarregaDadosXml(fullFileNameXml, true);
@@ -412,28 +405,36 @@ namespace OPS.ImportacaoDados
             //File.Delete(fullFileNameXml);
         }
 
-        private static void CarregaDadosXml(String fullFileNameXml, bool completo)
+        private static void CarregaDadosXml(string fullFileNameXml, bool completo)
         {
-            Banco banco = new Banco();
+            var banco = new Banco();
             LimpaDespesaTemporaria(banco);
-            DateTime dtControleImportacao = DateTime.MinValue;
+
+            if (completo)
+            {
+                banco.ExecuteNonQuery(@"
+                    DELETE FROM cf_despesa where ano=2017;
+
+                    ALTER TABLE cf_despesa AUTO_INCREMENT = 2742524;
+			");
+            }
 
             StreamReader stream = null;
-            int linhaAtual = 0;
+            var linhaAtual = 0;
 
             try
             {
-                if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
-                    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
-                else
+                //if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
+                //    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
+                //else
                     stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
 
-                StringBuilder sqlFields = new StringBuilder();
-                StringBuilder sqlValues = new StringBuilder();
+                var sqlFields = new StringBuilder();
+                var sqlValues = new StringBuilder();
                 //string nuDeputadoIdControle = "";
                 //int id_sequencial_deputado_ano = -1;
 
-                using (XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings() { IgnoreComments = true }))
+                using (var reader = XmlReader.Create(stream, new XmlReaderSettings {IgnoreComments = true}))
                 {
                     reader.ReadToDescendant("DESPESAS");
                     reader.ReadToDescendant("DESPESA");
@@ -448,9 +449,9 @@ namespace OPS.ImportacaoDados
                         }
 
                         //DataRow drDespesa = dtDespesa.NewRow();
-                        XmlDocument doc = new XmlDocument();
+                        var doc = new XmlDocument();
                         doc.LoadXml(strXmlNodeDespeza);
-                        XmlNodeList files = doc.DocumentElement.SelectNodes("*");
+                        var files = doc.DocumentElement.SelectNodes("*");
 
                         sqlFields.Clear();
                         sqlValues.Clear();
@@ -468,18 +469,17 @@ namespace OPS.ImportacaoDados
 
                             string value;
                             if (fileNode.Name == "datEmissao")
-                            {
-                                value = string.IsNullOrEmpty(fileNode.InnerText) ? "" : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
-                            }
+                                value = string.IsNullOrEmpty(fileNode.InnerText)
+                                    ? ""
+                                    : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
                             else
-                            {
                                 value = fileNode.InnerText.ToUpper();
-                            }
 
                             banco.AddParameter(fileNode.Name, value);
                         }
 
-                        banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields.ToString() + ") VALUES (" + sqlValues.ToString() + ")");
+                        banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues +
+                                              ")");
 
                         if (++linhaAtual == 10000)
                         {
@@ -490,12 +490,9 @@ namespace OPS.ImportacaoDados
                             banco = new Banco();
 
                             if (completo)
-                            {
                                 ProcessarDespesasTemp(banco, completo);
-                            }
                         }
-                    }
-                    while (true);
+                    } while (true);
 
                     reader.Close();
                 }
@@ -535,13 +532,9 @@ namespace OPS.ImportacaoDados
 
 
             if (completo)
-            {
                 InsereDespesaFinal(banco);
-            }
             else
-            {
                 InsereDespesaFinalParcial(banco);
-            }
 
             LimpaDespesaTemporaria(banco);
         }
@@ -727,7 +720,7 @@ namespace OPS.ImportacaoDados
                 AS (
 	                select id_cf_deputado, mes, sum(valor_liquido) as total
 	                from cf_despesa d
-	                where ano = 2016
+	                where ano = 2017
 	                GROUP BY id_cf_deputado, mes
                 );
 
@@ -752,7 +745,8 @@ namespace OPS.ImportacaoDados
             {
                 banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
                 banco.AddParameter("mes", dr["mes"]);
-                banco.ExecuteNonQuery(@"DELETE FROM cf_despesa WHERE id_cf_deputado=@id_cf_deputado and ano=2016 and mes=@mes");
+                banco.ExecuteNonQuery(
+                    @"DELETE FROM cf_despesa WHERE id_cf_deputado=@id_cf_deputado and ano=2017 and mes=@mes");
 
                 banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
                 banco.AddParameter("mes", dr["mes"]);
@@ -830,26 +824,34 @@ namespace OPS.ImportacaoDados
 
         public static void ImportaPresencasDeputados()
         {
-            StringBuilder sqlFields = new StringBuilder();
-            StringBuilder sqlValues = new StringBuilder();
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
             //Carregar a partir da legislatura 53. Existem dados desde 24/02/99
-            DateTime dtPesquisa = new DateTime(2007, 2, 1);
+            var dtPesquisa = new DateTime(2015, 1, 31); //new DateTime(2007, 2, 4);
 
             DataTable dtMandatos;
             using (var banco = new Banco())
             {
-                dtMandatos = banco.GetTable("select * from cf_mandato");
+                dtMandatos =
+                    banco.GetTable("select id_cf_deputado, id_legislatura, id_carteira_parlamantar from cf_mandato");
             }
 
             var datetimenow = DateTime.Now.Date;
 
             while (true)
             {
-                XmlDocument doc = new XmlDocument();
+                dtPesquisa = dtPesquisa.AddDays(1);
+                if (dtPesquisa == datetimenow)
+                    break;
+
+                var doc = new XmlDocument();
                 IRestResponse response;
                 var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
-                var request = new RestRequest("ListarPresencasDia?data={data}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=", Method.GET);
+                var request =
+                    new RestRequest(
+                        "ListarPresencasDia?data={data}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=",
+                        Method.GET);
 
                 request.AddUrlSegment("data", dtPesquisa.ToString("dd/MM/yyyy"));
 
@@ -857,13 +859,11 @@ namespace OPS.ImportacaoDados
                 {
                     response = client.Execute(request);
                     if (!response.Content.Contains("qtdeSessoesDia"))
-                    {
                         continue;
-                    }
 
                     doc.LoadXml(response.Content);
                 }
-                catch (Exception ex)
+                catch
                 {
                     Thread.Sleep(5000);
 
@@ -877,27 +877,27 @@ namespace OPS.ImportacaoDados
 
                 using (var banco = new Banco())
                 {
-                    int count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
-                    for (int i = 0; i < count; i++)
+                    var count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
+                    for (var i = 0; i < count; i++)
                     {
-                        XmlNode temp = dia.SelectNodes("parlamentares/parlamentar/sessoesDia/sessaoDia").Item(i);
+                        var temp = dia.SelectNodes("parlamentares/parlamentar/sessoesDia/sessaoDia").Item(i);
 
-                        string inicio = temp["inicio"].InnerText;
+                        var inicio = temp["inicio"].InnerText;
 
-                        if (lstSessaoDia.ContainsKey(inicio)) continue; // gnorar registro duplicado
+                        if (lstSessaoDia.ContainsKey(inicio)) continue; // ignorar registro duplicado
 
-                        string[] descricao =
+                        var descricao =
                             temp["descricao"].InnerText
-                            .Replace("N º", "Nº")
-                            .Replace("SESSÃO PREPARATÓRIA", "SESSÃO_PREPARATÓRIA")
-                            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                .Replace("N º", "").Replace("Nº", "")
+                                .Replace("SESSÃO PREPARATÓRIA", "SESSÃO_PREPARATÓRIA")
+                                .Split(new[] {'-', ' '}, StringSplitOptions.RemoveEmptyEntries);
 
                         banco.AddParameter("legislatura", dia["legislatura"].InnerText);
                         banco.AddParameter("data", DateTime.Parse(dia["data"].InnerText));
                         banco.AddParameter("inicio", DateTime.Parse(inicio));
 
                         //1=> ORDINÁRIA, 2=> EXTRAORDINÁRIA, 3=> SESSÃO PREPARATÓRIA
-                        int tipo = 0;
+                        var tipo = 0;
                         switch (descricao[0])
                         {
                             case "ORDINÁRIA":
@@ -917,38 +917,29 @@ namespace OPS.ImportacaoDados
                         }
 
                         banco.AddParameter("tipo", tipo);
-                        if (descricao[2] != "-")
-                        {
-                            banco.AddParameter("numero", descricao[2]);
-                        }
-                        else
-                        {
-                            banco.AddParameter("numero", descricao[1].Substring(2));
-                        }
+                        banco.AddParameter("numero", descricao[1]);
 
-
-                        int id_cf_secao = Convert.ToInt32(banco.ExecuteScalar(
+                        var id_cf_secao = Convert.ToInt32(banco.ExecuteScalar(
                             "INSERT cf_sessao (legislatura, data, inicio, tipo, numero) values (@legislatura, @data, @inicio, @tipo, @numero); SELECT LAST_INSERT_ID();"));
 
                         lstSessaoDia.Add(inicio, id_cf_secao);
                     }
 
-                    XmlNodeList parlamentares = dia.SelectNodes("parlamentares/parlamentar");
+                    var parlamentares = dia.SelectNodes("parlamentares/parlamentar");
 
                     foreach (XmlNode parlamentar in parlamentares)
                     {
-                        XmlNodeList sessoesDia = parlamentar.SelectNodes("sessoesDia/sessaoDia");
+                        var sessoesDia = parlamentar.SelectNodes("sessoesDia/sessaoDia");
 
                         foreach (XmlNode sessaoDia in sessoesDia)
                         {
-
                             string id_cf_deputado;
                             var drMqandato = dtMandatos.Select(
-                                  string.Format("id_legislatura={0} and id_carteira_parlamantar={1}",
-                                      dia["legislatura"].InnerText,
-                                      parlamentar["carteiraParlamentar"].InnerText
-                                  )
-                              );
+                                string.Format("id_legislatura={0} and id_carteira_parlamantar={1}",
+                                    dia["legislatura"].InnerText,
+                                    parlamentar["carteiraParlamentar"].InnerText
+                                )
+                            );
 
                             if (drMqandato.Length > 0)
                             {
@@ -957,11 +948,11 @@ namespace OPS.ImportacaoDados
                             else
                             {
                                 var nomeparlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
-                                string sigla_partido = "";
-                                string sigla_estado = "";
+                                var sigla_partido = "";
+                                var sigla_estado = "";
                                 try
                                 {
-                                    string[] temp = nomeparlamentar[1].Split('/');
+                                    var temp = nomeparlamentar[1].Split('/');
                                     sigla_partido = temp[0];
                                     sigla_estado = temp[1];
                                 }
@@ -972,15 +963,16 @@ namespace OPS.ImportacaoDados
 
                                 banco.AddParameter("nome_parlamentar", nomeparlamentar[0]);
                                 banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-                                banco.AddParameter("id_carteira_parlamantar", parlamentar["carteiraParlamentar"].InnerText);
+                                banco.AddParameter("id_carteira_parlamantar",
+                                    parlamentar["carteiraParlamentar"].InnerText);
                                 banco.AddParameter("sigla_estado", sigla_estado);
                                 banco.AddParameter("sigla_partido", sigla_partido);
 
                                 try
                                 {
                                     id_cf_deputado =
-                                    banco.ExecuteScalar(
-                                        @"INSERT INTO cf_mandato (
+                                        banco.ExecuteScalar(
+                                            @"INSERT INTO cf_mandato (
 	                                        id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido
                                         ) VALUES (
 	                                        (SELECT id FROM cf_deputado where nome_parlamentar like @nome_parlamentar)
@@ -991,12 +983,23 @@ namespace OPS.ImportacaoDados
                                         );
 
                                         SELECT LAST_INSERT_ID();"
-                                    ).ToString();
+                                        ).ToString();
+
+                                    // generate the data you want to insert
+                                    var toInsert = dtMandatos.NewRow();
+                                    toInsert["id_cf_deputado"] = id_cf_deputado;
+                                    toInsert["id_legislatura"] = dia["legislatura"].InnerText;
+                                    toInsert["id_carteira_parlamantar"] = parlamentar["carteiraParlamentar"].InnerText;
+
+                                    // insert in the desired place
+                                    dtMandatos.Rows.Add(toInsert);
                                 }
                                 catch (Exception)
                                 {
                                     // parlamentar não existe na base
-                                    Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" + dia["legislatura"].InnerText + "/" + parlamentar["carteiraParlamentar"].InnerText);
+                                    Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" +
+                                                      dia["legislatura"].InnerText + "/" +
+                                                      parlamentar["carteiraParlamentar"].InnerText);
                                     break;
                                 }
                             }
@@ -1014,18 +1017,12 @@ namespace OPS.ImportacaoDados
                         }
                     }
                 }
-
-                dtPesquisa = dtPesquisa.AddDays(1);
-                if (dtPesquisa == datetimenow)
-                {
-                    break;
-                }
             }
         }
 
         public static void AtualizaDeputadoValores()
         {
-            using (Banco banco = new Banco())
+            using (var banco = new Banco())
             {
                 var dt = banco.GetTable("select id, id_cadastro from cf_deputado");
                 object quantidade_secretarios;
@@ -1034,12 +1031,16 @@ namespace OPS.ImportacaoDados
                 foreach (DataRow dr in dt.Rows)
                 {
                     banco.AddParameter("id_cf_deputado", dr["id"]);
-                    valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
+                    valor_total_ceap =
+                        banco.ExecuteScalar(
+                            "select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
 
                     if (!Convert.IsDBNull(dr["id_cadastro"]))
                     {
                         banco.AddParameter("id_cadastro_deputado", dr["id_cadastro"]);
-                        quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cadastro_deputado=@id_cadastro_deputado;");
+                        quantidade_secretarios =
+                            banco.ExecuteScalar(
+                                "select count(1) from cf_secretario where id_cadastro_deputado=@id_cadastro_deputado;");
                     }
                     else
                     {
@@ -1056,9 +1057,7 @@ namespace OPS.ImportacaoDados
 						where id=@id_cf_deputado"
                     );
                 }
-
             }
-
         }
     }
 }

@@ -2,6 +2,7 @@
 
 app.controller('ContatoController', ['$scope', '$api', '$timeout',
     function ($scope, $api, $timeout) {
+        document.title = "OPS :: Contato";
 
     	$scope.disqusConfig = {
     		disqus_identifier: 'Contato',
@@ -33,9 +34,15 @@ app.controller('ContatoController', ['$scope', '$api', '$timeout',
     			// Hide status messages after three seconds.
     			$timeout(function () {
     				$scope.messages = null;
-    			}, 3000);
+    			}, 10000);
 			}, function (data, status, headers, config) {
-				$scope.submitted = false;
+			    $scope.submitted = false;
+
+			    if (ga.q) {
+			        ga('send', 'event', 'Email', 'envio', 'Lúcio', {
+			            'transport': 'beacon'
+			        });
+			    }
     		});
     	};
     }]);

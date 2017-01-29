@@ -1,5 +1,4 @@
-﻿var varsao = 1;
-var base_url = 'http://ops.net.br';
+﻿var base_url = 'http://ops.net.br';
 
 var $EditError = function (ex) {
     var msg = ex.ExceptionMessage || ex.Message || ex.d || ex;
@@ -97,6 +96,8 @@ var app;
 				.when("/fornecedor/:id", { templateUrl: "app/auditoria/fornecedor" })
 
                 .when("/forum", { templateUrl: "app/forum" })
+
+                .when("/solicitacao-restituicao", { templateUrl: "app/solicitacao-restituicao" })
 
 				.when("/fiscalize", { templateUrl: "app/fiscalize/nota-fiscal-lista" })
 				.when("/fiscalize/:id", { templateUrl: "app/fiscalize/nota-fiscal-detalhes" })

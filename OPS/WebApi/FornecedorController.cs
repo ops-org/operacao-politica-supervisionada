@@ -34,19 +34,25 @@ namespace OPS.WebApi
 
 		}
 
-		//[HttpGet]
-		//public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
-		//{
-		//	return dao.Pesquisa(filtro);
-		//}
+        [HttpPost]
+        public dynamic Consulta(Newtonsoft.Json.Linq.JObject jsonData)
+        {
+            return dao.Consulta(Convert.ToString(jsonData["cnpj"]), Convert.ToString(jsonData["nome"])); ;
+        }
 
-		//[HttpGet]
-		//public dynamic QuadroSocietario(int id)
-		//{
-		//	return dao.QuadroSocietario(id);
-		//}
+        //[HttpGet]
+        //public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
+        //{
+        //	return dao.Pesquisa(filtro);
+        //}
 
-		[HttpGet]
+        //[HttpGet]
+        //public dynamic QuadroSocietario(int id)
+        //{
+        //	return dao.QuadroSocietario(id);
+        //}
+
+        [HttpGet]
 		public dynamic RecebimentosMensaisPorAnoDeputados(int id)
 		{
 			return dao.RecebimentosMensaisPorAnoDeputados(id);

@@ -1,12 +1,11 @@
-﻿using OPS.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
+using OPS.Core;
 
 namespace OPS.ImportacaoDados
 {
@@ -18,44 +17,47 @@ namespace OPS.ImportacaoDados
 
             try
             {
-                using (Banco banco = new Banco())
+                using (var banco = new Banco())
                 {
                     banco.ExecuteNonQuery("UPDATE sf_senador SET ativo = 'N'");
 
-                    using (DataSet senado = new DataSet())
+                    using (var senado = new DataSet())
                     {
                         senado.ReadXml("http://legis.senado.gov.br/dadosabertos/senador/lista/atual");
 
-                        using (DataTable senadores = senado.Tables["IdentificacaoParlamentar"])
+                        using (var senadores = senado.Tables["IdentificacaoParlamentar"])
                         {
                             foreach (DataRow senador in senadores.Rows)
-                            {
-                                //email.Append(Convert.ToString(senador["EnderecoEletronico"]) + ";");
-
                                 try
                                 {
-                                    banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
-                                    banco.AddParameter("NomeParlamentar", Convert.ToString(senador["NomeParlamentar"]).ToUpper());
+                                    banco.AddParameter("CodigoParlamentar",
+                                        Convert.ToInt32(senador["CodigoParlamentar"]));
+                                    banco.AddParameter("NomeParlamentar",
+                                        Convert.ToString(senador["NomeParlamentar"]).ToUpper());
                                     banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
                                     banco.AddParameter("Foto", Convert.ToString(senador["UrlFotoParlamentar"]));
-                                    banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
+                                    banco.AddParameter("SiglaPartido",
+                                        Convert.ToString(senador["SiglaPartidoParlamentar"]));
                                     banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
                                     // Ao invés de gravar o fim do mandato grava o início
                                     //banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
-                                    banco.ExecuteNonQuery("INSERT INTO sf_senador (id, nome, Url, foto, id_partido, id_estado, ativo) VALUES (@CodigoParlamentar, @NomeParlamentar, @Url, @Foto, (SELECT id FROM partido where sigla like @SiglaPartido), (SELECT id FROM estado where sigla like @SiglaUf), 'S')");
+                                    banco.ExecuteNonQuery(
+                                        "INSERT INTO sf_senador (id, nome, Url, foto, id_partido, id_estado, ativo) VALUES (@CodigoParlamentar, @NomeParlamentar, @Url, @Foto, (SELECT id FROM partido where sigla like @SiglaPartido), (SELECT id FROM estado where sigla like @SiglaUf), 'S')");
                                 }
                                 catch
                                 {
                                     banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
                                     banco.AddParameter("Foto", Convert.ToString(senador["UrlFotoParlamentar"]));
-                                    banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
+                                    banco.AddParameter("SiglaPartido",
+                                        Convert.ToString(senador["SiglaPartidoParlamentar"]));
                                     banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
-                                    banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
+                                    banco.AddParameter("CodigoParlamentar",
+                                        Convert.ToInt32(senador["CodigoParlamentar"]));
                                     // Ao invés de gravar o fim do mandato grava o início
                                     //banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
-                                    banco.ExecuteNonQuery("UPDATE sf_senador SET url = @Url, foto = @Foto, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido), id_estado = (SELECT id FROM estado where sigla like @SiglaUf), ativo = 'S' WHERE id = @CodigoParlamentar");
+                                    banco.ExecuteNonQuery(
+                                        "UPDATE sf_senador SET url = @Url, foto = @Foto, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido), id_estado = (SELECT id FROM estado where sigla like @SiglaUf), ativo = 'S' WHERE id = @CodigoParlamentar");
                                 }
-                            }
                         }
                     }
                 }
@@ -68,38 +70,31 @@ namespace OPS.ImportacaoDados
 
         public static void ImportarDespesas(string atualDir, int ano)
         {
-            string downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
-            string fullFileNameCsv = atualDir + @"\" + ano + ".csv";
+            var downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
+            var fullFileNameCsv = atualDir + @"\" + ano + ".csv";
 
             if (!Directory.Exists(atualDir))
-            {
                 Directory.CreateDirectory(atualDir);
-            }
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+            var request = (HttpWebRequest) WebRequest.Create(downloadUrl);
 
             request.UserAgent = "Other";
             request.Method = "HEAD";
             request.ContentType = "application/json;charset=UTF-8";
             request.Timeout = 1000000;
 
-            using (System.Net.WebResponse resp = request.GetResponse())
+            using (var resp = request.GetResponse())
             {
-                long ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
                 long ContentLengthLocal = 0;
 
                 if (File.Exists(fullFileNameCsv))
-                {
-                    ContentLengthLocal = new System.IO.FileInfo(fullFileNameCsv).Length;
-                }
+                    ContentLengthLocal = new FileInfo(fullFileNameCsv).Length;
 
                 if (ContentLength == ContentLengthLocal)
-                {
-                    //Do something useful with ContentLength here 
                     return;
-                }
 
-                using (WebClient client = new WebClient())
+                using (var client = new WebClient())
                 {
                     client.Headers.Add("User-Agent: Other");
                     client.DownloadFile(downloadUrl, fullFileNameCsv);
@@ -111,71 +106,63 @@ namespace OPS.ImportacaoDados
             //File.Delete(fullFileNameCsv);
         }
 
-        private static void CarregaDadosCsv(String file, bool completo)
+        private static void CarregaDadosCsv(string file, bool completo)
         {
             //try
             //{
-            int linhaAtual = 0;
+            var linhaAtual = 0;
 
-            using (Banco banco = new Banco())
+            using (var banco = new Banco())
             {
-                //         if (!completo)
-                //         {
-                //             banco.ExecuteNonQuery(@"
-                // delete from sf_despesa where ano=2016;
+                if (!completo)
+                {
+                    banco.ExecuteNonQuery(@"
+                            delete from sf_despesa where ano=2017;
 
-                //             -- select max(id)+1 from sf_despesa;
-                //             ALTER TABLE sf_despesa AUTO_INCREMENT = 141807;
-                //");
-                //         }
+                             -- select max(id)+1 from sf_despesa;
+                             ALTER TABLE sf_despesa AUTO_INCREMENT = 167320;
+                    ");
+                }
 
                 LimpaDespesaTemporaria(banco);
 
-                using (StreamReader reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
+                using (var reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
                 {
-                    Int16 count = 0;
+                    short count = 0;
 
                     while (!reader.EndOfStream)
                     {
                         count++;
 
-                        String line = reader.ReadLine();
+                        var line = reader.ReadLine();
                         if (string.IsNullOrEmpty(line))
-                        {
-                            // Ignorar registros vazios no meio doo arquivo
                             continue;
-                        }
-                        else if (!line.EndsWith("\""))
-                        {
-                            // O arquivo pode vir com quebra de linha quando o texto no detalhamento é muito grande
+                        if (!line.EndsWith("\""))
                             line += reader.ReadLine();
-                        }
 
-                        List<String> values = ParseRowToList(line);
+                        var values = ParseRowToList(line);
 
                         if (count == 1) //Pula primeira linha
                             continue;
 
                         if (count == 2)
                         {
-                            if (values[0] != "ANO" ||
-                                values[1] != "MES" ||
-                                values[2] != "SENADOR" ||
-                                values[3] != "TIPO_DESPESA" ||
-                                values[4] != "CNPJ_CPF" ||
-                                values[5] != "FORNECEDOR" ||
-                                values[6] != "DOCUMENTO" ||
-                                values[7] != "DATA" ||
-                                values[8] != "DETALHAMENTO" ||
-                                values[9] != "VALOR_REEMBOLSADO")
-                            {
+                            if ((values[0] != "ANO") ||
+                                (values[1] != "MES") ||
+                                (values[2] != "SENADOR") ||
+                                (values[3] != "TIPO_DESPESA") ||
+                                (values[4] != "CNPJ_CPF") ||
+                                (values[5] != "FORNECEDOR") ||
+                                (values[6] != "DOCUMENTO") ||
+                                (values[7] != "DATA") ||
+                                (values[8] != "DETALHAMENTO") ||
+                                (values[9] != "VALOR_REEMBOLSADO"))
                                 return;
-                            }
 
                             continue;
                         }
 
-                        String cnpj;
+                        string cnpj;
 
                         banco.AddParameter("ano", Convert.ToInt32(values[0]));
                         banco.AddParameter("mes", Convert.ToInt32(values[1]));
@@ -186,15 +173,24 @@ namespace OPS.ImportacaoDados
                         banco.AddParameter("detalhamento", values[8]);
                         banco.AddParameter("valor_reembolsado", Convert.ToDouble(values[9]));
 
-                        try { banco.AddParameter("data", Convert.ToDateTime(values[7])); }
-                        catch { banco.AddParameter("data", DBNull.Value); }
+                        try
+                        {
+                            banco.AddParameter("data", Convert.ToDateTime(values[7]));
+                        }
+                        catch
+                        {
+                            banco.AddParameter("data", DBNull.Value);
+                        }
 
                         try
                         {
                             if (values[4].IndexOf("/") > 0)
-                                cnpj = Convert.ToInt64(values[4].Replace(".", "").Replace("-", "").Replace("/", "")).ToString("00000000000000");
+                                cnpj =
+                                    Convert.ToInt64(values[4].Replace(".", "").Replace("-", "").Replace("/", ""))
+                                        .ToString("00000000000000");
                             else
-                                cnpj = Convert.ToInt64(values[4].Replace(".", "").Replace("-", "")).ToString("00000000000");
+                                cnpj =
+                                    Convert.ToInt64(values[4].Replace(".", "").Replace("-", "")).ToString("00000000000");
                         }
                         catch
                         {
@@ -211,7 +207,7 @@ namespace OPS.ImportacaoDados
 							)");
                     }
 
-                    if (completo && ++linhaAtual == 10000)
+                    if (completo && (++linhaAtual == 10000))
                     {
                         linhaAtual = 0;
 
@@ -220,7 +216,7 @@ namespace OPS.ImportacaoDados
                 }
             }
 
-            using (Banco banco = new Banco())
+            using (var banco = new Banco())
             {
                 ProcessarDespesasTemp(banco, completo);
 
@@ -237,13 +233,13 @@ namespace OPS.ImportacaoDados
             //}
         }
 
-        private static List<String> ParseRowToList(String row)
+        private static List<string> ParseRowToList(string row)
         {
             try
             {
-                return row.Substring(1, row.Length - 2).Split(new string[] { @""";""" }, StringSplitOptions.None).ToList();
+                return row.Substring(1, row.Length - 2).Split(new[] {@""";"""}, StringSplitOptions.None).ToList();
             }
-            catch (Exception e)
+            catch
             {
                 return null;
             }
@@ -256,13 +252,9 @@ namespace OPS.ImportacaoDados
             InsereFornecedorFaltante(banco);
 
             if (completo)
-            {
                 InsereDespesaFinal(banco);
-            }
             else
-            {
                 InsereDespesaFinalParcial(banco);
-            }
 
             LimpaDespesaTemporaria(banco);
         }
@@ -350,7 +342,7 @@ namespace OPS.ImportacaoDados
                 AS (
 	                select id_sf_senador, mes, sum(valor) as total
 	                from sf_despesa d
-	                where ano = 2016
+	                where ano = 2017
 	                GROUP BY id_sf_senador, mes
                 );
 
@@ -423,7 +415,7 @@ namespace OPS.ImportacaoDados
 
         public static void AtualizaSenadorValores()
         {
-            using (Banco banco = new Banco())
+            using (var banco = new Banco())
             {
                 var dt = banco.GetTable("select id from sf_senador");
                 object valor_total_ceaps;
@@ -431,7 +423,8 @@ namespace OPS.ImportacaoDados
                 foreach (DataRow dr in dt.Rows)
                 {
                     banco.AddParameter("id_sf_senador", dr["id"]);
-                    valor_total_ceaps = banco.ExecuteScalar("select sum(valor) from sf_despesa where id_sf_senador=@id_sf_senador;");
+                    valor_total_ceaps =
+                        banco.ExecuteScalar("select sum(valor) from sf_despesa where id_sf_senador=@id_sf_senador;");
 
                     banco.AddParameter("valor_total_ceaps", valor_total_ceaps);
                     banco.AddParameter("id_sf_senador", dr["id"]);
@@ -441,7 +434,6 @@ namespace OPS.ImportacaoDados
 						where id=@id_sf_senador"
                     );
                 }
-
             }
         }
     }

@@ -52,7 +52,17 @@
 			</div>
 			<div class="col-md-4 form-group">
 				<label>Beneficiário</label>
-				<input type="text" id="txtBeneficiario" class="form-control input-sm" placeholder="CNPJ / CPF" />
+                <div class="input-group">
+                    <input type="text" id="txtBeneficiario" class="form-control input-sm" disabled="disabled" />
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" data-ng-click="LimparFiltroFornecedor();" title="Limpar">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" data-ng-click="AbreModalConsultaFornecedor();" title="Localizar beneficiário">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                    </div>
+                </div>
 			</div>
 			<div class="col-md-4 form-group" id="dvDocumento">
 				<label>Nota Fiscal</label>
@@ -64,7 +74,7 @@
 				<input type="button" value="Limpar filtros" class="btn btn-default btn-sm" data-ng-click="LimparFiltros();" />
 
 				<small class="pull-right text-muted" style="padding: 7px 0;">
-					Última Atualização em @ViewBag.dtUltimaAtualizacao
+                    Última Atualização em <span id="lblSenadorUltimaAtualizacao"></span>
 				</small>
 			</div>
 		</div>
@@ -81,15 +91,51 @@
 		</div>
 	</div>
 
-	<div id="popover_content_wrapper" style="display: none">
-		<input type="button" class="btn btn-success btn-sm btn-block" data-valor="3" value="Por Beneficiário" />
-		<input type="button" class="btn btn-primary btn-sm btn-block" data-valor="1" value="Por Senador" />
-		<input type="button" class="btn btn-primary btn-sm btn-block" data-valor="2" value="Por Despesa" />
-		<input type="button" class="btn btn-primary btn-sm btn-block" data-valor="4" value="Por Partido" />
-		<input type="button" class="btn btn-primary btn-sm btn-block" data-valor="5" value="Por Estado (Senador)" />
-		<input type="button" class="btn btn-primary btn-sm btn-block" data-valor="6" value="Por Nota Fiscal" />
-		<input type="button" class="btn btn-default btn-sm btn-block" data-valor="0" value="Cancelar" />
-	</div>
+    <div id="popover_content_wrapper" style="display: none">
+        <input type="button" class="btn btn-success btn-sm btn-block" data-valor="3" value="Por Beneficiário" />
+        <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="1" value="Por Senador" />
+        <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="2" value="Por Despesa" />
+        <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="4" value="Por Partido" />
+        <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="5" value="Por Estado (Senador)" />
+        <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="6" value="Por Nota Fiscal" />
+        <input type="button" class="btn btn-default btn-sm btn-block" data-valor="0" value="Cancelar" />
+    </div>
+    
+    <div id="dvConsultaFornecedor" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Pesquisar Beneficiário</h4>
+                </div>
+                <div class="modal-body text-justify">
+                    <form class="form-group">
+                        <div class="form-group">
+                            <label for="inputNome">Nome</label>
+                            <input type="text" class="form-control" id="inputNome" data-ng-model="formFornecedor.nome" placeholder="Informe um nome">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputCpfCnpj">CPF / CNPJ</label>
+                            <input type="text" class="form-control" id="inputCpfCnpj" data-ng-model="formFornecedor.cnpj" placeholder="Informe um CPF ou CNPJ">
+                        </div>
+
+                        <button type="button" class="btn btn-primary" data-ng-click="ConsultaFornecedor();">Pesquisar</button>
+                        <button type="reset" class="btn btn-default" data-ng-click="LimparFornecedor();">Limpar</button>
+                    </form>
+
+                    <div class="list-group" data-ng-show="fornecedores">
+                        <a class="list-group-item">
+                            Fornecedores
+                        </a>
+                        <a href="#" class="list-group-item" data-ng-repeat="fornecedor in fornecedores track by $index" data-ng-click="SelecionarFornecedor(fornecedor);">
+                            <small>{{fornecedor.cnpj_cpf}} </small><br />
+                            {{fornecedor.nome}}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="text/ng-template" id="parlamentar.html">
@@ -110,7 +156,7 @@
 		<tr ng-repeat="row in $data">
 			<td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.id_sf_despesa_tipo}}" data-descricao="{{::row.descricao}}">Detalhar</a></td>
 			<td data-title="'Despesa'" style="width:70%" sortable="'descricao'">{{::row.descricao}}</td>
-			@*TODO: Add Total de Notas e Valor Medio da Nota*@
+			<!--TODO: Add Total de Notas e Valor Medio da Nota-->
 			<td data-title="'Total Notas Fiscais'" style="width:15%" sortable="'total_notas'">{{::row.total_notas}}</td>
 			<td data-title="'Valor Total'" style="width:30%" sortable="'valor_total'">{{::row.valor_total}}</td>
 		</tr>
@@ -120,14 +166,13 @@
 <script type="text/ng-template" id="fornecedor.html">
 	<table ng-table="tableParams" class="table table-striped table-hover">
 		<tr ng-repeat="row in $data">
-			@*tipo*@
 			<td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.id_fornecedor}}" data-descricao="{{::row.nome_fornecedor}}">Detalhar</a></td>
 			<td data-title="'CNPJ/CPF'" style="width:15%" sortable="'cnpj_cpf'">{{::row.cnpj_cpf}}</td>
 			<td data-title="'Beneficiário'" style="width:40%" sortable="'nome_fornecedor'"><a data-ng-href="./#/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
-			@*<td data-title="'UF'" style="width:5%" sortable="'SgUf'">{{::row.SgUf}}</td>*@
-			@*<td data-title="'Auditei'" style="width:5%" sortable="'Auditei'">{{::row.Auditei}}</td>*@
-			@*<td data-title="'Última NF'" style="width:10%" sortable="'DataUltimaNotaFiscal'">{{::row.DataUltimaNotaFiscal}}</td>*@
-			@*<td data-title="'Doador'" style="width:5%" sortable="'Doador'">{{::row.Doador}}</td>*@
+			<!--<td data-title="'UF'" style="width:5%" sortable="'SgUf'">{ {::row.SgUf}}</td>-->
+			<!--<td data-title="'Auditei'" style="width:5%" sortable="'Auditei'">{ {::row.Auditei}}</td>-->
+			<!--<td data-title="'Última NF'" style="width:10%" sortable="'DataUltimaNotaFiscal'">{ {::row.DataUltimaNotaFiscal}}</td>-->
+			<!--<td data-title="'Doador'" style="width:5%" sortable="'Doador'">{ {::row.Doador}}</td>-->
 			<td data-title="'Total Notas Fiscais'" style="width:15%" sortable="'total_notas'">{{::row.total_notas}}</td>
 			<td data-title="'Valor Total'" style="width:15%" sortable="'valor_total'">{{::row.valor_total}}</td>
 		</tr>
@@ -139,7 +184,7 @@
 		<tr ng-repeat="row in $data">
 			<td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.id_partido}}" data-descricao="{{::row.nome_partido}}">Detalhar</a></td>
 			<td data-title="'Partido'" style="width:70%" sortable="'NomePartido'">{{::row.nome_partido}}</td>
-			@*TODO: Add Total de parlamentares e Media por parlamentar*@
+			<!--TODO: Add Total de parlamentares e Media por parlamentar-->
 			<td data-title="'Total Notas Fiscais'" style="width:15%" sortable="'total_notas'">{{::row.total_notas}}</td>
 			<td data-title="'Valor Total'" style="width:30%" sortable="'valor_total'">{{::row.valor_total}}</td>
 		</tr>
@@ -151,7 +196,7 @@
 		<tr ng-repeat="row in $data">
 			<td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.id_estado}}" data-descricao="{{::row.nome_estado}}">Detalhar</a></td>
 			<td data-title="'Estado'" style="width:70%" sortable="'SgUf'">{{::row.nome_estado}}</td>
-			@*TODO: Add Total de parlamentares e Media por parlamentar*@
+			<!--TODO: Add Total de parlamentares e Media por parlamentar-->
 			<td data-title="'Total Notas Fiscais'" style="width:15%" sortable="'total_notas'">{{::row.total_notas}}</td>
 			<td data-title="'Valor Total'" style="width:30%" sortable="'valor_total'">{{::row.valor_total}}</td>
 		</tr>

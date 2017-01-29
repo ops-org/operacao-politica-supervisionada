@@ -1,0 +1,85 @@
+﻿<div class="bg-landing-page" data-ng-controller="PrincipalController">
+    <div class="intro-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="intro-message">
+                        <h1>Operação Política Supervisionada</h1>
+                        <h3>Indexador de dados públicos da verba indenizatória</h3>
+                        <hr class="intro-divider" />
+                        <h4>Além do projeto, uma solução real</h4>
+                        <p><a href="./#/sobre" class="text-black">Veja como a OPS já conseguiu recuperar R$5 milhões de dinheiro público</a></p>
+                        <hr class="intro-divider" />
+                        <p>Escolha uma casa legislativa que deseja explorar</p>
+                        <div class="text-xs-center">
+                            <a href="./#/deputado-federal" class="btn btn-primary">Câmara dos Deputados</a>
+                            <a href="./#/senador" class="btn btn-primary">Senado Federal</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container form-group">
+        <h2>Campeões de Gastos</h2>
+        <p>Os Parlamentares que mais gastaram dinheiro público da verba indenizatória da atual legislatura</p>
+        <div class="resumo-gastos">
+            <h4>Deputados Federais <small>(Desde fevereiro de 2015)</small></h4>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.CamaraFederal track by $index">
+                    <a href="./#/deputado-federal/{{::gasto.id_cf_deputado}}">
+                        <div class="media ">
+                            <div class="media-left media-middle">
+                                <span class="media-thumbnail">
+                                    <img src="" data-ng-src='./Content/Images/Parlamentares/DEPFEDERAL/{{::gasto.id_cadastro}}.jpg' alt='{{::gasto.nome_parlamentar}}' height="100">
+                                </span>
+                            </div>
+                            <div class="media-left media-middle">
+                                <h5 class="media-heading" data-ng-bind="::gasto.nome_parlamentar"></h5>
+                                <h5 class="media-heading text-muted" data-ng-bind="::gasto.sigla_partido_estado"></h5>
+                                <h4 class="media-heading text-danger" data-ng-bind="::gasto.valor_total"></h4>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <hr />
+            <h4>Senadores <small>(Desde fevereiro de 2010)</small></h4>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.Senado track by $index">
+                    <a href="./#/senador/{{::gasto.id_sf_senador}}">
+                        <div class="media ">
+                            <div class="media-left media-middle">
+                                <span class="media-thumbnail">
+                                    <img src="" data-ng-src='./Content/Images/Parlamentares/SENADOR/{{::gasto.id_sf_senador}}.jpg' alt='{{::gasto.nome_parlamentar}}' height="100">
+                                </span>
+                            </div>
+                            <div class="media-left media-middle">
+                                <h5 class="media-heading" title="Nome do parlamentar" data-ng-bind="::gasto.nome_parlamentar"></h5>
+                                <h5 class="media-heading text-muted" title="Partido/Estado" data-ng-bind="::gasto.sigla_partido_estado"></h5>
+                                <h4 class="media-heading text-danger" title="Valor gasto acumulado no mandato" data-ng-bind="::gasto.valor_total"></h4>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section form-group">
+        <div class="container">
+            <h2>O que é a verba indenizatória?</h2>
+            <p>A verba indenizatória é um recurso financeiro público disponibilizado a todos os deputados federais e senadores para o custeio de seus mandatos.</p>
+            <p>Contrariando a lei de licitações, o uso deste dinheiro é feito sem licitação e basta o parlamentar apresentar a nota fiscal ou recibo.</p>
+            <p>Tão facil que comprar um pãozinho.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <dir-disqus config="disqusConfig"></dir-disqus>
+            </div>
+        </div>
+    </div>
+</div>

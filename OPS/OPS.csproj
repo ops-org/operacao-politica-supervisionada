@@ -66,23 +66,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Web.DynamicData" />
-    <Reference Include="System.Web.Entity" />
-    <Reference Include="System.Web.ApplicationServices" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
       <Private>True</Private>
@@ -121,14 +113,9 @@
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Net.Http">
     </Reference>
-    <Reference Include="System.Net.Http.WebRequest">
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="WebApi.OutputCache.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Strathweb.CacheOutput.WebApi2.0.10.0\lib\net45\WebApi.OutputCache.Core.dll</HintPath>
       <Private>True</Private>
@@ -187,6 +174,7 @@
     <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
+    <Content Include="Content\scripts\app\controllers\solicitacao-restituicao.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap-select.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap-select.min.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
@@ -225,28 +213,28 @@
     <Content Include="Content\styles\site.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="Views\App\_solicitacao-restituicao.html" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Views\Web.config" />
-    <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.map" />
-    <Content Include="Views\App\Auditoria\deputado-federal-detalhes.cshtml" />
-    <Content Include="Views\App\Auditoria\deputado-federal-lista.cshtml" />
-    <Content Include="Views\App\Auditoria\senador-detalhes.cshtml" />
-    <Content Include="Views\App\Auditoria\senador-lista.cshtml" />
-    <Content Include="Views\App\sobre.cshtml" />
-    <Content Include="Views\App\Auditoria\deputado-federal-documento.cshtml" />
-    <Content Include="Views\App\Auditoria\deputado-federal-secretario-detalhes.cshtml" />
-    <Content Include="Views\App\Auditoria\deputado-federal-secretario-lista.cshtml" />
-    <Content Include="Views\App\Fiscalize\nota-fiscal-lista.cshtml" />
-    <Content Include="Views\App\Fiscalize\nota-fiscal-detalhes.cshtml" />
-    <Content Include="Views\App\Auditoria\fornecedor.cshtml" />
-    <Content Include="Views\App\Erro\_404.cshtml" />
+    <Content Include="Views\App\Auditoria\_deputado-federal-detalhes.html" />
+    <Content Include="Views\App\Auditoria\_deputado-federal-lista.html" />
+    <Content Include="Views\App\Auditoria\_senador-detalhes.html" />
+    <Content Include="Views\App\Auditoria\_senador-lista.html" />
+    <Content Include="Views\App\_sobre.html" />
+    <Content Include="Views\App\Auditoria\_deputado-federal-documento.html" />
+    <Content Include="Views\App\Auditoria\_deputado-federal-secretario-detalhes.html" />
+    <Content Include="Views\App\Auditoria\_deputado-federal-secretario-lista.html" />
+    <Content Include="Views\App\Fiscalize\_nota-fiscal-lista.html" />
+    <Content Include="Views\App\Fiscalize\_nota-fiscal-detalhes.html" />
+    <Content Include="Views\App\Auditoria\_fornecedor.html" />
+    <Content Include="Views\App\Erro\_404.html" />
     <None Include="Properties\PublishProfiles\ops.net.br.pubxml" />
-    <Content Include="Views\App\forum.cshtml" />
+    <Content Include="Views\App\_forum.html" />
+    <Content Include="Views\_ViewStart.cshtml" />
     <None Include="_references.js" />
   </ItemGroup>
   <ItemGroup>
@@ -264,7 +252,7 @@
     <Content Include="Content\scripts\ng\angular-route.min.js.map" />
     <Content Include="Content\scripts\ng\angular.min.js.map" />
     <Content Include="Views\Main\Index.cshtml" />
-    <Content Include="Views\App\inicio.cshtml" />
+    <Content Include="Views\App\_inicio.html" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\scripts\ng\angular-sanitize.min.js.map" />
@@ -273,10 +261,6 @@
     <ProjectReference Include="..\OPS.Core\OPS.Core.csproj">
       <Project>{64bdceaf-f494-4c55-bbf3-16c28c718fe0}</Project>
       <Name>OPS.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OPS.ImportacaoDados\OPS.ImportacaoDados.csproj">
-      <Project>{aaa3dd94-d680-4c3d-a442-3c4d9e230afc}</Project>
-      <Name>OPS.ImportacaoDados</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
