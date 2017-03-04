@@ -12,8 +12,9 @@ namespace OPS
 			bundles.Add(new Bundle("~/Content/vendor")
 				.Include("~/Content/scripts/jquery/jquery-2.2.3.min.js")
 				.Include("~/Content/scripts/ng/angular.min.js")
-				.Include("~/Content/scripts/ng/angular-route.min.js")
+                .Include("~/Content/scripts/ng/angular-route.min.js")
 				.Include("~/Content/scripts/ng/angular-cookies.min.js")
+				.Include("~/Content/scripts/ng/angular-local-storage.min.js")
 				.Include("~/Content/scripts/ng/angular-sanitize.min.js")
 				.Include("~/Content/scripts/ng/angular-resource.min.js")
 				.Include("~/Content/scripts/bootstrap/bootstrap.min.js")
@@ -30,9 +31,11 @@ namespace OPS
 
 			bundles.Add(new StyleBundle("~/Content/style/css")
 				.Include("~/Content/styles/bootstrap.css")
+				.Include("~/Content/styles/social-buttons.css")
 				.Include("~/Content/styles/ng-table.css")
 				.Include("~/Content/styles/bootstrap-select.css")
-				.Include("~/Content/styles/site.css"));
+				.Include("~/Content/styles/site.css")
+                .Include("~/Content/styles/font-awesome.min.css"));
 
 			// Set EnableOptimizations to false for debugging. For more information,
 			// visit http://go.microsoft.com/fwlink/?LinkId=301862

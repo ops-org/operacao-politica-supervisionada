@@ -1,4 +1,4 @@
-﻿namespace PetAzul.Models.Util
+﻿namespace OPS.Core
 {
     public class DropDownDTO
     {

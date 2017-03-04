@@ -39,7 +39,7 @@ app.controller('ContatoController', ['$scope', '$api', '$timeout',
 			    $scope.submitted = false;
 
 			    if (ga.q) {
-			        ga('send', 'event', 'Email', 'envio', 'Lúcio', {
+			        ga('send', 'event', 'Email', 'envio', 'Contato', {
 			            'transport': 'beacon'
 			        });
 			    }

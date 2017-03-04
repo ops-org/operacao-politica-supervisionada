@@ -4,7 +4,9 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
+using DocumentFormat.OpenXml.Packaging;
 using OPS.Core;
 using OPS.ImportacaoDados;
 
@@ -470,9 +472,9 @@ namespace OPS.ImportacaoManual
 
         public static void Main(string[] args)
         {
-            var tempPath = @"C:\GitHub\operacao-politica-supervisionada\OPS\temp";
-
             Padrao.ConnectionString = ConfigurationManager.ConnectionStrings["AuditoriaContext"].ToString();
+
+            var tempPath = @"C:\GitHub\operacao-politica-supervisionada\OPS\temp";
 
             //MigrarFornecedores();
 
@@ -488,21 +490,48 @@ namespace OPS.ImportacaoManual
             //ConverterXmlParaCsvDespesasCamara(tempPath + @"\AnoAtual.xml");
 
             //Importação na nova estrutura
-            ImportacaoDados.Camara.ImportarDespesas(tempPath);
+            //ImportacaoDados.Camara.ImportarDespesas(tempPath);
 
-            //for (int ano = 2008; ano <= 2016; ano++)
+            //for (int ano = 2008; ano <= 2017; ano++)
             //{
-            //	ImportacaoDados.Senado.ImportarDespesas(tempPath, ano);
+            //    ImportacaoDados.Senado.ImportarDespesas(tempPath, ano, true);
             //}
-            ImportacaoDados.Senado.ImportarDespesas(tempPath, 2017);
+            //ImportacaoDados.Senado.ImportarDespesas(tempPath, 2017, false);
 
             //ImportacaoDados.CamaraAtualizaDeputadoValores();
             //ImportacaoDados.Senado.AtualizaSenadorValores();
-            AtualizaCampeoesGastos();
+            //AtualizaCampeoesGastos();
             //AtualizaFornecedorDoador();
 
             //Camara.ImportaPresencasDeputados();
+
+
             //Fornecedor.ConsultarReceitaWS();
+
+            // To search and replace content in a document part.
+            SearchAndReplace(@"C:\GitHub\operacao-politica-supervisionada\OPS\temp\Modelo Padrão de Denúncia por falta de Transparência versão 4.docx");
+        }
+
+        public static void SearchAndReplace(string document)
+        {
+            File.Copy(document, document.Replace(".docx", " (copia).docx"));
+
+            using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(document, true))
+            {
+                string docText = null;
+                using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
+                {
+                    docText = sr.ReadToEnd();
+                }
+
+                docText = docText.Replace("#CIDADE_AUDITOR#", "Mondaí");
+                docText = docText.Replace("#CIDADE_AUDITADA#", "São José");
+
+                using (StreamWriter sw = new StreamWriter(wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
+                {
+                    sw.Write(docText);
+                }
+            }
         }
     }
 }

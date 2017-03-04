@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using MySql.Data.MySqlClient;
 using OPS.Core;
 using RestSharp;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace OPS.ImportacaoDados
 {
@@ -13,6 +17,9 @@ namespace OPS.ImportacaoDados
     {
         public static void ConsultarReceitaWS()
         {
+            int RateLimit_Remaining = -1;
+            string DateMask_UltimaAtualizacao = "yyyy-MM-dd HH:mm:ss.fff";
+
             DataTable dtFornecedores;
             DataTable dtFornecedoresAtividade;
             DataTable dtFornecedoresNatJu;
@@ -25,93 +32,112 @@ namespace OPS.ImportacaoDados
                     left join fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
                     and f.cnpj_cpf <> '00000000000000'
-                    -- and obtido_em < '2016-16-12'
-                    and fi.id_fornecedor is null
+                    -- and obtido_em < '2017-01-01'
+                    -- and fi.id_fornecedor is not null
+                    -- and ip_colaborador is null
+                    -- and controle is null
+                    and controle is null
+                    and f.mensagem = 'Uma tarefa foi cancelada.'
                     order by 1 desc
-                    LIMIT 50000 offset 11505");
+                    LIMIT 1, 90000");
 
                 dtFornecedoresAtividade = banco.GetTable("SELECT * FROM fornecedor_atividade;");
                 dtFornecedoresNatJu = banco.GetTable("SELECT * FROM fornecedor_natureza_juridica;");
             }
 
             Console.WriteLine("Consultando CNPJ's Local: {0} itens.", dtFornecedores.Rows.Count);
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            //var watch = System.Diagnostics.Stopwatch.StartNew();
 
             int i = 0;
             foreach (DataRow item in dtFornecedores.Rows)
             {
                 // the code that you want to measure comes here
-                watch.Stop();
-                Console.WriteLine(watch.ElapsedMilliseconds);
-                watch.Restart();
+                //watch.Stop();
+                //Console.WriteLine(watch.ElapsedMilliseconds);
+                //watch.Restart();
 
                 i++;
-                //Console.WriteLine("Consultando CNPJ '{0}'", item["cnpj_cpf"]);
-
-                // The connection timeout
-
-                var client = new RestClient("http://receitaws.com.br")
-                {
-                    Timeout = 100, //Timeout in milliseconds to use for requests made by this client instance
-                    ReadWriteTimeout = 5000 //The number of milliseconds before the writing or reading times out.
-                };
-
-                FornecedorInfo receita;
+                FornecedorInfo receita = null;
 
                 try
                 {
-                    var request = new RestRequest("v1/cnpj/{cnpj}", Method.GET);
-                    request.AddUrlSegment("cnpj", item["cnpj_cpf"].ToString());
-
-                    receita = client.Execute<FornecedorInfo>(request).Data;
-                }
-                catch (WebException ex)
-                {
-                    if ((ex.Response != null) &&
-                        ((((HttpWebResponse)ex.Response).StatusCode == HttpStatusCode.BadGateway) ||
-                         (((HttpWebResponse)ex.Response).StatusCode == HttpStatusCode.GatewayTimeout)))
+                    using (HttpClient client = new HttpClient())
                     {
-                        //using (var banco = new Banco())
-                        //{
-                        //    var sql = new StringBuilder();
+                        //--------------------------------
+                        string uriString;
+                        HttpResponseMessage response = null;
 
-                        //    //Inserir assim pra saber que já foi consultado
-                        //    banco.AddParameter("UsuarioInclusao", "receitaws-reconsultar");
-                        //    banco.AddParameter("Cnpj", item["txtCNPJCPF"].ToString());
 
-                        //    sql.Append("UPDATE fornecedores SET");
-                        //    sql.Append("       UsuarioInclusao       = @UsuarioInclusao");
-                        //    sql.Append(" WHERE txtCNPJCPF            = @Cnpj");
+                        uriString = string.Format("https://www.receitaws.com.br/v1/cnpj/{0}", item["cnpj_cpf"].ToString());
+                        client.BaseAddress = new Uri(uriString);
 
-                        //    banco.ExecuteNonQuery(sql.ToString());
+                        if (RateLimit_Remaining > -1 && RateLimit_Remaining <= 1)
+                            System.Threading.Thread.Sleep(26000);
 
-                        Console.WriteLine("CNPJ Não Disponivel: " + item["cnpj_cpf"]);
-                        //}
+
+                        //Setar o Timeout do client quando é API BASICA
+                        client.Timeout = TimeSpan.FromMilliseconds(1000);
+                        response = client.GetAsync(string.Empty).Result;
+
+                        //var rateLimit = response.Headers.FirstOrDefault(x => x.Key == "X-RateLimit-Limit");
+                        //var retryAfter = response.Headers.FirstOrDefault(x => x.Key == "RetryAfter"); // A API do ReceitaWS infelizmente não retorna um valor de retryAfter, então temos que usar um sleep num valor padrão.
+                        var rateLimit_Remaining = response.Headers.FirstOrDefault(x => x.Key == "X-RateLimit-Remaining");
+
+
+                        if (rateLimit_Remaining.Value != null)
+                        {
+                            int temp;
+                            int.TryParse(rateLimit_Remaining.Value.First(), out temp);
+                            RateLimit_Remaining = temp;
+                        }
+
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseContent = response.Content;
+
+                            string responseString = responseContent.ReadAsStringAsync().Result;
+
+                            receita = (FornecedorInfo)JsonConvert.DeserializeObject(responseString, typeof(FornecedorInfo));
+                        }
+                        else
+                        {
+                            InserirControle(1, item["cnpj_cpf"].ToString(), response.RequestMessage.ToString());
+                            continue;
+                        }
                     }
-                    else
-                    {
-                        Console.WriteLine("Erro: " + ex.Message);
-                        Thread.Sleep(30000); //1 MINUTO
-                    }
 
-                    continue;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Erro: " + ex.Message);
-                    Thread.Sleep(30000); //1 MINUTO
+                    //if (receita == null)
+                    //{
+                    //    receita = new ReceitaWSData();
+                    //    receita.status = ReceitaWSData.STATUS_ERROR;
+                    //    receita.ultima_atualizacao = DateTime.Now.ToString(DateMask_UltimaAtualizacao);
 
+                    //    if (ex is AggregateException)
+                    //    {
+                    //        receita.message = "API Básica -- Gateway Time-out -- Exception: " + ex.InnerException.Message;
+                    //        receita.ControleProcessamento = ReceitaWSData.ControleProcessamentoReceitaWS.Ignorar;
+                    //    }
+                    //    else
+                    //    {
+                    //        receita.message = ex.Message;
+                    //    }
+                    //}
+                    InserirControle(2, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
                     continue;
                 }
 
                 string strSql2;
                 using (var banco = new Banco())
                 {
-                    if (receita?.status == null)
-                    {
-                        Thread.Sleep(60000); //1 MINUTO
-                        continue;
-                    }
+                    //if (receita?.status == null)
+                    //{
+                    //    Thread.Sleep(60000); //1 MINUTO
+                    //    continue;
+                    //}
 
                     if (receita.status == "OK")
                     {
@@ -152,7 +178,8 @@ namespace OPS.ImportacaoDados
 							    motivo_situacao_cadastral,
 							    situacao_especial,
 							    data_situacao_especial,
-							    capital_social
+							    capital_social,
+                                ip_colaborador
 						    ) values (
 							    @id_fornecedor,
 							    @cnpj,
@@ -177,7 +204,8 @@ namespace OPS.ImportacaoDados
 							    @motivo_situacao_cadastral,
 							    @situacao_especial,
 							    @data_situacao_especial,
-							    @capital_social
+							    @capital_social,
+                                @ip_colaborador
 						    )";
 
                         banco.AddParameter("@id_fornecedor", item["id"]);
@@ -189,10 +217,8 @@ namespace OPS.ImportacaoDados
 
                         if (receita.atividade_principal != null && receita.atividade_principal.Count > 0)
                         {
-                            var drAt =
-                                dtFornecedoresAtividade.Select("codigo='" + receita.atividade_principal[0].code + "'");
-                            banco.AddParameter("@id_fornecedor_atividade_principal",
-                                drAt.Length > 0 ? drAt[0]["id"] : DBNull.Value);
+                            var drAt = LocalizaInsereAtividade(dtFornecedoresAtividade, receita.atividade_principal[0]);
+                            banco.AddParameter("@id_fornecedor_atividade_principal", drAt["id"]);
                         }
                         else
                         {
@@ -228,6 +254,8 @@ namespace OPS.ImportacaoDados
                         banco.AddParameter("@data_situacao_especial", ParseDate(receita.data_situacao_especial));
                         banco.AddParameter("@capital_social", ObterValor(receita.capital_social));
 
+                        banco.AddParameter("@ip_colaborador", DateTime.Now.ToString("yyMMdd"));
+
                         banco.ExecuteNonQuery(strSql);
 
 
@@ -236,9 +264,9 @@ namespace OPS.ImportacaoDados
                         {
                             try
                             {
-                                var drAts = dtFornecedoresAtividade.Select("codigo='" + atividadesSecundaria.code + "'");
+                                var drAt = LocalizaInsereAtividade(dtFornecedoresAtividade, atividadesSecundaria);
                                 banco.AddParameter("@id_fornecedor_info", item["id"]);
-                                banco.AddParameter("@id_fornecedor_atividade", drAts[0]["id"]);
+                                banco.AddParameter("@id_fornecedor_atividade", drAt["id"]);
 
                                 banco.ExecuteNonQuery(strSql2);
                             }
@@ -272,11 +300,12 @@ namespace OPS.ImportacaoDados
                             banco.ExecuteNonQuery(strSql2);
                         }
 
+                        InserirControle(0, item["cnpj_cpf"].ToString(), "");
                         //Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"]);
                     }
                     else
                     {
-                        Console.WriteLine("CNPJ Não Encontrado: " + item["cnpj_cpf"]);
+                        InserirControle(2, item["cnpj_cpf"].ToString(), receita.message);
                     }
                 }
             }
@@ -305,13 +334,62 @@ namespace OPS.ImportacaoDados
             Console.ReadKey();
         }
 
+        private static void InserirControle(int controle, string cnpj_cpf, string mensagem)
+        {
+            using (var banco = new Banco())
+            {
+                banco.AddParameter("@cnpj_cpf", cnpj_cpf);
+                banco.AddParameter("@controle", controle);
+                banco.AddParameter("@mensagem", mensagem);
+
+                banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where cnpj_cpf=@cnpj_cpf;");
+            }
+        }
+
+        private static DataRow LocalizaInsereAtividade( DataTable dtFornecedoresAtividade, IAtividade atividadesSecundaria)
+        {
+            var drs = dtFornecedoresAtividade.Select("codigo='" + atividadesSecundaria.code + "'");
+
+            var dr = dtFornecedoresAtividade.NewRow();
+
+            if (drs.Length == 0)
+            {
+                using (var banco = new Banco())
+                {
+                    var strSql =
+                        @"insert into fornecedor_atividade (codigo, descricao) values (@codigo, @descricao); SELECT LAST_INSERT_ID();";
+                    banco.AddParameter("@codigo", atividadesSecundaria.code);
+                    banco.AddParameter("@descricao", atividadesSecundaria.text);
+
+                    dr["id"] = Convert.ToInt32(banco.ExecuteScalar(strSql));
+                    dr["codigo"] = atividadesSecundaria.code;
+                    dr["descricao"] = atividadesSecundaria.text;
+
+                    dtFornecedoresAtividade.Rows.Add(dr);
+
+                    return dr;
+                }
+            }
+
+            return drs[0];
+        }
+
         private static object ObterValor(object d)
         {
             if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()))
                 return DBNull.Value;
             try
             {
-                return Convert.ToDecimal(d.ToString().Split(' ')[1]);
+                var sValor = d.ToString().Split(' ');
+
+                if (sValor.Length == 1)
+                {
+                    return Convert.ToDecimal(sValor[0], new CultureInfo("en-US"));
+                }
+                else
+                {
+                    return Convert.ToDecimal(sValor[1], new CultureInfo("en-US"));
+                }
             }
             catch
             {
@@ -335,14 +413,19 @@ namespace OPS.ImportacaoDados
         }
     }
 
+    public interface IAtividade
+    {
+        string text { get; set; }
+        string code { get; set; }
+    }
 
-    public class AtividadePrincipal
+    public class AtividadePrincipal : IAtividade
     {
         public string text { get; set; }
         public string code { get; set; }
     }
 
-    public class AtividadesSecundaria
+    public class AtividadesSecundaria : IAtividade
     {
         public string text { get; set; }
         public string code { get; set; }
@@ -383,6 +466,7 @@ namespace OPS.ImportacaoDados
         public string cnpj { get; set; }
         public string ultima_atualizacao { get; set; }
         public string status { get; set; }
+        public string message { get; set; }
         public string tipo { get; set; }
         public string email { get; set; }
         public string efr { get; set; }

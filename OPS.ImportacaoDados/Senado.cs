@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -68,7 +69,7 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        public static void ImportarDespesas(string atualDir, int ano)
+        public static void ImportarDespesas(string atualDir, int ano, bool completo)
         {
             var downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
             var fullFileNameCsv = atualDir + @"\" + ano + ".csv";
@@ -76,7 +77,7 @@ namespace OPS.ImportacaoDados
             if (!Directory.Exists(atualDir))
                 Directory.CreateDirectory(atualDir);
 
-            var request = (HttpWebRequest) WebRequest.Create(downloadUrl);
+            var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
 
             request.UserAgent = "Other";
             request.Method = "HEAD";
@@ -91,7 +92,7 @@ namespace OPS.ImportacaoDados
                 if (File.Exists(fullFileNameCsv))
                     ContentLengthLocal = new FileInfo(fullFileNameCsv).Length;
 
-                if (ContentLength == ContentLengthLocal)
+                if (!completo && ContentLength == ContentLengthLocal)
                     return;
 
                 using (var client = new WebClient())
@@ -101,12 +102,12 @@ namespace OPS.ImportacaoDados
                 }
             }
 
-            CarregaDadosCsv(fullFileNameCsv, false);
+            CarregaDadosCsv(fullFileNameCsv, ano, completo);
 
             //File.Delete(fullFileNameCsv);
         }
 
-        private static void CarregaDadosCsv(string file, bool completo)
+        private static void CarregaDadosCsv(string file, int ano, bool completo)
         {
             //try
             //{
@@ -116,6 +117,8 @@ namespace OPS.ImportacaoDados
             {
                 if (!completo)
                 {
+                    throw new NotImplementedException();
+
                     banco.ExecuteNonQuery(@"
                             delete from sf_despesa where ano=2017;
 
@@ -162,42 +165,16 @@ namespace OPS.ImportacaoDados
                             continue;
                         }
 
-                        string cnpj;
-
                         banco.AddParameter("ano", Convert.ToInt32(values[0]));
                         banco.AddParameter("mes", Convert.ToInt32(values[1]));
                         banco.AddParameter("senador", values[2]);
                         banco.AddParameter("tipo_despesa", values[3]);
+                        banco.AddParameter("cnpj_cpf", !string.IsNullOrEmpty(values[4]) ? Utils.RemoveCaracteresNaoNumericos(values[4]) : "");
                         banco.AddParameter("fornecedor", values[5]);
                         banco.AddParameter("documento", values[6]);
+                        banco.AddParameter("data", !string.IsNullOrEmpty(values[7]) ? (object)Convert.ToDateTime(values[7]) : DBNull.Value);
                         banco.AddParameter("detalhamento", values[8]);
                         banco.AddParameter("valor_reembolsado", Convert.ToDouble(values[9]));
-
-                        try
-                        {
-                            banco.AddParameter("data", Convert.ToDateTime(values[7]));
-                        }
-                        catch
-                        {
-                            banco.AddParameter("data", DBNull.Value);
-                        }
-
-                        try
-                        {
-                            if (values[4].IndexOf("/") > 0)
-                                cnpj =
-                                    Convert.ToInt64(values[4].Replace(".", "").Replace("-", "").Replace("/", ""))
-                                        .ToString("00000000000000");
-                            else
-                                cnpj =
-                                    Convert.ToInt64(values[4].Replace(".", "").Replace("-", "")).ToString("00000000000");
-                        }
-                        catch
-                        {
-                            cnpj = "";
-                        }
-
-                        banco.AddParameter("cnpj_cpf", cnpj);
 
                         banco.ExecuteNonQuery(
                             @"INSERT INTO sf_despesa_temp (
@@ -223,9 +200,13 @@ namespace OPS.ImportacaoDados
                 banco.ExecuteNonQuery(@"
 				        UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
 			        ");
+            }
 
+            if (ano == DateTime.Now.Year)
+            {
                 AtualizaSenadorValores();
             }
+
             //}
             //catch (Exception ex)
             //{
@@ -237,7 +218,7 @@ namespace OPS.ImportacaoDados
         {
             try
             {
-                return row.Substring(1, row.Length - 2).Split(new[] {@""";"""}, StringSplitOptions.None).ToList();
+                return row.Substring(1, row.Length - 2).Split(new[] { @""";""" }, StringSplitOptions.None).ToList();
             }
             catch
             {

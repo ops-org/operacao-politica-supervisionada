@@ -350,7 +350,7 @@ namespace OPS.ImportacaoDados
             if (!Directory.Exists(atualDir))
                 Directory.CreateDirectory(atualDir);
 
-            var request = (HttpWebRequest) WebRequest.Create(downloadUrl);
+            var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
 
             request.UserAgent = "Other";
             request.Method = "HEAD";
@@ -361,24 +361,14 @@ namespace OPS.ImportacaoDados
             {
                 var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
                 var ContentLengthLocal = new FileInfo(fullFileNameZip).Length;
-                if (ContentLength != ContentLengthLocal)
-                    using (var client = new WebClient())
-                    {
-                        client.Headers.Add("User-Agent: Other");
-                        client.DownloadFile(downloadUrl, fullFileNameZip);
-                    }
+                if (ContentLength == ContentLengthLocal)
+                    return;
 
-                //if (ContentLength == ContentLengthLocal)
-                //{
-                //    //Do something useful with ContentLength here 
-                //    return;
-                //}
-
-                //using (WebClient client = new WebClient())
-                //{
-                //    client.Headers.Add("User-Agent: Other");
-                //    client.DownloadFile(downloadUrl, fullFileNameZip);
-                //}
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent: Other");
+                    client.DownloadFile(downloadUrl, fullFileNameZip);
+                }
             }
 
             ZipFile file = null;
@@ -427,14 +417,14 @@ namespace OPS.ImportacaoDados
                 //if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
                 //    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
                 //else
-                    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
+                stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
 
                 var sqlFields = new StringBuilder();
                 var sqlValues = new StringBuilder();
                 //string nuDeputadoIdControle = "";
                 //int id_sequencial_deputado_ano = -1;
 
-                using (var reader = XmlReader.Create(stream, new XmlReaderSettings {IgnoreComments = true}))
+                using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
                 {
                     reader.ReadToDescendant("DESPESAS");
                     reader.ReadToDescendant("DESPESA");
@@ -890,7 +880,7 @@ namespace OPS.ImportacaoDados
                             temp["descricao"].InnerText
                                 .Replace("N º", "").Replace("Nº", "")
                                 .Replace("SESSÃO PREPARATÓRIA", "SESSÃO_PREPARATÓRIA")
-                                .Split(new[] {'-', ' '}, StringSplitOptions.RemoveEmptyEntries);
+                                .Split(new[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                         banco.AddParameter("legislatura", dia["legislatura"].InnerText);
                         banco.AddParameter("data", DateTime.Parse(dia["data"].InnerText));

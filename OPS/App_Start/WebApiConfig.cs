@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Formatting;
 using System.Web.Http;
 using Newtonsoft.Json.Serialization;
 using System.Web.Http.Routing;
@@ -31,6 +32,6 @@ namespace OPS
 			config.Formatters.Clear();
 			config.Formatters.Add(json);
 			json.SerializerSettings.PreserveReferencesHandling = Newtonsoft.Json.PreserveReferencesHandling.Objects;
-		}
+        }
 	}
 }

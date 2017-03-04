@@ -9,7 +9,8 @@ namespace OPS.WebApi
     public class IndicadoresController : ApiController
 	{
 		[HttpGet]
-		public dynamic ParlamentarResumoGastos()
+        //[Authorize(Roles = "Admin")]
+        public dynamic ParlamentarResumoGastos()
 		{
 			return ComandoSqlDao.RecuperarCardsIndicadores();
 		}
