@@ -31,7 +31,7 @@ Até o momento já foram economizados mais de R$ 5,5 milhões do dinheiro públi
 * [Blog](http://luciobig.com.br) - Blog do Lúcio
 
 ##Fontes de Dados
-* [CEAP - Camâra](http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar) - Cota Para Exercicio da Atividade Parlamentar - Câmara
+* [CEAP - Câmara](http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar) - Cota Para Exercicio da Atividade Parlamentar - Câmara
 * [CEAPS - Senado](https://www12.senado.gov.br/transparencia/dados-abertos/dados-abertos-ceaps) - Cota Para Exercicio da Atividade Parlamentar - Senado
 * [Receita Federal](http://www.receita.fazenda.gov.br/PessoaJuridica/CNPJ/cnpjreva/Cnpjreva_Solicitacao.asp) - Informações dos Fornecedores (Pessoa Juridica).
 
