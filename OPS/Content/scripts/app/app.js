@@ -114,7 +114,9 @@ var app;
 		        .when("/signup", { controller: "SignupController", templateUrl: "app/autenticacao/signup" })
 		        .when("/refresh", { controller: "RefreshController", templateUrl: "app/autenticacao/refresh" })
 		        .when("/tokens", { controller: "TokensManagerController", templateUrl: "app/autenticacao/tokens" })
-		        .when("/associate", { controller: "AssociateController", templateUrl: "app/autenticacao/associate" })
+		        .when("/reset-password", { controller: "ResetPasswordController", templateUrl: "app/autenticacao/reset-password" })
+		        .when("/set-password/:user_id/:token", { controller: "SetPasswordController", templateUrl: "app/autenticacao/set-password" })
+		        .when("/verify-email/:token", { controller: "VerifyEmailController", templateUrl: "app/autenticacao/verify-email" })
 
 				.otherwise({ redirectTo: '/' });
 

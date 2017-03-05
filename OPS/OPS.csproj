@@ -227,6 +227,7 @@
     <Compile Include="Providers\SimpleAuthorizationServerProvider.cs" />
     <Compile Include="Providers\SimpleRefreshTokenProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
+    <Compile Include="Service\EmailService.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="WebApi\AccountController.cs" />
     <Compile Include="WebApi\ContatoController.cs" />
@@ -260,6 +261,7 @@
     <Content Include="Content\scripts\app\controllers\index.js" />
     <Content Include="Content\scripts\app\controllers\login.js" />
     <Content Include="Content\scripts\app\controllers\refresh.js" />
+    <Content Include="Content\scripts\app\controllers\reset-password.js" />
     <Content Include="Content\scripts\app\controllers\senador-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
     <Content Include="Content\scripts\app\controllers\senador-lista.js" />
@@ -271,9 +273,11 @@
     <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
+    <Content Include="Content\scripts\app\controllers\set-password.js" />
     <Content Include="Content\scripts\app\controllers\signup.js" />
     <Content Include="Content\scripts\app\controllers\solicitacao-restituicao.js" />
     <Content Include="Content\scripts\app\controllers\tokens-manager.js" />
+    <Content Include="Content\scripts\app\controllers\verify-email.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap-select.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap-select.min.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
@@ -322,9 +326,12 @@
     <Content Include="Global.asax" />
     <Content Include="Views\App\Autenticacao\_associate.html" />
     <Content Include="Views\App\Autenticacao\_login.html" />
+    <Content Include="Views\App\Autenticacao\_reset-password.html" />
     <Content Include="Views\App\Autenticacao\_refresh.html" />
+    <Content Include="Views\App\Autenticacao\_set-password.html" />
     <Content Include="Views\App\Autenticacao\_signup.html" />
     <Content Include="Views\App\Autenticacao\_tokens.html" />
+    <Content Include="Views\App\Autenticacao\_verify-email.html" />
     <Content Include="Views\App\_solicitacao-restituicao.html" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>

@@ -3,16 +3,19 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Configuration;
 using System.Web.Http;
+using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin;
 using Microsoft.Owin.Cors;
+using Microsoft.Owin.Security.DataProtection;
 using Microsoft.Owin.Security.Facebook;
 using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.OAuth;
 using Microsoft.Owin.Security.Twitter;
 using OPS;
 using OPS.Providers;
+using OPS.Service;
 using Owin;
 
 [assembly: OwinStartup(typeof(Startup))]
@@ -25,7 +28,8 @@ namespace OPS
         public static OAuthBearerAuthenticationOptions OAuthBearerOptions { get; private set; }
         public static GoogleOAuth2AuthenticationOptions googleAuthOptions { get; private set; }
         public static FacebookAuthenticationOptions facebookAuthOptions { get; private set; }
-        public static Func<UserManager<AppUser>> UserManagerFactory { get; private set; }
+        public static IDataProtectionProvider DataProtectionProvider { get; private set; }
+        public static Func<UserManager<ApplicationUser>> UserManagerFactory { get; private set; }
 
         public void Configuration(IAppBuilder app)
         {
@@ -79,7 +83,7 @@ namespace OPS
                 {
                     AppId = WebConfigurationManager.AppSettings.Get("FacebookAppId"),
                     AppSecret = WebConfigurationManager.AppSettings.Get("FacebookAppSecret"),
-                    Scope = {"email"},
+                    Scope = { "email" },
                     Provider = new FacebookAuthProvider(),
                     BackchannelHttpHandler = new FacebookBackChannelHandler(),
                     UserInformationEndpoint = "https://graph.facebook.com/v2.4/me?fields=id,name,email"
@@ -112,15 +116,25 @@ namespace OPS
 
             UserManagerFactory = () =>
             {
-                var usermanager = new UserManager<AppUser>(new UserStore<AppUser>(new AuthContext()));
+                var usermanager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new AuthContext()));
                 // allow alphanumeric characters in username
-                usermanager.UserValidator = new UserValidator<AppUser>(usermanager)
+                usermanager.UserValidator = new UserValidator<ApplicationUser>(usermanager)
                 {
                     AllowOnlyAlphanumericUserNames = false
                 };
 
+                usermanager.EmailService = new EmailService();
+
                 return usermanager;
             };
+
+            //// add this assignment
+            //DataProtectionProvider = app.GetDataProtectionProvider();
+            //// Configure the db context, user manager and signin manager to use a single instance per request
+            ////app.CreatePerOwinContext(SampleDataContext.Create);
+
+            //app.CreatePerOwinContext(() => DependencyResolver.Current.GetService<ApplicationUserManager>());
+            ////app.CreatePerOwinContext(() => DependencyResolver.Current.GetService<ApplicationSignInManager>());
         }
     }
 }

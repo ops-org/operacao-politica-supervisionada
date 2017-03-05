@@ -94,16 +94,18 @@ namespace OPS.WebApi
                 return new ChallengeResult(provider, this);
             }
 
-            IdentityUser user = await _repo.FindAsync(new UserLoginInfo(externalLogin.LoginProvider, externalLogin.ProviderKey));
+            IdentityUser user =
+                await _repo.FindAsync(new UserLoginInfo(externalLogin.LoginProvider, externalLogin.ProviderKey));
 
             bool hasRegistered = user != null;
 
-            redirectUri = string.Format("{0}#external_access_token={1}&provider={2}&haslocalaccount={3}&external_user_name={4}",
-                                            redirectUri,
-                                            externalLogin.ExternalAccessToken,
-                                            externalLogin.LoginProvider,
-                                            hasRegistered.ToString(),
-                                            externalLogin.UserName);
+            redirectUri =
+                string.Format("{0}#external_access_token={1}&provider={2}&haslocalaccount={3}&external_user_name={4}",
+                    redirectUri,
+                    externalLogin.ExternalAccessToken,
+                    externalLogin.LoginProvider,
+                    hasRegistered.ToString(),
+                    externalLogin.UserName);
 
             return Redirect(redirectUri);
 
@@ -140,7 +142,7 @@ namespace OPS.WebApi
                 return BadRequest("Invalid Provider or External Access Token");
             }
 
-            IdentityUser user = await _repo.FindAsync(new UserLoginInfo(model.Provider, verifiedAccessToken.user_id));
+            ApplicationUser user = await _repo.FindAsync(new UserLoginInfo(model.Provider, verifiedAccessToken.user_id));
 
             bool hasRegistered = user != null;
 
@@ -149,7 +151,7 @@ namespace OPS.WebApi
                 return BadRequest("External user is already registered");
             }
 
-            user = new IdentityUser()
+            user = new ApplicationUser()
             {
                 UserName = model.UserName,
                 Email = model.Email
@@ -210,6 +212,58 @@ namespace OPS.WebApi
 
             return Ok(accessTokenResponse);
 
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("ResetPassword")]
+        public async Task<IHttpActionResult> ResetPassword(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return BadRequest("E-mail não informado.");
+            }
+
+            ApplicationUser user = await _repo.FindByEmailAsync(value);
+            if (user == null)
+            {
+                return BadRequest("Usuário não localidado.");
+            }
+
+            var sBaseUrl = Url.Content("~/");
+            await _repo.ResetPassword(user, sBaseUrl);
+
+            return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("SetPassword")]
+        public async Task<IHttpActionResult> SetPassword(PasswordRecoverModel user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await _repo.SetPassword(user);
+
+            return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("VerifyEmail")]
+        public async Task<IHttpActionResult> VerifyEmail(VerifyEmailModel user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await _repo.VerifyEmail(user);
+
+            return Ok();
         }
 
         protected override void Dispose(bool disposing)
