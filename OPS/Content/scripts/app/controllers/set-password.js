@@ -7,8 +7,8 @@ app.controller('SetPasswordController',
         document.title = "OPS :: Definir nova senha";
 
         $scope.SetPassword = function () {
-            $scope.reset.UserId = $routeParams.user_id;
-            $scope.reset.Token = $routeParams.token;
+            $scope.reset.UserId = $location.search().id;
+            $scope.reset.Token = $location.search().token;
 
             $api.post('Account/SetPassword', $scope.reset)
                 .success(function (data) {

@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Web;
-using Microsoft.AspNet.Identity.EntityFramework;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace OPS.Models
 {
-    public class UserModel
+	public class UserModel
     {
         [Required]
         [Display(Name = "E-mail")]
@@ -16,7 +11,7 @@ namespace OPS.Models
 
         [Required]
         [Display(Name = "Nome")]
-        public string Name { get; set; }
+        public string FullName { get; set; }
 
         [Required]
         [StringLength(100, ErrorMessage = "A {0} deve ter mais de {2} caracteres.", MinimumLength = 6)]

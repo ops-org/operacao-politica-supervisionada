@@ -18,7 +18,6 @@ namespace OPS.ImportacaoDados
         public static void ConsultarReceitaWS()
         {
             int RateLimit_Remaining = -1;
-            string DateMask_UltimaAtualizacao = "yyyy-MM-dd HH:mm:ss.fff";
 
             DataTable dtFornecedores;
             DataTable dtFornecedoresAtividade;
@@ -36,10 +35,9 @@ namespace OPS.ImportacaoDados
                     -- and fi.id_fornecedor is not null
                     -- and ip_colaborador is null
                     -- and controle is null
-                    and controle is null
-                    and f.mensagem = 'Uma tarefa foi cancelada.'
-                    order by 1 desc
-                    LIMIT 1, 90000");
+                    and controle = 1
+                    -- and f.mensagem = 'Uma tarefa foi cancelada.'
+                    order by 1 desc");
 
                 dtFornecedoresAtividade = banco.GetTable("SELECT * FROM fornecedor_atividade;");
                 dtFornecedoresNatJu = banco.GetTable("SELECT * FROM fornecedor_natureza_juridica;");
@@ -284,10 +282,10 @@ namespace OPS.ImportacaoDados
 
                         foreach (var qsa in receita.qsa)
                         {
-                            if (!string.IsNullOrEmpty(qsa.pais_origem))
-                            {
-                                var x = 1;
-                            }
+                            //if (!string.IsNullOrEmpty(qsa.pais_origem))
+                            //{
+                            //    var x = 1;
+                            //}
 
                             banco.AddParameter("@id_fornecedor", item["id"]);
                             banco.AddParameter("@nome", qsa.nome);
@@ -295,13 +293,13 @@ namespace OPS.ImportacaoDados
 
                             banco.AddParameter("@nome_representante", qsa.nome_rep_legal);
                             banco.AddParameter("@id_fornecedor_socio_representante_qualificacao",
-                                !string.IsNullOrEmpty(qsa.qual_rep_legal) ? (object)qsa.qual_rep_legal.Split('-')[0] : DBNull.Value);
+                                !string.IsNullOrEmpty(qsa.qual_rep_legal) && qsa.qual_rep_legal.Contains("-") ? (object)qsa.qual_rep_legal.Split('-')[0] : DBNull.Value);
 
                             banco.ExecuteNonQuery(strSql2);
                         }
 
                         InserirControle(0, item["cnpj_cpf"].ToString(), "");
-                        //Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"]);
+                        Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"] + " - " + i);
                     }
                     else
                     {

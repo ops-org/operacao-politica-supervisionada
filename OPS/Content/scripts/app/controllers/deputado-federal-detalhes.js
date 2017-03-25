@@ -9,13 +9,13 @@ app.controller('DeputadoVisualizarController', ["$scope", "$api", "$routeParams"
     		disqus_url: base_url + '/deputado-federal/' + $routeParams.id.toString()
     	};
 
-    	$api.get('Deputado', $routeParams.id).success(function (response) {
+    	$api.get('Deputado/' + $routeParams.id.toString()).success(function (response) {
     		$scope.deputado_federal = response;
 
     		document.title = "OPS :: Deputado Federal - " + response.NomeParlamentar;
     	});
 
-    	$api.get('Deputado/GastosMensaisPorAno', $routeParams.id).success(function (response) {
+    	$api.get('Deputado/' + $routeParams.id.toString() + '/GastosMensaisPorAno').success(function (response) {
     		Highcharts.setOptions({
     			lang: {
     				decimalPoint: ',',
@@ -59,11 +59,11 @@ app.controller('DeputadoVisualizarController', ["$scope", "$api", "$routeParams"
     		});
     	});
 
-    	$api.get('Deputado/MaioresNotas', $routeParams.id).success(function (response) {
+    	$api.get('Deputado/' + $routeParams.id.toString() + '/MaioresNotas').success(function (response) {
     		$scope.MaioresNotas = response
     	});
 
-    	$api.get('Deputado/MaioresFornecedores', $routeParams.id).success(function (response) {
+    	$api.get('Deputado/' + $routeParams.id.toString() + '/MaioresFornecedores').success(function (response) {
     		$scope.MaioresFornecedores = response
     	});
     }]);

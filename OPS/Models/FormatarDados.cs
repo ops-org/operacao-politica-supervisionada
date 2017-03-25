@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using OPS.Core;
 
 namespace OPS.Models
 {
@@ -132,11 +133,11 @@ namespace OPS.Models
 			}
 			else if (responseFromServer.IndexOf("Verifique se o mesmo foi digitado corretamente") > 0)
 			{
-				throw new System.Exception("CNPJ não localizado junto a receita federal.");
+				throw new BusinessException("CNPJ não localizado junto a receita federal.");
 			}
 			else if (responseFromServer.IndexOf("Digite os caracteres acima:") > 0)
 			{
-				throw new System.Exception("Capcha incorreto.");
+				throw new BusinessException("Capcha incorreto.");
 			}
 			return null;
 		}

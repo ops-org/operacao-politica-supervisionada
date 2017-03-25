@@ -22,7 +22,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	            });
 
 	            $("#img-input").keydown(function (e) {
-	                if (e.keyCode == 13) {
+	                if (e.keyCode === 13) {
 	                    e.preventDefault();
 
 	                    if ($("#img-input").val()) {
@@ -98,17 +98,17 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	        CarregaGraficoRecebimentosPorMesDeputados();
 	        CarregaGraficoRecebimentosPorMesSenadores();
 
-	        $api.get('Fornecedor/DeputadoFederalMaioresGastos', $routeParams.id).success(function (response) {
+	        $api.get('Fornecedor/' + $routeParams.id +'/DeputadoFederalMaioresGastos').success(function (response) {
 	            $scope.DeputadoFederalMaioresGastos = response
 	        });
 
-	        $api.get('Fornecedor/SenadoresMaioresGastos', $routeParams.id).success(function (response) {
+	        $api.get('Fornecedor/' + $routeParams.id + '/SenadoresMaioresGastos').success(function (response) {
 	            $scope.SenadoresMaioresGastos = response
 	        });
 	    };
 
 	    var CarregaGraficoRecebimentosPorMesDeputados = function () {
-	        $api.get('Fornecedor/RecebimentosMensaisPorAnoDeputados', $routeParams.id).success(function (response) {
+	    	$api.get('Fornecedor/' + $routeParams.id.toString() + '/RecebimentosMensaisPorAnoDeputados').success(function (response) {
 	            if (!response) return;
 
 	            var chart = new Highcharts.Chart({
@@ -167,7 +167,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	    }
 
 	    var CarregaGraficoRecebimentosPorMesSenadores = function () {
-	        $api.get('Fornecedor/RecebimentosMensaisPorAnoSenadores', $routeParams.id).success(function (response) {
+	    	$api.get('Fornecedor/' + $routeParams.id.toString() + '/RecebimentosMensaisPorAnoSenadores').success(function (response) {
 	            if (!response) return;
 
 	            var chart = new Highcharts.Chart({
@@ -234,7 +234,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	    var $loader = $('<img class="loader-facebook" src="./Content/images/ajax-loader-facebook.gif"/> <em>Buscando ...</em>');
 
 	    $scope.BuscarCaptcha = function () {
-	        var strUrl = 'Api/Fornecedor/Captcha?value=' + $scope.fornecedor.cnpj_cpf;
+	        var strUrl = 'Api/Fornecedor/Captcha/' + $scope.fornecedor.cnpj_cpf;
 	        $.ajax({
 	            type: 'GET',
 	            url: strUrl,
@@ -296,7 +296,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 
 	        document.title = "OPS :: Beneficiario - " + response.fornecedor.nome;
 
-	        if (response.fornecedor.cnpj_cpf.length == 14) {
+	        if (response.fornecedor.cnpj_cpf.length === 14) {
 	            $scope.fornecedor.tipo = 'pj';
 
 	            if (!response.fornecedor.data_de_abertura) {
@@ -308,7 +308,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	            //$api.get('Fornecedor/QuadroSocietario', $routeParams.id).success(function (response) {
 	            //	$scope.fornecedorQuadroSocietario = response;
 	            //});
-	        } else if (response.fornecedor.cnpj_cpf.length == 11) {
+	        } else if (response.fornecedor.cnpj_cpf.length === 11) {
 	            $scope.fornecedor.tipo = 'pf';
 	        } else {
 	            $scope.fornecedor.tipo = 'nd'; //fornecedor interno / sem cnpj

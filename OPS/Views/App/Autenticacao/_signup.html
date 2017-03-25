@@ -1,81 +1,65 @@
 ﻿<div class="container">
-    <div class="omb_login col-sm-offset-3">
-        <div class="row">
-            <div class="col-xs-12 col-sm-6">
-                <h3 class="text-center">
-                    Criar Conta
-                </h3>
-            </div>
-        </div>
+    <div class="omb_login col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
+        <h3 class="text-center">
+            Criar Conta
+        </h3>
         <br />
         <div class="row omb_socialButtons">
-            <div class="col-xs-4 col-sm-2">
+            <div class="col-xs-12">
                 <button class="btn btn-block omb_btn-facebook" data-ng-click="authExternalProvider('Facebook')">
                     <i class="fa fa-facebook visible-xs"></i>
-                    <span class="hidden-xs">Facebook</span>
+                    <span class="hidden-xs">Entrar com Facebook</span>
                 </button>
             </div>
-            <div class="col-xs-4 col-sm-2">
+            <!--<div class="col-xs-4">
                 <button class="btn btn-block omb_btn-twitter" data-ng-click="authExternalProvider('Twitter')">
                     <i class="fa fa-twitter visible-xs"></i>
                     <span class="hidden-xs">Twitter</span>
                 </button>
-            </div>
-            <div class="col-xs-4 col-sm-2">
+            </div>-->
+            <!--<div class="col-xs-4">
                 <button class="btn btn-block omb_btn-google" data-ng-click="authExternalProvider('Google')">
                     <i class="fa fa-google-plus visible-xs"></i>
                     <span class="hidden-xs">Google+</span>
                 </button>
-            </div>
+            </div>-->
         </div>
-        <div class="row omb_loginOr">
-            <div class="col-xs-12 col-sm-6">
-                <hr class="omb_hrOr">
-                <span class="omb_spanOr">ou</span>
-            </div>
+        <div class="omb_loginOr">
+            <hr class="omb_hrOr">
+            <span class="omb_spanOr">ou</span>
         </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-6">
-                <form class="omb_loginForm" action="" autocomplete="off" method="POST">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                            <input type="text" class="form-control" name="name" placeholder="Nome" data-ng-model="registration.name" required autofocus>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-                            <input type="text" class="form-control" name="email" placeholder="E-mail" data-ng-model="registration.email" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                            <input type="password" class="form-control" name="password" placeholder="Senha" data-ng-model="registration.password" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-                            <input type="password" class="form-control" name="password" placeholder="Confirme a senha" data-ng-model="registration.confirmPassword" required>
-                        </div>
-                    </div>
-                    <div data-ng-hide="!message" data-ng-class="(savedSuccessfully) ? 'alert alert-success' : 'alert alert-danger'">
-                        {{message}}
-                    </div>
-                    <div class="form-group">
-                        <button class="btn btn-primary btn-block" type="button" data-ng-click="signUp()">Cadastrar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-6 text-right">
-                <div class="form-group">
-                    <a href="./#/login">Já possui uma conta?</a>
+        <form class="omb_loginForm" action="" autocomplete="off" method="POST">
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                    <input type="text" class="form-control" name="name" placeholder="Nome" data-ng-model="registration.fullName" required autofocus>
                 </div>
             </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
+                    <input type="text" class="form-control" name="email" placeholder="E-mail" data-ng-model="registration.email" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                    <input type="password" class="form-control" name="password" placeholder="Senha" data-ng-model="registration.password" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                    <input type="password" class="form-control" name="password" placeholder="Confirme a senha" data-ng-model="registration.confirmPassword" required>
+                </div>
+            </div>
+            <div data-ng-hide="!message" data-ng-class="(savedSuccessfully) ? 'alert alert-success' : 'alert alert-danger'" data-ng-bind-html="message"></div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block" type="button" data-ng-click="signUp()">Cadastrar</button>
+            </div>
+        </form>
+        <div class="form-group text-right">
+            <a href="./#/login">Já possui uma conta?</a>
         </div>
     </div>
 </div>

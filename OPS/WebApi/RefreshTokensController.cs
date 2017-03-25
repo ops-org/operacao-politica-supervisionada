@@ -3,10 +3,9 @@ using System.Web.Http;
 
 namespace OPS.WebApi
 {
-    [RoutePrefix("api/RefreshTokens")]
+    [RoutePrefix("Api/RefreshTokens")]
     public class RefreshTokensController : ApiController
     {
-
         private AuthRepository _repo = null;
 
         public RefreshTokensController()
@@ -23,7 +22,7 @@ namespace OPS.WebApi
 
         //[Authorize(Users = "Admin")]
         [AllowAnonymous]
-        [Route("")]
+        [Route("Delete/{tokenId}")]
         public async Task<IHttpActionResult> Delete(string tokenId)
         {
             var result = await _repo.RemoveRefreshToken(tokenId);

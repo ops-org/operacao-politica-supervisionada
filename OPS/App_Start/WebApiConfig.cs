@@ -1,37 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Formatting;
+﻿using Microsoft.Owin.Security.OAuth;
+using OPS.Core;
 using System.Web.Http;
-using Newtonsoft.Json.Serialization;
-using System.Web.Http.Routing;
 
 namespace OPS
 {
 	public static class WebApiConfig
 	{
-		public static string UrlPrefix { get { return "Api"; } }
-		public static string UrlPrefixRelative { get { return "~/Api"; } }
-
 		//http://www.asp.net/web-api/overview/web-api-routing-and-actions/routing-in-aspnet-web-api
 		public static void Register(HttpConfiguration config)
 		{
+			// Web API configuration and services
+			// Configure Web API to use only bearer token authentication.
+
+			config.SuppressDefaultHostAuthentication();
+
+#if DEBUG
+			// To disable tracing in your application, please comment out or remove the following line of code
+			// For more information, refer to: http://www.asp.net/web-api
+			config.EnableSystemDiagnosticsTracing();
+#endif
+
+			//config.Filters.Add(new HostAuthenticationFilter(new OAuthBearerAuthenticationOptions().AuthenticationType));
+			config.Filters.Add(new HostAuthenticationFilter(OAuthDefaults.AuthenticationType));
+
+			//config.Filters.Add(new HostAuthenticationFilter(Startup.OAuthBearerOptions.AuthenticationType));
+
 			// Web API routes
 			config.MapHttpAttributeRoutes();
 
-			config.Routes.MapHttpRoute("DefaultApiGet", UrlPrefix + "/{controller}", new { id = RouteParameter.Optional, action = "Get" }, new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-			config.Routes.MapHttpRoute("DefaultApiGetById", UrlPrefix + "/{controller}/{id}", new { action = "Get" }, new { id = @"\d+", httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-			config.Routes.MapHttpRoute("DefaultApiPost", UrlPrefix + "/{controller}", new { action = "Post" }, new { httpMethod = new HttpMethodConstraint(HttpMethod.Post) });
+			config.Routes.MapHttpRoute(
+				name: "DefaultApi",
+				routeTemplate: "api/{controller}/{id}",
+				defaults: new { id = RouteParameter.Optional }
+			);
 
-			config.Routes.MapHttpRoute("DefaultApiWithId", UrlPrefix + "/{controller}/{id}", null, new { id = @"\d+" });
-			config.Routes.MapHttpRoute("DefaultApiWithActionId", UrlPrefix + "/{controller}/{action}/{id}", new { id = RouteParameter.Optional }, new { id = @"\d+" });
-			config.Routes.MapHttpRoute("DefaultApiWithAction", UrlPrefix + "/{controller}/{action}/{value}", new { value = RouteParameter.Optional });
-
+			
 			var json = config.Formatters.JsonFormatter;
 			config.Formatters.Clear();
 			config.Formatters.Add(json);
-			json.SerializerSettings.PreserveReferencesHandling = Newtonsoft.Json.PreserveReferencesHandling.Objects;
-        }
+			json.SerializerSettings.PreserveReferencesHandling = Newtonsoft.Json.PreserveReferencesHandling.None;
+
+			config.Filters.Add(new ExceptionHandlingAttribute());
+		}
 	}
 }

@@ -4,12 +4,17 @@ app.controller('VerifyEmailController',
 [
     '$scope', '$routeParams', '$location', '$api',
     function ($scope, $routeParams, $location, $api) {
+        $scope.loading = true;
         document.title = "OPS :: Confirmar e-mail";
 
-        $api.post('Account/VerifyEmail', $routeParams.token)
+        var verify = {
+            UserId: $location.search().id,
+            Token: $location.search().token
+        };
+
+        $api.post('Account/VerifyEmail', verify)
                 .success(function (data) {
-                    alert('Sua senha foi confirmado com sucesso.');
-                    $location.path('/login');
+                    $scope.loading = false;
                 });
     }
 ]);

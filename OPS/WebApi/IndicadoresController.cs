@@ -5,12 +5,13 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+	[RoutePrefix("Api/Indicadores")]
+	[CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class IndicadoresController : ApiController
 	{
 		[HttpGet]
-        //[Authorize(Roles = "Admin")]
-        public dynamic ParlamentarResumoGastos()
+		[Route("ParlamentarResumoGastos")]
+		public dynamic ParlamentarResumoGastos()
 		{
 			return ComandoSqlDao.RecuperarCardsIndicadores();
 		}

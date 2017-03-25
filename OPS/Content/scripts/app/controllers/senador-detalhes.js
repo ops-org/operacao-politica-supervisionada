@@ -9,13 +9,13 @@ app.controller('SenadorVisualizarController', ["$scope", "$api", "$routeParams",
     		disqus_url: base_url + '/senador/' + $routeParams.id.toString()
     	};
 
-    	$api.get('Senador', $routeParams.id).success(function (response) {
+    	$api.get('Senador/' + $routeParams.id.toString()).success(function (response) {
     		$scope.senador = response;
 
-    		document.title = "OPS :: Senador - " + response.NomeParlamentar;
+			document.title = "OPS :: Senador - " + response.nome_parlamentar;
     	});
 
-    	$api.get('Senador/GastosMensaisPorAno', $routeParams.id).success(function (response) {
+    	$api.get('Senador/' + $routeParams.id.toString() + '/GastosMensaisPorAno').success(function (response) {
     		Highcharts.setOptions({
     			lang: {
     				decimalPoint: ',',
@@ -59,11 +59,11 @@ app.controller('SenadorVisualizarController', ["$scope", "$api", "$routeParams",
     		});
     	});
 
-    	$api.get('Senador/MaioresNotas', $routeParams.id).success(function (response) {
+    	$api.get('Senador/' + $routeParams.id.toString() + '/MaioresNotas').success(function (response) {
     		$scope.MaioresNotas = response
     	});
 
-    	$api.get('Senador/MaioresFornecedores', $routeParams.id).success(function (response) {
+    	$api.get('Senador/' + $routeParams.id.toString() + '/MaioresFornecedores').success(function (response) {
     		$scope.MaioresFornecedores = response
     	});
     }]);

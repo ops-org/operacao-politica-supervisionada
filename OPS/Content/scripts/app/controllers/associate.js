@@ -1,38 +1,46 @@
 ﻿'use strict';
-app.controller('AssociateController', ['$scope', '$location','$timeout','authService', function ($scope, $location,$timeout, authService) {
+app.controller('AssociateController', ['$scope', '$location', '$timeout', 'authService', 'localStorageService',
+   function ($scope, $location, $timeout, authService, localStorageService) {
 
-    $scope.savedSuccessfully = false;
-    $scope.message = "";
+      $scope.savedSuccessfully = false;
+      $scope.message = "";
 
-    $scope.registerData = {
-        userName: authService.externalAuthData.userName,
-        provider: authService.externalAuthData.provider,
-        externalAccessToken: authService.externalAuthData.externalAccessToken
-    };
+      $scope.registerData = {
+         userName: authService.externalAuthData.userName,
+         provider: authService.externalAuthData.provider,
+         externalAccessToken: authService.externalAuthData.externalAccessToken
+      };
 
-    $scope.registerExternal = function () {
+      $scope.registerExternal = function () {
 
-        authService.registerExternal($scope.registerData).then(function (response) {
+         authService.registerExternal($scope.registerData).then(function (response) {
 
             $scope.savedSuccessfully = true;
-            $scope.message = "User has been registered successfully, you will be redicted to orders page in 2 seconds.";
+            $scope.message = "O usuário foi registrado com sucesso, você será redigido para a página de pedidos em 2 segundos.";
             startTimer();
 
-        },
-          function (response) {
+         },
+           function (response) {
               var errors = [];
-              for (var key in response.modelState) {
-                  errors.push(response.modelState[key]);
+              for (var key in response.ModelState) {
+                 errors.push(response.ModelState[key]);
               }
-              $scope.message = "Failed to register user due to:" + errors.join(' ');
-          });
-    };
+              $scope.message = "Falha ao registrar usuário devido a: " + errors.join(' ');
+           });
+      };
 
-    var startTimer = function () {
-        var timer = $timeout(function () {
+      var startTimer = function () {
+         var timer = $timeout(function () {
             $timeout.cancel(timer);
-            $location.path('/');
-        }, 2000);
-    }
 
-}]);
+            var returnUrl = localStorageService.get('returnUrl');
+            if (returnUrl) {
+               localStorageService.remove('returnUrl');
+               $location.path(returnUrl);
+            } else{
+               $location.path('/');
+            }
+         }, 2000);
+      }
+
+   }]);

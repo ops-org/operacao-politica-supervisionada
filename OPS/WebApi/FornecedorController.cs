@@ -11,8 +11,9 @@ using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
 {
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
-    public class FornecedorController : ApiController
+	[RoutePrefix("Api/Fornecedor")]
+	[CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+	public class FornecedorController : ApiController
 	{
 		FornecedorDao dao;
 
@@ -22,10 +23,9 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-        [ActionName("Get")]
-        //[CacheOutput(ClientTimeSpan = 0 /* sem cache no cliente */, ServerTimeSpan = 43200 /* 12h */)]
-        [IgnoreCacheOutput]
-        public dynamic Consulta(int id)
+		[Route("{id:int}")]
+		[IgnoreCacheOutput]
+		public dynamic Consulta(int id)
 		{
 			var _fornecedor = dao.Consulta(id);
 			var _quadro_societario = dao.QuadroSocietario(id);
@@ -35,7 +35,8 @@ namespace OPS.WebApi
 		}
 
         [HttpPost]
-        public dynamic Consulta(Newtonsoft.Json.Linq.JObject jsonData)
+		[Route("Consulta")]
+		public dynamic Consulta(Newtonsoft.Json.Linq.JObject jsonData)
         {
             return dao.Consulta(Convert.ToString(jsonData["cnpj"]), Convert.ToString(jsonData["nome"])); ;
         }
@@ -53,24 +54,28 @@ namespace OPS.WebApi
         //}
 
         [HttpGet]
+		[Route("{id:int}/RecebimentosMensaisPorAnoDeputados")]
 		public dynamic RecebimentosMensaisPorAnoDeputados(int id)
 		{
 			return dao.RecebimentosMensaisPorAnoDeputados(id);
 		}
 
 		[HttpGet]
+		[Route("{id:int}/RecebimentosMensaisPorAnoSenadores")]
 		public dynamic RecebimentosMensaisPorAnoSenadores(int id)
 		{
 			return dao.RecebimentosMensaisPorAnoSenadores(id);
 		}
 
 		[HttpGet]
+		[Route("{id:int}/DeputadoFederalMaioresGastos")]
 		public dynamic DeputadoFederalMaioresGastos(int id)
 		{
 			return dao.DeputadoFederalMaioresGastos(id);
 		}
 
 		[HttpGet]
+		[Route("{id:int}/SenadoresMaioresGastos")]
 		public dynamic SenadoresMaioresGastos(int id)
 		{
 			return dao.SenadoresMaioresGastos(id);
@@ -84,7 +89,8 @@ namespace OPS.WebApi
 
 		[HttpGet]
         [IgnoreCacheOutput]
-        public string Captcha(string value)
+		[Route("Captcha/{value}")]
+		public string Captcha(string value)
 		{
 			CookieContainer _cookies = new CookieContainer();
 			var htmlResult = string.Empty;
@@ -113,7 +119,8 @@ namespace OPS.WebApi
 
 		[HttpPost]
         [IgnoreCacheOutput]
-        public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
+		[Route("ConsultarDadosCnpj")]
+		public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
 		{
             var ret = ObterDados(jsonData["cnpj"].ToString(), jsonData["captcha"].ToString());
 
@@ -156,10 +163,10 @@ namespace OPS.WebApi
 			var strHtmlFornecedor = stHtml.ReadToEnd();
 
 			if (strHtmlFornecedor.Contains("Verifique se o mesmo foi digitado corretamente"))
-				throw new Exception("O número do CNPJ não foi localizado na Receita Federal");
+				throw new BusinessException("O número do CNPJ não foi localizado na Receita Federal");
 
 			if (strHtmlFornecedor.Contains("0,0"))
-				throw new Exception("Os caracteres não conferem com a imagem");
+				throw new BusinessException("Os caracteres não conferem com a imagem");
 
 			if (strHtmlFornecedor.Length > 0)
 			{

@@ -333,7 +333,7 @@ namespace OPS.Dao
 
         internal dynamic Lancamentos(FiltroParlamentarDTO filtro)
         {
-            if (filtro == null) throw new ArgumentException("filtro");
+            if (filtro == null) throw new BusinessException("Parâmetro filtro não informado!");
 
             switch (filtro.Agrupamento)
             {
@@ -351,7 +351,7 @@ namespace OPS.Dao
                     return LancamentosNotaFiscal(filtro);
             }
 
-            throw new ArgumentException("filtro.Agrupamento");
+            throw new BusinessException("Parâmetro filtro.Agrupamento não informado!");
         }
 
         private dynamic LancamentosParlamentar(FiltroParlamentarDTO filtro)
@@ -786,7 +786,7 @@ namespace OPS.Dao
 
                 AdicionaFiltroEstadoDeputado(filtro, sqlSelect);
 
-                sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "l.data_emissao desc, l.valor_liquido desc" : filtro.sorting);
+                sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "l.data_emissao desc, l.valor_liquido desc" : Utils.MySqlEscape(filtro.sorting));
                 sqlSelect.AppendFormat("LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
 
                 sqlSelect.AppendLine("SELECT FOUND_ROWS();");
@@ -896,7 +896,7 @@ namespace OPS.Dao
         {
             if (!string.IsNullOrEmpty(filtro.Partido))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + filtro.Partido + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
             }
         }
 
@@ -904,7 +904,7 @@ namespace OPS.Dao
         {
             if (!string.IsNullOrEmpty(filtro.Uf))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + filtro.Uf + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
             }
         }
 
@@ -921,7 +921,7 @@ namespace OPS.Dao
                         using (Banco banco = new Banco())
                         {
                             var id_fornecedor =
-                                banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + filtro.Fornecedor + "'");
+                                banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + "'");
 
                             if (!Convert.IsDBNull(id_fornecedor))
                             {
@@ -931,7 +931,7 @@ namespace OPS.Dao
                     }
                     else
                     {
-                        sqlSelect.AppendLine("	AND l.id_fornecedor =" + filtro.Fornecedor + " ");
+                        sqlSelect.AppendLine("	AND l.id_fornecedor =" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + " ");
                     }
                 }
             }
@@ -941,7 +941,7 @@ namespace OPS.Dao
         {
             if (!string.IsNullOrEmpty(filtro.Despesa))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_despesa_tipo IN (" + filtro.Despesa + ") ");
+                sqlSelect.AppendLine("	AND l.id_cf_despesa_tipo IN (" + Utils.MySqlEscapeNumberToIn(filtro.Despesa) + ") ");
             }
         }
 
@@ -949,14 +949,14 @@ namespace OPS.Dao
         {
             if (!string.IsNullOrEmpty(filtro.IdParlamentar))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (" + filtro.IdParlamentar + ") ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (" + Utils.MySqlEscapeNumberToIn(filtro.IdParlamentar) + ") ");
             }
         }
 
         private static void AdicionaResultadoComum(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
             //sqlSelect.AppendLine("select * from table_in_memory ");
-            sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "valor_total desc" : filtro.sorting);
+            sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "valor_total desc" : Utils.MySqlEscape(filtro.sorting));
             sqlSelect.AppendFormat("LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
 
             sqlSelect.AppendLine(
@@ -1004,10 +1004,10 @@ namespace OPS.Dao
 
                 if (!string.IsNullOrEmpty(filtro.NomeParlamentar))
                 {
-                    strSql.AppendFormat("and p.nome_parlamentar LIKE '%{0}%' ", filtro.NomeParlamentar);
+                    strSql.AppendFormat("and p.nome_parlamentar LIKE '%{0}%' ", Utils.MySqlEscape(filtro.NomeParlamentar));
                 }
 
-                strSql.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "p.quantidade_secretarios DESC, p.nome_parlamentar" : filtro.sorting);
+                strSql.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "p.quantidade_secretarios DESC, p.nome_parlamentar" : Utils.MySqlEscape(filtro.sorting));
                 strSql.AppendFormat("LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
 
                 strSql.AppendLine("SELECT FOUND_ROWS(); ");

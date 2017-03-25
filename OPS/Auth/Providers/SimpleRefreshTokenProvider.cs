@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.Owin.Security.Infrastructure;
 using OPS.Entities;
+using OPS.Helpers;
 
 namespace OPS.Providers
 {

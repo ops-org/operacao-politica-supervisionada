@@ -12,10 +12,10 @@ using OPS.ImportacaoDados;
 
 namespace OPS.ImportacaoManual
 {
-    internal class Program
-    {
-        public static string[] ColunasXmlDespesasCamara =
-        {
+   internal class Program
+   {
+      public static string[] ColunasXmlDespesasCamara =
+      {
             "txNomeParlamentar",
             "ideCadastro",
             "nuCarteiraParlamentar",
@@ -47,8 +47,8 @@ namespace OPS.ImportacaoManual
             "nuDeputadoId"
         };
 
-        public static string[] ColunasXmlDeputadosCamara =
-        {
+      public static string[] ColunasXmlDeputadosCamara =
+      {
             "ideCadastro",
             "numLegislatura",
             "nomeParlamentar",
@@ -64,122 +64,122 @@ namespace OPS.ImportacaoManual
             "Fone"
         };
 
-        public static void ConverterXmlParaCsvDespesasCamara(string fullFileNameXml)
-        {
-            StreamReader stream = null;
+      public static void ConverterXmlParaCsvDespesasCamara(string fullFileNameXml)
+      {
+         StreamReader stream = null;
 
-            try
+         try
+         {
+            if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
+               stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
+            else
+               stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
+
+            using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
             {
-                if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
-                    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
-                else
-                    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
+               reader.ReadToDescendant("DESPESAS");
+               reader.ReadToDescendant("DESPESA");
 
-                using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
-                {
-                    reader.ReadToDescendant("DESPESAS");
-                    reader.ReadToDescendant("DESPESA");
+               using (var outputFile = new StreamWriter(fullFileNameXml.Replace(".xml", ".csv")))
+               {
+                  do
+                  {
+                     var lstCsv = new List<string>();
+                     var strXmlNodeDespeza = reader.ReadOuterXml();
+                     if (string.IsNullOrEmpty(strXmlNodeDespeza))
+                        break;
 
-                    using (var outputFile = new StreamWriter(fullFileNameXml.Replace(".xml", ".csv")))
-                    {
-                        do
-                        {
-                            var lstCsv = new List<string>();
-                            var strXmlNodeDespeza = reader.ReadOuterXml();
-                            if (string.IsNullOrEmpty(strXmlNodeDespeza))
-                                break;
+                     var doc = new XmlDocument();
+                     doc.LoadXml(strXmlNodeDespeza);
+                     var files = doc.DocumentElement.SelectNodes("*");
 
-                            var doc = new XmlDocument();
-                            doc.LoadXml(strXmlNodeDespeza);
-                            var files = doc.DocumentElement.SelectNodes("*");
+                     var indexXml = 0;
+                     for (var i = 0; i < 29; i++)
+                        if (files[indexXml].Name == ColunasXmlDespesasCamara[i])
+                           lstCsv.Add(files[indexXml++].InnerText);
+                        else
+                           lstCsv.Add("");
 
-                            var indexXml = 0;
-                            for (var i = 0; i < 29; i++)
-                                if (files[indexXml].Name == ColunasXmlDespesasCamara[i])
-                                    lstCsv.Add(files[indexXml++].InnerText);
-                                else
-                                    lstCsv.Add("");
+                     outputFile.WriteLine("\"" + string.Join("\";\"", lstCsv) + "\"");
+                  } while (true);
+               }
 
-                            outputFile.WriteLine("\"" + string.Join("\";\"", lstCsv) + "\"");
-                        } while (true);
-                    }
-
-                    reader.Close();
-                }
+               reader.Close();
             }
-            catch (Exception)
+         }
+         catch (Exception)
+         {
+            throw;
+         }
+         finally
+         {
+            stream.Close();
+            stream.Dispose();
+         }
+      }
+
+      public static void ConverterXmlParaCsvDeputadosCamara()
+      {
+         var fullFileNameXml = @"C:\GitHub\OPS\temp\Deputados.xml";
+         StreamReader stream = null;
+
+         try
+         {
+            //if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
+            //	stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
+            //else
+            stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
+
+            using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
             {
-                throw;
+               reader.ReadToDescendant("orgao");
+               reader.ReadToDescendant("Deputados");
+               reader.ReadToDescendant("Deputado");
+
+               using (var outputFile = new StreamWriter(fullFileNameXml.Replace(".xml", ".csv")))
+               {
+                  do
+                  {
+                     var lstCsv = new List<string>();
+                     var strXmlNodeDeputado = reader.ReadOuterXml();
+                     if (string.IsNullOrEmpty(strXmlNodeDeputado))
+                        break;
+
+                     var doc = new XmlDocument();
+                     doc.LoadXml(strXmlNodeDeputado);
+                     var files = doc.DocumentElement.SelectNodes("*");
+
+                     var indexXml = 0;
+                     for (var i = 0; i < 13; i++)
+                        if (files[indexXml].Name == ColunasXmlDeputadosCamara[i])
+                           lstCsv.Add(files[indexXml++].InnerText);
+                        else
+                           lstCsv.Add("");
+
+                     outputFile.WriteLine("\"" + string.Join("\";\"", lstCsv) + "\"");
+                  } while (true);
+               }
+
+               reader.Close();
             }
-            finally
-            {
-                stream.Close();
-                stream.Dispose();
-            }
-        }
+         }
+         catch (Exception)
+         {
+            throw;
+         }
+         finally
+         {
+            stream.Close();
+            stream.Dispose();
+         }
+      }
 
-        public static void ConverterXmlParaCsvDeputadosCamara()
-        {
-            var fullFileNameXml = @"C:\GitHub\OPS\temp\Deputados.xml";
-            StreamReader stream = null;
-
-            try
-            {
-                //if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
-                //	stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
-                //else
-                stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
-
-                using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
-                {
-                    reader.ReadToDescendant("orgao");
-                    reader.ReadToDescendant("Deputados");
-                    reader.ReadToDescendant("Deputado");
-
-                    using (var outputFile = new StreamWriter(fullFileNameXml.Replace(".xml", ".csv")))
-                    {
-                        do
-                        {
-                            var lstCsv = new List<string>();
-                            var strXmlNodeDeputado = reader.ReadOuterXml();
-                            if (string.IsNullOrEmpty(strXmlNodeDeputado))
-                                break;
-
-                            var doc = new XmlDocument();
-                            doc.LoadXml(strXmlNodeDeputado);
-                            var files = doc.DocumentElement.SelectNodes("*");
-
-                            var indexXml = 0;
-                            for (var i = 0; i < 13; i++)
-                                if (files[indexXml].Name == ColunasXmlDeputadosCamara[i])
-                                    lstCsv.Add(files[indexXml++].InnerText);
-                                else
-                                    lstCsv.Add("");
-
-                            outputFile.WriteLine("\"" + string.Join("\";\"", lstCsv) + "\"");
-                        } while (true);
-                    }
-
-                    reader.Close();
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                stream.Close();
-                stream.Dispose();
-            }
-        }
-
-        public static void MigrarFornecedores()
-        {
-            using (var banco = new Banco())
-            {
-                var dtFornecedoresInfo = banco.GetTable(
-                    @"SELECT
+      public static void MigrarFornecedores()
+      {
+         using (var banco = new Banco())
+         {
+            var dtFornecedoresInfo = banco.GetTable(
+                @"SELECT
 					txtCNPJCPF,
 					txtBeneficiario,
 					NomeFantasia,
@@ -228,23 +228,23 @@ namespace OPS.ImportacaoManual
 					EnteFederativoResponsavel,
 					CapitalSocial
 					FROM auditoria.fornecedores where NomeFantasia is not null;");
-                var dtFornecedoresAtividade = banco.GetTable("SELECT * FROM ops.fornecedor_atividade;");
-                //DataTable dtFornecedoresAtividadeSec = banco.GetTable("SELECT * FROM ops.fornecedor_atividade_secundaria;");
-                var dtFornecedoresNatJu = banco.GetTable("SELECT * FROM ops.fornecedor_natureza_juridica;");
-                //DataTable dtFornecedoresQAS = banco.GetTable("SELECT * FROM ops.fornecedorquadrosocietario;");
+            var dtFornecedoresAtividade = banco.GetTable("SELECT * FROM ops.fornecedor_atividade;");
+            //DataTable dtFornecedoresAtividadeSec = banco.GetTable("SELECT * FROM ops.fornecedor_atividade_secundaria;");
+            var dtFornecedoresNatJu = banco.GetTable("SELECT * FROM ops.fornecedor_natureza_juridica;");
+            //DataTable dtFornecedoresQAS = banco.GetTable("SELECT * FROM ops.fornecedorquadrosocietario;");
 
-                var dtFornecedores = banco.GetTable("SELECT * FROM ops.fornecedor;");
+            var dtFornecedores = banco.GetTable("SELECT * FROM ops.fornecedor;");
 
-                foreach (DataRow item in dtFornecedores.Rows)
-                {
-                    var drItens = dtFornecedoresInfo.Select("txtCNPJCPF='" + item["cnpj_cpf"] + "'");
-                    if (drItens.Length == 0)
-                        continue;
+            foreach (DataRow item in dtFornecedores.Rows)
+            {
+               var drItens = dtFornecedoresInfo.Select("txtCNPJCPF='" + item["cnpj_cpf"] + "'");
+               if (drItens.Length == 0)
+                  continue;
 
-                    var dr = drItens[0];
+               var dr = drItens[0];
 
-                    var strSql =
-                        @"insert into ops.fornecedor_info(
+               var strSql =
+                   @"insert into ops.fornecedor_info(
 							id_fornecedor,
 							cnpj,
 							obtido_em,
@@ -296,71 +296,71 @@ namespace OPS.ImportacaoManual
 							@capital_social
 						)";
 
-                    banco.AddParameter("@id_fornecedor", item["id"]);
-                    banco.AddParameter("@cnpj", item["cnpj_cpf"]);
-                    banco.AddParameter("@obtido_em", ParseDate(dr["DataInclusao"]));
-                    banco.AddParameter("@nome", dr["txtBeneficiario"]);
-                    banco.AddParameter("@data_de_abertura", ParseDate(dr["DataAbertura"]));
-                    banco.AddParameter("@nome_fantasia", dr["NomeFantasia"]);
+               banco.AddParameter("@id_fornecedor", item["id"]);
+               banco.AddParameter("@cnpj", item["cnpj_cpf"]);
+               banco.AddParameter("@obtido_em", ParseDate(dr["DataInclusao"]));
+               banco.AddParameter("@nome", dr["txtBeneficiario"]);
+               banco.AddParameter("@data_de_abertura", ParseDate(dr["DataAbertura"]));
+               banco.AddParameter("@nome_fantasia", dr["NomeFantasia"]);
 
-                    var drAT = dtFornecedoresAtividade.Select("codigo='" + dr["AtividadePrincipal"].ToString().Split(' ')[0] +
-                                                       "'");
-                    if (drAT.Length > 0)
-                        banco.AddParameter("@id_fornecedor_atividade_principal", drAT[0]["id"]);
-                    else
-                        banco.AddParameter("@id_fornecedor_atividade_principal", DBNull.Value);
+               var drAT = dtFornecedoresAtividade.Select("codigo='" + dr["AtividadePrincipal"].ToString().Split(' ')[0] +
+                                                  "'");
+               if (drAT.Length > 0)
+                  banco.AddParameter("@id_fornecedor_atividade_principal", drAT[0]["id"]);
+               else
+                  banco.AddParameter("@id_fornecedor_atividade_principal", DBNull.Value);
 
-                    var drNJ = dtFornecedoresNatJu.Select("codigo='" + dr["NaturezaJuridica"].ToString().Split(' ')[0] + "'");
-                    if (drAT.Length > 0)
-                        banco.AddParameter("@id_fornecedor_natureza_juridica", drNJ[0]["id"]);
-                    else
-                        banco.AddParameter("@id_fornecedor_natureza_juridica", DBNull.Value);
+               var drNJ = dtFornecedoresNatJu.Select("codigo='" + dr["NaturezaJuridica"].ToString().Split(' ')[0] + "'");
+               if (drAT.Length > 0)
+                  banco.AddParameter("@id_fornecedor_natureza_juridica", drNJ[0]["id"]);
+               else
+                  banco.AddParameter("@id_fornecedor_natureza_juridica", DBNull.Value);
 
-                    banco.AddParameter("@logradouro", dr["Logradouro"]);
-                    banco.AddParameter("@numero", dr["Numero"]);
-                    banco.AddParameter("@complemento", dr["Complemento"]);
-                    banco.AddParameter("@cep", dr["Cep"]);
-                    banco.AddParameter("@bairro", dr["Bairro"]);
-                    banco.AddParameter("@municipio", dr["Cidade"]);
-                    banco.AddParameter("@estado", dr["Uf"]);
-                    banco.AddParameter("@endereco_eletronico", dr["Email"]);
-                    banco.AddParameter("@telefone", dr["Telefone"]);
-                    banco.AddParameter("@ente_federativo_responsavel", dr["EnteFederativoResponsavel"]);
-                    banco.AddParameter("@situacao_cadastral", dr["Situacao"]);
-                    banco.AddParameter("@data_da_situacao_cadastral", ParseDate(dr["DataSituacao"]));
-                    banco.AddParameter("@motivo_situacao_cadastral", dr["MotivoSituacao"]);
-                    banco.AddParameter("@situacao_especial", dr["SituacaoEspecial"]);
-                    banco.AddParameter("@data_situacao_especial", ParseDate(dr["DataSituacaoEspecial"]));
-                    banco.AddParameter("@capital_social", ObterValor(dr["CapitalSocial"]));
+               banco.AddParameter("@logradouro", dr["Logradouro"]);
+               banco.AddParameter("@numero", dr["Numero"]);
+               banco.AddParameter("@complemento", dr["Complemento"]);
+               banco.AddParameter("@cep", dr["Cep"]);
+               banco.AddParameter("@bairro", dr["Bairro"]);
+               banco.AddParameter("@municipio", dr["Cidade"]);
+               banco.AddParameter("@estado", dr["Uf"]);
+               banco.AddParameter("@endereco_eletronico", dr["Email"]);
+               banco.AddParameter("@telefone", dr["Telefone"]);
+               banco.AddParameter("@ente_federativo_responsavel", dr["EnteFederativoResponsavel"]);
+               banco.AddParameter("@situacao_cadastral", dr["Situacao"]);
+               banco.AddParameter("@data_da_situacao_cadastral", ParseDate(dr["DataSituacao"]));
+               banco.AddParameter("@motivo_situacao_cadastral", dr["MotivoSituacao"]);
+               banco.AddParameter("@situacao_especial", dr["SituacaoEspecial"]);
+               banco.AddParameter("@data_situacao_especial", ParseDate(dr["DataSituacaoEspecial"]));
+               banco.AddParameter("@capital_social", ObterValor(dr["CapitalSocial"]));
 
-                    banco.ExecuteNonQuery(strSql);
+               banco.ExecuteNonQuery(strSql);
 
 
-                    var strSql2 = @"insert into ops.fornecedor_atividade_secundaria values (@id_fornecedor_info, @id_fornecedor_atividade)";
+               var strSql2 = @"insert into ops.fornecedor_atividade_secundaria values (@id_fornecedor_info, @id_fornecedor_atividade)";
 
-                    for (var i = 0; i < 20; i++)
-                        try
-                        {
-                            var pos = (i + 1).ToString("00");
-                            if (Convert.IsDBNull(dr["AtividadeSecundaria" + pos]) ||
-                                string.IsNullOrEmpty(dr["AtividadeSecundaria" + pos].ToString())) continue;
+               for (var i = 0; i < 20; i++)
+                  try
+                  {
+                     var pos = (i + 1).ToString("00");
+                     if (Convert.IsDBNull(dr["AtividadeSecundaria" + pos]) ||
+                         string.IsNullOrEmpty(dr["AtividadeSecundaria" + pos].ToString())) continue;
 
-                            var drATS = dtFornecedoresAtividade.Select("codigo='" + dr["AtividadeSecundaria" + pos].ToString().Split(' ')[0] + "'");
-                            if (drATS.Length > 0)
-                            {
-                                banco.AddParameter("@id_fornecedor_info", item["id"]);
-                                banco.AddParameter("@id_fornecedor_atividade", drATS[0]["id"]);
-                                banco.ExecuteNonQuery(strSql2);
-                            }
-                        }
-                        catch
-                        {
-                            // ignored
-                            //if (!ex.Message.Contains("Duplicate entry")) break;
-                        }
-                }
+                     var drATS = dtFornecedoresAtividade.Select("codigo='" + dr["AtividadeSecundaria" + pos].ToString().Split(' ')[0] + "'");
+                     if (drATS.Length > 0)
+                     {
+                        banco.AddParameter("@id_fornecedor_info", item["id"]);
+                        banco.AddParameter("@id_fornecedor_atividade", drATS[0]["id"]);
+                        banco.ExecuteNonQuery(strSql2);
+                     }
+                  }
+                  catch
+                  {
+                     // ignored
+                     //if (!ex.Message.Contains("Duplicate entry")) break;
+                  }
+            }
 
-                banco.ExecuteNonQuery(@"
+            banco.ExecuteNonQuery(@"
 					update ops.fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
 					update ops.fornecedor_info set logradouro=null where logradouro = '';
 					update ops.fornecedor_info set numero=null where numero = '';
@@ -375,42 +375,42 @@ namespace OPS.ImportacaoManual
 					update ops.fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '';
 					update ops.fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
 				");
-            }
-        }
+         }
+      }
 
-        private static object ObterValor(object d)
-        {
-            if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()))
-                return DBNull.Value;
-            try
-            {
-                return Convert.ToDecimal(d.ToString().Split(' ')[1]);
-            }
-            catch
-            {
-                return DBNull.Value;
-            }
-        }
+      private static object ObterValor(object d)
+      {
+         if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()))
+            return DBNull.Value;
+         try
+         {
+            return Convert.ToDecimal(d.ToString().Split(' ')[1]);
+         }
+         catch
+         {
+            return DBNull.Value;
+         }
+      }
 
-        private static object ParseDate(object d)
-        {
-            if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
-                d.ToString().StartsWith("*"))
-                return DBNull.Value;
-            try
-            {
-                return Convert.ToDateTime(d);
-            }
-            catch
-            {
-                return DBNull.Value;
-            }
-        }
+      private static object ParseDate(object d)
+      {
+         if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
+             d.ToString().StartsWith("*"))
+            return DBNull.Value;
+         try
+         {
+            return Convert.ToDateTime(d);
+         }
+         catch
+         {
+            return DBNull.Value;
+         }
+      }
 
-        public static void AtualizaCampeoesGastos()
-        {
-            var strSql =
-                @"truncate table cf_deputado_campeao_gasto;
+      public static void AtualizaCampeoesGastos()
+      {
+         var strSql =
+             @"truncate table cf_deputado_campeao_gasto;
 				insert into cf_deputado_campeao_gasto
 				SELECT l1.id_cf_deputado, d.id_cadastro, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
 				FROM (
@@ -445,93 +445,93 @@ namespace OPS.ImportacaoManual
 				LEFT JOIN estado e on e.id = d.id_estado;
 				";
 
-            using (var banco = new Banco())
+         using (var banco = new Banco())
+         {
+            banco.ExecuteNonQuery(strSql);
+         }
+      }
+
+      public static void AtualizaFornecedorDoador()
+      {
+         using (var banco = new Banco())
+         {
+            var dt = banco.GetTable("select id, cnpj_cpf from fornecedor");
+
+            foreach (DataRow dr in dt.Rows)
             {
-                banco.ExecuteNonQuery(strSql);
+               banco.AddParameter("cnpj", dr["cnpj_cpf"]);
+               var existe = banco.ExecuteScalar("select 1 from eleicao_doacao where raiz_cnpj_cpf_doador=@cnpj;");
+               if (existe != null)
+               {
+                  banco.AddParameter("id", dr["id"]);
+                  banco.ExecuteNonQuery("update fornecedor set doador=1 where id=@id");
+               }
             }
-        }
+         }
+      }
 
-        public static void AtualizaFornecedorDoador()
-        {
-            using (var banco = new Banco())
+      public static void Main(string[] args)
+      {
+         Padrao.ConnectionString = ConfigurationManager.ConnectionStrings["AuditoriaContext"].ToString();
+
+         var tempPath = @"C:\GitHub\operacao-politica-supervisionada\OPS\temp";
+
+         //MigrarFornecedores();
+
+         //ImportacaoDados.Camara.AtualizaInfoDeputados();
+         //ImportacaoDados.Camara.AtualizaInfoDeputadosCompleto();
+
+         //ImportacaoDados.Camara.ImportarMandatos();
+
+         //ImportacaoDados.Senado.CarregaSenadores();
+
+         //Teste
+         //ConverterXmlParaCsvDeputadosCamara();
+         //ConverterXmlParaCsvDespesasCamara(tempPath + @"\AnoAtual.xml");
+
+         //Importação na nova estrutura
+         //ImportacaoDados.Camara.ImportarDespesas(tempPath);
+
+         //for (int ano = 2008; ano <= 2017; ano++)
+         //{
+         //   ImportacaoDados.Senado.ImportarDespesas(tempPath, ano, true);
+         //}
+         //ImportacaoDados.Senado.ImportarDespesas(tempPath, 2017, false);
+
+         //ImportacaoDados.CamaraAtualizaDeputadoValores();
+         //ImportacaoDados.Senado.AtualizaSenadorValores();
+         //AtualizaCampeoesGastos();
+         //AtualizaFornecedorDoador();
+
+         //Camara.ImportaPresencasDeputados();
+
+
+         Fornecedor.ConsultarReceitaWS();
+
+         // To search and replace content in a document part.
+         //SearchAndReplace(@"C:\GitHub\operacao-politica-supervisionada\OPS\temp\Modelo Padrão de Denúncia por falta de Transparência versão 4.docx");
+      }
+
+      public static void SearchAndReplace(string document)
+      {
+         File.Copy(document, document.Replace(".docx", " (copia).docx"));
+
+         using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(document, true))
+         {
+            string docText = null;
+            using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
             {
-                var dt = banco.GetTable("select id, cnpj_cpf from fornecedor");
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    banco.AddParameter("cnpj", dr["cnpj_cpf"]);
-                    var existe = banco.ExecuteScalar("select 1 from eleicao_doacao where raiz_cnpj_cpf_doador=@cnpj;");
-                    if (existe != null)
-                    {
-                        banco.AddParameter("id", dr["id"]);
-                        banco.ExecuteNonQuery("update fornecedor set doador=1 where id=@id");
-                    }
-                }
+               docText = sr.ReadToEnd();
             }
-        }
 
-        public static void Main(string[] args)
-        {
-            Padrao.ConnectionString = ConfigurationManager.ConnectionStrings["AuditoriaContext"].ToString();
+            docText = docText.Replace("#CIDADE_AUDITOR#", "Mondaí");
+            docText = docText.Replace("#CIDADE_AUDITADA#", "São José");
 
-            var tempPath = @"C:\GitHub\operacao-politica-supervisionada\OPS\temp";
-
-            //MigrarFornecedores();
-
-            //ImportacaoDados.Camara.AtualizaInfoDeputados();
-            //ImportacaoDados.Camara.AtualizaInfoDeputadosCompleto();
-
-            //ImportacaoDados.Camara.ImportarMandatos();
-
-            //ImportacaoDados.Senado.CarregaSenadores();
-
-            //Teste
-            //ConverterXmlParaCsvDeputadosCamara();
-            //ConverterXmlParaCsvDespesasCamara(tempPath + @"\AnoAtual.xml");
-
-            //Importação na nova estrutura
-            //ImportacaoDados.Camara.ImportarDespesas(tempPath);
-
-            //for (int ano = 2008; ano <= 2017; ano++)
-            //{
-            //    ImportacaoDados.Senado.ImportarDespesas(tempPath, ano, true);
-            //}
-            //ImportacaoDados.Senado.ImportarDespesas(tempPath, 2017, false);
-
-            //ImportacaoDados.CamaraAtualizaDeputadoValores();
-            //ImportacaoDados.Senado.AtualizaSenadorValores();
-            //AtualizaCampeoesGastos();
-            //AtualizaFornecedorDoador();
-
-            //Camara.ImportaPresencasDeputados();
-
-
-            //Fornecedor.ConsultarReceitaWS();
-
-            // To search and replace content in a document part.
-            SearchAndReplace(@"C:\GitHub\operacao-politica-supervisionada\OPS\temp\Modelo Padrão de Denúncia por falta de Transparência versão 4.docx");
-        }
-
-        public static void SearchAndReplace(string document)
-        {
-            File.Copy(document, document.Replace(".docx", " (copia).docx"));
-
-            using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(document, true))
+            using (StreamWriter sw = new StreamWriter(wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
             {
-                string docText = null;
-                using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
-                {
-                    docText = sr.ReadToEnd();
-                }
-
-                docText = docText.Replace("#CIDADE_AUDITOR#", "Mondaí");
-                docText = docText.Replace("#CIDADE_AUDITADA#", "São José");
-
-                using (StreamWriter sw = new StreamWriter(wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
-                {
-                    sw.Write(docText);
-                }
+               sw.Write(docText);
             }
-        }
-    }
+         }
+      }
+   }
 }

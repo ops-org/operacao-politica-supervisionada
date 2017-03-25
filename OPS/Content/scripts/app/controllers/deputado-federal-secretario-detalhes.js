@@ -9,7 +9,7 @@ app.controller('DeputadoFederalSecretariosDetalhesController', ["$scope", "$rout
     		disqus_url: base_url + '/deputado-federal/' + $routeParams.id.toString() + '/secretario'
     	};
 
-    	$api.get('Deputado/SecretariosPorDeputado', $routeParams.id).success(function (response) {
+    	$api.get('Deputado/' + $routeParams.id.toString() + '/Secretarios').success(function (response) {
     		$scope.deputado_federal_secretarios = response;
 
     		$scope.id_cf_deputado = $routeParams.id;

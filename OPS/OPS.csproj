@@ -157,6 +157,10 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Web.Http.Tracing, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Tracing.5.2.3\lib\net45\System.Web.Http.Tracing.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web.Http.WebHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebApi.WebHost.5.2.3\lib\net45\System.Web.Http.WebHost.dll</HintPath>
       <Private>True</Private>
@@ -206,31 +210,31 @@
   <ItemGroup>
     <Compile Include="AuthContext.cs" />
     <Compile Include="AuthRepository.cs" />
+    <Compile Include="Auth\Helpers\Helper.cs" />
     <Compile Include="Dao\ComandoSqlDao.cs" />
+    <Compile Include="Dao\DenunciaDao.cs" />
     <Compile Include="Dao\FornecedorDao.cs" />
     <Compile Include="Dao\ParametrosDao.cs" />
     <Compile Include="Dao\PartidoDao.cs" />
     <Compile Include="Dao\SenadorDao.cs" />
     <Compile Include="Dao\EstadoDao.cs" />
-    <Compile Include="Entities\Client.cs" />
-    <Compile Include="Entities\RefreshToken.cs" />
-    <Compile Include="Helper.cs" />
-    <Compile Include="Models\Enums.cs" />
+    <Compile Include="Auth\Entities\Client.cs" />
+    <Compile Include="Auth\Entities\RefreshToken.cs" />
     <Compile Include="Models\ExternalLoginModels.cs" />
     <Compile Include="Models\FormatarDados.cs" />
     <Compile Include="Models\Fornecedor.cs" />
     <Compile Include="Models\FornecedorQuadroSocietario.cs" />
     <Compile Include="Models\UserModel.cs" />
-    <Compile Include="Providers\FacebookAuthProvider.cs" />
-    <Compile Include="Providers\FacebookBackChannelHandler.cs" />
-    <Compile Include="Providers\GoogleAuthProvider.cs" />
-    <Compile Include="Providers\SimpleAuthorizationServerProvider.cs" />
-    <Compile Include="Providers\SimpleRefreshTokenProvider.cs" />
-    <Compile Include="Results\ChallengeResult.cs" />
-    <Compile Include="Service\EmailService.cs" />
+    <Compile Include="Auth\Providers\FacebookAuthProvider.cs" />
+    <Compile Include="Auth\Providers\FacebookBackChannelHandler.cs" />
+    <Compile Include="Auth\Providers\GoogleAuthProvider.cs" />
+    <Compile Include="Auth\Providers\SimpleAuthorizationServerProvider.cs" />
+    <Compile Include="Auth\Providers\SimpleRefreshTokenProvider.cs" />
+    <Compile Include="Auth\Results\ChallengeResult.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="WebApi\AccountController.cs" />
     <Compile Include="WebApi\ContatoController.cs" />
+    <Compile Include="WebApi\DenunciaController.cs" />
     <Compile Include="WebApi\DeputadoController.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
@@ -258,6 +262,8 @@
     <Content Include="Content\scripts\app\app.js" />
     <Content Include="Content\scripts\app\controllers\associate.js" />
     <Content Include="Content\scripts\app\controllers\contato.js" />
+    <Content Include="Content\scripts\app\controllers\denuncias-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\denuncias-lista.js" />
     <Content Include="Content\scripts\app\controllers\index.js" />
     <Content Include="Content\scripts\app\controllers\login.js" />
     <Content Include="Content\scripts\app\controllers\refresh.js" />
@@ -303,6 +309,7 @@
     <Content Include="Content\fonts\fontawesome-webfont.woff" />
     <Content Include="Content\fonts\fontawesome-webfont.woff2" />
     <Content Include="Content\fonts\FontAwesome.otf" />
+    <Content Include="_app_offline.htm" />
     <None Include="Content\scripts\jquery\jquery-2.2.3.intellisense.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.js" />
@@ -318,7 +325,6 @@
     <Content Include="Content\scripts\ng\angular.min.js" />
     <Content Include="Content\scripts\ng\ng-table.js" />
     <Content Include="Content\styles\font-awesome.css" />
-    <Content Include="Content\styles\font-awesome.min.css" />
     <Content Include="Content\styles\ng-table.css" />
     <Content Include="Content\styles\site.css" />
     <Content Include="Content\styles\social-buttons.css" />
@@ -332,6 +338,8 @@
     <Content Include="Views\App\Autenticacao\_signup.html" />
     <Content Include="Views\App\Autenticacao\_tokens.html" />
     <Content Include="Views\App\Autenticacao\_verify-email.html" />
+    <Content Include="Views\App\Denuncia\_denuncia-detalhes.html" />
+    <Content Include="Views\App\Denuncia\_denuncia-lista.html" />
     <Content Include="Views\App\_solicitacao-restituicao.html" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>

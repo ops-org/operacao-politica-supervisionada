@@ -419,7 +419,7 @@ namespace OPS.Dao
 					}
 					else
 					{
-						throw new Exception("Fornecedor inexistente.");
+						throw new BusinessException("Fornecedor inexistente.");
 					}
 				}
 
@@ -687,7 +687,7 @@ namespace OPS.Dao
                 {
                     if (!string.IsNullOrEmpty(nome))
                     {
-                        banco.AddParameter("nome", "%" + nome + "%");
+                        banco.AddParameter("nome", "%" + Utils.MySqlEscape(nome) + "%");
                         sSql += " AND nome like @nome";
                     }
                 }

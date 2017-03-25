@@ -7,10 +7,12 @@ using Newtonsoft.Json.Linq;
 
 namespace OPS.WebApi
 {
-    public class ContatoController : ApiController
+	[RoutePrefix("Api/Partido")]
+	public class ContatoController : ApiController
     {
         [HttpPost]
-        public IHttpActionResult Post(JObject jsonData)
+		[ActionName("")]
+		public IHttpActionResult Post(JObject jsonData)
         {
             var mRemetente = WebConfigurationManager.AppSettings["EmailComunicacao"];
             var mSenhaEmail = WebConfigurationManager.AppSettings["SenhaEmailComunicacao"];

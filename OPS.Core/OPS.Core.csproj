@@ -40,12 +40,23 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\OPS\bin\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\OPS\bin\System.Web.Http.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Banco.cs" />
+    <Compile Include="BusinessException.cs" />
     <Compile Include="CacheHelper.cs" />
     <Compile Include="ConvertExtension.cs" />
     <Compile Include="CookieAwareWebClient.cs">
@@ -53,9 +64,11 @@
     </Compile>
     <Compile Include="DropDownDTO.cs" />
     <Compile Include="eAgrupamentoAuditoria.cs" />
+    <Compile Include="FiltroDenunciaDTO.cs" />
     <Compile Include="FiltroDropDownDTO.cs" />
     <Compile Include="FiltroParlamentarDTO.cs" />
     <Compile Include="FiltroUsuarioDTO.cs" />
+    <Compile Include="ExceptionHandlingAttribute.cs" />
     <Compile Include="MemoryCacheHelper.cs" />
     <Compile Include="Padrao.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

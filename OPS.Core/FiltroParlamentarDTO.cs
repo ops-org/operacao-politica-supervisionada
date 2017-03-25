@@ -2,7 +2,7 @@
 {
 	public class FiltroParlamentarDTO
 	{
-		public string filter { get; set; }
+		//public string filter { get; set; }
 		public string sorting { get; set; }
 		public int count { get; set; }
 		public int page { get; set; }
@@ -20,7 +20,7 @@
 
 		public string Periodo { get; set; }
 
-		public string Documento { get; set; }
+		//public string Documento { get; set; }
 
 		public eAgrupamentoAuditoria Agrupamento { get; set; }
 

@@ -21,12 +21,17 @@ app.controller('SignupController', ['$scope', '$location', '$timeout', 'authServ
         },
          function (response) {
              var errors = [];
-             for (var key in response.data.modelState) {
-                 for (var i = 0; i < response.data.modelState[key].length; i++) {
-                     errors.push(response.data.modelState[key][i]);
+             for (var key in response.data.ModelState) {
+                 var model = response.data.ModelState[key];
+                 if (!Array.isArray(model)) {
+                     errors.push("<li>" + model + "</li>");
+                 } else {
+                     for (var subKey in model) {
+                         errors.push("<li>" + model[subKey] + "</li>");
+                     }
                  }
              }
-             $scope.message = "Failed to register user due to:" + errors.join(' ');
+             $scope.message = "Falha ao registrar usuário devido a: <ul style='padding-left: 25px;'>" + errors.join(' ') + "</ul>";
          });
     };
 

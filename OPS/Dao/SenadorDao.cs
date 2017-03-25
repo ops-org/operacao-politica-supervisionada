@@ -146,69 +146,6 @@ namespace OPS.Dao
 			}
 		}
 
-		internal dynamic Documento(int id)
-		{
-			using (Banco banco = new Banco())
-			{
-				var strSql = new StringBuilder();
-
-				strSql.AppendLine(@"
-					SELECT
-						l.id as id_sf_despesa
-						, l.valor
-						, l.ano
-						, l.mes
-						, l.documento
-						, l.data_documento
-						, td.id as id_sf_despesa_tipo
-						, td.descricao as descricao_despesa
-						, d.id as id_sf_senador
-						, d.nome as nome_parlamentar
-						, e.sigla as sigla_estado
-						, p.sigla as sigla_partido
-						, pj.id AS id_fornecedor
-						, pj.cnpj_cpf
-						, pj.nome AS nome_fornecedor
-					FROM sf_despesa l
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN sf_senador d ON d.id = l.id_sf_senador
-					LEFT JOIN sf_despesa_tipo td ON td.id = l.id_sf_despesa_tipo
-					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-				 ");
-				banco.AddParameter("@id", id);
-
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
-				{
-					if (reader.Read())
-					{
-						var result = new
-						{
-							id_sf_despesa = reader["id_sf_despesa"],
-							valor = Utils.FormataValor(reader["valor"]),
-							ano = reader["ano"].ToString(),
-							mes = reader["mes"].ToString(),
-							documento = reader["documento"].ToString(),
-							data_documento = Utils.FormataData(reader["data_documento"]),
-							id_sf_despesa_tipo = reader["id_sf_despesa_tipo"],
-							descricao_despesa = reader["descricao_despesa"].ToString(),
-							id_sf_senador = reader["id_sf_senador"],
-							nome_parlamentar = reader["nome_parlamentar"].ToString(),
-							sigla_estado = reader["sigla_estado"].ToString(),
-							sigla_partido = reader["sigla_partido"].ToString(),
-							id_fornecedor = reader["id_fornecedor"],
-							cnpj_cpf = reader["cnpj_cpf"].ToString(),
-							nome_fornecedor = reader["nome_fornecedor"].ToString()
-						};
-
-						return result;
-					}
-
-					return null;
-				}
-			}
-		}
-		
 		internal dynamic GastosMensaisPorAno(int id)
 		{
 			using (Banco banco = new Banco())
@@ -301,7 +238,7 @@ namespace OPS.Dao
 
 		internal dynamic Lancamentos(FiltroParlamentarDTO filtro)
 		{
-			if (filtro == null) throw new ArgumentException("filtro");
+			if (filtro == null) throw new BusinessException("Parâmetro filtro não informado!");
 
 			switch (filtro.Agrupamento)
 			{
@@ -319,7 +256,7 @@ namespace OPS.Dao
 					return LancamentosNotaFiscal(filtro);
 			}
 
-			throw new ArgumentException("filtro.Agrupamento");
+			throw new BusinessException("Parâmetro filtro.Agrupamento não informado!");
 		}
 
 		private dynamic LancamentosParlamentar(FiltroParlamentarDTO filtro)
@@ -753,7 +690,7 @@ namespace OPS.Dao
 
 				AdicionaFiltroEstadoSenador(filtro, sqlSelect);
 
-				sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "l.data_documento desc, l.valor desc" : filtro.sorting);
+				sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "l.data_documento desc, l.valor desc" : Utils.MySqlEscape(filtro.sorting));
 				sqlSelect.AppendFormat("LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
 
 				sqlSelect.AppendFormat("SELECT FOUND_ROWS();");
@@ -844,7 +781,7 @@ namespace OPS.Dao
 		{
 			if (!string.IsNullOrEmpty(filtro.Partido))
 			{
-				sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_partido IN(" + filtro.Partido + ")) ");
+				sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
 			}
 		}
 
@@ -852,7 +789,7 @@ namespace OPS.Dao
 		{
 			if (!string.IsNullOrEmpty(filtro.Uf))
 			{
-				sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_estado IN(" + filtro.Uf + ")) ");
+				sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
 			}
 		}
 
@@ -869,7 +806,7 @@ namespace OPS.Dao
 						using (Banco banco = new Banco())
 						{
 							var id_fornecedor =
-								banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + filtro.Fornecedor + "'");
+								banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + "'");
 
 							if (!Convert.IsDBNull(id_fornecedor))
 							{
@@ -879,7 +816,7 @@ namespace OPS.Dao
 					}
 					else
 					{
-						sqlSelect.AppendLine("	AND l.id_fornecedor =" + filtro.Fornecedor + " ");
+						sqlSelect.AppendLine("	AND l.id_fornecedor =" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + " ");
 					}
 				}
 			}
@@ -889,7 +826,7 @@ namespace OPS.Dao
 		{
 			if (!string.IsNullOrEmpty(filtro.Despesa))
 			{
-				sqlSelect.AppendLine("	AND l.id_sf_despesa_tipo IN (" + filtro.Despesa + ") ");
+				sqlSelect.AppendLine("	AND l.id_sf_despesa_tipo IN (" + Utils.MySqlEscapeNumberToIn(filtro.Despesa) + ") ");
 			}
 		}
 
@@ -897,14 +834,14 @@ namespace OPS.Dao
 		{
 			if (!string.IsNullOrEmpty(filtro.IdParlamentar))
 			{
-				sqlSelect.AppendLine("	AND l.id_sf_senador IN (" + filtro.IdParlamentar + ") ");
+				sqlSelect.AppendLine("	AND l.id_sf_senador IN (" + Utils.MySqlEscapeNumberToIn(filtro.IdParlamentar) + ") ");
 			}
 		}
 
 		private static void AdicionaResultadoComum(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
 		{
 			//sqlSelect.AppendLine("select * from table_in_memory ");
-			sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "valor_total desc" : filtro.sorting);
+			sqlSelect.AppendFormat("ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "valor_total desc" : Utils.MySqlEscape(filtro.sorting));
 			sqlSelect.AppendFormat("LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
 
 			sqlSelect.AppendLine(
@@ -935,6 +872,5 @@ namespace OPS.Dao
 				return lstRetorno;
 			}
 		}
-
 	}
 }

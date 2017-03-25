@@ -55,10 +55,10 @@
                     <input type="text" id="txtBeneficiario" class="form-control input-sm" disabled="disabled" />
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default btn-sm" data-ng-click="LimparFiltroFornecedor();" title="Limpar">
-                            <span class="glyphicon glyphicon-remove"></span>
+                            <span class="fa fa-times"></span>
                         </button>
                         <button type="button" class="btn btn-default btn-sm" data-ng-click="AbreModalConsultaFornecedor();" title="Localizar beneficiário">
-                            <span class="glyphicon glyphicon-search"></span>
+                            <span class="fa fa-search"></span>
                         </button>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
     <table ng-table="tableParams" class="table table-striped table-hover">
         <tr ng-repeat="row in $data">
             <td data-title="'Emissão'" style="width:10%" sortable="'data_emissao'">{{::row.data_emissao}}</td>
-            <td data-title="'CNPJ/CPF'" style="width:10%" sortable="'id'">{{::row.cnpj_cpf}}</td>
+            <td data-title="'CNPJ/CPF'" style="width:10%" sortable="'cnpj_cpf'">{{::row.cnpj_cpf}}</td>
             <td data-title="'Beneficiário'" style="width:30%" sortable="'nome_fornecedor'"><a data-ng-href="./#/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
             <td data-title="'Parlamentar'" style="width:30%" sortable="'nome_parlamentar'"><a href="./#/deputado-federal/{{::row.id_deputado}}">{{::row.nome_parlamentar}}</a></td>
             <td data-title="'Nº Nota Fiscal'" style="width:10%" sortable="'numero_documento'">{{::row.numero_documento}}</td>
