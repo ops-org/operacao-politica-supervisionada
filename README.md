@@ -3,7 +3,7 @@
 
 ## Operação Política Supervisionada
 
-**Sistema para auditoria publica de gastos com a Cota Parlamentar dos Deputados Federais e Senadores.**
+**Sistema para auditoria pública de gastos com a Cota para Atividade Parlamentar dos Deputados Federais e Senadores.**
 
 [![Crates.io](https://img.shields.io/crates/l/rustc-serialize.svg?maxAge=2592000)]()
 ![PHP](https://img.shields.io/badge/language-ASP.MVC-green.svg)
@@ -15,13 +15,13 @@ A **Operação Política Supervisionada** conta com a ajuda de seus colaboradore
 
 Além disso, qualquer um pode ser um fiscal dos gastos públicos e este site oferece dados suficientes para isso.
 
-Este projeto é político e social, mas não pertence a nenhum partido e não segue uma ideologia política. Ele não tem nenhuma ligação privada ou fim lucrativo.
+Este projeto é político e social, mas pertence a nenhum partido, segue nenhuma ideologia política e tem nenhuma ligação privada ou fim lucrativo.
 
 ## Como Funciona
 
 Seu uso é muito simples e pode ser através de smartphones, tablets e PCs.
 
-Você pode fiscalizar de forma detalhada os gastos realizados via Cota Parlamentar. 
+Você pode fiscalizar de forma detalhada os gastos realizados via Cota para Atividade Parlamentar. 
 
 Até o momento já foram economizados mais de R$ 5,5 milhões do dinheiro público graças a estas fiscalizações e às exigências feitas diretamente aos parlamentares para que devolvam o dinheiro público indevidamente utilizado.
 
