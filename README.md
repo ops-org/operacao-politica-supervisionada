@@ -29,7 +29,7 @@ Até o momento já foram economizados mais de R$ 5,5 milhões do dinheiro públi
 * [Homepage](http://ops.net.br) - Homepage
 * [Facebook](https://www.facebook.com/operacaopoliticasupervisionada) - Pagina no Facebook
 * [Blog](http://luciobig.com.br) - Blog do Lúcio
-* lucio@ops.net.br - Contato principal
+* luciobig@ops.net.br - Contato principal
 * suporte@ops.net.br - Contato técnico
 
 ## Fontes de Dados
