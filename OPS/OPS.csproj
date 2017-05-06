@@ -267,31 +267,30 @@
     <Content Include="Content\fonts\fontawesome-webfont.svg" />
     <Content Include="Content\images\patrocine.png" />
     <Content Include="Content\scripts\app\app.js" />
-    <Content Include="Content\scripts\app\controllers\associate.js" />
+    <Content Include="Content\scripts\app\controllers\auth\associate.js" />
     <Content Include="Content\scripts\app\controllers\cidadao-fiscal\auditar-portal-transparencia.js" />
     <Content Include="Content\scripts\app\controllers\contato.js" />
-    <Content Include="Content\scripts\app\controllers\denuncias-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\denuncias-lista.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-lista.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-lista.js" />
-    <Content Include="Content\scripts\app\controllers\fiscalize-nota-fiscal.js" />
-    <Content Include="Content\scripts\app\controllers\fiscalize-notas-fiscais.js" />
+    <Content Include="Content\scripts\app\controllers\denuncia\denuncias-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\denuncia\denuncias-lista.js" />
+    <Content Include="Content\scripts\app\controllers\deputado\deputado-federal-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\deputado\deputado-federal-documento.js" />
+    <Content Include="Content\scripts\app\controllers\deputado\deputado-federal-lista.js" />
+    <Content Include="Content\scripts\app\controllers\deputado\deputado-federal-secretario-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\deputado\deputado-federal-secretario-lista.js" />
+    <Content Include="Content\scripts\app\controllers\fiscalize\fiscalize-nota-fiscal.js" />
+    <Content Include="Content\scripts\app\controllers\fiscalize\fiscalize-notas-fiscais.js" />
     <Content Include="Content\scripts\app\controllers\index.js" />
-    <Content Include="Content\scripts\app\controllers\login.js" />
-    <Content Include="Content\scripts\app\controllers\refresh.js" />
-    <Content Include="Content\scripts\app\controllers\reset-password.js" />
-    <Content Include="Content\scripts\app\controllers\senador-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\senador-lista.js" />
+    <Content Include="Content\scripts\app\controllers\auth\login.js" />
+    <Content Include="Content\scripts\app\controllers\auth\refresh.js" />
+    <Content Include="Content\scripts\app\controllers\auth\reset-password.js" />
+    <Content Include="Content\scripts\app\controllers\senador\senador-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\senador\senador-lista.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
-    <Content Include="Content\scripts\app\controllers\set-password.js" />
-    <Content Include="Content\scripts\app\controllers\signup.js" />
-    <Content Include="Content\scripts\app\controllers\solicitacao-restituicao.js" />
-    <Content Include="Content\scripts\app\controllers\tokens-manager.js" />
-    <Content Include="Content\scripts\app\controllers\verify-email.js" />
+    <Content Include="Content\scripts\app\controllers\auth\set-password.js" />
+    <Content Include="Content\scripts\app\controllers\auth\signup.js" />
+    <Content Include="Content\scripts\app\controllers\auth\tokens-manager.js" />
+    <Content Include="Content\scripts\app\controllers\auth\verify-email.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap-select.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap-select.min.js" />
     <Content Include="Content\scripts\bootstrap\bootstrap.min.js" />
@@ -373,11 +372,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Content\scripts\app\controllers\auth\" />
-    <Folder Include="Content\scripts\app\controllers\denuncia\" />
-    <Folder Include="Content\scripts\app\controllers\deputado\" />
-    <Folder Include="Content\scripts\app\controllers\fiscalize\" />
-    <Folder Include="Content\scripts\app\controllers\senador\" />
     <Folder Include="Views\App\Transparencia\" />
   </ItemGroup>
   <ItemGroup>
