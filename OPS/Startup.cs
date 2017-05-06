@@ -25,6 +25,7 @@ namespace OPS
 		public static OAuthBearerAuthenticationOptions OAuthBearerOptions { get; private set; }
 		public static GoogleOAuth2AuthenticationOptions GoogleAuthOptions { get; private set; }
 		public static FacebookAuthenticationOptions FacebookAuthOptions { get; private set; }
+		public static IDataProtectionProvider DataProtectionProvider { get; set; }
 
 		public void Configuration(IAppBuilder app)
 		{
@@ -40,6 +41,8 @@ namespace OPS
 
 		public void ConfigureOAuth(IAppBuilder app)
 		{
+			DataProtectionProvider = app.GetDataProtectionProvider();
+
 			//use a cookie to temporarily store information about a user logging in with a third party login provider
 			app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
 			OAuthBearerOptions = new OAuthBearerAuthenticationOptions();

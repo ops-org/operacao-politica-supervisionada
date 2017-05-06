@@ -506,32 +506,12 @@ namespace OPS.ImportacaoManual
          //Camara.ImportaPresencasDeputados();
 
 
-         Fornecedor.ConsultarReceitaWS();
+         //Fornecedor.ConsultarReceitaWS();
 
          // To search and replace content in a document part.
          //SearchAndReplace(@"C:\GitHub\operacao-politica-supervisionada\OPS\temp\Modelo Padrão de Denúncia por falta de Transparência versão 4.docx");
       }
 
-      public static void SearchAndReplace(string document)
-      {
-         File.Copy(document, document.Replace(".docx", " (copia).docx"));
-
-         using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(document, true))
-         {
-            string docText = null;
-            using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
-            {
-               docText = sr.ReadToEnd();
-            }
-
-            docText = docText.Replace("#CIDADE_AUDITOR#", "Mondaí");
-            docText = docText.Replace("#CIDADE_AUDITADA#", "São José");
-
-            using (StreamWriter sw = new StreamWriter(wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
-            {
-               sw.Write(docText);
-            }
-         }
-      }
+     
    }
 }

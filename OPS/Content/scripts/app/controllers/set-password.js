@@ -12,7 +12,7 @@ app.controller('SetPasswordController',
 
             $api.post('Account/SetPassword', $scope.reset)
                 .success(function (data) {
-                    alert('Sua senha foi redeninida com sucesso.');
+                    alert('Sua senha foi redenida com sucesso.');
                     $location.path('/login');
                 });
         }

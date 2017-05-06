@@ -15,7 +15,7 @@ app.controller('SignupController', ['$scope', '$location', '$timeout', 'authServ
         authService.saveRegistration($scope.registration).then(function (response) {
 
             $scope.savedSuccessfully = true;
-            $scope.message = "User has been registered successfully, you will be redicted to login page in 2 seconds.";
+				$scope.message = "O usuário foi registrado com sucesso, você será rediciado para a página de login em 2 segundos.";
             startTimer();
 
         },

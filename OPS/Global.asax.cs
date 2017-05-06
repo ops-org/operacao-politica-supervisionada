@@ -29,7 +29,10 @@ namespace OPS
 			GlobalConfiguration.Configuration.Filters.Add(new ExceptionHandlingAttribute());
 
             new Dao.ParametrosDao().CarregarPadroes();
-        }
+
+			ViewEngines.Engines.Clear();
+			ViewEngines.Engines.Add(new RazorViewEngine());
+		}
 
         protected void Application_Error(object sender, EventArgs e)
         {

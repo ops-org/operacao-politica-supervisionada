@@ -26,7 +26,7 @@ namespace OPS.ImportacaoDados
             using (var banco = new Banco())
             {
                 dtFornecedores = banco.GetTable(
-                    @"select cnpj_cpf, f.id, fi.id_fornecedor
+					@"select cnpj_cpf, f.id, fi.id_fornecedor
                     from fornecedor f
                     left join fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
@@ -34,9 +34,10 @@ namespace OPS.ImportacaoDados
                     -- and obtido_em < '2017-01-01'
                     -- and fi.id_fornecedor is not null
                     -- and ip_colaborador is null
-                    -- and controle is null
-                    and controle = 1
+                     and controle is null
+                    -- and controle = 1
                     -- and f.mensagem = 'Uma tarefa foi cancelada.'
+					-- and controle = 0
                     order by 1 desc");
 
                 dtFornecedoresAtividade = banco.GetTable("SELECT * FROM fornecedor_atividade;");

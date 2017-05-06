@@ -568,7 +568,7 @@ namespace OPS.Dao
 				{
 					foreach (var atividade in fornecedor.AtividadeSecundaria)
 					{
-						if (string.IsNullOrEmpty(atividade)) continue;
+						if (string.IsNullOrEmpty(atividade) || atividade == "********") continue;
 
 						object id_fornecedor_atividade;
 

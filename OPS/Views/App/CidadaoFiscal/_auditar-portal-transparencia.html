@@ -1,0 +1,207 @@
+﻿<div class="container" data-ng-controller="AuditarPortalTransparenciaController">
+	<fieldset class="form-group">
+		<legend>Cidadão fiscal - Auditar portal de transparência municipal</legend>
+
+		<div class="panel panel-default">
+			<div class="panel-body text-justify">
+				<p>A despeito das Leis de Transparência (2009) e de Acesso à Informação (2011) estarem em vigor há vários anos, ainda tem-se muitos Municípios brasileiros que não possuem seus Portais de Transparência ou não disponibilizam as informações exigidas.  O cidadão, por sua vez, não sabe como cobrar e denunciar nem dispõe de instrumentos e sistemas para fazê-lo.</p>
+				<p>A partir o checklist abaixo, você poderá avaliar o portal de transparência do seu município, bem como, de qualquer outra cidade brasileira. Ao final poderá gerar um relatório para a cobrança de melhorias no portal de transparência auditado, e também, uma denúncia dirigida ao Ministério Público e Tribunal de Contas.</p>
+				<p>Em caso de dúvidas, veja um modelo de checklist clicando <a href="#">aqui</a>, ou entre em contato pelo email: <a href="#">cidadaofiscal@ossj.com.br</a></p>
+			</div>
+		</div>
+
+		<form name="helpForm" novalidate role="form">
+			<div class="list-group">
+				<div class="list-group-item active">Qual cidade você deseja auditar?</div>
+				<div class="list-group">
+					<div class="list-group-item">
+						<div class="row">
+							<div class="col-sm-6">
+								<div class="form-group">
+									<label for="estado">Estado</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.portal-estado.$error.required">Obrigatório!</span>
+									<select type="text" id="portal-estado" name="estado" data-ng-model="auditoria.estado"
+											  ng-options="item.id as item.text for item in estados" required class="form-control input-sm">
+										<option value="">Selecione</option>
+									</select>
+								</div>
+							</div>
+							<div class="col-sm-6">
+								<div class="form-group">
+									<label for="cidade">Cidade</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.cidade.$error.required">Obrigatório!</span>
+									<input type="text" id="cidade" name="cidade" data-ng-model="auditoria.cidade" class="form-control input-sm" required />
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<div class="form-group">
+									<label for="link-portal">Link do portal de transparência</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.link-portal.$error.required">Obrigatório!</span>
+									<input type="text" id="link-portal" name="link-portal" data-ng-model="auditoria.link_portal" class="form-control input-sm" required />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="list-group" data-ng-repeat="grupo in auditoria.grupos">
+				<div class="list-group-item active">{{::grupo.id}}. {{::grupo.nome}}</div>
+				<div class="list-group">
+					<div class="list-group-item" data-ng-repeat="item in grupo.itens">
+						<p>{{::item.informacao_auditada }}</p>
+						<p><small class="text-mutted">Dispositivo Legal: {{::item.dispositivo_legal}}</small></p>
+						<p>
+							<label class="radio-inline" title="A informação foi encontrada e atende a lei de acesso a informação.">
+								<input type="radio" name="rd-{{::item.id}}" value="1" data-ng-model="item.situacao">
+								Atende
+							</label>
+							<label class="radio-inline" title="A informação foi encontrada e atende parcialmente a lei de acesso a informação.">
+								<input type="radio" name="rd-{{::item.id}}" value="2" data-ng-model="item.situacao">
+								Atende parcialmente
+							</label>
+							<label class="radio-inline" title="A informação não foi encontrada no portal de transparência.">
+								<input type="radio" name="rd-{{::item.id}}" value="3" data-ng-model="item.situacao">
+								Informação não encontrada
+							</label>
+							<label class="radio-inline" title="Requisito não se aplica ao portal auditado.">
+								<input type="radio" name="rd-{{::item.id}}" value="4" data-ng-model="item.situacao">
+								Não se aplica
+							</label>
+						</p>
+						<div data-ng-show="item.situacao && item.situacao!=1 && item.situacao!=4">
+							<p>
+								<textarea class="form-control" rows="3" placeholder="Informe o indício de prova." data-ng-model="item.indicio_de_prova"></textarea>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!--<div class="form-group text-center">
+				<button data-ng-disabled="submitted" data-ng-click="Salvar(helpForm)" class="btn btn-success btn-group-lg">{{ submitted ? 'Salvando' : 'Salvar'}}</button>
+			</div>-->
+
+			<div class="list-group">
+				<div class="list-group-item active">Preencha para gerar uma denúncia</div>
+				<div class="list-group">
+					<div class="list-group-item" data-ng-repeat="signatario in auditoria.signatarios">
+						<div class="row">
+							<div class="col-sm-8">
+								<div class="form-group">
+									<label for="signatario-nome-completo">Nome Completo</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-nome-completo.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-nome-completo" name="signatario-nome-completo" data-ng-model="signatario.nome_completo" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<div class="form-group">
+									<label for="signatario-rg">RG</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-rg.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-rg" name="signatario-rg" data-ng-model="signatario.rg" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<div class="form-group">
+									<label for="signatario-cpf">CPF</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-cpf.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-cpf" name="signatario-cpf" data-ng-model="signatario.cpf" class="form-control input-sm" required />
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-3">
+								<div class="form-group">
+									<label for="signatario-nacionalidade">Nacionalidade</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-nacionalidade.$error.required">Obrigatório!</span>
+									<select type="text" id="signatario-nacionalidade" name="nacionalidade" data-ng-model="signatario.nacionalidade" required class="form-control input-sm">
+										<option value="">Selecione</option>
+										<option value="1">Brasileiro</option>
+									</select>
+								</div>
+							</div>
+							<div class="col-sm-3">
+								<div class="form-group">
+									<label for="signatario-estado-civil">Estado civil</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-estado-civil.$error.required">Obrigatório!</span>
+									<select type="text" id="signatario-estado-civil" name="estado-civil" data-ng-model="signatario.estado_civil" required class="form-control input-sm">
+										<option value="">Selecione</option>
+										<option value="1">Solteiro(a)</option>
+										<option value="2">Casado(a)</option>
+										<option value="3">Divorciado(a)</option>
+										<option value="4">Viúvo(a)</option>
+										<option value="4">Separado(a)</option>
+									</select>
+								</div>
+							</div>
+							<div class="col-sm-3">
+								<div class="form-group">
+									<label for="signatario-profissao">Profissão</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-profissao.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-profissao" name="signatario-profissao" data-ng-model="signatario.profissao" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-3">
+								<div class="form-group">
+									<label for="signatario-email">E-mail</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-email.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-email" name="signatario-email" data-ng-model="auditoria.email" class="form-control input-sm" required />
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-4">
+								<div class="form-group">
+									<label for="signatario-endereco">Endereço</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-endereco.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-endereco" name="signatario-endereco" data-ng-model="signatario.endereco" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<div class="form-group">
+									<label for="signatario-cep">CEP</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-cep.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-cep" name="signatario-cep" data-ng-model="signatario.cep" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<div class="form-group">
+									<label for="signatario-bairro">Bairro</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-bairro.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-bairro" name="signatario-bairro" data-ng-model="signatario.bairro" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<div class="form-group">
+									<label for="signatario-cidade">Cidade</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-cidade.$error.required">Obrigatório!</span>
+									<input type="text" id="signatario-cidade" name="signatario-cidade" data-ng-model="signatario.cidade" class="form-control input-sm" required />
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<div class="form-group">
+									<label for="signatario-estado">Estado</label>
+									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-estado.$error.required">Obrigatório!</span>
+									<select type="text" id="signatario-estado" name="estado" data-ng-model="signatario.estado"
+											  ng-options="item.id as item.text for item in estados" required class="form-control input-sm">
+										<option value="">Selecione</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="form-group text-center">
+				<button data-ng-disabled="submitted" data-ng-click="Salvar(helpForm)" class="btn btn-success btn-group-lg">{{ submitted ? 'Salvando' : 'Salvar'}}</button>
+			</div>
+			<!--<div class="form-group text-center">
+				<button data-ng-disabled="submitted" data-ng-click="GerarDenuncia(helpForm)" class="btn btn-success btn-group-lg">{{ submitted ? 'Gerando denúncia' : 'Gerar denúncia'}}</button>
+			</div>-->
+		</form>
+	</fieldset>
+</div>
+

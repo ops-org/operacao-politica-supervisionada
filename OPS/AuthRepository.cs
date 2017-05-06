@@ -32,7 +32,13 @@ namespace OPS
 			_ctx = new AuthContext();
 
 			_userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(_ctx));
-			_userManager.UserTokenProvider = new TotpSecurityStampBasedTokenProvider<ApplicationUser, string>();
+			//_userManager.UserTokenProvider = new TotpSecurityStampBasedTokenProvider<ApplicationUser, string>();
+			var dataProtectorProvider = Startup.DataProtectionProvider;
+			var dataProtector = dataProtectorProvider.Create("Asp.Net Identity");
+			_userManager.UserTokenProvider = new DataProtectorTokenProvider<ApplicationUser, string>(dataProtector)
+			{
+				TokenLifespan = TimeSpan.FromHours(24),
+			};
 		}
 
 		public async Task<IdentityResult> RegisterUser(UserModel userModel, string sBaseUrl)

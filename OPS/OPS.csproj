@@ -52,6 +52,10 @@
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\DocumentFormat.OpenXml.2.5\lib\DocumentFormat.OpenXml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
       <Private>True</Private>
@@ -73,40 +77,40 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    <Reference Include="Microsoft.Owin, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.3.1.0\lib\net45\Microsoft.Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Cors, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Cors, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Cors.3.1.0\lib\net45\Microsoft.Owin.Cors.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.1.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.3.1.0\lib\net45\Microsoft.Owin.Security.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security.Cookies, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security.Cookies, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.1.0\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security.Facebook, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Security.Facebook.3.0.1\lib\net45\Microsoft.Owin.Security.Facebook.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security.Facebook, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Facebook.3.1.0\lib\net45\Microsoft.Owin.Security.Facebook.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security.Google, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Security.Google.3.0.1\lib\net45\Microsoft.Owin.Security.Google.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security.Google, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Google.3.1.0\lib\net45\Microsoft.Owin.Security.Google.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security.OAuth, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security.OAuth, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.1.0\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security.Twitter, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Owin.Security.Twitter.3.0.1\lib\net45\Microsoft.Owin.Security.Twitter.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security.Twitter, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Twitter.3.1.0\lib\net45\Microsoft.Owin.Security.Twitter.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -121,8 +125,8 @@
       <HintPath>..\packages\MySql.Data.Entity.6.9.9\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
@@ -206,6 +210,7 @@
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthContext.cs" />
@@ -220,6 +225,7 @@
     <Compile Include="Dao\EstadoDao.cs" />
     <Compile Include="Auth\Entities\Client.cs" />
     <Compile Include="Auth\Entities\RefreshToken.cs" />
+    <Compile Include="Models\Auditoria.cs" />
     <Compile Include="Models\ExternalLoginModels.cs" />
     <Compile Include="Models\FormatarDados.cs" />
     <Compile Include="Models\Fornecedor.cs" />
@@ -233,6 +239,7 @@
     <Compile Include="Auth\Results\ChallengeResult.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="WebApi\AccountController.cs" />
+    <Compile Include="WebApi\CidadaoFiscalController.cs" />
     <Compile Include="WebApi\ContatoController.cs" />
     <Compile Include="WebApi\DenunciaController.cs" />
     <Compile Include="WebApi\DeputadoController.cs" />
@@ -261,22 +268,23 @@
     <Content Include="Content\images\patrocine.png" />
     <Content Include="Content\scripts\app\app.js" />
     <Content Include="Content\scripts\app\controllers\associate.js" />
+    <Content Include="Content\scripts\app\controllers\cidadao-fiscal\auditar-portal-transparencia.js" />
     <Content Include="Content\scripts\app\controllers\contato.js" />
     <Content Include="Content\scripts\app\controllers\denuncias-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\denuncias-lista.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-lista.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-lista.js" />
+    <Content Include="Content\scripts\app\controllers\fiscalize-nota-fiscal.js" />
+    <Content Include="Content\scripts\app\controllers\fiscalize-notas-fiscais.js" />
     <Content Include="Content\scripts\app\controllers\index.js" />
     <Content Include="Content\scripts\app\controllers\login.js" />
     <Content Include="Content\scripts\app\controllers\refresh.js" />
     <Content Include="Content\scripts\app\controllers\reset-password.js" />
     <Content Include="Content\scripts\app\controllers\senador-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-documento.js" />
     <Content Include="Content\scripts\app\controllers\senador-lista.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-detalhes.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-secretario-lista.js" />
-    <Content Include="Content\scripts\app\controllers\fiscalize-nota-fiscal.js" />
-    <Content Include="Content\scripts\app\controllers\fiscalize-notas-fiscais.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-lista.js" />
-    <Content Include="Content\scripts\app\controllers\deputado-federal-detalhes.js" />
     <Content Include="Content\scripts\app\controllers\fornecedor.js" />
     <Content Include="Content\scripts\app\controllers\principal.js" />
     <Content Include="Content\scripts\app\controllers\set-password.js" />
@@ -309,6 +317,8 @@
     <Content Include="Content\fonts\fontawesome-webfont.woff" />
     <Content Include="Content\fonts\fontawesome-webfont.woff2" />
     <Content Include="Content\fonts\FontAwesome.otf" />
+    <Content Include="Views\App\CidadaoFiscal\_auditar-portal-transparencia.html" />
+    <Content Include="Views\App\_timeline.html" />
     <Content Include="_app_offline.htm" />
     <None Include="Content\scripts\jquery\jquery-2.2.3.intellisense.js" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.js" />
@@ -340,12 +350,10 @@
     <Content Include="Views\App\Autenticacao\_verify-email.html" />
     <Content Include="Views\App\Denuncia\_denuncia-detalhes.html" />
     <Content Include="Views\App\Denuncia\_denuncia-lista.html" />
-    <Content Include="Views\App\_solicitacao-restituicao.html" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Views\Web.config" />
-    <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Content\scripts\jquery\jquery-2.2.3.min.map" />
     <Content Include="Views\App\Auditoria\_deputado-federal-detalhes.html" />
     <Content Include="Views\App\Auditoria\_deputado-federal-lista.html" />
@@ -361,11 +369,15 @@
     <Content Include="Views\App\Erro\_404.html" />
     <None Include="Properties\PublishProfiles\ops.net.br.pubxml" />
     <Content Include="Views\App\_forum.html" />
-    <Content Include="Views\_ViewStart.cshtml" />
     <None Include="_references.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Content\scripts\app\controllers\auth\" />
+    <Folder Include="Content\scripts\app\controllers\denuncia\" />
+    <Folder Include="Content\scripts\app\controllers\deputado\" />
+    <Folder Include="Content\scripts\app\controllers\fiscalize\" />
+    <Folder Include="Content\scripts\app\controllers\senador\" />
     <Folder Include="Views\App\Transparencia\" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,131 @@
+﻿<!--Baseado em: https://gist.github.com/LibertysYarn/8722008-->
+<style type="text/css">
+	.timeline { list-style: none; padding: 20px 0 20px; position: relative; }
+
+		.timeline:before { top: 0; bottom: 0; position: absolute; content: " "; width: 3px; background-color: #eeeeee; left: 50%; margin-left: -1.5px; }
+
+		.timeline > li { margin-bottom: 20px; position: relative; }
+
+			.timeline > li:before, .timeline > li:after { content: " "; display: table; }
+
+			.timeline > li:after { clear: both; }
+
+			.timeline > li > .timeline-panel { width: 46%; float: left; border: 1px solid #d4d4d4; border-radius: 2px; padding: 20px; position: relative; -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175); }
+
+				.timeline > li > .timeline-panel:before { position: absolute; top: 26px; right: -15px; display: inline-block; border-top: 15px solid transparent; border-left: 15px solid #ccc; border-right: 0 solid #ccc; border-bottom: 15px solid transparent; content: " "; }
+
+				.timeline > li > .timeline-panel:after { position: absolute; top: 27px; right: -14px; display: inline-block; border-top: 14px solid transparent; border-left: 14px solid #fff; border-right: 0 solid #fff; border-bottom: 14px solid transparent; content: " "; }
+
+			.timeline > li > .timeline-badge { color: #fff; width: 50px; height: 50px; line-height: 50px; font-size: 1.4em; text-align: center; position: absolute; top: 16px; left: 50%; margin-left: -25px; background-color: #999999; z-index: 100; border-top-right-radius: 50%; border-top-left-radius: 50%; border-bottom-right-radius: 50%; border-bottom-left-radius: 50%; }
+
+			.timeline > li.timeline-inverted > .timeline-panel { float: right; }
+
+				.timeline > li.timeline-inverted > .timeline-panel:before { border-left-width: 0; border-right-width: 15px; left: -15px; right: auto; }
+
+				.timeline > li.timeline-inverted > .timeline-panel:after { border-left-width: 0; border-right-width: 14px; left: -14px; right: auto; }
+
+	.timeline-badge.primary { background-color: #2e6da4 !important; }
+
+	.timeline-badge.success { background-color: #3f903f !important; }
+
+	.timeline-badge.warning { background-color: #f0ad4e !important; }
+
+	.timeline-badge.danger { background-color: #d9534f !important; }
+
+	.timeline-badge.info { background-color: #5bc0de !important; }
+
+	.timeline-title { margin-top: 0; color: inherit; }
+
+	.timeline-body > p,
+	.timeline-body > ul { margin-bottom: 0; }
+
+		.timeline-body > p + p { margin-top: 5px; }
+
+	@media (max-width: 767px) {
+		ul.timeline:before { left: 40px; }
+
+		ul.timeline > li > .timeline-panel { float: right; width: calc(100% - 90px); width: -moz-calc(100% - 90px); width: -webkit-calc(100% - 90px); }
+
+		ul.timeline > li > .timeline-badge { left: 15px; margin-left: 0; top: 16px; }
+
+		ul.timeline > li > .timeline-panel:before { border-left-width: 0; border-right-width: 15px; left: -15px; right: auto; }
+
+		ul.timeline > li > .timeline-panel:after { border-left-width: 0; border-right-width: 14px; left: -14px; right: auto; }
+	}
+</style>
+<div class="container">
+	<div class="page-header">
+		<h1 id="timeline">Nossa história</h1>
+	</div>
+	<ul class="timeline">
+		<li>
+			<div class="timeline-badge"><i class="glyphicon glyphicon-check"></i></div>
+			<div class="timeline-panel">
+				<div class="timeline-heading">
+					<h4 class="timeline-title">16 de março de 2013</h4>
+					<p><small class="text-muted"><i class="glyphicon glyphicon-time"></i>Está oficialmente criada a Operação Pega Safado</small></p>
+				</div>
+				<div class="timeline-body">
+					<p>
+						O vídeo <a href="https://www.youtube.com/watch?v=ESenZF_G1qI" target="_blank">Tutorial Pega Safado – parte 1</a>, postado no Youtube é acessado por mais de 40 mil pessoas. Nele é possível aprender a levantar dados de gastos com a Cota Parlamentar e cruzá-los com dados da Receita Federal.
+					</p>
+				</div>
+			</div>
+		</li>
+		<li class="timeline-inverted">
+			<div class="timeline-badge warning"><i class="glyphicon glyphicon-credit-card"></i></div>
+			<div class="timeline-panel">
+				<div class="timeline-heading">
+					<h4 class="timeline-title">31 de março de 2013</h4>
+				</div>
+				<div class="timeline-body">
+					<p>O vídeo <a href="https://www.youtube.com/watch?v=TWN4g8VmyEQ" target="_blank">Dep. Arnon e a Farra dos alugueis</a> é o precursor de vídeos de denúncia e também de solicitação de participação da sociedade para tentar elucidar gastos “estranhos” do dinheiro público da CEAP. A partir deste vídeo, eu comecei a solicitar às pessoas que acompanham o trabalho da OPS, para que fossem até o endereço de empresas suspeitas e que foram contratadas por parlamentares e as fotografassem. As imagens são enviadas à mim através de e-mail. A identidade de todos os colaboradores é mantida em sigilo absoluto.</p>
+				</div>
+			</div>
+		</li>
+		<li>
+			<div class="timeline-badge danger"><i class="glyphicon glyphicon-credit-card"></i></div>
+			<div class="timeline-panel">
+				<div class="timeline-heading">
+					<h4 class="timeline-title">20 de maio de 2013</h4>
+				</div>
+				<div class="timeline-body">
+					<p>Pela primeira vez é utilizada a sigla <a href="https://www.youtube.com/watch?v=WyO1sJR_ijg" target="_blank">OPS</a>. Porém, ainda com o significado Operação Pega Safado.</p>
+				</div>
+			</div>
+		</li>
+		<li class="timeline-inverted">
+			<div class="timeline-badge warning"><i class="glyphicon glyphicon-credit-card"></i></div>
+			<div class="timeline-panel">
+				<div class="timeline-heading">
+					<h4 class="timeline-title">25 de junho de 2013</h4>
+				</div>
+				<div class="timeline-body">
+					<p>O vídeo “A Lista dos Vinte” é postado e nele estão presentes os nomes de vinte parlamentares que foram investigados pela OPS e considerados suspeitos de terem cometidos crimes de ordem financeira.</p>
+				</div>
+			</div>
+		</li>
+		<li>
+			<div class="timeline-badge info"><i class="glyphicon glyphicon-floppy-disk"></i></div>
+			<div class="timeline-panel">
+				<div class="timeline-heading">
+					<h4 class="timeline-title">05 de julho de 2013</h4>
+				</div>
+				<div class="timeline-body">
+					<p>O Dossiê <a href="https://www.youtube.com/watch?v=UmSL6_8IAaE" target="_blank">A Lista dos Vinte</a> é entregue ao TCU. O órgão dá entrada na denúncia que mais tarde se transformaria em diligências e depois em Acórdão.</p>
+				</div>
+			</div>
+		</li>
+		<li class="timeline-inverted">
+			<div class="timeline-badge success"><i class="glyphicon glyphicon-thumbs-up"></i></div>
+			<div class="timeline-panel">
+				<div class="timeline-heading">
+					<h4 class="timeline-title">Mussum ipsum cacilds</h4>
+				</div>
+				<div class="timeline-body">
+					<p>Mussum ipsum cacilds, vidis litro abertis. Consetis adipiscings elitis. Pra lá , depois divoltis porris, paradis. Paisis, filhis, espiritis santis. Mé faiz elementum girarzis, nisi eros vermeio, in elementis mé pra quem é amistosis quis leo. Manduma pindureta quium dia nois paga. Sapien in monti palavris qui num significa nadis i pareci latim. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis.</p>
+				</div>
+			</div>
+		</li>
+	</ul>
+</div>
