@@ -182,7 +182,7 @@
     <table ng-table="tableParams" class="table table-striped table-hover">
         <tr ng-repeat="row in $data">
             <td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.id_partido}}" data-descricao="{{::row.nome_partido}}">Detalhar</a></td>
-            <td data-title="'Partido'" style="width:70%" sortable="'NomePartido'">{{::row.nome_partido}}</td>
+            <td data-title="'Partido'" style="width:70%" sortable="'nome_partido'">{{::row.nome_partido}}</td>
             <!--TODO: Add Total de parlamentares e Media por parlamentar-->
             <td data-title="'Total Notas Fiscais'" style="width:15%" sortable="'total_notas'">{{::row.total_notas}}</td>
             <td data-title="'Valor Total'" style="width:30%" sortable="'valor_total'">{{::row.valor_total}}</td>
@@ -194,7 +194,7 @@
     <table ng-table="tableParams" class="table table-striped table-hover">
         <tr ng-repeat="row in $data">
             <td><a tabindex="0" role="button" class="popover-link btn btn-primary btn-sm" data-valor="{{::row.id_estado}}" data-descricao="{{::row.nome_estado}}">Detalhar</a></td>
-            <td data-title="'Estado'" style="width:70%" sortable="'SgUf'">{{::row.nome_estado}}</td>
+            <td data-title="'Estado'" style="width:70%" sortable="'nome_estado'">{{::row.nome_estado}}</td>
             <!--TODO: Add Total de parlamentares e Media por parlamentar-->
             <td data-title="'Total Notas Fiscais'" style="width:15%" sortable="'total_notas'">{{::row.total_notas}}</td>
             <td data-title="'Valor Total'" style="width:30%" sortable="'valor_total'">{{::row.valor_total}}</td>

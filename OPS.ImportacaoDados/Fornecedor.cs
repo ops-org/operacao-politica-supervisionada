@@ -15,7 +15,26 @@ namespace OPS.ImportacaoDados
 {
     public static class Fornecedor
     {
-        public static void ConsultarReceitaWS()
+	    public static void AtualizaFornecedorDoador()
+	    {
+		    using (var banco = new Banco())
+		    {
+			    var dt = banco.GetTable("select id, cnpj_cpf from fornecedor");
+
+			    foreach (DataRow dr in dt.Rows)
+			    {
+				    banco.AddParameter("cnpj", dr["cnpj_cpf"]);
+				    var existe = banco.ExecuteScalar("select 1 from eleicao_doacao where raiz_cnpj_cpf_doador=@cnpj;");
+				    if (existe != null)
+				    {
+					    banco.AddParameter("id", dr["id"]);
+					    banco.ExecuteNonQuery("update fornecedor set doador=1 where id=@id");
+				    }
+			    }
+		    }
+	    }
+
+		public static void ConsultarReceitaWS()
         {
             int RateLimit_Remaining = -1;
 
@@ -32,11 +51,11 @@ namespace OPS.ImportacaoDados
                     where char_length(f.cnpj_cpf) = 14
                     and f.cnpj_cpf <> '00000000000000'
                     -- and obtido_em < '2017-01-01'
-                    -- and fi.id_fornecedor is not null
-                    -- and ip_colaborador is null
-                     and controle is null
+                    -- and fi.id_fornecedor is null
+                    and ip_colaborador is null -- not in ('170509', '170510', '170511', '170512')
+                    -- and controle is null
                     -- and controle = 1
-                    -- and f.mensagem = 'Uma tarefa foi cancelada.'
+                     and f.mensagem <> 'Uma tarefa foi cancelada.'
 					-- and controle = 0
                     order by 1 desc");
 
@@ -153,10 +172,10 @@ namespace OPS.ImportacaoDados
                         }
 
                         var strSql =
-                            @"insert into fornecedor_info(
+							@"insert into fornecedor_info(
 							    id_fornecedor,
 							    cnpj,
-							    obtido_em,
+								tipo,
 							    nome,
 							    data_de_abertura,
 							    nome_fantasia,
@@ -178,11 +197,12 @@ namespace OPS.ImportacaoDados
 							    situacao_especial,
 							    data_situacao_especial,
 							    capital_social,
+								obtido_em,
                                 ip_colaborador
 						    ) values (
 							    @id_fornecedor,
 							    @cnpj,
-							    @obtido_em,
+								@tipo,
 							    @nome,
 							    @data_de_abertura,
 							    @nome_fantasia,
@@ -204,12 +224,13 @@ namespace OPS.ImportacaoDados
 							    @situacao_especial,
 							    @data_situacao_especial,
 							    @capital_social,
+								@obtido_em,
                                 @ip_colaborador
 						    )";
 
                         banco.AddParameter("@id_fornecedor", item["id"]);
                         banco.AddParameter("@cnpj", item["cnpj_cpf"]);
-                        banco.AddParameter("@obtido_em", ParseDate(receita.ultima_atualizacao));
+                        banco.AddParameter("@tipo", receita.tipo);
                         banco.AddParameter("@nome", receita.nome);
                         banco.AddParameter("@data_de_abertura", ParseDate(receita.abertura));
                         banco.AddParameter("@nome_fantasia", receita.fantasia);
@@ -252,8 +273,8 @@ namespace OPS.ImportacaoDados
                         banco.AddParameter("@situacao_especial", receita.situacao_especial);
                         banco.AddParameter("@data_situacao_especial", ParseDate(receita.data_situacao_especial));
                         banco.AddParameter("@capital_social", ObterValor(receita.capital_social));
-
-                        banco.AddParameter("@ip_colaborador", DateTime.Now.ToString("yyMMdd"));
+	                    banco.AddParameter("@obtido_em", ParseDate(receita.ultima_atualizacao));
+						banco.AddParameter("@ip_colaborador", DateTime.Now.ToString("yyMMdd"));
 
                         banco.ExecuteNonQuery(strSql);
 
@@ -276,21 +297,17 @@ namespace OPS.ImportacaoDados
                         }
 
                         strSql2 =
-                            @"insert into fornecedor_socio 
-                                (id_fornecedor, nome, id_fornecedor_socio_qualificacao, nome_representante, id_fornecedor_socio_representante_qualificacao) 
+							@"insert into fornecedor_socio 
+                                (id_fornecedor, nome, pais_origem, id_fornecedor_socio_qualificacao, nome_representante, id_fornecedor_socio_representante_qualificacao) 
                             values 
-                                (@id_fornecedor, @nome, @id_fornecedor_socio_qualificacao, @nome_representante, @id_fornecedor_socio_representante_qualificacao)";
+                                (@id_fornecedor, @nome, @pais_origem, @id_fornecedor_socio_qualificacao, @nome_representante, @id_fornecedor_socio_representante_qualificacao)";
 
                         foreach (var qsa in receita.qsa)
                         {
-                            //if (!string.IsNullOrEmpty(qsa.pais_origem))
-                            //{
-                            //    var x = 1;
-                            //}
-
                             banco.AddParameter("@id_fornecedor", item["id"]);
                             banco.AddParameter("@nome", qsa.nome);
-                            banco.AddParameter("@id_fornecedor_socio_qualificacao", qsa.qual.Split('-')[0]);
+	                        banco.AddParameter("@pais_origem", qsa.pais_origem);
+							banco.AddParameter("@id_fornecedor_socio_qualificacao", qsa.qual.Split('-')[0]);
 
                             banco.AddParameter("@nome_representante", qsa.nome_rep_legal);
                             banco.AddParameter("@id_fornecedor_socio_representante_qualificacao",
@@ -412,6 +429,7 @@ namespace OPS.ImportacaoDados
         }
     }
 
+	#region ReceitaWS DTO
     public interface IAtividade
     {
         string text { get; set; }
@@ -475,4 +493,5 @@ namespace OPS.ImportacaoDados
         public string capital_social { get; set; }
         public Extra extra { get; set; }
     }
+	#endregion ReceitaWS DTO
 }

@@ -28,20 +28,22 @@ namespace OPS.Models
 		public string rg { get; set; }
 		public string cpf { get; set; }
 		public string profissao { get; set; }
-		public int? estado_civil { get; set; }
-		public int? nacionalidade { get; set; }
+		public string estado_civil { get; set; }
+		public string nacionalidade { get; set; }
 		public string endereco { get; set; }
 		public string cep { get; set; }
 		public string bairro { get; set; }
 		public string cidade { get; set; }
-		public int? estado { get; set; }
+		public string estado { get; set; }
+		public string email { get; set; }
 	}
 
 	public class Auditoria
 	{
+		public string codigo { get; set; }
 		public List<AuditoriaGrupo> grupos { get; set; }
 		public List<AuditoriaSignatario> signatarios { get; set; }
-		public int? estado { get; set; }
+		public string estado { get; set; }
 		public string cidade { get; set; }
 		public string link_portal { get; set; }
 	}

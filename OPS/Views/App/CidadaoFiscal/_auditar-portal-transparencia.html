@@ -1,4 +1,4 @@
-﻿<div class="container" data-ng-controller="AuditarPortalTransparenciaController">
+﻿<div class="container cidadao-fiscal" data-ng-controller="AuditarPortalTransparenciaController">
 	<fieldset class="form-group">
 		<legend>Cidadão fiscal - Auditar portal de transparência municipal</legend>
 
@@ -6,11 +6,11 @@
 			<div class="panel-body text-justify">
 				<p>A despeito das Leis de Transparência (2009) e de Acesso à Informação (2011) estarem em vigor há vários anos, ainda tem-se muitos Municípios brasileiros que não possuem seus Portais de Transparência ou não disponibilizam as informações exigidas.  O cidadão, por sua vez, não sabe como cobrar e denunciar nem dispõe de instrumentos e sistemas para fazê-lo.</p>
 				<p>A partir o checklist abaixo, você poderá avaliar o portal de transparência do seu município, bem como, de qualquer outra cidade brasileira. Ao final poderá gerar um relatório para a cobrança de melhorias no portal de transparência auditado, e também, uma denúncia dirigida ao Ministério Público e Tribunal de Contas.</p>
-				<p>Em caso de dúvidas, veja um modelo de checklist clicando <a href="#">aqui</a>, ou entre em contato pelo email: <a href="#">cidadaofiscal@ossj.com.br</a></p>
+				<!--<p>Em caso de dúvidas, veja um modelo de checklist clicando <a href="#">aqui</a>, ou entre em contato pelo email: <a href="#">cidadaofiscal@ossj.com.br</a></p>-->
 			</div>
 		</div>
 
-		<form name="helpForm" novalidate role="form">
+		<form name="helpForm" role="form" ng-submit="Salvar(helpForm)" novalidate>
 			<div class="list-group">
 				<div class="list-group-item active">Qual cidade você deseja auditar?</div>
 				<div class="list-group">
@@ -21,7 +21,7 @@
 									<label for="estado">Estado</label>
 									<span class="label label-danger" data-ng-show="submitted && helpForm.portal-estado.$error.required">Obrigatório!</span>
 									<select type="text" id="portal-estado" name="estado" data-ng-model="auditoria.estado"
-											  ng-options="item.id as item.text for item in estados" required class="form-control input-sm">
+											ng-options="item.id as item.text for item in estados" required class="form-control input-sm">
 										<option value="">Selecione</option>
 									</select>
 								</div>
@@ -55,22 +55,25 @@
 						<p><small class="text-mutted">Dispositivo Legal: {{::item.dispositivo_legal}}</small></p>
 						<p>
 							<label class="radio-inline" title="A informação foi encontrada e atende a lei de acesso a informação.">
-								<input type="radio" name="rd-{{::item.id}}" value="1" data-ng-model="item.situacao">
+								<input type="radio" name="rd-{{::item.id}}" value="1" data-ng-model="item.situacao" required>
 								Atende
 							</label>
 							<label class="radio-inline" title="A informação foi encontrada e atende parcialmente a lei de acesso a informação.">
-								<input type="radio" name="rd-{{::item.id}}" value="2" data-ng-model="item.situacao">
+								<input type="radio" name="rd-{{::item.id}}" value="2" data-ng-model="item.situacao" required>
 								Atende parcialmente
 							</label>
-							<label class="radio-inline" title="A informação não foi encontrada no portal de transparência.">
+							<label class="radio-inline" title="A informação não foi encontrada no portal de transparência." required>
 								<input type="radio" name="rd-{{::item.id}}" value="3" data-ng-model="item.situacao">
 								Informação não encontrada
 							</label>
 							<label class="radio-inline" title="Requisito não se aplica ao portal auditado.">
-								<input type="radio" name="rd-{{::item.id}}" value="4" data-ng-model="item.situacao">
+								<input type="radio" name="rd-{{::item.id}}" value="4" data-ng-model="item.situacao" required>
 								Não se aplica
 							</label>
 						</p>
+						<div ng-show="helpForm.$submitted || helpForm['rd-' + item.id].$touched">
+							<span class="text-danger" ng-show="helpForm['rd-' + item.id].$error.required">Selecione uma opção.</span>
+						</div>
 						<div data-ng-show="item.situacao && item.situacao!=1 && item.situacao!=4">
 							<p>
 								<textarea class="form-control" rows="3" placeholder="Informe o indício de prova." data-ng-model="item.indicio_de_prova"></textarea>
@@ -147,7 +150,7 @@
 								<div class="form-group">
 									<label for="signatario-email">E-mail</label>
 									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-email.$error.required">Obrigatório!</span>
-									<input type="text" id="signatario-email" name="signatario-email" data-ng-model="auditoria.email" class="form-control input-sm" required />
+									<input type="text" id="signatario-email" name="signatario-email" data-ng-model="signatario.email" class="form-control input-sm" required />
 								</div>
 							</div>
 						</div>
@@ -185,7 +188,7 @@
 									<label for="signatario-estado">Estado</label>
 									<span class="label label-danger" data-ng-show="submitted && helpForm.signatario-estado.$error.required">Obrigatório!</span>
 									<select type="text" id="signatario-estado" name="estado" data-ng-model="signatario.estado"
-											  ng-options="item.id as item.text for item in estados" required class="form-control input-sm">
+											ng-options="item.id as item.text for item in estados" required class="form-control input-sm">
 										<option value="">Selecione</option>
 									</select>
 								</div>
@@ -196,11 +199,11 @@
 			</div>
 
 			<div class="form-group text-center">
-				<button data-ng-disabled="submitted" data-ng-click="Salvar(helpForm)" class="btn btn-success btn-group-lg">{{ submitted ? 'Salvando' : 'Salvar'}}</button>
+				<button type="submit" data-ng-disabled="submitted" class="btn btn-success btn-group-lg">Salvar</button>
 			</div>
-			<!--<div class="form-group text-center">
-				<button data-ng-disabled="submitted" data-ng-click="GerarDenuncia(helpForm)" class="btn btn-success btn-group-lg">{{ submitted ? 'Gerando denúncia' : 'Gerar denúncia'}}</button>
-			</div>-->
+			<div class="form-group text-center" data-ng-show="codigo">
+				<button type="button" data-ng-disabled="submitted" data-ng-click="GerarDenuncia(helpForm)" class="btn btn-primary btn-group-lg">Gerar denúncia</button>
+			</div>
 		</form>
 	</fieldset>
 </div>

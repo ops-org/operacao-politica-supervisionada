@@ -87,5 +87,12 @@ namespace OPS.WebApi
 		{
 			return dao.MaioresFornecedores(id);
 		}
+
+		[HttpGet]
+		[Route("{id:int}/ResumoPresenca")]
+		public dynamic ResumoPresenca(int id)
+		{
+			return dao.ResumoPresenca(id);
+		}
 	}
 }
