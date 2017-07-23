@@ -1,14 +1,13 @@
 ﻿var $EditError = function (ex) {
 	var msg = ex.ExceptionMessage || ex.Message || ex.d || ex;
 	if (msg)
-		alert('Erro:' + msg);
+		alert(msg);
 };
 
 var OPS = function ($) {
 	var select = function (selector, apiUrl, defaultValues) {
 		var $select = $(selector).selectpicker({
 			width: '100%',
-			actionsBox: true,
 			liveSearch: true,
 			liveSearchNormalize: true,
 			selectOnTab: true,
@@ -86,6 +85,9 @@ var app;
 
 			$compileProvider.debugInfoEnabled(false);
 
+			$locationProvider.html5Mode(false);
+			$locationProvider.hashPrefix('!');
+
 			$routeProvider
 				.when("/", { templateUrl: "app/inicio" })
 				.when("/sobre", { templateUrl: "app/sobre" })
@@ -121,9 +123,7 @@ var app;
 
 				.when("/cidadao-fiscal/:id?", { controller: "AuditarPortalTransparenciaController", templateUrl: "app/cidadaofiscal/auditar-portal-transparencia" })
 
-			.otherwise({ redirectTo: '/' });
-
-			$locationProvider.html5Mode(true);
+				.otherwise({ redirectTo: '/' });
 		}]);
 
 	app.run(['$rootScope', '$http', '$location', '$templateCache', 'authService',
@@ -144,7 +144,7 @@ var app;
 					ga('send', 'pageview', { 'page': $location.path() });
 				}, 1000);
 
-				$('body').animate({ scrollTop: 0 }, 0);
+				//$('body').animate({ scrollTop: 0 }, 0);
 			});
 		}]);
 
@@ -668,24 +668,24 @@ function LoadPopoverAuditoria() {
 					var $select;
 					var Agrupamento = parseInt($('#lstAgrupamento').val());
 					switch (Agrupamento) {
-					case 1:
-						$select = $('#lstParlamentar');
-						break;
-					case 2:
-						$select = $('#lstDespesa');
-						break;
-					case 3:
-						$select = $('#txtBeneficiario');
-						break;
-					case 4:
-						$select = $('#lstPartido');
-						break;
-					case 5:
-						$select = $('#lstUF');
-						break;
-					case 6:
-						$select = $('#txtDocumento');
-						break;
+						case 1:
+							$select = $('#lstParlamentar');
+							break;
+						case 2:
+							$select = $('#lstDespesa');
+							break;
+						case 3:
+							$select = $('#txtBeneficiario');
+							break;
+						case 4:
+							$select = $('#lstPartido');
+							break;
+						case 5:
+							$select = $('#lstUF');
+							break;
+						case 6:
+							$select = $('#txtDocumento');
+							break;
 					}
 					if (Agrupamento != 3) {
 						var $selectItens = $select.find('option[value="' + valor + '"]');
@@ -713,13 +713,13 @@ function LoadPopoverAuditoria() {
 var _urq = _urq || [];
 function loadSiteMaster() {
 	setTimeout(function () {
-		_urq.push(['setGACode', 'UA-38537890-5']);
+		_urq.push(['setGACode', GoogleAnalyticsKey]);
 		_urq.push(['setPerformInitialShorctutAnimation', false]);
 		_urq.push(['initSite', '9cf4c59a-d438-48b0-aa5e-e16f549b9c8c']);
 
 		(function () {
 			var ur = document.createElement('script'); ur.type = 'text/javascript'; ur.async = true;
-			ur.src = ('https:' == document.location.protocol ? 'https://cdn.userreport.com/userreport.js' : 'http://cdn.userreport.com/userreport.js');
+			ur.src = document.location.protocol + '//cdn.userreport.com/userreport.js';
 			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ur, s);
 		})();
 
@@ -730,14 +730,6 @@ function loadSiteMaster() {
 				$('#crowd-shortcut').parent().css('top', '54px');
 			}
 		}, 100);
-
-		$('#btnReportarErro').click(function () {
-			if ($('#crowd-shortcut').length > 0) {
-				_urq.push(['Feedback_Open', 'submit/bug']);
-			} else {
-				window.open('https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug')
-			}
-		});
 
 		/* Facebook */
 		//window.fbAsyncInit = function () {
@@ -758,6 +750,28 @@ function loadSiteMaster() {
 	}, 3000); //Não bloquear a carga da tela
 }
 
+function ReportarErro(e, self) {
+    trackOutboundLink(self, true);
+
+    if ($('#crowd-shortcut').length > 0) {
+        _urq.push(['Feedback_Open', 'submit/bug']);
+
+        e.preventDefault();
+        return false;
+    }
+}
+
+function DeixarUmaIdeia(e, self) {
+    trackOutboundLink(self, true);
+
+    if ($('#crowd-shortcut').length > 0) {
+        _urq.push(['Feedback_Open', 'ideias/popular']);
+
+        e.preventDefault();
+        return false;
+    }
+}
+
 /* Google Analytics */
 try {
 	(function (i, s, o, g, r, a, m) {
@@ -767,7 +781,7 @@ try {
 			m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
 	})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
-	ga('create', 'UA-38537890-5', 'auto');
+	ga('create', GoogleAnalyticsKey, 'auto');
 	//ga('send', 'pageview');
 } catch (e) { }
 
@@ -780,16 +794,27 @@ try {
 var trackOutboundLink = function (self, isExternal) {
 	var url = $(self).attr('href');
 
-	if (!window.ga.q) {
+	if (ga.hasOwnProperty('loaded') && ga.loaded === true) {
+		//Success, ga is loaded
+		ga('send', 'event', {
+			'eventCategory': 'Outbound',
+			'eventAction': 'Link',
+			'eventLabel': url,
+			'eventValue': 1,
+			'hitCallbackTimeout': 500, // ms
+			'hitCallback': function () {
+				if (!isExternal) { document.location = url; }
+			},
+			'hitCallbackFail': function () {
+				console.log("Unable to send Google Analytics data");
+			}
+		});
+	} else {
+
 		// Google Analytics is blocked
 		if (!isExternal) {
 			document.location = url;
 		}
-	} else {
-		window.ga('send', 'event', 'outbound', 'click', url, {
-			'transport': 'beacon',
-			'hitCallback': function () { if (!isExternal) { document.location = url; } }
-		});
 	}
 
 	return isExternal;

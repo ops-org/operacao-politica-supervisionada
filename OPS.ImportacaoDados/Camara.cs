@@ -34,6 +34,49 @@ namespace OPS.ImportacaoDados
 			"numRessarcimento", "vlrRestituicao",       "nuDeputadoId", "ideDocumento"
 		};
 
+		public static void ValidarLinkRecibos()
+		{
+			using (var banco = new Banco())
+			{
+				DataTable dtDocumentos = banco.GetTable(
+					"select id, id_cf_deputado, ano, id_documento from cf_despesa where id > 1506033 and id_documento is not null and link_documento is null");
+
+				foreach (DataRow dr in dtDocumentos.Rows)
+				{
+					string downloadUrl =
+						string.Format("http://www.camara.gov.br/cota-parlamentar/documentos/publ/{0}/{1}/{2}.pdf",
+						dr["id_cf_deputado"], dr["ano"], dr["id_documento"]);
+
+					try
+					{
+						var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+
+						request.UserAgent = "Other";
+						request.Method = "HEAD";
+						request.ContentType = "application/json;charset=UTF-8";
+						request.Timeout = 1000000;
+
+						using (var resp = request.GetResponse())
+						{
+							long contentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+							if (contentLength == 0) continue;
+						}
+					}
+					catch (System.Net.WebException ex)
+					{
+						if (!ex.Message.Contains("404"))
+							Console.WriteLine(ex.Message);
+
+						continue;
+					}
+
+					banco.AddParameter("link_documento", downloadUrl);
+					banco.AddParameter("id", dr["id"]);
+					banco.ExecuteNonQuery("UPDATE cf_despesa SET link_documento=? WHERE id=?");
+				}
+			}
+		}
+
 		/// <summary>
 		/// Importar mandatos
 		/// </summary>
@@ -161,7 +204,7 @@ namespace OPS.ImportacaoDados
 						d.matricula = dt.matricula,
 						d.id_parlamentar = dt.idParlamentar,
 						d.nome_civil = dt.nome,
-						d.nome_parlamentar = dt.nomeParlamentar,
+						d.nome_parlamentar = dt.nome_parlamentar,
 						d.url_foto = dt.urlFoto,
 						d.sexo = LEFT(dt.sexo, 1),
 						d.id_estado = e.id,
@@ -170,7 +213,7 @@ namespace OPS.ImportacaoDados
 						d.anexo = dt.anexo,
 						d.fone = dt.fone,
 						d.email = dt.email
-					where dt.nomeParlamentar is not null;
+					where dt.nome_parlamentar is not null;
 
                     SET SQL_BIG_SELECTS=0;
 				");
@@ -332,6 +375,8 @@ namespace OPS.ImportacaoDados
 
 		public static void ImportaPresencasDeputados()
 		{
+			Console.WriteLine("Iniciando Importação de presenças");
+
 			var sqlFields = new StringBuilder();
 			var sqlValues = new StringBuilder();
 
@@ -348,29 +393,25 @@ namespace OPS.ImportacaoDados
 				dtSessoes = banco.GetTable("select id, id_legislatura, data, inicio, tipo, numero, checksum from cf_sessao");
 
 
-				//object max_data = banco.ExecuteScalar("select max(data) from cf_sessao");
-				//if (string.IsNullOrEmpty(max_data.ToString()))
-				//{
-				//	dtPesquisa = new DateTime(2010, 2, 1);
-				//}
-				//else
-				//{
-				//	DateTime data_db = Convert.ToDateTime(max_data);
-				//	DateTime data_inicio = Convert.ToDateTime(max_data);
-				//	dtPesquisa = data_db > data_inicio ? data_inicio : data_db;
-				//}
+				object max_data = banco.ExecuteScalar("select max(data) from cf_sessao");
+				if (string.IsNullOrEmpty(max_data.ToString()))
+				{
+					dtPesquisa = new DateTime(2010, 2, 1);
+				}
+				else
+				{
+					dtPesquisa = Convert.ToDateTime(max_data).AddDays(-5);
+				}
 			}
 
-			var datetimenow = new DateTime(2013, 3, 27); //DateTime.Now.Date;
-			//int ano_inicio = dtPesquisa.Year;
-			//int presencas_importadas = 0;
+			var datetimenow = DateTime.Now.Date;
+			int ano_inicio = dtPesquisa.Year;
+			int presencas_importadas = 0;
+
+			dtPesquisa = dtPesquisa.AddDays(-1);
 
 			while (true)
 			{
-				dtPesquisa = dtPesquisa.AddDays(1);
-				if (dtPesquisa == datetimenow)
-					break;
-
 				var doc = new XmlDocument();
 				IRestResponse response;
 				var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
@@ -383,10 +424,15 @@ namespace OPS.ImportacaoDados
 
 				try
 				{
+					dtPesquisa = dtPesquisa.AddDays(1);
+					if (dtPesquisa == datetimenow)
+						break;
+
 					response = client.Execute(request);
 					if (!response.Content.Contains("qtdeSessoesDia"))
 						continue;
 
+					Console.WriteLine(dtPesquisa.ToString("dd/MM/yyyy"));
 					using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
 					{
 						checksum = BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(response.Content)));
@@ -404,14 +450,13 @@ namespace OPS.ImportacaoDados
 								{
 									foreach (DataRow dr in drSessoes)
 									{
-
 										var id_cf_sessao = Convert.ToInt32(dr["id"]);
 
 										banco.AddParameter("id", id_cf_sessao);
-										dtMandatos = banco.GetTable("delete from cf_sessao where id=@id");
+										banco.ExecuteNonQuery("delete from cf_sessao where id=@id");
 
 										banco.AddParameter("id", id_cf_sessao);
-										dtSessoes = banco.GetTable("delete from cf_sessao_presenca where id_cf_sessao=@id");
+										banco.ExecuteNonQuery("delete from cf_sessao_presenca where id_cf_sessao=@id");
 									}
 								}
 							}
@@ -437,7 +482,7 @@ namespace OPS.ImportacaoDados
 					var count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
 					for (var i = 0; i < count; i++)
 					{
-						//presencas_importadas++;
+						presencas_importadas++;
 						var temp = dia.SelectNodes("parlamentares/parlamentar/sessoesDia/sessaoDia").Item(i);
 
 						var inicio = temp["inicio"].InnerText;
@@ -512,12 +557,12 @@ namespace OPS.ImportacaoDados
 							}
 							else
 							{
-								var nomeparlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
+								var nome_parlamentar = parlamentar["nome_parlamentar"].InnerText.Split('-');
 								var sigla_partido = "";
 								var sigla_estado = "";
 								try
 								{
-									var temp = nomeparlamentar[1].Split('/');
+									var temp = nome_parlamentar[1].Split('/');
 									sigla_partido = temp[0];
 									sigla_estado = temp[1];
 								}
@@ -526,7 +571,7 @@ namespace OPS.ImportacaoDados
 									var x = e;
 								}
 
-								banco.AddParameter("nome_parlamentar", nomeparlamentar[0]);
+								banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
 								banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
 								banco.AddParameter("id_carteira_parlamantar",
 									parlamentar["carteiraParlamentar"].InnerText);
@@ -562,7 +607,7 @@ namespace OPS.ImportacaoDados
 								catch (Exception ex)
 								{
 									// parlamentar não existe na base
-									Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" +
+									Console.WriteLine(parlamentar["nome_parlamentar"].InnerText + "/" +
 													  dia["legislatura"].InnerText + "/" +
 													  parlamentar["carteiraParlamentar"].InnerText);
 									break;
@@ -603,9 +648,195 @@ namespace OPS.ImportacaoDados
 			//		}
 			//	}
 			//}
+
+			Console.WriteLine("Finalizado Importação de presenças");
 		}
 
 		#region Importação Dados CEAP
+
+		public static void ImportarDespesasXml(string atualDir)
+		{
+			// http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar
+			// http://www.camara.gov.br/cotas/AnosAnteriores.zip
+			// http://www.camara.gov.br/cotas/AnoAnterior.zip
+			// http://www.camara.gov.br/cotas/AnoAtual.zip
+
+			var downloadUrl = "http://www.camara.leg.br/cotas/AnoAtual.zip";
+			var fullFileNameZip = atualDir + @"\AnoAtual.zip";
+			var fullFileNameXml = atualDir + @"\AnoAtual.xml";
+
+			if (!Directory.Exists(atualDir))
+				Directory.CreateDirectory(atualDir);
+
+			var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+
+			request.UserAgent = "Other";
+			request.Method = "HEAD";
+			request.ContentType = "application/json;charset=UTF-8";
+			request.Timeout = 1000000;
+
+			using (var resp = request.GetResponse())
+			{
+				if (File.Exists(fullFileNameZip))
+				{
+					var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+					var ContentLengthLocal = new FileInfo(fullFileNameZip).Length;
+					if (ContentLength == ContentLengthLocal)
+						return;
+				}
+
+				using (var client = new WebClient())
+				{
+					client.Headers.Add("User-Agent: Other");
+					client.DownloadFile(downloadUrl, fullFileNameZip);
+				}
+			}
+
+			ZipFile file = null;
+
+			try
+			{
+				file = new ZipFile(fullFileNameZip);
+
+				if (file.TestArchive(true) == false)
+					throw new BusinessException("<script>alert('Erro no Zip. Faça o upload novamente.')</script>");
+			}
+			finally
+			{
+				if (file != null)
+					file.Close();
+			}
+
+			var zip = new FastZip();
+			zip.ExtractZip(fullFileNameZip, atualDir, null);
+
+			CarregaDadosXml(fullFileNameXml, true);
+
+			//File.Delete(fullFileNameZip);
+			//File.Delete(fullFileNameXml);
+		}
+
+		private static void CarregaDadosXml(string fullFileNameXml, bool completo)
+		{
+			var banco = new Banco();
+			LimpaDespesaTemporaria(banco);
+
+			if (completo)
+			{
+				banco.ExecuteNonQuery(@"
+                    DELETE FROM cf_despesa where ano=2017;
+
+                     -- select max(id)+1 from cf_despesa;
+                    ALTER TABLE cf_despesa AUTO_INCREMENT = 2762548;
+				");
+			}
+
+			StreamReader stream = null;
+			var linhaAtual = 0;
+
+			try
+			{
+				//if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
+				//    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
+				//else
+				stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
+
+				var sqlFields = new StringBuilder();
+				var sqlValues = new StringBuilder();
+				//string nuDeputadoIdControle = "";
+				//int id_sequencial_deputado_ano = -1;
+
+				using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
+				{
+					reader.ReadToDescendant("DESPESAS");
+					reader.ReadToDescendant("DESPESA");
+
+					//string tretas;
+					do
+					{
+						var strXmlNodeDespeza = reader.ReadOuterXml();
+						//if (strXmlNodeDespeza == "")
+						//{
+						//   Console.WriteLine(linhaAtual);
+						//   break;
+						//}
+						//else 
+						if (string.IsNullOrEmpty(strXmlNodeDespeza))
+						{
+							Console.WriteLine(linhaAtual);
+							break;
+						}
+						//else
+						//{
+						//   tretas = strXmlNodeDespeza;
+						//}
+
+						//DataRow drDespesa = dtDespesa.NewRow();
+						var doc = new XmlDocument();
+						doc.LoadXml(strXmlNodeDespeza);
+						var files = doc.DocumentElement.SelectNodes("*");
+
+						sqlFields.Clear();
+						sqlValues.Clear();
+
+						foreach (XmlNode fileNode in files)
+						{
+							if (sqlFields.Length > 0)
+							{
+								sqlFields.Append(",");
+								sqlValues.Append(",");
+							}
+
+							sqlFields.Append(fileNode.Name);
+							sqlValues.Append("@" + fileNode.Name);
+
+							string value;
+							if (fileNode.Name == "datEmissao")
+								value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
+							else
+								value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper();
+
+							banco.AddParameter(fileNode.Name, value);
+						}
+
+						banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+
+						if (++linhaAtual == 10000)
+						{
+							Console.WriteLine(linhaAtual);
+
+							linhaAtual = 0;
+							banco.Dispose();
+							banco = new Banco();
+
+							if (completo)
+								ProcessarDespesasTemp(banco, completo);
+						}
+					} while (true);
+
+					reader.Close();
+				}
+			}
+			finally
+			{
+				banco.Dispose();
+
+				stream.Close();
+				stream.Dispose();
+			}
+
+			banco = new Banco();
+			ProcessarDespesasTemp(banco, completo);
+
+			banco.ExecuteNonQuery(@"
+				    UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
+			    ");
+			banco.Dispose();
+
+			AtualizaDeputadoValores();
+
+			AtualizaCampeoesGastos();
+		}
 
 		/// <summary>
 		/// Baixa e Importa os Dados da CEAP
@@ -636,7 +867,10 @@ namespace OPS.ImportacaoDados
 					long contentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
 					long contentLengthLocal = new FileInfo(fullFileNameZip).Length;
 					if (contentLength == contentLengthLocal)
+					{
+						CarregaDadosCsv(fullFileNameCsv, ano, completo);
 						return;
+					}
 				}
 
 				using (var client = new WebClient())
@@ -674,7 +908,7 @@ namespace OPS.ImportacaoDados
 						DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
 
 						-- select max(id)+1 from cf_despesa
-						ALTER TABLE cf_despesa AUTO_INCREMENT = 2757537;
+						ALTER TABLE cf_despesa AUTO_INCREMENT = 2762548;
                   ");
 				}
 
@@ -709,7 +943,7 @@ namespace OPS.ImportacaoDados
 							continue;
 						}
 
-						valores = ImportacaoUtils.ParseCsvRowToList(";", linha);
+						valores = linha.Split(new[] { ";" }, StringSplitOptions.None).ToList();
 						for (int i = 0; i < totalColunas; i++)
 						{
 							if (ColunasCEAP[i] == "datEmissao")
@@ -718,7 +952,16 @@ namespace OPS.ImportacaoDados
 							}
 							else if (!ColunasCEAP[i].StartsWith("tx") && !ColunasCEAP[i].StartsWith("sg"))
 							{
-								banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : (object)Convert.ToDecimal(valores[i]));
+								if (ColunasCEAP[i] == "vlrLiquido" && valores[i] == "-0")
+								{
+									// Valor liquido deve ser calculado pelo vlrDocumento-vlrGlosa-vlrRestituicao
+									banco.AddParameter(ColunasCEAP[i], null);
+								}
+								else
+								{
+									//OBS: Necessario dar replace para o caso do vlrRestituicao que esta vindo com o separador trocado.
+									banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : (object)Convert.ToDecimal(valores[i].Replace(".", ",")));
+								}
 							}
 							else
 							{
@@ -781,10 +1024,10 @@ namespace OPS.ImportacaoDados
 			InsereFornecedorFaltante(banco);
 
 
-			if (completo)
-				InsereDespesaFinal(banco);
-			else
-				InsereDespesaFinalParcial(banco);
+			//if (completo)
+			InsereDespesaFinal(banco);
+			//else
+			//	InsereDespesaFinalParcial(banco);
 
 			LimpaDespesaTemporaria(banco);
 		}
@@ -795,7 +1038,8 @@ namespace OPS.ImportacaoDados
 				UPDATE cf_despesa_temp SET txtNumero = NULL WHERE txtNumero = 'S/N' OR txtNumero = '';
 				UPDATE cf_despesa_temp SET ideDocumento = NULL WHERE ideDocumento = '';
 				UPDATE cf_despesa_temp SET txtCNPJCPF = NULL WHERE txtCNPJCPF = '';
-				UPDATE cf_despesa_temp SET txtFornecedor = 'CORREIOS' WHERE txtCNPJCPF is null and txtFornecedor LIKE 'CORREIOS%';	
+				UPDATE cf_despesa_temp SET txtFornecedor = 'CORREIOS' WHERE txtCNPJCPF is null and txtFornecedor LIKE 'CORREIOS%';
+				-- UPDATE cf_despesa_temp set vlrLiquido = vlrDocumento - vlrGlosa - vlrRestituicao where vlrLiquido is null;
 			");
 		}
 
@@ -809,6 +1053,13 @@ namespace OPS.ImportacaoDados
 					select id from cf_deputado
 				);
 			");
+
+			if (banco.Rows > 0)
+			{
+				Console.WriteLine(banco.Rows + " novos deputados!");
+
+				DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
+			}
 		}
 
 		private static void InsereTipoDespesaFaltante(Banco banco)
@@ -1085,21 +1336,10 @@ namespace OPS.ImportacaoDados
 				foreach (DataRow dr in dt.Rows)
 				{
 					banco.AddParameter("id_cf_deputado", dr["id"]);
-					valor_total_ceap =
-						banco.ExecuteScalar(
-							"select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
+					valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
 
-					if (!Convert.IsDBNull(dr["id_cadastro"]))
-					{
-						banco.AddParameter("id_cadastro_deputado", dr["id_cadastro"]);
-						quantidade_secretarios =
-							banco.ExecuteScalar(
-								"select count(1) from cf_secretario where id_cadastro_deputado=@id_cadastro_deputado;");
-					}
-					else
-					{
-						quantidade_secretarios = 0;
-					}
+					banco.AddParameter("id_cf_deputado", dr["id"]);
+					quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
 
 					banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
 					banco.AddParameter("valor_total_ceap", valor_total_ceap);
@@ -1168,6 +1408,8 @@ namespace OPS.ImportacaoDados
 							client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + idCadastro + ".jpg", src);
 
 							ImportacaoUtils.CreateImageThumbnail(src);
+
+							Console.WriteLine("Atualizado imagem do deputado " + idCadastro);
 						}
 					}
 					catch (Exception)

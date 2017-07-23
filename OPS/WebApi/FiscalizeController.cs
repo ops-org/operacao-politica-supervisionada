@@ -30,7 +30,7 @@ namespace OPS.WebApi
 				SomaConfiaveis = o.somaConfiaveis,
 				SomaFiscalizacoes = o.somaFiscalizacoes,
 				RazaoConfiaveis = o.razaoConfiaveis,
-				NomeParlamentar = o.parlamentar,
+				nome_parlamentar = o.parlamentar,
 				Valor = o.valor
 			});
 
@@ -50,7 +50,7 @@ namespace OPS.WebApi
 			var oNotaFiscal = new
 			{
 				NotaFiscalId = o.notaFiscalId,
-				NomeParlamentar = o.parlamentar,
+				nome_parlamentar = o.parlamentar,
 				Cota = o.cota,
 				Uf = o.uf,
 				Partido = o.partido,

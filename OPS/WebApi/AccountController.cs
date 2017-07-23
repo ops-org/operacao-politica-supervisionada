@@ -1,19 +1,20 @@
-﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Web.Configuration;
-using System.Web.Http;
-using Microsoft.AspNet.Identity;
+﻿using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.OAuth;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OPS.Models;
-using OPS.Results;
+using OPS.Core.Auth;
+using OPS.Core.Auth.Results;
+using OPS.Core.Models;
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Web.Configuration;
+using System.Web.Http;
 
 namespace OPS.WebApi
 {
@@ -334,7 +335,7 @@ namespace OPS.WebApi
 					parsedToken.user_id = jObj["data"]["user_id"];
 					parsedToken.app_id = jObj["data"]["app_id"];
 
-					if (!string.Equals(Startup.FacebookAuthOptions.AppId, parsedToken.app_id, StringComparison.OrdinalIgnoreCase))
+					if (!string.Equals(ConfigureStartup.FacebookAuthOptions.AppId, parsedToken.app_id, StringComparison.OrdinalIgnoreCase))
 						return null;
 				}
 				else if (provider == "Google")
@@ -342,7 +343,7 @@ namespace OPS.WebApi
 					parsedToken.user_id = jObj["user_id"];
 					parsedToken.app_id = jObj["audience"];
 
-					if (!string.Equals(Startup.GoogleAuthOptions.ClientId, parsedToken.app_id, StringComparison.OrdinalIgnoreCase))
+					if (!string.Equals(ConfigureStartup.GoogleAuthOptions.ClientId, parsedToken.app_id, StringComparison.OrdinalIgnoreCase))
 						return null;
 				}
 			}
@@ -368,7 +369,7 @@ namespace OPS.WebApi
 
 			var ticket = new AuthenticationTicket(identity, props);
 
-			var accessToken = Startup.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
+			var accessToken = ConfigureStartup.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
 			var userRoles = "";
 			if (user.Roles.Any())
 				userRoles = string.Join(",", user.Roles.Select(x => x.RoleId));

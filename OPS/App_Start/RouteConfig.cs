@@ -20,16 +20,16 @@ namespace OPS
 			);
 
 			routes.MapRoute(
+				name: "Default",
+				url: "{action}.html/{id}",
+				defaults: new { controller = "Main", action = "Index", id = UrlParameter.Optional }
+			);
+
+			routes.MapRoute(
 				name: "Application",
 				url: "{*url}",
 				defaults: new { controller = "Main", action = "Index" }
 			);
-
-			//routes.MapRoute(
-			//	name: "Default",
-			//	url: "{controller}/{action}/{id}",
-			//	defaults: new { controller = "Main", action = "Index", id = UrlParameter.Optional }
-			//);
 		}
 	}
 }

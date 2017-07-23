@@ -17,10 +17,20 @@ namespace OPS.Controllers
 		{
 			ViewBag.Title = "OPS - Operação Política Supervisionada";
 
-            ViewBag.DeputadoFederalUltimaAtualizacao = Padrao.DeputadoFederalUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
-            ViewBag.SenadorUltimaAtualizacao = Padrao.SenadorUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
+			ViewBag.DeputadoFederalUltimaAtualizacao = Padrao.DeputadoFederalUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
+			ViewBag.SenadorUltimaAtualizacao = Padrao.SenadorUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
+			ViewBag.GoogleAnalyticsKey = System.Web.Configuration.WebConfigurationManager.AppSettings.Get("GoogleAnalyticsKey");
 
-            return View();
+			var url = HttpContext.Request.RawUrl.Replace(Url.Content("~/"), "/");
+
+			if (string.IsNullOrEmpty(url) || url == "/")
+			{
+				return View();
+			}
+			else
+			{
+				return RedirectPermanent(Url.Content("~/#!") + url);
+			}
 		}
 	}
 }

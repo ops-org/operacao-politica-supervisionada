@@ -1,12 +1,12 @@
 ﻿using OPS.Core;
-using OPS.Dao;
-using OPS.Models;
 using System;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web.Http;
+using OPS.Core.DAO;
+using OPS.Core.Models;
 using WebApi.OutputCache.V2;
 
 namespace OPS.WebApi
@@ -34,26 +34,26 @@ namespace OPS.WebApi
 
 		}
 
-        [HttpPost]
+		[HttpPost]
 		[Route("Consulta")]
 		public dynamic Consulta(Newtonsoft.Json.Linq.JObject jsonData)
-        {
-            return dao.Consulta(Convert.ToString(jsonData["cnpj"]), Convert.ToString(jsonData["nome"])); ;
-        }
+		{
+			return dao.Consulta(Convert.ToString(jsonData["cnpj"]), Convert.ToString(jsonData["nome"])); ;
+		}
 
-        //[HttpGet]
-        //public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
-        //{
-        //	return dao.Pesquisa(filtro);
-        //}
+		//[HttpGet]
+		//public dynamic Pesquisa([FromUri] FiltroDropDownDTO filtro)
+		//{
+		//	return dao.Pesquisa(filtro);
+		//}
 
-        //[HttpGet]
-        //public dynamic QuadroSocietario(int id)
-        //{
-        //	return dao.QuadroSocietario(id);
-        //}
+		//[HttpGet]
+		//public dynamic QuadroSocietario(int id)
+		//{
+		//	return dao.QuadroSocietario(id);
+		//}
 
-        [HttpGet]
+		[HttpGet]
 		[Route("{id:int}/RecebimentosMensaisPorAnoDeputados")]
 		public dynamic RecebimentosMensaisPorAnoDeputados(int id)
 		{
@@ -88,7 +88,7 @@ namespace OPS.WebApi
 		private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 
 		[HttpGet]
-        [IgnoreCacheOutput]
+		[IgnoreCacheOutput]
 		[Route("Captcha/{value}")]
 		public string Captcha(string value)
 		{
@@ -118,98 +118,33 @@ namespace OPS.WebApi
 		}
 
 		[HttpPost]
-        [IgnoreCacheOutput]
+		[IgnoreCacheOutput]
 		[Route("ConsultarDadosCnpj")]
 		public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
 		{
-            var ret = ObterDados(jsonData["cnpj"].ToString(), jsonData["captcha"].ToString());
-
-            // Testar
-            ////now get cache instance
-            //var cache = Configuration.CacheOutputConfiguration().GetCacheOutputProvider(Request);
-            ////and invalidate cache for method "Get" of "FornecedorController"
-            //cache.RemoveStartsWith(Configuration.CacheOutputConfiguration().MakeBaseCachekey("FornecedorController", "Get"));
-
-            return ret;
-        }
-
-		private dynamic ObterDados(string aCNPJ, string aCaptcha)
-		{
-			string cnpj = new Regex(@"[^\d]").Replace(aCNPJ, string.Empty);
+			string aCNPJ  = jsonData["cnpj"].ToString();
 			CookieContainer _cookies = CacheHelper.Get<CookieContainer>("CookieReceitaFederal_" + aCNPJ);
 
-			var request = (HttpWebRequest)WebRequest.Create(urlBaseReceitaFederal + paginaValidacao);
-			request.ProtocolVersion = HttpVersion.Version10;
-			request.CookieContainer = _cookies;
-			request.Method = "POST";
+			var oFormatarDados = new FormatarDados();
+			var id = oFormatarDados.ObterDados(_cookies, aCNPJ, jsonData["captcha"].ToString());
 
-			var postData = string.Empty;
-			postData += "origem=comprovante&";
-			postData += "cnpj=" + cnpj + "&";
-			postData += "txtTexto_captcha_serpro_gov_br=" + aCaptcha + "&";
-			postData += "submit1=Consultar&";
-			postData += "search_type=cnpj";
+			// Testar
+			////now get cache instance
+			//var cache = Configuration.CacheOutputConfiguration().GetCacheOutputProvider(Request);
+			////and invalidate cache for method "Get" of "FornecedorController"
+			//cache.RemoveStartsWith(Configuration.CacheOutputConfiguration().MakeBaseCachekey("FornecedorController", "Get"));
 
-			byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-			request.ContentType = "application/x-www-form-urlencoded";
-			request.ContentLength = byteArray.Length;
-
-			var dataStream = request.GetRequestStream();
-			dataStream.Write(byteArray, 0, byteArray.Length);
-			dataStream.Close();
-
-			var response = request.GetResponse();
-			var stHtml = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding("ISO-8859-1"));
-			var strHtmlFornecedor = stHtml.ReadToEnd();
-
-			if (strHtmlFornecedor.Contains("Verifique se o mesmo foi digitado corretamente"))
-				throw new BusinessException("O número do CNPJ não foi localizado na Receita Federal");
-
-			if (strHtmlFornecedor.Contains("0,0"))
-				throw new BusinessException("Os caracteres não conferem com a imagem");
-
-			if (strHtmlFornecedor.Length > 0)
+			if (id > 0) //encontrou?
 			{
-				var requestQAS = (HttpWebRequest)HttpWebRequest.Create(urlBaseReceitaFederal + paginaQuadroSocietario);
-				requestQAS.CookieContainer = _cookies;
-				requestQAS.Method = "GET";
-				var res = (HttpWebResponse)requestQAS.GetResponse();
-				StreamReader sr = new StreamReader(res.GetResponseStream(), Encoding.GetEncoding("ISO-8859-1"));
-				string strHtmlQuadroSocietario = sr.ReadToEnd();
+				var _fornecedor = dao.Consulta(id);
+				var _quadro_societario = dao.QuadroSocietario(id);
 
-				var formataDados = new FormatarDados();
-				Fornecedor fornecedor = formataDados.MontarObjFornecedor(cnpj, strHtmlFornecedor);
-				if (fornecedor != null)
-				{
-					formataDados.MontarObjFornecedorQuadroSocietario(fornecedor, strHtmlQuadroSocietario);
-
-					//string UserName;
-					//try
-					//{
-					//	UserName = HttpContext.Current.User.Identity.Name;
-					//}
-					//catch (Exception)
-					//{
-					//	UserName = "anonymous";
-					//}
-
-					//fornecedor.UsuarioInclusao = UserName;
-					//fornecedor.DataInclusao = DateTime.Now.ToString();
-
-					var fornecedorDao = new FornecedorDao();
-					var id = fornecedorDao.AtualizaDados(fornecedor);
-
-					var _fornecedor = dao.Consulta(id);
-					var _quadro_societario = dao.QuadroSocietario(id);
-
-					return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
-					// fornecedorDao.MarcaVisitado(fornecedor.CnpjCpf, UserName);
-				}
-
-				//return fornecedor;
+				return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
 			}
-
-			return null;
+			else
+			{
+				return null;
+			}
 		}
 	}
 }

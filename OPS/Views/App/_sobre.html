@@ -68,8 +68,8 @@
                         <p class="text-justify">
                             1. <strong>Câmara de Deputados</strong><br/>
                             <ul>
-                                <li><a href="http://www2.camara.leg.br/participe/fale-conosco/perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Legislação relacionada</a></li>
                                 <li><a href="http://www2.camara.leg.br/legin/int/atomes/2009/atodamesa-43-21-maio-2009-588364-normaatualizada-cd-mesa.html" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Regras para uso da cota parlamentar (Ato da mesa Nº 43)</a></li>
+								<li><a href="http://www2.camara.leg.br/participe/fale-conosco/perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Legislação relacionada</a></li>
                                 <li><a href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Limites mensais por parlamentar</a></li>
                                 <li><a href="http://www.camara.gov.br/cota-parlamentar" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Explorar a cota parlamentar na câmara</a></li>
                                 <li><a href="http://www2.camara.leg.br/deputados/pesquisa" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Conheça os Deputados</a></li>
@@ -91,7 +91,7 @@
 
         <div class="row">
             <div class="col-md-6">
-                <div class="panel panel-default">
+                <div id="contato" class="panel panel-default">
                     <div class="panel-heading">Contato</div>
                     <div class="panel-body">
                         <div data-ng-controller="ContatoController">
@@ -157,27 +157,36 @@
 
                         <p><strong>Com código</strong></p>
                         <p class="text-justify">Esse é um projeto de código aberto, você pode contribuir com correções e novas funcionalidades.</p>
-                        <p><a href="https://github.com/ops-org/operacao-politica-supervisionada">https://github.com/ops-org/operacao-politica-supervisionada</a></p>
+                        <p><a href="https://github.com/ops-org/operacao-politica-supervisionada" target="_blank" onclick="return trackOutboundLink(this, true);">https://github.com/ops-org/operacao-politica-supervisionada</a></p>
+                        <br />
+
+                        <p><strong>Com ideias</strong></p>
+                        <p class="text-justify">Qualquer ideia contrutiva é sempre bem vinda. Também é possivel votar nas ideias existentes e deixar sua opinião.</p>
+                        <p><a href="https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#ideas/popular" target="_blank" onclick="return DeixarUmaIdeia(event, this);">Deixar uma ideia</a></p>
                         <br />
 
                         <p><strong>Com doações</strong></p>
                         <p class="text-justify">Você poderá doar uma única vez ou programar para que suas doações sejam mensais. É possível cancelar as doações recorrentes a qualquer momento, sem pagamento de taxas ou multas.</p>
 
-                        <a href="https://sites.google.com/site/doandoparaaops/doacao-via-deposito---banco-do-brasil">
+                        <a target="_blank" href="https://sites.google.com/site/doandoparaaops/doacao-via-deposito---banco-do-brasil" onclick="return trackOutboundLink(this, true);">
                             <img src="https://luciobigdotcomdotbr.files.wordpress.com/2015/11/bb_100.png?w=100" alt="bb" width="100" height="56">
                         </a>
 
-                        <a href="https://www.patreon.com/bePatron?patAmt=20&amp;u=192467">
+                        <a target="_blank" href="https://www.patreon.com/bePatron?patAmt=20&amp;u=192467" onclick="return trackOutboundLink(this, true);">
                             <img src="https://luciobigdotcomdotbr.files.wordpress.com/2015/11/patreon_25.png?w=100" alt="patreon" width="100" height="56">
                         </a>
 
-                        <a href="https://sites.google.com/site/doandoparaaops/doacao-mensal-paypal">
+                        <a target="_blank" href="https://sites.google.com/site/doandoparaaops/doacao-mensal-paypal" onclick="return trackOutboundLink(this, true);">
                             <img src="https://luciobigdotcomdotbr.files.wordpress.com/2015/11/paypal_25.png?w=100" alt="paypal" width="100" height="56">
                         </a>
 
-                        <a href="https://sites.google.com/site/doandoparaaops/doacoes-via-pagseguro">
+                        <a target="_blank" href="https://pagseguro.uol.com.br/checkout/nc/nl/donation/sender-identification.jhtml?t=b71889bbdc400e71008fab3d4ba4802662561764f8d69f10#rmcl" onclick="return trackOutboundLink(this, true);">
                             <img src="https://luciobigdotcomdotbr.files.wordpress.com/2015/11/pagseguro_25.png?w=100" alt="pagseguro" width="100" height="56">
                         </a>
+
+						<a target="_blank" href="https://apoia.se/ops" onclick="return trackOutboundLink(this, true);">
+							<img src="https://luciobigdotcomdotbr.files.wordpress.com/2015/11/apo.png?w=100" alt="apoia.se" width="100" height="56">
+						</a>
 
                         <br /><br />
                         <div class="text-center">
@@ -190,6 +199,6 @@
     </div>
     <br />
     <div class="form-group">
-        <p class="text-right"><a href="https://luciobig.com.br/o-que-e-ops/" target="_blank" class="btn btn-default btn-sm">Saiba mais sobre a OPS&nbsp;<i class="fa fa-chevron-right"></i></a></p>
+        <p class="text-right"><a href="https://luciobig.com.br/o-que-e-ops/" target="_blank" class="btn btn-default btn-sm" onclick="return trackOutboundLink(this, true);">Saiba mais sobre a OPS&nbsp;<i class="fa fa-chevron-right"></i></a></p>
     </div>
 </div>

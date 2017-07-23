@@ -145,7 +145,7 @@
 						<div class="icon"><i class="fa fa-briefcase"></i></div>
 						<div class="text">
 							<h3 data-ng-bind="fornecedor.cnpj_cpf"></h3>
-							<span>CPNJ</span>
+							<span>CNPJ</span>
 						</div>
 					</div>
 				</div>
@@ -458,13 +458,13 @@
 							<th style="width:20%">Valor</th>
 						</tr>
 						<tr ng-repeat="row in DeputadoFederalMaioresGastos">
-							<td><a href="./#/deputado-federal/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
-							<td><a href="./#/deputado-federal?IdParlamentar={{::row.id_cf_deputado}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
+							<td><a href="./#!/deputado-federal/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
+							<td><a href="./#!/deputado-federal?IdParlamentar={{::row.id_cf_deputado}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
 						</tr>
 					</table>
 				</div>
 
-				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#/deputado-federal?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os deputados</a>
+				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#!/deputado-federal?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os deputados</a>
 			</fieldset>
 		</div>
 	</div>
@@ -488,13 +488,13 @@
 							<th style="width:20%">Valor</th>
 						</tr>
 						<tr ng-repeat="row in SenadoresMaioresGastos">
-							<td><a href="./#/senador/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
-							<td><a href="./#/senador?IdParlamentar={{::row.id_cf_deputado}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
+							<td><a href="./#!/senador/{{::row.id_sf_senador}}">{{::row.nome_parlamentar}}</a></td>
+							<td><a href="./#!/senador?IdParlamentar={{::row.id_sf_senador}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
 						</tr>
 					</table>
 				</div>
 
-				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#/senador?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os senadores</a>
+				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#!/senador?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os senadores</a>
 			</fieldset>
 		</div>
 	</div>

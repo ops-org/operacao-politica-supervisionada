@@ -12,7 +12,7 @@ using System.Web.Hosting;
 using System.Web.Http;
 using Novacode;
 using OPS.Core;
-using OPS.Models;
+using OPS.Core.Models;
 
 namespace OPS.WebApi
 {
@@ -72,7 +72,7 @@ namespace OPS.WebApi
 				return new
 				{
 					grupos = lstAuditoriaGrupo,
-					signatarios = new List<AuditoriaSignatario> {new AuditoriaSignatario()}
+					signatarios = new List<AuditoriaSignatario> { new AuditoriaSignatario() }
 				};
 			}
 		}
@@ -217,7 +217,7 @@ namespace OPS.WebApi
 			int? userId;
 			try
 			{
-				var identity = (ClaimsIdentity) User.Identity;
+				var identity = (ClaimsIdentity)User.Identity;
 				userId = Convert.ToInt32(identity.FindFirst("UserId").Value);
 			}
 			catch (Exception)
@@ -225,48 +225,74 @@ namespace OPS.WebApi
 				userId = null;
 			}
 
-			//if (string.IsNullOrEmpty(auditoria.codigo))
-			//{
-			// TODO: Ajustar para não gerar nova
-			auditoria.codigo = Guid.NewGuid().ToString();
-			//}
-
 			using (var banco = new Banco())
 			{
+				int id_mcf_auditoria;
 				banco.BeginTransaction();
 
-				banco.AddParameter("codigo", auditoria.codigo);
-				banco.AddParameter("id_user", userId);
-				banco.AddParameter("id_estado", auditoria.estado);
-				banco.AddParameter("cidade", auditoria.cidade);
-				banco.AddParameter("link_portal", auditoria.link_portal);
+				if (!string.IsNullOrEmpty(auditoria.codigo))
+				{
+					banco.AddParameter("codigo", auditoria.codigo);
+					var id = banco.ExecuteScalar(@"select id from mcf_auditoria where codigo = @codigo");
 
-				var id = banco.ExecuteScalar(
-					@"INSERT INTO mcf_auditoria (
+					if (Convert.IsDBNull(id))
+					{
+						auditoria.codigo = null;
+						return Salvar(auditoria);
+					}
+					id_mcf_auditoria = Convert.ToInt32(id);
+
+					banco.AddParameter("codigo", auditoria.codigo);
+					banco.AddParameter("id_user", userId);
+					banco.AddParameter("id_estado", auditoria.estado);
+					banco.AddParameter("cidade", auditoria.cidade);
+					banco.AddParameter("link_portal", auditoria.link_portal);
+					banco.AddParameter("id", id_mcf_auditoria);
+
+					banco.ExecuteNonQuery(
+						@"UPDATE mcf_auditoria SET 
+							codigo = @codigo, id_user = @id_user, id_estado = @id_estado, cidade = @cidade, link_portal = @link_portal 
+						WHERE id = @id;");
+
+					banco.AddParameter("id_mcf_auditoria", id_mcf_auditoria);
+					banco.ExecuteNonQuery(@"delete from mcf_auditoria_item where id_mcf_auditoria = @id_mcf_auditoria");
+				}
+				else
+				{
+					auditoria.codigo = Guid.NewGuid().ToString();
+
+					banco.AddParameter("codigo", auditoria.codigo);
+					banco.AddParameter("id_user", userId);
+					banco.AddParameter("id_estado", auditoria.estado);
+					banco.AddParameter("cidade", auditoria.cidade);
+					banco.AddParameter("link_portal", auditoria.link_portal);
+
+					var id = banco.ExecuteScalar(
+						@"INSERT INTO mcf_auditoria (
 						codigo, id_user, data_criacao, data_geracao_denuncia, id_estado, cidade, link_portal
 					) VALUES (
 						@codigo, @id_user, NOW(), NULL, @id_estado, @cidade, @link_portal
 					);
 					SELECT LAST_INSERT_ID();");
 
-				var id_mcf_auditoria = Convert.ToInt32(id);
-
+					id_mcf_auditoria = Convert.ToInt32(id);
+				}
 
 				foreach (var grupo in auditoria.grupos)
-				foreach (var item in grupo.itens)
-				{
-					banco.AddParameter("id_mcf_auditoria", id_mcf_auditoria);
-					banco.AddParameter("id_mcf_id_transparencia_item", item.id);
-					banco.AddParameter("id_mcf_id_transparencia_item_situacao", item.situacao);
-					banco.AddParameter("indicio_de_prova", item.indicio_de_prova);
+					foreach (var item in grupo.itens)
+					{
+						banco.AddParameter("id_mcf_auditoria", id_mcf_auditoria);
+						banco.AddParameter("id_mcf_id_transparencia_item", item.id);
+						banco.AddParameter("id_mcf_id_transparencia_item_situacao", item.situacao);
+						banco.AddParameter("indicio_de_prova", item.indicio_de_prova);
 
-					banco.ExecuteScalar(
-						@"INSERT INTO mcf_auditoria_item (
+						banco.ExecuteScalar(
+							@"INSERT INTO mcf_auditoria_item (
 								id_mcf_auditoria, id_mcf_id_transparencia_item, id_mcf_id_transparencia_item_situacao, indicio_de_prova
 							) VALUES (
 								@id_mcf_auditoria, @id_mcf_id_transparencia_item, @id_mcf_id_transparencia_item_situacao, @indicio_de_prova
 							);");
-				}
+					}
 
 				foreach (var signatario in auditoria.signatarios)
 				{
@@ -315,24 +341,48 @@ namespace OPS.WebApi
 			var auditoria = Consultar(codigo);
 
 			// Store a global reference to the loaded document.
-			var g_document = DocX.Load(HostingEnvironment.MapPath("~/temp/Template Cidadao Fiscal.docx"));
+			var g_document = DocX.Load(HostingEnvironment.MapPath("~/Content/template/template-cidadao-fiscal.docx"));
 
 			// Replace text in this document.
 			g_document.ReplaceText("#CIDADE_AUDITADA#", auditoria.cidade);
 			g_document.ReplaceText("#DATA_EXTENSO#", DateTime.Now.ToString(@"dd \de MMMM \de yyyy", new CultureInfo("pt-BR")));
 
 			var auditor = auditoria.signatarios[0];
+
+			string nacionalidade = "";
+			switch (auditor.nacionalidade)
+			{
+				case "1": nacionalidade = "Brasileiro(a)"; break;
+			}
+
+			string estado_civil = "";
+			switch (auditor.estado_civil)
+			{
+				case "1": estado_civil = "Solteiro(a)"; break;
+				case "2": estado_civil = "Casado(a)"; break;
+				case "3": estado_civil = "Divorciado(a)"; break;
+				case "4": estado_civil = "Viúvo(a)"; break;
+				case "5": estado_civil = "Separado(a)"; break;
+			}
+
+			string estado;
+			using (var banco = new Banco())
+			{
+				banco.AddParameter("id", auditor.estado);
+				estado = banco.ExecuteScalar(@"select nome from estado where id = @id").ToString();
+			}
+
 			g_document.ReplaceText("#DADOS_DO_AUDITOR#",
-				string.Concat(auditor.nacionalidade, ", ", //TODO: converter para texto
-					auditor.estado_civil, ", ", //TODO: converter para texto
-					auditor.profissao, ", ",
-					"portador da carteira de identidade nº ", auditor.rg, ", ",
-					"inscrito no CPF nº ", auditor.cpf, ", ",
-					"residente e domiciliado na ", auditor.endereco, ", ",
-					"CEP ", auditor.cep, ", ",
-					"Bairro ", auditor.bairro, ", ",
-					"Cidade de ", auditor.cidade, ", ",
-					auditor.estado)); //TODO: converter para texto
+				string.Concat(nacionalidade, ", ",
+				  estado_civil, ", ",
+				  auditor.profissao, ", ",
+				  "portador da carteira de identidade nº ", auditor.rg, ", ",
+				  "inscrito no CPF nº ", auditor.cpf, ", ",
+				  "residente e domiciliado na ", auditor.endereco, ", ",
+				  "CEP ", auditor.cep, ", ",
+				  "Bairro ", auditor.bairro, ", ",
+				  "Cidade de ", auditor.cidade, ", ",
+				  estado));
 
 			g_document.ReplaceText("#CIDADE_AUDITOR#", auditor.cidade);
 			g_document.ReplaceText("#NOME_AUDITOR#", auditor.nome_completo);

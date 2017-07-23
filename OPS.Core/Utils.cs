@@ -124,5 +124,10 @@ namespace OPS.Core
                 await objSmtp.SendMailAsync(objEmail);
             }
         }
+
+	    public static string SingleSpacedTrim(String s)
+	    {
+		    return new Regex(@"\s{2,}").Replace(s, " ");
+	    }
     }
 }

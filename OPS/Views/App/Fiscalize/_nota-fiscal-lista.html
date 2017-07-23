@@ -15,11 +15,11 @@
 				</tr>
 				<tr data-ng-repeat="nota in notas">
 					<td>
-						<a class="btn btn-primary btn-sm" href="./#/fiscalize/{{nota.NotaFiscalId}}">Ver Nota</a>
+						<a class="btn btn-primary btn-sm" href="./#!/fiscalize/{{nota.NotaFiscalId}}">Ver Nota</a>
 					</td>
 					<td>{{nota.NotaFiscalId}}</td>
 					<td>{{nota.Valor}}</td>
-					<td>{{nota.NomeParlamentar}}</td>
+					<td>{{nota.nome_parlamentar}}</td>
 					<td>{{nota.SomaSuspeitas}}</td>
 					<td>{{nota.SomaConfiaveis}}</td>
 					<td>{{nota.SomaFiscalizacoes}}</td>

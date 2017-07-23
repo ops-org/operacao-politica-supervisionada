@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using OPS.Core;
+using OPS.Core.DAO;
+using System;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Web;
@@ -6,7 +9,6 @@ using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
-using OPS.Core;
 
 namespace OPS
 {
@@ -27,14 +29,16 @@ namespace OPS
 			//register your filter with Web API pipeline
 			GlobalConfiguration.Configuration.Filters.Add(new ExceptionHandlingAttribute());
 
-			new Dao.ParametrosDao().CarregarPadroes();
+			new ParametrosDao().CarregarPadroes();
 
 			ViewEngines.Engines.Clear();
 			ViewEngines.Engines.Add(new RazorViewEngine());
 		}
 
+
 		protected void Application_Error(object sender, EventArgs e)
 		{
+#if !DEBUG
 			try
 			{
 				string message = Server.GetLastError().Message;
@@ -42,11 +46,21 @@ namespace OPS
 				//Ignorar OperationCanceledException e HttpException
 				if (!message.Contains("This is an invalid webresource request.") && !message.Contains("The operation was canceled."))
 				{
-					HttpUnhandledException httpUnhandledException = new HttpUnhandledException(message, Server.GetLastError());
+					string infoAdicional = JsonConvert.SerializeObject(Context.Request,
+					Formatting.Indented, new JsonSerializerSettings
+					{
+						ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+						ContractResolver = new IgnoreErrorPropertiesResolver()
+					});
+
+					var exBase = Server.GetLastError().GetBaseException();
+					HttpUnhandledException httpUnhandledException = new HttpUnhandledException(
+						exBase.Message + Environment.NewLine + "<code>" + infoAdicional + "</code>",
+						exBase.GetBaseException());
 
 					Task.Run(async () =>
 					{
-						await Utils.SendMailAsync(new MailAddress("suporte@ops.net.br"), "OPS :: Informe de erro",
+						await Utils.SendMailAsync(new MailAddress("suporte@ops.net.br"), "OPS :: " + exBase.Message,
 							httpUnhandledException.GetHtmlErrorMessage());
 					}).Wait();
 				}
@@ -55,6 +69,7 @@ namespace OPS
 			{
 				// ignored
 			}
+#endif
 		}
 	}
 }

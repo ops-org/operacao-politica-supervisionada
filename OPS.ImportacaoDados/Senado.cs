@@ -32,7 +32,7 @@ namespace OPS.ImportacaoDados
 								try
 								{
 									banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
-									banco.AddParameter("NomeParlamentar", Convert.ToString(senador["NomeParlamentar"]).ToUpper());
+									banco.AddParameter("nome_parlamentar", Convert.ToString(senador["nome_parlamentar"]).ToUpper());
 									banco.AddParameter("NomeCompletoParlamentar", Convert.ToString(senador["NomeCompletoParlamentar"]));
 									banco.AddParameter("SexoParlamentar", Convert.ToString(senador["SexoParlamentar"])[0].ToString());
 									banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
@@ -46,7 +46,7 @@ namespace OPS.ImportacaoDados
 										@"INSERT INTO sf_senador (
 											id, nome, nome_completo, sexo, url, foto, id_partido, id_estado, email, ativo
 										) VALUES (
-											@CodigoParlamentar, @NomeParlamentar, @NomeCompletoParlamentar, @SexoParlamentar, @Url, @Foto, 
+											@CodigoParlamentar, @nome_parlamentar, @NomeCompletoParlamentar, @SexoParlamentar, @Url, @Foto, 
 											(SELECT id FROM partido where sigla like @SiglaPartido), (SELECT id FROM estado where sigla like @SiglaUf), 
 											@EmailParlamentar, 'S'
 										)");
@@ -279,6 +279,13 @@ namespace OPS.ImportacaoDados
 					select nome from sf_senador
 				);
 			");
+
+			if (banco.Rows > 0)
+			{
+				Console.WriteLine(banco.Rows + " novos senadores!");
+
+				DownloadFotosSenadores(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\SENADOR\");
+			}
 		}
 
 		private static void InsereFornecedorFaltante(Banco banco)
@@ -480,6 +487,8 @@ namespace OPS.ImportacaoDados
 							client.DownloadFile(row["foto"].ToString(), src);
 
 							ImportacaoUtils.CreateImageThumbnail(src);
+
+							Console.WriteLine("Atualizado imagem do senador " + id);
 						}
 					}
 					catch (Exception)

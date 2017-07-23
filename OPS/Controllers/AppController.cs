@@ -27,25 +27,6 @@ namespace OPS.Controllers
             }
 
             return File(Server.MapPath("~/Views/App/Erro/_404.html"), "text/html");
-
-            //         ViewEngineResult result = ViewEngines.Engines.FindView(ControllerContext, partialUrl, null);
-            //if (result.View != null)
-            //{
-            //	switch (partialUrl.ToLower())
-            //	{
-            //		case "auditoria/deputado-federal-lista":
-            //			ViewBag.dtUltimaAtualizacao = Padrao.DeputadoFederalUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
-            //			break;
-            //		case "auditoria/senador-lista":
-            //			ViewBag.dtUltimaAtualizacao = Padrao.SenadorUltimaAtualizacao.ToString("dd/MM/yyyy HH:mm");
-            //			break;
-            //	}
-            //	return PartialView(partialUrl);
-            //}
-            //else
-            //{
-            //	return PartialView("Erro/_404");
-            //}
         }
     }
 }

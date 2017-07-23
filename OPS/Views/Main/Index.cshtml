@@ -21,7 +21,7 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand topnav" href="./#/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
+				<a class="navbar-brand topnav" href="./#!/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
 					<img src="~/Content/images/logo_ops.png" width="64" height="40" alt="OPS" />
 				</a>
 			</div>
@@ -31,23 +31,25 @@
 						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Explorar<span class="caret"></span></a>
 						<ul class="dropdown-menu">
 							<li class="dropdown-header">Câmara dos Deputados</li>
-							<li><a href="./#/deputado-federal">Cota parlamentar (CEAP)</a></li>
-							<li><a href="./#/deputado-federal/secretario">Secretários</a></li>
+							<li><a href="./#!/deputado-federal">Cota parlamentar (CEAP)</a></li>
+							@*<li><a href="./#!/deputado-federal-frequencia">Frequência</a></li>*@
+							<li><a href="./#!/deputado-federal/secretario">Secretários</a></li>
 							<li role="separator" class="divider"></li>
 							<li class="dropdown-header">Senado Federal</li>
-							<li><a href="./#/senador">Cota Parlamentar (CEAPS)</a></li>
+							<li><a href="./#!/senador">Cota Parlamentar (CEAPS)</a></li>
 							<li role="separator" class="divider"></li>
 							<li class="dropdown-header">Presidência da República</li>
 							<li><a href="https://web-cpgf.rhcloud.com" onclick="return trackOutboundLink(this, true);" target="_blank">Cartão Corporativo (CPGF)</a></li>
 						</ul>
 					</li>
-					<li><a href="./#/forum">Forum</a></li>
-					<li><a href="./#/fiscalize">Resumo App</a></li>
-					<li><a href="./#/sobre">Sobre</a></li>
+					<li><a href="./#!/forum">Forum</a></li>
+					<li><a href="./#!/fiscalize">Resumo App</a></li>
+					<li><a href="./#!/sobre">Sobre</a></li>
+					<li><a href="./#!/sobre#contato">Contato</a></li>
 					<li class="dropdown" data-ng-show="authentication.isAuth">
 						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Olá {{authentication.firstName}}<span class="caret"></span></a>
 						<ul class="dropdown-menu">
-							<li><a href="./#/denuncia">Denúncias</a></li>
+							<li><a href="./#!/denuncia">Denúncias</a></li>
 							<li role="separator" class="divider"></li>
 							<li><a href="#" data-ng-click="logOut()">Sair</a></li>
 						</ul>
@@ -55,17 +57,17 @@
 				</ul>
 
 				@*<ul class="nav navbar-nav navbar-right">
-					<li class="dropdown" data-ng-show="authentication.isAuth">
-						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Olá {{authentication.firstName}}<span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="./#/denuncia">Denúncias</a></li>
-							<li role="separator" class="divider"></li>
-							<li><a href="#" data-ng-click="logOut()">Sair</a></li>
-						</ul>
-					</li>
-					<li data-ng-hide="authentication.isAuth"><a href="./#/login">Entrar</a></li>
-					<li data-ng-hide="authentication.isAuth"><a href="./#/signup">Criar Conta</a></li>
-				</ul>*@
+						<li class="dropdown" data-ng-show="authentication.isAuth">
+							<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Olá {{authentication.firstName}}<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li><a href="./#!/denuncia">Denúncias</a></li>
+								<li role="separator" class="divider"></li>
+								<li><a href="#" data-ng-click="logOut()">Sair</a></li>
+							</ul>
+						</li>
+						<li data-ng-hide="authentication.isAuth"><a href="./#!/login">Entrar</a></li>
+						<li data-ng-hide="authentication.isAuth"><a href="./#!/signup">Criar Conta</a></li>
+					</ul>*@
 			</div>
 		</div>
 	</nav>
@@ -84,7 +86,8 @@
 	</div>
 	<script type="text/javascript">
     var DeputadoFederalUltimaAtualizacao = '@ViewBag.DeputadoFederalUltimaAtualizacao';
-    var SenadorUltimaAtualizacao = '@ViewBag.SenadorUltimaAtualizacao';
+		var SenadorUltimaAtualizacao = '@ViewBag.SenadorUltimaAtualizacao';
+		var GoogleAnalyticsKey = '@ViewBag.GoogleAnalyticsKey';
 	</script>
 
 	@Scripts.Render("~/Content/vendor")
@@ -101,9 +104,10 @@
 					OPS - Operação Política Supervisionada
 				</div>
 				<div class="col-sm-6 text-xs-center text-right">
-					<a href="./#/sobre">Sobre</a>
+					<a href="./#!/sobre">Sobre</a>
+					<a href="./#!/sobre#contato">Contato</a>
 					<a href="https://github.com/ops-org/operacao-politica-supervisionada" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofolow">Repositório no GitHub</a>
-					<a href="javascript:;" id="btnReportarErro">Reportar um erro</a>
+					<a href="https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug" target="_blank" onclick="ReportarErro(event, this)">Reportar um erro</a>
 				</div>
 			</div>
 		</div>

@@ -5,7 +5,7 @@ app.controller('DenunciasListaController', ["$scope", "$tabela", "$api", "$query
 
         document.title = "OPS :: Denúncias";
         $scope.filtro = {
-            MansagensNaoLidas: true,
+            MensagensNaoLidas: true,
             AguardandoRevisao: true,
             PendenteInformacao: true,
             Duvidoso: true,

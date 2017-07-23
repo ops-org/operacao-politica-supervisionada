@@ -2,10 +2,10 @@
 	<div class="row deputado-header form-group">
 		<div class="form-group">
 			<div class="col-md-2 text-center">
-				<img class="img-thumbnail img-responsive img-parlamentar" src="http://104.131.229.175/fiscalize/parlamentar/{{::nota.IdCadastro}}.jpg" alt="{{::nota.NomeParlamentar}}" />
+				<img class="img-thumbnail img-responsive img-parlamentar" src="http://104.131.229.175/fiscalize/parlamentar/{{::nota.IdCadastro}}.jpg" alt="{{::nota.nome_parlamentar}}" />
 			</div>
 			<div class="col-md-10 text-left">
-				<h1 data-ng-bind="::nota.NomeParlamentar"></h1>
+				<h1 data-ng-bind="::nota.nome_parlamentar"></h1>
 				<h4>Deputado Federal</h4>
 				<h3>{{::nota.Partido}} / {{::nota.Uf}}</h3>
 			</div>
@@ -78,7 +78,7 @@
 					<div class="icon"><i class="fa fa-briefcase"></i></div>
 					<div class="text">
 						<h3 data-ng-bind="nota.CpfCnpj"></h3>
-						<span>CPF/CPNJ</span>
+						<span>CPF/CNPJ</span>
 					</div>
 				</div>
 			</div>

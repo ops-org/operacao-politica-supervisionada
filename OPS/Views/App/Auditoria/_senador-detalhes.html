@@ -9,7 +9,7 @@
 							<img class="img-thumbnail img-responsive img-parlamentar" src="./Content/Images/Parlamentares/SENADOR/{{::senador.id_sf_senador}}.jpg" alt="{{::senador.nome_parlamentar}}" />
 						</div>
 						<div class="col-xs-12 col-md-8 col-lg-9 text-left">
-							<h3>Sen. {{::senador.nome_parlamentar}}</h3>
+							<h3>Sen(a). {{::senador.nome_parlamentar}}</h3>
 							<!--<p class="text-muted" data-ng-bind="::senador.Nome"></p>-->
 							<h4>{{::senador.sigla_partido}} / {{::senador.sigla_estado}}</h4>
 							<!--<p><a href="mailto:{{::senador.email}}" data-ng-bind="::senador.Email"></a></p>-->
@@ -20,7 +20,7 @@
 				</div>
 			</div>
 			<div class="col-xs-12 col-sm-4">
-				<a href="./#/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=6">
+				<a href="./#!/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=6">
 					<div class="box-item form-group alert alert-info text-center">
 						<div class="box-item-title" data-ng-bind="::senador.valor_total_ceaps"></div>
 						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
@@ -48,13 +48,13 @@
 							<th style="width:20%">Valor</th>
 						</tr>
 						<tr ng-repeat="row in MaioresNotas">
-							<td><a data-ng-href="./#/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
+							<td><a data-ng-href="./#!/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
 							<td>{{::row.valor}}</td>
 						</tr>
 					</table>
 				</div>
 
-				<a class="btn btn-default btn-sm pull-right" href="./#/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=6">Ver todas as notas</a>
+				<a class="btn btn-default btn-sm pull-right" href="./#!/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=6">Ver todas as notas</a>
 			</fieldset>
 		</div>
 		<div class="col-xs-12 col-sm-6">
@@ -68,13 +68,13 @@
 							<th style="width:20%">Valor</th>
 						</tr>
 						<tr ng-repeat="row in MaioresFornecedores">
-							<td><a data-ng-href="./#/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
-							<td><a href="./#/senador?IdParlamentar={{::senador.id_sf_senador}}&Fornecedor={{::row.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
+							<td><a data-ng-href="./#!/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
+							<td><a href="./#!/senador?IdParlamentar={{::senador.id_sf_senador}}&Fornecedor={{::row.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
 						</tr>
 					</table>
 				</div>
 
-				<a class="btn btn-default btn-sm pull-right" href="./#/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=3">Ver todos os fornecedores</a>
+				<a class="btn btn-default btn-sm pull-right" href="./#!/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=3">Ver todos os fornecedores</a>
 			</fieldset>
 		</div>
 	</div>

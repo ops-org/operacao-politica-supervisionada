@@ -1,18 +1,11 @@
 ﻿using System.Security.Claims;
 using System.Web.Http;
-using OPS.Core;
-using OPS.Dao;
-using WebApi.OutputCache.V2;
+using OPS.Core.DAO;
+using OPS.Core.DTO;
+using OPS.Core.Models;
 
 namespace OPS.WebApi
 {
-    public class DenunciaComentarioDTO
-    {
-        public string id_denuncia { get; set; }
-        public string texto { get; set; }
-        public string situacao { get; set; }
-    }
-
 	[RoutePrefix("Api/Denuncia")]
 	public class DenunciaController : ApiController
     {
@@ -23,8 +16,8 @@ namespace OPS.WebApi
             _dao = new DenunciaDao();
         }
 
-        [HttpGet]
-		[ActionName("")]
+		[HttpGet]
+		[Route("")]
 		[Authorize]
         public dynamic Lista([FromUri] FiltroDenunciaDTO filtro)
         {
@@ -34,16 +27,16 @@ namespace OPS.WebApi
             return _dao.Consultar(filtro, userId);
         }
 
-        [HttpGet]
-		[ActionName("{id:int}")]
+		[HttpGet]
+		[Route("{value}")]
 		[Authorize]
-        public dynamic Detalhes(int id)
-        {
-            return _dao.Consultar(id);
-        }
+		public DenunciaModel Detalhes(string value)
+		{
+			return _dao.Consultar(value);
+		}
 
-        [HttpPost]
-		[ActionName("AdicionarComentario")]
+		[HttpPost]
+		[Route("AdicionarComentario")]
 		[Authorize]
         public void AdicionarComentario(DenunciaComentarioDTO value)
         {
