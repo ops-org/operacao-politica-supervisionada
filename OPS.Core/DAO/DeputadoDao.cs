@@ -17,12 +17,27 @@ namespace OPS.Core.DAO
 					SELECT 
 						d.id as id_cf_deputado
 						, d.id_cadastro
+						, d.id_parlamentar
+						, d.id_partido
+						, p.sigla as sigla_partido
+						, p.nome as nome_partido
+						, d.id_estado
+						, e.sigla as sigla_estado
+						, e.nome as nome_estado
+						, d.cod_orcamento
 						, d.nome_parlamentar
 						, d.nome_civil
 						, d.condicao
+						, d.url_foto
+						, d.sexo
+						, d.gabinete
+						, d.anexo
+						, d.fone
 						, d.email
-						, e.sigla as sigla_estado
-						, p.sigla as sigla_partido
+						, d.profissao
+						, d.nascimento
+						, d.falecimento
+						, d.matricula
 						, d.valor_total_ceap
 						, d.quantidade_secretarios
 						, g.id as id_cf_gabinete
@@ -42,13 +57,26 @@ namespace OPS.Core.DAO
 						{
 							id_cf_deputado = reader["id_cf_deputado"],
 							id_cadastro = reader["id_cadastro"],
+							id_parlamentar = reader["id_parlamentar"],
+							id_partido = reader["id_partido"],
+							sigla_estado = reader["sigla_estado"].ToString(),
+							nome_partido = reader["nome_partido"].ToString(),
+							id_estado = reader["id_cadastro"],
+							sigla_partido = reader["sigla_partido"].ToString(),
+							nome_estado = reader["nome_estado"].ToString(),
+							cod_orcamento = reader["cod_orcamento"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							nome_civil = reader["nome_civil"].ToString(),
-							sigla_estado = reader["sigla_estado"].ToString(),
-							sigla_partido = reader["sigla_partido"].ToString(),
 							condicao = reader["condicao"].ToString(),
+							sexo = reader["sexo"].ToString(),
+							gabinete = reader["gabinete"],
+							anexo = reader["anexo"].ToString(),
+							fone = reader["fone"].ToString(),
 							email = reader["email"].ToString(),
-
+							profissao = reader["profissao"].ToString(),
+							nascimento = Utils.FormataData(reader["nascimento"]),
+							falecimento = Utils.FormataData(reader["falecimento"]),
+							matricula = reader["matricula"],
 							valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
 							id_cf_gabinete = reader["id_cf_gabinete"],
 							quantidade_secretarios = reader["quantidade_secretarios"].ToString(),

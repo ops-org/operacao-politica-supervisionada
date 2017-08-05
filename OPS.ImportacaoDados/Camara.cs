@@ -204,7 +204,7 @@ namespace OPS.ImportacaoDados
 						d.matricula = dt.matricula,
 						d.id_parlamentar = dt.idParlamentar,
 						d.nome_civil = dt.nome,
-						d.nome_parlamentar = dt.nome_parlamentar,
+						d.nome_parlamentar = dt.nomeParlamentar,
 						d.url_foto = dt.urlFoto,
 						d.sexo = LEFT(dt.sexo, 1),
 						d.id_estado = e.id,
@@ -213,7 +213,7 @@ namespace OPS.ImportacaoDados
 						d.anexo = dt.anexo,
 						d.fone = dt.fone,
 						d.email = dt.email
-					where dt.nome_parlamentar is not null;
+					where dt.nomeParlamentar is not null;
 
                     SET SQL_BIG_SELECTS=0;
 				");

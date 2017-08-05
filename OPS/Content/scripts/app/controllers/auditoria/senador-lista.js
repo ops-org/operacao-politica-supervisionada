@@ -18,7 +18,7 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     			$tabela.params.sorting[lstSorting[0]] = lstSorting[1];
     		}
 
-    		OPS.select("#lstParlamentar", "./Api/Senador/Pesquisa", qs.IdParlamentar);
+    		OPS.select("#lstParlamentar", "./Api/Senador", qs.IdParlamentar);
     		$scope.filtro.IdParlamentar = qs.IdParlamentar;
 
     		OPS.select("#lstDespesa", "./Api/Senador/TipoDespesa", qs.Despesa);

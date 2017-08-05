@@ -76,6 +76,7 @@ namespace OPS.Core
 			JsonProperty property = base.CreateProperty(member, memberSerialization);
 
 			if (new[]{
+				"Cache",
 				"Files",
 				"InputStream",
 				"Filter",

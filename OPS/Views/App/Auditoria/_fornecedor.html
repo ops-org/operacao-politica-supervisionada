@@ -1,530 +1,348 @@
 ﻿<div class="container-fluid" data-ng-controller="FornecedorController">
 
-	<div data-ng-if="fornecedor.tipo==='nd'">
-		<fieldset id="fsDadosReceita" class="form-group">
-			<legend>Dados do Beneficiário</legend>
-			<div class="row">
-				<div class="col-md-12">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-flag"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.nome"></h3>
-							<span>Nome</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</fieldset>
-	</div>
+    <div data-ng-if="fornecedor.tipo==='nd'">
+        <fieldset id="fsDadosReceita" class="form-group">
+            <legend>Dados do Beneficiário</legend>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="fa fa-flag"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="fornecedor.nome"></h3>
+                            <span>Nome</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </div>
 
-	<div data-ng-if="fornecedor.tipo==='pf'">
-		<fieldset id="fsDadosReceita" class="form-group">
-			<legend>Dados do Beneficiário</legend>
-			<div class="row">
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-briefcase"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.cnpj_cpf"></h3>
-							<span>CPF</span>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-flag"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.nome"></h3>
-							<span>Nome</span>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-usd"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.doador == 1 ? 'Sim' : 'Não'"></h3>
-							<span>Doador de campanha</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</fieldset>
-	</div>
+    <div data-ng-if="fornecedor.tipo==='pf'">
+        <fieldset id="fsDadosReceita" class="form-group">
+            <legend>Dados do Beneficiário</legend>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="fa fa-briefcase"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="fornecedor.cnpj_cpf"></h3>
+                            <span>CPF</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="fa fa-flag"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="fornecedor.nome"></h3>
+                            <span>Nome</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dvg-painel-info-etiqueta">
+                        <div class="icon"><i class="fa fa-usd"></i></div>
+                        <div class="text">
+                            <h3 data-ng-bind="fornecedor.doador == 1 ? 'Sim' : 'Não'"></h3>
+                            <span>Doador de campanha</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </div>
 
-	<div data-ng-if="fornecedor.tipo==='pj'">
-		<fieldset id="fsConsultaReceita" class="form-group" style="display: none;">
-			<legend>Consulta de CNPJ na Receita Federal</legend>
-			<div class="row">
-				<div class="col-md-4 col-md-offset-2">
-					<div class="col-md-12">
-						<div class="form-group img-captcha" style="height: 50px">
-							<img id="captcha_img" title="Informe o texto da imagem" alt="Captcha" src="" />
-							<a href="#" id="buscar-captcha-btn" class="btn btn-warning btn-sm" style="margin-left: 3px" title="Carregar outra imagem"><i class="fa fa-refresh"></i></a>
-						</div>
-					</div>
-					<div class="col-md-12">
-						<div class="form-group">
-							<label class="control-label">Digite o Captcha</label>
-							<div class="input-group">
-								<input type="text" id="img-input" value="" class="form-control input-sm input-sm" />
-								<span class="input-group-btn">
-									<button type="button" id="buscarDados-btn" class="btn btn-success btn-sm" data-ng-click="ConsultarCNPJ();">Buscar</button>
-								</span>
-							</div>
-							<p class="bg-danger pull-left hidden msg" style="padding: 10px 20px;">
-								<i class="fa fa-exclamation-triangle"></i>&nbsp;<strong><span id="msgErro-span"></span></strong>
-							</p>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<p class="text-justify">
-						O Captcha exibido é necessário para você consultar os dados do fornecedor na página da Receita Federal.<br />
-						Após a consulta as informações do fornecedor serão salvas para as próximas consultas e para os próximos
-						usuários que auditarem este fornecedor.<br />
-						Caso tenha alguma dúvida entre em <a href="mailto:suporte@ops.net.br">contato</a>.
-					</p>
-				</div>
-			</div>
-			<br />
-		</fieldset>
-		<div class="row form-group" id="dvBotoesAcao">
-			<div class="col-md-12 text-center">
-				<a class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dvQueProcurar">O Que Procurar?</a>
-				<input type="button" data-ng-click="ReconsultarDadosReceita()" value="Atualizar Dados" title="Reconsultar dados a partir da Receita Federal" class="btn btn-primary btn-sm" />
-				<!--<input type="button" id="ButtonDenunciar" value="Denunciar" title="Denunciar esse Fornecedor" class="btn btn-success btn-sm" />-->
-				<input type="button" data-ng-click="PesquisarNoMaps(fornecedor)" value="Pesquisar no Maps" title="Pesquisar Fornecedor no Maps" class="btn btn-default btn-sm" />
-				<input type="button" data-ng-click="PesquisarNoGoogle(fornecedor)" value="Pesquisar no Google" title="Pesquisar Fornecedor no Google" class="btn btn-default btn-sm" />
-				<!--<input type="button" id="ButtonListarDeputados" value="Listar Parlamentares" title="Listar Todos os Parlamentares que Contrataram esse Fornecedor" class="btn btn-default btn-sm" />
-					<input type="button" id="ButtonListarDocumentos" value="Solicitar/Listar Documentos" class="btn btn-default btn-sm" />
-					<input type="button" id="ButtonListarDoacoes" value="Listar Doações Eleitorais" title="Listar Doações Eleitorais do Fornecedor" class="btn btn-primary btn-sm" />-->
-			</div>
-		</div>
-		<!--<fieldset id="fsMinhasDenuncias">
-				<legend>Denúncias</legend>
-				<div class="row">
-					<div class="col-md-12">
-						<div id="LabelExisteDenuncia" class="alert alert-danger"></div>
-					</div>
-					<div class="col-md-12">
-						<table class="table table-condensed table-striped">
-							<thead>
-								<tr>
-									<th>Nome/Nome Empresarial</th>
-									<th>Qualificação</th>
-									<th>Nome do Repres. Legal</th>
-									<th>Qualif. Rep. Legal</th>
-								</tr>
-							</thead>
-							<tbody data-ng-repeat="row in fornecedorDenuncias">
-								<tr>
-									<td data-ng-bind="row.Nome"></td>
-									<td data-ng-bind="row.Qualificacao"></td>
-									<td data-ng-bind="row.NomeRepresentanteLegal"></td>
-									<td data-ng-bind="row.QualificacaoRepresentanteLegal"></td>
-								</tr>
-								<tr id="ltrSemDenuncias">
-									<td colspan="4"></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<br />
-			</fieldset>-->
-		<fieldset id="fsDadosReceita" class="form-group">
-			<legend>Dados do Beneficiário</legend>
-			<div id="dvInfoDataConsultaCNPJ" class="alert alert-warning" data-ng-if="fornecedor.DataInclusao">
-				As informações abaixo foram consultadas em {{fornecedor.obtido_em}}. Clique <a href='#' onclick='ReconsultarDadosReceita(); return false;'>aqui</a> para atualizar.
-			</div>
+    <div data-ng-if="fornecedor.tipo==='pj'">
+        <fieldset id="fsConsultaReceita" class="form-group" style="display: none;">
+            <legend>Consulta de CNPJ na Receita Federal</legend>
+            <div class="row">
+                <div class="col-md-4 col-md-offset-2">
+                    <div class="col-md-12">
+                        <div class="form-group img-captcha" style="height: 50px">
+                            <img id="captcha_img" title="Informe o texto da imagem" alt="Captcha" src="" />
+                            <a href="#" id="buscar-captcha-btn" class="btn btn-warning btn-sm" style="margin-left: 3px" title="Carregar outra imagem"><i class="fa fa-refresh"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="control-label">Digite o Captcha</label>
+                            <div class="input-group">
+                                <input type="text" id="img-input" value="" class="form-control input-sm input-sm" />
+                                <span class="input-group-btn">
+                                    <button type="button" id="buscarDados-btn" class="btn btn-success btn-sm" data-ng-click="ConsultarCNPJ();">Buscar</button>
+                                </span>
+                            </div>
+                            <p class="bg-danger pull-left hidden msg" style="padding: 10px 20px;">
+                                <i class="fa fa-exclamation-triangle"></i>&nbsp;<strong><span id="msgErro-span"></span></strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <p class="text-justify">
+                        O Captcha exibido é necessário para você consultar os dados do fornecedor na página da Receita Federal.<br />
+                        Após a consulta as informações do fornecedor serão salvas para as próximas consultas e para os próximos
+                        usuários que auditarem este fornecedor.<br />
+                        Caso tenha alguma dúvida entre em <a href="mailto:suporte@ops.net.br">contato</a>.
+                    </p>
+                </div>
+            </div>
+            <br />
+        </fieldset>
+        <div class="row form-group" id="dvBotoesAcao">
+            <div class="col-md-12 text-center">
+                <a class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dvQueProcurar">O Que Procurar?</a>
+                <input type="button" data-ng-click="ReconsultarDadosReceita()" value="Atualizar Dados" title="Reconsultar dados a partir da Receita Federal" class="btn btn-primary btn-sm" />
+                <!--<input type="button" id="ButtonDenunciar" value="Denunciar" title="Denunciar esse Fornecedor" class="btn btn-success btn-sm" />-->
+                <input type="button" data-ng-click="PesquisarNoMaps(fornecedor)" value="Pesquisar no Maps" title="Pesquisar Fornecedor no Maps" class="btn btn-default btn-sm" />
+                <input type="button" data-ng-click="PesquisarNoGoogle(fornecedor)" value="Pesquisar no Google" title="Pesquisar Fornecedor no Google" class="btn btn-default btn-sm" />
+                <!--<input type="button" id="ButtonListarDeputados" value="Listar Parlamentares" title="Listar Todos os Parlamentares que Contrataram esse Fornecedor" class="btn btn-default btn-sm" />
+                    <input type="button" id="ButtonListarDocumentos" value="Solicitar/Listar Documentos" class="btn btn-default btn-sm" />
+                    <input type="button" id="ButtonListarDoacoes" value="Listar Doações Eleitorais" title="Listar Doações Eleitorais do Fornecedor" class="btn btn-primary btn-sm" />-->
+            </div>
+        </div>
+        <!--<fieldset id="fsMinhasDenuncias">
+                <legend>Denúncias</legend>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="LabelExisteDenuncia" class="alert alert-danger"></div>
+                    </div>
+                    <div class="col-md-12">
+                        <table class="table table-condensed table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nome/Nome Empresarial</th>
+                                    <th>Qualificação</th>
+                                    <th>Nome do Repres. Legal</th>
+                                    <th>Qualif. Rep. Legal</th>
+                                </tr>
+                            </thead>
+                            <tbody data-ng-repeat="row in fornecedorDenuncias">
+                                <tr>
+                                    <td data-ng-bind="row.Nome"></td>
+                                    <td data-ng-bind="row.Qualificacao"></td>
+                                    <td data-ng-bind="row.NomeRepresentanteLegal"></td>
+                                    <td data-ng-bind="row.QualificacaoRepresentanteLegal"></td>
+                                </tr>
+                                <tr id="ltrSemDenuncias">
+                                    <td colspan="4"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <br />
+            </fieldset>-->
+        <fieldset id="fsDadosReceita" class="form-group">
+            <legend>Dados do Beneficiário</legend>
+            <div id="dvInfoDataConsultaCNPJ" class="alert alert-warning" data-ng-if="fornecedor.obtido_em">
+                As informações abaixo foram atualizadas em {{fornecedor.obtido_em}}. Clique <a href='#' onclick='ReconsultarDadosReceita(); return false;'>aqui</a> para atualizar.
+            </div>
 
-			<div class="row">
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-briefcase"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.cnpj_cpf"></h3>
-							<span>CNPJ</span>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-flag"></i></div>
-						<div class="text">
-							<h3 data-ng-class="fornecedor.situacao_cadastral == 'ATIVA' ? 'text-success' : 'text-warning'" data-ng-bind="fornecedor.situacao_cadastral"></h3>
-							<span>Situação Cadastral</span>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-usd"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.doador == 1 ? 'Sim' : 'Não'"></h3>
-							<span>Doador de campanha</span>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-briefcase"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.nome"></h3>
-							<span>Razão social / Nome empresarial</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-briefcase"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.nome_fantasia"></h3>
-							<span>Nome fantasia / Título do estabelecimento</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-		</fieldset>
+            <div class="row">
+                <div class="col-md-4">
+                    <p><label>CNPJ:</label> {{::fornecedor.cnpj_cpf}}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><label>Situação Cadastral:</label> <span data-ng-class="fornecedor.situacao_cadastral == 'ATIVA' ? 'text-success' : 'text-warning'" data-ng-bind="fornecedor.situacao_cadastral"></span></p>
+                </div>
+                <div class="col-md-4">
+                    <p><label>Doador de campanha:</label> <span data-ng-bind="fornecedor.doador == 1 ? 'Sim' : 'Não'"></span></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><label>Razão social:</label> {{::fornecedor.nome}}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><label>Nome fantasia:</label> {{::fornecedor.nome_fantasia}}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p><label>Endereço:</label> {{::fornecedor.logradouro}}, {{::fornecedor.numero}} - {{::fornecedor.bairro}}<span data-ng-if="complemento">, {{::fornecedor.complemento}}</span>, {{::fornecedor.cep}}, {{::fornecedor.cidade}}, {{::fornecedor.estado}}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p><label>Data de abertura:</label> {{::fornecedor.data_de_abertura}}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><label>E-mail:</label> {{::fornecedor.endereco_eletronico}}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><label>Telefone:</label> {{::fornecedor.telefone}}</p>
+                </div>
+            </div>
+        </fieldset>
 
-		<div class="form-group text-center">
-			<button class="btn btn-primary" type="button" data-ng-click="ExpandirContrairInformacoesAdicional($event)">Ver mais</button>
-		</div>
-		<div id="collapseDadosEmpresaAdicional" style="display:none" class="form-group">
-			<div class="row">
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-calendar"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.data_de_abertura"></h3>
-							<span>Data de abertura</span>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-envelope-o"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.endereco_eletronico"></h3>
-							<span>Endereço eletrônico (E-mail)</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-phone"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.telefone"></h3>
-							<span>Telefone</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-list"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.atividade_principal"></h3>
-							<span>Código e descrição da atividade econômica principal (CNAE)</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-list"></i></div>
-						<div class="text">
-							<h3>
-                                <p data-ng-repeat="row in fornecedor.atividade_secundaria" data-ng-bind="row"></p>
-                            </h3>
-							<span>Código e descrição das atividades econômicas secundárias</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-list"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.natureza_juridica"></h3>
-							<span>Código e descrição da natureza jurídica</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-calendar"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.data_da_situacao_cadastral"></h3>
-							<span>Data da situação cadastral</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-8">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-bell-o"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.motivo_situacao_cadastral"></h3>
-							<span>Motivo de situação cadastral</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-bell-o"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.situacao_especial"></h3>
-							<span>Situação especial</span>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-bell-o"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.data_situacao_especial"></h3>
-							<span>Data da situação especial</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-globe"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="fornecedor.ente_federativo_responsavel"></h3>
-							<span>Ente federativo responsável (EFR)</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
-			</div>
+        <div class="form-group text-center">
+            <button class="btn btn-primary" type="button" data-ng-click="ExpandirContrairInformacoesAdicional($event)">Ver mais</button>
+        </div>
+        <div id="collapseDadosEmpresaAdicional" style="display:none" class="form-group">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Código e descrição da atividade econômica principal (CNAE):</label>
+                        <div>{{::fornecedor.atividade_principal}}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Código e descrição das atividades econômicas secundárias:</label>
+                        <div data-ng-repeat="row in fornecedor.atividade_secundaria" data-ng-bind="row"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p><label>Código e descrição da natureza jurídica:</label> {{::fornecedor.natureza_juridica}}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p><label>Data da situação cadastral:</label> {{::fornecedor.data_da_situacao_cadastral}}</p>
+                </div>
+                <div class="col-md-8" data-ng-if="fornecedor.motivo_situacao_cadastral">
+                    <p><label>Motivo de situação cadastral:</label> {{::fornecedor.motivo_situacao_cadastral}}</p>
+                </div>
+                <div class="col-md-4" data-ng-if="fornecedor.situacao_especial">
+                    <p><label>Situação especial:</label> {{::fornecedor.situacao_especial}}</p>
+                </div>
+                <div class="col-md-4" data-ng-if="fornecedor.data_situacao_especial">
+                    <p><label>Data da situação especial:</label> {{::fornecedor.data_situacao_especial}}</p>
+                </div>
+                <div class="col-md-4" data-ng-if="fornecedor.ente_federativo_responsavel">
+                    <p><label>Ente federativo responsável (EFR):</label> {{::fornecedor.ente_federativo_responsavel}}</p>
+                </div>
+            </div>
+            <div class="row" data-ng-if="fornecedor.capital_social">
+                <div class="col-md-12">
+                    <p><label>Capital Social:</label> R$ {{::fornecedor.capital_social}}</p>
+                </div>
+            </div>
 
-			<fieldset class="form-group">
-				<legend>Endereço</legend>
-				<div class="row">
-					<div class="col-md-6">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.logradouro"></h3>
-								<span>Logradouro</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-2">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.numero"></h3>
-								<span>Numero</span>
-							</div>
-							<span class="clearfix"></span>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.complemento"></h3>
-								<span>Complemento</span>
-							</div>
-							<span class="clearfix"></span>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-4">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.bairro"></h3>
-								<span>Bairro / Distrito</span>
-							</div>
-							<span class="clearfix"></span>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.cidade"></h3>
-								<span>Município / Cidade</span>
-							</div>
-							<span class="clearfix"></span>
-						</div>
-					</div>
-					<div class="col-md-2">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.cep"></h3>
-								<span>CEP</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-2">
-						<div class="dvg-painel-info-etiqueta">
-							<div class="icon"><i class="fa fa-map-marker"></i></div>
-							<div class="text">
-								<h3 data-ng-bind="fornecedor.estado"></h3>
-								<span>UF</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</fieldset>
+            <fieldset id="fsQuadroSocietario" class="form-group">
+                <legend>Quadro de Sócios e Administradores - QSA</legend>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <table class="table table-condensed table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome/Nome Empresarial</th>
+                                        <th>Qualificação</th>
+                                        <th>Nome do Repres. Legal</th>
+                                        <th>Qualif. Rep. Legal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr data-ng-repeat="row in quadro_societario" data-ng-show="quadro_societario.length>0">
+                                        <td data-ng-bind="row.nome"></td>
+                                        <td data-ng-bind="row.qualificacao"></td>
+                                        <td data-ng-bind="row.nome_representante_legal"></td>
+                                        <td data-ng-bind="row.qualificacao_representante_legal"></td>
+                                    </tr>
+                                    <tr data-ng-hide="quadro_societario.length>0">
+                                        <td colspan="4" class="text-center">A natureza jurídica não permite o preenchimento do QSA</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
 
-			<fieldset id="fsQuadroSocietario" class="form-group">
-				<legend>Quadro de Sócios e Administradores - QSA</legend>
-				<div class="form-group">
-					<div class="row">
-						<div class="col-md-12">
-							<div class="dvg-painel-info-etiqueta">
-								<div class="icon"><i class="fa fa-usd"></i></div>
-								<div class="text">
-									<h3 data-ng-bind="fornecedor.capital_social"></h3>
-									<span>Capital Social</span>
-								</div>
-								<span class="clearfix"></span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<div class="form-group">
-							<table class="table table-condensed table-striped">
-								<thead>
-									<tr>
-										<th>Nome/Nome Empresarial</th>
-										<th>Qualificação</th>
-										<th>Nome do Repres. Legal</th>
-										<th>Qualif. Rep. Legal</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr data-ng-repeat="row in quadro_societario" data-ng-show="quadro_societario.length>0">
-										<td data-ng-bind="row.nome"></td>
-										<td data-ng-bind="row.qualificacao"></td>
-										<td data-ng-bind="row.nome_representante_legal"></td>
-										<td data-ng-bind="row.qualificacao_representante_legal"></td>
-									</tr>
-									<tr data-ng-hide="quadro_societario.length>0">
-										<td colspan="4" class="text-center">A natureza jurídica não permite o preenchimento do QSA</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</fieldset>
-		</div>
-	</div>
+    <div class="row form-group" data-ng-hide="DeputadoFederalMaioresGastos.length===0">
+        <div class="col-xs-12 col-sm-6">
+            <fieldset>
+                <legend>Deputados Federais - Recebimentos mensais</legend>
 
-	<div class="row form-group" data-ng-hide="DeputadoFederalMaioresGastos.length===0">
-		<div class="col-xs-12 col-sm-6">
-			<fieldset>
-				<legend>Deputados Federais - Recebimentos mensais</legend>
+                <div id="fornecedor-recebimentos-por-mes-deputados" class="form-group" style="padding-right: 10px;"></div>
+            </fieldset>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+            <fieldset>
+                <legend>Deputados Federais</legend>
 
-				<div id="fornecedor-recebimentos-por-mes-deputados" class="form-group" style="padding-right: 10px;"></div>
-			</fieldset>
-		</div>
-		<div class="col-xs-12 col-sm-6">
-			<fieldset>
-				<legend>Deputados Federais</legend>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <tr>
+                            <th style="width:80%">Parlamentar</th>
+                            <th style="width:20%">Valor</th>
+                        </tr>
+                        <tr ng-repeat="row in DeputadoFederalMaioresGastos">
+                            <td><a href="./#!/deputado-federal/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
+                            <td><a href="./#!/deputado-federal?IdParlamentar={{::row.id_cf_deputado}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
+                        </tr>
+                    </table>
+                </div>
 
-				<div class="table-responsive">
-					<table class="table table-striped table-hover">
-						<tr>
-							<th style="width:80%">Parlamentar</th>
-							<th style="width:20%">Valor</th>
-						</tr>
-						<tr ng-repeat="row in DeputadoFederalMaioresGastos">
-							<td><a href="./#!/deputado-federal/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
-							<td><a href="./#!/deputado-federal?IdParlamentar={{::row.id_cf_deputado}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
-						</tr>
-					</table>
-				</div>
+                <a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#!/deputado-federal?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os deputados</a>
+            </fieldset>
+        </div>
+    </div>
 
-				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#!/deputado-federal?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os deputados</a>
-			</fieldset>
-		</div>
-	</div>
+    <div class="row form-group" data-ng-hide="SenadoresMaioresGastos.length===0">
+        <div class="col-xs-12 col-sm-6">
+            <fieldset>
+                <legend>Senadores - Recebimentos mensais</legend>
 
-	<div class="row form-group" data-ng-hide="SenadoresMaioresGastos.length===0">
-		<div class="col-xs-12 col-sm-6">
-			<fieldset>
-				<legend>Senadores - Recebimentos mensais</legend>
+                <div id="fornecedor-recebimentos-por-mes-senadores" class="form-group" style="padding-right: 10px;"></div>
+            </fieldset>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+            <fieldset>
+                <legend>Senadores</legend>
 
-				<div id="fornecedor-recebimentos-por-mes-senadores" class="form-group" style="padding-right: 10px;"></div>
-			</fieldset>
-		</div>
-		<div class="col-xs-12 col-sm-6">
-			<fieldset>
-				<legend>Senadores</legend>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <tr>
+                            <th style="width:80%">Parlamentar</th>
+                            <th style="width:20%">Valor</th>
+                        </tr>
+                        <tr ng-repeat="row in SenadoresMaioresGastos">
+                            <td><a href="./#!/senador/{{::row.id_sf_senador}}">{{::row.nome_parlamentar}}</a></td>
+                            <td><a href="./#!/senador?IdParlamentar={{::row.id_sf_senador}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
+                        </tr>
+                    </table>
+                </div>
 
-				<div class="table-responsive">
-					<table class="table table-striped table-hover">
-						<tr>
-							<th style="width:80%">Parlamentar</th>
-							<th style="width:20%">Valor</th>
-						</tr>
-						<tr ng-repeat="row in SenadoresMaioresGastos">
-							<td><a href="./#!/senador/{{::row.id_sf_senador}}">{{::row.nome_parlamentar}}</a></td>
-							<td><a href="./#!/senador?IdParlamentar={{::row.id_sf_senador}}&Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">{{::row.valor_total}}</a></td>
-						</tr>
-					</table>
-				</div>
+                <a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#!/senador?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os senadores</a>
+            </fieldset>
+        </div>
+    </div>
 
-				<a class="btn btn-default btn-sm pull-right" href="#" data-ng-href="./#!/senador?Fornecedor={{fornecedor.id_fornecedor}}&Periodo=0&Agrupamento=6">Ver todos os senadores</a>
-			</fieldset>
-		</div>
-	</div>
+    <div class="form-group">
+        <dir-disqus config="disqusConfig"></dir-disqus>
+    </div>
 
-	<div class="form-group">
-		<dir-disqus config="disqusConfig"></dir-disqus>
-	</div>
-
-	<div id="dvQueProcurar" class="modal fade" tabindex="-1" role="dialog">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title">O que procurar?</h4>
-				</div>
-				<div class="modal-body text-justify">
-					<p>
-						A primeira coisa que sugerimos é começar a investigar o fornecedor. Em várias fiscalizações que a OPS já realizou, a empresa esteva registrada em endereços que não condiziam com a realidade do local. Um exemplo é a de uma locadora que dizia funcionar aonde, na realidade havia uma padaria. Você pode utilizar o Google Maps ou o Street View (se estiver disponível) para avaliar a localização da empresa. Visite o local, se for possível.
-					</p>
-					<p>
-						Outra sugestão é verificar se a empresa possui uma página na internet e se ela realmente fornece o serviço prestado ao parlamentar. A OPS já encontrou “empresas” que faturavam alguns milhões de reais tendo como clientes apenas políticos. Além disso, estas empresas não possuíam qualquer publicidade na internet ou em outro lugar. Empresas sérias não se escondem e são facilmente localizadas.
-					</p>
-					<p>
-						O foco da OPS não é a empresa prestadora de serviço ou fornecedora de produtos ao parlamentar, mas a nossa experiência nos mostra que muitas vezes empresas fajutas eram abertas apenas para emitirem notas a parlamentares.
-					</p>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-success" data-dismiss="modal">Entendi</button>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div id="dvQueProcurar" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">O que procurar?</h4>
+                </div>
+                <div class="modal-body text-justify">
+                    <p>
+                        A primeira coisa que sugerimos é começar a investigar o fornecedor. Em várias fiscalizações que a OPS já realizou, a empresa esteva registrada em endereços que não condiziam com a realidade do local. Um exemplo é a de uma locadora que dizia funcionar aonde, na realidade havia uma padaria. Você pode utilizar o Google Maps ou o Street View (se estiver disponível) para avaliar a localização da empresa. Visite o local, se for possível.
+                    </p>
+                    <p>
+                        Outra sugestão é verificar se a empresa possui uma página na internet e se ela realmente fornece o serviço prestado ao parlamentar. A OPS já encontrou “empresas” que faturavam alguns milhões de reais tendo como clientes apenas políticos. Além disso, estas empresas não possuíam qualquer publicidade na internet ou em outro lugar. Empresas sérias não se escondem e são facilmente localizadas.
+                    </p>
+                    <p>
+                        O foco da OPS não é a empresa prestadora de serviço ou fornecedora de produtos ao parlamentar, mas a nossa experiência nos mostra que muitas vezes empresas fajutas eram abertas apenas para emitirem notas a parlamentares.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">Entendi</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

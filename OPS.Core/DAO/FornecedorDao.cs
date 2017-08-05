@@ -134,13 +134,13 @@ namespace OPS.Core.DAO
                         reader.NextResult();
                         while (reader.Read())
                         {
-                            fornecedor.atividade_secundaria.Add(string.Format("{0} - {1}", reader["codigo"], reader["descricao"]));
+                            fornecedor.atividade_secundaria.Add($"{reader["codigo"]} - {reader["descricao"]}");
                         }
 
                         return fornecedor;
                     }
 
-					return null; ;
+					return null;
 				}
 			}
 		}

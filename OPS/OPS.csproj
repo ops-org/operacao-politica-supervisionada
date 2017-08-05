@@ -287,7 +287,6 @@
     <Content Include="Content\fonts\fontawesome-webfont.woff" />
     <Content Include="Content\fonts\fontawesome-webfont.woff2" />
     <Content Include="Content\fonts\FontAwesome.otf" />
-    <Content Include="Properties\PublishProfiles\ops.net.br.pubxml.user" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Properties\PublishProfiles\ops.net.br.pubxml" />
@@ -348,7 +347,6 @@
     <Content Include="Views\App\_forum.html" />
     <Content Include="Views\Main\AuthComplete.cshtml" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
-    <Content Include="temp\tessdata\receita8.traineddata" />
     <None Include="_references.js" />
   </ItemGroup>
   <ItemGroup>
