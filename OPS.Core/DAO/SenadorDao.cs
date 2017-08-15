@@ -16,8 +16,15 @@ namespace OPS.Core.DAO
 					SELECT 
 						d.id as id_sf_senador
 						, d.nome as nome_parlamentar
-						, e.sigla as sigla_estado
+						, d.nome_completo as nome_civil
+						, d.sexo
+						, d.id_partido
 						, p.sigla as sigla_partido
+						, p.nome as nome_partido
+						, d.id_estado
+						, e.sigla as sigla_estado
+						, e.nome as nome_estado
+						, d.email
 						, d.url
 						, d.valor_total_ceaps
 					FROM sf_senador d
@@ -35,8 +42,15 @@ namespace OPS.Core.DAO
 						{
 							id_sf_senador = reader["id_sf_senador"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
+							nome_civil = reader["nome_civil"].ToString(),
+							sexo = reader["sexo"].ToString(),
+							id_partido = reader["id_partido"],
 							sigla_estado = reader["sigla_estado"].ToString(),
+							nome_partido = reader["nome_partido"].ToString(),
+							id_estado = reader["id_estado"],
 							sigla_partido = reader["sigla_partido"].ToString(),
+							nome_estado = reader["nome_estado"].ToString(),
+							email = reader["email"].ToString(),
 							url = reader["url"].ToString(),
 
 							valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
@@ -755,20 +769,16 @@ namespace OPS.Core.DAO
 					sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0}01 AND {0}12", dataIni.Year - 1));
 					break;
 
-				case "9": //PERIODO_MANDATO_56
-					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 202301");
-					break;
-
 				case "8": //PERIODO_MANDATO_55
-					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201102 AND 201901");
+					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 201901");
 					break;
 
 				case "7": //PERIODO_MANDATO_54
-					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 200702 AND 201101");
+					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201102 AND 201501");
 					break;
 
 				case "6": //PERIODO_MANDATO_53
-					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 200702 AND 201001");
+					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 200702 AND 201101");
 					break;
 			}
 		}
@@ -866,6 +876,102 @@ namespace OPS.Core.DAO
 					}
 				}
 				return lstRetorno;
+			}
+		}
+
+		public dynamic SenadoResumoMensal()
+		{
+			using (Banco banco = new Banco())
+			{
+				using (MySqlDataReader reader = banco.ExecuteReader(@"select ano, mes, valor from sf_despesa_resumo_mensal"))
+				{
+					List<dynamic> lstRetorno = new List<dynamic>();
+					var lstValoresMensais = new decimal?[12];
+					string anoControle = string.Empty;
+					bool existeGastoNoAno = false;
+
+					while (reader.Read())
+					{
+						if (reader["ano"].ToString() != anoControle)
+						{
+							if (existeGastoNoAno)
+							{
+								lstRetorno.Add(new
+								{
+									name = anoControle.ToString(),
+									data = lstValoresMensais
+								});
+
+								lstValoresMensais = new decimal?[12];
+								existeGastoNoAno = false;
+							}
+
+							anoControle = reader["ano"].ToString();
+						}
+
+						if (Convert.ToDecimal(reader["valor"]) > 0)
+						{
+							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor"]);
+							existeGastoNoAno = true;
+						}
+					}
+
+					if (existeGastoNoAno)
+					{
+						lstRetorno.Add(new
+						{
+							name = anoControle.ToString(),
+							data = lstValoresMensais
+						});
+					}
+
+					return lstRetorno;
+				}
+			}
+		}
+
+		public dynamic SenadoResumoAnual()
+		{
+			using (Banco banco = new Banco())
+			{
+				var strSql = new StringBuilder();
+				strSql.AppendLine(@"
+					select ano, sum(valor) as valor
+					from sf_despesa_resumo_mensal
+					group by ano
+				");
+
+				var categories = new List<dynamic>();
+				var series = new List<dynamic>();
+
+				var senado = new List<dynamic>();
+
+
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				{
+					if (reader.HasRows)
+					{
+						while (reader.Read())
+						{
+
+							categories.Add(Convert.ToInt32(reader["ano"]));
+							senado.Add(Convert.ToDecimal(reader["valor"]));
+						}
+					}
+				}
+
+				series.Add(new
+				{
+					name = "Senado",
+					stack = "senado",
+					data = senado
+				});
+
+				return new
+				{
+					categories,
+					series
+				};
 			}
 		}
 	}

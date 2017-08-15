@@ -236,98 +236,91 @@ namespace OPS.ImportacaoDados
 			{
 				banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
 
-				using (
-					var dReader =
-						banco.ExecuteReader(
-							"SELECT * from cf_deputado where nome_civil is null and id_cadastro is not null and id_cadastro <> 0")
-				)
+				var dt = banco.GetTable("SELECT * from cf_deputado");
+
+				foreach (DataRow dr in dt.Rows)
 				{
-					using (var banco2 = new Banco())
+					// Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
+					var doc = new XmlDocument();
+					var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
+					var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=&ideCadastro=" + dr["id_cadastro"].ToString(), Method.GET);
+
+					try
 					{
-						while (dReader.Read())
+						var response = client.Execute(request);
+						doc.LoadXml(response.Content);
+					}
+					catch (Exception)
+					{
+						Thread.Sleep(5000);
+
+						try
 						{
-							// Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
-							var doc = new XmlDocument();
-							var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
-							var request =
-								new RestRequest(
-									"ObterDetalhesDeputado?numLegislatura=&ideCadastro=" + dReader["id_cadastro"],
-									Method.GET);
+							var response = client.Execute(request);
+							doc.LoadXml(response.Content);
+						}
+						catch (Exception)
+						{
+							continue;
+						}
+					}
 
-							try
+					XmlNode deputados = doc.DocumentElement;
+					var deputado = deputados.SelectNodes("*");
+
+					foreach (XmlNode fileNode in deputado)
+					{
+						sqlFields.Clear();
+						sqlValues.Clear();
+
+						foreach (XmlNode item in fileNode.ChildNodes)
+						{
+							if (item.Name == "comissoes") break;
+							if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
 							{
-								var response = client.Execute(request);
-								doc.LoadXml(response.Content);
-							}
-							catch (Exception)
-							{
-								Thread.Sleep(5000);
-
-								try
-								{
-									var response = client.Execute(request);
-									doc.LoadXml(response.Content);
-								}
-								catch (Exception)
-								{
-									continue;
-								}
-							}
-
-							XmlNode deputados = doc.DocumentElement;
-							var deputado = deputados.SelectNodes("*");
-
-							foreach (XmlNode fileNode in deputado)
-							{
-								sqlFields.Clear();
-								sqlValues.Clear();
-
-								foreach (XmlNode item in fileNode.ChildNodes)
-								{
-									if (item.Name == "comissoes") break;
-									if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
-									{
-										object value;
-										if (item.Name.StartsWith("data"))
-											if (!string.IsNullOrEmpty(item.InnerText))
-												value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
-											else
-												value = DBNull.Value;
-										else
-											value = item.InnerText;
-
-										sqlFields.Append($",{item.Name}");
-										sqlValues.Append($",@{item.Name}");
-										banco2.AddParameter(item.Name, value);
-									}
+								object value;
+								if (item.Name.StartsWith("data"))
+									if (!string.IsNullOrEmpty(item.InnerText))
+										value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
 									else
-									{
-										foreach (XmlNode item2 in item.ChildNodes)
-										{
-											if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
+										value = DBNull.Value;
+								else
+									value = item.InnerText;
 
-
-											sqlFields.Append($",{item2.Name}");
-											sqlValues.Append($",@{item2.Name}");
-											banco2.AddParameter(item2.Name, item2.InnerText);
-										}
-									}
-								}
-
-								try
+								sqlFields.Append($",{item.Name}");
+								sqlValues.Append($",@{item.Name}");
+								banco.AddParameter(item.Name, value);
+							}
+							else
+							{
+								foreach (XmlNode item2 in item.ChildNodes)
 								{
-									banco2.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
-														   sqlFields.ToString().Substring(1) + ")  values (" +
-														   sqlValues.ToString().Substring(1) + ")");
-								}
-								catch
-								{
-									// ignored
+									if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
+
+
+									sqlFields.Append($",{item2.Name}");
+									sqlValues.Append($",@{item2.Name}");
+									banco.AddParameter(item2.Name, item2.InnerText);
 								}
 							}
 						}
 
-						banco2.ExecuteNonQuery(@"
+						try
+						{
+							banco.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
+												   sqlFields.ToString().Substring(1) + ")  values (" +
+												   sqlValues.ToString().Substring(1) + ")");
+
+							break;
+						}
+						catch
+						{
+							// ignored
+						}
+					}
+				}
+
+				banco.ExecuteNonQuery(@"
 							update cf_deputado d
 							left join (
 								select		
@@ -367,18 +360,13 @@ namespace OPS.ImportacaoDados
 							where dt.nomeParlamentarAtual is not null;
 						");
 
-						banco2.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
-					}
-				}
+				banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
 			}
 		}
 
 		public static void ImportaPresencasDeputados()
 		{
 			Console.WriteLine("Iniciando Importação de presenças");
-
-			var sqlFields = new StringBuilder();
-			var sqlValues = new StringBuilder();
 
 			//Carregar a partir da legislatura 53. Existem dados desde 24/02/99
 			DateTime dtPesquisa = new DateTime(2011, 8, 31); // = new DateTime(2015, 1, 31); //new DateTime(2007, 2, 4);

@@ -9,28 +9,18 @@ body { /* Margin bottom by footer height */ margin-bottom: 92px; }
 
 .topnav { font-size: 14px; }
 
-.intro-header { padding: 10px 0; text-align: center; }
-
-.intro-message { color: #000; }
-	.intro-message > h1 { font-size: 2.5em; }
-	.intro-message a:hover { text-decoration: none; }
+.intro-header { padding: 70px 0 160px; text-align: center; }
 
 .intro-divider { width: 400px; border-top: 1px solid #f8f8f8; border-bottom: 1px solid rgba(0,0,0,0.2); }
 
 @media(max-width:768px) {
-	.bg { background-position: top 34px center; }
-
-	.intro-message > h1 { font-size: 1.6em; }
-
-	.intro-message > h3 { font-size: 1.2em; }
-
-	.intro-divider { width: 100%; }
+	.bg-landing-page { background-position: top 34px center; }
 }
 
 @media(max-width:650px) {
-	.bg { background-size: contain; }
+	.bg-landing-page { background-size: contain; }
 
-	.intro-header { padding: 10px 0; }
+	.intro-header { padding: 30px 0; }
 
 	.list-inline > li { padding-right: 4px; padding-left: 4px; }
 

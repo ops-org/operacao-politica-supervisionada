@@ -12,11 +12,6 @@ namespace OPS.Core
 		public static readonly int ITENS_POR_PAGINA = 100;
 
 		/// <summary>
-		/// Versão do Site
-		/// </summary>
-		public static readonly int VERSAO = 160908;
-
-		/// <summary>
 		/// Ano Inicial dos Dados de Auditoria dos Senadores
 		/// </summary>
 		public static int DeputadoFederalMenorAno;

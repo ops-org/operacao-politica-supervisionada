@@ -1,7 +1,7 @@
 ﻿<div class="container-fluid" data-ng-controller="DeputadoListaController">
 
     <ol class="breadcrumb">
-        <li><a href="./">Inicio</a></li>
+        <li><a href="./#!/deputado-federal">Inicio</a></li>
         <li class="active">Deputados federais - Cota Parlamentar (CEAP)</li>
     </ol>
 
@@ -35,7 +35,7 @@
             </div>
             <div class="form-group col-md-4">
                 <label>Deputado / Liderança</label>
-                <select id="lstParlamentar" class="form-control input-sm" multiple></select>
+                <select id="lstParlamentar" class="form-control input-sm" multiple data-actions-box="true"></select>
             </div>
             <div class="form-group col-md-4">
                 <label>Despesa</label>
@@ -69,7 +69,7 @@
             </div>
 
             <div class="form-group col-md-12">
-                <input type="button" id="ButtonPesquisar" data-ng-click="Pesquisar();" value="Pesquisar" class="btn btn-success btn-sm" />
+                <input type="button" id="ButtonPesquisar" data-ng-click="Pesquisar();" value="Pesquisar" class="btn btn-danger btn-sm" />
                 <input type="button" value="Limpar filtros" class="btn btn-default btn-sm" data-ng-click="LimparFiltros();" />
 
                 <small class="pull-right text-muted" style="padding: 7px 0;">
@@ -91,7 +91,7 @@
     </div>
 
     <div id="popover_content_wrapper" style="display: none">
-        <input type="button" class="btn btn-success btn-sm btn-block" data-valor="3" value="Por Beneficiário" />
+        <input type="button" class="btn btn-danger btn-sm btn-block" data-valor="3" value="Por Beneficiário" />
         <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="1" value="Por Deputado" />
         <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="2" value="Por Despesa" />
         <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="4" value="Por Partido" />

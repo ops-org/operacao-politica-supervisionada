@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using MySql.Data.MySqlClient;
 
 namespace OPS.Core.DAO
 {
-	public static class ComandoSqlDao
+	public static class IndicadoresDao
 	{
 		/// <summary>
 		/// Retorna resumo (8 Itens) dos parlamentares mais e menos gastadores
@@ -12,7 +13,7 @@ namespace OPS.Core.DAO
 		/// 4 Senadores MAIS gastadores (CEAPS)
 		/// </summary>
 		/// <returns></returns>
-		public static object RecuperarCardsIndicadores()
+		public static object ParlamentarResumoGastos()
 		{
 			using (Banco banco = new Banco())
 			{

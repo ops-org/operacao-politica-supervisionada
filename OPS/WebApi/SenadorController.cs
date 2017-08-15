@@ -74,5 +74,19 @@ namespace OPS.WebApi
 		{
 			return dao.MaioresFornecedores(id);
 		}
+
+	    [HttpGet]
+	    [Route("SenadoResumoMensal")]
+	    public dynamic SenadoResumoMensal()
+	    {
+		    return dao.SenadoResumoMensal();
+	    }
+
+	    [HttpGet]
+	    [Route("SenadoResumoAnual")]
+	    public dynamic SenadoResumoAnual()
+	    {
+		    return dao.SenadoResumoAnual();
+	    }
 	}
 }

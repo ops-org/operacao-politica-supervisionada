@@ -94,5 +94,19 @@ namespace OPS.WebApi
 		{
 			return dao.ResumoPresenca(id);
 		}
+
+		[HttpGet]
+		[Route("CamaraResumoMensal")]
+		public dynamic CamaraResumoMensal()
+		{
+			return dao.CamaraResumoMensal();
+		}
+
+		[HttpGet]
+		[Route("CamaraResumoAnual")]
+		public dynamic CamaraResumoAnual()
+		{
+			return dao.CamaraResumoAnual();
+		}
 	}
 }

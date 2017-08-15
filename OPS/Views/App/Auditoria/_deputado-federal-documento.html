@@ -10,136 +10,48 @@
         <div class="form-group">
             <div class="row">
                 <div class="col-md-8">
-                    <a href="#" data-ng-href="./#!/deputado-federal/{{::documento.id_cf_deputado}}">
-                        <div class="dvg-painel-info-etiqueta">
-                            <div class="icon"><i class="fa fa-user"></i></div>
-                            <div class="text">
-                                <h3 data-ng-bind="::documento.nome_parlamentar"></h3>
-                                <span>Nome Parlamentar</span>
-                            </div>
-                        </div>
-                    </a>
+                    <p><label>Nome Parlamentar:</label> <a href="#" data-ng-href="./#!/deputado-federal/{{::documento.id_cf_deputado}}" title="Visualisar perfil do parlamentar">{{::documento.nome_parlamentar}}</a></p>
                 </div>
                 <div class="col-md-4">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-tags"></i></div>
-                        <div class="text">
-                            <h3>{{::documento.sigla_partido}} / {{::documento.sigla_estado}}</h3>
-                            <span>Partido / UF</span>
-                        </div>
-                    </div>
+                    <p><label>Partido / UF:</label> {{::documento.sigla_partido}} / {{::documento.sigla_estado}}</p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-8">
-                    <a href="#" data-ng-href="{{::documento.url_beneficiario}}">
-                        <div class="dvg-painel-info-etiqueta">
-                            <div class="icon"><i class="fa fa-briefcase"></i></div>
-                            <div class="text">
-                                <h3 data-ng-bind="::documento.nome_fornecedor"></h3>
-                                <span>Befeficiario/Fornecedor</span>
-                            </div>
-                            <span class="clearfix"></span>
-                        </div>
-                    </a>
+                    <p><label>Beneficiario:</label> <a href="#" data-ng-href="{{::documento.url_beneficiario}}" title="Visualizar perfil do beneficiario">{{::documento.nome_fornecedor}}</a></p>
                 </div>
                 <div class="col-md-4">
-                    <a href="#" data-ng-href="{{::documento.url_beneficiario}}">
-                        <div class="dvg-painel-info-etiqueta">
-                            <div class="icon"><i class="fa fa-briefcase"></i></div>
-                            <div class="text">
-                                <h3 data-ng-bind="::documento.cnpj_cpf"></h3>
-                                <span>CNPJ</span>
-                            </div>
-                            <span class="clearfix"></span>
-                        </div>
-                    </a>
+                    <p><label>CNPJ / CPF:</label> <a href="#" data-ng-href="{{::documento.url_beneficiario}}" title="Visualizar perfil do beneficiario">{{::documento.cnpj_cpf}}</a></p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-8">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-list"></i></div>
-                        <div class="text">
-                            <h3 data-ng-bind="::documento.descricao_despesa"></h3>
-                            <span>Despesa</span>
-                        </div>
-                        <span class="clearfix"></span>
-                    </div>
+                    <p><label>Despesa:</label> {{::documento.descricao_despesa}}</p>
                 </div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-calendar"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.competencia"></h3>
-							<span>Data do pedido de reembolso</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
+                <div class="col-md-4">
+                    <p><label>Data do pedido de reembolso:</label> {{::documento.competencia}}</p>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-4">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-usd"></i></div>
-                        <div class="text">
-                            <h3 data-ng-bind="::documento.valor_documento"></h3>
-                            <span>Valor da Despesa</span>
-                        </div>
-                        <span class="clearfix"></span>
-                    </div>
+                    <p><label>Valor da Despesa:</label> {{::documento.valor_documento}}</p>
                 </div>
                 <div class="col-md-4">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-usd"></i></div>
-                        <div class="text">
-                            <h3 data-ng-bind="::documento.valor_liquido"></h3>
-                            <span>Valor Reembolsado</span>
-                        </div>
-                        <span class="clearfix"></span>
-                    </div>
+                    <p><label>Valor Reembolsado:</label> {{::documento.valor_liquido}}</p>
                 </div>
-				<div class="col-md-4">
-					<div class="dvg-painel-info-etiqueta">
-						<div class="icon"><i class="fa fa-calendar"></i></div>
-						<div class="text">
-							<h3 data-ng-bind="::documento.data_emissao"></h3>
-							<span>Data da Despesa</span>
-						</div>
-						<span class="clearfix"></span>
-					</div>
-				</div>
+                <div class="col-md-4">
+                    <p><label>Data da Despesa:</label> {{::documento.data_emissao}}</p>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-4">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-user"></i></div>
-                        <div class="text">
-                            <h3 data-ng-bind="::documento.tipo_documento"></h3>
-                            <span>Tipo do Documento</span>
-                        </div>
-                        <span class="clearfix"></span>
-                    </div>
+                    <p><label>Tipo do Documento:</label> {{::documento.tipo_documento}}</p>
                 </div>
                 <div class="col-md-4" data-ng-if="::documento.nome_passageiro">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-user"></i></div>
-                        <div class="text">
-                            <h3 data-ng-bind="::documento.nome_passageiro"></h3>
-                            <span>Nome do Passageiro</span>
-                        </div>
-                        <span class="clearfix"></span>
-                    </div>
+                    <p><label>Nome do Passageiro:</label> {{::documento.nome_passageiro}}</p>
                 </div>
                 <div class="col-md-4" data-ng-if="::documento.trecho_viagem">
-                    <div class="dvg-painel-info-etiqueta">
-                        <div class="icon"><i class="fa fa-map-marker"></i></div>
-                        <div class="text">
-                            <h3 data-ng-bind="::documento.trecho_viagem"></h3>
-                            <span>Trecho da Viagem</span>
-                        </div>
-                        <span class="clearfix"></span>
-                    </div>
+                    <p><label>Trecho da Viagem:</label> {{::documento.trecho_viagem}}</p>
                 </div>
             </div>
         </div>
@@ -154,7 +66,7 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-xs-12 text-center">
-                            <a data-ng-if="::documento.id_documento" class="btn btn-success" href="#" 
+                            <a data-ng-if="::documento.id_documento" class="btn btn-danger" href="#" 
                                data-ng-href="{{documento.url_documento}}"
                                onclick="return trackOutboundLink(this, true);"
                                target="_blank" rel="nofollow">Nota/Recibo&nbsp;<i class="fa fa-download"></i></a>
@@ -171,6 +83,5 @@
                 </div>
             </div>
         </div>
-
     </fieldset>
 </div>

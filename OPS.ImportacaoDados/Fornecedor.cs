@@ -380,17 +380,17 @@ namespace OPS.ImportacaoDados
 			{
 				banco.ExecuteNonQuery(@"
 					update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
-					update fornecedor_info set logradouro=null where logradouro = '';
-					update fornecedor_info set numero=null where numero = '';
-					update fornecedor_info set complemento=null where complemento = '';
-					update fornecedor_info set cep=null where cep = '';
-					update fornecedor_info set bairro=null where bairro = '';
-					update fornecedor_info set municipio=null where municipio = '';
-					update fornecedor_info set estado=null where estado = '';
-					update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '';
-					update fornecedor_info set telefone=null where telefone = '';
-					update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '';
-					update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '';
+					update fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
+					update fornecedor_info set numero=null where numero = '' or numero = '********';
+					update fornecedor_info set complemento=null where complemento = '' or complemento = '********';
+					update fornecedor_info set cep=null where cep = '' or cep = '********';
+					update fornecedor_info set bairro=null where bairro = '' or bairro = '********';
+					update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
+					update fornecedor_info set estado=null where estado = '' or estado = '**';
+					update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
+					update fornecedor_info set telefone=null where telefone = '' or telefone = '********';
+					update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
+					update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
 					update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
 				");
 			}

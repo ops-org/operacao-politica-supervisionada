@@ -117,7 +117,7 @@
     <Compile Include="CookieAwareWebClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DAO\ComandoSqlDao.cs" />
+    <Compile Include="DAO\IndicadoresDao.cs" />
     <Compile Include="DAO\DenunciaDao.cs" />
     <Compile Include="DAO\DeputadoDao.cs" />
     <Compile Include="DAO\EstadoDao.cs" />

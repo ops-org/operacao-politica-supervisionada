@@ -61,7 +61,7 @@ namespace OPS.Core.DAO
 							id_partido = reader["id_partido"],
 							sigla_estado = reader["sigla_estado"].ToString(),
 							nome_partido = reader["nome_partido"].ToString(),
-							id_estado = reader["id_cadastro"],
+							id_estado = reader["id_estado"],
 							sigla_partido = reader["sigla_partido"].ToString(),
 							nome_estado = reader["nome_estado"].ToString(),
 							cod_orcamento = reader["cod_orcamento"],
@@ -1212,6 +1212,101 @@ namespace OPS.Core.DAO
 				};
 			}
 
+		}
+
+		public dynamic CamaraResumoMensal()
+		{
+			using (Banco banco = new Banco())
+			{
+				using (MySqlDataReader reader = banco.ExecuteReader(@"select ano, mes, valor from cf_despesa_resumo_mensal"))
+				{
+					List<dynamic> lstRetorno = new List<dynamic>();
+					var lstValoresMensais = new decimal?[12];
+					string anoControle = string.Empty;
+					bool existeGastoNoAno = false;
+
+					while (reader.Read())
+					{
+						if (reader["ano"].ToString() != anoControle)
+						{
+							if (existeGastoNoAno)
+							{
+								lstRetorno.Add(new
+								{
+									name = anoControle.ToString(),
+									data = lstValoresMensais
+								});
+
+								lstValoresMensais = new decimal?[12];
+								existeGastoNoAno = false;
+							}
+
+							anoControle = reader["ano"].ToString();
+						}
+
+						if (Convert.ToDecimal(reader["valor"]) > 0)
+						{
+							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor"]);
+							existeGastoNoAno = true;
+						}
+					}
+
+					if (existeGastoNoAno)
+					{
+						lstRetorno.Add(new
+						{
+							name = anoControle.ToString(),
+							data = lstValoresMensais
+						});
+					}
+
+					return lstRetorno;
+				}
+			}
+		}
+
+		public dynamic CamaraResumoAnual()
+		{
+			using (Banco banco = new Banco())
+			{
+				var strSql = new StringBuilder();
+				strSql.AppendLine(@"
+					select ano, sum(valor) as valor
+					from cf_despesa_resumo_mensal sf
+					group by ano
+				");
+
+				var categories = new List<dynamic>();
+				var series = new List<dynamic>();
+
+				var camara = new List<dynamic>();
+
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				{
+					if (reader.HasRows)
+					{
+						while (reader.Read())
+						{
+
+							categories.Add(Convert.ToInt32(reader["ano"]));
+							camara.Add(Convert.ToDecimal(reader["valor"]));
+						}
+					}
+				}
+
+				series.Add(new
+				{
+					name = "Câmara",
+					stack = "camara",
+					data = camara
+				});
+
+				return new
+				{
+					categories,
+					series
+				};
+			}
 		}
 	}
 }

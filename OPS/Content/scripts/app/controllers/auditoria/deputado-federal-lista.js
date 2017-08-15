@@ -37,7 +37,7 @@ app.controller('DeputadoListaController', ["$rootScope", "$scope", "$tabela", "$
     		$("#txtDocumento").val(qs.Documento);
     		$scope.filtro.Documento = qs.Documento || null;
 
-    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "3").trigger('change').val();
+    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "8").trigger('change').val();
     		$scope.TrocaAba(null, parseInt(qs.Agrupamento || '1'));
 
     		$scope.Pesquisar(true);
@@ -52,9 +52,15 @@ app.controller('DeputadoListaController', ["$rootScope", "$scope", "$tabela", "$
     		$('#lblDeputadoFederalUltimaAtualizacao').text(window.DeputadoFederalUltimaAtualizacao);
     	}
 
-    	$scope.Pesquisar = function (page_load) {
+        $scope.Pesquisar = function (page_load) {
+            var lstParlamentar = $("#lstParlamentar").val();
+            if (lstParlamentar && lstParlamentar.length > 50) {
+                alert('No maximo 50 deputados / lideranças podem ser selecionados por vez. Redefina sua busca e tente novamente.');
+                return;
+            }
+
     		if (!page_load) {
-    		    $scope.filtro.IdParlamentar = ($("#lstParlamentar").val() || []).join(',') || null;
+                $scope.filtro.IdParlamentar = (lstParlamentar || []).join(',') || null;
     		    $scope.filtro.Despesa = ($("#lstDespesa").val() || []).join(',') || null;
     		    $scope.filtro.Uf = ($("#lstUF").val() || []).join(',') || null;
     		    $scope.filtro.Partido = ($("#lstPartido").val() || []).join(',') || null;

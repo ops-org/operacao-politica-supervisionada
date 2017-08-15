@@ -1,7 +1,7 @@
 ﻿<div class="container-fluid" data-ng-controller="SenadorListaController">
 
 	<ol class="breadcrumb">
-		<li><a href="./">Inicio</a></li>
+		<li><a href="./#!/senador">Inicio</a></li>
 		<li class="active">Senadores - Cota Parlamentar (CEAPS)</li>
 	</ol>
 
@@ -27,16 +27,15 @@
 					<option value="3">Últimos 4 Meses</option>
 					<option value="4">Ano Atual</option>
 					<option value="5">Ano Anterior</option>
-					<option value="9">Legislatura 56 (2015-2023)</option>
-					<option value="8">Legislatura 55 (2011-2019)</option>
-					<option value="7">Legislatura 54 (2007-2011)</option>
-					<option value="6">Legislatura 53 (2007-2010)</option>
+					<option value="8">Legislatura 54 (2015-2019)</option>
+					<option value="7">Legislatura 53 (2011-2015)</option>
+					<option value="6">Legislatura 53 (2007-2011)</option>
 					<option value="0">Todas as Legislaturas</option>
 				</select>
 			</div>
 			<div class="col-md-4 form-group form-group-sm">
 				<label>Senador</label>
-				<select id="lstParlamentar" class="form-control input-sm" multiple></select>
+				<select id="lstParlamentar" class="form-control input-sm" multiple data-actions-box="true"></select>
 			</div>
 			<div class="col-md-4 form-group">
 				<label>Despesa</label>
@@ -70,7 +69,7 @@
 			</div>
 
 			<div class="col-md-12 form-group">
-				<input type="button" id="ButtonPesquisar" data-ng-click="Pesquisar();" value="Pesquisar" class="btn btn-success btn-sm" />
+				<input type="button" id="ButtonPesquisar" data-ng-click="Pesquisar();" value="Pesquisar" class="btn btn-danger btn-sm" />
 				<input type="button" value="Limpar filtros" class="btn btn-default btn-sm" data-ng-click="LimparFiltros();" />
 
 				<small class="pull-right text-muted" style="padding: 7px 0;">
@@ -92,7 +91,7 @@
 	</div>
 
     <div id="popover_content_wrapper" style="display: none">
-        <input type="button" class="btn btn-success btn-sm btn-block" data-valor="3" value="Por Beneficiário" />
+        <input type="button" class="btn btn-danger btn-sm btn-block" data-valor="3" value="Por Beneficiário" />
         <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="1" value="Por Senador" />
         <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="2" value="Por Despesa" />
         <input type="button" class="btn btn-primary btn-sm btn-block" data-valor="4" value="Por Partido" />

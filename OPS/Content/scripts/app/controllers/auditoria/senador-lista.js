@@ -37,7 +37,7 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     		$("#txtDocumento").val(qs.Documento);
     		$scope.filtro.Documento = qs.Documento || null;
 
-    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "3").trigger('change').val();
+    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "8").trigger('change').val();
     		$scope.TrocaAba(null, parseInt(qs.Agrupamento || '1'));
 
     		$scope.Pesquisar(true);
@@ -52,18 +52,15 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
 	        $('#lblSenadorUltimaAtualizacao').text(window.SenadorUltimaAtualizacao);
 	    }
 
-    	$scope.Pesquisar = function (page_load) {
-    		//switch ($("#lstAgrupamento").val()) {
-    		//	case '2': $scope.visao = 'despesa.html'; break;
-    		//	case '3': $scope.visao = 'fornecedor.html'; break;
-    		//	case '4': $scope.visao = 'partido.html'; break;
-    		//	case '5': $scope.visao = 'uf.html'; break;
-    		//	case '6': $scope.visao = 'documento.html'; break;
-    		//	default: $scope.visao = 'parlamentar.html';
-    		//}
+        $scope.Pesquisar = function (page_load) {
+            var lstParlamentar = $("#lstParlamentar").val();
+            if (lstParlamentar && lstParlamentar.length > 50) {
+                alert('No maximo 50 senadores podem ser selecionados por vez. Redefina sua busca e tente novamente.');
+                return;
+	        }
 
     		if (!page_load) {
-    		    $scope.filtro.IdParlamentar = ($("#lstParlamentar").val() || []).join(',') || null;
+                $scope.filtro.IdParlamentar = (lstParlamentar || []).join(',') || null;
     		    $scope.filtro.Despesa = ($("#lstDespesa").val() || []).join(',') || null;
     		    $scope.filtro.Uf = ($("#lstUF").val() || []).join(',') || null;
     		    $scope.filtro.Partido = ($("#lstPartido").val() || []).join(',') || null;

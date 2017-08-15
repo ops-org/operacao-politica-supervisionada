@@ -3,31 +3,84 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="intro-message">
-                        <h1>Operação Política Supervisionada</h1>
-                        <h3>Indexador de dados públicos da verba indenizatória</h3>
-                        <hr class="intro-divider" />
-                        <h4>Além do projeto, uma solução real</h4>
-                        <p><a href="./#!/sobre" class="text-black">Veja como a OPS já conseguiu recuperar R$5 milhões de dinheiro público</a></p>
-                        <hr class="intro-divider" />
-                        <p>Escolha uma casa legislativa que deseja explorar</p>
-                        <div class="text-xs-center">
-                            <a href="./#!/deputado-federal" class="btn btn-primary">Câmara dos Deputados</a>
-                            <a href="./#!/senador" class="btn btn-primary">Senado Federal</a>
-                        </div>
-                    </div>
+                    <h1>Operação Política Supervisionada</h1>
+                    <h3>Indexador de dados públicos da cota parlamentar</h3>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="container form-group">
-        <h2>Campeões de Gastos</h2>
+        <h2>Resumo anual da cota parlamentar</h2>
+        <div class="row">
+            <div class="col-sm-6">
+                <h4>Câmara dos Deputados <small>(513 deputados)</small></h4>
+                <div id="camara-resumo-gastos-anual"></div>
+            </div>
+            <div class="col-sm-6">
+                <h4>Senado Federal <small>(81 senadores)</small></h4>
+                <div id="senado-resumo-gastos-anual"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container form-group">
+        <h2>Resumo mensal da cota parlamentar</h2>
+
+        <h4>Câmara Federal <small>(513 deputados)</small></h4>
+        <label>Legislatura:</label>
+        <div id="camara-legislatura" class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default">
+                <input type="radio" name="cl-options" value="0"> Todas
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="cl-options" value="52"> 52º (2007-2011)
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="cl-options" value="53"> 53º (2011-2015)
+            </label>
+            <label class="btn btn-default active">
+                <input type="radio" name="cl-options" value="54" checked> 54º (2015-2019)
+            </label>
+        </div>
+        <div id="camara-resumo-gastos"></div>
+
+        <h4>Senado Federal <small>(81 senadores)</small></h4>
+        <label>Legislatura:</label>
+        <div id="senado-legislatura" class="btn-group" data-toggle="buttons">
+            <label class="btn btn-default">
+                <input type="radio" name="sl-options" value="0"> Todas
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="sl-options" value="52"> 52º (2007-2011)
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="sl-options" value="53"> 53º (2011-2015)
+            </label>
+            <label class="btn btn-default active">
+                <input type="radio" name="sl-options" value="54" checked> 54º (2015-2019)
+            </label>
+        </div>
+        <div id="senado-resumo-gastos"></div>
+    </div>
+
+    <div class="content-section form-group">
+        <div class="container">
+            <h2>O que é a cota parlamantar?</h2>
+            <p>A <strong>cota parlamantar</strong>, também conhecida como verba indenizatória é um <strong>recurso financeiro público</strong> disponibilizado a todos os <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.</p>
+            <p>Cada um tem direito a restituir até <strong><a href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">R$ 44.000,00 por mês</a></strong> com sua <strong>alimentação, passagens aereas, combustivel, consultoria</strong>, entre outros.</p>
+            <p>Contrariando a lei de licitações, o uso deste dinheiro é feito sem licitação e <strong>basta o parlamentar apresentar a nota fiscal ou recibo</strong>.</p>
+        </div>
+    </div>
+
+    <div class="container form-group">
+        <h2>Campeões de gastos</h2>
         <p>Os Parlamentares que mais gastaram dinheiro público da verba indenizatória da atual legislatura</p>
         <div class="resumo-gastos">
             <h4>Deputados Federais <small>(Desde fevereiro de 2015)</small></h4>
             <div class="row">
                 <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.CamaraFederal track by $index">
-                    <a href="./#!/deputado-federal/{{::gasto.id_cf_deputado}}">
+                    <a href="./#!/deputado-federal/{{::gasto.id_cf_deputado}}" title="Clique para visualizar o perfil do deputado(a)">
                         <div class="media ">
                             <div class="media-left media-middle">
                                 <span class="media-thumbnail">
@@ -44,10 +97,10 @@
                 </div>
             </div>
             <hr />
-            <h4>Senadores <small>(Desde fevereiro de 2010)</small></h4>
+            <h4>Senadores <small>(Desde fevereiro de 2015)</small></h4>
             <div class="row">
                 <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.Senado track by $index">
-                    <a href="./#!/senador/{{::gasto.id_sf_senador}}">
+                    <a href="./#!/senador/{{::gasto.id_sf_senador}}" title="Clique para visualizar o perfil do senador(a)">
                         <div class="media ">
                             <div class="media-left media-middle">
                                 <span class="media-thumbnail">
@@ -65,13 +118,15 @@
             </div>
         </div>
     </div>
+    <br />
 
     <div class="content-section form-group">
-        <div class="container">
-            <h2>O que é a verba indenizatória?</h2>
-            <p>A verba indenizatória é um recurso financeiro público disponibilizado a todos os deputados federais e senadores para o custeio de seus mandatos.</p>
-            <p>Contrariando a lei de licitações, o uso deste dinheiro é feito sem licitação e basta o parlamentar apresentar a nota fiscal ou recibo.</p>
-            <p>Tão facil quanto comprar um pãozinho.</p>
+        <div class="container form-group text-center">
+            <h2>Escolha uma casa legislativa para explorar</h2>
+            <div class="text-xs-center">
+                <a href="./#!/deputado-federal" class="btn btn-danger btn-lg">Câmara dos Deputados</a>
+                <a href="./#!/senador" class="btn btn-danger btn-lg">Senado Federal</a>
+            </div>
         </div>
     </div>
 

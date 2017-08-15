@@ -1,33 +1,37 @@
 ﻿<div class="container-fluid" data-ng-controller="SenadorVisualizarController">
 	<fieldset>
-		<legend>Senador(a)</legend>
-		<div class="row box-deputado form-group">
-			<div class="col-xs-12 col-sm-8">
-				<div class="row deputado-header form-group">
-					<div class="form-group">
-						<div class="col-xs-12 col-md-4 col-lg-3 text-center">
-							<img class="img-thumbnail img-responsive img-parlamentar" src="./Content/Images/Parlamentares/SENADOR/{{::senador.id_sf_senador}}.jpg" alt="{{::senador.nome_parlamentar}}" />
-						</div>
-						<div class="col-xs-12 col-md-8 col-lg-9 text-left">
-							<h3>Sen(a). {{::senador.nome_parlamentar}}</h3>
-							<!--<p class="text-muted" data-ng-bind="::senador.Nome"></p>-->
-							<h4>{{::senador.sigla_partido}} / {{::senador.sigla_estado}}</h4>
-							<!--<p><a href="mailto:{{::senador.email}}" data-ng-bind="::senador.Email"></a></p>-->
-							<p><a href="#" data-ng-href="{{::senador.url}}" target="_blank" rel="nofollow">Perfil no Senado</a></p>
-						</div>
-						<div class="clearfix"></div>
-					</div>
-				</div>
-			</div>
-			<div class="col-xs-12 col-sm-4">
-				<a href="./#!/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=6">
-					<div class="box-item form-group alert alert-info text-center">
-						<div class="box-item-title" data-ng-bind="::senador.valor_total_ceaps"></div>
-						<div class="box-item-text">Gastos com cota parlamentar acumulado</div>
-					</div>
-				</a>
-			</div>
-		</div>
+		<legend>Senador(a) {{::senador.nome_parlamentar}}</legend>
+	    <div class="row box-deputado form-group">
+	        <div class="form-group">
+	            <div class="form-group">
+	                <div class="col-xs-12 col-md-4 col-lg-3 text-center">
+                        <img class="img-thumbnail img-responsive img-parlamentar" src="./Content/Images/Parlamentares/SENADOR/{{::senador.id_sf_senador}}.jpg" alt="{{::senador.nome_parlamentar}}" />
+	                </div>
+	                <div class="col-xs-12 col-md-8 col-lg-9 text-left">
+	                    <h3 data-ng-bind="::senador.nome_civil"></h3>
+	                    <div class="row">
+	                        <div class="col-md-12">
+	                            <div class="col-sm-6" style="padding-left: 0px;">
+	                                <p><label>Partido:</label> <span title="{{::senador.nome_partido}}">{{::senador.sigla_partido}}</span> / <span title="{{::senador.nome_estado}}">{{::senador.sigla_estado}}</span></p>
+                                    <p><label>Email:</label> {{::senador.email}}</p>
+	                            </div>
+	                            <div class="col-sm-6" style="padding-left: 0px;">
+	                                <p>
+	                                    <label>Gasto Acumulado CEAPS:</label>
+	                                    <a href="./#!/senador?IdParlamentar={{::senador.id_sf_senador}}&Periodo=0&Agrupamento=6" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{::senador.valor_total_ceaps}}</a>
+	                                </p>
+	                                <p>
+	                                    <label>Página oficial no Senado:</label>
+	                                    <a data-ng-href="{{::senador.url}}" target="_blank" onclick="return trackOutboundLink(this, true);">Acesse</a>
+	                                </p>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="clearfix"></div>
+	            </div>
+	        </div>
+	    </div>
 	</fieldset>
 
 	<fieldset class="form-group">

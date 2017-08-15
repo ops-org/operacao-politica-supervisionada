@@ -12,7 +12,7 @@ namespace OPS.WebApi
 		[Route("ParlamentarResumoGastos")]
 		public dynamic ParlamentarResumoGastos()
 		{
-			return ComandoSqlDao.RecuperarCardsIndicadores();
+			return IndicadoresDao.ParlamentarResumoGastos();
 		}
 	}
 }
