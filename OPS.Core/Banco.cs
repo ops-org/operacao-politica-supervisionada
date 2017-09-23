@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using MySql.Data.MySqlClient;
 
 namespace OPS.Core
@@ -71,7 +72,8 @@ namespace OPS.Core
                 command.CommandText = sql;
                 command.CommandTimeout = timeOut;
 
-                Rows = command.ExecuteNonQuery();
+                
+				Rows = command.ExecuteNonQuery();
 
                 LastInsertedId = command.LastInsertedId;
             }
@@ -189,5 +191,18 @@ namespace OPS.Core
         {
             _mParametros.Add(new MySqlParameter(name, value));
         }
+
+	    public string ParametersHash()
+	    {
+		    var lst = _mParametros.Select(x => x.Value?.ToString() ?? string.Empty);
+		    var str = string.Join(",", lst);
+
+		    return Utils.Hash(str);
+	    }
+
+	    public void ClearParameters()
+	    {
+			_mParametros.Clear();
+		}
     }
 }

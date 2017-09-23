@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace OPS.Core
     {
         public static string FormataValor(object value)
         {
-            if (!Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
+            if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
                 try
                 {
                     return Convert.ToDecimal(value).ToString("#,##0.00");
@@ -25,7 +26,7 @@ namespace OPS.Core
 
         public static string FormataData(object value)
         {
-            if (!Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
+            if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
                 try
                 {
                     return Convert.ToDateTime(value).ToString("dd/MM/yyyy");
@@ -39,7 +40,7 @@ namespace OPS.Core
 
         public static string FormataDataHora(object value)
         {
-            if (!Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
+            if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
                 try
                 {
                     return Convert.ToDateTime(value).ToString("dd/MM/yyyy HH:mm");
@@ -53,7 +54,7 @@ namespace OPS.Core
 
         public static object ParseDateTime(object d)
         {
-            if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
+            if (d != null && Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
                 d.ToString().StartsWith("*"))
                 return DBNull.Value;
 
@@ -129,5 +130,22 @@ namespace OPS.Core
 	    {
 		    return new Regex(@"\s{2,}").Replace(s, " ");
 	    }
-    }
+
+	    public static string Hash(string input)
+	    {
+		    using (SHA1Managed sha1 = new SHA1Managed())
+		    {
+			    var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+			    var sb = new StringBuilder(hash.Length * 2);
+
+			    foreach (byte b in hash)
+			    {
+				    // can be "x2" if you want lowercase
+				    sb.Append(b.ToString("X2"));
+			    }
+
+			    return sb.ToString();
+		    }
+	    }
+	}
 }

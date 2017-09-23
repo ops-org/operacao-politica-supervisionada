@@ -127,6 +127,7 @@
     <Compile Include="DAO\SenadorDao.cs" />
     <Compile Include="DTO\DenunciaComentarioDTO.cs" />
     <Compile Include="DTO\DropDownDTO.cs" />
+    <Compile Include="DTO\FiltroFrequenciaCamaraDTO.cs" />
     <Compile Include="eAgrupamentoAuditoria.cs" />
     <Compile Include="DTO\FiltroDenunciaDTO.cs" />
     <Compile Include="DTO\FiltroDropDownDTO.cs" />

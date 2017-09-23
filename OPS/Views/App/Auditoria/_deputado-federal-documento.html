@@ -18,7 +18,7 @@
             </div>
             <div class="row">
                 <div class="col-md-8">
-                    <p><label>Beneficiario:</label> <a href="#" data-ng-href="{{::documento.url_beneficiario}}" title="Visualizar perfil do beneficiario">{{::documento.nome_fornecedor}}</a></p>
+                    <p><label>Beneficiário:</label> <a href="#" data-ng-href="{{::documento.url_beneficiario}}" title="Visualizar perfil do beneficiario">{{::documento.nome_fornecedor}}</a></p>
                 </div>
                 <div class="col-md-4">
                     <p><label>CNPJ / CPF:</label> <a href="#" data-ng-href="{{::documento.url_beneficiario}}" title="Visualizar perfil do beneficiario">{{::documento.cnpj_cpf}}</a></p>
@@ -60,28 +60,13 @@
             <a href="#" data-ng-href="{{::documento.url_documentos_Deputado_beneficiario}}" class="btn btn-primary">Ver todas as notas do deputado para o beneficiário.</a>
         </div>
 
-        <div class="form-group">
-            <div class="panel panel-default">
-                <div class="panel-heading">Dados na câmara</div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-xs-12 text-center">
-                            <a data-ng-if="::documento.id_documento" class="btn btn-danger" href="#" 
-                               data-ng-href="{{documento.url_documento}}"
-                               onclick="return trackOutboundLink(this, true);"
-                               target="_blank" rel="nofollow">Nota/Recibo&nbsp;<i class="fa fa-download"></i></a>
-                            <a data-ng-if="::documento.id_documento" class="btn btn-default" href="#" 
-                               data-ng-href="{{documento.url_detalhes_documento}}" 
-                               onclick="return trackOutboundLink(this, true);"
-                               target="_blank" rel="nofollow">Detalhes da nota/recibo&nbsp;<i class="fa fa-plus"></i></a>
-                            <a class="btn btn-default" href="#" 
-                               data-ng-href="{{documento.url_demais_documentos_mes}}" 
-                               onclick="return trackOutboundLink(this, true);"
-                               target="_blank" rel="nofollow">Demais Notas do mês&nbsp;<i class="fa fa-plus"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="form-group text-center">
+            <p></p>
+            <span data-ng-if="::documento.id_documento">
+                <a class="btn btn-danger" href="#" data-ng-href="{{documento.url_documento}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Nota/Recibo&nbsp;<i class="fa fa-download"></i></a>
+                <a class="btn btn-default" href="#" data-ng-href="{{documento.url_detalhes_documento}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Detalhes da nota/recibo&nbsp;<i class="fa fa-plus"></i></a>
+            </span>
+            <a class="btn btn-default" href="#" data-ng-href="{{documento.url_demais_documentos_mes}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Demais Notas do mês&nbsp;<i class="fa fa-plus"></i></a>
         </div>
     </fieldset>
 </div>

@@ -334,6 +334,55 @@ namespace OPS.Core.DAO
 			}
 		}
 
+		public dynamic Lista()
+		{
+			using (Banco banco = new Banco())
+			{
+				var strSql = new StringBuilder();
+				strSql.AppendLine(@"
+					SELECT 
+						d.id as id_cf_deputado
+						, d.id_cadastro
+						, d.nome_parlamentar 
+						, d.nome_civil
+						, d.valor_total_ceap
+						, d.id_partido
+						, p.sigla as sigla_partido
+						, p.nome as nome_partido
+						, d.id_estado
+						, e.sigla as sigla_estado
+						, e.nome as nome_estado
+					FROM cf_deputado d
+					LEFT JOIN partido p on p.id = d.id_partido
+					LEFT JOIN estado e on e.id = d.id_estado
+					ORDER BY nome_parlamentar
+				");
+
+				var lstRetorno = new List<dynamic>();
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				{
+					while (reader.Read())
+					{
+						lstRetorno.Add(new
+						{
+							id_cf_deputado = reader["id_cf_deputado"],
+							id_cadastro = reader["id_cadastro"],
+							nome_parlamentar = reader["nome_parlamentar"].ToString(),
+							nome_civil = reader["nome_civil"].ToString(),
+							valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
+							id_partido = reader["id_partido"],
+							sigla_partido = reader["sigla_partido"].ToString(),
+							nome_partido = reader["nome_partido"].ToString(),
+							id_estado = reader["id_estado"],
+							sigla_estado = reader["sigla_estado"].ToString(),
+							nome_estado = reader["nome_estado"].ToString()
+						});
+					}
+				}
+				return lstRetorno;
+			}
+		}
+
 		public dynamic Pesquisa()
 		{
 			using (Banco banco = new Banco())
@@ -626,7 +675,7 @@ namespace OPS.Core.DAO
 						SELECT
 						 d.id_partido
 						, p.nome as nome_partido
-						, count(l1.total_notas) as total_notas
+						, sum(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
 						from (
 							SELECT
@@ -702,7 +751,7 @@ namespace OPS.Core.DAO
 						SELECT
 						 d.id_estado
 						, e.nome as nome_estado
-						, count(l1.total_notas) as total_notas
+						, sum(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
 						from (
 
@@ -768,79 +817,51 @@ namespace OPS.Core.DAO
 
 		private dynamic LancamentosNotaFiscal(FiltroParlamentarDTO filtro)
 		{
-
-			//sqlSelect.AppendLine(" p.IdeCadastro as IdCadastro");
-			//sqlSelect.AppendLine(", p.nuDeputadoId as IdDeputado");
-			//sqlSelect.AppendLine(", l.id as Id");
-			//sqlSelect.AppendLine(", l.ideDocumento as IdDocumento");
-			//sqlSelect.AppendLine(", l.txtNumero as NotaFiscal");
-			//sqlSelect.AppendLine(", l.txtCNPJCPF AS Codigo");
-			//sqlSelect.AppendLine(", l.numano as NumAno");
-			//sqlSelect.AppendLine(", l.txtNumero as Numero");
-			//sqlSelect.AppendLine(", l.datEmissao as DataEmissao");
-			//sqlSelect.AppendLine(", SUBSTRING(IFNULL(f.txtbeneficiario, l.txtbeneficiario), 1, 50) AS NomeBeneficiario");
-			//sqlSelect.AppendLine(", l.txNomeParlamentar as nome_parlamentar");
-			//sqlSelect.AppendLine(", SUM(l.vlrLiquido) AS vlrTotal ");
+			var sqlWhere = new StringBuilder();
+			AdicionaFiltroPeriodo(filtro, sqlWhere);
+			AdicionaFiltroDeputado(filtro, sqlWhere);
+			AdicionaFiltroDespesa(filtro, sqlWhere);
+			AdicionaFiltroFornecedor(filtro, sqlWhere);
+			AdicionaFiltroPartidoDeputado(filtro, sqlWhere);
+			AdicionaFiltroEstadoDeputado(filtro, sqlWhere);
+			AdicionaFiltroDocumento(filtro, sqlWhere);
 
 			using (Banco banco = new Banco())
 			{
 				var sqlSelect = new StringBuilder();
 
-				//sqlSelect.AppendLine("DROP TABLE IF EXISTS table_in_memory; ");
-				//sqlSelect.AppendLine("CREATE TEMPORARY TABLE table_in_memory ");
-				//sqlSelect.AppendLine("AS ( ");
 				sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
-						 l.id as id_cf_despesa
+					SELECT
+						l.id as id_cf_despesa
 						, l.data_emissao
-						, l.id_fornecedor
+						, l.id_fornecedor			
 						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
 						, d.id as id_deputado
 						, d.nome_parlamentar
-                        , l.numero_documento
+						, l.numero_documento
+						, l.trecho_viagem
 						, l.valor_liquido
-					FROM cf_despesa l
-					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
-					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
-					WHERE (1=1)
+					FROM (
+						SELECT *
+						FROM cf_despesa l
+						WHERE (1=1)
 				");
 
-				AdicionaFiltroPeriodo(filtro, sqlSelect);
-
-				AdicionaFiltroDeputado(filtro, sqlSelect);
-
-				AdicionaFiltroDespesa(filtro, sqlSelect);
-
-				AdicionaFiltroFornecedor(filtro, sqlSelect);
-
-				AdicionaFiltroPartidoDeputado(filtro, sqlSelect);
-
-				AdicionaFiltroEstadoDeputado(filtro, sqlSelect);
+				sqlSelect.Append(sqlWhere);
 
 				sqlSelect.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "l.data_emissao desc, l.valor_liquido desc" : Utils.MySqlEscape(filtro.sorting));
-				sqlSelect.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
-
-				sqlSelect.AppendLine("SELECT FOUND_ROWS();");
+				sqlSelect.AppendFormat(" LIMIT {0},{1} ", (filtro.page - 1) * filtro.count, filtro.count);
+				sqlSelect.AppendLine(@" ) l
+					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
+					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor;");
 
 				sqlSelect.AppendLine(
-					@"SELECT SUM(l.valor_liquido) as valor_total
+					@"SELECT COUNT(1) AS row_count, SUM(l.valor_liquido) as valor_total
 					FROM cf_despesa l
-					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
-					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
 					WHERE (1=1)");
 
-				AdicionaFiltroPeriodo(filtro, sqlSelect);
-
-				AdicionaFiltroDeputado(filtro, sqlSelect);
-
-				AdicionaFiltroDespesa(filtro, sqlSelect);
-
-				AdicionaFiltroFornecedor(filtro, sqlSelect);
-
-				AdicionaFiltroPartidoDeputado(filtro, sqlSelect);
-
-				AdicionaFiltroEstadoDeputado(filtro, sqlSelect);
+				sqlSelect.Append(sqlWhere);
 
 				var lstRetorno = new List<dynamic>();
 				using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
@@ -857,17 +878,15 @@ namespace OPS.Core.DAO
 							id_deputado = reader["id_deputado"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							numero_documento = reader["numero_documento"].ToString(),
+							trecho_viagem = reader["trecho_viagem"].ToString(),
 							valor_liquido = Utils.FormataValor(reader["valor_liquido"])
 						});
 					}
 
 					reader.NextResult();
 					reader.Read();
-					string TotalCount = reader[0].ToString();
-
-					reader.NextResult();
-					reader.Read();
-					string ValorTotal = Utils.FormataValor(reader[0]);
+					string TotalCount = reader["row_count"].ToString();
+					string ValorTotal = Utils.FormataValor(reader["valor_total"]);
 
 					return new
 					{
@@ -982,6 +1001,14 @@ namespace OPS.Core.DAO
 			if (!string.IsNullOrEmpty(filtro.IdParlamentar))
 			{
 				sqlSelect.AppendLine("	AND l.id_cf_deputado IN (" + Utils.MySqlEscapeNumberToIn(filtro.IdParlamentar) + ") ");
+			}
+		}
+
+		private static void AdicionaFiltroDocumento(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
+		{
+			if (!string.IsNullOrEmpty(filtro.Documento))
+			{
+				sqlSelect.AppendLine("	AND l.numero_documento like '%" + Utils.MySqlEscape(filtro.Documento) + "' ");
 			}
 		}
 
@@ -1279,8 +1306,6 @@ namespace OPS.Core.DAO
 				var categories = new List<dynamic>();
 				var series = new List<dynamic>();
 
-				var camara = new List<dynamic>();
-
 				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
 				{
 					if (reader.HasRows)
@@ -1289,23 +1314,176 @@ namespace OPS.Core.DAO
 						{
 
 							categories.Add(Convert.ToInt32(reader["ano"]));
-							camara.Add(Convert.ToDecimal(reader["valor"]));
+							series.Add(Convert.ToDecimal(reader["valor"]));
 						}
 					}
 				}
-
-				series.Add(new
-				{
-					name = "Câmara",
-					stack = "camara",
-					data = camara
-				});
 
 				return new
 				{
 					categories,
 					series
 				};
+			}
+		}
+
+		public dynamic Frequencia(FiltroFrequenciaCamaraDTO filtro)
+		{
+			var sqlWhere = new StringBuilder();
+
+			using (Banco banco = new Banco())
+			{
+				var sqlSelect = new StringBuilder();
+
+				sqlSelect.AppendLine(@"
+					SELECT
+						s.id as id_cf_sessao
+						, s.inicio
+						, s.tipo
+						, s.numero
+						, sp.presenca
+						, sp.ausencia
+						, sp.ausencia_justificada
+					FROM cf_sessao s
+					LEFT JOIN (
+						SELECT
+							id_cf_sessao
+							, sum(IF(sp.presente = 1, 1, 0)) as presenca
+							, sum(IF(sp.presente = 0 and sp.justificativa = '', 1, 0)) as ausencia
+							, sum(IF(sp.presente = 0 and sp.justificativa <> '', 1, 0)) as ausencia_justificada
+						FROM cf_sessao_presenca sp 
+						GROUP BY id_cf_sessao
+					) sp on sp.id_cf_sessao = s.id
+					WHERE (1=1)
+				");
+
+				sqlSelect.Append(sqlWhere);
+
+				sqlSelect.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "s.inicio desc" : Utils.MySqlEscape(filtro.sorting));
+				sqlSelect.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
+
+				sqlSelect.AppendLine(
+					@"SELECT COUNT(1) as row_count
+					FROM cf_sessao s
+					WHERE (1=1)");
+
+				sqlSelect.Append(sqlWhere);
+
+				var lstRetorno = new List<dynamic>();
+				using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+				{
+					while (reader.Read())
+					{
+						string sTipo = "";
+						switch (reader["tipo"].ToString())
+						{
+							case "1": sTipo = "Ordinária"; break;
+							case "2": sTipo = "Extraordinária"; break;
+							case "3": sTipo = "Preparatória"; break;
+						}
+
+						var presenca = Convert.ToInt32(reader["presenca"]);
+						var ausencia = Convert.ToInt32(reader["ausencia"]);
+						var ausencia_justificada = Convert.ToInt32(reader["ausencia_justificada"]);
+						var total = presenca + ausencia + ausencia_justificada;
+
+						lstRetorno.Add(new
+						{
+							id_cf_sessao = reader["id_cf_sessao"],
+							inicio = Utils.FormataDataHora(reader["inicio"]),
+							tipo = sTipo,
+							numero = reader["numero"].ToString(),
+							presenca = presenca,
+							presenca_percentual = Utils.FormataValor((decimal)presenca * 100 / total),
+							ausencia = ausencia,
+							ausencia_percentual = Utils.FormataValor((decimal)ausencia * 100 / total),
+							ausencia_justificada = ausencia_justificada,
+							ausencia_justificada_percentual = Utils.FormataValor((decimal)ausencia_justificada * 100 / total),
+							total = total
+						});
+					}
+
+					reader.NextResult();
+					reader.Read();
+					string TotalCount = reader["row_count"].ToString();
+
+					return new
+					{
+						total_count = TotalCount,
+						results = lstRetorno
+					};
+				}
+			}
+		}
+
+
+		public dynamic Frequencia(int id)
+		{
+			using (Banco banco = new Banco())
+			{
+				var sqlSelect = new StringBuilder();
+
+				sqlSelect.AppendFormat(@"
+					SELECT
+						sp.id_cf_deputado
+						, d.nome_parlamentar
+						, sp.presente
+						, sp.justificativa
+						, sp.presenca_externa
+					FROM cf_sessao_presenca sp
+					INNER JOIN cf_deputado d on d.id = sp.id_cf_deputado
+					WHERE sp.id_cf_sessao = {0}
+					ORDER BY d.nome_parlamentar ASC
+				", id);
+
+				var lstRetorno = new List<dynamic>();
+				using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+				{
+					while (reader.Read())
+					{
+						int nPresente = Convert.ToInt32(reader["presente"]);
+						int nPresensaExterna = Convert.ToInt32(reader["presenca_externa"]);
+						string sJustificativa = reader["justificativa"].ToString();
+
+						string sPresenca;
+						int nPresenca;
+						if (nPresensaExterna == 1)
+						{
+							nPresenca = 1;
+							sPresenca = "Presença externa";
+						}
+						else if (nPresente == 1)
+						{
+							nPresenca = 1;
+							sPresenca = "Presente";
+						}
+						else if (!string.IsNullOrEmpty(sJustificativa))
+						{
+							nPresenca = 2;
+							sPresenca = "Ausencia justificada";
+						}
+						else
+						{
+							nPresenca = 3;
+							sPresenca = "Ausente";
+						}
+
+						lstRetorno.Add(new
+						{
+							id_cf_deputado = reader["id_cf_deputado"],
+							nome_parlamentar = reader["nome_parlamentar"].ToString(),
+							id_presenca = nPresenca,
+							presenca = sPresenca,
+							justificativa = sJustificativa
+						});
+					}
+
+					return new
+					{
+						total_count = lstRetorno.Count,
+						results = lstRetorno
+					};
+				}
 			}
 		}
 	}

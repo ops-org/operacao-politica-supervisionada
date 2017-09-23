@@ -52,6 +52,19 @@ app.controller('PrincipalController', ['$scope', '$api',
                     pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>'
                 },
 
+                dataLabels: {
+                    enabled: true,
+                    rotation: -90,
+                    color: '#FFFFFF',
+                    align: 'right',
+                    format: '{point.y:.2f}', // one decimal
+                    y: 10, // 10 pixels down from the top
+                    style: {
+                        fontSize: '13px',
+                        fontFamily: 'Verdana, sans-serif'
+                    }
+                },
+
                 series: response
             });
 
@@ -201,6 +214,9 @@ app.controller('PrincipalController', ['$scope', '$api',
 
         $api.get('Deputado/CamaraResumoAnual').success(function (response) {
             Highcharts.setOptions({
+                global: {
+                    useUTC: false
+                },
                 lang: {
                     decimalPoint: ',',
                     thousandsSep: ' '
@@ -225,12 +241,12 @@ app.controller('PrincipalController', ['$scope', '$api',
                     title: {
                         text: "Valor (em reais)"
                     },
-                    labels: {
-                        align: 'left',
-                        x: 3,
-                        y: 16,
-                        format: '{value:.,0f}'
-                    },
+                    //labels: {
+                    //    align: 'left',
+                    //    x: 3,
+                    //    y: 16,
+                    //    format: '{value:,.0f}'
+                    //},
                     showFirstLabel: false
                 }],
 
@@ -241,23 +257,25 @@ app.controller('PrincipalController', ['$scope', '$api',
                 tooltip: {
                     shared: true,
                     crosshairs: true,
-                    pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>'
+                    pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>'
                 },
 
-                dataLabels: {
-                    enabled: true,
-                    rotation: -90,
-                    color: '#FFFFFF',
-                    align: 'right',
-                    format: '{point.y:.1f}', // one decimal
-                    y: 10, // 10 pixels down from the top
-                    style: {
-                        fontSize: '13px',
-                        fontFamily: 'Verdana, sans-serif'
+                series: [{
+                    name: 'Câmara',
+                    data: response.series,
+                    dataLabels: {
+                        enabled: true,
+                        rotation: -90,
+                        color: '#FFFFFF',
+                        align: 'right',
+                        format: '{point.y:,.2f}', // one decimal
+                        y: 10, // 10 pixels down from the top
+                        style: {
+                            fontSize: '13px',
+                            fontFamily: 'Verdana, sans-serif'
+                        }
                     }
-                },
-
-                series: response.series
+                }]
             });
         });
 
@@ -287,12 +305,12 @@ app.controller('PrincipalController', ['$scope', '$api',
                     title: {
                         text: "Valor (em reais)"
                     },
-                    labels: {
-                        align: 'left',
-                        x: 3,
-                        y: 16,
-                        format: '{value:.,0f}'
-                    },
+                    //labels: {
+                    //    align: 'left',
+                    //    x: 3,
+                    //    y: 16,
+                    //    format: '{value:,.0f}'
+                    //},
                     showFirstLabel: false
                 }],
 
@@ -303,23 +321,25 @@ app.controller('PrincipalController', ['$scope', '$api',
                 tooltip: {
                     shared: true,
                     crosshairs: true,
-                    pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>'
+                    pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>'
                 },
 
-                dataLabels: {
-                    enabled: true,
-                    rotation: -90,
-                    color: '#FFFFFF',
-                    align: 'right',
-                    format: '{point.y:.1f}', // one decimal
-                    y: 10, // 10 pixels down from the top
-                    style: {
-                        fontSize: '13px',
-                        fontFamily: 'Verdana, sans-serif'
+                series: [{
+                    name: 'Senado',
+                    data: response.series,
+                    dataLabels: {
+                        enabled: true,
+                        rotation: -90,
+                        color: '#FFFFFF',
+                        align: 'right',
+                        format: '{point.y:,.2f}', // one decimal
+                        y: 10, // 10 pixels down from the top
+                        style: {
+                            fontSize: '13px',
+                            fontFamily: 'Verdana, sans-serif'
+                        }
                     }
-                },
-
-                series: response.series
+                }]
             });
         });
     }]);

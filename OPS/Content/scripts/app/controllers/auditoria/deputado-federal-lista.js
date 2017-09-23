@@ -1,11 +1,10 @@
 ﻿'use strict';
 
-app.controller('DeputadoListaController', ["$rootScope", "$scope", "$tabela", "$api", "$queryString",
+app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabela", "$api", "$queryString",
     function ($rootScope, $scope, $tabela, $api, $queryString) {
 
     	var init = function () {
     		document.title = "OPS :: Deputado Federal";
-
     		$scope.filtro = {};
 
     		var qs = $queryString.search();
@@ -82,7 +81,7 @@ app.controller('DeputadoListaController', ["$rootScope", "$scope", "$tabela", "$
     	$scope.LimparFiltros = function () {
     		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido").selectpicker('deselectAll');
     		$("#txtBeneficiario, #txtDocumento").val('');
-    		$("#lstPerido").val('3').selectpicker('refresh');
+    		$("#lstPerido").val('8').selectpicker('refresh');
     		$scope.TrocaAba(null, 1);
     	}
 

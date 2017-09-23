@@ -24,6 +24,14 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
+		[Route("Lista")]
+		//[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+		public dynamic Lista()
+		{
+			return dao.Lista();
+		}
+
+		[HttpGet]
 		[Route("Pesquisa")]
 		[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
 		public dynamic Pesquisa()
@@ -107,6 +115,20 @@ namespace OPS.WebApi
 		public dynamic CamaraResumoAnual()
 		{
 			return dao.CamaraResumoAnual();
+		}
+
+		[HttpGet]
+		[Route("Frequencia/{id:int}")]
+		public dynamic Frequencia(int id)
+		{
+			return dao.Frequencia(id);
+		}
+
+		[HttpGet]
+		[Route("Frequencia")]
+		public dynamic Frequencia([FromUri]FiltroFrequenciaCamaraDTO filtro)
+		{
+			return dao.Frequencia(filtro);
 		}
 	}
 }

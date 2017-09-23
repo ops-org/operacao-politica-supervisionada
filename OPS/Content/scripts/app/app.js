@@ -95,6 +95,9 @@ var app;
                 .when("/deputado-federal/documento/:id", { templateUrl: "app/auditoria/deputado-federal-documento" })
                 .when("/deputado-federal/:id/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-detalhes" })
                 .when("/deputado-federal/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-lista" })
+                .when("/deputado-federal/frequencia/:id", { templateUrl: "app/auditoria/deputado-federal-frequencia-detalhes" })
+                .when("/deputado-federal/frequencia", { templateUrl: "app/auditoria/deputado-federal-frequencia-lista" })
+                .when("/deputado-federal/conheca", { templateUrl: "app/auditoria/deputado-federal-conheca" })
                 .when("/deputado-federal/:id", { templateUrl: "app/auditoria/deputado-federal-detalhes" })
                 .when("/deputado-federal", { templateUrl: "app/auditoria/deputado-federal-lista" })
 
@@ -517,10 +520,10 @@ var app;
                     return new NgTableParams(params, {
                         counts: false,
                         filterDelay: 300,
-                        getData: function (params) {
+                        getData: function (paramsInner) {
                             $rootScope.countRequest++;
 
-                            var paramsSorting = params.sorting();
+                            var paramsSorting = paramsInner.sorting();
                             var sorting = '';
                             if (Object.keys(paramsSorting).length > 0) {
                                 var key = Object.keys(paramsSorting)[0];
@@ -529,29 +532,29 @@ var app;
 
 
                             var ngTableFilter = {};
-                            if (Object.keys(params.filter()).length > 0) {
-                                angular.copy(params.filter(), ngTableFilter); //DeepCopy
+                            if (Object.keys(paramsInner.filter()).length > 0) {
+                                angular.copy(paramsInner.filter(), ngTableFilter); //DeepCopy
                             }
 
                             ngTableFilter['sorting'] = sorting;
-                            ngTableFilter['count'] = params.count();
-                            ngTableFilter['page'] = params.page();
+                            ngTableFilter['count'] = paramsInner.count();
+                            ngTableFilter['page'] = paramsInner.page();
 
                             return _$resource.query(ngTableFilter)
                                 .$promise
                                 .then(function (data) {
                                     //salvar a pesquisa atual na URL, para histórico e compartlhamento.
-                                    filter['sorting'] = sorting || undefined;
-                                    //filter['count'] = params.count();
-                                    if (params.page() > 1) {
-                                        filter['page'] = params.page();
-                                    }
+                                    //filter['sorting'] = sorting || undefined;
+                                    ////filter['count'] = params.count();
+                                    //if (paramsInner.page() > 1) {
+                                    //    filter['page'] = paramsInner.page();
+                                    //}
 
                                     // HACH: ao voltar 2x estava aplicando o filtro indevidamente a pagina que poderia quebrar.
                                     if (path === $location.path()) {
                                         $location.search(filter);
                                         //$locationEx.skipReload().path($location.path()).search(filter).replace();
-                                        console.log(filter);
+                                        //console.log(filter);
 
                                         // Esperar carregar o grid e levar para o grid, util quando paginando e filtrando.
                                         setTimeout(function () {
@@ -565,7 +568,7 @@ var app;
                                     }
 
                                     $rootScope.countRequest--;
-                                    params.total(data.total_count);
+                                    paramsInner.total(data.total_count);
                                     return data.results;
                                 })
                                 .catch(function (response) {

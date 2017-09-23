@@ -21,7 +21,7 @@
 
 		public string Periodo { get; set; }
 
-		//public string Documento { get; set; }
+		public string Documento { get; set; }
 
 		public eAgrupamentoAuditoria Agrupamento { get; set; }
 

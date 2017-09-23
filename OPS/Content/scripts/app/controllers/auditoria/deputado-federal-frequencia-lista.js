@@ -1,19 +1,9 @@
 ﻿'use strict';
 
-app.controller('DenunciasListaController', ["$scope", "$tabela", "$api", "$queryString",
+app.controller('DeputadoFederalFrequenciaListaController', ["$scope", "$tabela", "$api", "$queryString",
     function ($scope, $tabela, $api, $queryString) {
 
-        document.title = "OPS :: Denúncias";
-
-        $scope.filtro = {
-            MensagensNaoLidas: true,
-            AguardandoRevisao: true,
-            PendenteInformacao: true,
-            Duvidoso: true,
-            Dossie: false,
-            Repetido: false,
-            NaoProcede: false
-        };
+        document.title = "OPS :: Assiduidade nas sessões da Câmara Federal";
 
         var qs = $queryString.search();
         if (qs.page) {
@@ -26,7 +16,9 @@ app.controller('DenunciasListaController', ["$scope", "$tabela", "$api", "$query
         }
 
         $scope.BuscaGrid = function () {
-            $scope.tableParams = $tabela.databind('Denuncia', $scope.filtro);
+            var filtro = {};
+
+            $scope.tableParams = $tabela.databind('Deputado/Frequencia', filtro);
         }
 
         $scope.BuscaGrid();

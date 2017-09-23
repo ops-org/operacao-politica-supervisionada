@@ -61,10 +61,11 @@ namespace OPS.Core.DAO
 				banco.AddParameter("id", id);
 
 				using (MySqlDataReader reader = banco.ExecuteReader(
-                        @"SELECT 
+						@"SELECT 
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
-							, pj.nome
+							, pji.tipo
+							, IFNULL(pji.nome, pj.nome) as nome
 							, pj.doador
 							, pji.data_de_abertura
 							, pji.nome_fantasia
@@ -97,7 +98,7 @@ namespace OPS.Core.DAO
                         FROM fornecedor_atividade_secundaria fas 
                         INNER JOIN fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
                         where id_fornecedor = @id;"
-                    ))
+					))
 				{
 					if (reader.Read())
 					{
@@ -106,6 +107,7 @@ namespace OPS.Core.DAO
                             id_fornecedor = reader["id_fornecedor"].ToString(),
                             cnpj_cpf = reader["cnpj_cpf"].ToString(),
                             data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
+                            tipo = reader["tipo"].ToString(),
                             nome = reader["nome"].ToString(),
                             nome_fantasia = reader["nome_fantasia"].ToString(),
                             atividade_principal = reader["atividade_principal"].ToString(),
@@ -445,6 +447,7 @@ namespace OPS.Core.DAO
 					id_fornecedor_natureza_juridica = DBNull.Value;
 				}
 
+				banco.AddParameter("tipo", fornecedor.Tipo);
 				banco.AddParameter("nome", fornecedor.RazaoSocial);
 				banco.AddParameter("data_de_abertura", Utils.ParseDateTime(fornecedor.DataAbertura));
 				banco.AddParameter("nome_fantasia", fornecedor.NomeFantasia);
@@ -476,6 +479,7 @@ namespace OPS.Core.DAO
 
 					sql =
 						@"INSERT INTO fornecedor_info (
+							tipo,
 							nome,
 							data_de_abertura,
 							nome_fantasia,
@@ -501,6 +505,7 @@ namespace OPS.Core.DAO
 							id_fornecedor,
 							cnpj
 						) VALUES (
+							@tipo,
 							@nome,
 							@data_de_abertura,
 							@nome_fantasia,
@@ -532,6 +537,7 @@ namespace OPS.Core.DAO
 				{
 					sql =
 						@"UPDATE fornecedor_info SET
+							tipo								= @tipo,
 							nome								= @nome,
 							data_de_abertura					= @data_de_abertura,
 							nome_fantasia						= @nome_fantasia,

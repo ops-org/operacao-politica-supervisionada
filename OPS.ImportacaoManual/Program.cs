@@ -114,13 +114,13 @@ namespace OPS.ImportacaoManual
 
 			var tempPath = @"C:\GitHub\operacao-politica-supervisionada\OPS\temp";
 
-			//ConverterXmlParaCsvDespesasCamara(tempPath);
+			////ConverterXmlParaCsvDespesasCamara(tempPath);
 
-			#region Camara
+			//#region Camara
 			//Camara.AtualizaInfoDeputados();
 			//Camara.AtualizaInfoDeputadosCompleto();
 
-			//Camara.ImportarMandatos();
+			////Camara.ImportarMandatos();
 			//Camara.DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
 
 			//Importação na nova estrutura
@@ -129,28 +129,29 @@ namespace OPS.ImportacaoManual
 			//	Camara.ImportarDespesas(tempPath, ano, true);
 			//}
 			//Camara.ImportarDespesas(tempPath, 2017, false);
-			Camara.ImportarDespesasXml(tempPath);
-			//Camara.AtualizaDeputadoValores();
-			Camara.ImportaPresencasDeputados();
+			
+			//Camara.ImportarDespesasXml(tempPath);
+			////Camara.AtualizaDeputadoValores();
+			//Camara.ImportaPresencasDeputados();
 
-			//Camara.ValidarLinkRecibos();
-			#endregion Camara
+			////Camara.ValidarLinkRecibos();
+			////#endregion Camara
 
-			#region Senado
-			//Senado.CarregaSenadores();
-			//Senado.DownloadFotosSenadores(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\SENADOR\");
+			////#region Senado
+			////Senado.CarregaSenadores();
+			////Senado.DownloadFotosSenadores(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\SENADOR\");
 
 			//for (int ano = 2008; ano <= 2017; ano++)
 			//{
-			//   Senado.ImportarDespesas(tempPath, ano, true);
+			//	Senado.ImportarDespesas(tempPath, ano, true);
 			//}
-			Senado.ImportarDespesas(tempPath, 2017, false);
-			#endregion Senado
+			//Senado.ImportarDespesas(tempPath, 2017, false);
+			//#endregion Senado
 
-			Fornecedor.ConsultarReceitaWS();
+			//Fornecedor.ConsultarReceitaWS();
 
-			//Fornecedor.AtualizaFornecedorDoador();
-			//Fornecedor.ConsultarCNPJ();
+			////Fornecedor.AtualizaFornecedorDoador();
+			Fornecedor.ConsultarCNPJ();
 		}
 	}
 }

@@ -944,9 +944,6 @@ namespace OPS.Core.DAO
 				var categories = new List<dynamic>();
 				var series = new List<dynamic>();
 
-				var senado = new List<dynamic>();
-
-
 				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
 				{
 					if (reader.HasRows)
@@ -955,17 +952,10 @@ namespace OPS.Core.DAO
 						{
 
 							categories.Add(Convert.ToInt32(reader["ano"]));
-							senado.Add(Convert.ToDecimal(reader["valor"]));
+							series.Add(Convert.ToDecimal(reader["valor"]));
 						}
 					}
 				}
-
-				series.Add(new
-				{
-					name = "Senado",
-					stack = "senado",
-					data = senado
-				});
 
 				return new
 				{

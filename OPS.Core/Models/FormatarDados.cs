@@ -106,10 +106,10 @@ namespace OPS.Core.Models
 				textoHTML = textoHTML.Substring(textoHTML.IndexOf("NÚMERO DE INSCRIÇÃO"));
 				textoHTML = textoHTML.Substring(0, textoHTML.IndexOf("Aprovado pela Instrução Normativa")).Replace("NÚMERO DE INSCRIÇÃO", "").Trim();
 				textoHTML = Regex.Replace(textoHTML, "&nbsp;", string.Empty).Trim();
-				fornecedor.CnpjCpf = cnpj; //textoHTML.Substring(0, textoHTML.IndexOf("\r\n"));
+				fornecedor.CnpjCpf = cnpj;
 
-				textoHTML = textoHTML.Replace(fornecedor.CnpjCpf, "");
-				fornecedor.Matriz = (textoHTML.Substring(0, textoHTML.IndexOf("COMPROVANTE")).Trim().Equals("MATRIZ")) ? 1 : 0;
+				textoHTML = textoHTML.Replace(textoHTML.Substring(0, textoHTML.IndexOf("\r\n")), "");
+				fornecedor.Tipo = textoHTML.Substring(0, textoHTML.IndexOf("COMPROVANTE")).Trim();
 
 				textoHTML = textoHTML.Substring(textoHTML.IndexOf("DATA DE ABERTURA")).Replace("DATA DE ABERTURA", "").Trim();
 				fornecedor.DataAbertura = textoHTML.Substring(0, textoHTML.IndexOf("\r\n")).Trim();

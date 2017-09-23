@@ -1,15 +1,15 @@
 ﻿<div class="container-fluid" data-ng-controller="FornecedorController">
 
-    <div data-ng-if="fornecedor.tipo==='nd'">
+    <div data-ng-if="fornecedor.genero==='nd'">
         <fieldset id="fsDadosReceita" class="form-group">
             <legend>Dados do Beneficiário</legend>
             <div class="col-md-12">
-                <p><label>Nome:</label> {{::fornecedor.nome}}</p>
+                <p><label>Nome:</label> {{fornecedor.nome}}</p>
             </div>
         </fieldset>
     </div>
 
-    <div data-ng-if="fornecedor.tipo==='pf'">
+    <div data-ng-if="fornecedor.genero==='pf'">
         <fieldset id="fsDadosReceita" class="form-group">
             <legend>Dados do Beneficiário</legend>
             <div class="row">
@@ -26,7 +26,7 @@
         </fieldset>
     </div>
 
-    <div data-ng-if="fornecedor.tipo==='pj'">
+    <div data-ng-if="fornecedor.genero==='pj'">
         <fieldset id="fsConsultaReceita" class="form-group" style="display: none;">
             <legend>Consulta de CNPJ na Receita Federal</legend>
             <div class="row">
@@ -34,7 +34,7 @@
                     <div class="col-md-12">
                         <div class="form-group img-captcha" style="height: 50px">
                             <img id="captcha_img" title="Informe o texto da imagem" alt="Captcha" src="" />
-                            <a href="#" id="buscar-captcha-btn" class="btn btn-warning btn-sm" style="margin-left: 3px" title="Carregar outra imagem"><i class="fa fa-refresh"></i></a>
+                            <a data-ng-click="BuscarCaptchaReceita()" class="btn btn-warning btn-sm" style="margin-left: 3px" title="Carregar outra imagem"><i class="fa fa-refresh"></i></a>
                         </div>
                     </div>
                     <div class="col-md-12">
@@ -114,38 +114,44 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <p><label>CNPJ:</label> {{::fornecedor.cnpj_cpf}}</p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <p><label>Tipo:</label> {{fornecedor.tipo}}</p>
+                </div>
+                <div class="col-md-3">
                     <p><label>Situação Cadastral:</label> <span data-ng-class="fornecedor.situacao_cadastral == 'ATIVA' ? 'text-success' : 'text-warning'" data-ng-bind="fornecedor.situacao_cadastral"></span></p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <p><label>Doador de campanha:</label> <span data-ng-bind="fornecedor.doador == 1 ? 'Sim' : 'Não'"></span></p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    <p><label>Razão social:</label> {{::fornecedor.nome}}</p>
+                    <p><label>Razão social:</label> {{fornecedor.nome}}</p>
                 </div>
                 <div class="col-md-6">
-                    <p><label>Nome fantasia:</label> {{::fornecedor.nome_fantasia}}</p>
+                    <p><label>Nome fantasia:</label> {{fornecedor.nome_fantasia}}</p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <p><label>Endereço:</label> {{::fornecedor.logradouro}}, {{::fornecedor.numero}} - {{::fornecedor.bairro}}<span data-ng-if="complemento">, {{::fornecedor.complemento}}</span>, {{::fornecedor.cep}}, {{::fornecedor.cidade}}, {{::fornecedor.estado}}</p>
+                    <p><label>Endereço:</label> {{fornecedor.logradouro}}, {{fornecedor.numero}} - {{fornecedor.bairro}}<span data-ng-if="complemento">, {{fornecedor.complemento}}</span>, {{fornecedor.cep}}, {{fornecedor.cidade}}, {{fornecedor.estado}}</p>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
-                    <p><label>Data de abertura:</label> {{::fornecedor.data_de_abertura}}</p>
+                <div class="col-md-3">
+                    <p><label>Data de abertura:</label> {{fornecedor.data_de_abertura}}</p>
                 </div>
-                <div class="col-md-4">
-                    <p><label>E-mail:</label> {{::fornecedor.endereco_eletronico}}</p>
+                <div class="col-md-3">
+                    <p><label>E-mail:</label> {{fornecedor.endereco_eletronico}}</p>
                 </div>
-                <div class="col-md-4">
-                    <p><label>Telefone:</label> {{::fornecedor.telefone}}</p>
+                <div class="col-md-3">
+                    <p><label>Telefone:</label> {{fornecedor.telefone}}</p>
+                </div>
+                <div class="col-md-3" data-ng-if="fornecedor.capital_social">
+                    <p><label>Capital Social:</label> R$ {{fornecedor.capital_social}}</p>
                 </div>
             </div>
         </fieldset>
@@ -158,7 +164,7 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         <label>Código e descrição da atividade econômica principal (CNAE):</label>
-                        <div>{{::fornecedor.atividade_principal}}</div>
+                        <div>{{fornecedor.atividade_principal}}</div>
                     </div>
                 </div>
             </div>
@@ -172,29 +178,24 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <p><label>Código e descrição da natureza jurídica:</label> {{::fornecedor.natureza_juridica}}</p>
+                    <p><label>Código e descrição da natureza jurídica:</label> {{fornecedor.natureza_juridica}}</p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-4">
-                    <p><label>Data da situação cadastral:</label> {{::fornecedor.data_da_situacao_cadastral}}</p>
+                    <p><label>Data da situação cadastral:</label> {{fornecedor.data_da_situacao_cadastral}}</p>
                 </div>
                 <div class="col-md-8" data-ng-if="fornecedor.motivo_situacao_cadastral">
-                    <p><label>Motivo de situação cadastral:</label> {{::fornecedor.motivo_situacao_cadastral}}</p>
+                    <p><label>Motivo de situação cadastral:</label> {{fornecedor.motivo_situacao_cadastral}}</p>
                 </div>
                 <div class="col-md-4" data-ng-if="fornecedor.situacao_especial">
-                    <p><label>Situação especial:</label> {{::fornecedor.situacao_especial}}</p>
+                    <p><label>Situação especial:</label> {{fornecedor.situacao_especial}}</p>
                 </div>
                 <div class="col-md-4" data-ng-if="fornecedor.data_situacao_especial">
-                    <p><label>Data da situação especial:</label> {{::fornecedor.data_situacao_especial}}</p>
+                    <p><label>Data da situação especial:</label> {{fornecedor.data_situacao_especial}}</p>
                 </div>
                 <div class="col-md-4" data-ng-if="fornecedor.ente_federativo_responsavel">
-                    <p><label>Ente federativo responsável (EFR):</label> {{::fornecedor.ente_federativo_responsavel}}</p>
-                </div>
-            </div>
-            <div class="row" data-ng-if="fornecedor.capital_social">
-                <div class="col-md-12">
-                    <p><label>Capital Social:</label> R$ {{::fornecedor.capital_social}}</p>
+                    <p><label>Ente federativo responsável (EFR):</label> {{fornecedor.ente_federativo_responsavel}}</p>
                 </div>
             </div>
 

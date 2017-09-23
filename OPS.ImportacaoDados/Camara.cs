@@ -545,7 +545,7 @@ namespace OPS.ImportacaoDados
 							}
 							else
 							{
-								var nome_parlamentar = parlamentar["nome_parlamentar"].InnerText.Split('-');
+								var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
 								var sigla_partido = "";
 								var sigla_estado = "";
 								try
@@ -559,7 +559,7 @@ namespace OPS.ImportacaoDados
 									var x = e;
 								}
 
-								banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
+								banco.AddParameter("nomeParlamentar", nome_parlamentar[0]);
 								banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
 								banco.AddParameter("id_carteira_parlamantar",
 									parlamentar["carteiraParlamentar"].InnerText);
@@ -595,7 +595,7 @@ namespace OPS.ImportacaoDados
 								catch (Exception ex)
 								{
 									// parlamentar não existe na base
-									Console.WriteLine(parlamentar["nome_parlamentar"].InnerText + "/" +
+									Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" +
 													  dia["legislatura"].InnerText + "/" +
 													  parlamentar["carteiraParlamentar"].InnerText);
 									break;
@@ -707,20 +707,20 @@ namespace OPS.ImportacaoDados
 		private static void CarregaDadosXml(string fullFileNameXml, bool completo)
 		{
 			var banco = new Banco();
-			LimpaDespesaTemporaria(banco);
-
-			if (completo)
+			var lstHash = new Dictionary<string, long>();
+			using (var dReader = banco.ExecuteReader("select id, hash from cf_despesa where ano=2017"))
 			{
-				banco.ExecuteNonQuery(@"
-                    DELETE FROM cf_despesa where ano=2017;
-
-                     -- select max(id)+1 from cf_despesa;
-                    ALTER TABLE cf_despesa AUTO_INCREMENT = 2762548;
-				");
+				while (dReader.Read())
+				{
+					lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+				}
 			}
+
+			LimpaDespesaTemporaria(banco);
 
 			StreamReader stream = null;
 			var linhaAtual = 0;
+			int vazia = 0;
 
 			try
 			{
@@ -751,6 +751,11 @@ namespace OPS.ImportacaoDados
 						//else 
 						if (string.IsNullOrEmpty(strXmlNodeDespeza))
 						{
+							vazia++;
+							if (vazia < 10)
+							{
+								continue;
+							}
 							Console.WriteLine(linhaAtual);
 							break;
 						}
@@ -758,6 +763,7 @@ namespace OPS.ImportacaoDados
 						//{
 						//   tretas = strXmlNodeDespeza;
 						//}
+						vazia = 0;
 
 						//DataRow drDespesa = dtDespesa.NewRow();
 						var doc = new XmlDocument();
@@ -787,18 +793,22 @@ namespace OPS.ImportacaoDados
 							banco.AddParameter(fileNode.Name, value);
 						}
 
+						string hash = banco.ParametersHash();
+						if (lstHash.Remove(hash))
+						{
+							banco.ClearParameters();
+							continue;
+						}
+
+						banco.AddParameter("hash", hash);
+						sqlFields.Append(", hash");
+						sqlValues.Append(", @hash");
+
 						banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
 
-						if (++linhaAtual == 10000)
+						if (++linhaAtual % 100 == 0)
 						{
 							Console.WriteLine(linhaAtual);
-
-							linhaAtual = 0;
-							banco.Dispose();
-							banco = new Banco();
-
-							if (completo)
-								ProcessarDespesasTemp(banco, completo);
 						}
 					} while (true);
 
@@ -814,6 +824,13 @@ namespace OPS.ImportacaoDados
 			}
 
 			banco = new Banco();
+
+			if (lstHash.Count > 0)
+			{
+				string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
+				banco.ExecuteNonQuery(string.Format("delete from cf_despesa where id IN({0})", lstExcluir.Substring(1)));
+			}
+
 			ProcessarDespesasTemp(banco, completo);
 
 			banco.ExecuteNonQuery(@"
@@ -824,6 +841,8 @@ namespace OPS.ImportacaoDados
 			AtualizaDeputadoValores();
 
 			AtualizaCampeoesGastos();
+
+			AtualizaResumoMensal();
 		}
 
 		/// <summary>
@@ -890,15 +909,16 @@ namespace OPS.ImportacaoDados
 
 			using (var banco = new Banco())
 			{
-				if (!completo)
-				{
-					banco.ExecuteNonQuery(@"
-						DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
+				//if (!completo)
+				//{
+				//	banco.ExecuteNonQuery(@"
+				//		DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
 
-						-- select max(id)+1 from cf_despesa
-						ALTER TABLE cf_despesa AUTO_INCREMENT = 2762548;
-                  ");
-				}
+				//		-- select max(id)+1 from cf_despesa
+				//		ALTER TABLE cf_despesa AUTO_INCREMENT = 2974353;
+				//              ");
+				//}
+				var dt = banco.GetTable("select id, hash from cf_despesa where ano=" + ano);
 
 				LimpaDespesaTemporaria(banco);
 
@@ -957,6 +977,18 @@ namespace OPS.ImportacaoDados
 							}
 						}
 
+						string hash = banco.ParametersHash();
+
+						var lstDr = dt.Select("hash='" + hash + "'");
+						if (lstDr.Length > 0)
+						{
+							dt.Rows.Remove(lstDr[0]);
+							banco.ClearParameters();
+							continue;
+						}
+
+						banco.AddParameter("hash", hash);
+
 						banco.ExecuteNonQuery(
 							@"INSERT INTO cf_despesa_temp (
 								txNomeParlamentar, idecadastro, nuCarteiraParlamentar, nuLegislatura, sgUF, 
@@ -964,26 +996,32 @@ namespace OPS.ImportacaoDados
 								txtDescricaoEspecificacao, txtFornecedor, txtCNPJCPF, txtNumero, indTipoDocumento, 
 								datEmissao, vlrDocumento, vlrGlosa, vlrLiquido, numMes, 
 								numAno, numParcela, txtPassageiro, txtTrecho, numLote, 
-								numRessarcimento, vlrRestituicao, nuDeputadoId, ideDocumento
+								numRessarcimento, vlrRestituicao, nuDeputadoId, ideDocumento, hash
 							) VALUES (
 								@txNomeParlamentar, @idecadastro, @nuCarteiraParlamentar, @nuLegislatura, @sgUF, 
 								@sgPartido, @codLegislatura, @numSubCota, @txtDescricao, @numEspecificacaoSubCota, 
 								@txtDescricaoEspecificacao, @txtFornecedor, @txtCNPJCPF, @txtNumero, @indTipoDocumento, 
 								@datEmissao, @vlrDocumento, @vlrGlosa, @vlrLiquido, @numMes, 
 								@numAno, @numParcela, @txtPassageiro, @txtTrecho, @numLote, 
-								@numRessarcimento, @vlrRestituicao, @nuDeputadoId, @ideDocumento
+								@numRessarcimento, @vlrRestituicao, @nuDeputadoId, @ideDocumento, @hash
 							)");
 
-						if (++linhaAtual == 10000)
-						{
-							linhaAtual = 0;
+						//if (++linhaAtual == 10000)
+						//{
+						//	linhaAtual = 0;
 
-							ProcessarDespesasTemp(banco, true);
-						}
+						//	ProcessarDespesasTemp(banco, true);
+						//}
 					}
 				}
 
 				ProcessarDespesasTemp(banco, completo);
+
+				foreach (DataRow dr in dt.Rows)
+				{
+					banco.AddParameter("id", dr["id"].ToString());
+					banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
+				}
 			}
 
 			if (ano == DateTime.Now.Year)
@@ -991,6 +1029,8 @@ namespace OPS.ImportacaoDados
 				AtualizaDeputadoValores();
 
 				AtualizaCampeoesGastos();
+
+				AtualizaResumoMensal();
 
 				using (var banco = new Banco())
 				{
@@ -1163,7 +1203,8 @@ namespace OPS.ImportacaoDados
 					trecho_viagem,
 					lote,
 					ressarcimento,
-					ano_mes
+					ano_mes,
+					hash
 				)
 				select 
 					dt.ideDocumento,
@@ -1186,7 +1227,8 @@ namespace OPS.ImportacaoDados
 					txtTrecho,
 					numLote,
 					numRessarcimento,
-					concat(numAno, LPAD(numMes, 2, '0'))
+					concat(numAno, LPAD(numMes, 2, '0')),
+					hash
 				from cf_despesa_temp dt
 				LEFT join fornecedor f on f.cnpj_cpf = dt.txtCNPJCPF
 					or (f.cnpj_cpf is null and dt.txtCNPJCPF is null and f.nome = dt.txtFornecedor)
@@ -1365,6 +1407,23 @@ namespace OPS.ImportacaoDados
 				INNER JOIN cf_deputado d on d.id = l1.id_cf_deputado 
 				LEFT JOIN partido p on p.id = d.id_partido
 				LEFT JOIN estado e on e.id = d.id_estado;";
+
+			using (var banco = new Banco())
+			{
+				banco.ExecuteNonQuery(strSql);
+			}
+		}
+
+		public static void AtualizaResumoMensal()
+		{
+			var strSql =
+				@"truncate table cf_despesa_resumo_mensal;
+				insert into cf_despesa_resumo_mensal
+				(ano, mes, valor) (
+					select ano, mes, sum(valor_liquido)
+					from cf_despesa
+					group by ano, mes
+				);";
 
 			using (var banco = new Banco())
 			{

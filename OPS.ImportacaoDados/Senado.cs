@@ -140,18 +140,17 @@ namespace OPS.ImportacaoDados
 			int DETALHAMENTO = indice++;
 			int VALOR_REEMBOLSADO = indice++;
 
-			//var linhaAtual = 0;
+			int linhaAtual = 0;
 
 			using (var banco = new Banco())
 			{
-				if (!completo)
+				var lstHash = new Dictionary<string, long>();
+				using (var dReader = banco.ExecuteReader("select id, hash from sf_despesa where ano=" + ano))
 				{
-					banco.ExecuteNonQuery(@"
-						delete from sf_despesa where ano=" + DateTime.Now.Year + @";
-
-						-- select max(id)+1 from sf_despesa
-						ALTER TABLE sf_despesa AUTO_INCREMENT = 196405;
-                  ");
+					while (dReader.Read())
+					{
+						lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+					}
 				}
 
 				LimpaDespesaTemporaria(banco);
@@ -208,20 +207,33 @@ namespace OPS.ImportacaoDados
 						banco.AddParameter("detalhamento", valores[DETALHAMENTO]);
 						banco.AddParameter("valor_reembolsado", Convert.ToDouble(valores[VALOR_REEMBOLSADO]));
 
+						string hash = banco.ParametersHash();
+						if (lstHash.Remove(hash))
+						{
+							banco.ClearParameters();
+							continue;
+						}
+
+						banco.AddParameter("hash", hash);
+
 						banco.ExecuteNonQuery(
 							@"INSERT INTO sf_despesa_temp (
-								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado
+								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado, hash
 							) VALUES (
-								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado
+								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @hash
 							)");
 					}
 
-					//if (completo && (++linhaAtual == 10000))
-					//{
-					//	linhaAtual = 0;
+					if (++linhaAtual % 100 == 0)
+					{
+						Console.WriteLine(linhaAtual);
+					}
+				}
 
-					//	ProcessarDespesasTemp(banco, completo);
-					//}
+				if (lstHash.Count > 0)
+				{
+					string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
+					banco.ExecuteNonQuery(string.Format("delete from sf_despesa where id IN({0})", lstExcluir.Substring(1)));
 				}
 
 				ProcessarDespesasTemp(banco, completo);
@@ -230,8 +242,8 @@ namespace OPS.ImportacaoDados
 			if (ano == DateTime.Now.Year)
 			{
 				AtualizaSenadorValores();
-
 				AtualizaCampeoesGastos();
+				AtualizaResumoMensal();
 
 				using (var banco = new Banco())
 				{
@@ -248,10 +260,10 @@ namespace OPS.ImportacaoDados
 			InsereSenadorFaltante(banco);
 			InsereFornecedorFaltante(banco);
 
-			if (completo)
-				InsereDespesaFinal(banco);
-			else
-				InsereDespesaFinalParcial(banco);
+			//if (completo)
+			InsereDespesaFinal(banco);
+			//else
+			//	InsereDespesaFinalParcial(banco);
 
 			LimpaDespesaTemporaria(banco);
 		}
@@ -316,7 +328,8 @@ namespace OPS.ImportacaoDados
 					documento,
 					data_documento,
 					detalhamento,
-					valor
+					valor,
+					hash
 				)
 				SELECT 
 					p.id,
@@ -328,7 +341,8 @@ namespace OPS.ImportacaoDados
 					d.documento,
 					d.`data`,
 					d.detalhamento,
-					d.valor_reembolsado
+					d.valor_reembolsado,
+					d.hash
 				FROM sf_despesa_temp d
 				inner join sf_senador p on p.nome = d.senador
 				inner join sf_despesa_tipo dt on dt.descricao = d.tipo_despesa
@@ -460,6 +474,23 @@ namespace OPS.ImportacaoDados
 				INNER JOIN sf_senador d on d.id = l1.id_sf_senador
 				LEFT JOIN partido p on p.id = d.id_partido
 				LEFT JOIN estado e on e.id = d.id_estado;";
+
+			using (var banco = new Banco())
+			{
+				banco.ExecuteNonQuery(strSql);
+			}
+		}
+
+		public static void AtualizaResumoMensal()
+		{
+			var strSql =
+				@"truncate table sf_despesa_resumo_mensal;
+					insert into sf_despesa_resumo_mensal
+					(ano, mes, valor) (
+						select ano, mes, sum(valor)
+						from sf_despesa
+						group by ano, mes
+					);";
 
 			using (var banco = new Banco())
 			{

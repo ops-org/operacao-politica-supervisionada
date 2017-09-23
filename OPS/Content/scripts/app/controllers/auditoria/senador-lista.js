@@ -5,7 +5,6 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
 
     	var init = function () {
     		document.title = "OPS :: Senador";
-
     		$scope.filtro = {};
 
     		var qs = $queryString.search();
@@ -82,7 +81,7 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     	$scope.LimparFiltros = function () {
     		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido").selectpicker('deselectAll');
     		$("#txtBeneficiario, #txtDocumento").val('');
-    		$("#lstPerido").val('3').selectpicker('refresh');
+    		$("#lstPerido").val('8').selectpicker('refresh');
     		$scope.TrocaAba(null, 1);
     	}
 

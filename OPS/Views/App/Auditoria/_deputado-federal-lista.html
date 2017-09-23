@@ -1,4 +1,4 @@
-﻿<div class="container-fluid" data-ng-controller="DeputadoListaController">
+﻿<div class="container-fluid" data-ng-controller="DeputadoFederalListaController">
 
     <ol class="breadcrumb">
         <li><a href="./#!/deputado-federal">Inicio</a></li>
@@ -205,12 +205,13 @@
 <script type="text/ng-template" id="documento.html">
     <table ng-table="tableParams" class="table table-striped table-hover">
         <tr ng-repeat="row in $data">
-            <td data-title="'Emissão'" style="width:10%" sortable="'data_emissao'">{{::row.data_emissao}}</td>
-            <td data-title="'CNPJ/CPF'" style="width:10%" sortable="'cnpj_cpf'">{{::row.cnpj_cpf}}</td>
-            <td data-title="'Beneficiário'" style="width:30%" sortable="'nome_fornecedor'"><a data-ng-href="./#!/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
-            <td data-title="'Parlamentar'" style="width:30%" sortable="'nome_parlamentar'"><a href="./#!/deputado-federal/{{::row.id_deputado}}">{{::row.nome_parlamentar}}</a></td>
-            <td data-title="'Nº Nota Fiscal'" style="width:10%" sortable="'numero_documento'">{{::row.numero_documento}}</td>
-            <td data-title="'Valor'" style="width:10%" sortable="'valor_liquido'"><a href="./#!/deputado-federal/documento/{{::row.id_cf_despesa}}">{{::row.valor_liquido}}</a></td>
+            <td data-title="'Emissão'" sortable="'data_emissao'">{{::row.data_emissao}}</td>
+            <td data-title="'CNPJ/CPF'" sortable="'cnpj_cpf'">{{::row.cnpj_cpf}}</td>
+            <td data-title="'Beneficiário'" sortable="'nome_fornecedor'"><a data-ng-href="./#!/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
+            <td data-title="'Parlamentar'" sortable="'nome_parlamentar'"><a href="./#!/deputado-federal/{{::row.id_deputado}}">{{::row.nome_parlamentar}}</a></td>
+            <td data-title="'Nº Nota Fiscal'" sortable="'numero_documento'">{{::row.numero_documento}}</td>
+            <td data-title="'Trecho'" sortable="'trecho_viagem'">{{::row.trecho_viagem}}</td>
+            <td data-title="'Valor'" sortable="'valor_liquido'"><a href="./#!/deputado-federal/documento/{{::row.id_cf_despesa}}">{{::row.valor_liquido}}</a></td>
         </tr>
     </table>
 </script>

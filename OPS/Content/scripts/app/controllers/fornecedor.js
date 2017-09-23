@@ -8,19 +8,16 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	        $scope.disqusConfig = {
 	            disqus_identifier: 'fornecedor-' + $routeParams.id.toString(),
 	            disqus_url: base_url + '/fornecedor/' + $routeParams.id.toString()
-	        };
+            };
+
+            $scope.BuscarCaptchaReceita = function() {
+	            $("#captcha_img").fadeOut(1000, function () {
+	                $(this).attr('src', "");
+	                $scope.BuscarCaptcha();
+	            });
+            };
 
 	        setTimeout(function () {
-	            $("#buscar-captcha-btn").on("click", function (e) {
-	                e.preventDefault();
-
-	                $("#captcha_img").fadeOut(1000, function () {
-	                    $(this).attr('src', "");
-	                    $scope.BuscarCaptcha();
-	                });
-
-	            });
-
 	            $("#img-input").keydown(function (e) {
 	                if (e.keyCode === 13) {
 	                    e.preventDefault();
@@ -35,39 +32,6 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	                    return false;
 	                }
 	            });
-
-	            //$("#buscarDados-btn").on("click", function (e) {
-	            //    e.preventDefault();
-
-	            //    if ($("#img-input").val()) {
-	            //        $scope.ObterDados();
-	            //    } else {
-	            //        alert('Digite o texto da imagem!');
-	            //        $("#img-input").focus();
-	            //    }
-	            //});
-
-	            //$('#ButtonDenunciar').click(function (e) {
-	            //	e.preventDefault();
-	            //	window.parent.TabDenuncia($("#lblCNPJ").text(), $("#lblRazaoSocial").text());
-	            //});
-
-	            //$('#ButtonListarDoacoes').click(function (e) {
-	            //	e.preventDefault();
-	            //	window.parent.TabDoacoes($("#lblCNPJ").text(), $("#lblRazaoSocial").text());
-	            //});
-
-	            //$('#ButtonListarDeputados').click(function (e) {
-	            //	e.preventDefault();
-	            //	window.parent.addTabDocumentos($("#lblCNPJ").text(), $("#lblRazaoSocial").text(), 0);
-	            //});
-
-	            //$('#ButtonListarDocumentos').click(function (e) {
-	            //	e.preventDefault();
-	            //	window.parent.addTabDocumentos($("#lblCNPJ").text(), $("#lblRazaoSocial").text(), 1);
-	            //});
-
-	           
 	        }, 1000);
 
 	        $scope.PesquisarNoMaps = function (f) {
@@ -297,7 +261,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	        document.title = "OPS :: Beneficiario - " + response.fornecedor.nome;
 
 	        if (response.fornecedor.cnpj_cpf.length === 14) {
-	            $scope.fornecedor.tipo = 'pj';
+	            $scope.fornecedor.genero = 'pj';
 
 	            if (!response.fornecedor.data_de_abertura) {
 	                setTimeout(function () {
@@ -309,9 +273,9 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	            //	$scope.fornecedorQuadroSocietario = response;
 	            //});
 	        } else if (response.fornecedor.cnpj_cpf.length === 11) {
-	            $scope.fornecedor.tipo = 'pf';
+                $scope.fornecedor.genero = 'pf';
 	        } else {
-	            $scope.fornecedor.tipo = 'nd'; //fornecedor interno / sem cnpj
+                $scope.fornecedor.genero = 'nd'; //fornecedor interno / sem cnpj
 	        }
 	    }
 
