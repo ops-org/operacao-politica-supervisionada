@@ -1,25 +1,23 @@
-﻿<div class="container-fluid" data-ng-controller="DeputadoFederalFrequenciaListaController">
-    <fieldset>
-        <legend>Frequência nas sessões da Câmara Federal</legend>
+﻿<div class="container" data-ng-controller="DeputadoFederalFrequenciaListaController">
+    <h3 class="page-title">Frequência nas sessões da Câmara Federal</h3>
 
-        <div class="table-responsive scroll-mark">
-            <table ng-table="tableParams" class="table table-striped table-hover">
-                <tr ng-repeat="row in $data">
-                    <td ><a class="btn btn-primary btn-sm" href="./#!/deputado-federal/frequencia/{{::row.id_cf_sessao}}">Detalhar sessão</a></td>
-                    <td data-title="'Numero'" sortable="'numero'">{{::row.numero}}</td>
-                    <td data-title="'Ínicio sessão'" sortable="'inicio'">{{::row.inicio}}</td>
-                    <td data-title="'Tipo'" sortable="'tipo'">{{::row.tipo}}</td>
-                    <td data-title="'Presenças'" sortable="'presenca'">{{::row.presenca}} <span class="text-muted">({{::row.presenca_percentual}}%)</span></td>
-                    <td data-title="'Ausencias'" sortable="'ausencia'">{{::row.ausencia}} <span class="text-muted">({{::row.ausencia_percentual}}%)</span></td>
-                    <td data-title="'Ausencias Justificadas'" sortable="'ausencia_justificada'">{{::row.ausencia_justificada}} <span class="text-muted">({{::row.ausencia_justificada_percentual}}%)</span></td>
-                    <td data-title="'Total'">{{::row.total}}</td>
-                </tr>
-            </table>
-        </div>
+    <div class="table-responsive scroll-mark">
+        <table ng-table="tableParams" class="table table-striped table-hover">
+            <tr ng-repeat="row in $data">
+                <td><a class="btn btn-primary btn-sm" href="./#!/deputado-federal/frequencia/{{::row.id_cf_sessao}}">Detalhar sessão</a></td>
+                <td data-title="'Numero'" sortable="'numero'">{{::row.numero}}</td>
+                <td data-title="'Ínicio sessão'" sortable="'inicio'">{{::row.inicio}}</td>
+                <td data-title="'Tipo'" sortable="'tipo'">{{::row.tipo}}</td>
+                <td data-title="'Presenças'" sortable="'presenca'">{{::row.presenca}} <span class="text-muted">({{::row.presenca_percentual}}%)</span></td>
+                <td data-title="'Ausencias'" sortable="'ausencia'">{{::row.ausencia}} <span class="text-muted">({{::row.ausencia_percentual}}%)</span></td>
+                <td data-title="'Ausencias Justificadas'" sortable="'ausencia_justificada'">{{::row.ausencia_justificada}} <span class="text-muted">({{::row.ausencia_justificada_percentual}}%)</span></td>
+                <td data-title="'Total'">{{::row.total}}</td>
+            </tr>
+        </table>
+    </div>
 
-        <!--<p>
-            Fonte: <a target="_blank" href="http://www2.camara.leg.br/atividade-legislativa/plenario/resultadoVotacao"  onclick="return trackOutboundLink(this, true);">Câmara de Deputados - Resultado da votação eletrônica e lista de presença</a>
-        </p>-->
-    </fieldset>
+    <p>
+        Fonte: <a target="_blank" href="http://www2.camara.leg.br/atividade-legislativa/plenario/resultadoVotacao" onclick="return trackOutboundLink(this, true);">Câmara de Deputados - Resultado da votação eletrônica e lista de presença</a>
+    </p>
 </div>
 

@@ -2,6 +2,7 @@
 using OPS.Core.DAO;
 using OPS.Core.DTO;
 using WebApi.OutputCache.V2;
+using System.Threading.Tasks;
 
 namespace OPS.WebApi
 {
@@ -77,9 +78,29 @@ namespace OPS.WebApi
 
 		[HttpGet]
 		[Route("Documento/{id:int}")]
-		public dynamic Documento(int id)
+		public async Task<IHttpActionResult> Documento(int id)
 		{
-			return dao.Documento(id);
+			var result = await dao.Documento(id);
+
+			return Ok(result);
+		}
+
+		[HttpGet]
+		[Route("DocumentosDoMesmoDia/{id:int}")]
+		public async Task<IHttpActionResult> DocumentosDoMesmoDia(int id)
+		{
+			var result = await dao.DocumentosDoMesmoDia(id);
+
+			return Ok(result);
+		}
+
+		[HttpGet]
+		[Route("DocumentosDaSubcotaMes/{id:int}")]
+		public async Task<IHttpActionResult> DocumentosDaSubcotaMes(int id)
+		{
+			var result = await dao.DocumentosDaSubcotaMes(id);
+
+			return Ok(result);
 		}
 
 		[HttpGet]

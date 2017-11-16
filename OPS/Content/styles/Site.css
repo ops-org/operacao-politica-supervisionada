@@ -56,8 +56,12 @@ body { /* Margin bottom by footer height */ margin-bottom: 92px; }
 .box-deputado .box-item { margin: 10px auto; }
 	.box-deputado .box-item .box-item-title { font-size: 30px; }
 
-.img-parlamentar { margin: 0 auto; margin-top: 15px; height: 160px; width: 120px; display: block; }
-	.img-parlamentar img { width: 120px; }
+.img-parlamentar { margin: 0 auto; }
+.img-deputado { margin: 0 auto; margin-top: 0; display: block; }
+
+@media(min-width:768px) {
+	.img-deputado { margin-top: 30px; }
+}
 
 .margin-bottom-0 { margin-bottom: 0; }
 
@@ -87,3 +91,20 @@ form.ng-submitted .form-control.ng-invalid { border: 1px solid red; }
 @media screen and (max-width: 767px) {
 	.table-responsive > .table { margin-bottom: 20px; padding: 0 10px; }
 }
+
+.panel-primary .panel-heading a { color: #fff; }
+.panel-danger > .panel-heading { color: #FFF; background-color: #f27474; border-color: #ebccd1; }
+.panel-danger .panel-heading a { color: #fff; }
+
+.page-title { padding: 10px 0; border-bottom: 2px solid #f27474; margin-top: 0; margin-bottom: 20px; }
+
+.navbar-default .navbar-nav > li > a { color: #f27474; }
+	.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus { color: #f27474; }
+
+.dropdown-menu > li > a { color: #f27474; }
+	.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus { color: #f27474; text-decoration: none; }
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus { background-color: #f27474; color: #FFF; }
+
+.global-header { background-color: #fff; box-shadow: 0 1px 15px 0 rgba(192,72,25,0.32); }
+	.global-header nav { font-size: 17px; color: #f27474; float: right; margin-top: 29px; }

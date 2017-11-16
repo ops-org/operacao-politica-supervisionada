@@ -4,6 +4,7 @@ namespace OPS.Core.Models
 {
 	public class Fornecedor
 	{
+		public int id { get; set; }
 		public string CnpjCpf { get; set; }
 		public string DataAbertura { get; set; }
 		public string RazaoSocial { get; set; }

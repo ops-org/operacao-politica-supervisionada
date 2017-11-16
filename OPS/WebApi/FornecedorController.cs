@@ -126,7 +126,7 @@ namespace OPS.WebApi
 			CookieContainer _cookies = CacheHelper.Get<CookieContainer>("CookieReceitaFederal_" + aCNPJ);
 
 			var oFormatarDados = new FormatarDados();
-			var id = oFormatarDados.ObterDados(_cookies, aCNPJ, jsonData["captcha"].ToString());
+			var fornecedor = oFormatarDados.ObterDados(_cookies, aCNPJ, jsonData["captcha"].ToString());
 
 			// Testar
 			////now get cache instance
@@ -134,10 +134,10 @@ namespace OPS.WebApi
 			////and invalidate cache for method "Get" of "FornecedorController"
 			//cache.RemoveStartsWith(Configuration.CacheOutputConfiguration().MakeBaseCachekey("FornecedorController", "Get"));
 
-			if (id > 0) //encontrou?
+			if (fornecedor != null) //encontrou?
 			{
-				var _fornecedor = dao.Consulta(id);
-				var _quadro_societario = dao.QuadroSocietario(id);
+				var _fornecedor = dao.Consulta(fornecedor.id);
+				var _quadro_societario = dao.QuadroSocietario(fornecedor.id);
 
 				return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
 			}

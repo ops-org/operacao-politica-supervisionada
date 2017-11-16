@@ -11,7 +11,7 @@
     </div>
 
     <div class="container form-group">
-        <h2>Resumo anual da cota parlamentar</h2>
+        <h2 class="page-title">Resumo anual da cota parlamentar</h2>
         <div class="row">
             <div class="col-sm-6">
                 <h4>Câmara dos Deputados <small>(513 deputados)</small></h4>
@@ -25,7 +25,7 @@
     </div>
 
     <div class="container form-group">
-        <h2>Resumo mensal da cota parlamentar</h2>
+        <h2 class="page-title">Resumo mensal da cota parlamentar</h2>
 
         <h4>Câmara Federal <small>(513 deputados)</small></h4>
         <label>Legislatura:</label>
@@ -66,15 +66,15 @@
 
     <div class="content-section form-group">
         <div class="container text-justify">
-            <h2>O que é a cota parlamantar?</h2>
-            <p>A <strong>cota parlamantar</strong>, também conhecida como verba indenizatória é um <strong>recurso financeiro público</strong> disponibilizado a todos os <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.</p>
+            <h2 class="page-title">O que é a cota parlamentar?</h2>
+            <p>A <strong>cota parlamentar</strong>, também conhecida como verba indenizatória é um <strong>recurso financeiro público</strong> disponibilizado a todos os <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.</p>
             <p>Cada um tem direito a restituir até <strong><a href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow" title="Clique para visualizar a lista official de valores por estado">R$ 45.612,53 por mês</a></strong> com sua <strong>alimentação, passagens aereas, combustivel, consultoria</strong>, entre outros.</p>
             <p>Contrariando a lei de licitações, o uso deste dinheiro é feito sem licitação e <strong>basta o parlamentar apresentar a nota fiscal ou recibo</strong>.</p>
         </div>
     </div>
 
     <div class="container form-group">
-        <h2>Campeões de gastos</h2>
+        <h2 class="page-title">Campeões de gastos</h2>
         <p>Os Parlamentares que mais gastaram dinheiro público da verba indenizatória da atual legislatura</p>
         <br/>
         <div class="resumo-gastos">
@@ -85,7 +85,7 @@
                         <a href="./#!/deputado-federal/{{::gasto.id_cf_deputado}}" title="Clique para visualizar o perfil do deputado(a)">
                             <div class="media ">
                                 <div class="media-left media-middle">
-                                    <img src="" data-ng-src='./Content/Images/Parlamentares/DEPFEDERAL/{{::gasto.id_cadastro}}.jpg' alt='{{::gasto.nome_parlamentar}}' height="120">
+                                    <img src="" data-ng-src='./Content/Images/Parlamentares/DEPFEDERAL/{{::gasto.id_cadastro}}_120x160.jpg' alt='{{::gasto.nome_parlamentar}}' width="90" height="120">
                                 </div>
                                 <div class="media-left media-middle">
                                     <h5 class="media-heading" data-ng-bind="::gasto.nome_parlamentar"></h5>
@@ -105,7 +105,7 @@
                         <a href="./#!/senador/{{::gasto.id_sf_senador}}" title="Clique para visualizar o perfil do senador(a)">
                             <div class="media ">
                                 <div class="media-left media-middle">
-                                    <img src="" data-ng-src='./Content/Images/Parlamentares/SENADOR/{{::gasto.id_sf_senador}}.jpg' alt='{{::gasto.nome_parlamentar}}' height="120">
+                                    <img src="" data-ng-src='./Content/Images/Parlamentares/SENADOR/{{::gasto.id_sf_senador}}_120x160.jpg' alt='{{::gasto.nome_parlamentar}}' width="90" height="120">
                                 </div>
                                 <div class="media-left media-middle">
                                     <h5 class="media-heading" title="Nome do parlamentar" data-ng-bind="::gasto.nome_parlamentar"></h5>

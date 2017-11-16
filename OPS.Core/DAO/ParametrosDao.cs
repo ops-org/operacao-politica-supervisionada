@@ -15,10 +15,9 @@ namespace OPS.Core.DAO
 					{
 						if (reader.Read())
 						{
-							Padrao.DeputadoFederalMenorAno = int.Parse(reader["cf_deputado_menor_ano"].ToString());
 							Padrao.DeputadoFederalUltimaAtualizacao = DateTime.Parse(reader["cf_deputado_ultima_atualizacao"].ToString());
-							Padrao.SenadorMenorAno = int.Parse(reader["sf_senador_menor_ano"].ToString());
 							Padrao.SenadorUltimaAtualizacao = DateTime.Parse(reader["sf_senador_ultima_atualizacao"].ToString());
+							Padrao.DeputadoFederalPresencaUltimaAtualizacao = DateTime.Parse(reader["cf_deputado_presenca_ultima_atualizacao"].ToString());
 						}
 					}
 				}

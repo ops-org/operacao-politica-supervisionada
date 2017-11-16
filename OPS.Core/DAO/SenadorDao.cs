@@ -17,6 +17,7 @@ namespace OPS.Core.DAO
 						d.id as id_sf_senador
 						, d.nome as nome_parlamentar
 						, d.nome_completo as nome_civil
+						, d.nascimento
 						, d.sexo
 						, d.id_partido
 						, p.sigla as sigla_partido
@@ -25,7 +26,6 @@ namespace OPS.Core.DAO
 						, e.sigla as sigla_estado
 						, e.nome as nome_estado
 						, d.email
-						, d.url
 						, d.valor_total_ceaps
 					FROM sf_senador d
 					LEFT JOIN partido p on p.id = d.id_partido
@@ -43,6 +43,7 @@ namespace OPS.Core.DAO
 							id_sf_senador = reader["id_sf_senador"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							nome_civil = reader["nome_civil"].ToString(),
+							nascimento = Utils.FormataData(reader["nascimento"]),
 							sexo = reader["sexo"].ToString(),
 							id_partido = reader["id_partido"],
 							sigla_estado = reader["sigla_estado"].ToString(),
@@ -51,7 +52,6 @@ namespace OPS.Core.DAO
 							sigla_partido = reader["sigla_partido"].ToString(),
 							nome_estado = reader["nome_estado"].ToString(),
 							email = reader["email"].ToString(),
-							url = reader["url"].ToString(),
 
 							valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
 						};
@@ -227,8 +227,13 @@ namespace OPS.Core.DAO
 				var strSql = new StringBuilder();
 				strSql.AppendLine(@"
 					SELECT 
-						id, nome
-					FROM sf_senador 
+						id, nome, nome_completo
+					FROM sf_senador
+					WHERE id IN (
+						/* Somente senadores com despesas */
+						select distinct id_sf_senador 
+						from sf_despesa
+					)
 					ORDER BY nome
 				");
 
@@ -240,6 +245,7 @@ namespace OPS.Core.DAO
 						lstRetorno.Add(new
 						{
 							id = reader["id"].ToString(),
+							tokens = new[] { reader["nome"].ToString(), reader["nome_completo"].ToString() },
 							text = reader["nome"].ToString()
 						});
 					}
@@ -254,17 +260,17 @@ namespace OPS.Core.DAO
 
 			switch (filtro.Agrupamento)
 			{
-				case eAgrupamentoAuditoria.Parlamentar:
+				case EnumAgrupamentoAuditoria.Parlamentar:
 					return LancamentosParlamentar(filtro);
-				case eAgrupamentoAuditoria.Despesa:
+				case EnumAgrupamentoAuditoria.Despesa:
 					return LancamentosDespesa(filtro);
-				case eAgrupamentoAuditoria.Fornecedor:
+				case EnumAgrupamentoAuditoria.Fornecedor:
 					return LancamentosFornecedor(filtro);
-				case eAgrupamentoAuditoria.Partido:
+				case EnumAgrupamentoAuditoria.Partido:
 					return LancamentosPartido(filtro);
-				case eAgrupamentoAuditoria.Uf:
+				case EnumAgrupamentoAuditoria.Uf:
 					return LancamentosEstado(filtro);
-				case eAgrupamentoAuditoria.Documento:
+				case EnumAgrupamentoAuditoria.Documento:
 					return LancamentosNotaFiscal(filtro);
 			}
 

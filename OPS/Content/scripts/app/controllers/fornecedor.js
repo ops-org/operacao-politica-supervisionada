@@ -263,11 +263,11 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	        if (response.fornecedor.cnpj_cpf.length === 14) {
 	            $scope.fornecedor.genero = 'pj';
 
-	            if (!response.fornecedor.data_de_abertura) {
-	                setTimeout(function () {
-	                    $scope.ReconsultarDadosReceita();
-	                }, 100);
-	            }
+	            //if (!response.fornecedor.data_de_abertura) {
+	            //    setTimeout(function () {
+	            //        $scope.ReconsultarDadosReceita();
+	            //    }, 100);
+	            //}
 
 	            //$api.get('Fornecedor/QuadroSocietario', $routeParams.id).success(function (response) {
 	            //	$scope.fornecedorQuadroSocietario = response;

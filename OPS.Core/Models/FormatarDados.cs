@@ -16,7 +16,7 @@ namespace OPS.Core.Models
 		private const string paginaCaptcha = "captcha/gerarCaptcha.asp";
 		private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 
-		public int ObterDados(CookieContainer _cookies, string aCNPJ, string aCaptcha, bool bUsarSleap = false)
+		public Fornecedor ObterDados(CookieContainer _cookies, string aCNPJ, string aCaptcha, bool bUsarSleap = false)
 		{
 			Random aleatorio = new Random();
 
@@ -86,14 +86,14 @@ namespace OPS.Core.Models
 					//fornecedor.DataInclusao = DateTime.Now.ToString();
 
 					var fornecedorDao = new FornecedorDao();
-					var id = fornecedorDao.AtualizaDados(fornecedor);
+					fornecedor.id = fornecedorDao.AtualizaDados(fornecedor);
 
-					return id;
+					return fornecedor;
 					// fornecedorDao.MarcaVisitado(fornecedor.CnpjCpf, UserName);
 				}
 			}
 
-			return 0;
+			return null;
 		}
 
 		public Fornecedor MontarObjFornecedor(string cnpj, string responseFromServer)

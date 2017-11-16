@@ -23,13 +23,13 @@
 
 		public string Documento { get; set; }
 
-		public eAgrupamentoAuditoria Agrupamento { get; set; }
+		public EnumAgrupamentoAuditoria Agrupamento { get; set; }
 
 		public FiltroParlamentarDTO()
 		{
 			this.count = 100;
 			this.page = 1;
-			this.Agrupamento = eAgrupamentoAuditoria.Parlamentar; 
+			this.Agrupamento = EnumAgrupamentoAuditoria.Parlamentar; 
 		}
 	}
 }

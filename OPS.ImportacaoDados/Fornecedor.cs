@@ -1,15 +1,13 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
+using OPS.Core;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Net;
-using System.Threading;
-using MySql.Data.MySqlClient;
-using OPS.Core;
-using RestSharp;
 using System.Net.Http;
-using Newtonsoft.Json;
+using System.Text;
 
 namespace OPS.ImportacaoDados
 {
@@ -17,6 +15,8 @@ namespace OPS.ImportacaoDados
 	{
 		public static void ConsultarCNPJ()
 		{
+			int totalErros = 0, totalAcertos = 0;
+
 			while (true)
 			{
 				DataTable dtFornecedores;
@@ -46,7 +46,7 @@ namespace OPS.ImportacaoDados
 				{
 					try
 					{
-						Receita.ConsultarCNPJ(item["cnpj_cpf"].ToString());
+						Receita.ConsultarCNPJ(item["cnpj_cpf"].ToString(), ref totalAcertos, ref totalErros);
 					}
 					catch (Exception e)
 					{
@@ -76,9 +76,12 @@ namespace OPS.ImportacaoDados
 			}
 		}
 
-		public static void ConsultarReceitaWS()
+		public static string ConsultarReceitaWS()
 		{
+			var sb = new StringBuilder();
+			var strInfoAdicional = new StringBuilder();
 			int RateLimit_Remaining = -1;
+			int totalImportados = 0;
 
 			DataTable dtFornecedores;
 			DataTable dtFornecedoresAtividade;
@@ -101,6 +104,12 @@ namespace OPS.ImportacaoDados
 					-- and controle <> 5
 					and (controle is null or controle <> 5)
                     order by 1 desc");
+
+				if (dtFornecedores.Rows.Count == 0)
+				{
+					Console.WriteLine("Não há fornecedores para consultar");
+					return "<p>Não há fornecedores para consultar</p>";
+				}
 
 				dtFornecedoresAtividade = banco.GetTable("SELECT * FROM fornecedor_atividade;");
 				dtFornecedoresNatJu = banco.GetTable("SELECT * FROM fornecedor_natureza_juridica;");
@@ -368,6 +377,13 @@ namespace OPS.ImportacaoDados
 
 						InserirControle(0, item["cnpj_cpf"].ToString(), "");
 						Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"] + " - " + i);
+
+						totalImportados++;
+
+						if (receita.situacao != "ATIVA")
+						{
+							strInfoAdicional.Append("<p>Empresa inativa importada:" + receita.cnpj + " - " + receita.nome + "</p>");
+						}
 					}
 					else
 					{
@@ -395,9 +411,7 @@ namespace OPS.ImportacaoDados
 				");
 			}
 
-			Console.WriteLine("");
-			Console.WriteLine("Saindo... ");
-			Console.ReadKey();
+			return string.Format("<p>{0} de {1} fornecedores novos importados</p>", totalImportados, dtFornecedores.Rows.Count) + strInfoAdicional.ToString();
 		}
 
 		private static void InserirControle(int controle, string cnpj_cpf, string mensagem)

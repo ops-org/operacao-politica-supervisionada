@@ -39,6 +39,14 @@ namespace OPS
 		protected void Application_Error(object sender, EventArgs e)
 		{
 #if !DEBUG
+			// Tratamento de erros de referencia ao site antigo pelo BingBot
+			if (Context.Request.Path.EndsWith(@"&_escaped_fragment_=/"))
+			{
+				Server.ClearError();
+				Response.RedirectPermanent("~/", true);
+				return;
+			}
+
 			try
 			{
 				string message = Server.GetLastError().Message;
@@ -46,8 +54,7 @@ namespace OPS
 				//Ignorar OperationCanceledException e HttpException
 				if (!message.Contains("This is an invalid webresource request.") && !message.Contains("The operation was canceled."))
 				{
-					string infoAdicional = JsonConvert.SerializeObject(Context.Request,
-					Formatting.Indented, new JsonSerializerSettings
+					string infoAdicional = JsonConvert.SerializeObject(Context.Request, Formatting.Indented, new JsonSerializerSettings
 					{
 						ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
 						ContractResolver = new IgnoreErrorPropertiesResolver()
@@ -60,7 +67,7 @@ namespace OPS
 
 					Task.Run(async () =>
 					{
-						await Utils.SendMailAsync(new MailAddress("suporte@ops.net.br"), "OPS :: " + exBase.Message,
+						await Utils.SendMailAsync(new MailAddress(Padrao.EmailEnvioErros), "OPS :: " + exBase.Message,
 							httpUnhandledException.GetHtmlErrorMessage());
 					}).Wait();
 				}

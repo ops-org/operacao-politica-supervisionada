@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using MySql.Data.MySqlClient;
 using OPS.Core.DTO;
+using System.Threading.Tasks;
+using System.Data.Common;
 
 namespace OPS.Core.DAO
 {
@@ -184,7 +186,7 @@ namespace OPS.Core.DAO
 			}
 		}
 
-		public dynamic Documento(int id)
+		public async Task<dynamic> Documento(int id)
 		{
 			using (Banco banco = new Banco())
 			{
@@ -206,6 +208,7 @@ namespace OPS.Core.DAO
 						, l.trecho_viagem
 						, l.ano
 						, l.mes
+						, l.ano_mes
 						, td.id as id_cf_despesa_tipo
 						, td.descricao as descricao_despesa
 						, d.id as id_cf_deputado
@@ -225,50 +228,145 @@ namespace OPS.Core.DAO
 				 ");
 				banco.AddParameter("@id", id);
 
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString());
+				while (await reader.ReadAsync())
 				{
-					if (reader.Read())
+					string sTipoDocumento = "";
+					switch (await reader.GetValueOrDefaultAsync<int>(3))
 					{
-						string sTipoDocumento = "";
-						switch (reader["tipo_documento"].ToString())
-						{
-							case "0": sTipoDocumento = "Nota Fiscal"; break;
-							case "1": sTipoDocumento = "Recibo"; break;
-							case "2": case "3": sTipoDocumento = "Despesa no Exterior"; break;
-						}
-						var result = new
-						{
-							id_cf_despesa = reader["id_cf_despesa"],
-							id_documento = reader["id_documento"],
-							numero_documento = reader["numero_documento"].ToString(),
-							tipo_documento = sTipoDocumento,
-							data_emissao = Utils.FormataData(reader["data_emissao"]),
-							valor_documento = Utils.FormataValor(reader["valor_documento"]),
-							valor_glosa = Utils.FormataValor(reader["valor_glosa"]),
-							valor_liquido = Utils.FormataValor(reader["valor_liquido"]),
-							valor_restituicao = Utils.FormataValor(reader["valor_restituicao"]),
-							parcela = reader["parcela"].ToString(),
-							nome_passageiro = reader["nome_passageiro"].ToString(),
-							trecho_viagem = reader["trecho_viagem"].ToString(),
-							ano = reader["ano"].ToString(),
-							mes = reader["mes"].ToString(),
-							id_cf_despesa_tipo = reader["id_cf_despesa_tipo"],
-							descricao_despesa = reader["descricao_despesa"].ToString(),
-							id_cf_deputado = reader["id_cf_deputado"],
-							nome_parlamentar = reader["nome_parlamentar"].ToString(),
-							sigla_estado = reader["sigla_estado"].ToString(),
-							sigla_partido = reader["sigla_partido"].ToString(),
-							id_fornecedor = reader["id_fornecedor"],
-							cnpj_cpf = reader["cnpj_cpf"].ToString(),
-							nome_fornecedor = reader["nome_fornecedor"].ToString(),
-							competencia = string.Format("{0:00}/{1:0000}", reader["mes"], reader["ano"])
-						};
-
-						return result;
+						case 0: sTipoDocumento = "Nota Fiscal"; break;
+						case 1: sTipoDocumento = "Recibo"; break;
+						case 2: case 3: sTipoDocumento = "Despesa no Exterior"; break;
 					}
 
-					return null;
+					var result = new
+					{
+						id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+						id_documento = await reader.GetValueOrDefaultAsync<ulong>(1),
+						numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
+						tipo_documento = sTipoDocumento,
+						data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<MySql.Data.Types.MySqlDateTime?>(4)),
+						valor_documento = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(5)),
+						valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
+						valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
+						valor_restituicao = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(8)),
+						parcela = await reader.GetValueOrDefaultAsync<uint?>(9),
+						nome_passageiro = await reader.GetValueOrDefaultAsync<string>(10),
+						trecho_viagem = await reader.GetValueOrDefaultAsync<string>(11),
+						ano = await reader.GetValueOrDefaultAsync<ushort>(12),
+						mes = await reader.GetValueOrDefaultAsync<ushort>(13),
+						ano_mes = await reader.GetValueOrDefaultAsync<uint>(14),
+						id_cf_despesa_tipo = await reader.GetValueOrDefaultAsync<uint>(15),
+						descricao_despesa = await reader.GetValueOrDefaultAsync<string>(16),
+						id_cf_deputado = await reader.GetValueOrDefaultAsync<int>(17),
+						nome_parlamentar = await reader.GetValueOrDefaultAsync<string>(18),
+						sigla_estado = await reader.GetValueOrDefaultAsync<string>(19),
+						sigla_partido = await reader.GetValueOrDefaultAsync<string>(20),
+						id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(21),
+						cnpj_cpf = await reader.GetValueOrDefaultAsync<string>(22),
+						nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(23),
+						competencia = string.Format("{0:00}/{1:0000}", await reader.GetValueOrDefaultAsync<ushort>(13), await reader.GetValueOrDefaultAsync<ushort>(12)),
+					};
+
+					return result;
 				}
+				reader.Close();
+				return null;
+			}
+		}
+
+		public async Task<dynamic> DocumentosDoMesmoDia(int id)
+		{
+			using (Banco banco = new Banco())
+			{
+				var strSql = new StringBuilder();
+
+				strSql.AppendLine(@"
+					SELECT
+						l.id as id_cf_despesa
+						, pj.id as id_fornecedor
+						, pj.nome as nome_fornecedor
+						, pji.estado as sigla_estado_fornecedor
+						, l.valor_liquido
+					FROM (
+						select id, id_cf_deputado, id_fornecedor, data_emissao from cf_despesa
+						where id = @id
+					) l1 
+					INNER JOIN cf_despesa l on
+						l1.id_cf_deputado = l.id_cf_deputado and
+						l1.data_emissao = l.data_emissao and
+						l1.id <> l.id
+					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor_info pji ON pji.id_fornecedor = pj.id
+					order by l.valor_liquido desc
+					limit 50
+				 ");
+				banco.AddParameter("@id", id);
+
+				var lstRetorno = new List<dynamic>();
+
+				DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString());
+				while (await reader.ReadAsync())
+				{
+					lstRetorno.Add(new
+					{
+						id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+						id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+						nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
+						sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
+						valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
+					});
+				}
+				reader.Close();
+				return lstRetorno;
+			}
+		}
+
+		public async Task<dynamic> DocumentosDaSubcotaMes(int id)
+		{
+			using (Banco banco = new Banco())
+			{
+				var strSql = new StringBuilder();
+
+				strSql.AppendLine(@"
+					SELECT
+						l.id as id_cf_despesa
+						, pj.id as id_fornecedor
+						, pj.nome as nome_fornecedor
+						, pji.estado as sigla_estado_fornecedor
+						, l.valor_liquido
+					FROM (
+						select id, id_cf_deputado, id_fornecedor, id_cf_despesa_tipo, ano_mes from cf_despesa
+						where id = @id
+					) l1 
+					INNER JOIN cf_despesa l on
+						l1.id_cf_deputado = l.id_cf_deputado and
+						l1.ano_mes = l.ano_mes and
+						l1.id_cf_despesa_tipo = l.id_cf_despesa_tipo and
+						l1.id <> l.id
+					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor_info pji ON pji.id_fornecedor = pj.id
+					order by l.valor_liquido desc
+					limit 50
+				 ");
+				banco.AddParameter("@id", id);
+
+				var lstRetorno = new List<dynamic>();
+
+				DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString());
+				while (reader.Read())
+				{
+					lstRetorno.Add(new
+					{
+						id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+						id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+						nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
+						sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
+						valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
+					});
+				}
+				reader.Close();
+				return lstRetorno;
 			}
 		}
 
@@ -418,17 +516,17 @@ namespace OPS.Core.DAO
 
 			switch (filtro.Agrupamento)
 			{
-				case eAgrupamentoAuditoria.Parlamentar:
+				case EnumAgrupamentoAuditoria.Parlamentar:
 					return LancamentosParlamentar(filtro);
-				case eAgrupamentoAuditoria.Despesa:
+				case EnumAgrupamentoAuditoria.Despesa:
 					return LancamentosDespesa(filtro);
-				case eAgrupamentoAuditoria.Fornecedor:
+				case EnumAgrupamentoAuditoria.Fornecedor:
 					return LancamentosFornecedor(filtro);
-				case eAgrupamentoAuditoria.Partido:
+				case EnumAgrupamentoAuditoria.Partido:
 					return LancamentosPartido(filtro);
-				case eAgrupamentoAuditoria.Uf:
+				case EnumAgrupamentoAuditoria.Uf:
 					return LancamentosEstado(filtro);
-				case eAgrupamentoAuditoria.Documento:
+				case EnumAgrupamentoAuditoria.Documento:
 					return LancamentosNotaFiscal(filtro);
 			}
 
@@ -842,6 +940,7 @@ namespace OPS.Core.DAO
 						, l.numero_documento
 						, l.trecho_viagem
 						, l.valor_liquido
+						, pji.estado as sigla_estado_fornecedor
 					FROM (
 						SELECT *
 						FROM cf_despesa l
@@ -854,7 +953,9 @@ namespace OPS.Core.DAO
 				sqlSelect.AppendFormat(" LIMIT {0},{1} ", (filtro.page - 1) * filtro.count, filtro.count);
 				sqlSelect.AppendLine(@" ) l
 					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
-					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor;");
+					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor_info pji on pji.id_fornecedor = pj.id;");
+
 
 				sqlSelect.AppendLine(
 					@"SELECT COUNT(1) AS row_count, SUM(l.valor_liquido) as valor_total
@@ -875,6 +976,7 @@ namespace OPS.Core.DAO
 							id_fornecedor = reader["id_fornecedor"],
 							cnpj_cpf = reader["cnpj_cpf"],
 							nome_fornecedor = reader["nome_fornecedor"].ToString(),
+							sigla_estado_fornecedor = reader["sigla_estado_fornecedor"].ToString(),
 							id_deputado = reader["id_deputado"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							numero_documento = reader["numero_documento"].ToString(),

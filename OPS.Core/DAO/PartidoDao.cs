@@ -1,27 +1,28 @@
 ﻿using System.Collections.Generic;
-using MySql.Data.MySqlClient;
+using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace OPS.Core.DAO
 {
 	public class PartidoDao
 	{
-		public dynamic Consultar()
+		public async Task<dynamic> Consultar()
 		{
 			using (Banco banco = new Banco())
 			{
 				var lstRetorno = new List<dynamic>();
-				using (MySqlDataReader reader = banco.ExecuteReader("SELECT id, sigla, nome FROM partido order by nome;"))
+
+				DbDataReader reader = await banco.ExecuteReaderAsync("SELECT id, sigla, nome FROM partido order by nome;");
+				while (reader.Read())
 				{
-					while (reader.Read())
+					lstRetorno.Add(new
 					{
-						lstRetorno.Add(new
-						{
-							id = reader["id"].ToString(),
-                            tokens = new[] { reader["sigla"].ToString(), reader["nome"].ToString() },
-                            text = reader["nome"].ToString()
-						});
-					}
+						id = reader.GetFieldValue<uint>(0),
+						tokens = new[] { reader.GetFieldValue<string>(1), reader.GetFieldValue<string>(2) },
+						text = reader.GetFieldValue<string>(2)
+					});
 				}
+
 				return lstRetorno;
 			}
 		}

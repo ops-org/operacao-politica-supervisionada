@@ -12,7 +12,7 @@ namespace OPS.ImportacaoDados
 {
 	public class Senado
 	{
-		public static void CarregaSenadores()
+		public static void CarregaSenadoresAtuais()
 		{
 			//StringBuilder email = new StringBuilder();
 
@@ -32,11 +32,9 @@ namespace OPS.ImportacaoDados
 								try
 								{
 									banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
-									banco.AddParameter("nome_parlamentar", Convert.ToString(senador["nome_parlamentar"]).ToUpper());
+									banco.AddParameter("nome_parlamentar", Convert.ToString(senador["NomeParlamentar"]).ToUpper());
 									banco.AddParameter("NomeCompletoParlamentar", Convert.ToString(senador["NomeCompletoParlamentar"]));
 									banco.AddParameter("SexoParlamentar", Convert.ToString(senador["SexoParlamentar"])[0].ToString());
-									banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
-									banco.AddParameter("Foto", Convert.ToString(senador["UrlFotoParlamentar"]));
 									banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
 									banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
 									banco.AddParameter("EmailParlamentar", Convert.ToString(senador["EmailParlamentar"]));
@@ -44,9 +42,9 @@ namespace OPS.ImportacaoDados
 									//banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
 									banco.ExecuteNonQuery(
 										@"INSERT INTO sf_senador (
-											id, nome, nome_completo, sexo, url, foto, id_partido, id_estado, email, ativo
+											id, nome, nome_completo, sexo, id_partido, id_estado, email, ativo
 										) VALUES (
-											@CodigoParlamentar, @nome_parlamentar, @NomeCompletoParlamentar, @SexoParlamentar, @Url, @Foto, 
+											@CodigoParlamentar, @nome_parlamentar, @NomeCompletoParlamentar, @SexoParlamentar,
 											(SELECT id FROM partido where sigla like @SiglaPartido), (SELECT id FROM estado where sigla like @SiglaUf), 
 											@EmailParlamentar, 'S'
 										)");
@@ -67,8 +65,6 @@ namespace OPS.ImportacaoDados
 										@"UPDATE sf_senador SET 
 											nome_completo = @NomeCompletoParlamentar
 											, sexo = @SexoParlamentar
-											, url = @Url
-											, foto = @Foto
 											, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido)
 											, id_estado = (SELECT id FROM estado where sigla like @SiglaUf)
 											, email = @EmailParlamentar
@@ -85,7 +81,228 @@ namespace OPS.ImportacaoDados
 			}
 		}
 
-		public static void ImportarDespesas(string atualDir, int ano, bool completo)
+		public static void AtualizaSenadores()
+		{
+
+			using (var banco = new Banco())
+			{
+				DataTable dtSenadores = banco.GetTable("SELECT id FROM sf_senador");
+
+				foreach (DataRow dr in dtSenadores.Rows)
+				{
+					try
+					{
+						using (var senado = new DataSet())
+						{
+							senado.ReadXml("http://legis.senado.leg.br/dadosabertos/senador/" + dr["id"].ToString());
+
+							DataRow senador = senado.Tables["IdentificacaoParlamentar"].Rows[0];
+							DataRow senadosDadosBasicos = senado.Tables["DadosBasicosParlamentar"].Rows[0];
+
+							banco.AddParameter("NomeParlamentar", Convert.ToString(senador["NomeParlamentar"]));
+							banco.AddParameter("NomeCompletoParlamentar", Convert.ToString(senador["NomeCompletoParlamentar"]));
+							banco.AddParameter("SexoParlamentar", Convert.ToString(senador["SexoParlamentar"])[0].ToString());
+
+							try
+							{
+								banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("Url", DBNull.Value);
+							}
+
+							try
+							{
+								banco.AddParameter("Foto", Convert.ToString(senador["UrlFotoParlamentar"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("Foto", DBNull.Value);
+							}
+
+							banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
+							try
+							{
+								banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
+							}
+							catch (Exception)
+							{
+								try
+								{
+									banco.AddParameter("SiglaUf", Convert.ToString(senadosDadosBasicos["UfNaturalidade"]));
+								}
+								catch (Exception)
+								{
+									try
+									{
+										DataRow ultimoMandato = senado.Tables["UltimoMandato"].Rows[0];
+										banco.AddParameter("SiglaUf", Convert.ToString(ultimoMandato["UfParlamentar"]));
+									}
+									catch (Exception)
+									{
+										banco.AddParameter("SiglaUf", DBNull.Value);
+									}
+								}
+							}
+
+							try
+							{
+								banco.AddParameter("EmailParlamentar", Convert.ToString(senador["EmailParlamentar"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("EmailParlamentar", DBNull.Value);
+							}
+
+
+							banco.AddParameter("DataNascimento", Convert.ToString(senadosDadosBasicos["DataNascimento"]));
+							banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
+							// Ao invés de gravar o fim do mandato grava o início
+							//banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
+							banco.ExecuteNonQuery(
+								@"UPDATE sf_senador SET 
+											nome = @NomeParlamentar
+											, nome_completo = @NomeCompletoParlamentar
+											, sexo = @SexoParlamentar
+											, url = @Url
+											, foto = @Foto
+											, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido)
+											, id_estado = (SELECT id FROM estado where sigla like @SiglaUf)
+											, email = @EmailParlamentar
+											, nascimento = @DataNascimento
+										WHERE id = @CodigoParlamentar");
+						}
+					}
+					catch (Exception ex)
+					{
+						Console.WriteLine(ex.Message);
+					}
+				}
+			}
+		}
+
+
+		public static void CarregaSenadores()
+		{
+
+			using (var banco = new Banco())
+			{
+				for (int i = 4921; i <= 6000; i++)
+				{
+					try
+					{
+						using (var senado = new DataSet())
+						{
+							senado.ReadXml("http://legis.senado.leg.br/dadosabertos/senador/" + i.ToString());
+
+							DataRow senador = senado.Tables["IdentificacaoParlamentar"].Rows[0];
+							DataRow senadosDadosBasicos = senado.Tables["DadosBasicosParlamentar"].Rows[0];
+
+
+							banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
+
+							try
+							{
+								banco.AddParameter("NomeParlamentar", Convert.ToString(senador["NomeParlamentar"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("NomeParlamentar", Convert.ToString(senador["NomeCompletoParlamentar"]));
+							}
+
+							banco.AddParameter("NomeCompletoParlamentar", Convert.ToString(senador["NomeCompletoParlamentar"]));
+							banco.AddParameter("SexoParlamentar", Convert.ToString(senador["SexoParlamentar"])[0].ToString());
+
+							try
+							{
+								banco.AddParameter("SiglaPartido", Convert.ToString(senador["SiglaPartidoParlamentar"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("SiglaPartido", DBNull.Value);
+							}
+
+							try
+							{
+								banco.AddParameter("SiglaUf", Convert.ToString(senador["UfParlamentar"]));
+							}
+							catch (Exception)
+							{
+								try
+								{
+									banco.AddParameter("SiglaUf", Convert.ToString(senadosDadosBasicos["UfNaturalidade"]));
+								}
+								catch (Exception)
+								{
+									try
+									{
+										DataRow ultimoMandato = senado.Tables["UltimoMandato"].Rows[0];
+										banco.AddParameter("SiglaUf", Convert.ToString(ultimoMandato["UfParlamentar"]));
+									}
+									catch (Exception)
+									{
+										banco.AddParameter("SiglaUf", DBNull.Value);
+									}
+								}
+							}
+
+							try
+							{
+								banco.AddParameter("EmailParlamentar", Convert.ToString(senador["EmailParlamentar"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("EmailParlamentar", DBNull.Value);
+							}
+
+							try
+							{
+								banco.AddParameter("DataNascimento", Convert.ToString(senadosDadosBasicos["DataNascimento"]));
+							}
+							catch (Exception)
+							{
+								banco.AddParameter("DataNascimento", DBNull.Value);
+							}
+
+							// Ao invés de gravar o fim do mandato grava o início
+							//banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
+							banco.ExecuteNonQuery(
+								@"INSERT INTO sf_senador (
+									id,
+									nome,
+									nome_completo,
+									sexo,
+									id_partido,
+									id_estado,
+									email,
+									nascimento,
+									ativo
+								) values (
+									@CodigoParlamentar
+									, @NomeParlamentar
+									, @NomeCompletoParlamentar
+									, @SexoParlamentar
+									, (SELECT id FROM partido where sigla like @SiglaPartido)
+									, (SELECT id FROM estado where sigla like @SiglaUf)
+									, @EmailParlamentar
+									, @DataNascimento
+									, 'N'
+								)");
+						}
+					}
+					catch (Exception ex)
+					{
+						if (!(ex is NullReferenceException))
+						{
+							Console.WriteLine(ex.Message);
+						}
+					}
+				}
+			}
+		}
+
+		public static string ImportarDespesas(string atualDir, int ano, bool completo)
 		{
 			var downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
 			var fullFileNameCsv = atualDir + @"\" + ano + ".csv";
@@ -111,7 +328,10 @@ namespace OPS.ImportacaoDados
 						ContentLengthLocal = new FileInfo(fullFileNameCsv).Length;
 
 					if (!completo && ContentLength == ContentLengthLocal)
-						return;
+					{
+						Console.WriteLine("Não há novos itens para importar!");
+						return "<p>Não há novos itens para importar!</p>";
+					}
 				}
 
 				using (var client = new WebClient())
@@ -121,13 +341,24 @@ namespace OPS.ImportacaoDados
 				}
 			}
 
-			CarregaDadosCsv(fullFileNameCsv, ano, completo);
+			var resumoImportacao = CarregaDadosCsv(fullFileNameCsv, ano, completo);
 
+			using (var banco = new Banco())
+			{
+				banco.ExecuteNonQuery(@"
+					UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
+				");
+			}
+
+			return resumoImportacao;
 			//File.Delete(fullFileNameCsv);
 		}
 
-		private static void CarregaDadosCsv(string file, int ano, bool completo)
+		private static string CarregaDadosCsv(string file, int ano, bool completo)
 		{
+			var sb = new StringBuilder();
+			string sResumoValores = string.Empty;
+
 			int indice = 0;
 			int ANO = indice++;
 			int MES = indice++;
@@ -150,6 +381,14 @@ namespace OPS.ImportacaoDados
 					while (dReader.Read())
 					{
 						lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+					}
+				}
+
+				using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=2017"))
+				{
+					if (dReader.Read())
+					{
+						sResumoValores = string.Format("[{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
 					}
 				}
 
@@ -230,10 +469,19 @@ namespace OPS.ImportacaoDados
 					}
 				}
 
+				if (lstHash.Count == 0 && linhaAtual == 0)
+				{
+					sb.AppendFormat("<p>Não há novos itens para importar! #2</p>");
+					return sb.ToString();
+				}
+
 				if (lstHash.Count > 0)
 				{
 					string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
 					banco.ExecuteNonQuery(string.Format("delete from sf_despesa where id IN({0})", lstExcluir.Substring(1)));
+
+					Console.WriteLine("Registros para exluir: " + lstHash.Count);
+					sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
 				}
 
 				ProcessarDespesasTemp(banco, completo);
@@ -247,25 +495,37 @@ namespace OPS.ImportacaoDados
 
 				using (var banco = new Banco())
 				{
-					banco.ExecuteNonQuery(@"
-				        UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
-			        ");
+					using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=2017"))
+					{
+						if (dReader.Read())
+						{
+							sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
+						}
+					}
+
+					sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
 				}
 			}
+
+			return sb.ToString();
 		}
 
-		private static void ProcessarDespesasTemp(Banco banco, bool completo)
+		private static string ProcessarDespesasTemp(Banco banco, bool completo)
 		{
+			var sb = new StringBuilder();
+
 			CorrigeDespesas(banco);
-			InsereSenadorFaltante(banco);
-			InsereFornecedorFaltante(banco);
+			sb.Append(InsereSenadorFaltante(banco));
+			sb.Append(InsereFornecedorFaltante(banco));
 
 			//if (completo)
-			InsereDespesaFinal(banco);
+			sb.Append(InsereDespesaFinal(banco));
 			//else
 			//	InsereDespesaFinalParcial(banco);
 
 			LimpaDespesaTemporaria(banco);
+
+			return sb.ToString();
 		}
 
 		private static void CorrigeDespesas(Banco banco)
@@ -281,26 +541,24 @@ namespace OPS.ImportacaoDados
 			");
 		}
 
-		private static void InsereSenadorFaltante(Banco banco)
+		private static string InsereSenadorFaltante(Banco banco)
 		{
-			banco.ExecuteNonQuery(@"
-				INSERT INTO sf_senador (nome)
-				select distinct senador
-				from sf_despesa_temp
-				where senador  not in (
-					select nome from sf_senador
-				);
-			");
-
-			if (banco.Rows > 0)
+			object total = banco.ExecuteScalar(@"select count(1) from sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+			if (Convert.ToInt32(total) > 0)
 			{
-				Console.WriteLine(banco.Rows + " novos senadores!");
+				CarregaSenadoresAtuais();
 
-				DownloadFotosSenadores(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\SENADOR\");
+				total = banco.ExecuteScalar(@"select count(1) from sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+				if (Convert.ToInt32(total) > 0)
+				{
+					throw new Exception("Existem despesas de senadores que não estão cadastrados!");
+				}
 			}
+
+			return string.Empty;
 		}
 
-		private static void InsereFornecedorFaltante(Banco banco)
+		private static string InsereFornecedorFaltante(Banco banco)
 		{
 			banco.ExecuteNonQuery(@"
 				INSERT INTO fornecedor (nome, cnpj_cpf)
@@ -311,9 +569,16 @@ namespace OPS.ImportacaoDados
 				and f.id is null
 				GROUP BY dt.cnpj_cpf;
 			");
+
+			if (banco.Rows > 0)
+			{
+				return "<p>" + banco.Rows + "+ Fornecedor</p>";
+			}
+
+			return string.Empty;
 		}
 
-		private static void InsereDespesaFinal(Banco banco)
+		private static string InsereDespesaFinal(Banco banco)
 		{
 			banco.ExecuteNonQuery(@"
 				ALTER TABLE sf_despesa DISABLE KEYS;
@@ -344,12 +609,19 @@ namespace OPS.ImportacaoDados
 					d.valor_reembolsado,
 					d.hash
 				FROM sf_despesa_temp d
-				inner join sf_senador p on p.nome = d.senador
+				inner join sf_senador p on ifnull(p.nome_importacao, p.nome) = d.senador
 				inner join sf_despesa_tipo dt on dt.descricao = d.tipo_despesa
 				inner join fornecedor f on f.cnpj_cpf = d.cnpj_cpf;
     
 				ALTER TABLE sf_despesa ENABLE KEYS;
 			", 3600);
+
+			if (banco.Rows > 0)
+			{
+				return "<p>" + banco.Rows + "+ Despesa</p>";
+			}
+
+			return string.Empty;
 		}
 
 		private static void InsereDespesaFinalParcial(Banco banco)
@@ -435,7 +707,13 @@ namespace OPS.ImportacaoDados
 		{
 			using (var banco = new Banco())
 			{
-				var dt = banco.GetTable("select id from sf_senador");
+				banco.ExecuteNonQuery("UPDATE sf_senador SET valor_total_ceaps=0;");
+
+				var dt = banco.GetTable(@"select id from sf_senador
+						WHERE id IN (
+						select distinct id_sf_senador
+						from sf_despesa
+					)");
 				object valor_total_ceaps;
 
 				foreach (DataRow dr in dt.Rows)
@@ -502,11 +780,12 @@ namespace OPS.ImportacaoDados
 		{
 			using (var banco = new Banco())
 			{
-				DataTable table = banco.GetTable("SELECT id, foto FROM sf_senador where foto is not null", 0);
+				DataTable table = banco.GetTable("SELECT id FROM sf_senador");
 
 				foreach (DataRow row in table.Rows)
 				{
 					string id = row["id"].ToString();
+					string url = "http://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
 					string src = dirRaiz + id + ".jpg";
 					if (File.Exists(src)) continue;
 
@@ -515,9 +794,10 @@ namespace OPS.ImportacaoDados
 						using (WebClient client = new WebClient())
 						{
 							client.Headers.Add("User-Agent: Other");
-							client.DownloadFile(row["foto"].ToString(), src);
+							client.DownloadFile(url, src);
 
-							ImportacaoUtils.CreateImageThumbnail(src);
+							ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
+							ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
 
 							Console.WriteLine("Atualizado imagem do senador " + id);
 						}

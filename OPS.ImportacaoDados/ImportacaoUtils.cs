@@ -27,7 +27,7 @@ namespace OPS.ImportacaoDados
 				thumbnail = img.GetThumbnailImage(width, height, () => false, IntPtr.Zero);
 			}
 
-			thumbnail.Save(sourcePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+			thumbnail.Save(sourcePath.Replace(".jpg", "_" + width + "x" + height + ".jpg"), System.Drawing.Imaging.ImageFormat.Jpeg);
 		}
 	}
 }

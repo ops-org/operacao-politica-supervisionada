@@ -1,118 +1,113 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-br" data-ng-app="app">
 <head>
-	<base href="~/" />
-	<meta charset="utf-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>@ViewBag.Title</title>
-	<link rel="shortcut icon" type="image/ico" href="~/favicon.ico" />
-
-	@Styles.Render("~/Content/style/css")
-	<script type="text/javascript">var base_url = '@Request.Url.Scheme://@Request.Url.Host@Url.Content("~/")';</script>
+    <base href="~/" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewBag.Title</title>
+    <link rel="shortcut icon" type="image/ico" href="~/favicon.ico" />
+    @Styles.Render("~/Content/style/css")
+    <script type="text/javascript">var base_url = '@Request.Url.Scheme://@Request.Url.Host@Url.Content("~/")';</script>
 </head>
 <body data-ng-controller="IndexController">
-	<nav class="navbar navbar-default navbar-static-top topnav" role="navigation">
-		<div class="container">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-					<span class="sr-only">Alternar Navegação</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand topnav" href="./#!/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
-					<img src="~/Content/images/logo_ops.png" width="64" height="40" alt="OPS" />
-				</a>
-			</div>
-			<div id="navbar" class="navbar-collapse collapse">
-				<ul class="nav navbar-nav navbar-right">
-					<li class="dropdown">
-						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Explorar<span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li class="dropdown-header">Câmara dos Deputados</li>
+    <nav class="navbar navbar-default navbar-static-top topnav global-header" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Alternar Navegação</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand topnav" href="./#!/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
+                    <img src="~/Content/images/logo_ops.png" width="64" height="40" alt="OPS" />
+                </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Explorar<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header">Câmara dos Deputados</li>
                             @*<li><a href="./#!/deputado-federal/conheca">Conheça os deputados</a></li>*@
-							<li><a href="./#!/deputado-federal">Cota parlamentar (CEAP)</a></li>
-							<li><a href="./#!/deputado-federal/frequencia">Frequência</a></li>
-							<li><a href="./#!/deputado-federal/secretario">Secretários</a></li>
-							<li role="separator" class="divider"></li>
-							<li class="dropdown-header">Senado Federal</li>
-							<li><a href="./#!/senador">Cota Parlamentar (CEAPS)</a></li>
-						</ul>
-					</li>
-					<li><a href="./#!/forum">Forum</a></li>
-					<li><a href="./#!/fiscalize">Resumo App</a></li>
-					<li><a href="./#!/sobre">Sobre</a></li>
-					<li><a href="./#!/sobre#contato">Contato</a></li>
-					<li class="dropdown" data-ng-show="authentication.isAuth">
-						<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Olá {{authentication.firstName}}<span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="./#!/denuncia">Denúncias</a></li>
-							<li role="separator" class="divider"></li>
-							<li><a href="#" data-ng-click="logOut()">Sair</a></li>
-						</ul>
-					</li>
-				</ul>
+                            <li><a href="./#!/deputado-federal">Cota parlamentar (CEAP)</a></li>
+                            <li><a href="./#!/deputado-federal/frequencia">Frequência</a></li>
+                            <li><a href="./#!/deputado-federal/secretario">Secretários</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li class="dropdown-header">Senado Federal</li>
+                            <li><a href="./#!/senador">Cota Parlamentar (CEAPS)</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="./#!/forum">Forum</a></li>
+                    <li><a target="_blank" rel="nofollow" href="https://luciobig.com.br">Blog</a></li>
+                    <li><a href="./#!/fiscalize">Resumo App</a></li>
+                    <li><a href="./#!/sobre">Sobre</a></li>
+                    @*<li><a href="./#!/sobre#contato">Contato</a></li>*@
+                    <li><a target="_blank" rel="nofollow" href="https://www.facebook.com/operacaopoliticasupervisionada" title="OPS no Facebook"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
+                    <li><a target="_blank" rel="nofollow" href="https://twitter.com/LucioBig" title="Lúcio Big no Twitter"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+                    <li><a target="_blank" rel="nofollow" href="https://www.youtube.com/channel/UCfQ98EX3oOv6IHBdUNMJq8Q" title="Lúcio Big no YouTube"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
 
-				@*<ul class="nav navbar-nav navbar-right">
-						<li class="dropdown" data-ng-show="authentication.isAuth">
-							<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Olá {{authentication.firstName}}<span class="caret"></span></a>
-							<ul class="dropdown-menu">
-								<li><a href="./#!/denuncia">Denúncias</a></li>
-								<li role="separator" class="divider"></li>
-								<li><a href="#" data-ng-click="logOut()">Sair</a></li>
-							</ul>
-						</li>
-						<li data-ng-hide="authentication.isAuth"><a href="./#!/login">Entrar</a></li>
-						<li data-ng-hide="authentication.isAuth"><a href="./#!/signup">Criar Conta</a></li>
-					</ul>*@
-			</div>
-		</div>
-	</nav>
+                    <li class="dropdown" data-ng-show="authentication.isAuth">
+                        <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Olá {{authentication.firstName}}<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="./#!/denuncia">Denúncias</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" data-ng-click="logOut()">Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-	<div id="app">
-		<div id="container">
-			<div data-ng-view></div>
-		</div>
+    <div class="page-container doc-container">
+        <div id="app">
+            <div id="container">
+                <div data-ng-view></div>
+            </div>
 
-		<div id="loading-modal" data-ng-show="countRequest > 0">
-			<div class="modal-backdrop fade in"></div>
-			<div id="loading-modal-text">
-				<img class="loader-facebook" src="~/Content/images/ajax-loader-facebook.gif" />Processando
-			</div>
-		</div>
-	</div>
-	<script type="text/javascript">
+            <div id="loading-modal" data-ng-show="countRequest > 0">
+                <div class="modal-backdrop fade in"></div>
+                <div id="loading-modal-text">
+                    <img class="loader-facebook" src="~/Content/images/ajax-loader-facebook.gif" />Processando
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
     var DeputadoFederalUltimaAtualizacao = '@ViewBag.DeputadoFederalUltimaAtualizacao';
 		var SenadorUltimaAtualizacao = '@ViewBag.SenadorUltimaAtualizacao';
 		var GoogleAnalyticsKey = '@ViewBag.GoogleAnalyticsKey';
-	</script>
+    </script>
 
-	@Scripts.Render("~/Content/vendor")
-	@Scripts.Render("~/Content/app")
+    @Scripts.Render("~/Content/vendor")
+    @Scripts.Render("~/Content/app")
 
-	<footer class="footer">
-		<div class="content-section text-muted text-center">
-			O controle social é indispensável para combatermos a corrupção em nosso país.
-		</div>
+    <footer class="footer">
+        <div class="content-section text-muted text-center">
+            O controle social é indispensável para combatermos a corrupção em nosso país.
+        </div>
 
-		<div class="container">
-			<div class="row">
-				<div class="col-sm-6 text-xs-center text-left">
-					OPS - Operação Política Supervisionada
-				</div>
-				<div class="col-sm-6 text-xs-center text-right">
-					<a href="./#!/sobre">Sobre</a>
-					<a href="./#!/sobre#contato">Contato</a>
-					<a href="https://github.com/ops-org/operacao-politica-supervisionada" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofolow">Repositório no GitHub</a>
-					<a href="https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug" target="_blank" onclick="ReportarErro(event, this)">Reportar um erro</a>
-				</div>
-			</div>
-		</div>
-	</footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 text-xs-center text-left">
+                    OPS - Operação Política Supervisionada
+                </div>
+                <div class="col-sm-6 text-xs-center text-right">
+                    <a href="./#!/sobre">Sobre</a>
+                    @*<a href="./#!/sobre#contato">Contato</a>*@
+                    <a href="https://github.com/ops-org/operacao-politica-supervisionada" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofolow">Repositório no GitHub</a>
+                    <a href="https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug" target="_blank" onclick="ReportarErro(event, this)">Reportar um erro</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-	<script type="text/javascript">
-		$(loadSiteMaster);
-	</script>
+
+    <script type="text/javascript">
+        $(loadSiteMaster);
+    </script>
 </body>
 </html>

@@ -24,6 +24,8 @@ namespace OPS
 
 			//config.Filters.Add(new HostAuthenticationFilter(Startup.OAuthBearerOptions.AuthenticationType));
 
+			config.Filters.Add(new LoggingFilterAttribute());
+
 			// Web API routes
 			config.MapHttpAttributeRoutes();
 

@@ -62,9 +62,9 @@ public static class Receita
 		}
 	}
 
-	public static void ConsultarCNPJ(string CNPJ)
+	public static void ConsultarCNPJ(string CNPJ, ref int totalAcertos, ref int totalErros)
 	{
-		bool bResolverCapchaAutomatico = false;
+		bool bResolverCapchaAutomatico = true;
 		Random aleatorio = new Random();
 		mutex.WaitOne();
 		try
@@ -120,15 +120,21 @@ public static class Receita
 					}
 
 					var oFormatarDados = new FormatarDados();
-					id = oFormatarDados.ObterDados(_cookies, CNPJ, texto, true);
+					Fornecedor fornecedor = oFormatarDados.ObterDados(_cookies, CNPJ, texto, true);
 
-					Console.WriteLine("Fornecedor atualizado: {0}", id);
+					if(fornecedor.Situacao != "ATIVA"){
+						Console.WriteLine("--- Fornecedor não ativo ---");
+					}
+
+					totalAcertos++;
+
 					break;
 				}
 				catch (Exception ex)
 				{
 					if (ex.Message == "O número do CNPJ não foi localizado na Receita Federal")
 					{
+						totalAcertos++;
 						using (Banco banco = new Banco())
 						{
 							banco.AddParameter("@cnpj_cpf", CNPJ);
@@ -142,6 +148,7 @@ public static class Receita
 					}
 					else
 					{
+						totalErros++;
 						if (i++ == 5)
 						{
 							break;
@@ -176,6 +183,9 @@ public static class Receita
 		}
 		catch (Exception e)
 		{
+			Console.WriteLine("Acertos: " + totalAcertos);
+			Console.WriteLine("Erros: " + totalErros);
+
 			erros[linguagem]--;
 			mutex.ReleaseMutex();
 			if (e is System.NullReferenceException)

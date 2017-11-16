@@ -57,7 +57,9 @@ app.controller('DeputadoVisualizarController', ["$scope", "$api", "$routeParams"
 			});
 		});
 
-		$api.get('Deputado/' + $routeParams.id.toString() + '/ResumoPresenca').success(function (response) {
+        $api.get('Deputado/' + $routeParams.id.toString() + '/ResumoPresenca').success(function (response) {
+            $scope.PossuiFrequenciaSessoes = response.frequencia_anual.categories.length > 0;
+
 			Highcharts.setOptions({
 				lang: {
 					decimalPoint: ',',

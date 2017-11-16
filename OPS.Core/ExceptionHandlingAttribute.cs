@@ -13,6 +13,7 @@ using System.Web.Http;
 using System.Web.Http.Filters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Threading;
 
 namespace OPS.Core
 {
@@ -49,7 +50,7 @@ namespace OPS.Core
 
 			Task.Run(async () =>
 			{
-				await Utils.SendMailAsync(new MailAddress("suporte@ops.net.br"), "OPS :: " + exBase.Message,
+				await Utils.SendMailAsync(new MailAddress(Padrao.EmailEnvioErros), "OPS :: " + exBase.Message,
 					httpUnhandledException.GetHtmlErrorMessage());
 			}).Wait();
 
@@ -66,6 +67,60 @@ namespace OPS.Core
 			   new JsonMediaTypeFormatter());
 
 			base.OnException(context);
+		}
+
+		public override Task OnExceptionAsync(HttpActionExecutedContext context, CancellationToken cancellationToken)
+		{
+			var task = base.OnExceptionAsync(context, cancellationToken);
+			return task.ContinueWith((t) =>
+			{
+				if (context.Exception is BusinessException || context.Exception is OperationCanceledException)
+				{
+					throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.InternalServerError)
+					{
+						Content = new StringContent(context.Exception.Message),
+						ReasonPhrase = "Exception"
+					});
+				}
+
+#if DEBUG
+				//Log Critical errors
+				Debug.WriteLine(context.Exception);
+
+				string sMessage = context.Exception.GetBaseException().Message;
+#else
+			string infoAdicional = JsonConvert.SerializeObject(context.Request,
+				Formatting.Indented, new JsonSerializerSettings
+				{
+					ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+					ContractResolver = new IgnoreErrorPropertiesResolver()
+				});
+
+			var exBase = context.Exception.GetBaseException();
+			HttpUnhandledException httpUnhandledException = new HttpUnhandledException(
+				exBase.Message + Environment.NewLine + "<code>" + infoAdicional + "</code>",
+				exBase.GetBaseException());
+
+			Task.Run(async () =>
+			{
+				await Utils.SendMailAsync(new MailAddress(Padrao.EmailEnvioErros), "OPS :: " + exBase.Message,
+					httpUnhandledException.GetHtmlErrorMessage());
+			}).Wait();
+
+			string sMessage = "Ocorreu um erro, tente novamente ou entre em contato com o administrador.";
+#endif
+
+				var ex = context.Exception;
+				context.Response = context.Request.CreateResponse(HttpStatusCode.InternalServerError,
+				   new
+				   {
+					   ExceptionMessage = sMessage,
+					   RealStatusCode = (int)(ex is NotImplementedException || ex is ArgumentNullException ? HttpStatusCode.NoContent : HttpStatusCode.BadRequest)
+				   },
+				   new JsonMediaTypeFormatter());
+
+				//base.OnException(context);
+			});
 		}
 	}
 

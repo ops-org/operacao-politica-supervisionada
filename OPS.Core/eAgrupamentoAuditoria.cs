@@ -4,7 +4,7 @@ using System.Web;
 
 namespace OPS.Core
 {
-	public enum eAgrupamentoAuditoria
+	public enum EnumAgrupamentoAuditoria
 	{
 		/// <summary>
 		/// Parlamentar (Deputado, Senador)
@@ -22,7 +22,7 @@ namespace OPS.Core
 		Fornecedor = 3,
 
 		/// <summary>
-		/// Partido do Parlamantar
+		/// Partido do Parlamentar
 		/// </summary>
 		Partido = 4,
 

@@ -2,6 +2,7 @@
 using System.Web.Http;
 using OPS.Core.DAO;
 using WebApi.OutputCache.V2;
+using System.Threading.Tasks;
 
 namespace OPS.WebApi
 {
@@ -19,9 +20,11 @@ namespace OPS.WebApi
         [HttpGet]
 		[Route("")]
 		[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-		public dynamic Consultar()
+		public async Task<IHttpActionResult> Consultar()
         {
-            return dao.Consultar();
+            var result = await dao.Consultar();
+
+			return Ok(result);
         }
     }
 }
