@@ -31,12 +31,12 @@ namespace OPS.WebApi
 				Stopwatch sw = Stopwatch.StartNew();
 				Stopwatch swGeral = Stopwatch.StartNew();
 
-				sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados --</h3>");
+				sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year - 1);
 				sb.AppendFormat("<br/><p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
 				sw.Restart();
 				try
 				{
-					sb.Append(Camara.ImportarDespesasXml(tempPath));
+					sb.Append(Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year - 1));
 				}
 				catch (Exception ex)
 				{
@@ -45,6 +45,19 @@ namespace OPS.WebApi
 				t = sw.Elapsed;
 				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
+				sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year);
+				sb.AppendFormat("<br/><p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
+				sw.Restart();
+				try
+				{
+					sb.Append(Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year));
+				}
+				catch (Exception ex)
+				{
+					sb.Append(ex.Message);
+				}
+				t = sw.Elapsed;
+				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
 				sb.AppendFormat("<br/><h3>-- Importa Presenças Deputados --</h3>");
 				sw.Restart();
@@ -59,11 +72,11 @@ namespace OPS.WebApi
 				t = sw.Elapsed;
 				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-				sb.AppendFormat("<br/><h3>-- Importar Despesas Senado --</h3>");
+				sb.AppendFormat("<br/><h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year - 1);
 				sw.Restart();
 				try
 				{
-					sb.Append(Senado.ImportarDespesas(tempPath, 2017, false));
+					sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
 				}
 				catch (Exception ex)
 				{
@@ -72,6 +85,18 @@ namespace OPS.WebApi
 				t = sw.Elapsed;
 				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
+				sb.AppendFormat("<br/><h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year);
+				sw.Restart();
+				try
+				{
+					sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
+				}
+				catch (Exception ex)
+				{
+					sb.Append(ex.Message);
+				}
+				t = sw.Elapsed;
+				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
 				sb.AppendFormat("<br/><h3>-- Consultar Receita WS --</h3>");
 				sw.Restart();

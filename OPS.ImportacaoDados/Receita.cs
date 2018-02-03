@@ -64,7 +64,7 @@ public static class Receita
 
 	public static void ConsultarCNPJ(string CNPJ, ref int totalAcertos, ref int totalErros)
 	{
-		bool bResolverCapchaAutomatico = true;
+		bool bResolverCapchaAutomatico = false;
 		Random aleatorio = new Random();
 		mutex.WaitOne();
 		try
@@ -121,6 +121,9 @@ public static class Receita
 
 					var oFormatarDados = new FormatarDados();
 					Fornecedor fornecedor = oFormatarDados.ObterDados(_cookies, CNPJ, texto, true);
+
+					if (fornecedor == null)
+						continue;
 
 					if(fornecedor.Situacao != "ATIVA"){
 						Console.WriteLine("--- Fornecedor não ativo ---");

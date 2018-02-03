@@ -707,16 +707,26 @@ namespace OPS.ImportacaoDados
 
 		#region Importação Dados CEAP
 
-		public static string ImportarDespesasXml(string atualDir)
+		public static string ImportarDespesasXml(string atualDir, int ano)
 		{
 			// http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar
 			// http://www.camara.gov.br/cotas/AnosAnteriores.zip
 			// http://www.camara.gov.br/cotas/AnoAnterior.zip
 			// http://www.camara.gov.br/cotas/AnoAtual.zip
 
-			var downloadUrl = "http://www.camara.leg.br/cotas/AnoAtual.zip";
-			var fullFileNameZip = atualDir + @"\AnoAtual.zip";
-			var fullFileNameXml = atualDir + @"\AnoAtual.xml";
+			string arquivo;
+			if (ano == DateTime.Now.Year)
+			{
+				arquivo = "AnoAtual";
+			}
+			else
+			{
+				arquivo = "AnoAnterior";
+			}
+
+			var downloadUrl = "http://www.camara.leg.br/cotas/" + arquivo + ".zip";
+			var fullFileNameZip = atualDir + @"\" + arquivo + ".zip";
+			var fullFileNameXml = atualDir + @"\" + arquivo + ".xml";
 
 			if (!Directory.Exists(atualDir))
 				Directory.CreateDirectory(atualDir);
@@ -772,7 +782,7 @@ namespace OPS.ImportacaoDados
 			var zip = new FastZip();
 			zip.ExtractZip(fullFileNameZip, atualDir, null);
 
-			string resumoImportacao = CarregaDadosXml(fullFileNameXml, true);
+			string resumoImportacao = CarregaDadosXml(fullFileNameXml, ano);
 
 			using (var banco = new Banco())
 			{
@@ -787,7 +797,7 @@ namespace OPS.ImportacaoDados
 			//File.Delete(fullFileNameXml);
 		}
 
-		private static string CarregaDadosXml(string fullFileNameXml, bool completo)
+		private static string CarregaDadosXml(string fullFileNameXml, int ano)
 		{
 			string sResumoValores = string.Empty;
 			var sb = new StringBuilder();
@@ -799,7 +809,7 @@ namespace OPS.ImportacaoDados
 				using (var banco = new Banco())
 				{
 
-					using (var dReader = banco.ExecuteReader("select id, hash from cf_despesa where ano=2017"))
+					using (var dReader = banco.ExecuteReader("select id, hash from cf_despesa where ano=" + ano.ToString()))
 					{
 						while (dReader.Read())
 						{
@@ -807,7 +817,7 @@ namespace OPS.ImportacaoDados
 						}
 					}
 
-					using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=2017"))
+					using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=" + ano.ToString()))
 					{
 						if (dReader.Read())
 						{
@@ -902,11 +912,20 @@ namespace OPS.ImportacaoDados
 								sqlFields.Append(", hash");
 								sqlValues.Append(", @hash");
 
-								banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+								try
+								{
+									banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+								}
+								catch (Exception e)
+								{
+									banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+									Console.WriteLine(e.Message);
+								}
 
-								if (++linhaAtual % 100 == 0)
+								if (++linhaAtual % 1000 == 0)
 								{
 									Console.WriteLine(linhaAtual);
+									//sb.Append(ProcessarDespesasTemp(banco));
 								}
 							} while (true);
 						}
@@ -939,7 +958,7 @@ namespace OPS.ImportacaoDados
 
 					if (linhaAtual > 0)
 					{
-						sb.Append(ProcessarDespesasTemp(banco, completo));
+						sb.Append(ProcessarDespesasTemp(banco));
 					}
 
 					using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=2017"))
@@ -1136,7 +1155,7 @@ namespace OPS.ImportacaoDados
 					}
 				}
 
-				ProcessarDespesasTemp(banco, completo);
+				ProcessarDespesasTemp(banco);
 
 				foreach (DataRow dr in dt.Rows)
 				{
@@ -1162,7 +1181,7 @@ namespace OPS.ImportacaoDados
 			}
 		}
 
-		private static string ProcessarDespesasTemp(Banco banco, bool completo)
+		private static string ProcessarDespesasTemp(Banco banco)
 		{
 			var sb = new StringBuilder();
 

@@ -112,7 +112,7 @@ namespace OPS.ImportacaoManual
 		{
 			Padrao.ConnectionString = ConfigurationManager.ConnectionStrings["AuditoriaContext"].ToString();
 
-			var tempPath = @"C:\GitHub\operacao-politica-supervisionada\OPS\temp";
+			var tempPath = @"D:\temp";
 
 			////ConverterXmlParaCsvDespesasCamara(tempPath);
 
@@ -124,13 +124,14 @@ namespace OPS.ImportacaoManual
 			//Camara.DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
 
 			//Importação na nova estrutura
-			//for (int ano = 2009; ano <= 2017; ano++)
+			//for (int ano = 2009; ano <= 2018; ano++)
 			//{
 			//	Camara.ImportarDespesas(tempPath, ano, true);
 			//}
 			//Camara.ImportarDespesas(tempPath, 2017, false);
-			
-			//Camara.ImportarDespesasXml(tempPath);
+
+			Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2017));
+			Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2018));
 			////Camara.AtualizaDeputadoValores();
 			//Camara.ImportaPresencasDeputados();
 
@@ -151,7 +152,7 @@ namespace OPS.ImportacaoManual
 			//Fornecedor.ConsultarReceitaWS();
 
 			////Fornecedor.AtualizaFornecedorDoador();
-			Fornecedor.ConsultarCNPJ();
+			//Fornecedor.ConsultarCNPJ();
 		}
 	}
 }

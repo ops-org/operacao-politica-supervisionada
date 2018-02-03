@@ -338,6 +338,11 @@ namespace OPS.ImportacaoDados
 						banco.ExecuteNonQuery(strSql);
 
 
+						banco.AddParameter("@id", item["id"]);
+						banco.AddParameter("@nome", receita.nome);
+						banco.ExecuteNonQuery(@"update fornecedor set nome=@nome where id=@id");
+
+
 						strSql2 = @"insert into fornecedor_atividade_secundaria values (@id_fornecedor_info, @id_fornecedor_atividade)";
 						foreach (var atividadesSecundaria in receita.atividades_secundarias)
 						{

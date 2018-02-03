@@ -68,7 +68,6 @@ namespace OPS.Core
 				if (_mParametros.Count > 0)
 				{
 					command.Parameters.AddRange(_mParametros.ToArray());
-					_mParametros.Clear();
 				}
 
 				command.CommandText = sql;
@@ -78,6 +77,7 @@ namespace OPS.Core
 				Rows = command.ExecuteNonQuery();
 
 				LastInsertedId = command.LastInsertedId;
+				_mParametros.Clear();
 			}
 
 			return true;
