@@ -16,13 +16,6 @@ app.controller('SenadorVisualizarController', ["$scope", "$api", "$routeParams",
     	});
 
     	$api.get('Senador/' + $routeParams.id.toString() + '/GastosMensaisPorAno').success(function (response) {
-    		Highcharts.setOptions({
-    			lang: {
-    				decimalPoint: ',',
-    				thousandsSep: ' '
-    			}
-    		});
-
     		$('#senadores-gastos-por-mes').highcharts({
     			chart: {
     				type: 'column'
@@ -33,7 +26,7 @@ app.controller('SenadorVisualizarController', ["$scope", "$api", "$routeParams",
     			},
 
     			xAxis: {
-    				categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    				categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
     			},
 
     			yAxis: [{ // left y axis

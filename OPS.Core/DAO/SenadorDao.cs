@@ -220,7 +220,63 @@ namespace OPS.Core.DAO
 			}
 		}
 
-		public dynamic Pesquisa()
+        public dynamic Busca(string value)
+        {
+            using (Banco banco = new Banco())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT 
+						s.id as id_sf_senador
+						, s.nome
+						, s.nome_completo
+						, s.valor_total_ceaps
+						, s.id_partido
+						, p.sigla as sigla_partido
+						, p.nome as nome_partido
+						, s.id_estado
+						, e.sigla as sigla_estado
+						, e.nome as nome_estado
+					FROM sf_senador s
+					LEFT JOIN partido p on p.id = s.id_partido
+					LEFT JOIN estado e on e.id = s.id_estado
+                    WHERE valor_total_ceaps > 0");
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    strSql.AppendLine("	AND (s.nome like '%" + Utils.MySqlEscape(value) + "%' or s.nome_completo like '%" + Utils.MySqlEscape(value) + "%')");
+                }
+
+                strSql.AppendLine(@"
+                    ORDER BY nome
+                    limit 100
+				");
+
+                var lstRetorno = new List<dynamic>();
+                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                {
+                    while (reader.Read())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id_sf_senador = reader["id_sf_senador"],
+                            nome = reader["nome"].ToString(),
+                            nome_completo = reader["nome_completo"].ToString(),
+                            valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
+                            id_partido = reader["id_partido"],
+                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
+                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            id_estado = reader["id_estado"],
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            nome_estado = reader["nome_estado"].ToString()
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
+        public dynamic Pesquisa()
 		{
 			using (Banco banco = new Banco())
 			{

@@ -23,15 +23,42 @@ namespace OPS.WebApi
 				value != "m" + System.Web.Configuration.WebConfigurationManager.AppSettings.Get("TaskKey")) return BadRequest("NOPS - " + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm"));
 
 			var tempPath = System.Web.Hosting.HostingEnvironment.MapPath("~/temp/");
+			var sDeputadosImagesPath = System.Web.Hosting.HostingEnvironment.MapPath("~/Content/images/Parlamentares/DEPFEDERAL/");
 
-			try
+            try
 			{
 				var sb = new StringBuilder();
 				TimeSpan t;
 				Stopwatch sw = Stopwatch.StartNew();
 				Stopwatch swGeral = Stopwatch.StartNew();
 
-				sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year - 1);
+			    sb.AppendFormat("<br/><h3>-- Importar Deputados --</h3>");
+			    sw.Restart();
+			    try
+			    {
+			        sb.Append(Camara.ImportarDeputados());
+			    }
+			    catch (Exception ex)
+			    {
+			        sb.Append(ex.Message);
+			    }
+			    t = sw.Elapsed;
+			    sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
+
+			    sb.AppendFormat("<br/><h3>-- Importar Fotos Deputados --</h3>");
+			    sw.Restart();
+			    try
+			    {
+			        sb.Append(Camara.DownloadFotosDeputados(sDeputadosImagesPath));
+			    }
+			    catch (Exception ex)
+			    {
+			        sb.Append(ex.Message);
+			    }
+			    t = sw.Elapsed;
+			    sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
+
+                sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year - 1);
 				sb.AppendFormat("<br/><p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
 				sw.Restart();
 				try
@@ -59,7 +86,7 @@ namespace OPS.WebApi
 				t = sw.Elapsed;
 				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-				sb.AppendFormat("<br/><h3>-- Importa Presenças Deputados --</h3>");
+				sb.AppendFormat("<br/><h3>-- Importar Presenças Deputados --</h3>");
 				sw.Restart();
 				try
 				{
@@ -72,7 +99,21 @@ namespace OPS.WebApi
 				t = sw.Elapsed;
 				sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-				sb.AppendFormat("<br/><h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year - 1);
+
+			    sb.AppendFormat("<br/><h3>-- Importar Senadores {0} --</h3>", DateTime.Now.Year);
+			    sw.Restart();
+			    try
+			    {
+			        sb.Append(Senado.CarregaSenadoresAtuais());
+			    }
+			    catch (Exception ex)
+			    {
+			        sb.Append(ex.Message);
+			    }
+			    t = sw.Elapsed;
+			    sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
+
+                sb.AppendFormat("<br/><h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year - 1);
 				sw.Restart();
 				try
 				{
@@ -123,7 +164,14 @@ namespace OPS.WebApi
 					cache.Remove(cacheKey);
 				}
 
-				await Utils.SendMailAsync(new MailAddress(Padrao.EmailEnvioErros), "OPS :: Resumo da Importação", sb.ToString());
+			    var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');
+			    var lstEmailTo = new MailAddressCollection();
+			    foreach (string email in lstEmails)
+			    {
+			        lstEmailTo.Add(email);
+                }
+
+                await Utils.SendMailAsync(lstEmailTo, "OPS :: Resumo da Importação", sb.ToString());
 			}
 			catch (Exception ex)
 			{

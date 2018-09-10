@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.Owin.Security.Facebook;
 
 namespace OPS.Core.Auth.Providers
@@ -9,13 +10,14 @@ namespace OPS.Core.Auth.Providers
 
 		public override Task Authenticated(FacebookAuthenticatedContext context)
         {
-            context.Identity.AddClaim(new System.Security.Claims.Claim("urn:facebook:access_token", context.AccessToken, XmlSchemaString, "Facebook"));
+            context.Identity.AddClaim(new Claim("ExternalAccessToken", context.AccessToken));
+            context.Identity.AddClaim(new Claim("urn:facebook:access_token", context.AccessToken, XmlSchemaString, "Facebook"));
             foreach (var x in context.User)
             {
                 var claimType = string.Format("urn:facebook:{0}", x.Key);
                 string claimValue = x.Value.ToString();
                 if (!context.Identity.HasClaim(claimType, claimValue))
-                    context.Identity.AddClaim(new System.Security.Claims.Claim(claimType, claimValue, XmlSchemaString, "Facebook"));
+                    context.Identity.AddClaim(new Claim(claimType, claimValue, XmlSchemaString, "Facebook"));
 
             }
             return Task.FromResult(0);

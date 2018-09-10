@@ -72,7 +72,7 @@ var app;
 (function (angular, $) {
     'use strict';
 
-    app = angular.module('app', ['ngRoute', 'ngTable', 'ngResource', 'ngSanitize', 'ngCookies', 'LocalStorageModule', 'angularUtils.directives.dirDisqus']);
+    app = angular.module('app', ['ngRoute', 'ngTable', 'ngResource', 'ngSanitize', 'ngCookies', 'LocalStorageModule', 'angularUtils.directives.dirDisqus', 'afkl.lazyImage']);
 
     app.constant('ngAuthSettings', {
         apiServiceBaseUri: base_url,
@@ -106,12 +106,14 @@ var app;
 
                 .when("/fornecedor/:id", { templateUrl: "app/auditoria/fornecedor" })
 
-                .when("/forum", { templateUrl: "app/forum" })
+                //.when("/forum", { templateUrl: "app/forum" })
 
                 //.when("/solicitacao-restituicao", { templateUrl: "app/solicitacao-restituicao" })
 
-                .when("/fiscalize", { templateUrl: "app/fiscalize/nota-fiscal-lista" })
-                .when("/fiscalize/:id", { templateUrl: "app/fiscalize/nota-fiscal-detalhes" })
+                //.when("/fiscalize", { templateUrl: "app/fiscalize/nota-fiscal-lista" })
+                //.when("/fiscalize/:id", { templateUrl: "app/fiscalize/nota-fiscal-detalhes" })
+
+                .when("/busca", { controller: "BuscaController", templateUrl: "app/busca" })
 
                 .when("/login", { controller: "LoginController", templateUrl: "app/autenticacao/login" })
                 .when("/signup", { controller: "SignupController", templateUrl: "app/autenticacao/signup" })
@@ -125,7 +127,7 @@ var app;
                 .when("/denuncia", { controller: "DenunciasListaController", templateUrl: "app/denuncia/denuncia-lista" })
                 .when("/denuncia/:id", { controller: "DenunciaDetalhesController", templateUrl: "app/denuncia/denuncia-detalhes" })
 
-                .when("/cidadao-fiscal/:id?", { controller: "AuditarPortalTransparenciaController", templateUrl: "app/cidadaofiscal/auditar-portal-transparencia" })
+                .when("/404", { templateUrl: "app/erro/404" })
 
                 .otherwise({ redirectTo: '/' });
         }]);
@@ -447,7 +449,7 @@ var app;
 
     }]);
 
-    app.factory('$api', ['$http', '$rootScope', '$cacheFactory', '$q', function ($http, $rootScope, $cacheFactory, $q) {
+    app.factory('$api', ['$http', '$location', '$rootScope', '$cacheFactory', '$q', function ($http, $location, $rootScope, $cacheFactory, $q) {
         //http://stackoverflow.com/questions/28669537/angularjs-abort-cancel-running-http-calls
         var promiseCanceller = $q.defer();
 
@@ -466,6 +468,8 @@ var app;
             }).error(function (data, status, headers, config) {
                 $rootScope.countRequest--;
 
+                if (status === 404)
+                    $location.path('/404').replace();
                 if (status !== 401)
                     $EditError(data);
             });
@@ -841,3 +845,13 @@ if (window.performance) {
 
 //// Apply the theme
 //Highcharts.setOptions(Highcharts.theme);
+
+Highcharts.setOptions({
+    global: {
+        useUTC: false
+    },
+    lang: {
+        decimalPoint: ',',
+        thousandsSep: '.'
+    }
+});

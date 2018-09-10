@@ -723,19 +723,63 @@ namespace OPS.Core.DAO
             }
         }
 
-		//public void MarcaVisitado(string Cnpj, string UserName)
-		//{
-		//	using (Banco banco = new Banco())
-		//	{
-		//		banco.AddParameter("txtCNPJCPF", Cnpj);
-		//		banco.AddParameter("UserName", UserName);
+        //public void MarcaVisitado(string Cnpj, string UserName)
+        //{
+        //	using (Banco banco = new Banco())
+        //	{
+        //		banco.AddParameter("txtCNPJCPF", Cnpj);
+        //		banco.AddParameter("UserName", UserName);
 
-		//		try
-		//		{
-		//			banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
-		//		}
-		//		catch { }
-		//	}
-		//}
-	}
+        //		try
+        //		{
+        //			banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
+        //		}
+        //		catch { }
+        //	}
+        //}
+
+        public dynamic Busca(string value)
+        {
+            using (Banco banco = new Banco())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT 
+						f.id_fornecedor
+						, f.cnpj
+						, f.nome
+						, f.nome_fantasia
+                        , f.estado
+					FROM fornecedor_info f
+                    WHERE 1=1");
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    strSql.AppendLine("	AND (f.nome like '%" + Utils.MySqlEscape(value) + "%' or f.nome_fantasia like '%" + Utils.MySqlEscape(value) + "%')");
+                }
+
+                strSql.AppendLine(@"
+                    ORDER BY nome, cnpj
+                    limit 100
+				");
+
+                var lstRetorno = new List<dynamic>();
+                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                {
+                    while (reader.Read())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id_fornecedor = reader["id_fornecedor"],
+                            cnpj = reader["cnpj"].ToString(),
+                            nome = reader["nome"].ToString(),
+                            nome_fantasia = reader["nome_fantasia"],
+                            estado = reader["estado"]
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+    }
 }

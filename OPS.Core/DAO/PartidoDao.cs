@@ -13,8 +13,8 @@ namespace OPS.Core.DAO
 				var lstRetorno = new List<dynamic>();
 
 				DbDataReader reader = await banco.ExecuteReaderAsync("SELECT id, sigla, nome FROM partido order by nome;");
-				while (reader.Read())
-				{
+			    while (await reader.ReadAsync())
+                {
 					lstRetorno.Add(new
 					{
 						id = reader.GetFieldValue<uint>(0),
@@ -22,8 +22,9 @@ namespace OPS.Core.DAO
 						text = reader.GetFieldValue<string>(2)
 					});
 				}
+			    reader.Close();
 
-				return lstRetorno;
+                return lstRetorno;
 			}
 		}
 	}

@@ -13,13 +13,6 @@ app.controller('PrincipalController', ['$scope', '$api',
         });
 
         $api.get('Deputado/CamaraResumoMensal').success(function (response) {
-            Highcharts.setOptions({
-                lang: {
-                    decimalPoint: ',',
-                    thousandsSep: ' '
-                }
-            });
-
             var chart = Highcharts.chart('camara-resumo-gastos', {
                 chart: {
                     type: 'column'
@@ -30,7 +23,7 @@ app.controller('PrincipalController', ['$scope', '$api',
                 },
 
                 xAxis: {
-                    categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                    categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
                 },
 
                 yAxis: [{ // left y axis
@@ -118,13 +111,6 @@ app.controller('PrincipalController', ['$scope', '$api',
         });
 
         $api.get('Senador/SenadoResumoMensal').success(function (response) {
-            Highcharts.setOptions({
-                lang: {
-                    decimalPoint: ',',
-                    thousandsSep: ' '
-                }
-            });
-
             var chart = Highcharts.chart('senado-resumo-gastos', {
                 chart: {
                     type: 'column'
@@ -135,7 +121,7 @@ app.controller('PrincipalController', ['$scope', '$api',
                 },
 
                 xAxis: {
-                    categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                    categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
                 },
 
                 yAxis: [{ // left y axis
@@ -213,19 +199,9 @@ app.controller('PrincipalController', ['$scope', '$api',
         });
 
         $api.get('Deputado/CamaraResumoAnual').success(function (response) {
-            Highcharts.setOptions({
-                global: {
-                    useUTC: false
-                },
-                lang: {
-                    decimalPoint: ',',
-                    thousandsSep: ' '
-                }
-            });
-
             $('#camara-resumo-gastos-anual').highcharts({
                 chart: {
-                    type: 'column'
+                    type: 'bar'
                 },
 
                 title: {
@@ -265,11 +241,11 @@ app.controller('PrincipalController', ['$scope', '$api',
                     data: response.series,
                     dataLabels: {
                         enabled: true,
-                        rotation: -90,
+                        //rotation: -90,
                         color: '#FFFFFF',
                         align: 'right',
                         format: '{point.y:,.2f}', // one decimal
-                        y: 10, // 10 pixels down from the top
+                        y: -1, // -1 pixels down from the top
                         style: {
                             fontSize: '13px',
                             fontFamily: 'Verdana, sans-serif'
@@ -280,16 +256,9 @@ app.controller('PrincipalController', ['$scope', '$api',
         });
 
         $api.get('Senador/SenadoResumoAnual').success(function (response) {
-            Highcharts.setOptions({
-                lang: {
-                    decimalPoint: ',',
-                    thousandsSep: ' '
-                }
-            });
-
             $('#senado-resumo-gastos-anual').highcharts({
                 chart: {
-                    type: 'column'
+                    type: 'bar'
                 },
 
                 title: {
@@ -329,11 +298,11 @@ app.controller('PrincipalController', ['$scope', '$api',
                     data: response.series,
                     dataLabels: {
                         enabled: true,
-                        rotation: -90,
+                        //rotation: -90,
                         color: '#FFFFFF',
                         align: 'right',
                         format: '{point.y:,.2f}', // one decimal
-                        y: 10, // 10 pixels down from the top
+                        y: -1, // -1 pixels down from the top
                         style: {
                             fontSize: '13px',
                             fontFamily: 'Verdana, sans-serif'

@@ -23,98 +23,98 @@ using RestSharp;
 
 namespace OPS.ImportacaoDados
 {
-	public static class Camara
-	{
-		private static readonly string[] ColunasCEAP = {
-			"txNomeParlamentar", "idecadastro", "nuCarteiraParlamentar", "nuLegislatura", "sgUF",
-			"sgPartido",        "codLegislatura", "numSubCota",     "txtDescricao", "numEspecificacaoSubCota",
-			"txtDescricaoEspecificacao", "txtFornecedor", "txtCNPJCPF",     "txtNumero", "indTipoDocumento",
-			"datEmissao", "vlrDocumento", "vlrGlosa", "vlrLiquido", "numMes",
-			"numAno", "numParcela", "txtPassageiro", "txtTrecho", "numLote",
-			"numRessarcimento", "vlrRestituicao",       "nuDeputadoId", "ideDocumento"
-		};
+    public static class Camara
+    {
+        private static readonly string[] ColunasCEAP = {
+            "txNomeParlamentar", "idecadastro", "nuCarteiraParlamentar", "nuLegislatura", "sgUF",
+            "sgPartido",        "codLegislatura", "numSubCota",     "txtDescricao", "numEspecificacaoSubCota",
+            "txtDescricaoEspecificacao", "txtFornecedor", "txtCNPJCPF",     "txtNumero", "indTipoDocumento",
+            "datEmissao", "vlrDocumento", "vlrGlosa", "vlrLiquido", "numMes",
+            "numAno", "numParcela", "txtPassageiro", "txtTrecho", "numLote",
+            "numRessarcimento", "vlrRestituicao",       "nuDeputadoId", "ideDocumento"
+        };
 
-		public static void ValidarLinkRecibos()
-		{
-			using (var banco = new Banco())
-			{
-				DataTable dtDocumentos = banco.GetTable(
-					"select id, id_cf_deputado, ano, id_documento from cf_despesa where id > 1506033 and id_documento is not null and link_documento is null");
+        public static void ValidarLinkRecibos()
+        {
+            using (var banco = new Banco())
+            {
+                DataTable dtDocumentos = banco.GetTable(
+                    "select id, id_cf_deputado, ano, id_documento from cf_despesa where id > 1506033 and id_documento is not null and link_documento is null");
 
-				foreach (DataRow dr in dtDocumentos.Rows)
-				{
-					string downloadUrl =
-						string.Format("http://www.camara.gov.br/cota-parlamentar/documentos/publ/{0}/{1}/{2}.pdf",
-						dr["id_cf_deputado"], dr["ano"], dr["id_documento"]);
+                foreach (DataRow dr in dtDocumentos.Rows)
+                {
+                    string downloadUrl =
+                        string.Format("http://www.camara.gov.br/cota-parlamentar/documentos/publ/{0}/{1}/{2}.pdf",
+                        dr["id_cf_deputado"], dr["ano"], dr["id_documento"]);
 
-					try
-					{
-						var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+                    try
+                    {
+                        var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
 
-						request.UserAgent = "Other";
-						request.Method = "HEAD";
-						request.ContentType = "application/json;charset=UTF-8";
-						request.Timeout = 1000000;
+                        request.UserAgent = "Other";
+                        request.Method = "HEAD";
+                        request.ContentType = "application/json;charset=UTF-8";
+                        request.Timeout = 1000000;
 
-						using (var resp = request.GetResponse())
-						{
-							long contentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
-							if (contentLength == 0) continue;
-						}
-					}
-					catch (System.Net.WebException ex)
-					{
-						if (!ex.Message.Contains("404"))
-							Console.WriteLine(ex.Message);
+                        using (var resp = request.GetResponse())
+                        {
+                            long contentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                            if (contentLength == 0) continue;
+                        }
+                    }
+                    catch (System.Net.WebException ex)
+                    {
+                        if (!ex.Message.Contains("404"))
+                            Console.WriteLine(ex.Message);
 
-						continue;
-					}
+                        continue;
+                    }
 
-					banco.AddParameter("link_documento", downloadUrl);
-					banco.AddParameter("id", dr["id"]);
-					banco.ExecuteNonQuery("UPDATE cf_despesa SET link_documento=? WHERE id=?");
-				}
-			}
-		}
+                    banco.AddParameter("link_documento", downloadUrl);
+                    banco.AddParameter("id", dr["id"]);
+                    banco.ExecuteNonQuery("UPDATE cf_despesa SET link_documento=? WHERE id=?");
+                }
+            }
+        }
 
-		/// <summary>
-		/// Importar mandatos
-		/// </summary>
-		public static void ImportarMandatos()
-		{
-			// http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
-			// http://www.camara.leg.br/internet/deputado/DeputadosXML_52a55.zip
+        /// <summary>
+        /// Importar mandatos
+        /// </summary>
+        public static void ImportarMandatos()
+        {
+            // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
+            // http://www.camara.leg.br/internet/deputado/DeputadosXML_52a55.zip
 
-			var doc = new XmlDocument();
-			doc.Load(@"C:\GitHub\operacao-politica-supervisionada\OPS\temp\DeputadosXML_52a55\Deputados.xml");
-			XmlNode deputados = doc.DocumentElement;
+            var doc = new XmlDocument();
+            doc.Load(@"D:\GitHub\operacao-politica-supervisionada\OPS\temp\DeputadosXML_52a55\Deputados.xml");
+            XmlNode deputados = doc.DocumentElement;
 
-			var deputado = deputados.SelectNodes("Deputados/Deputado");
-			var sqlFields = new StringBuilder();
-			var sqlValues = new StringBuilder();
+            var deputado = deputados.SelectNodes("Deputados/Deputado");
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
-			using (var banco = new Banco())
-			{
-				banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp");
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp");
 
-				foreach (XmlNode fileNode in deputado)
-				{
-					sqlFields.Clear();
-					sqlValues.Clear();
+                foreach (XmlNode fileNode in deputado)
+                {
+                    sqlFields.Clear();
+                    sqlValues.Clear();
 
-					foreach (XmlNode item in fileNode.SelectNodes("*"))
-					{
-						sqlFields.Append($",{item.Name}");
+                    foreach (XmlNode item in fileNode.SelectNodes("*"))
+                    {
+                        sqlFields.Append($",{item.Name}");
 
-						sqlValues.Append($",@{item.Name}");
-						banco.AddParameter(item.Name, item.InnerText.ToUpper());
-					}
+                        sqlValues.Append($",@{item.Name}");
+                        banco.AddParameter(item.Name, item.InnerText);
+                    }
 
-					banco.ExecuteNonQuery("INSERT cf_mandato_temp (" + sqlFields.ToString().Substring(1) + ")  values (" +
-										  sqlValues.ToString().Substring(1) + ")");
-				}
+                    banco.ExecuteNonQuery("INSERT cf_mandato_temp (" + sqlFields.ToString().Substring(1) + ")  values (" +
+                                          sqlValues.ToString().Substring(1) + ")");
+                }
 
-				banco.ExecuteNonQuery(@"
+                banco.ExecuteNonQuery(@"
                     SET SQL_BIG_SELECTS=1;
 
 					INSERT INTO cf_mandato (
@@ -126,405 +126,431 @@ namespace OPS.ImportacaoDados
                         condicao
                     )
                     select 
-	                    dt.id,
+	                    mt.ideCadastro,
 	                    mt.numLegislatura,
 	                    mt.Matricula,
 	                    e.id, 
 	                    p.id,
 	                    mt.Condicao
                     FROM cf_mandato_temp mt
-                    left join cf_deputado dt on dt.id_cadastro = mt.ideCadastro
                     left join partido p on p.sigla = mt.LegendaPartidoEleito
                     left join estado e on e.sigla = mt.UFEleito
                     /* Inserir apenas faltantes */
-                    LEFT JOIN cf_mandato m ON m.id_cf_deputado = dt.id 
+                    LEFT JOIN cf_mandato m ON m.id_cf_deputado = mt.ideCadastro
 	                    AND m.id_legislatura = mt.numLegislatura 
 	                    AND m.id_carteira_parlamantar = mt.Matricula
-                    WHERE m.id is null
-                    AND dt.id is not null;
+                    WHERE m.id is null;
                     
                     SET SQL_BIG_SELECTS=0;
 				");
 
-				banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp;");
-			}
-		}
+                //banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp;");
+            }
+        }
 
-		/// <summary>
-		/// Atualiza informações dos deputados em exercício na Câmara dos Deputados (1)
-		/// </summary>
-		public static void AtualizaInfoDeputados()
-		{
-			// http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
+        /// <summary>
+        /// Atualiza informações dos deputados em exercício na Câmara dos Deputados (1)
+        /// </summary>
+        public static string AtualizaInfoDeputados()
+        {
+            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+            string retorno = string.Empty;
+            // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
 
-			var doc = new XmlDocument();
-			var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx");
-			var request = new RestRequest("ObterDeputados", Method.GET);
-			var response = client.Execute(request);
-			doc.LoadXml(response.Content);
-			XmlNode deputados = doc.DocumentElement;
+            var doc = new XmlDocument();
+            var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx");
+            var request = new RestRequest("ObterDeputados", Method.GET);
+            var response = client.Execute(request);
+            doc.LoadXml(response.Content);
+            XmlNode deputados = doc.DocumentElement;
 
-			var deputado = deputados.SelectNodes("*");
-			var sqlFields = new StringBuilder();
-			var sqlValues = new StringBuilder();
+            var deputado = deputados.SelectNodes("*");
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
-			using (var banco = new Banco())
-			{
-				banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
 
-				foreach (XmlNode fileNode in deputado)
-				{
-					sqlFields.Clear();
-					sqlValues.Clear();
+                foreach (XmlNode fileNode in deputado)
+                {
+                    sqlFields.Clear();
+                    sqlValues.Clear();
 
-					foreach (XmlNode item in fileNode.SelectNodes("*"))
-						if (item.Name != "comissoes")
-						{
-							sqlFields.Append(string.Format(",{0}", item.Name));
+                    foreach (XmlNode item in fileNode.SelectNodes("*"))
+                    {
+                        if (item.Name != "comissoes")
+                        {
+                            sqlFields.Append(string.Format(",{0}", item.Name));
 
-							sqlValues.Append(string.Format(",@{0}", item.Name));
-							banco.AddParameter(item.Name, item.InnerText.ToUpper());
-						}
+                            sqlValues.Append(string.Format(",@{0}", item.Name));
+                            if (item.Name == "nome" || item.Name == "nomeParlamentar")
+                            {
+                                banco.AddParameter(item.Name, textInfo.ToTitleCase(item.InnerText));
+                            }
+                            else
+                            {
+                                banco.AddParameter(item.Name, item.InnerText);
+                            }
 
-					banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) +
-										  ")  values (" + sqlValues.ToString().Substring(1) + ")");
-				}
+                        }
+                    }
+
+                    banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) +
+                                          ")  values (" + sqlValues.ToString().Substring(1) + ")");
+                }
 
 
-				banco.ExecuteNonQuery(@"
+                banco.ExecuteNonQuery(@"
                     SET SQL_BIG_SELECTS=1;
 
 					update cf_deputado d
-					left join cf_deputado_temp dt on dt.ideCadastro = d.id_cadastro
+					left join cf_deputado_temp dt on dt.ideCadastro = d.id
 					left join partido p on p.sigla = dt.partido
 					left join estado e on e.sigla = dt.uf
 					set
-						d.cod_orcamento = CASE dt.codOrcamento WHEN '' THEN NULL ELSE dt.codOrcamento END,
-						d.condicao = dt.condicao,
-						d.matricula = dt.matricula,
-						d.id_parlamentar = dt.idParlamentar,
-						d.nome_civil = dt.nome,
-						d.nome_parlamentar = dt.nomeParlamentar,
-						d.url_foto = dt.urlFoto,
-						d.sexo = LEFT(dt.sexo, 1),
-						d.id_estado = e.id,
-						d.id_partido = p.id,
-						d.gabinete = dt.gabinete,
-						d.anexo = dt.anexo,
-						d.fone = dt.fone,
-						d.email = dt.email
+                        -- d.condicao = dt.condicao,
+						-- d.nome_civil = dt.nome,
+						-- d.nome_parlamentar = dt.nomeParlamentar,
+						-- d.url_foto = dt.urlFoto,
+						-- d.sexo = LEFT(dt.sexo, 1),
+						-- d.id_estado = e.id,
+						-- d.id_partido = p.id,
+						-- d.gabinete = dt.gabinete,
+						-- d.anexo = dt.anexo,
+						-- d.fone = dt.fone,
+						 d.email = dt.email
 					where dt.nomeParlamentar is not null;
 
                     SET SQL_BIG_SELECTS=0;
 				");
 
-				banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
-			}
-		}
+                if (banco.Rows > 0)
+                {
+                    retorno = "<p>" + banco.Rows + "+ Mandato<p>";
+                }
 
-		/// <summary>
-		/// Atualiza informações dos deputados em exercício na Câmara dos Deputados (2)
-		/// </summary>
-		public static void AtualizaInfoDeputadosCompleto()
-		{
-			// http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
+                //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
 
-			var sqlFields = new StringBuilder();
-			var sqlValues = new StringBuilder();
+                return retorno;
+            }
+        }
 
-			using (var banco = new Banco())
-			{
-				banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
+        /// <summary>
+        /// Atualiza informações dos deputados em exercício na Câmara dos Deputados (2)
+        /// </summary>
+        public static string AtualizaInfoDeputadosCompleto(bool cargaInicial = false)
+        {
+            string retorno = string.Empty;
+            // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
 
-				var dt = banco.GetTable("SELECT * from cf_deputado");
+            var sqlFields = new StringBuilder();
+            var sqlValues = new StringBuilder();
 
-				foreach (DataRow dr in dt.Rows)
-				{
-					// Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
-					var doc = new XmlDocument();
-					var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
-					var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=&ideCadastro=" + dr["id_cadastro"].ToString(), Method.GET);
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
 
-					try
-					{
-						var response = client.Execute(request);
-						doc.LoadXml(response.Content);
-					}
-					catch (Exception)
-					{
-						Thread.Sleep(5000);
+                var dt = banco.GetTable("SELECT id from cf_deputado" + (!cargaInicial ? " WHERE situacao <> 'Fim de Mandato'" : ""));
 
-						try
-						{
-							var response = client.Execute(request);
-							doc.LoadXml(response.Content);
-						}
-						catch (Exception)
-						{
-							continue;
-						}
-					}
+                foreach (DataRow dr in dt.Rows)
+                {
+                    // Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
+                    var doc = new XmlDocument();
+                    var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
+                    var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=" + (!cargaInicial ? "55" : "") + "&ideCadastro=" + dr["id"].ToString(), Method.GET);
 
-					XmlNode deputados = doc.DocumentElement;
-					var deputado = deputados.SelectNodes("*");
+                    try
+                    {
+                        var response = client.Execute(request);
+                        doc.LoadXml(response.Content);
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(5000);
 
-					foreach (XmlNode fileNode in deputado)
-					{
-						sqlFields.Clear();
-						sqlValues.Clear();
+                        try
+                        {
+                            var response = client.Execute(request);
+                            doc.LoadXml(response.Content);
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+                    }
 
-						foreach (XmlNode item in fileNode.ChildNodes)
-						{
-							if (item.Name == "comissoes") break;
-							if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
-							{
-								object value;
-								if (item.Name.StartsWith("data"))
-									if (!string.IsNullOrEmpty(item.InnerText))
-										value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
-									else
-										value = DBNull.Value;
-								else
-									value = item.InnerText;
+                    XmlNode deputados = doc.DocumentElement;
+                    var deputado = deputados.SelectNodes("*");
 
-								sqlFields.Append($",{item.Name}");
-								sqlValues.Append($",@{item.Name}");
-								banco.AddParameter(item.Name, value);
-							}
-							else
-							{
-								foreach (XmlNode item2 in item.ChildNodes)
-								{
-									if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
+                    foreach (XmlNode fileNode in deputado)
+                    {
+                        sqlFields.Clear();
+                        sqlValues.Clear();
 
+                        foreach (XmlNode item in fileNode.ChildNodes)
+                        {
+                            if (item.Name == "comissoes") break;
+                            if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
+                            {
+                                object value;
+                                if (item.Name.StartsWith("data"))
+                                    if (!string.IsNullOrEmpty(item.InnerText))
+                                        value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
+                                    else
+                                        value = DBNull.Value;
+                                else
+                                    value = item.InnerText;
 
-									sqlFields.Append($",{item2.Name}");
-									sqlValues.Append($",@{item2.Name}");
-									banco.AddParameter(item2.Name, item2.InnerText);
-								}
-							}
-						}
-
-						try
-						{
-							banco.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
-												   sqlFields.ToString().Substring(1) + ")  values (" +
-												   sqlValues.ToString().Substring(1) + ")");
-
-							break;
-						}
-						catch
-						{
-							// ignored
-						}
-					}
-				}
-
-				banco.ExecuteNonQuery(@"
-							update cf_deputado d
-							left join (
-								select		
-									ideCadastro,
-									idParlamentarDeprecated,
-									nomeCivil,
-									nomeParlamentarAtual,
-									sexo,
-									nomeProfissao,
-									dataNascimento,
-									ufRepresentacaoAtual,
-									max(email) as email,
-									max(sigla) as sigla,
-									max(numero) as numero,
-									max(anexo) as anexo,
-									max(telefone) as telefone,
-									max(dataFalecimento) as dataFalecimento
-								from cf_deputado_temp_detalhes
-								group by 1, 2, 3, 4, 5, 6, 7, 8
-							) dt on dt.ideCadastro = d.id_cadastro
-							left join partido p on p.sigla = dt.sigla
-							left join estado e on e.sigla = dt.ufRepresentacaoAtual
-							set
-								d.id_parlamentar = dt.idParlamentarDeprecated,
-								d.nome_civil = dt.nomeCivil,
-								d.nome_parlamentar = dt.nomeParlamentarAtual,
-								d.sexo = LEFT(dt.sexo, 1),
-								d.id_estado = e.id,
-								d.id_partido = p.id,
-								d.gabinete = dt.numero,
-								d.anexo = dt.anexo,
-								d.fone = dt.telefone,
-								d.email = dt.email,
-								d.profissao = dt.nomeProfissao,
-								d.nascimento = dt.dataNascimento,
-								d.falecimento = dt.dataFalecimento
-							where dt.nomeParlamentarAtual is not null;
-						");
-
-				banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
-			}
-		}
-
-		public static string ImportaPresencasDeputados()
-		{
-			var sb = new StringBuilder();
-			Console.WriteLine("Iniciando Importação de presenças");
+                                sqlFields.Append($",{item.Name}");
+                                sqlValues.Append($",@{item.Name}");
+                                banco.AddParameter(item.Name, value);
+                            }
+                            else
+                            {
+                                foreach (XmlNode item2 in item.ChildNodes)
+                                {
+                                    if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
 
 
-			string checksum = string.Empty;
+                                    sqlFields.Append($",{item2.Name}");
+                                    sqlValues.Append($",@{item2.Name}");
+                                    banco.AddParameter(item2.Name, item2.InnerText);
+                                }
+                            }
+                        }
 
-			DataTable dtMandatos;
-			DataTable dtSessoes;
-			using (var banco = new Banco())
-			{
-				dtMandatos = banco.GetTable("select id_cf_deputado, id_legislatura, id_carteira_parlamantar from cf_mandato");
-				dtSessoes = banco.GetTable("select id, id_legislatura, data, inicio, tipo, numero, checksum from cf_sessao");
-			}
+                        try
+                        {
+                            banco.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
+                                                   sqlFields.ToString().Substring(1) + ")  values (" +
+                                                   sqlValues.ToString().Substring(1) + ")");
 
-			//Carregar a partir da legislatura 53 (2007/02/01). Existem dados desde 24/02/99
-			DateTime dtPesquisa = Padrao.DeputadoFederalPresencaUltimaAtualizacao.Date; // new DateTime(2007, 2, 1);
-			var dtNow = DateTime.Now.Date;
-			var dtUltimaIntegracao = dtPesquisa.AddDays(-7);
-			int presencas_importadas = 0;
+                            break;
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                    }
+                }
 
-			dtPesquisa = dtPesquisa.AddDays(-30);
+                banco.ExecuteNonQuery(@"
+                	update cf_deputado d
+                	left join (
+                		select		
+                			ideCadastro,
+                			idParlamentarDeprecated,
+                			nomeCivil,
+                			nomeParlamentarAtual,
+                			sexo,
+                			nomeProfissao,
+                			dataNascimento,
+                			ufRepresentacaoAtual,
+                			max(email) as email,
+                			max(sigla) as sigla,
+                			max(numero) as numero,
+                			max(anexo) as anexo,
+                			max(telefone) as telefone,
+                			max(dataFalecimento) as dataFalecimento
+                		from cf_deputado_temp_detalhes
+                		group by 1, 2, 3, 4, 5, 6, 7, 8
+                	) dt on dt.ideCadastro = d.id_cf_deputado
+                	left join partido p on p.sigla = dt.sigla
+                	left join estado e on e.sigla = dt.ufRepresentacaoAtual
+                	set
+                		d.nome_civil = dt.nomeCivil,
+                		d.nome_parlamentar = dt.nomeParlamentarAtual,
+                		d.sexo = LEFT(dt.sexo, 1),
+                		d.id_estado = e.id,
+                		d.id_partido = p.id,
+                		d.gabinete = dt.numero,
+                		d.anexo = dt.anexo,
+                		d.fone = dt.telefone,
+                		d.email = dt.email,
+                		d.profissao = dt.nomeProfissao,
+                		d.nascimento = dt.dataNascimento,
+                		d.falecimento = dt.dataFalecimento
+                	where dt.nomeParlamentarAtual is not null;
+                ");
 
-			while (true)
-			{
-				dtPesquisa = dtPesquisa.AddDays(1);
-				if (dtPesquisa > dtNow) break;
+                if (banco.Rows > 0)
+                {
+                    retorno = "<p>" + banco.Rows + "+ Mandato<p>";
+                }
 
-				var doc = new XmlDocument();
-				IRestResponse response;
-				var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
-				var request =
-					new RestRequest(
-						"ListarPresencasDia?data={data}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=",
-						Method.GET);
+                //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
+            }
 
-				request.AddUrlSegment("data", dtPesquisa.ToString("dd/MM/yyyy"));
+            return retorno;
+        }
+
+        public static string ImportaPresencasDeputados()
+        {
+            var sb = new StringBuilder();
+            Console.WriteLine("Iniciando Importação de presenças");
 
 
-				if (dtPesquisa < dtUltimaIntegracao && dtSessoes.Select().All(r => Convert.ToDateTime(r["data"]) != dtPesquisa))
-				{
-					Console.WriteLine("Não Houve sessão no dia: " + dtPesquisa.ToShortDateString());
-					sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
+            string checksum = string.Empty;
 
-					// Não houve sessão no dia.
-					continue;
-				}
+            DataTable dtMandatos;
+            DataTable dtSessoes;
+            using (var banco = new Banco())
+            {
+                dtMandatos = banco.GetTable("select id_cf_deputado, id_legislatura, id_carteira_parlamantar from cf_mandato");
+                dtSessoes = banco.GetTable("select id, id_legislatura, data, inicio, tipo, numero, checksum from cf_sessao");
+            }
 
-				try
-				{
-					response = client.Execute(request);
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine("Erro:" + ex.Message);
+            //Carregar a partir da legislatura 53 (2007/02/01). Existem dados desde 24/02/99
+            DateTime dtPesquisa = Padrao.DeputadoFederalPresencaUltimaAtualizacao.Date; //new DateTime(2007, 2, 1);
+            if (dtPesquisa == DateTime.MinValue) dtPesquisa = new DateTime(2016, 2, 9);
+            var dtNow = DateTime.Now.Date;
+            //var dtUltimaIntegracao = dtPesquisa.AddDays(-7);
+            int presencas_importadas = 0;
 
-					if (ex.Message.Contains("timeout"))
-					{
-						Thread.Sleep(5000);
+            dtPesquisa = dtPesquisa.AddDays(-60);
 
-						dtPesquisa = dtPesquisa.AddDays(-1);
-						continue;
-					}
-					else
-					{
-						sb.AppendFormat("<p>Erro:{0}</p>", ex.Message);
+            while (true)
+            {
+                dtPesquisa = dtPesquisa.AddDays(1);
+                if (dtPesquisa > dtNow) break;
 
-						return sb.ToString();
-					}
-				}
+                var doc = new XmlDocument();
+                IRestResponse response;
+                var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
+                var request =
+                    new RestRequest(
+                        "ListarPresencasDia?data={data}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=",
+                        Method.GET);
 
-				if (!response.Content.Contains("qtdeSessoesDia"))
-					continue;
+                request.AddUrlSegment("data", dtPesquisa.ToString("dd/MM/yyyy"));
 
-				using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-				{
-					checksum = BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(response.Content)));
-					List<DataRow> drSessoes = dtSessoes.Select().Where(r => Convert.ToDateTime(r["data"]) == dtPesquisa).ToList();
 
-					if (drSessoes.Count > 0)
-					{
-						if (drSessoes[0]["checksum"].ToString() == checksum)
-						{
-							continue;
-						}
-						else
-						{
-							using (var banco = new Banco())
-							{
-								foreach (DataRow dr in drSessoes)
-								{
-									var id_cf_sessao = Convert.ToInt32(dr["id"]);
+                //if (dtPesquisa < dtUltimaIntegracao && dtSessoes.Select().All(r => Convert.ToDateTime(r["data"]) != dtPesquisa))
+                //{
+                //    Console.WriteLine("Não Houve sessão no dia: " + dtPesquisa.ToShortDateString());
+                //    sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
 
-									banco.AddParameter("id", id_cf_sessao);
-									banco.ExecuteNonQuery("delete from cf_sessao where id=@id");
+                //    // Não houve sessão no dia.
+                //    continue;
+                //}
 
-									banco.AddParameter("id", id_cf_sessao);
-									banco.ExecuteNonQuery("delete from cf_sessao_presenca where id_cf_sessao=@id");
-								}
-							}
-						}
-					}
-				}
+                try
+                {
+                    response = client.Execute(request);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Erro:" + ex.Message);
 
-				doc.LoadXml(response.Content);
+                    if (ex.Message.Contains("timeout"))
+                    {
+                        Thread.Sleep(5000);
 
-				Console.WriteLine("Importando presenças do dia: " + dtPesquisa.ToShortDateString());
-				sb.AppendFormat("<p>Importando presenças do dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
-				XmlNode dia = doc.DocumentElement;
+                        dtPesquisa = dtPesquisa.AddDays(-1);
+                        continue;
+                    }
+                    else
+                    {
+                        sb.AppendFormat("<p>Erro:{0}</p>", ex.Message);
 
-				var lstSessaoDia = new Dictionary<string, int>();
+                        return sb.ToString();
+                    }
+                }
 
-				using (var banco = new Banco())
-				{
-					var count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
-					for (var i = 0; i < count; i++)
-					{
-						presencas_importadas++;
-						var temp = dia.SelectNodes("parlamentares/parlamentar/sessoesDia/sessaoDia").Item(i);
+                if (!response.Content.Contains("qtdeSessoesDia"))
+                {
+                    sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
+                    continue;
+                }
 
-						var inicio = temp["inicio"].InnerText;
+                using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+                {
+                    checksum = BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(response.Content)));
+                    List<DataRow> drSessoes = dtSessoes.Select().Where(r => Convert.ToDateTime(r["data"]) == dtPesquisa).ToList();
 
-						if (lstSessaoDia.ContainsKey(inicio)) continue; // ignorar registro duplicado
+                    if (drSessoes.Count > 0)
+                    {
+                        if (drSessoes[0]["checksum"].ToString() == checksum)
+                        {
+                            sb.AppendFormat("<p>Sem alterações na sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
+                            continue;
+                        }
+                        else
+                        {
+                            using (var banco = new Banco())
+                            {
+                                foreach (DataRow dr in drSessoes)
+                                {
+                                    var id_cf_sessao = Convert.ToInt32(dr["id"]);
 
-						var descricao =
-							temp["descricao"].InnerText
-								.Replace("N º", "").Replace("Nº", "")
-								.Replace("SESSÃO PREPARATÓRIA", "SESSÃO_PREPARATÓRIA")
-								.Split(new[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                    banco.AddParameter("id", id_cf_sessao);
+                                    banco.ExecuteNonQuery("delete from cf_sessao where id=@id");
 
-						banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-						banco.AddParameter("data", DateTime.Parse(dia["data"].InnerText));
-						banco.AddParameter("inicio", DateTime.Parse(inicio));
+                                    banco.AddParameter("id", id_cf_sessao);
+                                    banco.ExecuteNonQuery("delete from cf_sessao_presenca where id_cf_sessao=@id");
+                                }
+                            }
+                        }
+                    }
+                }
 
-						//1=> ORDINÁRIA, 2=> EXTRAORDINÁRIA, 3=> SESSÃO PREPARATÓRIA
-						var tipo = 0;
-						switch (descricao[0])
-						{
-							case "ORDINÁRIA":
-							case "ORDINARIA":
-								tipo = 1;
-								break;
-							case "EXTRAORDINÁRIA":
-							case "EXTRAORDINARIA":
-								tipo = 2;
-								break;
-							case "SESSÃO_PREPARATÓRIA":
-							case "SESSÃO_PREPARATORIA":
-								tipo = 3;
-								break;
-							default:
-								throw new NotImplementedException("");
-						}
+                doc.LoadXml(response.Content);
 
-						banco.AddParameter("tipo", tipo);
-						banco.AddParameter("numero", descricao[1]);
-						banco.AddParameter("checksum", checksum);
+                Console.WriteLine("Importando presenças do dia: " + dtPesquisa.ToShortDateString());
+                sb.AppendFormat("<p>Importando presenças do dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
+                XmlNode dia = doc.DocumentElement;
 
-						var id_cf_secao = Convert.ToInt32(banco.ExecuteScalar(
-							@"INSERT cf_sessao (
+                var lstSessaoDia = new Dictionary<string, int>();
+
+                using (var banco = new Banco())
+                {
+                    var count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
+                    for (var i = 0; i < count; i++)
+                    {
+                        presencas_importadas++;
+                        var temp = dia.SelectNodes("parlamentares/parlamentar/sessoesDia/sessaoDia").Item(i);
+
+                        var inicio = temp["inicio"].InnerText;
+
+                        if (lstSessaoDia.ContainsKey(inicio)) continue; // ignorar registro duplicado
+
+                        var descricao =
+                            temp["descricao"].InnerText
+                                .Replace("N º", "").Replace("Nº", "")
+                                .Replace("SESSÃO PREPARATÓRIA", "SESSÃO_PREPARATÓRIA")
+                                .Split(new[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
+                        banco.AddParameter("data", DateTime.Parse(dia["data"].InnerText));
+                        banco.AddParameter("inicio", DateTime.Parse(inicio));
+
+                        //1=> ORDINÁRIA, 2=> EXTRAORDINÁRIA, 3=> SESSÃO PREPARATÓRIA
+                        var tipo = 0;
+                        switch (descricao[0])
+                        {
+                            case "ORDINÁRIA":
+                            case "ORDINARIA":
+                                tipo = 1;
+                                break;
+                            case "EXTRAORDINÁRIA":
+                            case "EXTRAORDINARIA":
+                                tipo = 2;
+                                break;
+                            case "SESSÃO_PREPARATÓRIA":
+                            case "SESSÃO_PREPARATORIA":
+                                tipo = 3;
+                                break;
+                            default:
+                                throw new NotImplementedException("");
+                        }
+
+                        banco.AddParameter("tipo", tipo);
+                        banco.AddParameter("numero", descricao[1]);
+                        banco.AddParameter("checksum", checksum);
+
+                        var id_cf_secao = Convert.ToInt32(banco.ExecuteScalar(
+                            @"INSERT cf_sessao (
 								id_legislatura, data, inicio, tipo, numero, checksum
 							) values ( 
 								@id_legislatura, @data, @inicio, @tipo, @numero, @checksum
@@ -532,605 +558,804 @@ namespace OPS.ImportacaoDados
 							
 							SELECT LAST_INSERT_ID();"));
 
-						lstSessaoDia.Add(inicio, id_cf_secao);
-					}
+                        lstSessaoDia.Add(inicio, id_cf_secao);
+                    }
 
-					var parlamentares = dia.SelectNodes("parlamentares/parlamentar");
+                    var parlamentares = dia.SelectNodes("parlamentares/parlamentar");
 
-					foreach (XmlNode parlamentar in parlamentares)
-					{
-						var sessoesDia = parlamentar.SelectNodes("sessoesDia/sessaoDia");
+                    foreach (XmlNode parlamentar in parlamentares)
+                    {
+                        var sessoesDia = parlamentar.SelectNodes("sessoesDia/sessaoDia");
 
-						foreach (XmlNode sessaoDia in sessoesDia)
-						{
-							string id_cf_deputado;
-							var drMqandato = dtMandatos.Select(
-								string.Format("id_legislatura={0} and id_carteira_parlamantar={1}",
-									dia["legislatura"].InnerText,
-									parlamentar["carteiraParlamentar"].InnerText
-								)
-							);
+                        foreach (XmlNode sessaoDia in sessoesDia)
+                        {
+                            string id_cf_deputado;
+                            var drMqandato = dtMandatos.Select(
+                                string.Format("id_legislatura={0} and id_carteira_parlamantar={1}",
+                                    dia["legislatura"].InnerText,
+                                    parlamentar["carteiraParlamentar"].InnerText
+                                )
+                            );
 
-							if (drMqandato.Length > 0)
-							{
-								id_cf_deputado = drMqandato[0]["id_cf_deputado"].ToString();
-							}
-							else
-							{
-								var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
-								var sigla_partido = "";
-								var sigla_estado = "";
-								try
-								{
-									var temp = nome_parlamentar[1].Split('/');
-									sigla_partido = temp[0];
-									sigla_estado = temp[1];
-								}
-								catch (Exception e)
-								{
-									var x = e;
-								}
+                            if (drMqandato.Length > 0)
+                            {
+                                id_cf_deputado = drMqandato[0]["id_cf_deputado"].ToString();
+                            }
+                            else
+                            {
+                                var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
+                                var sigla_partido = "";
+                                var sigla_estado = "";
+                                try
+                                {
+                                    var temp = nome_parlamentar[1].Split('/');
+                                    sigla_partido = temp[0];
+                                    sigla_estado = temp[1];
+                                }
+                                catch (Exception e)
+                                {
+                                    var x = e;
+                                }
 
-								banco.AddParameter("nomeParlamentar", nome_parlamentar[0]);
-								banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-								banco.AddParameter("id_carteira_parlamantar",
-									parlamentar["carteiraParlamentar"].InnerText);
-								banco.AddParameter("sigla_estado", sigla_estado);
-								banco.AddParameter("sigla_partido", sigla_partido);
+                                try
+                                {
+                                    banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
+                                    id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where nome_parlamentar like @nome_parlamentar").ToString();
+                                }
+                                catch (Exception e)
+                                {
+                                    sb.AppendFormat("<p>1. Parlamentar '{0}' não consta na base de dados, e foi ignorado na importação de presenças. Legislatura: {1}, Carteira: {2}.</p>",
+                                        parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
+                                    continue;
+                                }
+                               
+                                banco.AddParameter("id_cf_deputado", id_cf_deputado);
+                                banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
+                                banco.AddParameter("id_carteira_parlamantar", parlamentar["carteiraParlamentar"].InnerText);
+                                banco.AddParameter("sigla_estado", sigla_estado);
+                                banco.AddParameter("sigla_partido", sigla_partido);
 
-								try
-								{
-									id_cf_deputado =
-										banco.ExecuteScalar(
-											@"INSERT INTO cf_mandato (
-	                                        id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido
-                                        ) VALUES (
-	                                        (SELECT id FROM cf_deputado where nome_parlamentar like @nome_parlamentar)
-                                            , @id_legislatura
-                                            , @id_carteira_parlamantar
-                                            , (SELECT id FROM estado where sigla like @sigla_estado)
-                                            , (SELECT id FROM partido where sigla like @sigla_partido)
-                                        );
+                                try
+                                {
+                                    banco.ExecuteScalar(
+                                        @"INSERT INTO cf_mandato (
+	                                    id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido
+                                    ) VALUES (
+	                                    @id_cf_deputado
+                                        , @id_legislatura
+                                        , @id_carteira_parlamantar
+                                        , (SELECT id FROM estado where sigla like @sigla_estado)
+                                        , (SELECT id FROM partido where sigla like @sigla_partido)
+                                    );");
 
-                                        SELECT LAST_INSERT_ID();"
-										).ToString();
+                                    // generate the data you want to insert
+                                    var toInsert = dtMandatos.NewRow();
+                                    toInsert["id_cf_deputado"] = id_cf_deputado;
+                                    toInsert["id_legislatura"] = dia["legislatura"].InnerText;
+                                    toInsert["id_carteira_parlamantar"] = parlamentar["carteiraParlamentar"].InnerText;
 
-									// generate the data you want to insert
-									var toInsert = dtMandatos.NewRow();
-									toInsert["id_cf_deputado"] = id_cf_deputado;
-									toInsert["id_legislatura"] = dia["legislatura"].InnerText;
-									toInsert["id_carteira_parlamantar"] = parlamentar["carteiraParlamentar"].InnerText;
+                                    // insert in the desired place
+                                    dtMandatos.Rows.Add(toInsert);
+                                }
+                                catch (Exception)
+                                {
+                                    // parlamentar não existe na base
+                                    Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" + dia["legislatura"].InnerText + "/" + parlamentar["carteiraParlamentar"].InnerText);
 
-									// insert in the desired place
-									dtMandatos.Rows.Add(toInsert);
-								}
-								catch (Exception ex)
-								{
-									// parlamentar não existe na base
-									Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" +
-													  dia["legislatura"].InnerText + "/" +
-													  parlamentar["carteiraParlamentar"].InnerText);
-
-									sb.AppendFormat("<p>Parlamentar '{0}' não conta na base de dados, e foi ignorado na importação de presenças. Legislatura: {1}, Carteira: {2}.</p>",
-										parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
-									break;
-								}
-							}
-
-
-							banco.AddParameter("id_cf_sessao", lstSessaoDia[sessaoDia["inicio"].InnerText]);
-							banco.AddParameter("id_cf_deputado", Convert.ToInt32(id_cf_deputado));
-
-							banco.AddParameter("presente", sessaoDia["frequencia"].InnerText == "Presença" ? 1 : 0);
-							banco.AddParameter("justificativa", parlamentar["justificativa"].InnerText);
-							banco.AddParameter("presenca_externa", parlamentar["presencaExterna"].InnerText);
-
-							banco.ExecuteNonQuery(
-								"INSERT cf_sessao_presenca (id_cf_sessao, id_cf_deputado, presente, justificativa, presenca_externa) values (@id_cf_sessao, @id_cf_deputado, @presente, @justificativa, @presenca_externa);");
-						}
-					}
-				}
-			}
-
-			Padrao.DeputadoFederalPresencaUltimaAtualizacao = DateTime.Now;
-
-			using (var banco = new Banco())
-			{
-				banco.AddParameter("cf_deputado_presenca_ultima_atualizacao", Padrao.DeputadoFederalPresencaUltimaAtualizacao);
-				banco.ExecuteNonQuery(@"UPDATE parametros SET cf_deputado_presenca_ultima_atualizacao=@cf_deputado_presenca_ultima_atualizacao");
-			}
-
-			//if (presencas_importadas > 0)
-			//{
-			//	using (var banco = new Banco())
-			//	{
-			//		for (int ano = ano_inicio; ano <= dtPesquisa.Year; ano++)
-			//		{
-			//			banco.AddParameter("ano", ano);
-			//			var total_sessoes = Convert.ToInt32(banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_sessao WHERE year(data)=@ano"));
-
-			//			banco.AddParameter("ano", ano);
-			//			banco.AddParameter("total_sessoes", total_sessoes);
-			//			banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
+                                    sb.AppendFormat("<p>2. Parlamentar '{0}' não consta na base de dados, e foi ignorado na importação de presenças. Legislatura: {1}, Carteira: {2}.</p>",
+                                        parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
+                                }
+                            }
 
 
-			//			banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
-			//		}
-			//	}
-			//}
-			return sb.ToString();
-		}
+                            banco.AddParameter("id_cf_sessao", lstSessaoDia[sessaoDia["inicio"].InnerText]);
+                            banco.AddParameter("id_cf_deputado", Convert.ToInt32(id_cf_deputado));
 
-		public static void ImportarDeputados()
-		{
-			int pagina;
-			var client = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
+                            banco.AddParameter("presente", sessaoDia["frequencia"].InnerText == "Presença" ? 1 : 0);
+                            banco.AddParameter("justificativa", parlamentar["justificativa"].InnerText);
+                            banco.AddParameter("presenca_externa", parlamentar["presencaExterna"].InnerText);
 
-			int leg = 55;
-			//for (int leg = 55; leg <= 55; leg++)
-			//{
-			Deputados deputados;
-				pagina = 1;
+                            banco.ExecuteNonQuery(
+                                "INSERT cf_sessao_presenca (id_cf_sessao, id_cf_deputado, presente, justificativa, presenca_externa) values (@id_cf_sessao, @id_cf_deputado, @presente, @justificativa, @presenca_externa);");
+                        }
+                    }
+                }
+            }
 
-				do
-				{
-					var uri = string.Format("?idLegislatura={0}&pagina={1}&itens=100", leg, pagina++);
-					var request = new RestRequest(uri, Method.GET);
-					request.AddHeader("Accept", "application/json");
+            Padrao.DeputadoFederalPresencaUltimaAtualizacao = DateTime.Now;
 
-					deputados = client.Execute<Deputados>(request).Data;
+            using (var banco = new Banco())
+            {
+                banco.AddParameter("cf_deputado_presenca_ultima_atualizacao", Padrao.DeputadoFederalPresencaUltimaAtualizacao);
+                banco.ExecuteNonQuery(@"UPDATE parametros SET cf_deputado_presenca_ultima_atualizacao=@cf_deputado_presenca_ultima_atualizacao");
+            }
 
-					foreach (var deputado in deputados.dados)
-					{
+            //if (presencas_importadas > 0)
+            //{
+            //	using (var banco = new Banco())
+            //	{
+            //		for (int ano = ano_inicio; ano <= dtPesquisa.Year; ano++)
+            //		{
+            //			banco.AddParameter("ano", ano);
+            //			var total_sessoes = Convert.ToInt32(banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_sessao WHERE year(data)=@ano"));
 
-						//request = new RestRequest(deputado.id.ToString(), Method.GET);
-						//request.AddHeader("Accept", "application/json");
+            //			banco.AddParameter("ano", ano);
+            //			banco.AddParameter("total_sessoes", total_sessoes);
+            //			banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
 
-						//DeputadoDetalhes deputadoDetalhes = client.Execute<DeputadoDetalhes>(request).Data;
 
-						using (var banco = new Banco())
-						{
-							banco.AddParameter("id_cadastro", deputado.id);
-							var count = banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_deputado WHERE id_cadastro=@id_cadastro");
+            //			banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
+            //		}
+            //	}
+            //}
+            return sb.ToString();
+        }
 
-							if (Convert.ToInt32(count) == 0)
-							{
-								//banco.ExecuteNonQuery(@"INSERT INTO cf_deputado (id, id_cadastro, nome_parlamentar) VALUES ()");
-								Console.WriteLine(deputado.id.ToString() + " - " + deputado.nome);
-							}
-						}
-					}
-				} while (deputados.links.Any(x => x.rel == "next"));
-			//}
+        public static string ImportarDeputados(int legislaturaInicial = 55)
+        {
+            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+            var sb = new StringBuilder();
+            int novos = 0;
+            int pagina;
+            var client = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
 
-		}
+            //int leg = 55;
+            Deputados deputados;
 
-		#region Importação Dados CEAP
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery(@"UPDATE cf_deputado SET id_cf_gabinete=NULL");
+            }
 
-		public static string ImportarDespesasXml(string atualDir, int ano)
-		{
-			// http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar
-			// http://www.camara.gov.br/cotas/AnosAnteriores.zip
-			// http://www.camara.gov.br/cotas/AnoAnterior.zip
-			// http://www.camara.gov.br/cotas/AnoAtual.zip
+            for (int leg = legislaturaInicial; leg <= 55; leg++)
+            {
+                pagina = 1;
+                do
+                {
+                    var uri = string.Format("?idLegislatura={0}&pagina={1}&itens=100", leg, pagina++);
+                    var request = new RestRequest(uri, Method.GET);
+                    request.AddHeader("Accept", "application/json");
 
-			string arquivo;
-			if (ano == DateTime.Now.Year)
-			{
-				arquivo = "AnoAtual";
-			}
-			else
-			{
-				arquivo = "AnoAnterior";
-			}
+                    deputados = client.Execute<Deputados>(request).Data;
 
-			var downloadUrl = "http://www.camara.leg.br/cotas/" + arquivo + ".zip";
-			var fullFileNameZip = atualDir + @"\" + arquivo + ".zip";
-			var fullFileNameXml = atualDir + @"\" + arquivo + ".xml";
+                    foreach (var deputado in deputados.dados)
+                    {
+                        using (var banco = new Banco())
+                        {
+                            banco.AddParameter("id", deputado.id);
+                            var count = banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_deputado WHERE id=@id");
 
-			if (!Directory.Exists(atualDir))
-				Directory.CreateDirectory(atualDir);
+                            request = new RestRequest(deputado.id.ToString(), Method.GET);
+                            request.AddHeader("Accept", "application/json");
+                            Dados deputadoDetalhes = client.Execute<DeputadoDetalhes>(request).Data.dados;
 
-			var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+                            if (deputadoDetalhes == null)
+                            {
+                                Console.WriteLine(deputado.id);
+                                continue;
+                            }
 
-			request.UserAgent = "Other";
-			request.Method = "HEAD";
-			request.ContentType = "application/json;charset=UTF-8";
-			request.Timeout = 1000000;
+                            if (deputadoDetalhes.redeSocial.Any())
+                            {
+                                Console.WriteLine(string.Join(",", deputadoDetalhes.redeSocial));
+                            }
 
-			using (var resp = request.GetResponse())
-			{
-				if (File.Exists(fullFileNameZip))
-				{
-					var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
-					var ContentLengthLocal = new FileInfo(fullFileNameZip).Length;
-					if (ContentLength == ContentLengthLocal)
-					{
-						using (var banco = new Banco())
-						{
-							banco.ExecuteNonQuery(@"
+                            int? id_cf_gabinete = null;
+                            if (deputadoDetalhes.ultimoStatus.gabinete.sala != null)
+                            {
+                                banco.AddParameter("sala", deputadoDetalhes.ultimoStatus.gabinete.sala);
+                                var id = banco.ExecuteScalar(@"SELECT id from cf_gabinete where sala = @sala");
+
+                                var gabinete = deputadoDetalhes.ultimoStatus.gabinete;
+
+                                if (id == null || Convert.IsDBNull(id))
+                                {
+                                    banco.AddParameter("id", gabinete.sala);
+                                    banco.AddParameter("nome", gabinete.nome);
+                                    banco.AddParameter("predio", gabinete.predio);
+                                    banco.AddParameter("andar", gabinete.andar);
+                                    banco.AddParameter("sala", gabinete.sala);
+                                    banco.AddParameter("telefone", gabinete.telefone);
+
+                                    banco.ExecuteNonQuery(@"INSERT INTO cf_gabinete (
+                                        id,
+                                        nome,
+                                        predio,
+                                        andar,
+                                        sala,
+                                        telefone
+                                    ) VALUES (
+                                        @id,
+                                        @nome,
+                                        @predio,
+                                        @andar,
+                                        @sala,
+                                        @telefone
+                                    )");
+
+                                    id_cf_gabinete = Convert.ToInt32(gabinete.sala);
+                                }
+                                else
+                                {
+                                    id_cf_gabinete = Convert.ToInt32(id);
+
+                                    if (leg == 55)
+                                    {
+                                        banco.AddParameter("nome", gabinete.nome);
+                                        banco.AddParameter("predio", gabinete.predio);
+                                        banco.AddParameter("andar", gabinete.andar);
+                                        banco.AddParameter("telefone", gabinete.telefone);
+                                        banco.AddParameter("sala", gabinete.sala);
+
+                                        banco.ExecuteNonQuery(@"UPDATE cf_gabinete SET
+                                        nome = @nome,
+                                        predio = @predio,
+                                        andar = @andar,
+                                        telefone = @telefone
+                                        WHERE sala = @sala
+                                    ");
+                                    }
+                                }
+                            }
+
+                            string situacao;
+                            if (leg == 55)
+                            {
+                                situacao = deputadoDetalhes.ultimoStatus.situacao;
+                            }
+                            else
+                            {
+                                situacao = "Fim de Mandato";
+                            }
+
+                            if (Convert.ToInt32(count) == 0)
+                            {
+                                banco.AddParameter("id", deputado.id);
+                                banco.AddParameter("sigla_partido", deputadoDetalhes.ultimoStatus.siglaPartido);
+                                banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
+                                banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
+                                banco.AddParameter("cpf", deputadoDetalhes.cpf);
+                                banco.AddParameter("nome_civil", textInfo.ToTitleCase(deputadoDetalhes.nomeCivil));
+                                banco.AddParameter("nome_parlamentar", textInfo.ToTitleCase(deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil));
+                                banco.AddParameter("sexo", deputadoDetalhes.sexo);
+                                banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
+                                banco.AddParameter("situacao", situacao);
+                                banco.AddParameter("email", deputadoDetalhes.ultimoStatus.gabinete.email?.ToLower());
+                                banco.AddParameter("nascimento", deputadoDetalhes.dataNascimento);
+                                banco.AddParameter("falecimento", deputadoDetalhes.dataFalecimento);
+                                banco.AddParameter("sigla_estado_nascimento", deputadoDetalhes.ufNascimento);
+                                banco.AddParameter("municipio", deputadoDetalhes.municipioNascimento);
+                                banco.AddParameter("website", deputadoDetalhes.urlWebsite);
+                                banco.AddParameter("escolaridade", deputadoDetalhes.escolaridade);
+
+                                banco.ExecuteNonQuery(@"INSERT INTO cf_deputado (
+                                    id,
+                                    id_partido, 
+                                    id_estado,
+                                    id_cf_gabinete,
+                                    cpf, 
+                                    nome_civil, 
+                                    nome_parlamentar, 
+                                    sexo, 
+                                    condicao, 
+                                    situacao, 
+                                    email, 
+                                    nascimento, 
+                                    falecimento, 
+                                    id_estado_nascimento,
+                                    municipio, 
+                                    website,
+                                    escolaridade
+                                ) VALUES (
+                                    @id,
+                                    (SELECT id FROM partido where sigla like @sigla_partido), 
+                                    (SELECT id FROM estado where sigla like @sigla_estado), 
+                                    @id_cf_gabinete,
+                                    @cpf, 
+                                    @nome_civil, 
+                                    @nome_parlamentar, 
+                                    @sexo, 
+                                    @condicao, 
+                                    @situacao, 
+                                    @email, 
+                                    @nascimento, 
+                                    @falecimento, 
+                                    (SELECT id FROM estado where sigla like @sigla_estado_nascimento), 
+                                    @municipio, 
+                                    @website,
+                                    @escolaridade
+                                )");
+
+                                novos++;
+
+                                sb.Append("<p>" + deputadoDetalhes.ultimoStatus.nome + "</p>");
+                            }
+                            else
+                            {
+                                banco.AddParameter("sigla_partido", deputadoDetalhes.ultimoStatus.siglaPartido);
+                                banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
+                                banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
+                                banco.AddParameter("cpf", deputadoDetalhes.cpf);
+                                banco.AddParameter("nome_civil", textInfo.ToTitleCase(deputadoDetalhes.nomeCivil));
+                                banco.AddParameter("nome_parlamentar", textInfo.ToTitleCase(deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil));
+                                banco.AddParameter("sexo", deputadoDetalhes.sexo);
+                                banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
+                                banco.AddParameter("situacao", situacao);
+                                banco.AddParameter("email", deputadoDetalhes.ultimoStatus.gabinete.email?.ToLower());
+                                banco.AddParameter("nascimento", deputadoDetalhes.dataNascimento);
+                                banco.AddParameter("falecimento", deputadoDetalhes.dataFalecimento);
+                                banco.AddParameter("sigla_estado_nascimento", deputadoDetalhes.ufNascimento);
+                                banco.AddParameter("municipio", deputadoDetalhes.municipioNascimento);
+                                banco.AddParameter("website", deputadoDetalhes.urlWebsite);
+                                banco.AddParameter("escolaridade", deputadoDetalhes.escolaridade);
+                                banco.AddParameter("id", deputado.id);
+
+                                banco.ExecuteNonQuery(@"
+                                    UPDATE cf_deputado SET 
+                                    id_partido = (SELECT id FROM partido where sigla like @sigla_partido), 
+                                    id_estado = (SELECT id FROM estado where sigla like @sigla_estado),
+                                    id_cf_gabinete = @id_cf_gabinete,
+                                    cpf = @cpf, 
+                                    nome_civil = @nome_civil, 
+                                    nome_parlamentar = @nome_parlamentar, 
+                                    sexo = @sexo, 
+                                    condicao = @condicao, 
+                                    situacao = @situacao, 
+                                    email = @email, 
+                                    nascimento = @nascimento, 
+                                    falecimento = @falecimento, 
+                                    id_estado_nascimento = (SELECT id FROM estado where sigla like @sigla_estado_nascimento),
+                                    municipio = @municipio, 
+                                    website = @website,
+                                    escolaridade = @escolaridade
+                                    WHERE id = @id
+                            ");
+                            }
+                        }
+                    }
+                } while (deputados.links.Any(x => x.rel == "next"));
+
+            }
+
+            if (novos > 0)
+            {
+                sb.Append("<p>" + novos.ToString() + " +Deputados" + "</p>");
+            }
+
+            //DownloadFotosDeputados(sDeputadosImagesPath);
+
+            return sb.ToString();
+        }
+
+        #region Importação Dados CEAP
+
+        public static string ImportarDespesasXml(string atualDir, int ano)
+        {
+            // http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar
+            // http://www.camara.gov.br/cotas/AnosAnteriores.zip
+            // http://www.camara.gov.br/cotas/AnoAnterior.zip
+            // http://www.camara.gov.br/cotas/AnoAtual.zip
+
+            string arquivo;
+            if (ano == DateTime.Now.Year)
+            {
+                arquivo = "AnoAtual";
+            }
+            else if (ano == DateTime.Now.Year - 1)
+            {
+                arquivo = "AnoAnterior";
+            }
+            else
+            {
+                arquivo = "AnosAnteriores";
+            }
+
+            var downloadUrl = "http://www.camara.leg.br/cotas/" + arquivo + ".zip";
+            var fullFileNameZip = atualDir + @"\" + arquivo + ".zip";
+            var fullFileNameXml = atualDir + @"\" + arquivo + ".xml";
+
+            if (!Directory.Exists(atualDir))
+                Directory.CreateDirectory(atualDir);
+
+            var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+
+            request.UserAgent = "Other";
+            request.Method = "HEAD";
+            request.ContentType = "application/json;charset=UTF-8";
+            request.Timeout = 1000000;
+
+            using (var resp = request.GetResponse())
+            {
+                if (File.Exists(fullFileNameZip))
+                {
+                    var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                    var ContentLengthLocal = new FileInfo(fullFileNameZip).Length;
+                    if (ContentLength == ContentLengthLocal)
+                    {
+                        using (var banco = new Banco())
+                        {
+                            banco.ExecuteNonQuery(@"
 								UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
 							");
-						}
-						Console.WriteLine("Não há novos itens para importar!");
-						return "<p>Não há novos itens para importar!</p>";
-					}
-				}
+                        }
 
-				using (var client = new WebClient())
-				{
-					client.Headers.Add("User-Agent: Other");
-					client.DownloadFile(downloadUrl, fullFileNameZip);
-				}
-			}
+                        Console.WriteLine("Não há novos itens para importar!");
+                        return "<p>Não há novos itens para importar!</p>";
+                    }
+                }
 
-			ZipFile file = null;
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent: Other");
+                    client.DownloadFile(downloadUrl, fullFileNameZip);
+                }
+            }
 
-			try
-			{
-				file = new ZipFile(fullFileNameZip);
+            ZipFile file = null;
 
-				if (file.TestArchive(true) == false)
-					throw new BusinessException("Camara: Arquivo Zip corrompido.");
-			}
-			finally
-			{
-				if (file != null)
-					file.Close();
-			}
+            try
+            {
+                file = new ZipFile(fullFileNameZip);
 
-			var zip = new FastZip();
-			zip.ExtractZip(fullFileNameZip, atualDir, null);
+                if (file.TestArchive(true) == false)
+                    throw new BusinessException("Camara: Arquivo Zip corrompido.");
+            }
+            finally
+            {
+                if (file != null)
+                    file.Close();
+            }
 
-			string resumoImportacao = CarregaDadosXml(fullFileNameXml, ano);
+            var zip = new FastZip();
+            zip.ExtractZip(fullFileNameZip, atualDir, null);
 
-			using (var banco = new Banco())
-			{
-				banco.ExecuteNonQuery(@"
+            string resumoImportacao = CarregaDadosXml(fullFileNameXml, ano);
+
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery(@"
 					UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
 				");
-			}
+            }
 
-			return resumoImportacao;
+            return resumoImportacao;
 
-			//File.Delete(fullFileNameZip);
-			//File.Delete(fullFileNameXml);
-		}
+            //File.Delete(fullFileNameZip);
+            //File.Delete(fullFileNameXml);
+        }
 
-		private static string CarregaDadosXml(string fullFileNameXml, int ano)
-		{
-			string sResumoValores = string.Empty;
-			var sb = new StringBuilder();
-			var linhaAtual = 0;
-			var lstHash = new Dictionary<string, long>();
+        private static string CarregaDadosXml(string fullFileNameXml, int ano)
+        {
+            int linha = 0, inserido = 0;
+            string sResumoValores = string.Empty;
+            var sb = new StringBuilder();
+            var linhaAtual = 0;
+            var lstHash = new Dictionary<string, long>();
 
-			try
-			{
-				using (var banco = new Banco())
-				{
+            try
+            {
+                using (var banco = new Banco())
+                {
 
-					using (var dReader = banco.ExecuteReader("select id, hash from cf_despesa where ano=" + ano.ToString()))
-					{
-						while (dReader.Read())
-						{
-							lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
-						}
-					}
+                    using (var dReader = banco.ExecuteReader("select id, hash from cf_despesa where ano=" + ano.ToString()))
+                    {
+                        while (dReader.Read())
+                        {
+                            lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+                        }
+                    }
 
-					using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=" + ano.ToString()))
-					{
-						if (dReader.Read())
-						{
-							sResumoValores = string.Format("[{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
-						}
-					}
+                    using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=" + ano))
+                    {
+                        if (dReader.Read())
+                        {
+                            sResumoValores = string.Format("[{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
+                        }
+                    }
 
-					LimpaDespesaTemporaria(banco);
+                    LimpaDespesaTemporaria(banco);
 
-					StreamReader stream = null;
-					int vazia = 0;
+                    StreamReader stream = null;
+                    int vazia = 0;
 
-					try
-					{
-						//if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
-						//    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
-						//else
-						stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
+                    try
+                    {
+                        //if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
+                        //    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
+                        //else
+                        stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
 
-						var sqlFields = new StringBuilder();
-						var sqlValues = new StringBuilder();
-						//string nuDeputadoIdControle = "";
-						//int id_sequencial_deputado_ano = -1;
+                        var sqlFields = new StringBuilder();
+                        var sqlValues = new StringBuilder();
 
-						using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
-						{
-							reader.ReadToDescendant("DESPESAS");
-							reader.ReadToDescendant("DESPESA");
+                        using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
+                        {
+                            reader.ReadToDescendant("DESPESAS");
+                            reader.ReadToDescendant("DESPESA");
 
-							//string tretas;
-							do
-							{
-								var strXmlNodeDespeza = reader.ReadOuterXml();
-								//if (strXmlNodeDespeza == "")
-								//{
-								//   Console.WriteLine(linhaAtual);
-								//   break;
-								//}
-								//else 
-								if (string.IsNullOrEmpty(strXmlNodeDespeza))
-								{
-									vazia++;
-									if (vazia < 10)
-									{
-										continue;
-									}
-									Console.WriteLine(linhaAtual);
-									break;
-								}
-								//else
-								//{
-								//   tretas = strXmlNodeDespeza;
-								//}
-								vazia = 0;
+                            do
+                            {
+                                linha++;
+                                var strXmlNodeDespeza = reader.ReadOuterXml();
+                                if (string.IsNullOrEmpty(strXmlNodeDespeza))
+                                {
+                                    vazia++;
+                                    if (vazia < 100)
+                                    {
+                                        Console.WriteLine("[vazio]" + vazia);
+                                        continue;
+                                    }
+                                    Console.WriteLine(linhaAtual);
+                                    break;
+                                }
+                                vazia = 0;
 
-								//DataRow drDespesa = dtDespesa.NewRow();
-								var doc = new XmlDocument();
-								doc.LoadXml(strXmlNodeDespeza);
-								var files = doc.DocumentElement.SelectNodes("*");
+                                var doc = new XmlDocument();
+                                doc.LoadXml(strXmlNodeDespeza);
+                                var files = doc.DocumentElement.SelectNodes("*");
 
-								sqlFields.Clear();
-								sqlValues.Clear();
+                                sqlFields.Clear();
+                                sqlValues.Clear();
 
-								foreach (XmlNode fileNode in files)
-								{
-									if (sqlFields.Length > 0)
-									{
-										sqlFields.Append(",");
-										sqlValues.Append(",");
-									}
+                                foreach (XmlNode fileNode in files)
+                                {
+                                    if (sqlFields.Length > 0)
+                                    {
+                                        sqlFields.Append(",");
+                                        sqlValues.Append(",");
+                                    }
 
-									sqlFields.Append(fileNode.Name);
-									sqlValues.Append("@" + fileNode.Name);
+                                    sqlFields.Append(fileNode.Name);
+                                    sqlValues.Append("@" + fileNode.Name);
 
-									string value;
-									if (fileNode.Name == "datEmissao")
-										value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
-									else
-										value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper();
+                                    string value;
+                                    if (fileNode.Name == "datEmissao")
+                                        value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
+                                    else
+                                        value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper();
 
-									banco.AddParameter(fileNode.Name, value);
-								}
+                                    banco.AddParameter(fileNode.Name, value);
+                                }
 
-								string hash = banco.ParametersHash();
-								if (lstHash.Remove(hash))
-								{
-									banco.ClearParameters();
-									continue;
-								}
+                                string hash = banco.ParametersHash();
+                                if (lstHash.Remove(hash))
+                                {
+                                    banco.ClearParameters();
+                                    continue;
+                                }
 
-								banco.AddParameter("hash", hash);
-								sqlFields.Append(", hash");
-								sqlValues.Append(", @hash");
+                                banco.AddParameter("hash", hash);
+                                sqlFields.Append(", hash");
+                                sqlValues.Append(", @hash");
 
-								try
-								{
-									banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
-								}
-								catch (Exception e)
-								{
-									banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
-									Console.WriteLine(e.Message);
-								}
+                                try
+                                {
+                                    banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+                                }
+                                catch (Exception e)
+                                {
+                                    banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+                                    Console.WriteLine(e.Message);
+                                }
 
-								if (++linhaAtual % 1000 == 0)
-								{
-									Console.WriteLine(linhaAtual);
-									//sb.Append(ProcessarDespesasTemp(banco));
-								}
-							} while (true);
-						}
-					}
-					finally
-					{
-						stream.Close();
-						stream.Dispose();
-					}
-				}
+                                inserido++;
 
-				using (var banco = new Banco())
-				{
+                                if (++linhaAtual % 1000 == 0)
+                                {
+                                    sb.Append(ProcessarDespesasTemp(banco));
+                                    Console.WriteLine(linhaAtual);
+                                }
+                            } while (true);
+                        }
+                    }
+                    finally
+                    {
+                        stream.Close();
+                        stream.Dispose();
+                    }
+                }
 
-					if (lstHash.Count == 0 && linhaAtual == 0)
-					{
-						sb.Append("<p>Não há novos itens para importar! #2</p>");
-						return sb.ToString();
-					}
+                using (var banco = new Banco())
+                {
 
-					if (lstHash.Count > 0)
-					{
-						string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
-						banco.ExecuteNonQuery(string.Format("delete from cf_despesa where id IN({0})", lstExcluir.Substring(1)));
-						//banco.ExecuteNonQuery(string.Format("update cf_despesa valor_glosa=valor_documento, valor_liquido=0, exclusao=now() where id IN({0})", lstExcluir.Substring(1)));
+                    if (lstHash.Count == 0 && linhaAtual == 0)
+                    {
+                        sb.Append("<p>Não há novos itens para importar! #2</p>");
+                        return sb.ToString();
+                    }
 
-						Console.WriteLine("Registros para exluir: " + lstHash.Count);
-						sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
-					}
+                    if (lstHash.Count > 0)
+                    {
+                        string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
+                        banco.ExecuteNonQuery(string.Format("delete from cf_despesa where id IN({0})", lstExcluir.Substring(1)));
+                        //banco.ExecuteNonQuery(string.Format("update cf_despesa valor_glosa=valor_documento, valor_liquido=0, exclusao=now() where id IN({0})", lstExcluir.Substring(1)));
 
-					if (linhaAtual > 0)
-					{
-						sb.Append(ProcessarDespesasTemp(banco));
-					}
+                        Console.WriteLine("Registros para exluir: " + lstHash.Count);
+                        sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
+                    }
 
-					using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=2017"))
-					{
-						if (dReader.Read())
-						{
-							sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
-						}
-					}
+                    if (linhaAtual > 0)
+                    {
+                        sb.Append(ProcessarDespesasTemp(banco));
+                    }
 
-					sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
-				}
+                    using (var dReader = banco.ExecuteReader("select sum(valor_liquido) as valor, count(1) as itens from cf_despesa where ano=" + ano))
+                    {
+                        if (dReader.Read())
+                        {
+                            sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
+                        }
+                    }
 
-				AtualizaDeputadoValores();
-				AtualizaCampeoesGastos();
-				AtualizaResumoMensal();
+                    sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
+                }
 
-			}
-			catch (Exception ex)
-			{
-				sb.Append("Erro: " + ex.Message);
-			}
+                if (ano == DateTime.Now.Year)
+                {
+                    AtualizaDeputadoValores();
+                    AtualizaCampeoesGastos();
+                    AtualizaResumoMensal();
 
-			return sb.ToString();
-		}
+                    using (var banco = new Banco())
+                    {
+                        banco.ExecuteNonQuery("call insereDados()");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                sb.Append("Erro: " + ex.Message);
+            }
 
-		/// <summary>
-		/// Baixa e Importa os Dados da CEAP
-		/// </summary>
-		/// <param name="atualDir"></param>
-		/// <param name="ano"></param>
-		/// <param name="completo"></param>
-		public static void ImportarDespesas(string atualDir, int ano, bool completo)
-		{
-			var downloadUrl = "http://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
-			var fullFileNameZip = atualDir + @"\Ano-" + ano + ".csv.zip";
-			var fullFileNameCsv = atualDir + @"\Ano-" + ano + ".csv";
+            return sb.ToString();
+        }
 
-			if (!Directory.Exists(atualDir))
-				Directory.CreateDirectory(atualDir);
+        /// <summary>
+        /// Baixa e Importa os Dados da CEAP
+        /// </summary>
+        /// <param name="atualDir"></param>
+        /// <param name="ano"></param>
+        /// <param name="completo"></param>
+        public static void ImportarDespesas(string atualDir, int ano, bool completo)
+        {
+            var downloadUrl = "http://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
+            var fullFileNameZip = atualDir + @"\Ano-" + ano + ".csv.zip";
+            var fullFileNameCsv = atualDir + @"\Ano-" + ano + ".csv";
 
-			var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+            if (!Directory.Exists(atualDir))
+                Directory.CreateDirectory(atualDir);
 
-			request.UserAgent = "Other";
-			request.Method = "HEAD";
-			request.ContentType = "application/json;charset=UTF-8";
-			request.Timeout = 1000000;
+            var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
 
-			using (var resp = request.GetResponse())
-			{
-				if (File.Exists(fullFileNameZip))
-				{
-					long contentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
-					long contentLengthLocal = new FileInfo(fullFileNameZip).Length;
-					if (contentLength == contentLengthLocal)
-					{
-						CarregaDadosCsv(fullFileNameCsv, ano, completo);
-						return;
-					}
-				}
+            request.UserAgent = "Other";
+            request.Method = "HEAD";
+            request.ContentType = "application/json;charset=UTF-8";
+            request.Timeout = 1000000;
 
-				using (var client = new WebClient())
-				{
-					client.Headers.Add("User-Agent: Other");
-					client.DownloadFile(downloadUrl, fullFileNameZip);
-				}
-			}
+            using (var resp = request.GetResponse())
+            {
+                if (File.Exists(fullFileNameZip))
+                {
+                    long contentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                    long contentLengthLocal = new FileInfo(fullFileNameZip).Length;
+                    if (contentLength == contentLengthLocal)
+                    {
+                        CarregaDadosCsv(fullFileNameCsv, ano, completo);
+                        return;
+                    }
+                }
 
-			using (ZipFile file = new ZipFile(fullFileNameZip))
-			{
-				if (file.TestArchive(true) == false)
-					throw new Exception("Erro no Zip da Câmara");
-			}
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent: Other");
+                    client.DownloadFile(downloadUrl, fullFileNameZip);
+                }
+            }
 
-			var zip = new FastZip();
-			zip.ExtractZip(fullFileNameZip, atualDir, null);
+            using (ZipFile file = new ZipFile(fullFileNameZip))
+            {
+                if (file.TestArchive(true) == false)
+                    throw new Exception("Erro no Zip da Câmara");
+            }
 
-			CarregaDadosCsv(fullFileNameCsv, ano, completo);
+            var zip = new FastZip();
+            zip.ExtractZip(fullFileNameZip, atualDir, null);
 
-			//File.Delete(fullFileNameZip);
-			//File.Delete(fullFileNameXml);
-		}
+            CarregaDadosCsv(fullFileNameCsv, ano, completo);
 
-		private static void CarregaDadosCsv(string file, int ano, bool completo)
-		{
-			var linhaAtual = 0;
-			var totalColunas = ColunasCEAP.Length;
+            //File.Delete(fullFileNameZip);
+            //File.Delete(fullFileNameXml);
+        }
 
-			using (var banco = new Banco())
-			{
-				//if (!completo)
-				//{
-				//	banco.ExecuteNonQuery(@"
-				//		DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
+        private static void CarregaDadosCsv(string file, int ano, bool completo)
+        {
+            //var linhaAtual = 0;
+            var totalColunas = ColunasCEAP.Length;
 
-				//		-- select max(id)+1 from cf_despesa
-				//		ALTER TABLE cf_despesa AUTO_INCREMENT = 2974353;
-				//              ");
-				//}
-				var dt = banco.GetTable("select id, hash from cf_despesa where ano=" + ano);
+            using (var banco = new Banco())
+            {
+                //if (!completo)
+                //{
+                //	banco.ExecuteNonQuery(@"
+                //		DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
 
-				LimpaDespesaTemporaria(banco);
+                //		-- select max(id)+1 from cf_despesa
+                //		ALTER TABLE cf_despesa AUTO_INCREMENT = 2974353;
+                //              ");
+                //}
+                var dt = banco.GetTable("select id, hash from cf_despesa where ano=" + ano);
 
-				using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
-				{
-					int count = 0;
+                LimpaDespesaTemporaria(banco);
 
-					while (!reader.EndOfStream)
-					{
-						count++;
+                using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
+                {
+                    int count = 0;
 
-						var linha = reader.ReadLine();
-						if (string.IsNullOrEmpty(linha))
-							continue;
+                    while (!reader.EndOfStream)
+                    {
+                        count++;
 
-						List<string> valores;
-						if (count == 1)
-						{
-							valores = linha.Split(';').ToList();
+                        var linha = reader.ReadLine();
+                        if (string.IsNullOrEmpty(linha))
+                            continue;
 
-							for (int i = 0; i < totalColunas - 1; i++)
-							{
-								if (valores[i] != ColunasCEAP[i])
-								{
-									throw new Exception("Mudança de integração detectada para o Câmara Federal");
-								}
-							}
+                        List<string> valores;
+                        if (count == 1)
+                        {
+                            valores = linha.Split(';').ToList();
 
-							// Pular linha de titulo
-							continue;
-						}
+                            for (int i = 0; i < totalColunas - 1; i++)
+                            {
+                                if (valores[i] != ColunasCEAP[i])
+                                {
+                                    throw new Exception("Mudança de integração detectada para o Câmara Federal");
+                                }
+                            }
 
-						valores = linha.Split(new[] { ";" }, StringSplitOptions.None).ToList();
-						for (int i = 0; i < totalColunas; i++)
-						{
-							if (ColunasCEAP[i] == "datEmissao")
-							{
-								banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : Convert.ToDateTime(valores[i]).ToString("yyyy-MM-dd"));
-							}
-							else if (!ColunasCEAP[i].StartsWith("tx") && !ColunasCEAP[i].StartsWith("sg"))
-							{
-								if (ColunasCEAP[i] == "vlrLiquido" && valores[i] == "-0")
-								{
-									// Valor liquido deve ser calculado pelo vlrDocumento-vlrGlosa-vlrRestituicao
-									banco.AddParameter(ColunasCEAP[i], null);
-								}
-								else
-								{
-									//OBS: Necessario dar replace para o caso do vlrRestituicao que esta vindo com o separador trocado.
-									banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : (object)Convert.ToDecimal(valores[i].Replace(".", ",")));
-								}
-							}
-							else
-							{
-								banco.AddParameter(ColunasCEAP[i], valores[i].ToUpper());
-							}
-						}
+                            // Pular linha de titulo
+                            continue;
+                        }
 
-						string hash = banco.ParametersHash();
+                        valores = linha.Split(new[] { ";" }, StringSplitOptions.None).ToList();
+                        for (int i = 0; i < totalColunas; i++)
+                        {
+                            if (ColunasCEAP[i] == "datEmissao")
+                            {
+                                banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : Convert.ToDateTime(valores[i]).ToString("yyyy-MM-dd"));
+                            }
+                            else if (!ColunasCEAP[i].StartsWith("tx") && !ColunasCEAP[i].StartsWith("sg"))
+                            {
+                                if (ColunasCEAP[i] == "vlrLiquido" && valores[i] == "-0")
+                                {
+                                    // Valor liquido deve ser calculado pelo vlrDocumento-vlrGlosa-vlrRestituicao
+                                    banco.AddParameter(ColunasCEAP[i], null);
+                                }
+                                else
+                                {
+                                    //OBS: Necessario dar replace para o caso do vlrRestituicao que esta vindo com o separador trocado.
+                                    banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : (object)Convert.ToDecimal(valores[i].Replace(".", ",")));
+                                }
+                            }
+                            else
+                            {
+                                banco.AddParameter(ColunasCEAP[i], valores[i].ToUpper());
+                            }
+                        }
 
-						var lstDr = dt.Select("hash='" + hash + "'");
-						if (lstDr.Length > 0)
-						{
-							dt.Rows.Remove(lstDr[0]);
-							banco.ClearParameters();
-							continue;
-						}
+                        string hash = banco.ParametersHash();
 
-						banco.AddParameter("hash", hash);
+                        var lstDr = dt.Select("hash='" + hash + "'");
+                        if (lstDr.Length > 0)
+                        {
+                            dt.Rows.Remove(lstDr[0]);
+                            banco.ClearParameters();
+                            continue;
+                        }
 
-						banco.ExecuteNonQuery(
-							@"INSERT INTO cf_despesa_temp (
+                        banco.AddParameter("hash", hash);
+
+                        banco.ExecuteNonQuery(
+                            @"INSERT INTO cf_despesa_temp (
 								txNomeParlamentar, idecadastro, nuCarteiraParlamentar, nuLegislatura, sgUF, 
 								sgPartido, codLegislatura, numSubCota, txtDescricao, numEspecificacaoSubCota, 
 								txtDescricaoEspecificacao, txtFornecedor, txtCNPJCPF, txtNumero, indTipoDocumento, 
@@ -1146,153 +1371,162 @@ namespace OPS.ImportacaoDados
 								@numRessarcimento, @vlrRestituicao, @nuDeputadoId, @ideDocumento, @hash
 							)");
 
-						//if (++linhaAtual == 10000)
-						//{
-						//	linhaAtual = 0;
+                        //if (++linhaAtual == 10000)
+                        //{
+                        //	linhaAtual = 0;
 
-						//	ProcessarDespesasTemp(banco, true);
-						//}
-					}
-				}
+                        //	ProcessarDespesasTemp(banco, true);
+                        //}
+                    }
+                }
 
-				ProcessarDespesasTemp(banco);
+                ProcessarDespesasTemp(banco);
 
-				foreach (DataRow dr in dt.Rows)
-				{
-					banco.AddParameter("id", dr["id"].ToString());
-					banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
-				}
-			}
+                foreach (DataRow dr in dt.Rows)
+                {
+                    banco.AddParameter("id", dr["id"].ToString());
+                    banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
+                }
+            }
 
-			if (ano == DateTime.Now.Year)
-			{
-				AtualizaDeputadoValores();
+            if (ano == DateTime.Now.Year)
+            {
+                AtualizaDeputadoValores();
 
-				AtualizaCampeoesGastos();
+                AtualizaCampeoesGastos();
 
-				AtualizaResumoMensal();
+                AtualizaResumoMensal();
 
-				using (var banco = new Banco())
-				{
-					banco.ExecuteNonQuery(@"
+                using (var banco = new Banco())
+                {
+                    banco.ExecuteNonQuery(@"
 				        UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
 			        ");
-				}
-			}
-		}
+                }
+            }
+        }
 
-		private static string ProcessarDespesasTemp(Banco banco)
-		{
-			var sb = new StringBuilder();
+        private static string ProcessarDespesasTemp(Banco banco)
+        {
+            var sb = new StringBuilder();
 
-			CorrigeDespesas(banco);
-			sb.Append(InsereDeputadoFaltante(banco));
-			sb.Append(InsereTipoDespesaFaltante(banco));
-			sb.Append(InsereTipoEspecificacaoFaltante(banco));
-			sb.Append(InsereMandatoFaltante(banco));
-			sb.Append(InsereLegislaturaFaltante(banco));
-			sb.Append(InsereFornecedorFaltante(banco));
+            CorrigeDespesas(banco);
+            sb.Append(InsereDeputadoFaltante(banco));
+            //sb.Append(InsereTipoDespesaFaltante(banco));
+            //sb.Append(InsereTipoEspecificacaoFaltante(banco));
+            sb.Append(InsereMandatoFaltante(banco));
+            sb.Append(InsereLegislaturaFaltante(banco));
+            sb.Append(InsereFornecedorFaltante(banco));
 
 
-			//if (completo)
-			sb.Append(InsereDespesaFinal(banco));
-			//else
-			//	InsereDespesaFinalParcial(banco);
+            //if (completo)
+            sb.Append(InsereDespesaFinal(banco));
+            //else
+            //	InsereDespesaFinalParcial(banco);
 
-			LimpaDespesaTemporaria(banco);
+            LimpaDespesaTemporaria(banco);
 
-			return sb.ToString();
-		}
+            return sb.ToString();
+        }
 
-		private static void CorrigeDespesas(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static void CorrigeDespesas(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 				UPDATE cf_despesa_temp SET txtNumero = NULL WHERE txtNumero = 'S/N' OR txtNumero = '';
 				UPDATE cf_despesa_temp SET ideDocumento = NULL WHERE ideDocumento = '';
 				UPDATE cf_despesa_temp SET txtCNPJCPF = NULL WHERE txtCNPJCPF = '';
 				UPDATE cf_despesa_temp SET txtFornecedor = 'CORREIOS' WHERE txtCNPJCPF is null and txtFornecedor LIKE 'CORREIOS%';
 				-- UPDATE cf_despesa_temp set vlrLiquido = vlrDocumento - vlrGlosa - vlrRestituicao where vlrLiquido is null;
 			");
-		}
+        }
 
-		private static string InsereDeputadoFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
-				INSERT INTO cf_deputado (id, id_cadastro, nome_parlamentar)
-				select distinct nuDeputadoId, ideCadastro, txNomeParlamentar 
-				from cf_despesa_temp
-				where nuDeputadoId  not in (
-					select id from cf_deputado
-				);
-			");
+        private static string InsereDeputadoFaltante(Banco banco)
+        {
+            // Atualiza os deputados já existentes quando efetuarem os primeiros gastos com a cota
+            banco.ExecuteNonQuery(@"
+                UPDATE cf_deputado d
+                inner join cf_despesa_temp dt on d.id = dt.ideCadastro
+                set d.id_deputado = dt.nuDeputadoId
+                where d.id_deputado is null;
+            ");
 
-			if (banco.Rows > 0)
-			{
-				DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
+            // Insere um novo deputado ou liderança
+            banco.ExecuteNonQuery(@"
+        	    INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar)
+        	    select distinct ideCadastro, nuDeputadoId, txNomeParlamentar 
+        	    from cf_despesa_temp
+        	    where nuDeputadoId  not in (
+        		    select id_deputado from cf_deputado
+        	    );
+            ");
 
-				AtualizaInfoDeputados();
-				AtualizaInfoDeputadosCompleto();
+            //DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
 
-				return "<p>" + banco.Rows + "+ Deputado<p>";
-			}
+            if (banco.Rows > 0)
+            {
+                //AtualizaInfoDeputados();
+                //AtualizaInfoDeputadosCompleto();
 
-			return string.Empty;
-		}
+                return "<p>" + banco.Rows + "+ Deputado<p>";
+            }
 
-		private static string InsereTipoDespesaFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
-				INSERT INTO cf_despesa_tipo (id, descricao)
-				select distinct numSubCota, txtDescricao
-				from cf_despesa_temp
-				where numSubCota  not in (
-					select id from cf_despesa_tipo
-				);
-			");
+            return string.Empty;
+        }
 
-			if (banco.Rows > 0)
-			{
-				return "<p>" + banco.Rows + "+ Tipo Despesa<p>";
-			}
+        private static string InsereTipoDespesaFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
+        	INSERT INTO cf_despesa_tipo (id, descricao)
+        	select distinct numSubCota, txtDescricao
+        	from cf_despesa_temp
+        	where numSubCota  not in (
+        		select id from cf_despesa_tipo
+        	);
+        ");
 
-			return string.Empty;
-		}
+            if (banco.Rows > 0)
+            {
+                return "<p>" + banco.Rows + "+ Tipo Despesa<p>";
+            }
 
-		private static string InsereTipoEspecificacaoFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
-				INSERT INTO cf_especificacao_tipo (id_cf_despesa_tipo, id_cf_especificacao, descricao)
-				select distinct numSubCota, numEspecificacaoSubCota, txtDescricaoEspecificacao
-				from cf_despesa_temp dt
-				left join cf_especificacao_tipo tp on tp.id_cf_despesa_tipo = dt.numSubCota 
-					and tp.id_cf_especificacao = dt.numEspecificacaoSubCota
-				where numEspecificacaoSubCota <> 0
-				AND tp.descricao = null;
-			");
+            return string.Empty;
+        }
 
-			if (banco.Rows > 0)
-			{
-				return "<p>" + banco.Rows + "+ Tipo Especificação<p>";
-			}
+        private static string InsereTipoEspecificacaoFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
+            	INSERT INTO cf_especificacao_tipo (id_cf_despesa_tipo, id_cf_especificacao, descricao)
+            	select distinct numSubCota, numEspecificacaoSubCota, txtDescricaoEspecificacao
+            	from cf_despesa_temp dt
+            	left join cf_especificacao_tipo tp on tp.id_cf_despesa_tipo = dt.numSubCota 
+            		and tp.id_cf_especificacao = dt.numEspecificacaoSubCota
+            	where numEspecificacaoSubCota <> 0
+            	AND tp.descricao = null;
+            ");
 
-			return string.Empty;
-		}
+            if (banco.Rows > 0)
+            {
+                return "<p>" + banco.Rows + "+ Tipo Especificação<p>";
+            }
 
-		private static string InsereMandatoFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+            return string.Empty;
+        }
+
+        private static string InsereMandatoFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
 
 				INSERT INTO cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
-				select distinct nuDeputadoId, codLegislatura, nuCarteiraParlamentar, e.id, p.id 
+				select distinct dt.ideCadastro, codLegislatura, nuCarteiraParlamentar, e.id, p.id 
 				from ( 
 					select distinct 
-					nuDeputadoId, nuLegislatura, nuCarteiraParlamentar, codLegislatura, sgUF, sgPartido
+					ideCadastro, nuLegislatura, nuCarteiraParlamentar, codLegislatura, sgUF, sgPartido
 					from cf_despesa_temp
 				) dt
 				left join estado e on e.sigla = dt.sgUF
 				left join partido p on p.sigla = dt.sgPartido
-				left join cf_mandato m on m.id_cf_deputado = dt.nuDeputadoId 
+				left join cf_mandato m on m.id_cf_deputado = dt.ideCadastro 
 					AND m.id_legislatura = dt.codLegislatura 
 					AND m.id_carteira_parlamantar = nuCarteiraParlamentar
 				where dt.codLegislatura <> 0
@@ -1301,17 +1535,17 @@ namespace OPS.ImportacaoDados
                 SET SQL_BIG_SELECTS=0;
 			");
 
-			if (banco.Rows > 0)
-			{
-				return "<p>" + banco.Rows + "+ Mandato<p>";
-			}
+            if (banco.Rows > 0)
+            {
+                return "<p>" + banco.Rows + "+ Mandato<p>";
+            }
 
-			return string.Empty;
-		}
+            return string.Empty;
+        }
 
-		private static string InsereLegislaturaFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static string InsereLegislaturaFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 				INSERT INTO cf_legislatura (id, ano)
 				select distinct codLegislatura, nuLegislatura
 				from cf_despesa_temp dt
@@ -1321,17 +1555,17 @@ namespace OPS.ImportacaoDados
 				);
 			");
 
-			if (banco.Rows > 0)
-			{
-				return "<p>" + banco.Rows + "+ Legislatura<p>";
-			}
+            if (banco.Rows > 0)
+            {
+                return "<p>" + banco.Rows + "+ Legislatura<p>";
+            }
 
-			return string.Empty;
-		}
+            return string.Empty;
+        }
 
-		private static string InsereFornecedorFaltante(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static string InsereFornecedorFaltante(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
 
 				INSERT INTO fornecedor (nome, cnpj_cpf)
@@ -1352,17 +1586,17 @@ namespace OPS.ImportacaoDados
                 SET SQL_BIG_SELECTS=0;
 			");
 
-			if (banco.Rows > 0)
-			{
-				return "<p>" + banco.Rows + "+ Fornecedor<p>";
-			}
+            if (banco.Rows > 0)
+            {
+                return "<p>" + banco.Rows + "+ Fornecedor<p>";
+            }
 
-			return string.Empty;
-		}
+            return string.Empty;
+        }
 
-		private static string InsereDespesaFinal(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static string InsereDespesaFinal(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
 				 ALTER TABLE cf_despesa DISABLE KEYS;
 
@@ -1393,7 +1627,7 @@ namespace OPS.ImportacaoDados
 				)
 				select 
 					dt.ideDocumento,
-					dt.nuDeputadoId,
+					d.id,
 					m.id,
 					numSubCota,
 					numEspecificacaoSubCota,
@@ -1416,9 +1650,10 @@ namespace OPS.ImportacaoDados
 					hash,
 					now()
 				from cf_despesa_temp dt
+                LEFT JOIN cf_deputado d on d.id_deputado = dt.nuDeputadoId
 				LEFT join fornecedor f on f.cnpj_cpf = dt.txtCNPJCPF
 					or (f.cnpj_cpf is null and dt.txtCNPJCPF is null and f.nome = dt.txtFornecedor)
-				left join cf_mandato m on m.id_cf_deputado = dt.nuDeputadoId
+				left join cf_mandato m on m.id_cf_deputado = d.id
 					and m.id_legislatura = dt.codLegislatura 
 					and m.id_carteira_parlamantar = nuCarteiraParlamentar;
     
@@ -1426,18 +1661,18 @@ namespace OPS.ImportacaoDados
                 SET SQL_BIG_SELECTS=0;
 			", 3600);
 
-			if (banco.Rows > 0)
-			{
-				return "<p>" + banco.Rows + "+ Despesa<p>";
-			}
+            if (banco.Rows > 0)
+            {
+                return "<p>" + banco.Rows + "+ Despesa<p>";
+            }
 
-			return string.Empty;
-		}
+            return string.Empty;
+        }
 
-		private static void InsereDespesaFinalParcial(Banco banco)
-		{
-			var dt = banco.GetTable(
-				@"SET SQL_BIG_SELECTS=1;
+        private static void InsereDespesaFinalParcial(Banco banco)
+        {
+            var dt = banco.GetTable(
+                @"SET SQL_BIG_SELECTS=1;
 
                 DROP TABLE IF EXISTS table_in_memory_d;
                 CREATE TEMPORARY TABLE table_in_memory_d
@@ -1465,16 +1700,16 @@ namespace OPS.ImportacaoDados
                 SET SQL_BIG_SELECTS=0;
 			    ", 3600);
 
-			foreach (DataRow dr in dt.Rows)
-			{
-				banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
-				banco.AddParameter("mes", dr["mes"]);
-				banco.ExecuteNonQuery(
-					@"DELETE FROM cf_despesa WHERE id_cf_deputado=@id_cf_deputado and ano=2017 and mes=@mes");
+            foreach (DataRow dr in dt.Rows)
+            {
+                banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
+                banco.AddParameter("mes", dr["mes"]);
+                banco.ExecuteNonQuery(
+                    @"DELETE FROM cf_despesa WHERE id_cf_deputado=@id_cf_deputado and ano=2017 and mes=@mes");
 
-				banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
-				banco.AddParameter("mes", dr["mes"]);
-				banco.ExecuteNonQuery(@"
+                banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
+                banco.AddParameter("mes", dr["mes"]);
+                banco.ExecuteNonQuery(@"
                         SET SQL_BIG_SELECTS=1;
 
 				        INSERT INTO cf_despesa (
@@ -1535,58 +1770,58 @@ namespace OPS.ImportacaoDados
 
                         SET SQL_BIG_SELECTS=0;
 			        ", 3600);
-			}
-		}
+            }
+        }
 
-		private static void LimpaDespesaTemporaria(Banco banco)
-		{
-			banco.ExecuteNonQuery(@"
+        private static void LimpaDespesaTemporaria(Banco banco)
+        {
+            banco.ExecuteNonQuery(@"
 
                 truncate table cf_despesa_temp;
 			");
-		}
+        }
 
-		#endregion Importação Dados CEAP
+        #endregion Importação Dados CEAP
 
-		public static void AtualizaDeputadoValores()
-		{
-			using (var banco = new Banco())
-			{
-				var dt = banco.GetTable("select id, id_cadastro from cf_deputado");
-				object quantidade_secretarios;
-				object valor_total_ceap;
+        public static void AtualizaDeputadoValores()
+        {
+            using (var banco = new Banco())
+            {
+                var dt = banco.GetTable("select id from cf_deputado");
+                object quantidade_secretarios;
+                object valor_total_ceap;
 
-				foreach (DataRow dr in dt.Rows)
-				{
-					banco.AddParameter("id_cf_deputado", dr["id"]);
-					valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
+                foreach (DataRow dr in dt.Rows)
+                {
+                    banco.AddParameter("id_cf_deputado", dr["id"]);
+                    valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
 
-					banco.AddParameter("id_cf_deputado", dr["id"]);
-					quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
+                    banco.AddParameter("id_cf_deputado", dr["id"]);
+                    quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
 
-					banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
-					banco.AddParameter("valor_total_ceap", valor_total_ceap);
-					banco.AddParameter("id_cf_deputado", dr["id"]);
-					banco.ExecuteNonQuery(
-						@"update cf_deputado set 
+                    banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
+                    banco.AddParameter("valor_total_ceap", valor_total_ceap);
+                    banco.AddParameter("id_cf_deputado", dr["id"]);
+                    banco.ExecuteNonQuery(
+                        @"update cf_deputado set 
 						quantidade_secretarios=@quantidade_secretarios
 						, valor_total_ceap=@valor_total_ceap 
 						where id=@id_cf_deputado"
-					);
-				}
-			}
-		}
+                    );
+                }
+            }
+        }
 
-		/// <summary>
-		/// Atualiza indicador 'Campeões de gastos',
-		/// Os 4 deputados que mais gastaram com a CEAP desde o ínicio do mandato 55 (02/2015)
-		/// </summary>
-		public static void AtualizaCampeoesGastos()
-		{
-			var strSql =
-				@"truncate table cf_deputado_campeao_gasto;
+        /// <summary>
+        /// Atualiza indicador 'Campeões de gastos',
+        /// Os 4 deputados que mais gastaram com a CEAP desde o ínicio do mandato 55 (02/2015)
+        /// </summary>
+        public static void AtualizaCampeoesGastos()
+        {
+            var strSql =
+                @"truncate table cf_deputado_campeao_gasto;
 				insert into cf_deputado_campeao_gasto
-				SELECT l1.id_cf_deputado, d.id_cadastro, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
+				SELECT l1.id_cf_deputado, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
 				FROM (
 					SELECT 
 						l.id_cf_deputado,
@@ -1601,16 +1836,16 @@ namespace OPS.ImportacaoDados
 				LEFT JOIN partido p on p.id = d.id_partido
 				LEFT JOIN estado e on e.id = d.id_estado;";
 
-			using (var banco = new Banco())
-			{
-				banco.ExecuteNonQuery(strSql);
-			}
-		}
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery(strSql);
+            }
+        }
 
-		public static void AtualizaResumoMensal()
-		{
-			var strSql =
-				@"truncate table cf_despesa_resumo_mensal;
+        public static void AtualizaResumoMensal()
+        {
+            var strSql =
+                @"truncate table cf_despesa_resumo_mensal;
 				insert into cf_despesa_resumo_mensal
 				(ano, mes, valor) (
 					select ano, mes, sum(valor_liquido)
@@ -1618,122 +1853,128 @@ namespace OPS.ImportacaoDados
 					group by ano, mes
 				);";
 
-			using (var banco = new Banco())
-			{
-				banco.ExecuteNonQuery(strSql);
-			}
-		}
+            using (var banco = new Banco())
+            {
+                banco.ExecuteNonQuery(strSql);
+            }
+        }
 
-		/// <summary>
-		/// Baixa as imagens dos deputados novos (imagens que ainda não foram baixadas)
-		/// </summary>
-		/// <param name="dirRaiz"></param>
-		public static void DownloadFotosDeputados(string dirRaiz)
-		{
-			using (var banco = new Banco())
-			{
-				DataTable table = banco.GetTable("SELECT id_cadastro FROM cf_deputado where id_cadastro is not null", 0);
+        /// <summary>
+        /// Baixa as imagens dos deputados novos (imagens que ainda não foram baixadas)
+        /// </summary>
+        /// <param name="dirRaiz"></param>
+        public static string DownloadFotosDeputados(string dirRaiz, bool cargaInicial = false)
+        {
+            var sb = new StringBuilder();
+            using (var banco = new Banco())
+            {
+                string sql = "SELECT id FROM cf_deputado where id_deputado is not null";
+                if (!cargaInicial)
+                {
+                    sql += " AND situacao <> 'Fim de Mandato'";
+                }
+                DataTable table = banco.GetTable(sql, 0);
 
-				foreach (DataRow row in table.Rows)
-				{
-					string idCadastro = row["id_cadastro"].ToString();
-					string src = dirRaiz + idCadastro + ".jpg";
-					if (File.Exists(src)) continue;
+                foreach (DataRow row in table.Rows)
+                {
+                    string id = row["id"].ToString();
+                    string src = dirRaiz + id + ".jpg";
+                    if (File.Exists(src)) continue;
 
-					try
-					{
-						using (WebClient client = new WebClient())
-						{
-							client.Headers.Add("User-Agent: Other");
-							client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + idCadastro + ".jpg", src);
+                    try
+                    {
+                        using (WebClient client = new WebClient())
+                        {
+                            client.Headers.Add("User-Agent: Other");
+                            client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
 
-							ImportacaoUtils.CreateImageThumbnail(src);
+                            ImportacaoUtils.CreateImageThumbnail(src);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        sb.AppendLine("Imagem do deputado " + id + " inexistente!");
+                    }
+                }
+            }
 
-							Console.WriteLine("Atualizado imagem do deputado " + idCadastro);
-						}
-					}
-					catch (Exception)
-					{
-						//ignore
-					}
-				}
-			}
-		}
-	}
+            return sb.ToString();
+        }
+    }
 
 
-	public class Dado
-	{
-		public int id { get; set; }
-		public int idLegislatura { get; set; }
-		public string nome { get; set; }
-		public string siglaPartido { get; set; }
-		public string siglaUf { get; set; }
-		public string uri { get; set; }
-		public string uriPartido { get; set; }
-		public string urlFoto { get; set; }
-	}
+    public class Dado
+    {
+        public int id { get; set; }
+        public int idLegislatura { get; set; }
+        public string nome { get; set; }
+        public string siglaPartido { get; set; }
+        public string siglaUf { get; set; }
+        public string uri { get; set; }
+        public string uriPartido { get; set; }
+        public string urlFoto { get; set; }
+    }
 
-	public class Link
-	{
-		public string href { get; set; }
-		public string rel { get; set; }
-	}
+    public class Link
+    {
+        public string href { get; set; }
+        public string rel { get; set; }
+    }
 
-	public class Deputados
-	{
-		public List<Dado> dados { get; set; }
-		public List<Link> links { get; set; }
-	}
+    public class Deputados
+    {
+        public List<Dado> dados { get; set; }
+        public List<Link> links { get; set; }
+    }
 
-	public class Gabinete
-	{
-		public string andar { get; set; }
-		public string email { get; set; }
-		public string nome { get; set; }
-		public string predio { get; set; }
-		public string sala { get; set; }
-		public string telefone { get; set; }
-	}
+    public class Gabinete
+    {
+        public string andar { get; set; }
+        public string email { get; set; }
+        public string nome { get; set; }
+        public string predio { get; set; }
+        public string sala { get; set; }
+        public string telefone { get; set; }
+    }
 
-	public class UltimoStatus
-	{
-		public string condicaoEleitoral { get; set; }
-		public DateTime data { get; set; }
-		public string descricaoStatus { get; set; }
-		public Gabinete gabinete { get; set; }
-		public int id { get; set; }
-		public int idLegislatura { get; set; }
-		public string nome { get; set; }
-		public string nomeEleitoral { get; set; }
-		public string siglaPartido { get; set; }
-		public string siglaUf { get; set; }
-		public string situacao { get; set; }
-		public string uri { get; set; }
-		public string uriPartido { get; set; }
-		public string urlFoto { get; set; }
-	}
+    public class UltimoStatus
+    {
+        public string condicaoEleitoral { get; set; }
+        public DateTime data { get; set; }
+        public string descricaoStatus { get; set; }
+        public Gabinete gabinete { get; set; }
+        public int id { get; set; }
+        public int idLegislatura { get; set; }
+        public string nome { get; set; }
+        public string nomeEleitoral { get; set; }
+        public string siglaPartido { get; set; }
+        public string siglaUf { get; set; }
+        public string situacao { get; set; }
+        public string uri { get; set; }
+        public string uriPartido { get; set; }
+        public string urlFoto { get; set; }
+    }
 
-	public class Dados
-	{
-		public string cpf { get; set; }
-		public DateTime dataFalecimento { get; set; }
-		public DateTime dataNascimento { get; set; }
-		public string escolaridade { get; set; }
-		public int id { get; set; }
-		public string municipioNascimento { get; set; }
-		public string nomeCivil { get; set; }
-		public List<string> redeSocial { get; set; }
-		public string sexo { get; set; }
-		public string ufNascimento { get; set; }
-		public UltimoStatus ultimoStatus { get; set; }
-		public string uri { get; set; }
-		public string urlWebsite { get; set; }
-	}
+    public class Dados
+    {
+        public string cpf { get; set; }
+        public DateTime? dataFalecimento { get; set; }
+        public DateTime dataNascimento { get; set; }
+        public string escolaridade { get; set; }
+        public int id { get; set; }
+        public string municipioNascimento { get; set; }
+        public string nomeCivil { get; set; }
+        public List<string> redeSocial { get; set; }
+        public string sexo { get; set; }
+        public string ufNascimento { get; set; }
+        public UltimoStatus ultimoStatus { get; set; }
+        public string uri { get; set; }
+        public string urlWebsite { get; set; }
+    }
 
-	public class DeputadoDetalhes
-	{
-		public Dados dados { get; set; }
-		public List<Link> links { get; set; }
-	}
+    public class DeputadoDetalhes
+    {
+        public Dados dados { get; set; }
+        public List<Link> links { get; set; }
+    }
 }

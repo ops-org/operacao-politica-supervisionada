@@ -18,35 +18,35 @@ namespace OPS.Core.DAO
 				strSql.AppendLine(@"
 					SELECT 
 						d.id as id_cf_deputado
-						, d.id_cadastro
-						, d.id_parlamentar
 						, d.id_partido
 						, p.sigla as sigla_partido
 						, p.nome as nome_partido
 						, d.id_estado
 						, e.sigla as sigla_estado
 						, e.nome as nome_estado
-						, d.cod_orcamento
 						, d.nome_parlamentar
 						, d.nome_civil
 						, d.condicao
-						, d.url_foto
+						, d.situacao
 						, d.sexo
-						, d.gabinete
-						, d.anexo
-						, d.fone
+                        , g.id as id_cf_gabinete
+						, g.predio
+						, g.sala
+						, g.andar
+						, g.telefone
 						, d.email
 						, d.profissao
 						, d.nascimento
 						, d.falecimento
-						, d.matricula
+                        , en.sigla as sigla_estado_nascimento
+                        , d.municipio as nome_municipio_nascimento
 						, d.valor_total_ceap
 						, d.quantidade_secretarios
-						, g.id as id_cf_gabinete
 					FROM cf_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-					LEFT JOIN cf_gabinete g on g.id_cadastro_deputado = d.id_cadastro
+					LEFT JOIN estado e on e.id = d.id_estado -- eleito
+					LEFT JOIN estado en on en.id = d.id_estado_nascimento -- naturalidade
+                    LEFT JOIN cf_gabinete g on g.id = d.id_cf_gabinete
 					WHERE d.id = @id
 				");
 				banco.AddParameter("@id", id);
@@ -58,29 +58,29 @@ namespace OPS.Core.DAO
 						return new
 						{
 							id_cf_deputado = reader["id_cf_deputado"],
-							id_cadastro = reader["id_cadastro"],
-							id_parlamentar = reader["id_parlamentar"],
-							id_partido = reader["id_partido"],
+                            id_partido = reader["id_partido"],
 							sigla_estado = reader["sigla_estado"].ToString(),
 							nome_partido = reader["nome_partido"].ToString(),
 							id_estado = reader["id_estado"],
 							sigla_partido = reader["sigla_partido"].ToString(),
 							nome_estado = reader["nome_estado"].ToString(),
-							cod_orcamento = reader["cod_orcamento"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							nome_civil = reader["nome_civil"].ToString(),
 							condicao = reader["condicao"].ToString(),
-							sexo = reader["sexo"].ToString(),
-							gabinete = reader["gabinete"],
-							anexo = reader["anexo"].ToString(),
-							fone = reader["fone"].ToString(),
+						    situacao = reader["situacao"].ToString(),
+                            sexo = reader["sexo"].ToString(),
+						    id_cf_gabinete = reader["id_cf_gabinete"],
+                            predio = reader["predio"].ToString(),
+                            sala = reader["sala"].ToString(),
+                            andar = reader["andar"].ToString(),
+						    telefone = reader["telefone"].ToString(),
 							email = reader["email"].ToString(),
 							profissao = reader["profissao"].ToString(),
 							nascimento = Utils.FormataData(reader["nascimento"]),
 							falecimento = Utils.FormataData(reader["falecimento"]),
-							matricula = reader["matricula"],
-							valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
-							id_cf_gabinete = reader["id_cf_gabinete"],
+						    sigla_estado_nascimento = reader["sigla_estado_nascimento"].ToString(),
+						    nome_municipio_nascimento = reader["nome_municipio_nascimento"].ToString(),
+                            valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
 							quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
 						};
 					}
@@ -212,6 +212,7 @@ namespace OPS.Core.DAO
 						, td.id as id_cf_despesa_tipo
 						, td.descricao as descricao_despesa
 						, d.id as id_cf_deputado
+						, d.id_deputado
 						, d.nome_parlamentar
 						, e.sigla as sigla_estado
 						, p.sigla as sigla_partido
@@ -259,12 +260,13 @@ namespace OPS.Core.DAO
 						id_cf_despesa_tipo = await reader.GetValueOrDefaultAsync<uint>(15),
 						descricao_despesa = await reader.GetValueOrDefaultAsync<string>(16),
 						id_cf_deputado = await reader.GetValueOrDefaultAsync<int>(17),
-						nome_parlamentar = await reader.GetValueOrDefaultAsync<string>(18),
-						sigla_estado = await reader.GetValueOrDefaultAsync<string>(19),
-						sigla_partido = await reader.GetValueOrDefaultAsync<string>(20),
-						id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(21),
-						cnpj_cpf = await reader.GetValueOrDefaultAsync<string>(22),
-						nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(23),
+						id_deputado = await reader.GetValueOrDefaultAsync<int>(18),
+                        nome_parlamentar = await reader.GetValueOrDefaultAsync<string>(19),
+						sigla_estado = await reader.GetValueOrDefaultAsync<string>(20),
+						sigla_partido = await reader.GetValueOrDefaultAsync<string>(21),
+						id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(22),
+						cnpj_cpf = await reader.GetValueOrDefaultAsync<string>(23),
+						nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(24),
 						competencia = string.Format("{0:00}/{1:0000}", await reader.GetValueOrDefaultAsync<ushort>(13), await reader.GetValueOrDefaultAsync<ushort>(12)),
 					};
 
@@ -432,15 +434,105 @@ namespace OPS.Core.DAO
 			}
 		}
 
-		public dynamic Lista()
+		public dynamic Lista(FiltroParlamentarDTO filtro)
 		{
 			using (Banco banco = new Banco())
 			{
 				var strSql = new StringBuilder();
-				strSql.AppendLine(@"
+			    strSql.AppendLine(@"
 					SELECT 
 						d.id as id_cf_deputado
-						, d.id_cadastro
+						, d.nome_parlamentar 
+						, d.nome_civil
+						, m.valor_total_ceap
+						, d.id_partido
+						, p.sigla as sigla_partido
+						, p.nome as nome_partido
+						, d.id_estado
+						, e.sigla as sigla_estado
+						, e.nome as nome_estado
+                        , s.total_sessoes
+                        , s.total_presencas
+					FROM cf_deputado d
+                    INNER JOIN cf_mandato m on m.id_cf_deputado = d.id
+					LEFT JOIN partido p on p.id = d.id_partido
+					LEFT JOIN estado e on e.id = d.id_estado
+                    LEFT JOIN (
+                        SELECT 
+                            sp.id_cf_deputado
+                            , s.id_legislatura
+                            , sum(1) as total_sessoes
+						    , sum(IF(sp.presente = 1, 1, 0)) as total_presencas
+					    FROM cf_sessao_presenca sp
+					    inner join cf_sessao s on s.id = sp.id_cf_sessao
+					    group by sp.id_cf_deputado, s.id_legislatura
+                    ) s on s.id_cf_deputado = d.id and s.id_legislatura = m.id_legislatura
+                    WHERE 1=1");
+
+                switch (filtro.Periodo)
+                {
+                    case "8": //PERIODO_MANDATO_55
+                        strSql.AppendLine(" AND m.id_legislatura = 55");
+                        break;
+
+                    case "7": //PERIODO_MANDATO_54
+                        strSql.AppendLine(" AND m.id_legislatura = 54");
+                        break;
+
+                    case "6": //PERIODO_MANDATO_53
+                        strSql.AppendLine(" AND m.id_legislatura = 53");
+                        break;
+                }
+
+                if (!string.IsNullOrEmpty(filtro.Partido))
+		        {
+		            strSql.AppendLine("	AND d.id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ") ");
+		        }
+
+		        if (!string.IsNullOrEmpty(filtro.Uf))
+		        {
+		            strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ") ");
+		        }
+
+                strSql.AppendLine(@"
+                    ORDER BY nome_parlamentar
+				");
+
+				var lstRetorno = new List<dynamic>();
+				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				{
+					while (reader.Read())
+					{
+                        lstRetorno.Add(new
+                        {
+                            id_cf_deputado = reader["id_cf_deputado"],
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            nome_civil = reader["nome_civil"].ToString(),
+                            valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
+                            id_partido = reader["id_partido"],
+                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
+                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            id_estado = reader["id_estado"],
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            nome_estado = reader["nome_estado"].ToString(),
+                            total_sessoes = reader["total_sessoes"],
+                            total_presencas = reader["total_presencas"],
+                            frequencia = Utils.FormataValor(reader.GetValueOrDefault<decimal?>("total_presencas") * 100 / reader.GetValueOrDefault<decimal?>("total_sessoes"))
+                        });
+					}
+				}
+				return lstRetorno;
+			}
+		}
+
+        public dynamic Busca(string value)
+        {
+            using (Banco banco = new Banco())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT 
+						d.id as id_cf_deputado
 						, d.nome_parlamentar 
 						, d.nome_civil
 						, d.valor_total_ceap
@@ -453,35 +545,43 @@ namespace OPS.Core.DAO
 					FROM cf_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
-					ORDER BY nome_parlamentar
+                    WHERE id_deputado IS NOT NULL");
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(value) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(value) + "%')");
+                }
+
+                strSql.AppendLine(@"
+                    ORDER BY nome_parlamentar
+                    limit 100
 				");
 
-				var lstRetorno = new List<dynamic>();
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
-				{
-					while (reader.Read())
-					{
-						lstRetorno.Add(new
-						{
-							id_cf_deputado = reader["id_cf_deputado"],
-							id_cadastro = reader["id_cadastro"],
-							nome_parlamentar = reader["nome_parlamentar"].ToString(),
-							nome_civil = reader["nome_civil"].ToString(),
-							valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
-							id_partido = reader["id_partido"],
-							sigla_partido = reader["sigla_partido"].ToString(),
-							nome_partido = reader["nome_partido"].ToString(),
-							id_estado = reader["id_estado"],
-							sigla_estado = reader["sigla_estado"].ToString(),
-							nome_estado = reader["nome_estado"].ToString()
-						});
-					}
-				}
-				return lstRetorno;
-			}
-		}
+                var lstRetorno = new List<dynamic>();
+                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                {
+                    while (reader.Read())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id_cf_deputado = reader["id_cf_deputado"],
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            nome_civil = reader["nome_civil"].ToString(),
+                            valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
+                            id_partido = reader["id_partido"],
+                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
+                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            id_estado = reader["id_estado"],
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            nome_estado = reader["nome_estado"].ToString()
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
 
-		public dynamic Pesquisa()
+        public dynamic Pesquisa()
 		{
 			using (Banco banco = new Banco())
 			{
@@ -935,7 +1035,7 @@ namespace OPS.Core.DAO
 						, l.id_fornecedor			
 						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
-						, d.id as id_deputado
+						, d.id as id_cf_deputado
 						, d.nome_parlamentar
 						, l.numero_documento
 						, l.trecho_viagem
@@ -977,7 +1077,7 @@ namespace OPS.Core.DAO
 							cnpj_cpf = reader["cnpj_cpf"],
 							nome_fornecedor = reader["nome_fornecedor"].ToString(),
 							sigla_estado_fornecedor = reader["sigla_estado_fornecedor"].ToString(),
-							id_deputado = reader["id_deputado"],
+							id_cf_deputado = reader["id_cf_deputado"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							numero_documento = reader["numero_documento"].ToString(),
 							trecho_viagem = reader["trecho_viagem"].ToString(),
@@ -1045,7 +1145,7 @@ namespace OPS.Core.DAO
 			}
 		}
 
-		private static void AdicionaFiltroEstadoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
+		private static void AdicionaFiltroPartidoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
 		{
 			if (!string.IsNullOrEmpty(filtro.Partido))
 			{
@@ -1053,7 +1153,7 @@ namespace OPS.Core.DAO
 			}
 		}
 
-		private static void AdicionaFiltroPartidoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
+		private static void AdicionaFiltroEstadoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
 		{
 			if (!string.IsNullOrEmpty(filtro.Uf))
 			{
@@ -1226,7 +1326,7 @@ namespace OPS.Core.DAO
 							id_cf_gabinete = reader["id_cf_gabinete"],
 							nome = reader["nome"].ToString(),
 							orgao = reader["orgao"].ToString(),
-							data = Utils.FormataData(reader["data"])
+							data = reader["data"].ToString()
 						});
 					}
 

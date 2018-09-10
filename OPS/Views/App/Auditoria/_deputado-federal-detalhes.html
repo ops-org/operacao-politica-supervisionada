@@ -4,7 +4,7 @@
 
         <div class="form-group">
             <div class="col-xs-12 col-md-4 col-lg-2 text-center">
-                <img class="img-thumbnail img-responsive img-deputado" src="./Content/Images/Parlamentares/DEPFEDERAL/{{::deputado_federal.id_cadastro}}_120x160.jpg" alt="{{::deputado_federal.nome_parlamentar}}" width="130" height="170" />
+                <img class="img-thumbnail img-responsive img-deputado" src="./Content/Images/Parlamentares/DEPFEDERAL/{{::deputado_federal.id_cf_deputado}}_120x160.jpg" alt="{{::deputado_federal.nome_parlamentar}}" width="130" height="170" />
             </div>
             <div class="col-xs-12 col-md-8 col-lg-10 text-left">
                 <h1 style="margin-top: 0;">{{::deputado_federal.nome_parlamentar}} <small>({{::deputado_federal.sigla_partido}} / {{::deputado_federal.sigla_estado}})</small></h1>
@@ -14,8 +14,9 @@
                             <p><label>Nome civil:</label> {{::deputado_federal.nome_civil}}</p>
                             <p><label>Partido:</label> {{::deputado_federal.nome_partido}}</p>
                             <p><label>Estado:</label> {{::deputado_federal.nome_estado}}</p>
-                            <p><label>Condição:</label> {{::deputado_federal.condicao}}</p>
-                            <p><label>Profissão:</label> {{::deputado_federal.profissao}}</p>
+                            <p><label>Condição:</label> {{::deputado_federal.condicao}} ({{::deputado_federal.situacao}})</p>
+                            <p data-ng-if="deputado_federal.profissao"><label>Profissão:</label> {{::deputado_federal.profissao}}</p>
+                            <p data-ng-if="deputado_federal.nome_municipio_nascimento"><label>Naturalidade:</label> {{::deputado_federal.nome_municipio_nascimento}} - {{::deputado_federal.sigla_estado_nascimento}}</p>
                             <p><label>Nascimento:</label> {{::deputado_federal.nascimento}}</p>
                             <p data-ng-if="deputado_federal.falecimento"><label>Falecimento:</label> {{::deputado_federal.falecimento}}</p>
                         </div>
@@ -29,9 +30,9 @@
                                 <a href="./#!/deputado-federal?IdParlamentar={{::deputado_federal.id_cf_deputado}}&Periodo=0&Agrupamento=6" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{::deputado_federal.valor_total_ceap}}</a>
                             </p>
                             <p>
-                                <a href="http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cadastro}}" target="_blank" onclick="return trackOutboundLink(this, true);">Ver a página oficial na Câmara</a>
+                                <a href="http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cf_deputado}}" target="_blank" onclick="return trackOutboundLink(this, true);">Ver a página oficial na Câmara</a>
                             </p>
-                            <p><label>Telefone:</label> {{::deputado_federal.fone}}</p>
+                            <p><label>Telefone:</label> {{::deputado_federal.telefone}}</p>
                             <p><label>Email:</label> {{::deputado_federal.email}}</p>
                         </div>
                     </div>

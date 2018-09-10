@@ -19,7 +19,8 @@ namespace OPS
                 .Include("~/Content/scripts/ng/angular-resource.min.js")
                 .Include("~/Content/scripts/bootstrap/bootstrap.min.js")
                 .Include("~/Content/scripts/bootstrap/bootstrap-select.min.js")
-                .Include("~/Content/scripts/misc/highcharts.js"));
+                .Include("~/Content/scripts/misc/highcharts.js")
+                .Include("~/Content/scripts/misc/lazyload.js"));
 
             // Vai unificar e minificar
             bundles.Add(new ScriptBundle("~/Content/app")

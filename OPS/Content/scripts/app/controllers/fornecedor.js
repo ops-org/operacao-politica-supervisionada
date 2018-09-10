@@ -52,13 +52,6 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	            }
 	        };
 
-	        Highcharts.setOptions({
-	            lang: {
-	                decimalPoint: ',',
-	                thousandsSep: ' '
-	            }
-	        });
-
 	        CarregaGraficoRecebimentosPorMesDeputados();
 	        CarregaGraficoRecebimentosPorMesSenadores();
 
@@ -86,7 +79,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	                },
 
 	                xAxis: {
-	                    categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
 	                },
 
 	                yAxis: [{
@@ -145,7 +138,7 @@ app.controller('FornecedorController', ["$scope", "$api", "$routeParams",
 	                },
 
 	                xAxis: {
-	                    categories: ['Jan', 'Feb', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
 	                },
 
 	                yAxis: [{

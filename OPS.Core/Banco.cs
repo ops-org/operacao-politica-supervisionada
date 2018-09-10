@@ -2,229 +2,223 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 
 namespace OPS.Core
 {
-	public class Banco : IDisposable
-	{
-		private bool _mBeginTransaction;
-		private MySqlConnection _mConnection;
+    public class Banco : IDisposable
+    {
+        private bool _mBeginTransaction;
+        private MySqlConnection _mConnection;
 
-		private List<MySqlParameter> _mParametros;
-		private MySqlTransaction _mTransaction;
+        private List<MySqlParameter> _mParametros;
+        private MySqlTransaction _mTransaction;
 
-		public Banco()
-		{
-			Initializer(Padrao.ConnectionString);
-		}
+        public Banco()
+        {
+            Initializer(Padrao.ConnectionString);
+        }
 
-		public Banco(string connectionString)
-		{
-			Initializer(connectionString);
-		}
+        public Banco(string connectionString)
+        {
+            Initializer(connectionString);
+        }
 
-		public long Rows { get; set; }
-		public long LastInsertedId { get; set; }
+        public long Rows { get; set; }
+        public long LastInsertedId { get; set; }
 
-		public void Dispose()
-		{
-			try
-			{
-				if (_mBeginTransaction)
-					_mTransaction.Rollback();
-			}
-			catch
-			{
-				// ignored
-			}
+        public void Dispose()
+        {
+            try
+            {
+                if (_mBeginTransaction)
+                    _mTransaction.Rollback();
+            }
+            catch
+            {
+                // ignored
+            }
 
-			_mConnection.Close();
-			_mConnection.Dispose();
-			_mConnection = null;
-		}
+            _mConnection.Close();
+            _mConnection.Dispose();
+            _mConnection = null;
+        }
 
-		private void Initializer(string connectionString)
-		{
-			_mParametros = new List<MySqlParameter>();
-			_mConnection = new MySqlConnection(connectionString);
-			_mConnection.Open();
+        private void Initializer(string connectionString)
+        {
+            _mParametros = new List<MySqlParameter>();
+            _mConnection = new MySqlConnection(connectionString);
+            _mConnection.Open();
 
-			//ExecuteNonQuery("set @@session.time_zone = '-02:00'"); //Horário de verão
-			//ExecuteNonQuery("set @@session.time_zone = '-03:00'");
+            //ExecuteNonQuery("set @@session.time_zone = '-02:00'"); //Horário de verão
+            //ExecuteNonQuery("set @@session.time_zone = '-03:00'");
 
-			_mBeginTransaction = false;
-		}
+            _mBeginTransaction = false;
+        }
 
-		public bool ExecuteNonQuery(string sql, int timeOut = 60)
-		{
-			using (var command = _mConnection.CreateCommand())
-			{
-				if (_mBeginTransaction)
-					command.Transaction = _mTransaction;
+        public bool ExecuteNonQuery(string sql, int timeOut = 60)
+        {
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
 
-				if (_mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(_mParametros.ToArray());
-				}
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                }
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
+                Rows = command.ExecuteNonQuery();
 
-				Rows = command.ExecuteNonQuery();
+                LastInsertedId = command.LastInsertedId;
+                _mParametros.Clear();
+            }
 
-				LastInsertedId = command.LastInsertedId;
-				_mParametros.Clear();
-			}
+            return true;
+        }
 
-			return true;
-		}
+        public object ExecuteScalar(string sql, int timeOut = 60)
+        {
+            object retorno;
 
-		public object ExecuteScalar(string sql, int timeOut = 60)
-		{
-			object retorno;
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
 
-			using (var command = _mConnection.CreateCommand())
-			{
-				if (_mBeginTransaction)
-					command.Transaction = _mTransaction;
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                    _mParametros.Clear();
+                }
 
-				if (_mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(_mParametros.ToArray());
-					_mParametros.Clear();
-				}
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+                retorno = command.ExecuteScalar();
+            }
 
-				retorno = command.ExecuteScalar();
-			}
+            return retorno;
+        }
 
-			return retorno;
-		}
+        public MySqlDataReader ExecuteReader(string sql, int timeOut = 60)
+        {
+            var command = _mConnection.CreateCommand();
 
-		public MySqlDataReader ExecuteReader(string sql, int timeOut = 60)
-		{
-			MySqlDataReader reader;
+            if (_mBeginTransaction)
+                command.Transaction = _mTransaction;
 
-			using (var command = _mConnection.CreateCommand())
-			{
-				if (_mBeginTransaction)
-					command.Transaction = _mTransaction;
+            if (_mParametros.Count > 0)
+            {
+                command.Parameters.AddRange(_mParametros.ToArray());
+                _mParametros.Clear();
+            }
 
-				if (_mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(_mParametros.ToArray());
-					_mParametros.Clear();
-				}
+            command.CommandText = sql;
+            command.CommandTimeout = timeOut;
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+            return command.ExecuteReader();
+        }
 
-				reader = command.ExecuteReader();
-			}
+        public async Task<DbDataReader> ExecuteReaderAsync(string sql, int timeOut = 60)
+        {
+            var command = _mConnection.CreateCommand();
+            if (_mBeginTransaction)
+                command.Transaction = _mTransaction;
 
-			return reader;
-		}
+            if (_mParametros.Count > 0)
+            {
+                command.Parameters.AddRange(_mParametros.ToArray());
+                _mParametros.Clear();
+            }
 
-		public async Task<DbDataReader> ExecuteReaderAsync(string sql, int timeOut = 60)
-		{
-			using (var command = _mConnection.CreateCommand())
-			{
-				if (_mBeginTransaction)
-					command.Transaction = _mTransaction;
+            command.CommandText = sql;
+            command.CommandTimeout = timeOut;
 
-				if (_mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(_mParametros.ToArray());
-					_mParametros.Clear();
-				}
+            return await command.ExecuteReaderAsync();
+        }
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+        public DataTable GetTable(string sql, int timeOut = 60)
+        {
+            DataTable table;
 
-				return await command.ExecuteReaderAsync();
-			}
-		}
+            using (var command = _mConnection.CreateCommand())
+            {
+                if (_mBeginTransaction)
+                    command.Transaction = _mTransaction;
 
-		public DataTable GetTable(string sql, int timeOut = 60)
-		{
-			DataTable table;
+                if (_mParametros.Count > 0)
+                {
+                    command.Parameters.AddRange(_mParametros.ToArray());
+                    _mParametros.Clear();
+                }
 
-			using (var command = _mConnection.CreateCommand())
-			{
-				if (_mBeginTransaction)
-					command.Transaction = _mTransaction;
+                command.CommandText = sql;
+                command.CommandTimeout = timeOut;
 
-				if (_mParametros.Count > 0)
-				{
-					command.Parameters.AddRange(_mParametros.ToArray());
-					_mParametros.Clear();
-				}
+                using (var adaper = new MySqlDataAdapter(command))
+                {
+                    using (var data = new DataSet())
+                    {
+                        data.EnforceConstraints = false;
+                        adaper.Fill(data);
+                        table = data.Tables[0];
+                    }
+                }
+            }
 
-				command.CommandText = sql;
-				command.CommandTimeout = timeOut;
+            return table;
+        }
 
-				using (var adaper = new MySqlDataAdapter(command))
-				{
-					using (var data = new DataSet())
-					{
-						data.EnforceConstraints = false;
-						adaper.Fill(data);
-						table = data.Tables[0];
-					}
-				}
-			}
+        public void BeginTransaction()
+        {
+            _mBeginTransaction = true;
+            _mTransaction = _mConnection.BeginTransaction();
+        }
 
-			return table;
-		}
+        public void CommitTransaction()
+        {
+            _mBeginTransaction = false;
 
-		public void BeginTransaction()
-		{
-			_mBeginTransaction = true;
-			_mTransaction = _mConnection.BeginTransaction();
-		}
+            try
+            {
+                _mTransaction.Commit();
+            }
+            catch
+            {
+                _mTransaction.Rollback();
+            }
+        }
 
-		public void CommitTransaction()
-		{
-			_mBeginTransaction = false;
+        public void RollBackTransaction()
+        {
+            _mBeginTransaction = false;
+            _mTransaction.Rollback();
+        }
 
-			try
-			{
-				_mTransaction.Commit();
-			}
-			catch
-			{
-				_mTransaction.Rollback();
-			}
-		}
+        public void AddParameter(string name, object value)
+        {
+            _mParametros.Add(new MySqlParameter(name, value));
+        }
 
-		public void RollBackTransaction()
-		{
-			_mBeginTransaction = false;
-			_mTransaction.Rollback();
-		}
+        public string ParametersHash()
+        {
+            var lst = _mParametros.Select(x => x.Value?.ToString() ?? string.Empty);
+            var str = string.Join(",", lst);
 
-		public void AddParameter(string name, object value)
-		{
-			_mParametros.Add(new MySqlParameter(name, value));
-		}
+            return Utils.Hash(str);
+        }
 
-		public string ParametersHash()
-		{
-			var lst = _mParametros.Select(x => x.Value?.ToString() ?? string.Empty);
-			var str = string.Join(",", lst);
-
-			return Utils.Hash(str);
-		}
-
-		public void ClearParameters()
-		{
-			_mParametros.Clear();
-		}
-	}
+        public void ClearParameters()
+        {
+            _mParametros.Clear();
+        }
+    }
 }

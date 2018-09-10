@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
@@ -87,17 +88,17 @@ namespace OPS.Core
                     switch (v)
                     {
                         case "\x00":            // ASCII NUL (0x00) character
-                    return "\\0";
+                            return "\\0";
                         case "\b":              // BACKSPACE character
-                    return "\\b";
+                            return "\\b";
                         case "\n":              // NEWLINE (linefeed) character
-                    return "\\n";
+                            return "\\n";
                         case "\r":              // CARRIAGE RETURN character
-                    return "\\r";
+                            return "\\r";
                         case "\t":              // TAB
-                    return "\\t";
+                            return "\\t";
                         case "\u001A":          // Ctrl-Z
-                    return "\\Z";
+                            return "\\Z";
                         default:
                             return "\\" + v;
                     }
@@ -105,6 +106,12 @@ namespace OPS.Core
         }
 
         public static async Task SendMailAsync(MailAddress objEmailTo, string subject, string body)
+        {
+            var lstEmailTo = new MailAddressCollection() {objEmailTo};
+            await SendMailAsync(lstEmailTo, subject, body);
+        }
+
+        public static async Task SendMailAsync(MailAddressCollection lstEmailTo, string subject, string body)
         {
             using (var objEmail = new MailMessage
             {
@@ -116,7 +123,10 @@ namespace OPS.Core
                 From = new MailAddress("envio@ops.net.br", "[OPS] Operação Política Supervisionada")
             })
             {
-                objEmail.To.Add(objEmailTo);
+                foreach (MailAddress objEmailTo in lstEmailTo)
+                {
+                    objEmail.To.Add(objEmailTo);
+                }
 
                 //ServicePointManager.ServerCertificateValidationCallback =
                 //    (s, certificate, chain, sslPolicyErrors) => true;
@@ -126,43 +136,43 @@ namespace OPS.Core
             }
         }
 
-	    public static string SingleSpacedTrim(String s)
-	    {
-		    return new Regex(@"\s{2,}").Replace(s, " ");
-	    }
+        public static string SingleSpacedTrim(String s)
+        {
+            return new Regex(@"\s{2,}").Replace(s, " ");
+        }
 
-	    public static string Hash(string input)
-	    {
-		    using (SHA1Managed sha1 = new SHA1Managed())
-		    {
-			    var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
-			    var sb = new StringBuilder(hash.Length * 2);
+        public static string Hash(string input)
+        {
+            using (SHA1Managed sha1 = new SHA1Managed())
+            {
+                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+                var sb = new StringBuilder(hash.Length * 2);
 
-			    foreach (byte b in hash)
-			    {
-				    // can be "x2" if you want lowercase
-				    sb.Append(b.ToString("X2"));
-			    }
+                foreach (byte b in hash)
+                {
+                    // can be "x2" if you want lowercase
+                    sb.Append(b.ToString("X2"));
+                }
 
-			    return sb.ToString();
-		    }
-	    }
+                return sb.ToString();
+            }
+        }
 
-	    public static string GetIPAddress()
-	    {
-		    System.Web.HttpContext context = System.Web.HttpContext.Current;
-		    string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+        public static string GetIPAddress()
+        {
+            System.Web.HttpContext context = System.Web.HttpContext.Current;
+            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
 
-		    if (!string.IsNullOrEmpty(ipAddress))
-		    {
-			    string[] addresses = ipAddress.Split(',');
-			    if (addresses.Length != 0)
-			    {
-				    return addresses[0];
-			    }
-		    }
+            if (!string.IsNullOrEmpty(ipAddress))
+            {
+                string[] addresses = ipAddress.Split(',');
+                if (addresses.Length != 0)
+                {
+                    return addresses[0];
+                }
+            }
 
-		    return context.Request.ServerVariables["REMOTE_ADDR"];
-	    }
-	}
+            return context.Request.ServerVariables["REMOTE_ADDR"];
+        }
+    }
 }

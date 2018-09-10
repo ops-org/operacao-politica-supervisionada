@@ -9,7 +9,7 @@ body { /* Margin bottom by footer height */ margin-bottom: 92px; }
 
 .topnav { font-size: 14px; }
 
-.intro-header { padding: 70px 0 160px; text-align: center; }
+.intro-header { padding: 70px 0 100px; text-align: center; }
 
 .intro-divider { width: 400px; border-top: 1px solid #f8f8f8; border-bottom: 1px solid rgba(0,0,0,0.2); }
 
@@ -108,3 +108,17 @@ form.ng-submitted .form-control.ng-invalid { border: 1px solid red; }
 
 .global-header { background-color: #fff; box-shadow: 0 1px 15px 0 rgba(192,72,25,0.32); }
 	.global-header nav { font-size: 17px; color: #f27474; float: right; margin-top: 29px; }
+
+
+@media(max-width:500px) {
+    #camara-legislatura, #senado-legislatura { display: block; }
+        #camara-legislatura > label, #senado-legislatura>label { float: none; display: block; margin-bottom: 3px; border-radius: 4px; }
+}
+
+@media(min-width: 768px) {
+    .form-home .form-control { width: 300px !important; }
+}
+
+.deputado .panel, .senador .panel { min-height: 240px; }
+.deputado h6, .senador h6 { min-height: 50px; }
+.deputado img, .senador img { width: 120px; height: 160px; border: 1px solid #ddd; }

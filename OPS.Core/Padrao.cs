@@ -5,8 +5,9 @@ namespace OPS.Core
 	public static class Padrao
 	{
 		public const string EmailEnvioErros = "vanderleidenir@hotmail.com";
+		public const string EmailEnvioResumoImportacao = "vanderleidenir@hotmail.com;luciobig@ops.net.br";
 
-		public static string ConnectionString;
+        public static string ConnectionString;
 
 		/// <summary>
 		/// Quantidade padrão de Itens a Exibir nas Grids

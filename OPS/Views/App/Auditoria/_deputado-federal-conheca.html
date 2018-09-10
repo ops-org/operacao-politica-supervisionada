@@ -1,46 +1,74 @@
 ﻿<style>
     .deputado-conheca a { color: #333333; text-decoration: none; }
+
+    .afkl-lazy-wrapper { width: 92px; height: 122px; border: 1px solid #dddddd; background: url(./Content/Images/ajax-loader-facebook.gif) no-repeat center center }
+    .afkl-lazy-image { width: 90px; height: 120px; }
 </style>
 <div class="container-fluid" data-ng-controller="DeputadoFederalConhecaController">
-    <fieldset class="form-group">
-        <legend>Conheça os deputados</legend>
+    <h3 class="page-title">Deputados federais</h3>
+    
+    <p>
+        Resumo dos deputados federais, seus respectivos gastos com a cota parlamentar (CEAP) e frequência nas sessões plenárias por legislatura (mandato).
+    </p>
+    <hr/>
 
-        <div class="row deputado-conheca">
-            <div class="col-xs-12 col-sm-6 col-md-3 deputado" data-ng-repeat="deputado in deputado_federal track by $index">
+    <form id="form" autocomplete="off">
+        <div class="row">
+            <div class="form-group col-md-4">
+                <label>Legislatura</label>
+                <select id="lstPerido" class="form-control input-sm">
+                    <option value="8">55º (2015-2019)</option>
+                    <option value="7">54º (2011-2015)</option>
+                    <option value="6">53º (2007-2011)</option>
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Estado</label>
+                <select id="lstUF" class="form-control input-sm" multiple data-actions-box="true"></select>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Partido</label>
+                <select id="lstPartido" class="form-control input-sm" multiple data-actions-box="true"></select>
+            </div>
+        </div>
 
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <a href="./#!/deputado-federal/{{::deputado.id_cf_deputado}}" title="Clique para visualizar o perfil do deputado(a)">
-                            {{::deputado.nome_parlamentar}}
-                        </a>
-                    </div>
-                    <div class="panel-body">
-                        <div class="media">
-                            <div class="media-left media-middle">
-                                <span class="media-thumbnail">
-                                    <img src="" data-ng-src='./Content/Images/Parlamentares/DEPFEDERAL/{{::deputado.id_cadastro}}.jpg' alt='{{::deputado.nome_parlamentar}}' height="100">
-                                </span>
-                            </div>
-                            <div class="media-left media-middle">
-                                <h5 class="media-heading"><span title="{{::deputado.nome_partido}}">{{::deputado.sigla_partido}}</span> / <span title="{{::deputado.nome_estado}}">{{::deputado.sigla_estado}}</span></h5>
-                                <small class="text-muted">Cota parlamentar</small>
-                                <h4 class="media-heading text-danger">R$ {{::deputado.valor_total_ceap}} (100%)</h4>
-                                <small class="text-muted">Frequência</small>
-                                <h4 class="media-heading text-danger">100/100 (100%)</h4>
-                            </div>
+        <div class="row">
+            <div class="form-group col-md-12">
+                <input type="button" id="ButtonPesquisar" data-ng-click="Pesquisar();" value="Pesquisar" class="btn btn-danger btn-sm" />
+                <input type="button" value="Limpar filtros" class="btn btn-default btn-sm" data-ng-click="LimparFiltros();" />
+            </div>
+        </div>
+    </form>
+    <hr />
+
+    <div class="row deputado-conheca">
+        <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="deputado in deputado_federal track by $index">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <a href="./#!/deputado-federal/{{::deputado.id_cf_deputado}}" title="Clique para visualizar o perfil do deputado(a)">
+                        {{::deputado.nome_parlamentar}}
+                    </a>
+                </div>
+                <div class="panel-body">
+                    <div class="media">
+                        <div class="media-left media-middle">
+                            <a href="./#!/deputado-federal/{{::deputado.id_cf_deputado}}" title="Clique para visualizar o perfil do deputado(a)">
+                                <div class="afkl-lazy-wrapper media-thumbnail" afkl-lazy-image="./Content/Images/Parlamentares/DEPFEDERAL/{{deputado.id_cf_deputado}}.jpg"></div>
+                            </a>
+                        </div>
+                        <div class="media-left media-middle">
+                            <h5 class="media-heading"><span title="{{::deputado.nome_partido}}">{{::deputado.sigla_partido}}</span> - <span title="{{::deputado.nome_estado}}">{{::deputado.sigla_estado}}</span></h5>
+                            <small class="text-muted">Cota parlamentar</small>
+                            <h4 class="media-heading">R$ {{::deputado.valor_total_ceap}}</h4>
+                            <small class="text-muted">Frequência nas sessões plenárias</small>
+                            <h4 class="media-heading" title="Compareceu à {{::deputado.total_presencas}} de {{::deputado.total_sessoes}} sessões">{{::deputado.total_presencas}}/{{::deputado.total_sessoes}} - {{::deputado.frequencia}}%</h4>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <p data-ng-if="deputado_federal.id_cf_gabinete">
-            Fonte: <a target="_blank" href="http://www2.camara.leg.br/transparencia/recursos-humanos/servidores/lotacao/consulta-secretarios-parlamentares/layouts_transpar_quadroremuner_consultaSecretariosParlamentares?form.button.pesquisar=Pesquisar&b_start:int=0&lotacao={{::deputado_federal.id_cf_gabinete}}" onclick="return trackOutboundLink(this, true);">Câmara de Deputados - Consulta de Secretários Parlamentares por lotação</a>
-        </p>
-    </fieldset>
-
-    <!--<div class="form-group">
-        <dir-disqus config="disqusConfig"></dir-disqus>
-    </div>-->
 </div>
 

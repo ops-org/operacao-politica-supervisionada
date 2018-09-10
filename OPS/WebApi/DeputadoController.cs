@@ -24,12 +24,12 @@ namespace OPS.WebApi
 			return dao.Consultar(id);
 		}
 
-		[HttpGet]
+		[HttpPost]
 		[Route("Lista")]
-		//[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-		public dynamic Lista()
+		[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+		public dynamic Lista(FiltroParlamentarDTO filtro)
 		{
-			return dao.Lista();
+			return dao.Lista(filtro);
 		}
 
 		[HttpGet]
@@ -78,16 +78,19 @@ namespace OPS.WebApi
 
 		[HttpGet]
 		[Route("Documento/{id:int}")]
-		public async Task<IHttpActionResult> Documento(int id)
+		public async Task<dynamic> Documento(int id)
 		{
 			var result = await dao.Documento(id);
 
-			return Ok(result);
+		    if (result != null)
+		        return Ok(result);
+		    else
+		        return NotFound();
 		}
 
 		[HttpGet]
 		[Route("DocumentosDoMesmoDia/{id:int}")]
-		public async Task<IHttpActionResult> DocumentosDoMesmoDia(int id)
+		public async Task<dynamic> DocumentosDoMesmoDia(int id)
 		{
 			var result = await dao.DocumentosDoMesmoDia(id);
 
@@ -96,7 +99,7 @@ namespace OPS.WebApi
 
 		[HttpGet]
 		[Route("DocumentosDaSubcotaMes/{id:int}")]
-		public async Task<IHttpActionResult> DocumentosDaSubcotaMes(int id)
+		public async Task<dynamic> DocumentosDaSubcotaMes(int id)
 		{
 			var result = await dao.DocumentosDaSubcotaMes(id);
 

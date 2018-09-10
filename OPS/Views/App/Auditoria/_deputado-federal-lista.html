@@ -51,11 +51,11 @@
                 <div class="input-group">
                     <input type="text" id="txtBeneficiario" class="form-control input-sm" disabled="disabled" />
                     <div class="input-group-btn">
-                        <button type="button" class="btn btn-default btn-sm" data-ng-click="LimparFiltroFornecedor();" title="Limpar">
-                            <span class="fa fa-times"></span>
-                        </button>
                         <button type="button" class="btn btn-default btn-sm" data-ng-click="AbreModalConsultaFornecedor();" title="Localizar beneficiário">
                             <span class="fa fa-search"></span>
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" data-ng-click="LimparFiltroFornecedor();" title="Limpar">
+                            <span class="fa fa-times"></span>
                         </button>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
             <td data-title="'CNPJ/CPF'">{{::row.cnpj_cpf}}</td>
             <td data-title="'Beneficiário'"><a data-ng-href="./#!/fornecedor/{{::row.id_fornecedor}}">{{::row.nome_fornecedor}}</a></td>
             <td data-title="'UF'">{{::row.sigla_estado_fornecedor}}</td>
-            <td data-title="'Parlamentar'"><a href="./#!/deputado-federal/{{::row.id_deputado}}">{{::row.nome_parlamentar}}</a></td>
+            <td data-title="'Parlamentar'"><a href="./#!/deputado-federal/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
             <td data-title="'Nº Nota Fiscal'" sortable="'numero_documento'">{{::row.numero_documento}}</td>
             <td data-title="'Trecho'" sortable="'trecho_viagem'">{{::row.trecho_viagem}}</td>
             <td data-title="'Valor'" sortable="'valor_liquido'"><a href="./#!/deputado-federal/documento/{{::row.id_cf_despesa}}">{{::row.valor_liquido}}</a></td>

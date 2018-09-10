@@ -20,7 +20,7 @@ namespace OPS.Core.DAO
 				var strSql = new StringBuilder();
 
 				strSql.Append(@"
-					SELECT id_cf_deputado, id_cadastro, nome_parlamentar, valor_total, sigla_partido, sigla_estado
+					SELECT id_cf_deputado, nome_parlamentar, valor_total, sigla_partido, sigla_estado
 					FROM cf_deputado_campeao_gasto
 					order by valor_total desc; "
 				);
@@ -40,7 +40,6 @@ namespace OPS.Core.DAO
 						lstDeputados.Add(new
 						{
 							id_cf_deputado = reader["id_cf_deputado"],
-							id_cadastro = reader["id_cadastro"],
 							nome_parlamentar = reader["nome_parlamentar"].ToString(),
 							valor_total = "R$ " + Utils.FormataValor(reader["valor_total"]),
 							sigla_partido_estado = string.Format("{0} / {1}", reader["sigla_partido"], reader["sigla_estado"])

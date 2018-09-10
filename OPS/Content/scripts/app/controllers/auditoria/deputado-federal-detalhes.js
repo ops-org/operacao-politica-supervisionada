@@ -16,13 +16,6 @@ app.controller('DeputadoVisualizarController', ["$scope", "$api", "$routeParams"
 		});
 
 		$api.get('Deputado/' + $routeParams.id.toString() + '/GastosMensaisPorAno').success(function (response) {
-			Highcharts.setOptions({
-				lang: {
-					decimalPoint: ',',
-					thousandsSep: ' '
-				}
-			});
-
 			$('#deputados-gastos-por-mes').highcharts({
 				chart: {
 					type: 'column'
@@ -59,13 +52,6 @@ app.controller('DeputadoVisualizarController', ["$scope", "$api", "$routeParams"
 
         $api.get('Deputado/' + $routeParams.id.toString() + '/ResumoPresenca').success(function (response) {
             $scope.PossuiFrequenciaSessoes = response.frequencia_anual.categories.length > 0;
-
-			Highcharts.setOptions({
-				lang: {
-					decimalPoint: ',',
-					thousandsSep: ' '
-				}
-			});
 
 			$('#deputados-presenca-total-percentual').highcharts({
 				chart: {
