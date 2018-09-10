@@ -233,7 +233,7 @@ namespace OPS.Core.DAO
 				while (await reader.ReadAsync())
 				{
 					string sTipoDocumento = "";
-					switch (await reader.GetValueOrDefaultAsync<int>(3))
+					switch (await reader.GetValueOrDefaultAsync<uint>(3))
 					{
 						case 0: sTipoDocumento = "Nota Fiscal"; break;
 						case 1: sTipoDocumento = "Recibo"; break;
@@ -242,8 +242,8 @@ namespace OPS.Core.DAO
 
 					var result = new
 					{
-						id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-						id_documento = await reader.GetValueOrDefaultAsync<ulong>(1),
+						id_cf_despesa = await reader.GetValueOrDefaultAsync<dynamic>(0),
+						id_documento = await reader.GetValueOrDefaultAsync<dynamic>(1),
 						numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
 						tipo_documento = sTipoDocumento,
 						data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<MySql.Data.Types.MySqlDateTime?>(4)),
@@ -251,20 +251,20 @@ namespace OPS.Core.DAO
 						valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
 						valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
 						valor_restituicao = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(8)),
-						parcela = await reader.GetValueOrDefaultAsync<uint?>(9),
+						parcela = await reader.GetValueOrDefaultAsync<dynamic>(9),
 						nome_passageiro = await reader.GetValueOrDefaultAsync<string>(10),
 						trecho_viagem = await reader.GetValueOrDefaultAsync<string>(11),
-						ano = await reader.GetValueOrDefaultAsync<ushort>(12),
-						mes = await reader.GetValueOrDefaultAsync<ushort>(13),
-						ano_mes = await reader.GetValueOrDefaultAsync<uint>(14),
-						id_cf_despesa_tipo = await reader.GetValueOrDefaultAsync<uint>(15),
+						ano = await reader.GetValueOrDefaultAsync<dynamic>(12),
+						mes = await reader.GetValueOrDefaultAsync<dynamic>(13),
+						ano_mes = await reader.GetValueOrDefaultAsync<dynamic>(14),
+						id_cf_despesa_tipo = await reader.GetValueOrDefaultAsync<dynamic>(15),
 						descricao_despesa = await reader.GetValueOrDefaultAsync<string>(16),
-						id_cf_deputado = await reader.GetValueOrDefaultAsync<int>(17),
-						id_deputado = await reader.GetValueOrDefaultAsync<int>(18),
+						id_cf_deputado = await reader.GetValueOrDefaultAsync<dynamic>(17),
+						id_deputado = await reader.GetValueOrDefaultAsync<dynamic>(18),
                         nome_parlamentar = await reader.GetValueOrDefaultAsync<string>(19),
 						sigla_estado = await reader.GetValueOrDefaultAsync<string>(20),
 						sigla_partido = await reader.GetValueOrDefaultAsync<string>(21),
-						id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(22),
+						id_fornecedor = await reader.GetValueOrDefaultAsync<dynamic>(22),
 						cnpj_cpf = await reader.GetValueOrDefaultAsync<string>(23),
 						nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(24),
 						competencia = string.Format("{0:00}/{1:0000}", await reader.GetValueOrDefaultAsync<ushort>(13), await reader.GetValueOrDefaultAsync<ushort>(12)),

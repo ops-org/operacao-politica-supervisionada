@@ -95,10 +95,8 @@ namespace OPS.ImportacaoDados
                     left join fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
                     and f.cnpj_cpf <> '00000000000000'
-                    and fi.id_fornecedor is null
-					and (controle is null or controle <> 5)
-
                     -- and obtido_em < '2018-01-01'
+                    and fi.id_fornecedor is null
                     -- and ip_colaborador not like '1805%'
                     -- and fi.id_fornecedor is null
                     -- and ip_colaborador is null -- not in ('170509', '170510', '170511', '170512')
@@ -106,7 +104,7 @@ namespace OPS.ImportacaoDados
                     -- and controle <> 0
 					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
 					-- and controle <> 5
-					-- and (controle is null or controle <> 5)
+					and (controle is null or controle <> 5)
                     order by 1 desc");
 
                 if (dtFornecedores.Rows.Count == 0)
@@ -392,9 +390,6 @@ namespace OPS.ImportacaoDados
                                 banco.ExecuteNonQuery(strSql2);
                             }
 
-                            InserirControle(0, item["cnpj_cpf"].ToString(), "");
-                            Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"] + " - " + i);
-
                             totalImportados++;
 
                             if (receita.situacao != "ATIVA")
@@ -403,6 +398,9 @@ namespace OPS.ImportacaoDados
                             }
 
                             banco.CommitTransaction();
+
+                            InserirControle(0, item["cnpj_cpf"].ToString(), "");
+                            Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"] + " - " + i);
                         }
                         catch (Exception e)
                         {

@@ -14,6 +14,7 @@ namespace OPS.Core
     {
         private bool _mBeginTransaction;
         private MySqlConnection _mConnection;
+        private MySqlCommand _mCommand;
 
         private List<MySqlParameter> _mParametros;
         private MySqlTransaction _mTransaction;
@@ -62,115 +63,124 @@ namespace OPS.Core
 
         public bool ExecuteNonQuery(string sql, int timeOut = 60)
         {
-            using (var command = _mConnection.CreateCommand())
+            if (_mCommand == null)
+                _mCommand = _mConnection.CreateCommand();
+            else
+                _mCommand.Parameters.Clear();
+
+            if (_mBeginTransaction)
+                _mCommand.Transaction = _mTransaction;
+
+            if (_mParametros.Count > 0)
             {
-                if (_mBeginTransaction)
-                    command.Transaction = _mTransaction;
-
-                if (_mParametros.Count > 0)
-                {
-                    command.Parameters.AddRange(_mParametros.ToArray());
-                }
-
-                command.CommandText = sql;
-                command.CommandTimeout = timeOut;
-
-                Rows = command.ExecuteNonQuery();
-
-                LastInsertedId = command.LastInsertedId;
-                _mParametros.Clear();
+                _mCommand.Parameters.AddRange(_mParametros.ToArray());
             }
+
+            _mCommand.CommandText = sql;
+            _mCommand.CommandTimeout = timeOut;
+
+            Rows = _mCommand.ExecuteNonQuery();
+
+            LastInsertedId = _mCommand.LastInsertedId;
+            _mParametros.Clear();
 
             return true;
         }
 
         public object ExecuteScalar(string sql, int timeOut = 60)
         {
-            object retorno;
+            if (_mCommand == null)
+                _mCommand = _mConnection.CreateCommand();
+            else
+                _mCommand.Parameters.Clear();
 
-            using (var command = _mConnection.CreateCommand())
+            if (_mBeginTransaction)
+                _mCommand.Transaction = _mTransaction;
+
+            if (_mParametros.Count > 0)
             {
-                if (_mBeginTransaction)
-                    command.Transaction = _mTransaction;
-
-                if (_mParametros.Count > 0)
-                {
-                    command.Parameters.AddRange(_mParametros.ToArray());
-                    _mParametros.Clear();
-                }
-
-                command.CommandText = sql;
-                command.CommandTimeout = timeOut;
-
-                retorno = command.ExecuteScalar();
+                _mCommand.Parameters.AddRange(_mParametros.ToArray());
+                _mParametros.Clear();
             }
 
-            return retorno;
+            _mCommand.CommandText = sql;
+            _mCommand.CommandTimeout = timeOut;
+
+            return _mCommand.ExecuteScalar();
         }
 
         public MySqlDataReader ExecuteReader(string sql, int timeOut = 60)
         {
-            var command = _mConnection.CreateCommand();
+            if (_mCommand == null)
+                _mCommand = _mConnection.CreateCommand();
+            else
+                _mCommand.Parameters.Clear();
 
             if (_mBeginTransaction)
-                command.Transaction = _mTransaction;
+                _mCommand.Transaction = _mTransaction;
 
             if (_mParametros.Count > 0)
             {
-                command.Parameters.AddRange(_mParametros.ToArray());
+                _mCommand.Parameters.AddRange(_mParametros.ToArray());
                 _mParametros.Clear();
             }
 
-            command.CommandText = sql;
-            command.CommandTimeout = timeOut;
+            _mCommand.CommandText = sql;
+            _mCommand.CommandTimeout = timeOut;
 
-            return command.ExecuteReader();
+            return _mCommand.ExecuteReader(CommandBehavior.CloseConnection);
         }
 
         public async Task<DbDataReader> ExecuteReaderAsync(string sql, int timeOut = 60)
         {
-            var command = _mConnection.CreateCommand();
+            if (_mCommand == null)
+                _mCommand = _mConnection.CreateCommand();
+            else
+                _mCommand.Parameters.Clear();
+
             if (_mBeginTransaction)
-                command.Transaction = _mTransaction;
+                _mCommand.Transaction = _mTransaction;
 
             if (_mParametros.Count > 0)
             {
-                command.Parameters.AddRange(_mParametros.ToArray());
+                _mCommand.Parameters.AddRange(_mParametros.ToArray());
                 _mParametros.Clear();
             }
 
-            command.CommandText = sql;
-            command.CommandTimeout = timeOut;
+            _mCommand.CommandText = sql;
+            _mCommand.CommandTimeout = timeOut;
 
-            return await command.ExecuteReaderAsync();
+            return await _mCommand.ExecuteReaderAsync();
         }
 
         public DataTable GetTable(string sql, int timeOut = 60)
         {
             DataTable table;
 
-            using (var command = _mConnection.CreateCommand())
+            if (_mCommand == null)
+                _mCommand = _mConnection.CreateCommand();
+            else
+                _mCommand.Parameters.Clear();
+
+            if (_mBeginTransaction)
+                _mCommand.Transaction = _mTransaction;
+
+            if (_mParametros.Count > 0)
             {
-                if (_mBeginTransaction)
-                    command.Transaction = _mTransaction;
+                _mCommand.Parameters.AddRange(_mParametros.ToArray());
+                _mParametros.Clear();
+            }
 
-                if (_mParametros.Count > 0)
+            _mCommand.CommandText = sql;
+            _mCommand.CommandTimeout = timeOut;
+
+            using (var adaper = new MySqlDataAdapter(_mCommand))
+            {
+                using (var data = new DataSet())
                 {
-                    command.Parameters.AddRange(_mParametros.ToArray());
-                    _mParametros.Clear();
-                }
-
-                command.CommandText = sql;
-                command.CommandTimeout = timeOut;
-
-                using (var adaper = new MySqlDataAdapter(command))
-                {
-                    using (var data = new DataSet())
-                    {
-                        data.EnforceConstraints = false;
-                        adaper.Fill(data);
-                        table = data.Tables[0];
-                    }
+                    data.EnforceConstraints = false;
+                    adaper.Fill(data);
+                    table = data.Tables[0];
                 }
             }
 
@@ -191,7 +201,7 @@ namespace OPS.Core
             {
                 _mTransaction.Commit();
             }
-            catch
+            catch (Exception e)
             {
                 _mTransaction.Rollback();
             }
