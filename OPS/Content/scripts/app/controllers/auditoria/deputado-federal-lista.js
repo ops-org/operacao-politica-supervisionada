@@ -34,7 +34,20 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     		$scope.filtro.Partido = qs.Partido;
 
     		$("#txtDocumento").val(qs.Documento);
-    		$scope.filtro.Documento = qs.Documento || null;
+            $scope.filtro.Documento = qs.Documento || null;
+
+            if (qs.PeriodoCustom && qs.PeriodoCustom.length > 1) {
+                var periodo = qs.PeriodoCustom.split('-');
+                if (periodo[0].length == 6) {
+                    $("#lstPeridoAnoInicio").val(periodo[0].substr(0, 4));
+                    $("#lstPeridoMesInicio").val(periodo[0].substr(4, 2));
+                }
+                if (periodo[1].length == 6) {
+                    $("#lstPeridoAnoFinal").val(periodo[1].substr(0, 4));
+                    $("#lstPeridoMesFinal").val(periodo[1].substr(4, 2));
+                }
+            }
+            $scope.filtro.PeriodoCustom = qs.PeriodoCustom || null;
 
     		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "8").trigger('change').val();
     		$scope.TrocaAba(null, parseInt(qs.Agrupamento || '1'));
@@ -48,8 +61,12 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     			liveSearchNormalize: true
     		});
 
-    		$('#lblDeputadoFederalUltimaAtualizacao').text(window.DeputadoFederalUltimaAtualizacao);
-    	}
+            $('#lblDeputadoFederalUltimaAtualizacao').text(window.DeputadoFederalUltimaAtualizacao);
+
+	        $("#lstPeridoMesInicio,#lstPeridoAnoInicio,#lstPeridoMesFinal,#lstPeridoAnoFinal").change(function() {
+	            $("#lstPerido").val('0').selectpicker('refresh');
+	        });
+	    }
 
         $scope.Pesquisar = function (page_load) {
             var lstParlamentar = $("#lstParlamentar").val();
@@ -66,7 +83,8 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     		    $scope.filtro.Fornecedor = $("#txtBeneficiario").val() || null;
     			$scope.filtro.Documento = $("#txtDocumento").val() || null;
     			$scope.filtro.Periodo = $("#lstPerido").val();
-    			$scope.filtro.Agrupamento = $("#lstAgrupamento").val();
+                $scope.filtro.Agrupamento = $("#lstAgrupamento").val();
+                $scope.filtro.PeriodoCustom = $("#lstPeridoAnoInicio").val() + $("#lstPeridoMesInicio").val() + '-' + $("#lstPeridoAnoFinal").val() + $("#lstPeridoMesFinal").val();
 
     			delete $tabela.params.sorting;
     			$tabela.params.page = 1;
@@ -78,7 +96,9 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     		$scope.tableParams = $tabela.databind('Deputado/Lancamentos', $scope.filtro);
     	}
 
-    	$scope.LimparFiltros = function () {
+        $scope.LimparFiltros = function () {
+            document.forms[0].reset();
+
     		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido").selectpicker('deselectAll');
     		$("#txtBeneficiario, #txtDocumento").val('');
     		$("#lstPerido").val('8').selectpicker('refresh');
@@ -93,8 +113,8 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     		$rootScope.valor_total = null;
     		$scope.tableParams = null;
 
-    		$('#dvDocumento').hide();
-    		$('.nav-tabs li').removeClass('active')
+            $('#dvDocumento,#dvPeriodoCustom').hide();
+	        $('.nav-tabs li').removeClass('active');
     		$('.aba-' + id).addClass('active');
 
     		switch (id) {
@@ -115,12 +135,16 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     				break;
     			case 6:
     				$scope.visao = 'documento.html';
-    				$('#dvDocumento').show();
+                    $('#dvDocumento,#dvPeriodoCustom').show();
     				break;
     		}
 
-    		$scope.filtro.Agrupamento = id;
-    	}
+            $scope.filtro.Agrupamento = id;
+
+	        if (id !== 6) {
+	            $("#lstPeridoMesInicio,#lstPeridoAnoInicio,#lstPeridoMesFinal,#lstPeridoAnoFinal").val('');
+	        }
+	    }
 
     	$scope.AbreModalConsultaFornecedor = function() {
     	    $('#dvConsultaFornecedor').modal('show');

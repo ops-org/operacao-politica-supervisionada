@@ -408,7 +408,7 @@ namespace OPS.ImportacaoDados
             //var dtUltimaIntegracao = dtPesquisa.AddDays(-7);
             int presencas_importadas = 0;
 
-            dtPesquisa = dtPesquisa.AddDays(-60);
+            dtPesquisa = dtPesquisa.AddDays(-30);
 
             while (true)
             {
@@ -460,7 +460,7 @@ namespace OPS.ImportacaoDados
 
                 if (!response.Content.Contains("qtdeSessoesDia"))
                 {
-                    sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
+                    //sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
                     continue;
                 }
 
@@ -608,7 +608,7 @@ namespace OPS.ImportacaoDados
                                         parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
                                     continue;
                                 }
-                               
+
                                 banco.AddParameter("id_cf_deputado", id_cf_deputado);
                                 banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
                                 banco.AddParameter("id_carteira_parlamantar", parlamentar["carteiraParlamentar"].InnerText);
@@ -1030,7 +1030,12 @@ namespace OPS.ImportacaoDados
             string sResumoValores = string.Empty;
             var sb = new StringBuilder();
             var linhaAtual = 0;
+
+            // Controle, estão vindo itens duplicados no XML
             var lstHash = new Dictionary<string, long>();
+
+            // Controle, lista para remover caso não constem no XML
+            var lstHashExcluir = new Dictionary<string, long>();
 
             try
             {
@@ -1041,7 +1046,16 @@ namespace OPS.ImportacaoDados
                     {
                         while (dReader.Read())
                         {
-                            lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+                            try
+                            {
+                                lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+                                lstHashExcluir.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+                            }
+                            catch (Exception ex)
+                            {
+                                sb.Append("Erro: " + ex.Message);
+                            }
+                            
                         }
                     }
 
@@ -1055,7 +1069,6 @@ namespace OPS.ImportacaoDados
 
                     LimpaDespesaTemporaria(banco);
 
-                    StreamReader stream = null;
                     int vazia = 0;
 
                     try
@@ -1063,115 +1076,117 @@ namespace OPS.ImportacaoDados
                         //if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
                         //    stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
                         //else
-                        stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
-
-                        var sqlFields = new StringBuilder();
-                        var sqlValues = new StringBuilder();
-
-                        using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
+                        using (StreamReader stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1")))
                         {
-                            reader.ReadToDescendant("DESPESAS");
-                            reader.ReadToDescendant("DESPESA");
 
-                            do
+                            var sqlFields = new StringBuilder();
+                            var sqlValues = new StringBuilder();
+
+                            using (var reader = XmlReader.Create(stream, new XmlReaderSettings { IgnoreComments = true }))
                             {
-                                linha++;
-                                var strXmlNodeDespeza = reader.ReadOuterXml();
-                                if (string.IsNullOrEmpty(strXmlNodeDespeza))
+                                reader.ReadToDescendant("DESPESAS");
+                                reader.ReadToDescendant("DESPESA");
+
+                                do
                                 {
-                                    vazia++;
-                                    if (vazia < 100)
+                                    linha++;
+                                    var strXmlNodeDespeza = reader.ReadOuterXml();
+                                    if (string.IsNullOrEmpty(strXmlNodeDespeza))
                                     {
-                                        Console.WriteLine("[vazio]" + vazia);
+                                        vazia++;
+                                        if (vazia < 100)
+                                        {
+                                            Console.WriteLine("[vazio]" + vazia);
+                                            continue;
+                                        }
+                                        Console.WriteLine(linhaAtual);
+                                        break;
+                                    }
+                                    vazia = 0;
+
+                                    var doc = new XmlDocument();
+                                    doc.LoadXml(strXmlNodeDespeza);
+                                    var files = doc.DocumentElement.SelectNodes("*");
+
+                                    sqlFields.Clear();
+                                    sqlValues.Clear();
+
+                                    foreach (XmlNode fileNode in files)
+                                    {
+                                        if (sqlFields.Length > 0)
+                                        {
+                                            sqlFields.Append(",");
+                                            sqlValues.Append(",");
+                                        }
+
+                                        sqlFields.Append(fileNode.Name);
+                                        sqlValues.Append("@" + fileNode.Name);
+
+                                        string value;
+                                        if (fileNode.Name == "datEmissao")
+                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
+                                        else
+                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper();
+
+                                        banco.AddParameter(fileNode.Name, value);
+                                    }
+
+                                    string hash = banco.ParametersHash();
+                                    if (lstHash.ContainsKey(hash))
+                                    {
+                                        lstHashExcluir.Remove(hash);
+                                        banco.ClearParameters();
                                         continue;
                                     }
-                                    Console.WriteLine(linhaAtual);
-                                    break;
-                                }
-                                vazia = 0;
 
-                                var doc = new XmlDocument();
-                                doc.LoadXml(strXmlNodeDespeza);
-                                var files = doc.DocumentElement.SelectNodes("*");
+                                    banco.AddParameter("hash", hash);
+                                    sqlFields.Append(", hash");
+                                    sqlValues.Append(", @hash");
 
-                                sqlFields.Clear();
-                                sqlValues.Clear();
-
-                                foreach (XmlNode fileNode in files)
-                                {
-                                    if (sqlFields.Length > 0)
+                                    try
                                     {
-                                        sqlFields.Append(",");
-                                        sqlValues.Append(",");
+                                        banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
+                                        Console.WriteLine(e.Message);
                                     }
 
-                                    sqlFields.Append(fileNode.Name);
-                                    sqlValues.Append("@" + fileNode.Name);
+                                    lstHash.Add(hash, 0);
+                                    inserido++;
 
-                                    string value;
-                                    if (fileNode.Name == "datEmissao")
-                                        value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
-                                    else
-                                        value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper();
-
-                                    banco.AddParameter(fileNode.Name, value);
-                                }
-
-                                string hash = banco.ParametersHash();
-                                if (lstHash.Remove(hash))
-                                {
-                                    banco.ClearParameters();
-                                    continue;
-                                }
-
-                                banco.AddParameter("hash", hash);
-                                sqlFields.Append(", hash");
-                                sqlValues.Append(", @hash");
-
-                                try
-                                {
-                                    banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
-                                }
-                                catch (Exception e)
-                                {
-                                    banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
-                                    Console.WriteLine(e.Message);
-                                }
-
-                                inserido++;
-
-                                if (++linhaAtual % 1000 == 0)
-                                {
-                                    sb.Append(ProcessarDespesasTemp(banco));
-                                    Console.WriteLine(linhaAtual);
-                                }
-                            } while (true);
+                                    if (++linhaAtual % 1000 == 0)
+                                    {
+                                        sb.Append(ProcessarDespesasTemp(banco));
+                                        Console.WriteLine(linhaAtual);
+                                    }
+                                } while (true);
+                            }
                         }
                     }
-                    finally
+                    catch (Exception ex)
                     {
-                        stream.Close();
-                        stream.Dispose();
+                        sb.Append("Erro: " + ex.Message + "<br/>" + ex.StackTrace + "<br/>Hash:" + banco.ParametersHash());
                     }
                 }
 
                 using (var banco = new Banco())
                 {
 
-                    if (lstHash.Count == 0 && linhaAtual == 0)
+                    if (lstHashExcluir.Count > 0)
                     {
-                        sb.Append("<p>Não há novos itens para importar! #2</p>");
-                        return sb.ToString();
-                    }
-
-                    if (lstHash.Count > 0)
-                    {
-                        string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
+                        string lstExcluir = lstHashExcluir.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
                         banco.ExecuteNonQuery(string.Format("delete from cf_despesa where id IN({0})", lstExcluir.Substring(1)));
                         //banco.ExecuteNonQuery(string.Format("update cf_despesa valor_glosa=valor_documento, valor_liquido=0, exclusao=now() where id IN({0})", lstExcluir.Substring(1)));
 
-                        Console.WriteLine("Registros para exluir: " + lstHash.Count);
-                        sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
+                        Console.WriteLine("Registros para exluir: " + lstHashExcluir.Count);
+                        sb.AppendFormat("<p>{0} registros excluidos</p>", lstHashExcluir.Count);
+                    }
+                    else if (inserido == 0)
+                    {
+                        sb.Append("<p>Não há novos itens para importar! #2</p>");
+                        return sb.ToString();
                     }
 
                     if (linhaAtual > 0)
@@ -1204,7 +1219,7 @@ namespace OPS.ImportacaoDados
             }
             catch (Exception ex)
             {
-                sb.Append("Erro: " + ex.Message);
+                sb.Append("Erro: " + ex.Message + "<br/>" + ex.StackTrace);
             }
 
             return sb.ToString();

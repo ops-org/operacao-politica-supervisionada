@@ -23,7 +23,9 @@
 
 		public string Documento { get; set; }
 
-		public EnumAgrupamentoAuditoria Agrupamento { get; set; }
+	    public string PeriodoCustom { get; set; }
+
+        public EnumAgrupamentoAuditoria Agrupamento { get; set; }
 
 		public FiltroParlamentarDTO()
 		{

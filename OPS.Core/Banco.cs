@@ -128,7 +128,7 @@ namespace OPS.Core
             _mCommand.CommandText = sql;
             _mCommand.CommandTimeout = timeOut;
 
-            return _mCommand.ExecuteReader(CommandBehavior.CloseConnection);
+            return _mCommand.ExecuteReader();
         }
 
         public async Task<DbDataReader> ExecuteReaderAsync(string sql, int timeOut = 60)

@@ -573,7 +573,9 @@ namespace OPS.Core.DAO
 						SELECT
 						 d.id_partido
 						, p.nome as nome_partido
-						, count(l1.total_notas) as total_notas
+						, sum(l1.total_notas) as total_notas
+                        , count(l1.id_sf_senador) as total_senadores
+                        , sum(l1.valor_total) / count(l1.id_sf_senador) as valor_medio_por_senador
 						, sum(l1.valor_total) as valor_total
 						from (
 							SELECT
@@ -617,8 +619,10 @@ namespace OPS.Core.DAO
 							id_partido = reader["id_partido"],
 							nome_partido = reader["nome_partido"],
 							total_notas = reader["total_notas"],
-							valor_total = Utils.FormataValor(reader["valor_total"])
-						});
+                            total_senadores = reader["total_senadores"],
+                            valor_medio_por_senador = Utils.FormataValor(reader["valor_medio_por_senador"]),
+                            valor_total = Utils.FormataValor(reader["valor_total"])
+                        });
 					}
 
 					reader.NextResult();
