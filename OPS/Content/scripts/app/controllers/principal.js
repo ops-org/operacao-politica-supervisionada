@@ -61,14 +61,26 @@ app.controller('PrincipalController', ['$scope', '$api',
                 series: response
             });
 
-            //Esconder Intervalo de 2009 a 2014
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i <= chart.series.length - 5; i++) {
                 chart.series[i].hide();
             }
 
             $('#camara-legislatura input[type=radio]').on('change', function () {
                 switch ($(this).val()) {
-                    case '54':
+                    case '56':
+                        chart.series[0].hide(); //2009
+                        chart.series[1].hide(); //2010
+                        chart.series[2].hide(); //2011
+                        chart.series[3].hide(); //2012
+                        chart.series[4].hide(); //2013
+                        chart.series[5].hide(); //2014
+                        chart.series[6].hide(); //2015
+                        chart.series[7].hide(); //2016
+                        chart.series[8].hide(); //2017
+                        chart.series[9].hide(); //2018
+                        chart.series[10].show(); //2019
+                        break;
+                    case '55':
                         chart.series[0].hide(); //2009
                         chart.series[1].hide(); //2010
                         chart.series[2].hide(); //2011
@@ -78,8 +90,10 @@ app.controller('PrincipalController', ['$scope', '$api',
                         chart.series[6].show(); //2015
                         chart.series[7].show(); //2016
                         chart.series[8].show(); //2017
+                        chart.series[9].show(); //2018
+                        chart.series[10].hide(); //2019
                         break;
-                    case '53':
+                    case '54':
                         chart.series[0].hide(); //2009
                         chart.series[1].hide(); //2010
                         chart.series[2].show(); //2011
@@ -89,8 +103,10 @@ app.controller('PrincipalController', ['$scope', '$api',
                         chart.series[6].hide(); //2015
                         chart.series[7].hide(); //2016
                         chart.series[8].hide(); //2017
+                        chart.series[9].hide(); //2018
+                        chart.series[10].hide(); //2019
                         break;
-                    case '52':
+                    case '53':
                         chart.series[0].show(); //2009
                         chart.series[1].show(); //2010
                         chart.series[2].hide(); //2011
@@ -100,6 +116,8 @@ app.controller('PrincipalController', ['$scope', '$api',
                         chart.series[6].hide(); //2015
                         chart.series[7].hide(); //2016
                         chart.series[8].hide(); //2017
+                        chart.series[9].hide(); //2018
+                        chart.series[10].hide(); //2019
                         break;
                     default:
                         for (var i = 0; i < chart.series.length; i++) {
@@ -146,13 +164,26 @@ app.controller('PrincipalController', ['$scope', '$api',
                 series: response
             });
 
-            //Esconder Intervalo de 2008 a 2014
-            for (var i = 0; i < 6; i++) {
+            for (var i = 0; i < chart.series.length - 4; i++) {
                 chart.series[i].hide();
             }
 
             $('#senado-legislatura input[type=radio]').on('change', function () {
                 switch ($(this).val()) {
+                    case '55':
+                        chart.series[0].hide(); //2008
+                        chart.series[1].hide(); //2009
+                        chart.series[2].hide(); //2010
+                        chart.series[3].hide(); //2011
+                        chart.series[4].hide(); //2012
+                        chart.series[5].hide(); //2013
+                        chart.series[6].hide(); //2014
+                        chart.series[7].hide(); //2015
+                        chart.series[8].hide(); //2016
+                        chart.series[9].hide(); //2017
+                        chart.series[10].hide(); //2018
+                        chart.series[11].show(); //2019
+                        break;
                     case '54':
                         chart.series[0].hide(); //2008
                         chart.series[1].hide(); //2009
@@ -164,6 +195,8 @@ app.controller('PrincipalController', ['$scope', '$api',
                         chart.series[7].show(); //2015
                         chart.series[8].show(); //2016
                         chart.series[9].show(); //2017
+                        chart.series[10].show(); //2018
+                        chart.series[11].hide(); //2019
                         break;
                     case '53':
                         chart.series[0].hide(); //2008
@@ -176,6 +209,8 @@ app.controller('PrincipalController', ['$scope', '$api',
                         chart.series[7].hide(); //2015
                         chart.series[8].hide(); //2016
                         chart.series[9].hide(); //2017
+                        chart.series[10].hide(); //2018
+                        chart.series[11].hide(); //2019
                         break;
                     case '52':
                         chart.series[0].show(); //2008
@@ -188,6 +223,8 @@ app.controller('PrincipalController', ['$scope', '$api',
                         chart.series[7].hide(); //2015
                         chart.series[8].hide(); //2016
                         chart.series[9].hide(); //2017
+                        chart.series[10].hide(); //2018
+                        chart.series[11].hide(); //2019
                         break;
                     default:
                         for (var i = 0; i < chart.series.length; i++) {

@@ -56,6 +56,7 @@ namespace OPS.ImportacaoDados
                                 catch
                                 {
                                     banco.ClearParameters();
+                                    banco.AddParameter("nome_parlamentar", Convert.ToString(senador["NomeParlamentar"]).ToUpper());
                                     banco.AddParameter("NomeCompletoParlamentar", Convert.ToString(senador["NomeCompletoParlamentar"]));
                                     banco.AddParameter("SexoParlamentar", Convert.ToString(senador["SexoParlamentar"])[0].ToString());
                                     banco.AddParameter("Url", Convert.ToString(senador["UrlPaginaParlamentar"]));
@@ -68,7 +69,8 @@ namespace OPS.ImportacaoDados
                                     //banco.AddParameter("MandatoAtual", Convert.ToDateTime(senador["MandatoAtual"]).AddYears(-9).ToString("yyyyMM"));
                                     banco.ExecuteNonQuery(
                                         @"UPDATE sf_senador SET 
-											nome_completo = @NomeCompletoParlamentar
+                                            nome = @nome_parlamentar
+											, nome_completo = @NomeCompletoParlamentar
 											, sexo = @SexoParlamentar
 											, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido)
 											, id_estado = (SELECT id FROM estado where sigla like @SiglaUf)
@@ -348,17 +350,26 @@ namespace OPS.ImportacaoDados
                 }
             }
 
-            var resumoImportacao = CarregaDadosCsv(fullFileNameCsv, ano, completo);
-
-            using (var banco = new Banco())
+            try
             {
-                banco.ExecuteNonQuery(@"
+                var resumoImportacao = CarregaDadosCsv(fullFileNameCsv, ano, completo);
+
+                using (var banco = new Banco())
+                {
+                    banco.ExecuteNonQuery(@"
 					UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
 				");
-            }
+                }
 
-            return resumoImportacao;
-            //File.Delete(fullFileNameCsv);
+                return resumoImportacao;
+            }
+            catch (Exception ex)
+            {
+                // Excluir o arquivo para tentar importar novamente na proxima execução
+                File.Delete(fullFileNameCsv);
+
+                return "Erro ao importar:" + ex.Message;
+            }
         }
 
         private static string CarregaDadosCsv(string file, int ano, bool completo)
@@ -751,7 +762,7 @@ namespace OPS.ImportacaoDados
 						l.id_sf_senador,
 						sum(l.valor) as valor_total
 					FROM  sf_despesa l
-					where l.ano_mes >= 201502 
+					where l.ano_mes >= 201902 
 					GROUP BY l.id_sf_senador
 					order by valor_total desc 
 					limit 4

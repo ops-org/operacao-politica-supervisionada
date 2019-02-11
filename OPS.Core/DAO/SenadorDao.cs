@@ -835,7 +835,11 @@ namespace OPS.Core.DAO
 					sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0}01 AND {0}12", dataIni.Year - 1));
 					break;
 
-				case "8": //PERIODO_MANDATO_55
+                case "9": //PERIODO_MANDATO_56
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201902 AND 202301");
+                    break;
+
+                case "8": //PERIODO_MANDATO_55
 					sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 201901");
 					break;
 

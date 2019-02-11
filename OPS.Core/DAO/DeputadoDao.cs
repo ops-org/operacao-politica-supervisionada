@@ -474,6 +474,10 @@ namespace OPS.Core.DAO
 
                 switch (filtro.Periodo)
                 {
+                    case "9": //PERIODO_MANDATO_56
+                        strSql.AppendLine(" AND m.id_legislatura = 56");
+                        break;
+
                     case "8": //PERIODO_MANDATO_55
                         strSql.AppendLine(" AND m.id_legislatura = 55");
                         break;
@@ -1138,6 +1142,10 @@ namespace OPS.Core.DAO
                     sqlSelect.AppendFormat(" AND l.ano_mes BETWEEN {0} AND {1}", dataIni.ToString("yyyyMM"), dataFim.ToString("yyyyMM"));
                     break;
 
+                case "9": //PERIODO_MANDATO_55
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201902 AND 202301");
+                    break;
+
                 case "8": //PERIODO_MANDATO_55
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 201901");
                     break;
@@ -1570,9 +1578,9 @@ namespace OPS.Core.DAO
 						, s.inicio
 						, s.tipo
 						, s.numero
-						, sp.presenca
-						, sp.ausencia
-						, sp.ausencia_justificada
+						, IFNULL(sp.presenca, 0) AS presenca
+						, IFNULL(sp.ausencia, 0) AS ausencia
+						, IFNULL(sp.ausencia_justificada, 0) AS ausencia_justificada
 					FROM cf_sessao s
 					LEFT JOIN (
 						SELECT
@@ -1623,11 +1631,11 @@ namespace OPS.Core.DAO
                             tipo = sTipo,
                             numero = reader["numero"].ToString(),
                             presenca = presenca,
-                            presenca_percentual = Utils.FormataValor((decimal)presenca * 100 / total),
+                            presenca_percentual = presenca > 0 ? Utils.FormataValor((decimal)presenca * 100 / total) : "",
                             ausencia = ausencia,
-                            ausencia_percentual = Utils.FormataValor((decimal)ausencia * 100 / total),
+                            ausencia_percentual = ausencia> 0 ? Utils.FormataValor((decimal)ausencia * 100 / total) : "",
                             ausencia_justificada = ausencia_justificada,
-                            ausencia_justificada_percentual = Utils.FormataValor((decimal)ausencia_justificada * 100 / total),
+                            ausencia_justificada_percentual = ausencia_justificada > 0 ? Utils.FormataValor((decimal)ausencia_justificada * 100 / total) : "",
                             total = total
                         });
                     }

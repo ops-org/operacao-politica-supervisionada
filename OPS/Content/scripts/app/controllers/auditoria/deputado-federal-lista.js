@@ -49,7 +49,7 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
             }
             $scope.filtro.PeriodoCustom = qs.PeriodoCustom || null;
 
-    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "8").trigger('change').val();
+    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "9").trigger('change').val();
     		$scope.TrocaAba(null, parseInt(qs.Agrupamento || '1'));
 
     		$scope.Pesquisar(true);
@@ -84,7 +84,8 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
     			$scope.filtro.Documento = $("#txtDocumento").val() || null;
     			$scope.filtro.Periodo = $("#lstPerido").val();
                 $scope.filtro.Agrupamento = $("#lstAgrupamento").val();
-                $scope.filtro.PeriodoCustom = $("#lstPeridoAnoInicio").val() + $("#lstPeridoMesInicio").val() + '-' + $("#lstPeridoAnoFinal").val() + $("#lstPeridoMesFinal").val();
+                var competencia = $("#lstPeridoAnoInicio").val() + $("#lstPeridoMesInicio").val() + '-' + $("#lstPeridoAnoFinal").val() + $("#lstPeridoMesFinal").val();
+                $scope.filtro.PeriodoCustom = competencia !== '-' ? competencia : null;
 
     			delete $tabela.params.sorting;
     			$tabela.params.page = 1;

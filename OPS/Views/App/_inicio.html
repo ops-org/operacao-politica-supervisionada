@@ -60,13 +60,16 @@
                 <input type="radio" name="cl-options" value="0"> Todas
             </label>
             <label class="btn btn-default">
-                <input type="radio" name="cl-options" value="52"> 52º (2007-2011)
+                <input type="radio" name="cl-options" value="53"> 53º (2007-2011)
             </label>
             <label class="btn btn-default">
-                <input type="radio" name="cl-options" value="53"> 53º (2011-2015)
+                <input type="radio" name="cl-options" value="54"> 54º (2011-2015)
             </label>
-            <label class="btn btn-default active">
-                <input type="radio" name="cl-options" value="54" checked> 54º (2015-2019)
+            <label class="btn btn-default">
+                <input type="radio" name="cl-options" value="55" checked> 55º (2015-2019)
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="cl-options" value="56" checked> 56º (2019-2023)
             </label>
         </div>
         <div id="camara-resumo-gastos"></div>
@@ -83,8 +86,11 @@
             <label class="btn btn-default">
                 <input type="radio" name="sl-options" value="53"> 53º (2011-2015)
             </label>
-            <label class="btn btn-default active">
+            <label class="btn btn-default">
                 <input type="radio" name="sl-options" value="54" checked> 54º (2015-2019)
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="sl-options" value="55" checked> 55º (2019-2023)
             </label>
         </div>
         <div id="senado-resumo-gastos"></div>
@@ -104,7 +110,7 @@
         <p>Os Parlamentares que mais gastaram dinheiro público da verba indenizatória da atual legislatura</p>
         <br />
         <div class="resumo-gastos">
-            <h4>Deputados Federais <small>(Desde fevereiro de 2015)</small></h4>
+            <h4>Deputados Federais <small>(Desde fevereiro de 2019)</small></h4>
             <div class="row">
                 <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.CamaraFederal track by $index">
                     <div class="box">
@@ -124,7 +130,7 @@
                 </div>
             </div>
             <br />
-            <h4>Senadores <small>(Desde fevereiro de 2015)</small></h4>
+            <h4>Senadores <small>(Desde fevereiro de 2019)</small></h4>
             <div class="row">
                 <div class="col-xs-12 col-sm-6 col-md-3" data-ng-repeat="gasto in CampeoesGastos.Senado track by $index">
                     <div class="box">

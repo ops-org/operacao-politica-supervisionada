@@ -36,7 +36,7 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     		$("#txtDocumento").val(qs.Documento);
     		$scope.filtro.Documento = qs.Documento || null;
 
-    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "8").trigger('change').val();
+    		$scope.filtro.Periodo = $("#lstPerido").val(qs.Periodo || "9").trigger('change').val();
     		$scope.TrocaAba(null, parseInt(qs.Agrupamento || '1'));
 
     		$scope.Pesquisar(true);
@@ -81,7 +81,7 @@ app.controller('SenadorListaController', ["$rootScope", "$scope", "$tabela", "$a
     	$scope.LimparFiltros = function () {
     		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido").selectpicker('deselectAll');
     		$("#txtBeneficiario, #txtDocumento").val('');
-    		$("#lstPerido").val('8').selectpicker('refresh');
+    		$("#lstPerido").val("9").selectpicker('refresh');
     		$scope.TrocaAba(null, 1);
     	}
 

@@ -90,7 +90,7 @@ namespace OPS.ImportacaoDados
             using (var banco = new Banco())
             {
                 dtFornecedores = banco.GetTable(
-                    @"select cnpj_cpf, f.id, fi.id_fornecedor
+                    @"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
                     from fornecedor f
                     left join fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
@@ -104,8 +104,8 @@ namespace OPS.ImportacaoDados
                     -- and controle <> 0
 					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
 					-- and controle <> 5
-					and (controle is null or controle <> 5)
-                    order by 1 desc");
+					and (controle is null or controle NOT IN (2, 5))
+                    order by f.id desc");
 
                 if (dtFornecedores.Rows.Count == 0)
                 {
@@ -205,7 +205,7 @@ namespace OPS.ImportacaoDados
                     //        receita.message = ex.Message;
                     //    }
                     //}
-                    InserirControle(2, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
+                    InserirControle(1, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
                     continue;
                 }
 
@@ -394,7 +394,7 @@ namespace OPS.ImportacaoDados
 
                             if (receita.situacao != "ATIVA")
                             {
-                                strInfoAdicional.Append("<p>Empresa inativa importada:" + receita.cnpj + " - " + receita.nome + "</p>");
+                                strInfoAdicional.Append("<p>Empresa inativa importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + receita.nome + "</p>");
                             }
 
                             banco.CommitTransaction();
@@ -410,6 +410,8 @@ namespace OPS.ImportacaoDados
                     else
                     {
                         InserirControle(2, item["cnpj_cpf"].ToString(), receita.message);
+
+                        strInfoAdicional.Append("<p>Empresa invalida importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + item["nome"].ToString() + "; Motivo: " + receita.message + "</p>");
                     }
                 }
             }

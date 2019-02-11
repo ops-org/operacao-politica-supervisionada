@@ -24,14 +24,14 @@ app.controller('DeputadoFederalConhecaController', ["$scope", "$tabela", "$api",
 
             $scope.Pesquisar(true);
 
-            $('#lstPerido').val('8').selectpicker({
+            $('#lstPerido').val('9').selectpicker({
                 width: '100%',
                 actionsBox: true,
                 liveSearch: true,
                 liveSearchNormalize: true
             });
 
-            $scope.filtro.Periodo = '8';
+            $scope.filtro.Periodo = '9';
         }
 
         $scope.Pesquisar = function (page_load) {
@@ -53,7 +53,7 @@ app.controller('DeputadoFederalConhecaController', ["$scope", "$tabela", "$api",
 
         $scope.LimparFiltros = function () {
             $("#lstUF, #lstPartido").selectpicker('deselectAll');
-            $("#lstPerido").val('8').selectpicker('refresh');
+            $("#lstPerido").val('9').selectpicker('refresh');
         }
 
         init();
