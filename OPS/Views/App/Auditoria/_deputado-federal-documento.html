@@ -63,7 +63,7 @@
         <div class="form-group text-center">
             <p></p>
             <span data-ng-if="::documento.id_documento">
-                <a class="btn btn-danger" href="#" data-ng-href="{{documento.url_documento}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Recibo&nbsp;<i class="fa fa-download"></i></a>
+                <a data-ng-if="::documento.url_documento" class="btn btn-danger" href="#" data-ng-href="{{documento.url_documento}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Recibo&nbsp;<i class="fa fa-download"></i></a>
                 <a data-ng-if="::documento.url_documento_nfe" class="btn btn-danger" href="#" data-ng-href="{{documento.url_documento_nfe}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Recibo (NF-e)&nbsp;<i class="fa fa-download"></i></a>
                 <a class="btn btn-default" href="#" data-ng-href="{{documento.url_detalhes_documento}}" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofollow">Detalhes do recibo&nbsp;<i class="fa fa-plus"></i></a>
             </span>

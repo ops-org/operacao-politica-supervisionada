@@ -83,7 +83,7 @@ namespace OPS.WebApi
 
 		private const string urlBaseReceitaFederal = "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/";
 		private const string paginaValidacao = "valida.asp";
-		private const string paginaPrincipal = "cnpjreva_solicitacao2.asp";
+		private const string paginaPrincipal = "Cnpjreva_solicitacao3.asp";
 		private const string paginaCaptcha = "captcha/gerarCaptcha.asp";
 		private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 

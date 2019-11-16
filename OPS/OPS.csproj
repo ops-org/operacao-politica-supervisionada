@@ -219,6 +219,7 @@
     <Compile Include="WebApi\IndicadoresController.cs" />
     <Compile Include="WebApi\PartidoController.cs" />
     <Compile Include="WebApi\RefreshTokensController.cs" />
+    <Compile Include="WebApi\DeputadoEstadualController.cs" />
     <Compile Include="WebApi\SenadorController.cs" />
     <Compile Include="WebApi\EstadoController.cs" />
     <Compile Include="WebApi\TarefaController.cs" />
@@ -230,6 +231,8 @@
     <Content Include="Content\scripts\app\controllers\auditoria\deputado-federal-frequencia-lista.js" />
     <Content Include="Content\scripts\app\controllers\auditoria\deputado-federal-conheca.js" />
     <Content Include="Content\scripts\app\controllers\auditoria\deputado-federal-resumo.js" />
+    <Content Include="Content\scripts\app\controllers\auditoria\deputado-estadual-detalhes.js" />
+    <Content Include="Content\scripts\app\controllers\auditoria\deputado-estadual-lista.js" />
     <Content Include="Content\scripts\app\controllers\busca.js" />
     <Content Include="Content\scripts\misc\lazyload.js" />
     <Content Include="robots.txt" />
@@ -286,6 +289,8 @@
     <None Include="Properties\PublishProfiles\ops.net.br.pubxml" />
     <Content Include="Views\App\Auditoria\_deputado-federal-frequencia-detalhes.html" />
     <Content Include="Views\App\Auditoria\_deputado-federal-frequencia-lista.html" />
+    <Content Include="Views\App\Auditoria\_deputado-estadual-detalhes.html" />
+    <Content Include="Views\App\Auditoria\_deputado-estadual-lista.html" />
     <Content Include="Views\App\_busca.html" />
     <Content Include="_app_offline.htm" />
     <None Include="Content\scripts\jquery\jquery-2.2.3.intellisense.js" />

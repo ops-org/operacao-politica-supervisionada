@@ -208,7 +208,7 @@ namespace OPS.ImportacaoDados
                             DataRow senador = senado.Tables["IdentificacaoParlamentar"].Rows[0];
                             DataRow senadosDadosBasicos = senado.Tables["DadosBasicosParlamentar"].Rows[0];
 
-
+                            banco.ClearParameters();
                             banco.AddParameter("CodigoParlamentar", Convert.ToInt32(senador["CodigoParlamentar"]));
 
                             try
@@ -393,12 +393,19 @@ namespace OPS.ImportacaoDados
 
             using (var banco = new Banco())
             {
-                var lstHash = new Dictionary<string, long>();
-                using (var dReader = banco.ExecuteReader("select id, hash from sf_despesa where ano=" + ano))
+                var lstHash = new List<string>();
+                using (var dReader = banco.ExecuteReader("select hash from sf_despesa where ano=" + ano))
                 {
                     while (dReader.Read())
                     {
-                        lstHash.Add(dReader["hash"].ToString(), Convert.ToInt64(dReader["id"]));
+                        try
+                        {
+                            lstHash.Add(dReader["hash"].ToString());
+                        }
+                        catch (Exception)
+                        {
+                            // Vai ter duplicado mesmo
+                        }
                     }
                 }
 
@@ -495,14 +502,17 @@ namespace OPS.ImportacaoDados
 
                 if (lstHash.Count > 0)
                 {
-                    string lstExcluir = lstHash.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
-                    banco.ExecuteNonQuery(string.Format("delete from sf_despesa where id IN({0})", lstExcluir.Substring(1)));
+                    foreach (var hash in lstHash)
+                    {
+                        banco.ExecuteNonQuery(string.Format("delete from sf_despesa where hash = '{0}'", hash));
+                    }
+                    
 
                     Console.WriteLine("Registros para exluir: " + lstHash.Count);
                     sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
                 }
 
-                ProcessarDespesasTemp(banco, completo);
+                sb.Append(ProcessarDespesasTemp(banco, completo));
             }
 
             if (ano == DateTime.Now.Year)
@@ -510,19 +520,19 @@ namespace OPS.ImportacaoDados
                 AtualizaSenadorValores();
                 AtualizaCampeoesGastos();
                 AtualizaResumoMensal();
+            }
 
-                using (var banco = new Banco())
+            using (var banco = new Banco())
+            {
+                using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
                 {
-                    using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
+                    if (dReader.Read())
                     {
-                        if (dReader.Read())
-                        {
-                            sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
-                        }
+                        sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
                     }
-
-                    sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
                 }
+
+                sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
             }
 
             return sb.ToString();

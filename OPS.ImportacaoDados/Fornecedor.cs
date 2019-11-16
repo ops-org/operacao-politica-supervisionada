@@ -104,7 +104,7 @@ namespace OPS.ImportacaoDados
                     -- and controle <> 0
 					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
 					-- and controle <> 5
-					and (controle is null or controle NOT IN (2, 5))
+					and (controle is null or controle NOT IN (2, 3, 5))
                     order by f.id desc");
 
                 if (dtFornecedores.Rows.Count == 0)
@@ -133,6 +133,8 @@ namespace OPS.ImportacaoDados
                 {
                     InserirControle(3, item["cnpj_cpf"].ToString(), "CNPJ Invalido");
                     Console.WriteLine("CNPJ Invalido: " + item["cnpj_cpf"] + " - " + i);
+
+                    strInfoAdicional.Append("<p>Empresa invalida importada:" + item["id"].ToString() + " - " + item["cnpj_cpf"].ToString() + " - " + item["nome"].ToString() + "; Motivo: CNPJ Invalido</p>");
                     continue;
                 }
 

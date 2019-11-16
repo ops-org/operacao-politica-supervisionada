@@ -126,7 +126,7 @@ namespace OPS.ImportacaoDados
                         condicao
                     )
                     select 
-	                    mt.numeroDeputadoID,
+	                    mt.ideCadastro,
 	                    mt.numLegislatura,
 	                    mt.Matricula,
 	                    e.id, 
@@ -136,7 +136,7 @@ namespace OPS.ImportacaoDados
                     left join partido p on p.sigla = mt.LegendaPartidoEleito
                     left join estado e on e.sigla = mt.UFEleito
                     /* Inserir apenas faltantes */
-                    LEFT JOIN cf_mandato m ON m.id_cf_deputado = mt.numeroDeputadoID
+                    LEFT JOIN cf_mandato m ON m.id_cf_deputado = mt.ideCadastro
 	                    AND m.id_legislatura = mt.numLegislatura 
 	                    AND m.id_carteira_parlamantar = mt.Matricula
                     WHERE m.id is null;
@@ -404,6 +404,7 @@ namespace OPS.ImportacaoDados
             //Carregar a partir da legislatura 53 (2007/02/01). Existem dados desde 24/02/99
             DateTime dtPesquisa = Padrao.DeputadoFederalPresencaUltimaAtualizacao.Date; //new DateTime(2007, 2, 1);
             if (dtPesquisa == DateTime.MinValue) dtPesquisa = new DateTime(2016, 2, 9);
+            int ano_inicio = dtPesquisa.Year;
             var dtNow = DateTime.Now.Date;
             //var dtUltimaIntegracao = dtPesquisa.AddDays(-7);
             int presencas_importadas = 0;
@@ -539,6 +540,8 @@ namespace OPS.ImportacaoDados
                                 break;
                             case "SESSÃO_PREPARATÓRIA":
                             case "SESSÃO_PREPARATORIA":
+                            case "PREPARATÓRIA":
+                            case "PREPARATORIA":
                                 tipo = 3;
                                 break;
                             default:
@@ -574,8 +577,35 @@ namespace OPS.ImportacaoDados
                                 string.Format("id_legislatura={0} and id_carteira_parlamantar={1}",
                                     dia["legislatura"].InnerText,
                                     parlamentar["carteiraParlamentar"].InnerText
-                                )
-                            );
+                                ));
+
+                            if (drMqandato.Length == 0)
+                            {
+                                try
+                                {
+                                    var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
+                                    banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
+                                    id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where IFNULL(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
+                                }
+                                catch (Exception e)
+                                {
+                                    sb.AppendFormat("<p>1. Parlamentar '{0}' não consta na base de dados, e foi ignorado na importação de presenças. Legislatura: {1}, Carteira: {2}.</p>",
+                                        parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
+                                    continue;
+                                }
+
+                                drMqandato = dtMandatos.Select(string.Format("id_legislatura={0} and id_cf_deputado={1}",dia["legislatura"].InnerText, id_cf_deputado));
+
+                                if (drMqandato.Length > 0)
+                                {
+                                    drMqandato[0]["id_carteira_parlamantar"] = parlamentar["carteiraParlamentar"].InnerText;
+
+                                    banco.AddParameter("id_carteira_parlamantar", parlamentar["carteiraParlamentar"].InnerText);
+                                    banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
+                                    banco.AddParameter("id_cf_deputado", id_cf_deputado);
+                                    banco.ExecuteNonQuery("UPDATE cf_mandato SET id_carteira_parlamantar=@id_carteira_parlamantar WHERE id_legislatura=@id_legislatura and id_cf_deputado=@id_cf_deputado");
+                                }
+                            }
 
                             if (drMqandato.Length > 0)
                             {
@@ -600,7 +630,7 @@ namespace OPS.ImportacaoDados
                                 try
                                 {
                                     banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
-                                    id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where nome_parlamentar like @nome_parlamentar").ToString();
+                                    id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where IFNULL(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
                                 }
                                 catch (Exception e)
                                 {
@@ -672,21 +702,21 @@ namespace OPS.ImportacaoDados
 
             //if (presencas_importadas > 0)
             //{
-            //	using (var banco = new Banco())
-            //	{
-            //		for (int ano = ano_inicio; ano <= dtPesquisa.Year; ano++)
-            //		{
-            //			banco.AddParameter("ano", ano);
-            //			var total_sessoes = Convert.ToInt32(banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_sessao WHERE year(data)=@ano"));
+            //    using (var banco = new Banco())
+            //    {
+            //        for (int ano = ano_inicio; ano <= dtPesquisa.Year; ano++)
+            //        {
+            //            banco.AddParameter("ano", ano);
+            //            var total_sessoes = Convert.ToInt32(banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_sessao WHERE year(data)=@ano"));
 
-            //			banco.AddParameter("ano", ano);
-            //			banco.AddParameter("total_sessoes", total_sessoes);
-            //			banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
+            //            banco.AddParameter("ano", ano);
+            //            banco.AddParameter("total_sessoes", total_sessoes);
+            //            banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
 
 
-            //			banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
-            //		}
-            //	}
+            //            banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
+            //        }
+            //    }
             //}
             return sb.ToString();
         }
@@ -720,6 +750,9 @@ namespace OPS.ImportacaoDados
 
                     foreach (var deputado in deputados.dados)
                     {
+                        Dados deputadoDetalhes = null;
+                        string situacao = null; 
+
                         using (var banco = new Banco())
                         {
                             banco.AddParameter("id", deputado.id);
@@ -727,7 +760,7 @@ namespace OPS.ImportacaoDados
 
                             request = new RestRequest(deputado.id.ToString(), Method.GET);
                             request.AddHeader("Accept", "application/json");
-                            Dados deputadoDetalhes = client.Execute<DeputadoDetalhes>(request).Data.dados;
+                            deputadoDetalhes = client.Execute<DeputadoDetalhes>(request).Data.dados;
 
                             if (deputadoDetalhes == null)
                             {
@@ -779,7 +812,7 @@ namespace OPS.ImportacaoDados
                                 {
                                     id_cf_gabinete = Convert.ToInt32(id);
 
-                                    if (leg == 55)
+                                    if (leg == 56)
                                     {
                                         banco.AddParameter("nome", gabinete.nome);
                                         banco.AddParameter("predio", gabinete.predio);
@@ -798,8 +831,7 @@ namespace OPS.ImportacaoDados
                                 }
                             }
 
-                            string situacao;
-                            if (leg == 55)
+                            if (leg == 56)
                             {
                                 situacao = deputadoDetalhes.ultimoStatus.situacao;
                             }
@@ -867,6 +899,7 @@ namespace OPS.ImportacaoDados
                                 )");
 
                                 novos++;
+                                Console.WriteLine("INSERT");
 
                                 sb.Append("<p>" + deputadoDetalhes.ultimoStatus.nome + "</p>");
                             }
@@ -910,6 +943,44 @@ namespace OPS.ImportacaoDados
                                     escolaridade = @escolaridade
                                     WHERE id = @id
                             ");
+                            }
+
+
+                            Console.WriteLine("UPDATE");
+                            
+                        }
+
+                        if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
+                        {
+                            using (var banco = new Banco())
+                            {
+                                banco.AddParameter("id_cf_deputado", deputado.id);
+                                banco.AddParameter("id_legislatura", leg);
+                                var countMandato = banco.ExecuteScalar(@"
+                                SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura");
+
+                                if (Convert.ToInt32(countMandato) == 0)
+                                {
+                                    banco.AddParameter("id_cf_deputado", deputado.id);
+                                    banco.AddParameter("id_legislatura", leg);
+                                    banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
+                                    banco.AddParameter("sigla_partido", deputadoDetalhes.ultimoStatus.siglaPartido);
+                                    banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
+
+                                    banco.ExecuteNonQuery(@"INSERT INTO cf_mandato (
+                                    id_cf_deputado,
+                                    id_legislatura,
+                                    id_estado,
+                                    id_partido,
+                                    condicao
+                                    ) VALUES (
+                                    @id_cf_deputado,
+                                    @id_legislatura,
+                                    (SELECT id FROM estado where sigla like @sigla_estado), 
+                                    (SELECT id FROM partido where sigla like @sigla_partido), 
+                                    @condicao
+                                )");
+                                }
                             }
                         }
                     }
@@ -1026,7 +1097,7 @@ namespace OPS.ImportacaoDados
 
         private static string CarregaDadosXml(string fullFileNameXml, int ano)
         {
-            int linha = 0, inserido = 0;
+            int linha = 0, inserido = 0, registrosValidos = 0;
             string sResumoValores = string.Empty;
             var sb = new StringBuilder();
             var linhaAtual = 0;
@@ -1055,7 +1126,7 @@ namespace OPS.ImportacaoDados
                             {
                                 sb.Append("Erro: " + ex.Message);
                             }
-                            
+
                         }
                     }
 
@@ -1107,6 +1178,7 @@ namespace OPS.ImportacaoDados
                                     }
                                     vazia = 0;
 
+                                    registrosValidos++;
                                     var doc = new XmlDocument();
                                     doc.LoadXml(strXmlNodeDespeza);
                                     var files = doc.DocumentElement.SelectNodes("*");
@@ -1152,11 +1224,15 @@ namespace OPS.ImportacaoDados
 
                                     try
                                     {
+                                        if (inserido == 0 && registrosValidos > 1000)
+                                        {
+                                            banco.ResetConnection();
+                                        }
+
                                         banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
                                     }
                                     catch (Exception e)
                                     {
-                                        banco.ExecuteNonQuery("INSERT INTO cf_despesa_temp (" + sqlFields + ") VALUES (" + sqlValues + ")");
                                         Console.WriteLine(e.Message);
                                     }
 
@@ -1183,8 +1259,17 @@ namespace OPS.ImportacaoDados
 
                     if (lstHashExcluir.Count > 0)
                     {
-                        string lstExcluir = lstHashExcluir.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
-                        banco.ExecuteNonQuery(string.Format("delete from cf_despesa where id IN({0})", lstExcluir.Substring(1)));
+                        int skip = 0;
+                        while (true)
+                        {
+                            var lstHashExcluirTemp = lstHashExcluir.Skip(skip).Take(50);
+                            if (lstHashExcluirTemp.Count() == 0) break;
+
+                            string lstExcluir = lstHashExcluirTemp.Aggregate("", (keyString, pair) => keyString + "," + pair.Value);
+                            banco.ExecuteNonQuery(string.Format("delete from cf_despesa where id IN({0})", lstExcluir.Substring(1)));
+
+                            skip += 50;
+                        }
                         //banco.ExecuteNonQuery(string.Format("update cf_despesa valor_glosa=valor_documento, valor_liquido=0, exclusao=now() where id IN({0})", lstExcluir.Substring(1)));
 
                         Console.WriteLine("Registros para exluir: " + lstHashExcluir.Count);
@@ -1209,6 +1294,7 @@ namespace OPS.ImportacaoDados
                         }
                     }
 
+                    sResumoValores += " - Registros Validos: " + registrosValidos.ToString();
                     sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
                 }
 
@@ -1220,7 +1306,39 @@ namespace OPS.ImportacaoDados
 
                     using (var banco = new Banco())
                     {
-                        banco.ExecuteNonQuery("call insereDados()");
+                        var dt = banco.GetTable("SELECT id_cf_deputado as deputado, id as mandato FROM cf_mandato where id_legislatura = 55");
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            banco.AddParameter("@deputado", dr["deputado"]);
+                            banco.AddParameter("@mandato", dr["mandato"]);
+                            banco.ExecuteNonQuery(@"
+                                UPDATE cf_mandato SET
+                                    valor_total_ceap = (
+                                        SELECT SUM(valor_liquido) 
+                                        FROM cf_despesa 
+                                        WHERE id_cf_deputado = @deputado 
+                                        AND ano_mes BETWEEN 201502 and 201901
+                                    )
+                                WHERE id = @mandato;
+                            ");
+                        }
+
+                        dt = banco.GetTable("SELECT id_cf_deputado as deputado, id as mandato FROM cf_mandato where id_legislatura = 56");
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            banco.AddParameter("@deputado", dr["deputado"]);
+                            banco.AddParameter("@mandato", dr["mandato"]);
+                            banco.ExecuteNonQuery(@"
+                                UPDATE cf_mandato SET
+                                    valor_total_ceap = (
+                                        SELECT SUM(valor_liquido) 
+                                        FROM cf_despesa 
+                                        WHERE id_cf_deputado = @deputado 
+                                        AND ano_mes BETWEEN 201902 and 202301
+                                    )
+                                WHERE id = @mandato;
+                            ");
+                        }
                     }
                 }
             }
@@ -1293,144 +1411,144 @@ namespace OPS.ImportacaoDados
         //    //File.Delete(fullFileNameXml);
         //}
 
-       // private static void CarregaDadosCsv(string file, int ano, bool completo)
-       // {
-       //     //var linhaAtual = 0;
-       //     var totalColunas = ColunasCEAP.Length;
+        // private static void CarregaDadosCsv(string file, int ano, bool completo)
+        // {
+        //     //var linhaAtual = 0;
+        //     var totalColunas = ColunasCEAP.Length;
 
-       //     using (var banco = new Banco())
-       //     {
-       //         //if (!completo)
-       //         //{
-       //         //	banco.ExecuteNonQuery(@"
-       //         //		DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
+        //     using (var banco = new Banco())
+        //     {
+        //         //if (!completo)
+        //         //{
+        //         //	banco.ExecuteNonQuery(@"
+        //         //		DELETE FROM cf_despesa where ano=" + DateTime.Now.Year + @";
 
-       //         //		-- select max(id)+1 from cf_despesa
-       //         //		ALTER TABLE cf_despesa AUTO_INCREMENT = 2974353;
-       //         //              ");
-       //         //}
-       //         var dt = banco.GetTable("select id, hash from cf_despesa where ano=" + ano);
+        //         //		-- select max(id)+1 from cf_despesa
+        //         //		ALTER TABLE cf_despesa AUTO_INCREMENT = 2974353;
+        //         //              ");
+        //         //}
+        //         var dt = banco.GetTable("select id, hash from cf_despesa where ano=" + ano);
 
-       //         LimpaDespesaTemporaria(banco);
+        //         LimpaDespesaTemporaria(banco);
 
-       //         using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
-       //         {
-       //             int count = 0;
+        //         using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
+        //         {
+        //             int count = 0;
 
-       //             while (!reader.EndOfStream)
-       //             {
-       //                 count++;
+        //             while (!reader.EndOfStream)
+        //             {
+        //                 count++;
 
-       //                 var linha = reader.ReadLine();
-       //                 if (string.IsNullOrEmpty(linha))
-       //                     continue;
+        //                 var linha = reader.ReadLine();
+        //                 if (string.IsNullOrEmpty(linha))
+        //                     continue;
 
-       //                 List<string> valores;
-       //                 if (count == 1)
-       //                 {
-       //                     valores = linha.Split(';').ToList();
+        //                 List<string> valores;
+        //                 if (count == 1)
+        //                 {
+        //                     valores = linha.Split(';').ToList();
 
-       //                     for (int i = 0; i < totalColunas - 1; i++)
-       //                     {
-       //                         if (valores[i] != ColunasCEAP[i])
-       //                         {
-       //                             throw new Exception("Mudança de integração detectada para o Câmara Federal");
-       //                         }
-       //                     }
+        //                     for (int i = 0; i < totalColunas - 1; i++)
+        //                     {
+        //                         if (valores[i] != ColunasCEAP[i])
+        //                         {
+        //                             throw new Exception("Mudança de integração detectada para o Câmara Federal");
+        //                         }
+        //                     }
 
-       //                     // Pular linha de titulo
-       //                     continue;
-       //                 }
+        //                     // Pular linha de titulo
+        //                     continue;
+        //                 }
 
-       //                 valores = linha.Split(new[] { ";" }, StringSplitOptions.None).ToList();
-       //                 for (int i = 0; i < totalColunas; i++)
-       //                 {
-       //                     if (ColunasCEAP[i] == "dataEmissao")
-       //                     {
-       //                         banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : Convert.ToDateTime(valores[i]).ToString("yyyy-MM-dd"));
-       //                     }
-       //                     else if (!ColunasCEAP[i].StartsWith("tx") && !ColunasCEAP[i].StartsWith("sg"))
-       //                     {
-       //                         if (ColunasCEAP[i] == "valorLiquido" && valores[i] == "-0")
-       //                         {
-       //                             // Valor liquido deve ser calculado pelo valorDocumento-valorGlosa-restituicao
-       //                             banco.AddParameter(ColunasCEAP[i], null);
-       //                         }
-       //                         else
-       //                         {
-       //                             //OBS: Necessario dar replace para o caso do restituicao que esta vindo com o separador trocado.
-       //                             banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : (object)Convert.ToDecimal(valores[i].Replace(".", ",")));
-       //                         }
-       //                     }
-       //                     else
-       //                     {
-       //                         banco.AddParameter(ColunasCEAP[i], valores[i].ToUpper());
-       //                     }
-       //                 }
+        //                 valores = linha.Split(new[] { ";" }, StringSplitOptions.None).ToList();
+        //                 for (int i = 0; i < totalColunas; i++)
+        //                 {
+        //                     if (ColunasCEAP[i] == "dataEmissao")
+        //                     {
+        //                         banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : Convert.ToDateTime(valores[i]).ToString("yyyy-MM-dd"));
+        //                     }
+        //                     else if (!ColunasCEAP[i].StartsWith("tx") && !ColunasCEAP[i].StartsWith("sg"))
+        //                     {
+        //                         if (ColunasCEAP[i] == "valorLiquido" && valores[i] == "-0")
+        //                         {
+        //                             // Valor liquido deve ser calculado pelo valorDocumento-valorGlosa-restituicao
+        //                             banco.AddParameter(ColunasCEAP[i], null);
+        //                         }
+        //                         else
+        //                         {
+        //                             //OBS: Necessario dar replace para o caso do restituicao que esta vindo com o separador trocado.
+        //                             banco.AddParameter(ColunasCEAP[i], string.IsNullOrEmpty(valores[i]) ? null : (object)Convert.ToDecimal(valores[i].Replace(".", ",")));
+        //                         }
+        //                     }
+        //                     else
+        //                     {
+        //                         banco.AddParameter(ColunasCEAP[i], valores[i].ToUpper());
+        //                     }
+        //                 }
 
-       //                 string hash = banco.ParametersHash();
+        //                 string hash = banco.ParametersHash();
 
-       //                 var lstDr = dt.Select("hash='" + hash + "'");
-       //                 if (lstDr.Length > 0)
-       //                 {
-       //                     dt.Rows.Remove(lstDr[0]);
-       //                     banco.ClearParameters();
-       //                     continue;
-       //                 }
+        //                 var lstDr = dt.Select("hash='" + hash + "'");
+        //                 if (lstDr.Length > 0)
+        //                 {
+        //                     dt.Rows.Remove(lstDr[0]);
+        //                     banco.ClearParameters();
+        //                     continue;
+        //                 }
 
-       //                 banco.AddParameter("hash", hash);
+        //                 banco.AddParameter("hash", hash);
 
-       //                 banco.ExecuteNonQuery(
-       //                     @"INSERT INTO cf_despesa_temp (
-							//	txNomeParlamentar, numeroDeputadoID, numeroCarteiraParlamentar, legislatura, siglaUF, 
-							//	siglaPartido, codigoLegislatura, numeroSubCota, txtDescricao, numeroEspecificacaoSubCota, 
-							//	txtDescricaoEspecificacao, fornecedor, cnpjCPF, numero, tipoDocumento, 
-							//	dataEmissao, valorDocumento, valorGlosa, valorLiquido, mes, 
-							//	ano, parcela, passageiro, trecho, lote, 
-							//	ressarcimento, restituicao, numeroDeputadoID, idDocumento, hash
-							//) VALUES (
-							//	@txNomeParlamentar, @numeroDeputadoID, @numeroCarteiraParlamentar, @legislatura, @siglaUF, 
-							//	@siglaPartido, @codigoLegislatura, @numeroSubCota, @txtDescricao, @numeroEspecificacaoSubCota, 
-							//	@txtDescricaoEspecificacao, @fornecedor, @cnpjCPF, @numero, @tipoDocumento, 
-							//	@dataEmissao, @valorDocumento, @valorGlosa, @valorLiquido, @mes, 
-							//	@ano, @parcela, @passageiro, @trecho, @lote, 
-							//	@ressarcimento, @restituicao, @numeroDeputadoID, @idDocumento, @hash
-							//)");
+        //                 banco.ExecuteNonQuery(
+        //                     @"INSERT INTO cf_despesa_temp (
+        //	txNomeParlamentar, numeroDeputadoID, numeroCarteiraParlamentar, legislatura, siglaUF, 
+        //	siglaPartido, codigoLegislatura, numeroSubCota, txtDescricao, numeroEspecificacaoSubCota, 
+        //	txtDescricaoEspecificacao, fornecedor, cnpjCPF, numero, tipoDocumento, 
+        //	dataEmissao, valorDocumento, valorGlosa, valorLiquido, mes, 
+        //	ano, parcela, passageiro, trecho, lote, 
+        //	ressarcimento, restituicao, numeroDeputadoID, idDocumento, hash
+        //) VALUES (
+        //	@txNomeParlamentar, @numeroDeputadoID, @numeroCarteiraParlamentar, @legislatura, @siglaUF, 
+        //	@siglaPartido, @codigoLegislatura, @numeroSubCota, @txtDescricao, @numeroEspecificacaoSubCota, 
+        //	@txtDescricaoEspecificacao, @fornecedor, @cnpjCPF, @numero, @tipoDocumento, 
+        //	@dataEmissao, @valorDocumento, @valorGlosa, @valorLiquido, @mes, 
+        //	@ano, @parcela, @passageiro, @trecho, @lote, 
+        //	@ressarcimento, @restituicao, @numeroDeputadoID, @idDocumento, @hash
+        //)");
 
-       //                 //if (++linhaAtual == 10000)
-       //                 //{
-       //                 //	linhaAtual = 0;
+        //                 //if (++linhaAtual == 10000)
+        //                 //{
+        //                 //	linhaAtual = 0;
 
-       //                 //	ProcessarDespesasTemp(banco, true);
-       //                 //}
-       //             }
-       //         }
+        //                 //	ProcessarDespesasTemp(banco, true);
+        //                 //}
+        //             }
+        //         }
 
-       //         ProcessarDespesasTemp(banco);
+        //         ProcessarDespesasTemp(banco);
 
-       //         foreach (DataRow dr in dt.Rows)
-       //         {
-       //             banco.AddParameter("id", dr["id"].ToString());
-       //             banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
-       //         }
-       //     }
+        //         foreach (DataRow dr in dt.Rows)
+        //         {
+        //             banco.AddParameter("id", dr["id"].ToString());
+        //             banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
+        //         }
+        //     }
 
-       //     if (ano == DateTime.Now.Year)
-       //     {
-       //         AtualizaDeputadoValores();
+        //     if (ano == DateTime.Now.Year)
+        //     {
+        //         AtualizaDeputadoValores();
 
-       //         AtualizaCampeoesGastos();
+        //         AtualizaCampeoesGastos();
 
-       //         AtualizaResumoMensal();
+        //         AtualizaResumoMensal();
 
-       //         using (var banco = new Banco())
-       //         {
-       //             banco.ExecuteNonQuery(@"
-				   //     UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
-			    //    ");
-       //         }
-       //     }
-       // }
+        //         using (var banco = new Banco())
+        //         {
+        //             banco.ExecuteNonQuery(@"
+        //     UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
+        //    ");
+        //         }
+        //     }
+        // }
 
         private static string ProcessarDespesasTemp(Banco banco)
         {
@@ -1550,6 +1668,25 @@ namespace OPS.ImportacaoDados
             banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
 
+				UPDATE cf_mandato m 
+                INNER JOIN ( 
+	                select distinct 
+	                numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
+	                from cf_despesa_temp
+                ) dt ON m.id_cf_deputado = dt.numeroDeputadoID 
+	                AND m.id_legislatura = dt.codigoLegislatura 
+                left join estado e on e.sigla = dt.siglaUF
+                left join partido p on p.sigla = dt.siglaPartido
+                SET m.id_carteira_parlamantar = numeroCarteiraParlamentar
+                where dt.codigoLegislatura <> 0
+                AND m.id_carteira_parlamantar IS NULL;
+
+                SET SQL_BIG_SELECTS=0;
+			");
+
+            banco.ExecuteNonQuery(@"
+                SET SQL_BIG_SELECTS=1;
+
 				INSERT INTO cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
 				select distinct dt.numeroDeputadoID, codigoLegislatura, numeroCarteiraParlamentar, e.id, p.id 
 				from ( 
@@ -1561,7 +1698,7 @@ namespace OPS.ImportacaoDados
 				left join partido p on p.sigla = dt.siglaPartido
 				left join cf_mandato m on m.id_cf_deputado = dt.numeroDeputadoID 
 					AND m.id_legislatura = dt.codigoLegislatura 
-					AND m.id_carteira_parlamantar = numeroCarteiraParlamentar
+					-- AND m.id_carteira_parlamantar = numeroCarteiraParlamentar
 				where dt.codigoLegislatura <> 0
 				AND m.id is null;
 
@@ -1702,109 +1839,109 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-       // private static void InsereDespesaFinalParcial(Banco banco)
-       // {
-       //     var dt = banco.GetTable(
-       //         @"SET SQL_BIG_SELECTS=1;
+        // private static void InsereDespesaFinalParcial(Banco banco)
+        // {
+        //     var dt = banco.GetTable(
+        //         @"SET SQL_BIG_SELECTS=1;
 
-       //         DROP TABLE IF EXISTS table_in_memory_d;
-       //         CREATE TEMPORARY TABLE table_in_memory_d
-       //         AS (
-	      //          select id_cf_deputado, mes, sum(valor_liquido) as total
-	      //          from cf_despesa d
-	      //          where ano = 2017
-	      //          GROUP BY id_cf_deputado, mes
-       //         );
+        //         DROP TABLE IF EXISTS table_in_memory_d;
+        //         CREATE TEMPORARY TABLE table_in_memory_d
+        //         AS (
+        //          select id_cf_deputado, mes, sum(valor_liquido) as total
+        //          from cf_despesa d
+        //          where ano = 2017
+        //          GROUP BY id_cf_deputado, mes
+        //         );
 
-       //         DROP TABLE IF EXISTS table_in_memory_dt;
-       //         CREATE TEMPORARY TABLE table_in_memory_dt
-       //         AS (
-	      //          select numeroDeputadoID, mes, sum(valorLiquido) as total
-	      //          from cf_despesa_temp d
-	      //          GROUP BY numeroDeputadoID, mes
-       //         );
+        //         DROP TABLE IF EXISTS table_in_memory_dt;
+        //         CREATE TEMPORARY TABLE table_in_memory_dt
+        //         AS (
+        //          select numeroDeputadoID, mes, sum(valorLiquido) as total
+        //          from cf_despesa_temp d
+        //          GROUP BY numeroDeputadoID, mes
+        //         );
 
-       //         select dt.numeroDeputadoID as id_cf_deputado, dt.mes as mes
-       //         from table_in_memory_dt dt
-       //         left join table_in_memory_d d on dt.numeroDeputadoID = d.id_cf_deputado and dt.mes = d.mes
-       //         where (d.id_cf_deputado or d.total <> dt.total)
-       //         order by d.id_cf_deputado, d.mes;
+        //         select dt.numeroDeputadoID as id_cf_deputado, dt.mes as mes
+        //         from table_in_memory_dt dt
+        //         left join table_in_memory_d d on dt.numeroDeputadoID = d.id_cf_deputado and dt.mes = d.mes
+        //         where (d.id_cf_deputado or d.total <> dt.total)
+        //         order by d.id_cf_deputado, d.mes;
 
-       //         SET SQL_BIG_SELECTS=0;
-			    //", 3600);
+        //         SET SQL_BIG_SELECTS=0;
+        //", 3600);
 
-       //     foreach (DataRow dr in dt.Rows)
-       //     {
-       //         banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
-       //         banco.AddParameter("mes", dr["mes"]);
-       //         banco.ExecuteNonQuery(
-       //             @"DELETE FROM cf_despesa WHERE id_cf_deputado=@id_cf_deputado and ano=2017 and mes=@mes");
+        //     foreach (DataRow dr in dt.Rows)
+        //     {
+        //         banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
+        //         banco.AddParameter("mes", dr["mes"]);
+        //         banco.ExecuteNonQuery(
+        //             @"DELETE FROM cf_despesa WHERE id_cf_deputado=@id_cf_deputado and ano=2017 and mes=@mes");
 
-       //         banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
-       //         banco.AddParameter("mes", dr["mes"]);
-       //         banco.ExecuteNonQuery(@"
-       //                 SET SQL_BIG_SELECTS=1;
+        //         banco.AddParameter("id_cf_deputado", dr["id_cf_deputado"]);
+        //         banco.AddParameter("mes", dr["mes"]);
+        //         banco.ExecuteNonQuery(@"
+        //                 SET SQL_BIG_SELECTS=1;
 
-				   //     INSERT INTO cf_despesa (
-					  //      id_documento,
-					  //      id_cf_deputado,
-					  //      id_cf_mandato,
-					  //      id_cf_despesa_tipo,
-					  //      id_cf_especificacao,
-					  //      id_fornecedor,
-					  //      nome_passageiro,
-					  //      numero_documento,
-					  //      tipo_documento,
-					  //      data_emissao,
-					  //      valor_documento,
-					  //      valor_glosa,
-					  //      valor_liquido,
-					  //      valor_restituicao,
-					  //      mes,
-					  //      ano,
-					  //      parcela,
-					  //      trecho_viagem,
-					  //      lote,
-					  //      ressarcimento,
-					  //      ano_mes
-				   //     )
-				   //     select 
-						 //   dt.idDocumento,
-						 //   dt.numeroDeputadoID,
-						 //   m.id,
-						 //   numeroSubCota,
-						 //   numeroEspecificacaoSubCota,
-						 //   f.id,
-						 //   passageiro, -- id_passageiro,
-						 //   numero,
-						 //   tipoDocumento,
-						 //   dataEmissao,
-						 //   valorDocumento,
-						 //   valorGlosa,
-						 //   valorLiquido,
-						 //   restituicao,
-						 //   mes,
-						 //   ano,
-						 //   parcela,
-						 //   trecho,
-						 //   lote,
-						 //   ressarcimento,
-						 //   concat(ano, LPAD(mes, 2, '0'))
-					  //  from (
-						 //   select *					        
-						 //   from cf_despesa_temp dt
-						 //   WHERE numeroDeputadoID=@id_cf_deputado and mes=@mes
-					  //  ) dt
-				   //     LEFT join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
-					  //      or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome = dt.fornecedor)
-				   //     left join cf_mandato m on m.id_cf_deputado = dt.numeroDeputadoID
-					  //      and m.id_legislatura = dt.codigoLegislatura 
-					  //      and m.id_carteira_parlamantar = numeroCarteiraParlamentar;
+        //     INSERT INTO cf_despesa (
+        //      id_documento,
+        //      id_cf_deputado,
+        //      id_cf_mandato,
+        //      id_cf_despesa_tipo,
+        //      id_cf_especificacao,
+        //      id_fornecedor,
+        //      nome_passageiro,
+        //      numero_documento,
+        //      tipo_documento,
+        //      data_emissao,
+        //      valor_documento,
+        //      valor_glosa,
+        //      valor_liquido,
+        //      valor_restituicao,
+        //      mes,
+        //      ano,
+        //      parcela,
+        //      trecho_viagem,
+        //      lote,
+        //      ressarcimento,
+        //      ano_mes
+        //     )
+        //     select 
+        //   dt.idDocumento,
+        //   dt.numeroDeputadoID,
+        //   m.id,
+        //   numeroSubCota,
+        //   numeroEspecificacaoSubCota,
+        //   f.id,
+        //   passageiro, -- id_passageiro,
+        //   numero,
+        //   tipoDocumento,
+        //   dataEmissao,
+        //   valorDocumento,
+        //   valorGlosa,
+        //   valorLiquido,
+        //   restituicao,
+        //   mes,
+        //   ano,
+        //   parcela,
+        //   trecho,
+        //   lote,
+        //   ressarcimento,
+        //   concat(ano, LPAD(mes, 2, '0'))
+        //  from (
+        //   select *					        
+        //   from cf_despesa_temp dt
+        //   WHERE numeroDeputadoID=@id_cf_deputado and mes=@mes
+        //  ) dt
+        //     LEFT join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
+        //      or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome = dt.fornecedor)
+        //     left join cf_mandato m on m.id_cf_deputado = dt.numeroDeputadoID
+        //      and m.id_legislatura = dt.codigoLegislatura 
+        //      and m.id_carteira_parlamantar = numeroCarteiraParlamentar;
 
-       //                 SET SQL_BIG_SELECTS=0;
-			    //    ", 3600);
-       //     }
-       // }
+        //                 SET SQL_BIG_SELECTS=0;
+        //    ", 3600);
+        //     }
+        // }
 
         private static void LimpaDespesaTemporaria(Banco banco)
         {

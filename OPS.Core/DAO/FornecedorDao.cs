@@ -691,8 +691,19 @@ namespace OPS.Core.DAO
             {
                 if (!string.IsNullOrEmpty(cnpj))
                 {
-                    banco.AddParameter("cnpj", Utils.RemoveCaracteresNaoNumericos(cnpj));
-                    sSql += " AND cnpj_cpf = @cnpj";
+                    cnpj = Utils.RemoveCaracteresNaoNumericos(cnpj);
+
+                    if (cnpj.Length == 14 || cnpj.Length == 11)
+                    {
+                        banco.AddParameter("cnpj", cnpj);
+                        sSql += " AND cnpj_cpf = @cnpj";
+                    }
+                    else
+                    {
+                        banco.AddParameter("cnpj", cnpj + "%");
+                        sSql += " AND cnpj_cpf like @cnpj";
+                    }
+                    
                 }
                 else
                 {

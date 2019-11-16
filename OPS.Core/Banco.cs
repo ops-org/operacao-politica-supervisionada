@@ -87,7 +87,7 @@ namespace OPS.Core
             return true;
         }
 
-        public object ExecuteScalar(string sql, int timeOut = 60)
+        public object ExecuteScalar(string sql, int timeOut = 600)
         {
             if (_mCommand == null)
                 _mCommand = _mConnection.CreateCommand();
@@ -109,7 +109,7 @@ namespace OPS.Core
             return _mCommand.ExecuteScalar();
         }
 
-        public MySqlDataReader ExecuteReader(string sql, int timeOut = 60)
+        public MySqlDataReader ExecuteReader(string sql, int timeOut = 600)
         {
             if (_mCommand == null)
                 _mCommand = _mConnection.CreateCommand();
@@ -131,7 +131,7 @@ namespace OPS.Core
             return _mCommand.ExecuteReader();
         }
 
-        public async Task<DbDataReader> ExecuteReaderAsync(string sql, int timeOut = 60)
+        public async Task<DbDataReader> ExecuteReaderAsync(string sql, int timeOut = 600)
         {
             if (_mCommand == null)
                 _mCommand = _mConnection.CreateCommand();
@@ -153,7 +153,7 @@ namespace OPS.Core
             return await _mCommand.ExecuteReaderAsync();
         }
 
-        public DataTable GetTable(string sql, int timeOut = 60)
+        public DataTable GetTable(string sql, int timeOut = 600)
         {
             DataTable table;
 
@@ -229,6 +229,15 @@ namespace OPS.Core
         public void ClearParameters()
         {
             _mParametros.Clear();
+        }
+
+        public void ResetConnection()
+        {
+            _mCommand = null;
+            _mConnection = new MySqlConnection(Padrao.ConnectionString);
+            _mConnection.Open();
+
+            _mBeginTransaction = false;
         }
     }
 }

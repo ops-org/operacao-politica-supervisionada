@@ -104,6 +104,9 @@ var app;
                 .when("/senador/:id", { templateUrl: "app/auditoria/senador-detalhes" })
                 .when("/senador", { templateUrl: "app/auditoria/senador-lista" })
 
+                .when("/deputado-estadual/:id", { templateUrl: "app/auditoria/deputado-estadual-detalhes" })
+                .when("/deputado-estadual", { templateUrl: "app/auditoria/deputado-estadual-lista" })
+
                 .when("/fornecedor/:id", { templateUrl: "app/auditoria/fornecedor" })
 
                 //.when("/forum", { templateUrl: "app/forum" })

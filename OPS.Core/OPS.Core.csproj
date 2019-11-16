@@ -136,6 +136,7 @@
     <Compile Include="DAO\FornecedorDao.cs" />
     <Compile Include="DAO\ParametrosDao.cs" />
     <Compile Include="DAO\PartidoDao.cs" />
+    <Compile Include="DAO\DeputadoEstadualDao.cs" />
     <Compile Include="DAO\SenadorDao.cs" />
     <Compile Include="DbExtensions.cs" />
     <Compile Include="DTO\DenunciaComentarioDTO.cs" />

@@ -447,7 +447,7 @@ namespace OPS.Core.DAO
 						d.id as id_cf_deputado
 						, d.nome_parlamentar 
 						, d.nome_civil
-						, m.valor_total_ceap
+						, d.valor_total_ceap
 						, d.id_partido
 						, p.sigla as sigla_partido
 						, p.nome as nome_partido
@@ -1208,14 +1208,17 @@ namespace OPS.Core.DAO
                     {
                         using (Banco banco = new Banco())
                         {
-                            var id_fornecedor =
-                                banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + "'");
+                            var id_fornecedor = banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + "'");
 
                             if (!Convert.IsDBNull(id_fornecedor))
                             {
                                 sqlSelect.AppendLine("	AND l.id_fornecedor =" + id_fornecedor + " ");
                             }
                         }
+                    }
+                    else if (filtro.Fornecedor.Length == 8) //CNPJ raiz
+                    {
+                        sqlSelect.AppendLine("	AND l.id_fornecedor IN (select id from fornecedor where cnpj_cpf like '" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + "%')");
                     }
                     else
                     {
@@ -1633,7 +1636,7 @@ namespace OPS.Core.DAO
                             presenca = presenca,
                             presenca_percentual = presenca > 0 ? Utils.FormataValor((decimal)presenca * 100 / total) : "",
                             ausencia = ausencia,
-                            ausencia_percentual = ausencia> 0 ? Utils.FormataValor((decimal)ausencia * 100 / total) : "",
+                            ausencia_percentual = ausencia > 0 ? Utils.FormataValor((decimal)ausencia * 100 / total) : "",
                             ausencia_justificada = ausencia_justificada,
                             ausencia_justificada_percentual = ausencia_justificada > 0 ? Utils.FormataValor((decimal)ausencia_justificada * 100 / total) : "",
                             total = total

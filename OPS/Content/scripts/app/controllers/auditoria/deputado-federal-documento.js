@@ -24,13 +24,12 @@ app.controller('DeputadoDocumentoVisualizarController', ["$scope", "$api", "$rou
 
             if (doc.link === 2) { //NF-e
                 $scope.documento.url_documento = url_camara + 'nota-fiscal-eletronica?ideDocumentoFiscal=' + doc.id_documento;
-            } else /*if (doc.link == 2)*/ {
+            } else if (doc.link === 3) {
                 $scope.documento.url_documento = url_camara + 'documentos/publ/' + doc.id_deputado + '/' + doc.ano + '/' + doc.id_documento + '.pdf';
-            }
-
-            if (doc.link === 0) {
+            } else if (doc.link !== 1) {
                 $scope.documento.url_documento_nfe = url_camara + 'nota-fiscal-eletronica?ideDocumentoFiscal=' + doc.id_documento;
-            }
+                $scope.documento.url_documento = url_camara + 'documentos/publ/' + doc.id_deputado + '/' + doc.ano + '/' + doc.id_documento + '.pdf';
+            } 
 
             $scope.documento.url_demais_documentos_mes = url_camara + 'sumarizado?nuDeputadoId=' + doc.id_deputado + '&dataInicio=' + doc.mes + '/' + doc.ano + '&dataFim=' + doc.mes + '/' + doc.ano + '&despesa=' + doc.id_cf_despesa_tipo + '&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf='
             $scope.documento.url_detalhes_documento = url_camara + 'documento?nuDeputadoId=' + doc.id_deputado + '&numMes=' + doc.mes + '&numAno=' + doc.ano + '&despesa=' + doc.id_cf_despesa_tipo + '&cnpjFornecedor=' + doc.cnpj_cpf + '&idDocumento=' + doc.numero_documento
@@ -39,5 +38,5 @@ app.controller('DeputadoDocumentoVisualizarController', ["$scope", "$api", "$rou
             $scope.documento.url_documentos_Deputado_beneficiario = './#!/deputado-federal?IdParlamentar=' + doc.id_cf_deputado + '&Fornecedor=' + doc.id_fornecedor + '&Periodo=0&Agrupamento=6';
         });
 
-        
+
     }]);
