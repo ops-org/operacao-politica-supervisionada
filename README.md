@@ -1,12 +1,12 @@
 
-![Operação Política Supervisionada](https://github.com/ops-org/operacao-politica-supervisionada/blob/master/OPS/Content/images/logo_grande.png?raw=true)
+![Operação Política Supervisionada](https://github.com/ops-org/operacao-politica-supervisionada/blob/master/OPS/wwwroot/images/logo_grande.png?raw=true)
 
 ## Operação Política Supervisionada
 
 **Sistema para auditoria pública de gastos com a Cota para Exercício da Atividade Parlamentar dos Deputados Federais e Senadores.**
 
 [![Crates.io](https://img.shields.io/crates/l/rustc-serialize.svg?maxAge=2592000)]()
-![PHP](https://img.shields.io/badge/language-ASP.MVC-green.svg)
+![.NET Core](https://img.shields.io/badge/language-NET.Core-green.svg)
 ![MySQL](https://img.shields.io/badge/DB-MySQL-lightgrey.svg)
 
 ## Quem?
