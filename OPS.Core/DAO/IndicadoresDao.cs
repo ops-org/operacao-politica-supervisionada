@@ -1,11 +1,10 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Text;
-using MySql.Data.MySqlClient;
 
 namespace OPS.Core.DAO
 {
-	public static class IndicadoresDao
+    public static class IndicadoresDao
 	{
 		/// <summary>
 		/// Retorna resumo (8 Itens) dos parlamentares mais e menos gastadores
@@ -60,8 +59,8 @@ namespace OPS.Core.DAO
 
 					return new
 					{
-						CamaraFederal = lstDeputados,
-						Senado = lstSenadores
+						camara_federal = lstDeputados,
+						senado = lstSenadores
 					};
 				}
 			}

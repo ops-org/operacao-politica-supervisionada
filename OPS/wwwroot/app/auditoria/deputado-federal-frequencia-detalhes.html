@@ -1,0 +1,33 @@
+﻿<style type="text/css">
+    .presenca { background-color: #7cb5ec; }
+    .ausencia-justificada { background-color: #e4d354; }
+    .ausencia { background-color: #f15c80; }
+</style>
+<div class="container" data-ng-controller="DeputadoFederalFrequenciaDetalhesController">
+    <h3 class="page-title">Frequência nas sessões plenárias da Câmara Federal</h3>
+
+    <!--TODO: Adicionar Informação da Sessão-->
+
+    <div class="table-responsive scroll-mark">
+        <table ng-table="tableParams" class="table table-striped table-hover table-sm">
+            <tr ng-repeat="row in $data">
+                <td data-title="'Parlamentar'"><a href="./#!/deputado-federal/{{::row.id_cf_deputado}}">{{::row.nome_parlamentar}}</a></td>
+                <td data-title="'Frequência'">
+                    <span class="badge" ng-class="{ 'presenca': row.id_presenca==1, 'ausencia-justificada': row.id_presenca==2, 'ausencia': row.id_presenca==3 }">
+                        <i data-ng-if="row.id_presenca==1" class="fa fa-check"></i>
+                        <i data-ng-if="row.id_presenca==2" class="fa fa-times"></i>
+                        <i data-ng-if="row.id_presenca==3" class="fa fa-times"></i>
+                    </span>
+                    &nbsp;
+                    {{::row.presenca}}
+                </td>
+                <td data-title="'Justificativa'">{{::row.justificativa}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!--<p>
+        Fonte: <a target="_blank" href="http://www2.camara.leg.br/atividade-legislativa/plenario/resultadoVotacao"  onclick="return trackOutboundLink(this, true);">Câmara de Deputados - Resultado da votação eletrônica e lista de presença</a>
+    </p>-->
+</div>
+

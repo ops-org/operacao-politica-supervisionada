@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -314,7 +315,7 @@ namespace OPS.ImportacaoDados
         public static string ImportarDespesas(string atualDir, int ano, bool completo)
         {
             var downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
-            var fullFileNameCsv = atualDir + @"\" + ano + ".csv";
+            var fullFileNameCsv = System.IO.Path.Combine(atualDir, ano + ".csv");
 
             if (!Directory.Exists(atualDir))
                 Directory.CreateDirectory(atualDir);
@@ -374,6 +375,7 @@ namespace OPS.ImportacaoDados
 
         private static string CarregaDadosCsv(string file, int ano, bool completo)
         {
+            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var sb = new StringBuilder();
             string sResumoValores = string.Empty;
 
@@ -467,9 +469,9 @@ namespace OPS.ImportacaoDados
                         banco.AddParameter("cnpj_cpf", !string.IsNullOrEmpty(valores[CNPJ_CPF]) ? Utils.RemoveCaracteresNaoNumericos(valores[CNPJ_CPF]) : "");
                         banco.AddParameter("fornecedor", valores[FORNECEDOR]);
                         banco.AddParameter("documento", valores[DOCUMENTO]);
-                        banco.AddParameter("data", !string.IsNullOrEmpty(valores[DATA]) ? (object)Convert.ToDateTime(valores[DATA]) : DBNull.Value);
+                        banco.AddParameter("data", !string.IsNullOrEmpty(valores[DATA]) ? (object)Convert.ToDateTime(valores[DATA], cultureInfo) : DBNull.Value);
                         banco.AddParameter("detalhamento", valores[DETALHAMENTO]);
-                        banco.AddParameter("valor_reembolsado", Convert.ToDouble(valores[VALOR_REEMBOLSADO]));
+                        banco.AddParameter("valor_reembolsado", Convert.ToDouble(valores[VALOR_REEMBOLSADO], cultureInfo));
 
                         string hash = banco.ParametersHash();
                         if (lstHash.Remove(hash))
@@ -813,7 +815,7 @@ namespace OPS.ImportacaoDados
                 foreach (DataRow row in table.Rows)
                 {
                     string id = row["id"].ToString();
-                    string url = "http://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
+                    string url = "https://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
                     string src = dirRaiz + id + ".jpg";
                     if (File.Exists(src)) continue;
 

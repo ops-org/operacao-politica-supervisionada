@@ -1,0 +1,46 @@
+﻿<div class="container-fluid">
+    <fieldset>
+        <legend>Denúncias</legend>
+        <form>
+            <div class="text-center form-group">
+                <label class="checkbox-inline">
+                    <label><input type="checkbox" data-ng-model="filtro.AguardandoRevisao">Aguardando Revisão</label>
+                </label>
+                <label class="checkbox-inline">
+                    <label><input type="checkbox" data-ng-model="filtro.PendenteInformacao">Pendente Informação</label>
+                </label>
+                <label class="checkbox-inline">
+                    <label><input type="checkbox" data-ng-model="filtro.Duvidoso">Duvidoso</label>
+                </label>
+                <label class="checkbox-inline">
+                    <label><input type="checkbox" data-ng-model="filtro.Dossie">Dossiê</label>
+                </label>
+                <label class="checkbox-inline">
+                    <label><input type="checkbox" data-ng-model="filtro.Repetido">Repetido</label>
+                </label>
+                <label class="checkbox-inline">
+                    <label><input type="checkbox" data-ng-model="filtro.NaoProcede">Não Procede</label>
+                </label>
+            </div>
+            <div class="text-center form-group">
+                <input type="button" value="Filtrar" class="btn btn-danger btn-sm" data-ng-click="BuscaGrid()">
+            </div>
+        </form>
+
+        <div class="table-responsive scroll-mark">
+            <table ng-table="tableParams" class="table table-striped table-hover table-sm">
+                <tr ng-repeat="row in $data">
+                    <td data-title="'Código'" style="width:5%" sortable="'codigo'"><a href="./#!/denuncia/{{::row.id_denuncia}}">{{::row.codigo}}</a></td>
+                    <td data-title="'CNPJ/CPF'" style="width:10%" sortable="'cnpj_cpf'">{{::row.cnpj_cpf}}</td>
+                    <td data-title="'Razão social'" style="width:auto" sortable="'nome_fornecedor'">{{::row.nome_fornecedor}}</td>
+                    <td data-title="'Data da denúncia'" style="width:15%" sortable="'data_denuncia'">{{::row.data_denuncia}}</td>
+                    <td data-title="'Situação'" style="width:15%" sortable="'situacao'">{{::row.situacao}}</td>
+                    <td data-title="'Usuário'" style="width:5%" sortable="'nome_usuario_denuncia'">{{::row.nome_usuario_denuncia}}</td>
+                    <td data-title="'Revisor'" style="width:5%" sortable="'nome_usuario_auditoria'">{{::row.nome_usuario_auditoria}}</td>
+                </tr>
+                <tr><td colspan="7" class="text-center" data-ng-if="$data.length===0">{{$data.lenght}}Você ainda não fez nenhuma denúncia!</td></tr>
+            </table>
+        </div>
+    </fieldset>
+</div>
+

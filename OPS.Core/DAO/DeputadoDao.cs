@@ -10,7 +10,7 @@ namespace OPS.Core.DAO
 {
     public class DeputadoDao
     {
-        public dynamic Consultar(int id)
+        public async Task<dynamic> Consultar(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -51,9 +51,9 @@ namespace OPS.Core.DAO
 				");
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    if (reader.Read())
+                    if (await reader.ReadAsync())
                     {
                         return new
                         {
@@ -90,7 +90,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic MaioresFornecedores(int id)
+        public async Task<dynamic> MaioresFornecedores(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -118,10 +118,10 @@ namespace OPS.Core.DAO
 
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -137,7 +137,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic MaioresNotas(int id)
+        public async Task<dynamic> MaioresNotas(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -166,10 +166,10 @@ namespace OPS.Core.DAO
 
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -359,7 +359,7 @@ namespace OPS.Core.DAO
                 var lstRetorno = new List<dynamic>();
 
                 DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString());
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     lstRetorno.Add(new
                     {
@@ -375,7 +375,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic GastosMensaisPorAno(int id)
+        public async Task<dynamic> GastosMensaisPorAno(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -389,14 +389,14 @@ namespace OPS.Core.DAO
 				");
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
                     string anoControle = string.Empty;
                     bool existeGastoNoAno = false;
 
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         if (reader["ano"].ToString() != anoControle)
                         {
@@ -437,7 +437,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic Lista(FiltroParlamentarDTO filtro)
+        public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -503,12 +503,13 @@ namespace OPS.Core.DAO
 
                 strSql.AppendLine(@"
                     ORDER BY nome_parlamentar
+                    LIMIT 1000
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -532,7 +533,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic Busca(string value)
+        public async Task<dynamic> Busca(string value)
         {
             using (Banco banco = new Banco())
             {
@@ -565,9 +566,9 @@ namespace OPS.Core.DAO
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -588,7 +589,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic Pesquisa()
+        public async Task<dynamic> Pesquisa()
         {
             using (Banco banco = new Banco())
             {
@@ -601,9 +602,9 @@ namespace OPS.Core.DAO
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -617,30 +618,30 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic Lancamentos(FiltroParlamentarDTO filtro)
+        public async Task<dynamic> Lancamentos(FiltroParlamentarDTO filtro)
         {
             if (filtro == null) throw new BusinessException("Parâmetro filtro não informado!");
 
             switch (filtro.Agrupamento)
             {
                 case EnumAgrupamentoAuditoria.Parlamentar:
-                    return LancamentosParlamentar(filtro);
+                    return await LancamentosParlamentar(filtro);
                 case EnumAgrupamentoAuditoria.Despesa:
-                    return LancamentosDespesa(filtro);
+                    return await LancamentosDespesa(filtro);
                 case EnumAgrupamentoAuditoria.Fornecedor:
-                    return LancamentosFornecedor(filtro);
+                    return await LancamentosFornecedor(filtro);
                 case EnumAgrupamentoAuditoria.Partido:
-                    return LancamentosPartido(filtro);
+                    return await LancamentosPartido(filtro);
                 case EnumAgrupamentoAuditoria.Uf:
-                    return LancamentosEstado(filtro);
+                    return await LancamentosEstado(filtro);
                 case EnumAgrupamentoAuditoria.Documento:
-                    return LancamentosNotaFiscal(filtro);
+                    return await LancamentosNotaFiscal(filtro);
             }
 
             throw new BusinessException("Parâmetro filtro.Agrupamento não informado!");
         }
 
-        private dynamic LancamentosParlamentar(FiltroParlamentarDTO filtro)
+        private async Task<dynamic> LancamentosParlamentar(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -688,9 +689,9 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -704,7 +705,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader[0].ToString();
                     string ValorTotal = Utils.FormataValor(reader[1]);
 
@@ -718,7 +719,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        private dynamic LancamentosFornecedor(FiltroParlamentarDTO filtro)
+        private async Task<dynamic> LancamentosFornecedor(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -763,9 +764,9 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -781,7 +782,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader[0].ToString();
                     string ValorTotal = Utils.FormataValor(reader[1]);
 
@@ -795,7 +796,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        private dynamic LancamentosDespesa(FiltroParlamentarDTO filtro)
+        private async Task<dynamic> LancamentosDespesa(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -839,9 +840,9 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -853,7 +854,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader[0].ToString();
                     string ValorTotal = Utils.FormataValor(reader[1]);
 
@@ -867,7 +868,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        private dynamic LancamentosPartido(FiltroParlamentarDTO filtro)
+        private async Task<dynamic> LancamentosPartido(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -917,9 +918,9 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -933,7 +934,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader[0].ToString();
                     string ValorTotal = Utils.FormataValor(reader[1]);
 
@@ -947,7 +948,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        private dynamic LancamentosEstado(FiltroParlamentarDTO filtro)
+        private async Task<dynamic> LancamentosEstado(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -996,9 +997,9 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -1010,7 +1011,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader[0].ToString();
                     string ValorTotal = Utils.FormataValor(reader[1]);
 
@@ -1024,7 +1025,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        private dynamic LancamentosNotaFiscal(FiltroParlamentarDTO filtro)
+        private async Task<dynamic> LancamentosNotaFiscal(FiltroParlamentarDTO filtro)
         {
             var sqlWhere = new StringBuilder();
             AdicionaFiltroPeriodo(filtro, sqlWhere);
@@ -1076,9 +1077,9 @@ namespace OPS.Core.DAO
                 sqlSelect.Append(sqlWhere);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -1097,7 +1098,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader["row_count"].ToString();
                     string ValorTotal = Utils.FormataValor(reader["valor_total"]);
 
@@ -1263,7 +1264,7 @@ namespace OPS.Core.DAO
 				FROM table_in_memory; ");
         }
 
-        public dynamic TipoDespesa()
+        public async Task<dynamic> TipoDespesa()
         {
             using (Banco banco = new Banco())
             {
@@ -1272,9 +1273,9 @@ namespace OPS.Core.DAO
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -1287,7 +1288,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic Secretarios(FiltroParlamentarDTO filtro)
+        public async Task<dynamic> Secretarios(FiltroParlamentarDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -1312,9 +1313,9 @@ namespace OPS.Core.DAO
                 strSql.AppendLine("SELECT FOUND_ROWS(); ");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -1325,7 +1326,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
 
                     return new
                     {
@@ -1336,7 +1337,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic SecretariosPorDeputado(int id)
+        public async Task<dynamic> SecretariosPorDeputado(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -1353,10 +1354,10 @@ namespace OPS.Core.DAO
 				");
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     var lstRetorno = new List<dynamic>();
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -1373,7 +1374,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public object ResumoPresenca(int id)
+        public async Task<dynamic> ResumoPresenca(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -1403,11 +1404,11 @@ namespace OPS.Core.DAO
                 int ausencia_total = 0;
                 int ausencia_justificada_total = 0;
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     if (reader.HasRows)
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             int presenca = Convert.ToInt32(reader["presenca"]);
                             int ausencia = Convert.ToInt32(reader["ausencia"]);
@@ -1481,18 +1482,18 @@ namespace OPS.Core.DAO
 
         }
 
-        public dynamic CamaraResumoMensal()
+        public async Task<dynamic> CamaraResumoMensal()
         {
             using (Banco banco = new Banco())
             {
-                using (MySqlDataReader reader = banco.ExecuteReader(@"select ano, mes, valor from cf_despesa_resumo_mensal"))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(@"select ano, mes, valor from cf_despesa_resumo_mensal"))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
                     string anoControle = string.Empty;
                     bool existeGastoNoAno = false;
 
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         if (reader["ano"].ToString() != anoControle)
                         {
@@ -1532,7 +1533,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic CamaraResumoAnual()
+        public async Task<dynamic> CamaraResumoAnual()
         {
             using (Banco banco = new Banco())
             {
@@ -1546,16 +1547,13 @@ namespace OPS.Core.DAO
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    if (reader.HasRows)
+                    while (await reader.ReadAsync())
                     {
-                        while (reader.Read())
-                        {
 
-                            categories.Add(Convert.ToInt32(reader["ano"]));
-                            series.Add(Convert.ToDecimal(reader["valor"]));
-                        }
+                        categories.Add(Convert.ToInt32(reader["ano"]));
+                        series.Add(Convert.ToDecimal(reader["valor"]));
                     }
                 }
 
@@ -1567,7 +1565,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic Frequencia(FiltroFrequenciaCamaraDTO filtro)
+        public async Task<dynamic> Frequencia(FiltroFrequenciaCamaraDTO filtro)
         {
             var sqlWhere = new StringBuilder();
 
@@ -1610,9 +1608,9 @@ namespace OPS.Core.DAO
                 sqlSelect.Append(sqlWhere);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         string sTipo = "";
                         switch (reader["tipo"].ToString())
@@ -1644,7 +1642,7 @@ namespace OPS.Core.DAO
                     }
 
                     reader.NextResult();
-                    reader.Read();
+                    await reader.ReadAsync();
                     string TotalCount = reader["row_count"].ToString();
 
                     return new
@@ -1657,7 +1655,7 @@ namespace OPS.Core.DAO
         }
 
 
-        public dynamic Frequencia(int id)
+        public async Task<dynamic> Frequencia(int id)
         {
             using (Banco banco = new Banco())
             {
@@ -1677,9 +1675,9 @@ namespace OPS.Core.DAO
 				", id);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         int nPresente = Convert.ToInt32(reader["presente"]);
                         int nPresensaExterna = Convert.ToInt32(reader["presenca_externa"]);

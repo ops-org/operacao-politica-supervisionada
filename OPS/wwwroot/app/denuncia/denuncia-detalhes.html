@@ -1,0 +1,154 @@
+﻿<div id="conteudo" class="container-fluid" style="overflow: auto">
+    <!--<div class="row">
+        <div class="col-md-12">
+            <input type="submit" name="ButtonVoltar" value="Voltar" id="ButtonVoltar" class="btn btn-light btn-sm">
+            <input type="submit" name="ButtonListarDocumentos" value="Solicitar/Listar Documentos" onclick="window.parent.addTabDocumentos('04967361000162','EDUARDO RIBEIRO ADVOCACIA - EPP');return false;" id="ButtonListarDocumentos" class="btn btn-success btn-sm">
+            <input type="submit" name="ButtonFotoIncluir" value="Incluir Pendência" id="ButtonFotoIncluir" class="btn btn-primary btn-sm">
+        </div>
+    </div>-->
+    <div class="card">
+        <div class="card-header bg-light">Detalhes da denúncia</div>
+        <div class="card-body">
+            <div class="row">
+                <br>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">Código:</label>
+                        <span class="show" data-ng-bind="denuncia.codigo"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">Usuário:</label>
+                        <span class="show" data-ng-bind="denuncia.nome_usuario_denuncia"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">Data:</label>
+                        <span class="show" data-ng-bind="denuncia.data_denuncia"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">CNPJ/CPF:</label>
+                        <span class="show" data-ng-bind="denuncia.cnpj_cpf"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">Razão Social:</label>
+
+                        <a class="show" href="./#!/fornecedor/{{::denuncia.id_fornecedor}}" data-ng-bind="denuncia.nome_fornecedor"></a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">Situação:</label>
+                        <span class="show" data-ng-bind="denuncia.situacao_descricao"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="control-label">Denúncia:</label>
+                        <span class="show" data-ng-bind="denuncia.texto"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">Anexos</div>
+        <div class="card-body">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 130px">Data</th>
+                        <th scope="col" style="width: 200px">Usúario</th>
+                        <th scope="col">Anexo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-ng-if="!denuncia.anexos || denuncia.anexos.length === 0">
+                        <td colspan="3" class="text-center">Nenhum anexo para exibir!</td>
+                    </tr>
+                    <tr data-ng-repeat="anexo in denuncia.anexos">
+                        <td>{{::anexo.data}}</td>
+                        <td>{{::anexo.nome_usuario}}</td>
+                        <td><a href="./denuncia_anexo/{{::anexo.nome_arquivo}}">{{::anexo.nome_arquivo}}</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">Comentários</div>
+        <div class="card-body">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 130px">Data</th>
+                        <th scope="col" style="width: 200px">Usuário</th>
+                        <th scope="col">Comentário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-ng-if="!denuncia.mensagens || denuncia.mensagens.length === 0">
+                        <td colspan="3" class="text-center">Nenhum comentário para exibir!</td>
+                    </tr>
+                    <tr data-ng-repeat="mensagem in denuncia.mensagens">
+                        <td>{{::mensagem.data}}</td>
+                        <td>{{::mensagem.nome_usuario}}</td>
+                        <td>{{::mensagem.texto}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">Deixar um comentário</div>
+        <div class="card-body">
+            <form name="Form" id="form" novalidate ng-submit="form.submit(Form)" autocomplete="off">
+                <div class="form-group" data-ng-show="authentication.userRoles.indexOf('2')!==-1">
+                    <select data-ng-model="novo_comentario.situacao" class="form-control input-sm">
+                        <option value="A">Aguardando Revisão</option>
+                        <option value="I">Pendente Informação</option>
+                        <option value="P">Caso Duvidoso</option>
+                        <option value="D">Caso Dossiê</option>
+                        <option value="R">Caso Repetido</option>
+                        <option value="N">Não Procede</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <textarea id="txtTexto" data-ng-model="novo_comentario.texto" rows="5" cols="20" class="form-control input-sm"></textarea>
+                </div>
+                <!--<div class="form-group">
+                    <span id="AnexoValidator" class="failureNotification" style="visibility:hidden;">O anexo deverá estar compactado no formato .zip</span>
+                    <input data-ng-model="novo_comentario.anexo" type="file" class="form-control input-sm" accept="application/zip">
+                </div>-->
+                <input type="button" data-ng-click="EnviarComentario()" value="Enviar Comentário" class="btn btn-danger">
+            </form>
+        </div>
+    </div>
+
+    <!--<div class="card">
+        <div class="card-header bg-light">Outras denúncias do forenecdor</div>
+        <div class="card-body">
+            <table class="table table-hover table-striped">
+                <tbody>
+                    <tr align="center">
+                        <td colspan="4">Este fornecedor ainda não possui denuncias.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>-->
+</div>

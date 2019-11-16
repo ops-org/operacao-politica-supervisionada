@@ -1,12 +1,10 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
 
 namespace OPS.Core
 {
@@ -74,6 +72,7 @@ namespace OPS.Core
             if (_mParametros.Count > 0)
             {
                 _mCommand.Parameters.AddRange(_mParametros.ToArray());
+                _mParametros.Clear();
             }
 
             _mCommand.CommandText = sql;
@@ -82,7 +81,6 @@ namespace OPS.Core
             Rows = _mCommand.ExecuteNonQuery();
 
             LastInsertedId = _mCommand.LastInsertedId;
-            _mParametros.Clear();
 
             return true;
         }
@@ -201,7 +199,7 @@ namespace OPS.Core
             {
                 _mTransaction.Commit();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 _mTransaction.Rollback();
             }

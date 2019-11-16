@@ -252,3 +252,9 @@ ModelManifest.xml
 /OPS/.vs/config
 /OPS/Content/images/Parlamentares
 
+/OPS/wwwroot/images/Parlamentares
+/OPS/wwwroot/bundles
+/OPS.ImportacaoManual/appsettings.Production.json
+/OPS.ImportacaoManual/appsettings.Development.json
+/OPS/appsettings.Production.json
+/OPS/appsettings.Development.json

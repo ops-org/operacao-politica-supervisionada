@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
@@ -30,7 +34,7 @@ namespace OPS.Core
             if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
                 try
                 {
-                    return Convert.ToDateTime(value).ToString("dd/MM/yyyy");
+                    return Convert.ToDateTime(value.ToString()).ToString("dd/MM/yyyy");
                 }
                 catch
                 {
@@ -44,7 +48,7 @@ namespace OPS.Core
             if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
                 try
                 {
-                    return Convert.ToDateTime(value).ToString("dd/MM/yyyy HH:mm");
+                    return Convert.ToDateTime(value.ToString()).ToString("dd/MM/yyyy HH:mm");
                 }
                 catch
                 {
@@ -105,34 +109,75 @@ namespace OPS.Core
                 });
         }
 
-        public static async Task SendMailAsync(MailAddress objEmailTo, string subject, string body)
+        public static async Task SendMailAsync(IConfiguration configuration, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null)
         {
-            var lstEmailTo = new MailAddressCollection() {objEmailTo};
-            await SendMailAsync(lstEmailTo, subject, body);
+            var lstEmailTo = new MailAddressCollection() { objEmailTo };
+            await SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, subject, body, ReplyTo);
         }
 
-        public static async Task SendMailAsync(MailAddressCollection lstEmailTo, string subject, string body)
+        public static async Task SendMailAsync(IConfiguration configuration, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)
         {
-            using (var objEmail = new MailMessage
+            await SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, subject, body, ReplyTo);
+        }
+
+        public static async Task SendMailAsync(string APIKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)
+        {
+            var lstTo = new List<To>();
+            foreach (MailAddress objEmailTo in lstEmailTo)
             {
-                IsBodyHtml = true,
-                Subject = subject,
-                Body = body,
-                SubjectEncoding = Encoding.GetEncoding("ISO-8859-1"),
-                BodyEncoding = Encoding.GetEncoding("ISO-8859-1"),
-                From = new MailAddress("envio@ops.net.br", "[OPS] Operação Política Supervisionada")
-            })
-            {
-                foreach (MailAddress objEmailTo in lstEmailTo)
+                lstTo.Add(new To()
                 {
-                    objEmail.To.Add(objEmailTo);
+                    email = objEmailTo.Address,
+                    name = objEmailTo.DisplayName
+                });
+            }
+
+            var param = new SendGridMessage()
+            {
+                personalizations = new List<Personalization>{
+                    new Personalization()
+                    {
+                        to = lstTo,
+                        subject = subject
+                    }
+                },
+                content = new List<Content>(){
+                    new Content()
+                    {
+                        type = "text/html",
+                        value = body
+                    }
+                },
+                from = new From()
+                {
+                    email = "envio@ops.net.br",
+                    name = "[OPS] Operação Política Supervisionada"
+                },
+                reply_to = new ReplyTo()
+                {
+                    email = ReplyTo.Address,
+                    name = ReplyTo.DisplayName
                 }
+            };
 
-                //ServicePointManager.ServerCertificateValidationCallback =
-                //    (s, certificate, chain, sslPolicyErrors) => true;
+            var client = new RestClient("https://api.sendgrid.com/v3/mail/send");
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("cache-control", "no-cache");
+            request.AddHeader("Connection", "keep-alive");
+            request.AddHeader("Accept-Encoding", "gzip, deflate");
+            request.AddHeader("Host", "api.sendgrid.com");
+            request.AddHeader("Cache-Control", "no-cache");
+            request.AddHeader("Accept", "*/*");
+            request.AddHeader("content-type", "application/json");
+            request.AddHeader("authorization", "Bearer " + APIKey);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(param), ParameterType.RequestBody);
+            IRestResponse response = await client.ExecuteTaskAsync(request);
 
-                var objSmtp = new SmtpClient();
-                await objSmtp.SendMailAsync(objEmail);
+            if(response.StatusCode != HttpStatusCode.Accepted)
+            {
+                JObject responseBody = JObject.Parse(response.Content);
+
+                throw new Exception(responseBody["errors"][0]["message"].ToString());
             }
         }
 
@@ -158,21 +203,60 @@ namespace OPS.Core
             }
         }
 
-        public static string GetIPAddress()
+        //public static string GetIPAddress()
+        //{
+        //    System.Web.HttpContext context = System.Web.HttpContext.Current;
+        //    string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+        //    if (!string.IsNullOrEmpty(ipAddress))
+        //    {
+        //        string[] addresses = ipAddress.Split(',');
+        //        if (addresses.Length != 0)
+        //        {
+        //            return addresses[0];
+        //        }
+        //    }
+
+        //    return context.Request.ServerVariables["REMOTE_ADDR"];
+        //}
+
+
+
+        protected class SendGridMessage
         {
-            System.Web.HttpContext context = System.Web.HttpContext.Current;
-            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+            public List<Personalization> personalizations { get; set; }
+            public List<Content> content { get; set; }
+            public From from { get; set; }
+            public ReplyTo reply_to { get; set; }
+        }
+        protected class To
+        {
+            public string email { get; set; }
+            public string name { get; set; }
+        }
 
-            if (!string.IsNullOrEmpty(ipAddress))
-            {
-                string[] addresses = ipAddress.Split(',');
-                if (addresses.Length != 0)
-                {
-                    return addresses[0];
-                }
-            }
+        protected class Personalization
+        {
+            public List<To> to { get; set; }
+            public string subject { get; set; }
+        }
 
-            return context.Request.ServerVariables["REMOTE_ADDR"];
+        protected class Content
+        {
+            public string type { get; set; }
+            public string value { get; set; }
+        }
+
+        protected class From
+        {
+            public string email { get; set; }
+            public string name { get; set; }
+        }
+
+        protected class ReplyTo
+        {
+            public string email { get; set; }
+            public string name { get; set; }
         }
     }
 }

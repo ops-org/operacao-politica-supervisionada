@@ -587,14 +587,14 @@ namespace OPS.ImportacaoDados
                                     banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
                                     id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where IFNULL(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
                                 }
-                                catch (Exception e)
+                                catch (Exception)
                                 {
                                     sb.AppendFormat("<p>1. Parlamentar '{0}' não consta na base de dados, e foi ignorado na importação de presenças. Legislatura: {1}, Carteira: {2}.</p>",
                                         parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
                                     continue;
                                 }
 
-                                drMqandato = dtMandatos.Select(string.Format("id_legislatura={0} and id_cf_deputado={1}",dia["legislatura"].InnerText, id_cf_deputado));
+                                drMqandato = dtMandatos.Select(string.Format("id_legislatura={0} and id_cf_deputado={1}", dia["legislatura"].InnerText, id_cf_deputado));
 
                                 if (drMqandato.Length > 0)
                                 {
@@ -632,7 +632,7 @@ namespace OPS.ImportacaoDados
                                     banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
                                     id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where IFNULL(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
                                 }
-                                catch (Exception e)
+                                catch (Exception)
                                 {
                                     sb.AppendFormat("<p>1. Parlamentar '{0}' não consta na base de dados, e foi ignorado na importação de presenças. Legislatura: {1}, Carteira: {2}.</p>",
                                         parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
@@ -751,7 +751,7 @@ namespace OPS.ImportacaoDados
                     foreach (var deputado in deputados.dados)
                     {
                         Dados deputadoDetalhes = null;
-                        string situacao = null; 
+                        string situacao = null;
 
                         using (var banco = new Banco())
                         {
@@ -776,7 +776,7 @@ namespace OPS.ImportacaoDados
                             int? id_cf_gabinete = null;
                             if (deputadoDetalhes.ultimoStatus.gabinete.sala != null)
                             {
-                                banco.AddParameter("sala", deputadoDetalhes.ultimoStatus.gabinete.sala);
+                                banco.AddParameter("sala", deputadoDetalhes.ultimoStatus.gabinete.sala.PadLeft(3, '0'));
                                 var id = banco.ExecuteScalar(@"SELECT id from cf_gabinete where sala = @sala");
 
                                 var gabinete = deputadoDetalhes.ultimoStatus.gabinete;
@@ -946,8 +946,8 @@ namespace OPS.ImportacaoDados
                             }
 
 
-                            Console.WriteLine("UPDATE");
-                            
+                            //Console.WriteLine("UPDATE");
+
                         }
 
                         if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
@@ -1022,8 +1022,8 @@ namespace OPS.ImportacaoDados
             }
 
             var downloadUrl = "http://www.camara.leg.br/cotas/" + arquivo + ".zip";
-            var fullFileNameZip = atualDir + @"\" + arquivo + ".zip";
-            var fullFileNameXml = atualDir + @"\" + arquivo + ".xml";
+            var fullFileNameZip = System.IO.Path.Combine(atualDir, arquivo + ".zip");
+            var fullFileNameXml = System.IO.Path.Combine(atualDir, arquivo + ".xml");
 
             if (!Directory.Exists(atualDir))
                 Directory.CreateDirectory(atualDir);
@@ -1203,7 +1203,7 @@ namespace OPS.ImportacaoDados
                                         else if (fileNode.Name == "cnpjCPF")
                                             value = new System.Text.RegularExpressions.Regex(@"[^\d]").Replace(fileNode.InnerText.ToUpper().Trim(), "");
                                         else if (fileNode.Name == "siglaPartido")
-                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper().Trim().Replace("SOLIDARIEDADE", "SD");
+                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper().Trim().Replace("SOLIDARIEDADE", "SD").Replace("REPUBLICANOS", "PRB");
                                         else
                                             value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper().Trim();
 
@@ -1603,8 +1603,8 @@ namespace OPS.ImportacaoDados
 
             // Insere um novo deputado ou liderança
             banco.ExecuteNonQuery(@"
-        	    INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar)
-        	    select distinct idDeputado, numeroDeputadoID, nomeParlamentar 
+        	    INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar, cpf)
+        	    select distinct idDeputado, numeroDeputadoID, nomeParlamentar, cpf
         	    from cf_despesa_temp
         	    where numeroDeputadoID  not in (
         		    select id_deputado from cf_deputado
@@ -1793,6 +1793,7 @@ namespace OPS.ImportacaoDados
 					ressarcimento,
 					ano_mes,
 					hash,
+                    urlDocumento,
 					importacao
 				)
 				select 
@@ -1818,6 +1819,7 @@ namespace OPS.ImportacaoDados
 					ressarcimento,
 					concat(ano, LPAD(mes, 2, '0')),
 					hash,
+                    urlDocumento,
 					now()
 				from cf_despesa_temp dt
                 LEFT JOIN cf_deputado d on d.id_deputado = dt.numeroDeputadoID
@@ -2060,10 +2062,13 @@ namespace OPS.ImportacaoDados
 
                             ImportacaoUtils.CreateImageThumbnail(src);
                         }
+
+                        Console.WriteLine("Atualizado imagem do deputado " + id);
                     }
                     catch (Exception)
                     {
                         sb.AppendLine("Imagem do deputado " + id + " inexistente!");
+                        Console.WriteLine("Imagem do deputado " + id + " inexistente!");
                     }
                 }
             }

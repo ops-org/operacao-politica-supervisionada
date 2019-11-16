@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br" data-ng-app="app">
+<head>
+    <base href="/" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OPS - Opera&#231;&#227;o Pol&#237;tica Supervisionada</title>
+    <link rel="shortcut icon" type="image/ico" href="~/favicon.ico" />
+    <link href="/bundles/site.min.css?v=191112" rel="stylesheet" />
+</head>
+<body data-ng-controller="IndexController">
+
+    <header class="navbar navbar-expand flex-column flex-md-row navbar-light bg-light global-header">
+        <div class="container">
+            <a class="navbar-brand mr-0 mr-md-2" href="./#!/inicio" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
+                <img src="/images/logo_ops.png" width="64" height="40" alt="OPS" />
+            </a>
+
+            <ul class="navbar-nav flex-row ml-md-auto d-md-flex">
+                <li class="nav-item dropdown">
+                    <a class="nav-item nav-link dropdown-toggle mr-md-2" id="bd-versions" href="javascript:;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Explorar
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
+                        <div class="dropdown-header">Câmara dos Deputados</div>
+                        <a class="dropdown-item" href="./#!/deputado-federal/conheca">Conheça os deputados</a>
+                        <a class="dropdown-item" href="./#!/deputado-federal">Cota parlamentar (CEAP)</a>
+                        <a class="dropdown-item" href="./#!/deputado-federal/frequencia">Frequência</a>
+                        <a class="dropdown-item" href="./#!/deputado-federal/secretario">Secretários</a>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <div class="dropdown-header">Senado Federal</div>
+                        <a class="dropdown-item" href="./#!/senador">Cota Parlamentar (CEAPS)</a>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link p-2" href="https://luciobig.com.br" target="_blank" rel="noopener">Blog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2" href="./#!/sobre">Sobre</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2" href="https://www.facebook.com/operacaopoliticasupervisionada" title="OPS no Facebook" target="_blank" rel="noopener" aria-label="OPS no Facebook">
+                        <i class="fa fa-facebook" aria-hidden="true"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2" href="https://twitter.com/LucioBig" title="Lúcio Big no Twitter" target="_blank" rel="noopener" aria-label="Lúcio Big no Twitter">
+                        <i class="fa fa-twitter" aria-hidden="true"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2" href="https://www.youtube.com/channel/UCfQ98EX3oOv6IHBdUNMJq8Q" title="Lúcio Big no YouTube" target="_blank" rel="noopener" aria-label="Lúcio Big no YouTube">
+                        <i class="fa fa-youtube" aria-hidden="true"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item dropdown" data-ng-show="authentication.isAuth">
+                    <a class="nav-item nav-link dropdown-toggle mr-md-2" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Olá {{authentication.firstName}}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="bd-versions">
+                        <a class="dropdown-item" href="./#!/denuncia">Denúncias</a>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" data-ng-click="logOut()">Sair</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="page-container doc-container">
+        <div id="app">
+            <div id="container">
+                <div data-ng-view></div>
+            </div>
+
+            <div id="loading-modal" data-ng-show="countRequest > 0">
+                <div class="modal-backdrop fade show"></div>
+                <div id="loading-modal-text">
+                    <img class="loader-facebook" src="/images/ajax-loader-facebook.gif" />&nbsp;Processando
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="content-section text-muted text-center">
+            O controle social é indispensável para combatermos a corrupção em nosso país.
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 text-xs-center text-left">
+                    OPS - Operação Política Supervisionada
+                </div>
+                <div class="col-sm-6 text-xs-center text-right">
+                    <a href="./#!/sobre">Sobre</a>
+                    <a href="https://github.com/ops-org/operacao-politica-supervisionada" onclick="return trackOutboundLink(this, true);" target="_blank" rel="nofolow">Repositório no GitHub</a>
+                    <a href="https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/#submit/bug" target="_blank" onclick="ReportarErro(event, this)">Reportar um erro</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="text/javascript">
+        var base_url = 'http://localhost:5000/';
+        window.GoogleAnalyticsKey = "UA-38537890-5";
+        var DeputadoFederalUltimaAtualizacao = '';
+        var SenadorUltimaAtualizacao = '';
+    </script>
+
+    <script src="/bundles/vendor.min.js?v=191112"></script>
+    <script src="/bundles/app.min.js?v=191112"></script>
+
+    <script type="text/javascript">
+        $(loadSiteMaster);
+    </script>
+</body>
+</html>
