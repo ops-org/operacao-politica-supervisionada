@@ -9,6 +9,17 @@ body { /* Margin bottom by footer height */
     margin-bottom: 92px;
 }
 
+#navbar a {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+    #navbar a.active, #navbar a:not(.social):not(.dropdown-item):not(.logo):hover {
+        padding-bottom: 0.4rem !important;
+        border-bottom: 0.1rem solid #f27474;
+    }
+
+
 .bg-landing-page {
     background: url(../images/logo_opaca.jpg) no-repeat top 20px center;
 }
@@ -89,6 +100,10 @@ body { /* Margin bottom by footer height */
     .resumo-gastos a:hover {
         text-decoration: none;
     }
+
+.resumo-gastos .card-img {
+    max-width: 90px;
+}
 
 .resumo-gastos .card-text {
     margin-bottom: 0;
@@ -174,13 +189,10 @@ body { /* Margin bottom by footer height */
     .img-deputado {
         margin-top: 6px;
     }
+
     .img-senador {
         margin-top: 9px;
     }
-}
-
-.margin-bottom-0 {
-    margin-bottom: 0;
 }
 
 .dvg-painel-info-etiqueta {
@@ -329,41 +341,6 @@ form.ng-submitted .form-control.ng-invalid {
     margin-top: 0;
     margin-bottom: 20px;
 }
-
-.navbar-default .navbar-nav > li > a {
-    color: #f27474;
-}
-
-    .navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
-        color: #f27474;
-    }
-
-.dropdown-menu > li > a {
-    color: #f27474;
-}
-
-    .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
-        color: #f27474;
-        text-decoration: none;
-    }
-
-.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
-    background-color: #f27474;
-    color: #FFF;
-}
-
-.global-header {
-    background-color: #fff;
-    box-shadow: 0 1px 15px 0 rgba(192,72,25,0.32);
-}
-
-    .global-header nav {
-        font-size: 17px;
-        color: #f27474;
-        float: right;
-        margin-top: 29px;
-    }
-
 
 @media(max-width:500px) {
     #camara-legislatura, #senado-legislatura {

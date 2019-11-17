@@ -93,24 +93,24 @@ var app;
             $locationProvider.hashPrefix('!');
 
             $routeProvider
-                .when("/", { templateUrl: "app/inicio.html" })
-                .when("/sobre", { templateUrl: "app/sobre.html" })
-                .when("/deputado-federal/documento/:id", { templateUrl: "app/auditoria/deputado-federal-documento.html" })
-                .when("/deputado-federal/:id/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-detalhes.html" })
-                .when("/deputado-federal/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-lista.html" })
-                .when("/deputado-federal/frequencia/:id", { templateUrl: "app/auditoria/deputado-federal-frequencia-detalhes.html" })
-                .when("/deputado-federal/frequencia", { templateUrl: "app/auditoria/deputado-federal-frequencia-lista.html" })
-                .when("/deputado-federal/conheca", { templateUrl: "app/auditoria/deputado-federal-conheca.html" })
-                .when("/deputado-federal/:id", { templateUrl: "app/auditoria/deputado-federal-detalhes.html" })
-                .when("/deputado-federal", { templateUrl: "app/auditoria/deputado-federal-lista.html" })
+                .when("/", { templateUrl: "app/inicio.html?v=" + versao })
+                .when("/sobre", { templateUrl: "app/sobre.html?v=" + versao })
+                .when("/deputado-federal/documento/:id", { templateUrl: "app/auditoria/deputado-federal-documento.html?v=" + versao })
+                .when("/deputado-federal/:id/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-detalhes.html?v=" + versao })
+                .when("/deputado-federal/secretario", { templateUrl: "app/auditoria/deputado-federal-secretario-lista.html?v=" + versao })
+                .when("/deputado-federal/frequencia/:id", { templateUrl: "app/auditoria/deputado-federal-frequencia-detalhes.html?v=" + versao })
+                .when("/deputado-federal/frequencia", { templateUrl: "app/auditoria/deputado-federal-frequencia-lista.html?v=" + versao })
+                .when("/deputado-federal/conheca", { templateUrl: "app/auditoria/deputado-federal-conheca.html?v=" + versao })
+                .when("/deputado-federal/:id", { templateUrl: "app/auditoria/deputado-federal-detalhes.html?v=" + versao })
+                .when("/deputado-federal", { templateUrl: "app/auditoria/deputado-federal-lista.html?v=" + versao })
 
-                .when("/senador/:id", { templateUrl: "app/auditoria/senador-detalhes.html" })
-                .when("/senador", { templateUrl: "app/auditoria/senador-lista.html" })
+                .when("/senador/:id", { templateUrl: "app/auditoria/senador-detalhes.html?v=" + versao })
+                .when("/senador", { templateUrl: "app/auditoria/senador-lista.html?v=" + versao })
 
-                .when("/deputado-estadual/:id", { templateUrl: "app/auditoria/deputado-estadual-detalhes.html" })
-                .when("/deputado-estadual", { templateUrl: "app/auditoria/deputado-estadual-lista.html" })
+                .when("/deputado-estadual/:id", { templateUrl: "app/auditoria/deputado-estadual-detalhes.html?v=" + versao })
+                .when("/deputado-estadual", { templateUrl: "app/auditoria/deputado-estadual-lista.html?v=" + versao })
 
-                .when("/fornecedor/:id", { templateUrl: "app/auditoria/fornecedor.html" })
+                .when("/fornecedor/:id", { templateUrl: "app/auditoria/fornecedor.html?v=" + versao })
 
                 //.when("/forum", { templateUrl: "app/forum" })
 
@@ -119,21 +119,21 @@ var app;
                 //.when("/fiscalize", { templateUrl: "app/fiscalize/nota-fiscal-lista" })
                 //.when("/fiscalize/:id", { templateUrl: "app/fiscalize/nota-fiscal-detalhes" })
 
-                .when("/busca", { controller: "BuscaController", templateUrl: "app/busca.html" })
+                .when("/busca", { controller: "BuscaController", templateUrl: "app/busca.html?v=" + versao })
 
-                .when("/login", { controller: "LoginController", templateUrl: "app/autenticacao/login.html" })
-                .when("/signup", { controller: "SignupController", templateUrl: "app/autenticacao/signup.html" })
-                .when("/refresh", { controller: "RefreshController", templateUrl: "app/autenticacao/refresh.html" })
-                .when("/tokens", { controller: "TokensManagerController", templateUrl: "app/autenticacao/tokens.html" })
-                .when("/reset-password", { controller: "ResetPasswordController", templateUrl: "app/autenticacao/reset-password.html" })
-                .when("/set-password", { controller: "SetPasswordController", templateUrl: "app/autenticacao/set-password.html" })
-                .when("/verify-email", { controller: "VerifyEmailController", templateUrl: "app/autenticacao/verify-email.html" })
-                .when("/account", { controller: "AccountController", templateUrl: "app/autenticacao/account.html" })
+                .when("/login", { controller: "LoginController", templateUrl: "app/autenticacao/login.html?v=" + versao })
+                .when("/signup", { controller: "SignupController", templateUrl: "app/autenticacao/signup.html?v=" + versao })
+                .when("/refresh", { controller: "RefreshController", templateUrl: "app/autenticacao/refresh.html?v=" + versao })
+                .when("/tokens", { controller: "TokensManagerController", templateUrl: "app/autenticacao/tokens.html?v=" + versao })
+                .when("/reset-password", { controller: "ResetPasswordController", templateUrl: "app/autenticacao/reset-password.html?v=" + versao })
+                .when("/set-password", { controller: "SetPasswordController", templateUrl: "app/autenticacao/set-password.html?v=" + versao })
+                .when("/verify-email", { controller: "VerifyEmailController", templateUrl: "app/autenticacao/verify-email.html?v=" + versao })
+                .when("/account", { controller: "AccountController", templateUrl: "app/autenticacao/account.html?v=" + versao })
 
-                .when("/denuncia", { controller: "DenunciasListaController", templateUrl: "app/denuncia/denuncia-lista.html" })
-                .when("/denuncia/:id", { controller: "DenunciaDetalhesController", templateUrl: "app/denuncia/denuncia-detalhes.html" })
+                .when("/denuncia", { controller: "DenunciasListaController", templateUrl: "app/denuncia/denuncia-lista.html?v=" + versao })
+                .when("/denuncia/:id", { controller: "DenunciaDetalhesController", templateUrl: "app/denuncia/denuncia-detalhes.html?v=" + versao })
 
-                .when("/404", { templateUrl: "app/erro/404.html" })
+                .when("/404", { templateUrl: "app/erro/404.html?v=" + versao })
 
                 .otherwise({ redirectTo: '/' });
         }]);
@@ -143,17 +143,35 @@ var app;
             $rootScope.countRequest = 1;
             authService.fillAuthData();
 
-            $http.get('app/inicio.html', { cache: $templateCache });
+            $http.get('app/inicio.html?v=' + versao, { cache: $templateCache });
 
             $rootScope.$on('$locationChangeStart', function (event) {
                 $rootScope.countRequest = 1;
             });
 
             $rootScope.$on('$locationChangeSuccess', function (event) {
+                var path = $location.path();
+                var $navbar = $('#navbar');
+                
+                if (path === '/' || path === '/inicio') {
+                    $navbar.removeClass('border-bottom shadow-sm');
+                } else if (!$('#navbar').hasClass('border-bottom shadow-sm')) {
+                    $navbar.addClass('border-bottom shadow-sm');
+                }
+
+                $navbar.find('a.active').removeClass('active');
+                if (path === '/sobre') {
+                    $('#nav-sobre').addClass('active');
+                } else if (path.indexOf('/deputado-federal') !== -1) {
+                    $('#nav-camara').addClass('active');
+                } else if (path.indexOf('/senador') !== -1) {
+                    $('#nav-senado').addClass('active');
+                }
+
                 $rootScope.countRequest = 0;
 
                 setTimeout(function () {
-                    ga('send', 'pageview', { 'page': $location.path() });
+                    ga('send', 'pageview', { 'page': path });
                 }, 1000);
 
                 //$('body').animate({ scrollTop: 0 }, 0);
@@ -740,7 +758,7 @@ function loadSiteMaster() {
             if ($('#crowd-shortcut').length == 1) {
                 clearInterval(interval);
 
-                $('#crowd-shortcut').parent().css('top', '54px');
+                $('#crowd-shortcut').parent().css('top', '84px');
             }
         }, 100);
 

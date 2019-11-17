@@ -220,6 +220,7 @@ namespace OPS.Core.DAO
 						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
                         , l.link
+                        , l.url_documento
 					FROM cf_despesa l
 					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
 					LEFT JOIN cf_deputado d ON d.id = l.id_cf_deputado
@@ -270,7 +271,8 @@ namespace OPS.Core.DAO
                             cnpj_cpf = await reader.GetValueOrDefaultAsync<string>(23),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(24),
                             competencia = string.Format("{0:00}/{1:0000}", await reader.GetValueOrDefaultAsync<ushort>(13), await reader.GetValueOrDefaultAsync<ushort>(12)),
-                            link = await reader.GetValueOrDefaultAsync<dynamic>(25)
+                            link = await reader.GetValueOrDefaultAsync<dynamic>(25),
+                            url_documento = await reader.GetValueOrDefaultAsync<string>(26)
                         };
 
                         return result;
