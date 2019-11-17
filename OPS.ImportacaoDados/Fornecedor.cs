@@ -138,6 +138,7 @@ namespace OPS.ImportacaoDados
                     continue;
                 }
 
+                Console.WriteLine("Consultando CNPJ: " + item["cnpj_cpf"] + " - " + i);
                 FornecedorInfo receita = null;
 
                 try
@@ -153,7 +154,10 @@ namespace OPS.ImportacaoDados
                         client.BaseAddress = new Uri(uriString);
 
                         if (RateLimit_Remaining > -1 && RateLimit_Remaining <= 1)
-                            System.Threading.Thread.Sleep(26000);
+                        {
+                            Console.WriteLine("Rate limit atingido!");
+                            System.Threading.Thread.Sleep(60000);
+                        }
 
 
                         //Setar o Timeout do client quando é API BASICA

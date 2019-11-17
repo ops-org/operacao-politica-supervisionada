@@ -152,13 +152,17 @@ namespace OPS.Core
                 {
                     email = "envio@ops.net.br",
                     name = "[OPS] Operação Política Supervisionada"
-                },
-                reply_to = new ReplyTo()
+                }                
+            };
+
+            if(ReplyTo != null)
+            {
+                param.reply_to = new ReplyTo()
                 {
                     email = ReplyTo.Address,
                     name = ReplyTo.DisplayName
-                }
-            };
+                };
+            }
 
             var client = new RestClient("https://api.sendgrid.com/v3/mail/send");
             var request = new RestRequest(Method.POST);

@@ -290,8 +290,10 @@ namespace OPS.ImportacaoManual
 
         private static async Task ImportacaoDadosCompleto(IConfiguration configuration)
         {
-            var tempPath = configuration["AppSettings:SiteTempFolder"];
-            var sDeputadosImagesPath = System.IO.Path.Combine(tempPath, "images/Parlamentares/DEPFEDERAL/");
+            var rootPath = configuration["AppSettings:SiteRootFolder"];
+            var tempPath = System.IO.Path.Combine(rootPath, "wwwroot/temp");
+            var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/DEPFEDERAL/");
+            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/SENADOR/");
 
             try
             {
@@ -300,7 +302,9 @@ namespace OPS.ImportacaoManual
                 Stopwatch sw = Stopwatch.StartNew();
                 Stopwatch swGeral = Stopwatch.StartNew();
 
-                sb.AppendFormat("<br/><h3>-- Importar Deputados --</h3>");
+                sb.AppendFormat("<p> Iniciando importação: " + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
+
+                sb.AppendFormat("<h3>-- Importar Deputados --</h3>");
                 sw.Restart();
                 try
                 {
@@ -308,12 +312,12 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Importar Fotos Deputados --</h3>");
+                sb.AppendFormat("<h3>-- Importar Fotos Deputados --</h3>");
                 sw.Restart();
                 try
                 {
@@ -321,13 +325,13 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year - 1);
-                sb.AppendFormat("<br/><p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
+                sb.AppendFormat("<h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year - 1);
+                //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
                 sw.Restart();
                 try
                 {
@@ -335,13 +339,13 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message + ex.GetBaseException().StackTrace);
+                    sb.Append(ex.ToFullDescriptionString() + ex.GetBaseException().StackTrace);
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year);
-                sb.AppendFormat("<br/><p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
+                sb.AppendFormat("<h3>-- Importar Despesas Deputados {0} --</h3>", DateTime.Now.Year);
+                //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
                 sw.Restart();
                 try
                 {
@@ -349,12 +353,12 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Importar Presenças Deputados --</h3>");
+                sb.AppendFormat("<h3>-- Importar Presenças Deputados --</h3>");
                 sw.Restart();
                 try
                 {
@@ -362,13 +366,13 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
 
-                sb.AppendFormat("<br/><h3>-- Importar Senadores {0} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<h3>-- Importar Senadores {0} --</h3>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -376,12 +380,25 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year - 1);
+                sb.AppendFormat("<h3>-- Importar Imagens Senadores {0} --</h3>", DateTime.Now.Year);
+                sw.Restart();
+                try
+                {
+                    sb.Append(Senado.DownloadFotosSenadores(sSenadoressImagesPath));
+                }
+                catch (Exception ex)
+                {
+                    sb.Append(ex.ToFullDescriptionString());
+                }
+                t = sw.Elapsed;
+                sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
+
+                sb.AppendFormat("<h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year - 1);
                 sw.Restart();
                 try
                 {
@@ -389,12 +406,12 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<h3>-- Importar Despesas Senado {0} --</h3>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -402,12 +419,12 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
-                sb.AppendFormat("<br/><h3>-- Consultar Receita WS --</h3>");
+                sb.AppendFormat("<h3>-- Consultar Receita WS --</h3>");
                 sw.Restart();
                 try
                 {
@@ -415,19 +432,19 @@ namespace OPS.ImportacaoManual
                 }
                 catch (Exception ex)
                 {
-                    sb.Append(ex.GetBaseException().Message);
+                    sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
                 t = swGeral.Elapsed;
-                sb.AppendFormat("<br/><h3>Duração Total: {0:D2}h:{1:D2}m:{2:D2}s</h3>", t.Hours, t.Minutes, t.Seconds);
+                sb.AppendFormat("<h3>Duração Total: {0:D2}h:{1:D2}m:{2:D2}s</h3>", t.Hours, t.Minutes, t.Seconds);
 
                 new ParametrosDao().CarregarPadroes();
 
                 using (WebClient client = new WebClient())
                 {
-                    await client.DownloadDataTaskAsync("http:127.0.0.1:5000/api/tarefa/limparcache").ConfigureAwait(false);
+                    await client.DownloadDataTaskAsync("http://127.0.0.1:5000/api/tarefa/limparcache");
                 }
 
                 var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');
@@ -438,7 +455,7 @@ namespace OPS.ImportacaoManual
                 }
 
                 Console.WriteLine(sb.ToString());
-                await Utils.SendMailAsync(configuration, lstEmailTo, "OPS :: Resumo da Importação", sb.ToString());
+                await Utils.SendMailAsync(configuration, lstEmailTo, "OPS :: Resumo da Importação - " + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm"), sb.ToString());
             }
             catch (Exception ex)
             {

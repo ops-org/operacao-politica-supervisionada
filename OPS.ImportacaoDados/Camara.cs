@@ -406,6 +406,14 @@ namespace OPS.ImportacaoDados
             if (dtPesquisa == DateTime.MinValue) dtPesquisa = new DateTime(2016, 2, 9);
             int ano_inicio = dtPesquisa.Year;
             var dtNow = DateTime.Now.Date;
+
+            if(dtPesquisa == dtNow)
+            {
+                Console.WriteLine("Presenças já importadas hoje!");
+                sb.AppendFormat("Presenças já importadas hoje!");
+                return sb.ToString();
+            }
+
             //var dtUltimaIntegracao = dtPesquisa.AddDays(-7);
             int presencas_importadas = 0;
 
@@ -442,7 +450,7 @@ namespace OPS.ImportacaoDados
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Erro:" + ex.Message);
+                    Console.WriteLine("Erro:" + ex.ToFullDescriptionString());
 
                     if (ex.Message.Contains("timeout"))
                     {
@@ -453,7 +461,7 @@ namespace OPS.ImportacaoDados
                     }
                     else
                     {
-                        sb.AppendFormat("<p>Erro:{0}</p>", ex.Message);
+                        sb.AppendFormat("<p>Erro:{0}</p>", ex.ToFullDescriptionString());
 
                         return sb.ToString();
                     }
@@ -768,10 +776,11 @@ namespace OPS.ImportacaoDados
                                 continue;
                             }
 
-                            if (deputadoDetalhes.redeSocial.Any())
-                            {
-                                Console.WriteLine(string.Join(",", deputadoDetalhes.redeSocial));
-                            }
+                            // TODO: salvar para exibir
+                            //if (deputadoDetalhes.redeSocial.Any())
+                            //{
+                            //    Console.WriteLine(string.Join(",", deputadoDetalhes.redeSocial));
+                            //}
 
                             int? id_cf_gabinete = null;
                             if (deputadoDetalhes.ultimoStatus.gabinete.sala != null)
@@ -899,7 +908,7 @@ namespace OPS.ImportacaoDados
                                 )");
 
                                 novos++;
-                                Console.WriteLine("INSERT");
+                                //Console.WriteLine("INSERT");
 
                                 sb.Append("<p>" + deputadoDetalhes.ultimoStatus.nome + "</p>");
                             }
@@ -1124,7 +1133,7 @@ namespace OPS.ImportacaoDados
                             }
                             catch (Exception ex)
                             {
-                                sb.Append("Erro: " + ex.Message);
+                                sb.Append("Erro: " + ex.ToFullDescriptionString());
                             }
 
                         }
@@ -1170,10 +1179,11 @@ namespace OPS.ImportacaoDados
                                         vazia++;
                                         if (vazia < 100)
                                         {
-                                            Console.WriteLine("[vazio]" + vazia);
+                                            if(vazia > 1)
+                                                Console.WriteLine("Linha: " + linhaAtual + " - [vazio]" + vazia);
                                             continue;
                                         }
-                                        Console.WriteLine(linhaAtual);
+                                        //Console.WriteLine(linhaAtual);
                                         break;
                                     }
                                     vazia = 0;
@@ -1198,12 +1208,16 @@ namespace OPS.ImportacaoDados
                                         sqlValues.Append("@" + fileNode.Name);
 
                                         string value;
+                                        
+                                        
                                         if (fileNode.Name == "dataEmissao")
-                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
+                                                value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
                                         else if (fileNode.Name == "cnpjCPF")
-                                            value = new System.Text.RegularExpressions.Regex(@"[^\d]").Replace(fileNode.InnerText.ToUpper().Trim(), "");
+                                            value = new System.Text.RegularExpressions.Regex(@"[^\d]").Replace(fileNode.InnerText.Trim(), "");
                                         else if (fileNode.Name == "siglaPartido")
                                             value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper().Trim().Replace("SOLIDARIEDADE", "SD").Replace("REPUBLICANOS", "PRB");
+                                        else if (fileNode.Name == "urlDocumento")
+                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.Trim();
                                         else
                                             value = string.IsNullOrEmpty(fileNode.InnerText) ? null : fileNode.InnerText.ToUpper().Trim();
 
@@ -1233,7 +1247,7 @@ namespace OPS.ImportacaoDados
                                     }
                                     catch (Exception e)
                                     {
-                                        Console.WriteLine(e.Message);
+                                        Console.WriteLine(e.ToFullDescriptionString());
                                     }
 
                                     lstHash.Add(hash, 0);
@@ -1250,7 +1264,7 @@ namespace OPS.ImportacaoDados
                     }
                     catch (Exception ex)
                     {
-                        sb.Append("Erro: " + ex.Message + "<br/>" + ex.StackTrace + "<br/>Hash:" + banco.ParametersHash());
+                        sb.Append("Erro: " + ex.ToFullDescriptionString() + "<br/>Hash:" + banco.ParametersHash());
                     }
                 }
 
@@ -1344,7 +1358,7 @@ namespace OPS.ImportacaoDados
             }
             catch (Exception ex)
             {
-                sb.Append("Erro: " + ex.Message + "<br/>" + ex.StackTrace);
+                sb.Append("Erro: " + ex.ToFullDescriptionString());
 
                 // Excluir o arquivo para tentar importar novamente na proxima execução
                 File.Delete(fullFileNameXml.Replace(".xml", ".zip"));
@@ -1793,7 +1807,7 @@ namespace OPS.ImportacaoDados
 					ressarcimento,
 					ano_mes,
 					hash,
-                    urlDocumento,
+                    url_documento,
 					importacao
 				)
 				select 
@@ -2037,6 +2051,8 @@ namespace OPS.ImportacaoDados
         /// <param name="dirRaiz"></param>
         public static string DownloadFotosDeputados(string dirRaiz, bool cargaInicial = false)
         {
+            Console.WriteLine("DownloadFotosDeputados:" + dirRaiz);
+
             var sb = new StringBuilder();
             using (var banco = new Banco())
             {
@@ -2065,10 +2081,10 @@ namespace OPS.ImportacaoDados
 
                         Console.WriteLine("Atualizado imagem do deputado " + id);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        sb.AppendLine("Imagem do deputado " + id + " inexistente!");
-                        Console.WriteLine("Imagem do deputado " + id + " inexistente!");
+                        sb.AppendLine("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.ToFullDescriptionString());
+                        Console.WriteLine("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.ToFullDescriptionString());
                     }
                 }
             }

@@ -85,7 +85,7 @@ namespace OPS.ImportacaoDados
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.ToFullDescriptionString());
             }
 
             return novos.ToString() + " Senador(es) Inseridos";
@@ -186,7 +186,7 @@ namespace OPS.ImportacaoDados
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.ToFullDescriptionString());
                     }
                 }
             }
@@ -305,7 +305,7 @@ namespace OPS.ImportacaoDados
                     {
                         if (!(ex is NullReferenceException))
                         {
-                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.ToFullDescriptionString());
                         }
                     }
                 }
@@ -369,7 +369,7 @@ namespace OPS.ImportacaoDados
                 // Excluir o arquivo para tentar importar novamente na proxima execução
                 File.Delete(fullFileNameCsv);
 
-                return "Erro ao importar:" + ex.Message;
+                return "Erro ao importar:" + ex.ToFullDescriptionString();
             }
         }
 
@@ -806,11 +806,13 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        public static void DownloadFotosSenadores(string dirRaiz)
+        public static string DownloadFotosSenadores(string dirRaiz)
         {
+            var db = new StringBuilder();
+
             using (var banco = new Banco())
             {
-                DataTable table = banco.GetTable("SELECT id FROM sf_senador");
+                DataTable table = banco.GetTable("SELECT id FROM sf_senador where valor_total_ceaps > 0 or ativo = 'S'");
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -829,16 +831,23 @@ namespace OPS.ImportacaoDados
                             ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
                             ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
 
+                            db.AppendLine("Atualizado imagem do senador " + id);
                             Console.WriteLine("Atualizado imagem do senador " + id);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Imagem do senador " + id + " inexistente!");
-                        //ignore
+                        if (!ex.Message.Contains("404"))
+                        {
+                            db.AppendLine("Imagem do senador " + id + " inexistente! Motivo: " + ex.ToFullDescriptionString());
+                            Console.WriteLine("Imagem do senador " + id + " inexistente! Motivo: " + ex.ToFullDescriptionString());
+                            //ignore
+                        }
                     }
                 }
             }
+
+            return db.ToString();
         }
     }
 }
