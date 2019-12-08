@@ -10,7 +10,7 @@ app.controller('PrincipalController', ['$scope', '$api',
 
         $scope.search = function (event) {
             event.stopPropagation();
-            window.location.href = window.location.origin + '/#!/busca?q=' + $scope.q;
+            window.location.href = window.location.origin + '/#!/busca?q=' + ($scope.q || '');
         };
 
         $api.get('Indicadores/ParlamentarResumoGastos').success(function (response) {

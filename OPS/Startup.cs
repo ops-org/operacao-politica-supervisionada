@@ -4,12 +4,16 @@ using AspNetCore.CacheOutput.InMemory.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Net.Http.Headers;
 using OPS.Core.DAO;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 
@@ -37,6 +41,9 @@ namespace OPS
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var cultureInfo = new CultureInfo("pt-BR");
+            System.Threading.Thread.CurrentThread.CurrentCulture = cultureInfo;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = cultureInfo;
 
             Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"].ToString();
             new ParametrosDao().CarregarPadroes();
@@ -60,11 +67,31 @@ namespace OPS
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
+
+            //var cultureInfo = new CultureInfo("pt-BR");
+            //app.UseRequestLocalization(new RequestLocalizationOptions
+            //{
+            //    DefaultRequestCulture = new RequestCulture(cultureInfo),
+            //    SupportedCultures = new List<CultureInfo>
+            //    {
+            //        cultureInfo,
+            //    },
+            //    SupportedUICultures = new List<CultureInfo>
+            //    {
+            //        cultureInfo,
+            //    }
+            //});
 
             // Middleware to handle all request
             //app.Use(async (Context, next) =>
@@ -92,8 +119,12 @@ namespace OPS
                 typeProvider.Mappings.Add(".woff2", "application/font-woff2");
             }
             sfOptions.ContentTypeProvider = typeProvider;
+            //sfOptions.OnPrepareResponse = ctx =>
+            //{
+            //    const int durationInSeconds = 60 * 60 * 24;
+            //    ctx.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=" + durationInSeconds;
+            //};
             app.UseStaticFiles(sfOptions);
-            app.UseFileServer(enableDirectoryBrowsing: false);
 
             app.UseMvc();
         }

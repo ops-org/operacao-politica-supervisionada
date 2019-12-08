@@ -1,6 +1,4 @@
 ﻿using AspNetCore.CacheOutput;
-using AspNetCore.CacheOutput.Extensions;
-using AspNetCore.CacheOutput.InMemory.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -35,7 +33,9 @@ namespace OPS.WebApi
         [Route("LimparCache")]
         public async void LimparCache(string value)
         {
-            await Cache.RemoveStartsWithAsync("*");
+            new ParametrosDao().CarregarPadroes();
+
+            await Cache.RemoveStartsWithAsync("*").ConfigureAwait(false);
         }
 
         [HttpGet]

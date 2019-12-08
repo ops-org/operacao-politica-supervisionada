@@ -407,7 +407,7 @@ namespace OPS.ImportacaoDados
             int ano_inicio = dtPesquisa.Year;
             var dtNow = DateTime.Now.Date;
 
-            if(dtPesquisa == dtNow)
+            if (dtPesquisa == dtNow)
             {
                 Console.WriteLine("Presenças já importadas hoje!");
                 sb.AppendFormat("Presenças já importadas hoje!");
@@ -1179,7 +1179,7 @@ namespace OPS.ImportacaoDados
                                         vazia++;
                                         if (vazia < 100)
                                         {
-                                            if(vazia > 1)
+                                            if (vazia > 1)
                                                 Console.WriteLine("Linha: " + linhaAtual + " - [vazio]" + vazia);
                                             continue;
                                         }
@@ -1208,10 +1208,10 @@ namespace OPS.ImportacaoDados
                                         sqlValues.Append("@" + fileNode.Name);
 
                                         string value;
-                                        
-                                        
+
+
                                         if (fileNode.Name == "dataEmissao")
-                                                value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
+                                            value = string.IsNullOrEmpty(fileNode.InnerText) ? null : DateTime.Parse(fileNode.InnerText).ToString("yyyy-MM-dd");
                                         else if (fileNode.Name == "cnpjCPF")
                                             value = new System.Text.RegularExpressions.Regex(@"[^\d]").Replace(fileNode.InnerText.Trim(), "");
                                         else if (fileNode.Name == "siglaPartido")
@@ -1323,9 +1323,11 @@ namespace OPS.ImportacaoDados
                         var dt = banco.GetTable("SELECT id_cf_deputado as deputado, id as mandato FROM cf_mandato where id_legislatura = 55");
                         foreach (DataRow dr in dt.Rows)
                         {
-                            banco.AddParameter("@deputado", dr["deputado"]);
-                            banco.AddParameter("@mandato", dr["mandato"]);
-                            banco.ExecuteNonQuery(@"
+                            try
+                            {
+                                banco.AddParameter("@deputado", dr["deputado"]);
+                                banco.AddParameter("@mandato", dr["mandato"]);
+                                banco.ExecuteNonQuery(@"
                                 UPDATE cf_mandato SET
                                     valor_total_ceap = (
                                         SELECT SUM(valor_liquido) 
@@ -1333,25 +1335,46 @@ namespace OPS.ImportacaoDados
                                         WHERE id_cf_deputado = @deputado 
                                         AND ano_mes BETWEEN 201502 and 201901
                                     )
-                                WHERE id = @mandato;
-                            ");
+                                    WHERE id = @mandato;
+                                ");
+                            }
+                            catch (Exception ex1)
+                            {
+                                sb.Append(dr["deputado"] + "|" + dr["mandato"] + "|Erro: " + ex1.ToFullDescriptionString());
+
+                                banco.AddParameter("@deputado", dr["deputado"]);
+                                banco.AddParameter("@mandato", dr["mandato"]);
+                                banco.ExecuteNonQuery(@"UPDATE cf_mandato SET valor_total_ceap = 0 WHERE id = @mandato;");
+                            }
                         }
 
                         dt = banco.GetTable("SELECT id_cf_deputado as deputado, id as mandato FROM cf_mandato where id_legislatura = 56");
                         foreach (DataRow dr in dt.Rows)
                         {
-                            banco.AddParameter("@deputado", dr["deputado"]);
-                            banco.AddParameter("@mandato", dr["mandato"]);
-                            banco.ExecuteNonQuery(@"
-                                UPDATE cf_mandato SET
-                                    valor_total_ceap = (
-                                        SELECT SUM(valor_liquido) 
-                                        FROM cf_despesa 
-                                        WHERE id_cf_deputado = @deputado 
-                                        AND ano_mes BETWEEN 201902 and 202301
-                                    )
-                                WHERE id = @mandato;
-                            ");
+                            try
+                            {
+                                banco.AddParameter("@deputado", dr["deputado"]);
+                                banco.AddParameter("@mandato", dr["mandato"]);
+                                banco.ExecuteNonQuery(@"
+                                        UPDATE cf_mandato SET
+                                            valor_total_ceap = (
+                                                SELECT SUM(valor_liquido) 
+                                                FROM cf_despesa 
+                                                WHERE id_cf_deputado = @deputado 
+                                                AND ano_mes BETWEEN 201902 and 202301
+                                            )
+                                            WHERE id = @mandato;
+                                        ");
+                            }
+                            catch (Exception ex1)
+                            {
+                                sb.Append(dr["deputado"] + "|" + dr["mandato"] + "|Erro: " + ex1.ToFullDescriptionString());
+
+                                banco.AddParameter("@deputado", dr["deputado"]);
+                                banco.AddParameter("@mandato", dr["mandato"]);
+                                banco.ExecuteNonQuery(@"UPDATE cf_mandato SET valor_total_ceap = 0 WHERE id = @mandato;");
+                            }
+
                         }
                     }
                 }
@@ -2074,9 +2097,19 @@ namespace OPS.ImportacaoDados
                         using (WebClient client = new WebClient())
                         {
                             client.Headers.Add("User-Agent: Other");
-                            client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
+                            try
+                            {
+                                client.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src);
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine("Atualizado imagem do deputado 2 ---------- " + id);
+
+                                client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
+                            }
 
                             ImportacaoUtils.CreateImageThumbnail(src);
+                            ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
                         }
 
                         Console.WriteLine("Atualizado imagem do deputado " + id);

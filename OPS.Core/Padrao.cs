@@ -4,8 +4,8 @@ namespace OPS.Core
 {
 	public static class Padrao
 	{
-		public const string EmailEnvioErros = "vanderleidenir@gmail.com";
-		public const string EmailEnvioResumoImportacao = "vanderleidenir@gmail.com;luciobig@ops.net.br";
+		public const string EmailEnvioErros = "vanderlei@ops.net.br";
+		public const string EmailEnvioResumoImportacao = "vanderlei@ops.net.br;luciobig@ops.net.br";
 
         public static string ConnectionString;
 

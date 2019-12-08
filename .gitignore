@@ -258,3 +258,4 @@ ModelManifest.xml
 /OPS.ImportacaoManual/appsettings.Development.json
 /OPS/appsettings.Production.json
 /OPS/appsettings.Development.json
+/OPS/wwwroot/temp

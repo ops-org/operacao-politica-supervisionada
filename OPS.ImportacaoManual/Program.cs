@@ -135,7 +135,15 @@ namespace OPS.ImportacaoManual
             }
             else
             {
-                var tempPath = configuration["AppSettings:SiteTempFolder"];
+                //ImportacaoDadosCompleto(configuration).Wait();
+
+                var rootPath = configuration["AppSettings:SiteRootFolder"];
+                var tempPath = System.IO.Path.Combine(rootPath, "wwwroot/temp");
+                var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/DEPFEDERAL/");
+                var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/SENADOR/");
+                Camara.DownloadFotosDeputados(sDeputadosImagesPath);
+
+                //var tempPath = configuration["AppSettings:SiteTempFolder"];
 
                 ////ConverterXmlParaCsvDespesasCamara(tempPath);
 
@@ -439,8 +447,6 @@ namespace OPS.ImportacaoManual
 
                 t = swGeral.Elapsed;
                 sb.AppendFormat("<h3>Duração Total: {0:D2}h:{1:D2}m:{2:D2}s</h3>", t.Hours, t.Minutes, t.Seconds);
-
-                new ParametrosDao().CarregarPadroes();
 
                 using (WebClient client = new WebClient())
                 {

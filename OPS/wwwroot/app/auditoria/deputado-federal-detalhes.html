@@ -29,7 +29,10 @@
                             <a href="./#!/deputado-federal?IdParlamentar={{::deputado_federal.id_cf_deputado}}&Periodo=0&Agrupamento=6" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{::deputado_federal.valor_total_ceap}}</a>
                         </p>
                         <p class="mb-0">
-                            <a href="http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cf_deputado}}" target="_blank" onclick="return trackOutboundLink(this, true);">Ver a página oficial na Câmara</a>
+                            <a href="https://www.camara.leg.br/deputados/{{::deputado_federal.id_cf_deputado}}/biografia" target="_blank" onclick="return trackOutboundLink(this, true);">Visualizar <strong>biografia</strong></a>
+                        </p>
+                        <p class="mb-0" data-ng-show="deputado_federal.situacao!='Fim de Mandato'">
+                            <a href="http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cf_deputado}}" target="_blank" onclick="return trackOutboundLink(this, true);">Visualizar <strong>página</strong> oficial</a>
                         </p>
                         <p class="mb-0"><strong>Telefone:</strong> {{::deputado_federal.telefone}}</p>
                         <p class="mb-0"><strong>Email:</strong> {{::deputado_federal.email}}</p>
@@ -50,7 +53,7 @@
         </div>
 
         <div class="row form-group">
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-xs-12 col-sm-6" data-ng-if="MaioresNotas.length > 0">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
                         <a class="float-right" href="./#!/deputado-federal?IdParlamentar={{::deputado_federal.id_cf_deputado}}&Periodo=0&Agrupamento=6">Ver lista completa</a>
@@ -76,7 +79,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-xs-12 col-sm-6" data-ng-if="MaioresFornecedores.length > 0">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
                         <a class="float-right" href="./#!/deputado-federal?IdParlamentar={{::deputado_federal.id_cf_deputado}}&Periodo=0&Agrupamento=3">Ver lista completa</a>
@@ -104,7 +107,7 @@
             </div>
         </div>
 
-        <div class="card mb-3" data-ng-show="PossuiFrequenciaSessoes">
+        <div class="card mb-3" id="deputados-presenca">
             <div class="card-header bg-light">
                 Frequência nas Sessões Ordinárias
             </div>
