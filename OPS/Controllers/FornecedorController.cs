@@ -15,11 +15,11 @@ namespace OPS.WebApi
     [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class FornecedorController : Controller
     {
-        private IHostingEnvironment Environment { get; }
+        private IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
         public FornecedorDao dao { get; }
 
-        public FornecedorController(IConfiguration configuration, IHostingEnvironment env)
+        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;

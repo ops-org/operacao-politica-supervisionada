@@ -12,10 +12,10 @@ namespace OPS.WebApi
     [Route("api/[controller]")]
     public class ContatoController : Controller
     {
-        private IHostingEnvironment Environment { get; }
+        private IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
 
-        public ContatoController(IConfiguration configuration, IHostingEnvironment env)
+        public ContatoController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;

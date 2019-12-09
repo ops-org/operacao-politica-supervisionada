@@ -18,11 +18,11 @@ namespace OPS.WebApi
     public class TarefaController : Controller
     {
 
-        private IHostingEnvironment Environment { get; }
+        private IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
         public IApiCacheOutput Cache { get; }
 
-        public TarefaController(IConfiguration configuration, IHostingEnvironment env, IApiCacheOutput cache)
+        public TarefaController(IConfiguration configuration, IWebHostEnvironment env, IApiCacheOutput cache)
         {
             Environment = env;
             Configuration = configuration;

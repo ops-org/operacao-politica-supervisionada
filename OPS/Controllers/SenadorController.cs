@@ -13,12 +13,12 @@ namespace OPS.WebApi
     public class SenadorController : Controller
     {
 
-        private IHostingEnvironment Environment { get; }
+        private IWebHostEnvironment Environment { get; }
         private IConfiguration Configuration { get; }
 
         SenadorDao dao;
 
-        public SenadorController(IConfiguration configuration, IHostingEnvironment env)
+        public SenadorController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;

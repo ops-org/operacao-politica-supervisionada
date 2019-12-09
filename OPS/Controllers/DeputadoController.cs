@@ -14,12 +14,12 @@ namespace OPS.WebApi
     [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoController : Controller
     {
-        private IHostingEnvironment Environment { get; }
+        private IWebHostEnvironment Environment { get; }
         private IConfiguration Configuration { get; }
 
         DeputadoDao dao;
 
-        public DeputadoController(IConfiguration configuration, IHostingEnvironment env)
+        public DeputadoController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;

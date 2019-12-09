@@ -4,18 +4,13 @@ using AspNetCore.CacheOutput.InMemory.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
+using Microsoft.Extensions.Hosting;
 using OPS.Core.DAO;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Net;
 
 namespace OPS
 {
@@ -45,7 +40,7 @@ namespace OPS
             System.Threading.Thread.CurrentThread.CurrentCulture = cultureInfo;
             System.Threading.Thread.CurrentThread.CurrentUICulture = cultureInfo;
 
-            Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"].ToString();
+            Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
             new ParametrosDao().CarregarPadroes();
 
             services.AddInMemoryCacheOutput();
@@ -57,11 +52,12 @@ namespace OPS
             //    return new LiteDBOutputCacheProvider("OutputCacheLite.db");
             //});
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -126,7 +122,14 @@ namespace OPS
             //};
             app.UseStaticFiles(sfOptions);
 
-            app.UseMvc();
+            //app.UseMvc();
+
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }
