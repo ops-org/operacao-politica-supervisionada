@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="12.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.0" />
-    <PackageReference Include="MySqlConnector" Version="0.61.0" />
-    <PackageReference Include="RestSharp" Version="106.6.10" />
-    <PackageReference Include="Sendgrid" Version="9.12.0" />
+    <PackageReference Include="CsvHelper" Version="15.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.2" />
+    <PackageReference Include="MySqlConnector" Version="0.62.0" />
+    <PackageReference Include="RestSharp" Version="106.10.1" />
+    <PackageReference Include="Sendgrid" Version="9.13.0" />
     <PackageReference Include="System.Runtime.Caching" Version="4.7.0" />
   </ItemGroup>
 

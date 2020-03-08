@@ -13,8 +13,9 @@ namespace OPS.WebApi
 	{
 		private const string fiscalizeUrl = "http://104.131.229.175/fiscalize/pro/";
 
-		[HttpGet]
-		public dynamic Get()
+        [HttpGet()]
+
+        public dynamic Get()
 		{
 			var client = new RestClient(fiscalizeUrl);
 			var request = new RestRequest("json_lista_fiscalizacao_cache.php", Method.GET);
@@ -35,12 +36,12 @@ namespace OPS.WebApi
 			return lstNotaFiscal.ToList();
 		}
 
-		[HttpGet]
-		public dynamic Get(int id)
+		[HttpGet("{id:int}")]
+		public dynamic GetById(int id)
 		{
 			var client = new RestClient(fiscalizeUrl);
 			var request = new RestRequest("json_nota_fiscal.php?notaFiscalId={id}", Method.GET);
-			request.AddUrlSegment("id", id.ToString());
+			request.AddUrlSegment("id", id);
 
 			IRestResponse<NotaFiscal> response = client.Execute<NotaFiscal>(request);
 

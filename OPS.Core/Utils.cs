@@ -175,7 +175,7 @@ namespace OPS.Core
             request.AddHeader("content-type", "application/json");
             request.AddHeader("authorization", "Bearer " + APIKey);
             request.AddParameter("application/json", JsonConvert.SerializeObject(param), ParameterType.RequestBody);
-            IRestResponse response = await client.ExecuteTaskAsync(request);
+            IRestResponse response = await client.ExecuteAsync(request);
 
             if(response.StatusCode != HttpStatusCode.Accepted)
             {

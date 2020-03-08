@@ -1,13 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using OPS.Core;
-using OPS.Core.DAO;
 using OPS.ImportacaoDados;
-using RestSharp;
-using SendGrid;
-using SendGrid.Helpers.Mail;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
@@ -135,13 +129,13 @@ namespace OPS.ImportacaoManual
             }
             else
             {
-                //ImportacaoDadosCompleto(configuration).Wait();
+                ImportacaoDadosCompleto(configuration).Wait();
 
-                var rootPath = configuration["AppSettings:SiteRootFolder"];
-                var tempPath = System.IO.Path.Combine(rootPath, "wwwroot/temp");
-                var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/DEPFEDERAL/");
-                var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/SENADOR/");
-                Camara.DownloadFotosDeputados(sDeputadosImagesPath);
+                //var rootPath = configuration["AppSettings:SiteRootFolder"];
+                //var tempPath = System.IO.Path.Combine(rootPath, "wwwroot/temp");
+                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/DEPFEDERAL/");
+                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/SENADOR/");
+                //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
 
                 //var tempPath = configuration["AppSettings:SiteTempFolder"];
 
@@ -378,6 +372,27 @@ namespace OPS.ImportacaoManual
                 }
                 t = sw.Elapsed;
                 sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
+
+
+
+                sb.AppendFormat("<h3>-- Importar Secretários parlamentares {0} --</h3>", DateTime.Now.Year);
+                sw.Restart();
+
+                ////Instantiate DI container for the application  
+                //var serviceCollection = new ServiceCollection();
+
+                ////Register NodeServices  
+                //serviceCollection.AddNodeServices();
+
+                ////Request the DI container to supply the shared INodeServices instance  
+                //var nodeService = serviceCollection.BuildServiceProvider().GetRequiredService<INodeServices>();
+
+                ////Invoke the javascript module with parameters to execute in Node environment.  
+                //var taskResult = await nodeService.InvokeAsync<string>(@"D:\GitHub\operacao-politica-supervisionada\OPS.ImportacaoNodejs\app.js");
+
+                //sb.AppendFormat(taskResult);
+                //t = sw.Elapsed;
+                //sb.AppendFormat("<p>Duração: {0:D2}h:{1:D2}m:{2:D2}s</p>", t.Hours, t.Minutes, t.Seconds);
 
 
                 sb.AppendFormat("<h3>-- Importar Senadores {0} --</h3>", DateTime.Now.Year);

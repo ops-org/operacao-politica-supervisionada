@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS", "OPS\OPS.csproj", "{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS", "OPS\OPS.csproj", "{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.Core", "OPS.Core\OPS.Core.csproj", "{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.Core", "OPS.Core\OPS.Core.csproj", "{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.ImportacaoDados", "OPS.ImportacaoDados\OPS.ImportacaoDados.csproj", "{BB3F2C2A-4159-488D-B18A-4490A58373AF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.ImportacaoDados", "OPS.ImportacaoDados\OPS.ImportacaoDados.csproj", "{BB3F2C2A-4159-488D-B18A-4490A58373AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.ImportacaoManual", "OPS.ImportacaoManual\OPS.ImportacaoManual.csproj", "{D6B010CF-4E28-4F0B-8BF4-AB2E4706A3BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.ImportacaoManual", "OPS.ImportacaoManual\OPS.ImportacaoManual.csproj", "{D6B010CF-4E28-4F0B-8BF4-AB2E4706A3BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -43,7 +43,9 @@ namespace OPS.WebApi
         [Route("Consulta")]
         public dynamic Consulta(Newtonsoft.Json.Linq.JObject jsonData)
         {
-            return dao.Consulta(Convert.ToString(jsonData["cnpj"]), Convert.ToString(jsonData["nome"])); ;
+            if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
+
+            return dao.Consulta(jsonData["cnpj"].ToString(), jsonData["nome"].ToString()); ;
         }
 
         //[HttpGet]
@@ -87,10 +89,10 @@ namespace OPS.WebApi
         }
 
         private const string urlBaseReceitaFederal = "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/";
-        private const string paginaValidacao = "valida.asp";
+        //private const string paginaValidacao = "valida.asp";
         private const string paginaPrincipal = "Cnpjreva_solicitacao3.asp";
         private const string paginaCaptcha = "captcha/gerarCaptcha.asp";
-        private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
+        //private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 
         [HttpGet]
         [IgnoreCacheOutput]
@@ -109,14 +111,16 @@ namespace OPS.WebApi
 
             if (htmlResult.Length > 0)
             {
-                var wc2 = new CookieAwareWebClient(_cookies);
-                wc2.Headers[HttpRequestHeader.UserAgent] = "Mozilla/4.0 (compatible; Synapse)";
-                wc2.Headers[HttpRequestHeader.KeepAlive] = "300";
-                byte[] data = wc2.DownloadData(urlBaseReceitaFederal + paginaCaptcha);
+                using (var wc2 = new CookieAwareWebClient(_cookies))
+                {
+                    wc2.Headers[HttpRequestHeader.UserAgent] = "Mozilla/4.0 (compatible; Synapse)";
+                    wc2.Headers[HttpRequestHeader.KeepAlive] = "300";
+                    byte[] data = wc2.DownloadData(urlBaseReceitaFederal + paginaCaptcha);
 
-                CacheHelper.Add("CookieReceitaFederal_" + value, _cookies);
+                    CacheHelper.Add("CookieReceitaFederal_" + value, _cookies);
 
-                return "data:image/jpeg;base64," + System.Convert.ToBase64String(data, 0, data.Length);
+                    return "data:image/jpeg;base64," + System.Convert.ToBase64String(data, 0, data.Length);
+                }
             }
 
             return string.Empty;
@@ -127,6 +131,8 @@ namespace OPS.WebApi
         [Route("ConsultarDadosCnpj")]
         public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
         {
+            if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
+
             string aCNPJ = jsonData["cnpj"].ToString();
             CookieContainer _cookies = CacheHelper.Get<CookieContainer>("CookieReceitaFederal_" + aCNPJ);
 

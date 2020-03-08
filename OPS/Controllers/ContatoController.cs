@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using OPS.Core;
+using System;
 using System.Net.Mail;
 using System.Text;
 
@@ -25,6 +26,8 @@ namespace OPS.WebApi
         [ActionName("")]
         public async System.Threading.Tasks.Task<IActionResult> PostAsync(JObject jsonData)
         {
+            if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
+
             var Subject = "[OPS] Contato - " + jsonData["name"];
             var Body = jsonData["comments"].ToString();
             var From = new MailAddress("envio@ops.net.br", "[OPS] Operação Política Supervisionada");
@@ -37,8 +40,10 @@ namespace OPS.WebApi
 			objEmailTo.Add(new MailAddress("luciobig@ops.net.br", "Lúcio Big"));
 #endif
 
-            var objSmtp = new SmtpClient();
-            await Utils.SendMailAsync(Configuration, objEmailTo, Subject, Body, ReplyTo);
+            using (var objSmtp = new SmtpClient())
+            {
+                await Utils.SendMailAsync(Configuration, objEmailTo, Subject, Body, ReplyTo);
+            }
 
             return Ok();
         }

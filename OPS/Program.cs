@@ -16,8 +16,8 @@ namespace OPS
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseKestrel()
-                //.UseContentRoot("/var/www/ops.net.br/")
-                .UseSetting("detailedErrors", "true")
+                .UseContentRoot("/var/www/ops.net.br/")
+                //.UseSetting("detailedErrors", "true")
                 //.UseIISIntegration()
                 .UseStartup<Startup>()
                 .CaptureStartupErrors(true)
