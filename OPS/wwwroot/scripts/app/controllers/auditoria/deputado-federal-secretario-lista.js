@@ -15,11 +15,11 @@ app.controller('DeputadoFederalSecretariosListaController', ["$scope", "$tabela"
     		$tabela.params.sorting[lstSorting[0]] = lstSorting[1];
     	}
 
-    	$scope.BuscaGrid = function () {
-    		var filtro = {};
+        $scope.BuscaGrid = function () {
+            var filtro = {};
 
-    		$scope.tableParams = $tabela.databind('Deputado/Secretarios', filtro);
-    	}
+            $scope.tableParams = $tabela.databind('Deputado/Secretarios', filtro);
+        };
 
     	$scope.BuscaGrid();
     }]);

@@ -538,7 +538,7 @@ var app;
 
             return {
                 params: params,
-                databind: function (url, filter) {
+                databind: function (url, filter, storeFilter) {
                     var _$resource = $resource('./api/' + url, filter || {}, {
                         query: {
                             method: "GET"
@@ -579,7 +579,7 @@ var app;
                                     //}
 
                                     // HACH: ao voltar 2x estava aplicando o filtro indevidamente a pagina que poderia quebrar.
-                                    if (path === $location.path()) {
+                                    if (storeFilter !== false && path === $location.path()) {
                                         $location.search(filter);
                                         //$locationEx.skipReload().path($location.path()).search(filter).replace();
                                         //console.log(filter);

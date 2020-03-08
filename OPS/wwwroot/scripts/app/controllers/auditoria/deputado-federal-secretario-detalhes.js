@@ -1,7 +1,7 @@
 ﻿'use strict';
 
-app.controller('DeputadoFederalSecretariosDetalhesController', ["$scope", "$routeParams", "$api",
-    function ($scope, $routeParams, $api) {
+app.controller('DeputadoFederalSecretariosDetalhesController', ["$scope", "$tabela", "$api", "$routeParams", "$queryString",
+    function ($scope, $tabela, $api, $routeParams, $queryString) {
 
 		document.title = "OPS :: Secretários parlamentares";
     	$scope.disqusConfig = {
@@ -12,11 +12,26 @@ app.controller('DeputadoFederalSecretariosDetalhesController', ["$scope", "$rout
 		$api.get('Deputado/' + $routeParams.id.toString()).success(function (response) {
 			$scope.deputado_federal = response;
 			
-			document.title = "OPS :: Secretários parlamentares do(a) dep(a). " + response.nome_parlamentar;
+            document.title = "OPS :: " + response.nome_parlamentar + " :: Secretários parlamentares";
 		});
 
-    	$api.get('Deputado/' + $routeParams.id.toString() + '/Secretarios').success(function (response) {
-    		$scope.deputado_federal_secretarios = response;
-    	});
+        //var qs = $queryString.search();
+        //if (qs.page) {
+        //    $tabela.params.page = parseInt(qs.page);
+        //}
+        //if (qs.sorting) {
+        //    var lstSorting = qs.sorting.split(' ');
+        //    $tabela.params.sorting = {};
+        //    $tabela.params.sorting[lstSorting[0]] = lstSorting[1];
+        //}
 
+        $scope.BuscaGrid = function () {
+            var filtroAtivo = { Ativo: true };
+            $scope.tableParamsAtivo = $tabela.databind('Deputado/' + $routeParams.id.toString() + '/Secretarios', filtroAtivo, false);
+
+            var filtroInativo = { Ativo: false };
+            $scope.tableParamsInativo = $tabela.databind('Deputado/' + $routeParams.id.toString() + '/Secretarios', filtroInativo, false);
+        };
+
+        $scope.BuscaGrid();
     }]);

@@ -408,7 +408,7 @@ namespace OPS.ImportacaoDados
                             InserirControle(0, item["cnpj_cpf"].ToString(), "");
                             Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"] + " - " + i);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             banco.RollBackTransaction();
                         }

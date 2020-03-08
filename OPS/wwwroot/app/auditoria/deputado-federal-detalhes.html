@@ -20,19 +20,24 @@
                         <p class="mb-0" data-ng-if="deputado_federal.falecimento"><strong>Falecimento:</strong> {{::deputado_federal.falecimento}}</p>
                     </div>
                     <div class="col-sm-6">
+                        <p class="mb-0" title="Secretários Parlamentares">
+                            <strong>Pessoal do Gabinete:</strong>
+                            <a href="./#!/deputado-federal/{{::deputado_federal.id_cf_deputado}}/secretario" title="Clique para ver a lista de secretários">{{::deputado_federal.quantidade_secretarios}} Secretário(s)</a>
+                        </p>
                         <p class="mb-0">
-                            <strong>Secretários parlamentares:</strong>
-                            <a href="./#!/deputado-federal/{{::deputado_federal.id_cf_deputado}}/secretario" title="Clique para ver a lista de secretários">{{::deputado_federal.quantidade_secretarios}}</a>
+                            <strong>Custo Mensal do Gabinete:</strong>
+                            <a href="./#!/deputado-federal/{{::deputado_federal.id_cf_deputado}}/secretario" title="Clique para ver a lista de secretários">R$ {{::deputado_federal.custo_secretarios}}</a>
                         </p>
                         <p class="mb-0">
                             <strong>Gasto Acumulado CEAP:</strong>
                             <a href="./#!/deputado-federal?IdParlamentar={{::deputado_federal.id_cf_deputado}}&Periodo=0&Agrupamento=6" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{::deputado_federal.valor_total_ceap}}</a>
                         </p>
                         <p class="mb-0">
-                            <a href="https://www.camara.leg.br/deputados/{{::deputado_federal.id_cf_deputado}}/biografia" target="_blank" onclick="return trackOutboundLink(this, true);">Visualizar <strong>biografia</strong></a>
-                        </p>
-                        <p class="mb-0" data-ng-show="deputado_federal.situacao!='Fim de Mandato'">
-                            <a href="http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cf_deputado}}" target="_blank" onclick="return trackOutboundLink(this, true);">Visualizar <strong>página</strong> oficial</a>
+                            <strong>Visualizar:</strong>
+                            <a href="https://www.camara.leg.br/deputados/{{::deputado_federal.id_cf_deputado}}/biografia" target="_blank" onclick="return trackOutboundLink(this, true);">Biografia</a>
+                            <span data-ng-show="deputado_federal.situacao!='Fim de Mandato'">&nbsp;-
+                                <a href="http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id={{::deputado_federal.id_cf_deputado}}" target="_blank" onclick="return trackOutboundLink(this, true);">Página Oficial</a>
+                            </span>
                         </p>
                         <p class="mb-0"><strong>Telefone:</strong> {{::deputado_federal.telefone}}</p>
                         <p class="mb-0"><strong>Email:</strong> {{::deputado_federal.email}}</p>

@@ -61,15 +61,15 @@ namespace OPS.WebApi
         }
 
         [HttpGet("Secretarios")]
-        public async Task<dynamic> Secretarios([FromQuery]FiltroParlamentarDTO filtro)
+        public async Task<dynamic> Secretarios([FromQuery]FiltroSecretarioDTO filtro)
         {
             return await dao.Secretarios(filtro);
         }
 
         [HttpGet("{id:int}/Secretarios")]
-        public async Task<dynamic> SecretariosPorDeputado(int id)
+        public async Task<dynamic> SecretariosPorDeputado(int id, [FromQuery]FiltroSecretarioDTO filtro)
         {
-            return await dao.SecretariosPorDeputado(id);
+            return await dao.SecretariosPorDeputado(id, filtro);
         }
 
         [HttpGet("{id:int}/GastosMensaisPorAno")]

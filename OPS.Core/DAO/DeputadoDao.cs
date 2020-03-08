@@ -42,6 +42,7 @@ namespace OPS.Core.DAO
                         , d.municipio as nome_municipio_nascimento
 						, d.valor_total_ceap
 						, d.quantidade_secretarios
+						, d.custo_secretarios
 					FROM cf_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado -- eleito
@@ -82,6 +83,7 @@ namespace OPS.Core.DAO
                             nome_municipio_nascimento = reader["nome_municipio_nascimento"].ToString(),
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
                             quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
+                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"])
                         };
                     }
 
@@ -1290,7 +1292,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> Secretarios(FiltroParlamentarDTO filtro)
+        public async Task<dynamic> Secretarios(FiltroSecretarioDTO filtro)
         {
             using (Banco banco = new Banco())
             {
@@ -1300,6 +1302,7 @@ namespace OPS.Core.DAO
 						p.id as id_cf_deputado
 						, p.nome_parlamentar
 						, p.quantidade_secretarios
+						, p.custo_secretarios
 					from cf_deputado p
 					where p.quantidade_secretarios > 0
 				");
@@ -1309,7 +1312,7 @@ namespace OPS.Core.DAO
                     strSql.AppendFormat("and p.nome_parlamentar LIKE '%{0}%' ", Utils.MySqlEscape(filtro.NomeParlamentar));
                 }
 
-                strSql.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "p.quantidade_secretarios DESC, p.nome_parlamentar" : Utils.MySqlEscape(filtro.sorting));
+                strSql.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "p.nome_parlamentar" : Utils.MySqlEscape(filtro.sorting));
                 strSql.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
 
                 strSql.AppendLine("SELECT FOUND_ROWS(); ");
@@ -1323,7 +1326,8 @@ namespace OPS.Core.DAO
                         {
                             id_cf_deputado = reader["id_cf_deputado"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            quantidade_secretarios = reader["quantidade_secretarios"].ToString()
+                            quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
+                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"])
                         });
                     }
 
@@ -1339,22 +1343,33 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> SecretariosPorDeputado(int id)
+        public async Task<dynamic> SecretariosPorDeputado(int id, FiltroSecretarioDTO filtro)
         {
             using (Banco banco = new Banco())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT
-						s.id as id_cf_secretario
-						, s.id_cf_gabinete
-						, s.nome
-						, s.orgao
-						, s.data
+					SELECT SQL_CALC_FOUND_ROWS
+						s.nome
+						, s.cargo
+						, s.periodo
+						, s.valor_bruto
+						, s.valor_liquido
+						, s.valor_outros
+						, s.valor_outros + s.valor_bruto as custo_total
+                        , s.referencia
+						, s.link
 					FROM cf_secretario s
 					WHERE s.id_cf_deputado = @id
 				");
                 banco.AddParameter("@id", id);
+
+                strSql.AppendFormat("and s.periodo LIKE '{0}%' ", filtro.Ativo ? "Desde" : "de ");
+
+                strSql.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "s.nome" : Utils.MySqlEscape(filtro.sorting));
+                strSql.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
+
+                strSql.AppendLine("SELECT FOUND_ROWS(); ");
 
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
@@ -1363,15 +1378,28 @@ namespace OPS.Core.DAO
                     {
                         lstRetorno.Add(new
                         {
-                            id_cf_secretario = reader["id_cf_secretario"],
-                            id_cf_gabinete = reader["id_cf_gabinete"],
                             nome = reader["nome"].ToString(),
-                            orgao = reader["orgao"].ToString(),
-                            data = reader["data"].ToString()
+                            cargo = reader["cargo"].ToString(),
+                            periodo = reader["periodo"].ToString(),
+                            valor_bruto = Utils.FormataValor(reader["valor_bruto"]),
+                            valor_liquido = Utils.FormataValor(reader["valor_liquido"]),
+                            valor_outros = Utils.FormataValor(reader["valor_outros"]),
+                            custo_total = Utils.FormataValor(reader["custo_total"]),
+                            referencia = reader["referencia"].ToString(),
+                            link = reader["link"].ToString()
                         });
+
+
                     }
 
-                    return lstRetorno;
+                    reader.NextResult();
+                    await reader.ReadAsync();
+
+                    return new
+                    {
+                        total_count = reader[0],
+                        results = lstRetorno
+                    };
                 }
             }
         }

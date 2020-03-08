@@ -145,7 +145,7 @@ namespace OPS.ImportacaoDados
                 {
                     short count = 0;
 
-                    using (var csv = new CsvReader(reader))
+                    using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
                     {
                         while (csv.Read())
                         {
@@ -296,7 +296,7 @@ namespace OPS.ImportacaoDados
                             {
                                 banco.AddParameter("Valor", !string.IsNullOrEmpty(valor) ? (object)Convert.ToDouble(valor) : 0);
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                                 if (valor.EndsWith("."))
                                 {

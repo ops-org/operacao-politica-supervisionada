@@ -1997,7 +1997,7 @@ namespace OPS.ImportacaoDados
             using (var banco = new Banco())
             {
                 var dt = banco.GetTable("select id from cf_deputado");
-                object quantidade_secretarios;
+                //object quantidade_secretarios;
                 object valor_total_ceap;
 
                 foreach (DataRow dr in dt.Rows)
@@ -2005,16 +2005,15 @@ namespace OPS.ImportacaoDados
                     banco.AddParameter("id_cf_deputado", dr["id"]);
                     valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
 
-                    banco.AddParameter("id_cf_deputado", dr["id"]);
-                    quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
+                    //banco.AddParameter("id_cf_deputado", dr["id"]);
+                    //quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
+                    //banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
 
-                    banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
                     banco.AddParameter("valor_total_ceap", valor_total_ceap);
                     banco.AddParameter("id_cf_deputado", dr["id"]);
                     banco.ExecuteNonQuery(
                         @"update cf_deputado set 
-						quantidade_secretarios=@quantidade_secretarios
-						, valor_total_ceap=@valor_total_ceap 
+						    valor_total_ceap=@valor_total_ceap 
 						where id=@id_cf_deputado"
                     );
                 }
