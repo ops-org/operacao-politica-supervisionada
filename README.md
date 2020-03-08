@@ -8,6 +8,7 @@
 [![Crates.io](https://img.shields.io/crates/l/rustc-serialize.svg?maxAge=2592000)]()
 ![.NET Core](https://img.shields.io/badge/language-NET.Core-green.svg)
 ![MySQL](https://img.shields.io/badge/DB-MySQL-lightgrey.svg)
+![.NET Core Workflow](https://github.com/ops-org/operacao-politica-supervisionada/workflows/.NET%20Core/badge.svg)
 
 ## Quem?
 
