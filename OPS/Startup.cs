@@ -1,10 +1,8 @@
 ﻿using AspNetCore.CacheOutput;
 using AspNetCore.CacheOutput.Extensions;
-using AspNetCore.CacheOutput.InMemory.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,16 +41,12 @@ namespace OPS
             Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
             new ParametrosDao().CarregarPadroes();
 
-            services.AddInMemoryCacheOutput();
-
+            services.AddSingleton<CacheKeyGeneratorFactory, CacheKeyGeneratorFactory>();
             services.AddSingleton<ICacheKeyGenerator, DefaultCacheKeyGenerator>();
-            //services.AddSingleton<IApiOutputCache, InMemoryOutputCacheProvider>();
-            //services.AddSingleton<IApiOutputCache, LiteDBOutputCacheProvider>(provider =>
-            //{
-            //    return new LiteDBOutputCacheProvider("OutputCacheLite.db");
-            //});
+            services.AddSingleton<IApiCacheOutput, InMemoryCacheOutputProvider>();
 
             //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
         }
 

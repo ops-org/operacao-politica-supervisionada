@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 using OPS.Core;
 using System;
 using System.Net.Mail;
-using System.Text;
 
 namespace OPS.WebApi
 {

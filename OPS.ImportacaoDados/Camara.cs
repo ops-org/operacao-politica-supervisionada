@@ -1368,13 +1368,15 @@ namespace OPS.ImportacaoDados
                             }
                             catch (Exception ex1)
                             {
-                                sb.Append(dr["deputado"] + "|" + dr["mandato"] + "|Erro: " + ex1.ToFullDescriptionString());
+                                if (!ex1.Message.Contains("valor_total_ceap"))
+                                {
+                                    sb.Append(dr["deputado"] + "|" + dr["mandato"] + "|Erro: " + ex1.ToFullDescriptionString());
+                                }
 
                                 banco.AddParameter("@deputado", dr["deputado"]);
                                 banco.AddParameter("@mandato", dr["mandato"]);
                                 banco.ExecuteNonQuery(@"UPDATE cf_mandato SET valor_total_ceap = 0 WHERE id = @mandato;");
                             }
-
                         }
                     }
                 }

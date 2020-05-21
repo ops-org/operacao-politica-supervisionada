@@ -883,8 +883,8 @@ namespace OPS.Core.DAO
 					CREATE TEMPORARY TABLE table_in_memory
 					AS (
 						SELECT
-						 d.id_partido
-						, p.nome as nome_partido
+						 p.id as id_partido
+						, IFnull(p.nome, 'SEM PARTIDO') as nome_partido
 						, sum(l1.total_notas) as total_notas
 						, count(l1.id_cf_deputado) as total_deputados
                         , sum(l1.valor_total) / count(l1.id_cf_deputado) as valor_medio_por_deputado
@@ -963,8 +963,8 @@ namespace OPS.Core.DAO
 					CREATE TEMPORARY TABLE table_in_memory
 					AS (
 						SELECT
-						 d.id_estado
-						, e.nome as nome_estado
+						 e.id AS id_estado
+						, IFNULL(e.nome, 'Sem Estado / Lideranças de Partido') as nome_estado
 						, sum(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
 						from (
