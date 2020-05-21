@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.Models;
@@ -41,11 +42,11 @@ namespace OPS.WebApi
 
         [HttpPost]
         [Route("Consulta")]
-        public dynamic Consulta(Newtonsoft.Json.Linq.JObject jsonData)
+        public dynamic Consulta(JObject jsonData)
         {
             if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
 
-            return dao.Consulta(jsonData["cnpj"].ToString(), jsonData["nome"].ToString()); ;
+            return dao.Consulta((string)jsonData["cnpj"], (string)jsonData["nome"]); ;
         }
 
         //[HttpGet]
@@ -88,9 +89,9 @@ namespace OPS.WebApi
             return dao.SenadoresMaioresGastos(id);
         }
 
-        private const string urlBaseReceitaFederal = "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/";
+        private const string urlBaseReceitaFederal = "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/";
         //private const string paginaValidacao = "valida.asp";
-        private const string paginaPrincipal = "Cnpjreva_solicitacao3.asp";
+        private const string paginaPrincipal = "Cnpjreva_Solicitacao_CS.asp";
         private const string paginaCaptcha = "captcha/gerarCaptcha.asp";
         //private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 

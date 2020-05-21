@@ -120,7 +120,7 @@ namespace OPS.Core.DAO
                             cidade = reader["cidade"].ToString(),
                             estado = reader["estado"].ToString(),
                             situacao_cadastral = reader["situacao_cadastral"].ToString(),
-                            data_da_situacao_cadastral = reader["data_da_situacao_cadastral"].ToString(),
+                            data_da_situacao_cadastral = reader["data_da_situacao_cadastral"].ToString().Split(" ")[0],
                             motivo_situacao_cadastral = reader["motivo_situacao_cadastral"].ToString(),
                             situacao_especial = reader["situacao_especial"].ToString(),
                             data_situacao_especial = reader["data_situacao_especial"].ToString(),
@@ -668,7 +668,7 @@ namespace OPS.Core.DAO
 			{
 				try
 				{
-					return Convert.ToDecimal(d.ToString().Split(' ')[1]);
+					return Convert.ToDecimal(d.ToString().Split(' ')[0].Replace("R$", "").Trim());
 				}
 				catch (Exception)
 				{

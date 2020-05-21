@@ -10,10 +10,8 @@ namespace OPS.Core.Models
 {
 	public class FormatarDados
 	{
-		private const string urlBaseReceitaFederal = "http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/";
+		private const string urlBaseReceitaFederal = "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/";
 		private const string paginaValidacao = "valida.asp";
-		private const string paginaPrincipal = "cnpjreva_solicitacao3.asp";
-		private const string paginaCaptcha = "captcha/gerarCaptcha.asp";
 		private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 
 		public Fornecedor ObterDados(CookieContainer _cookies, string aCNPJ, string aCaptcha, bool bUsarSleap = false)
@@ -28,16 +26,19 @@ namespace OPS.Core.Models
 			var request = (HttpWebRequest)WebRequest.Create(urlBaseReceitaFederal + paginaValidacao);
 			request.ProtocolVersion = HttpVersion.Version10;
 			request.CookieContainer = _cookies;
-			request.Method = "POST";
+            request.AllowAutoRedirect = true;
+            request.Referer = "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao_CS.asp";
+            request.UserAgent = "Mozilla/4.0 (compatible; Synapse)";
+            request.KeepAlive = true;
+            request.Method = "POST";
 
 			var postData = string.Empty;
-			postData += "origem=comprovante&";
-			postData += "cnpj=" + cnpj + "&";
-			postData += "txtTexto_captcha_serpro_gov_br=" + aCaptcha + "&";
-			postData += "submit1=Consultar&";
-			postData += "search_type=cnpj";
+			postData += "origem=comprovante";
+			postData += "&cnpj=" + aCNPJ;
+            postData += "&txtTexto_captcha_serpro_gov_br=" + aCaptcha;
+            postData += "&search_type=cnpj";
 
-			byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
 			request.ContentType = "application/x-www-form-urlencoded";
 			request.ContentLength = byteArray.Length;
 
@@ -138,7 +139,7 @@ namespace OPS.Core.Models
 				}
 
 				textoHTML = textoHTML.Substring(textoHTML.IndexOf("CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA")).Replace("CÓDIGO E DESCRIÇÃO DA NATUREZA JURÍDICA", "").Trim();
-				fornecedor.NaturezaJuridica = textoHTML.Substring(0, textoHTML.IndexOf("PORTE DA EMPRESA")).Replace("PORTE DA EMPRESA", "").Trim();
+				fornecedor.NaturezaJuridica = textoHTML.Substring(0, textoHTML.IndexOf("LOGRADOURO")).Replace("LOGRADOURO", "").Trim();
 				if (fornecedor.NaturezaJuridica.Equals("LOGRADOURO"))
 					fornecedor.NaturezaJuridica = "";
 
@@ -198,7 +199,7 @@ namespace OPS.Core.Models
 					fornecedor.Situacao = "";
 
 				textoHTML = textoHTML.Substring(textoHTML.IndexOf("DATA DA SITUAÇÃO CADASTRAL")).Replace("DATA DA SITUAÇÃO CADASTRAL", "").Trim();
-				fornecedor.DataSituacao = textoHTML.Substring(0, textoHTML.IndexOf("\r\n")).Trim();
+				fornecedor.DataSituacao = textoHTML.Substring(0, textoHTML.IndexOf("\r\n")).Replace("00:00:00", "").Trim();
 				if (fornecedor.DataSituacao.Equals("MOTIVO DE SITUAÇÃO CADASTRAL"))
 					fornecedor.DataSituacao = "";
 
