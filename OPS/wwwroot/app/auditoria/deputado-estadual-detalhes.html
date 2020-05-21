@@ -13,13 +13,13 @@
                     <h1 style="margin-top: 0;">{{::deputado.nome_parlamentar}} <!--<small>({{::deputado.sigla_partido}} / {{::deputado.sigla_estado}})</small>--></h1>
 
                     <!--<p><label>Nome civil:</label> {{::deputado.nome_civil}}</p>
-                    <p><label>Partido:</label> {{::deputado.nome_partido}}</p>
+                    <p><label>Partido:</label> {{::deputado.nome_partido}}</p>-->
                     <p><label>Estado:</label> {{::deputado.nome_estado}}</p>
-                    <p><label>Nascimento:</label> {{::deputado.nascimento}}</p>
+                    <!--<p><label>Nascimento:</label> {{::deputado.nascimento}}</p>
                     <p><label>Email:</label> {{::deputado.email}}</p>-->
                     <p>
                         <label>Gasto Acumulado:</label>
-                        <a href="./#!/deputado?IdParlamentar={{::deputado.id_cl_deputado}}&Periodo=0&Agrupamento=6" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{::deputado.valor_total_ceaps}}</a>
+                        <a href="./#!/deputado?IdParlamentar={{::deputado.id_cl_deputado}}&Periodo=0&Agrupamento=6" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{::deputado.valor_total}}</a>
                     </p>
                     <!--<p><a data-ng-href="http://www25.senado.leg.br/web/deputadoes/deputado/-/perfil/{{::deputado.id_cl_deputado}}" href="#" target="_blank" onclick="return trackOutboundLink(this, true);">Ver página oficial no senado</a></p>-->
                 </div>

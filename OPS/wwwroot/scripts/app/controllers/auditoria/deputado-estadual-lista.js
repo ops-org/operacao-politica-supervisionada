@@ -27,11 +27,11 @@ app.controller('DeputadoEstadualListaController', ["$rootScope", "$scope", "$tab
     		$('#txtBeneficiario').val(qs.Fornecedor);
     		$scope.filtro.Fornecedor = qs.Fornecedor;
 
-    		//OPS.select("#lstUF", "./Api/Estado", qs.Uf);
-    		//$scope.filtro.Uf = qs.Uf;
+    		OPS.select("#lstUF", "./Api/Estado", qs.Uf);
+    		$scope.filtro.Uf = qs.Uf;
 
-    		//OPS.select("#lstPartido", "./Api/Partido", qs.Partido);
-    		//$scope.filtro.Partido = qs.Partido;
+    		OPS.select("#lstPartido", "./Api/Partido", qs.Partido);
+    		$scope.filtro.Partido = qs.Partido;
 
     		$("#txtDocumento").val(qs.Documento);
     		$scope.filtro.Documento = qs.Documento || null;
