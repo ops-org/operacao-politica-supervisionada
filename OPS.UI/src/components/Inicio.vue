@@ -12,7 +12,7 @@
               class="form-inline form-home"
               role="search"
               method="get"
-              v-on:submit.prevent="search()"
+              v-on:submit.prevent="buscar()"
             >
               <div class="input-group mb-3" style="margin: 0 auto;">
                 <input
@@ -62,21 +62,21 @@
         <small>(513 deputados)</small>
       </h4>
       <label>Legislatura:</label>
-      <div id="camara-legislatura" class="btn-group" data-toggle="buttons">
+      <div id="camara-legislatura" class="btn-group">
         <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="0" v-model="camaraLegislatura" /> Todas
+          <input type="radio" name="cl-options" value="0" v-model.number="camaraLegislatura" /> Todas
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="53" v-model="camaraLegislatura" /> 53º (2007-2011)
+          <input type="radio" name="cl-options" value="53" v-model.number="camaraLegislatura" /> 53º (2007-2011)
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="54" v-model="camaraLegislatura" /> 54º (2011-2015)
+          <input type="radio" name="cl-options" value="54" v-model.number="camaraLegislatura" /> 54º (2011-2015)
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="55" v-model="camaraLegislatura" /> 55º (2015-2019)
+          <input type="radio" name="cl-options" value="55" v-model.number="camaraLegislatura" /> 55º (2015-2019)
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="56" v-model="camaraLegislatura" /> 56º (2019-2023)
+          <input type="radio" name="cl-options" value="56" v-model.number="camaraLegislatura" /> 56º (2019-2023)
         </label>
       </div>
       <highcharts :options="chartCamaraResumoMensalOptions" ref="chartCamaraResumoMensal"></highcharts>
@@ -86,24 +86,24 @@
         <small>(81 senadores)</small>
       </h4>
       <label>Legislatura:</label>
-      <div id="senado-legislatura" class="btn-group" data-toggle="buttons">
+      <div id="senado-legislatura" class="btn-group">
         <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="0" v-model="senadoLegislatura" /> Todas
+          <input type="radio" name="sl-options" value="0" v-model.number="senadoLegislatura" /> Todas
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="52" v-model="senadoLegislatura" /> 52º (2007-2011)
+          <input type="radio" name="sl-options" value="52" v-model.number="senadoLegislatura" /> 52º (2007-2011)
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="53" v-model="senadoLegislatura" /> 53º (2011-2015)
+          <input type="radio" name="sl-options" value="53" v-model.number="senadoLegislatura" /> 53º (2011-2015)
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="54" v-model="senadoLegislatura" /> 54º (2015-2019)
+          <input type="radio" name="sl-options" value="54" v-model.number="senadoLegislatura" /> 54º (2015-2019)
         </label>
         <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="55" v-model="senadoLegislatura" /> 55º (2019-2023)
+          <input type="radio" name="sl-options" value="55" v-model.number="senadoLegislatura" /> 55º (2019-2023)
         </label>
       </div>
-      <highcharts :options="chartcSenadoResumoMensalOptions" ref="chartcSenadoResumoMensal"></highcharts>
+      <highcharts :options="chartcSenadoResumoMensalOptions" ref="chartSenadoResumoMensal"></highcharts>
     </div>
 
     <div class="content-section form-group">
@@ -161,14 +161,14 @@
                 <div class="row no-gutters">
                   <div class="col-xs-4">
                     <img
-                      v-bind:src="'https://ops.net.br/api/deputado/imagem/' + gasto.id_cf_deputado + '_120x160'"
+                      v-lazy="'https://ops.net.br/api/deputado/imagem/' + gasto.id_cf_deputado + '_120x160'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
                   </div>
                   <div class="col-xs-8">
                     <div class="card-body">
-                      <h6 class="card-title text-truncate" v-bind="gasto.nome_parlamentar"></h6>
+                      <h6 class="card-title text-truncate">{{gasto.nome_parlamentar}}</h6>
                       <p class="card-text">
                         {{gasto.sigla_partido_estado}}
                         <br />
@@ -200,14 +200,14 @@
                 <div class="row no-gutters">
                   <div class="col-sx-4">
                     <img
-                      v-bind:src="'https://ops.net.br/api/senador/imagem/' + gasto.id_sf_senador + '_120x160'"
+                      v-lazy="'https://ops.net.br/api/senador/imagem/' + gasto.id_sf_senador + '_120x160'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
                   </div>
                   <div class="col-sx-8">
                     <div class="card-body">
-                      <h6 class="card-title text-truncate" v-bind="gasto.nome_parlamentar"></h6>
+                      <h6 class="card-title text-truncate">{{gasto.nome_parlamentar}}</h6>
                       <p class="card-text">
                         {{gasto.sigla_partido_estado}}
                         <br />
@@ -259,12 +259,12 @@ export default {
     highcharts: Chart,
   },
   props: {
-    q: undefined,
+    q: String,
   },
   data() {
     return {
-      camaraLegislatura: '56',
-      senadoLegislatura: '55',
+      camaraLegislatura: 56,
+      senadoLegislatura: 55,
       CampeoesGastos: [],
       chartCamaraResumoMensalOptions: {
         chart: {
@@ -479,9 +479,7 @@ export default {
   },
   mounted() {
     const chartCamaraResumoMensal = this.$refs.chartCamaraResumoMensal.chart;
-    const chartcSenadoResumoMensal = this.$refs.chartcSenadoResumoMensal.chart;
-    // const chartCamaraResumoAnual = this.$refs.chartCamaraResumoAnual.chart;
-    // const chartcSenadoResumoAnual = this.$refs.chartcSenadoResumoAnual.chart;
+    const chartSenadoResumoMensal = this.$refs.chartSenadoResumoMensal.chart;
 
     axios
       .get('https://ops.net.br/api/Indicadores/ParlamentarResumoGastos')
@@ -508,7 +506,7 @@ export default {
 
         this.$nextTick(() => {
           for (let i = 0; i <= response.data.length - 3; i += 1) {
-            chartcSenadoResumoMensal.series[i].hide();
+            chartSenadoResumoMensal.series[i].hide();
           }
         });
       });
@@ -528,7 +526,7 @@ export default {
       });
   },
   methods: {
-    search() {
+    buscar() {
       this.$router.push(`/busca?q=${this.q || ''}`);
     },
   },
@@ -537,7 +535,7 @@ export default {
       const chart = this.$refs.chartCamaraResumoMensal.chart;
 
       switch (this.camaraLegislatura) {
-        case '56':
+        case 56:
           chart.series[0].hide(); // 2009
           chart.series[1].hide(); // 2010
           chart.series[2].hide(); // 2011
@@ -550,7 +548,7 @@ export default {
           chart.series[9].hide(); // 2018
           chart.series[10].show(); // 2019
           break;
-        case '55':
+        case 55:
           chart.series[0].hide(); // 2009
           chart.series[1].hide(); // 2010
           chart.series[2].hide(); // 2011
@@ -563,7 +561,7 @@ export default {
           chart.series[9].show(); // 2018
           chart.series[10].hide(); // 2019
           break;
-        case '54':
+        case 54:
           chart.series[0].hide(); // 2009
           chart.series[1].hide(); // 2010
           chart.series[2].show(); // 2011
@@ -576,7 +574,7 @@ export default {
           chart.series[9].hide(); // 2018
           chart.series[10].hide(); // 2019
           break;
-        case '53':
+        case 53:
           chart.series[0].show(); // 2009
           chart.series[1].show(); // 2010
           chart.series[2].hide(); // 2011
@@ -597,10 +595,10 @@ export default {
       }
     },
     senadoLegislatura() {
-      const chart = this.$refs.chartcSenadoResumoMensal.chart;
-
+      const chart = this.$refs.chartSenadoResumoMensal.chart;
+      debugger;
       switch (this.senadoLegislatura) {
-        case '55':
+        case 55:
           chart.series[0].hide(); // 2008
           chart.series[1].hide(); // 2009
           chart.series[2].hide(); // 2010
@@ -614,7 +612,7 @@ export default {
           chart.series[10].hide(); // 2018
           chart.series[11].show(); // 2019
           break;
-        case '54':
+        case 54:
           chart.series[0].hide(); // 2008
           chart.series[1].hide(); // 2009
           chart.series[2].hide(); // 2010
@@ -628,7 +626,7 @@ export default {
           chart.series[10].show(); // 2018
           chart.series[11].hide(); // 2019
           break;
-        case '53':
+        case 53:
           chart.series[0].hide(); // 2008
           chart.series[1].hide(); // 2009
           chart.series[2].hide(); // 2010
@@ -642,7 +640,7 @@ export default {
           chart.series[10].hide(); // 2018
           chart.series[11].hide(); // 2019
           break;
-        case '52':
+        case 52:
           chart.series[0].show(); // 2008
           chart.series[1].show(); // 2009
           chart.series[2].show(); // 2010

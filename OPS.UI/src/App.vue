@@ -3,14 +3,9 @@
     <div id="navbar" class="p-3 px-md-4 mb-3 bg-white">
       <div class="container d-flex flex-column flex-md-row align-items-center">
         <h5 class="my-0 mr-md-auto font-weight-normal">
-          <a
-            class="logo"
-            href="./#!/inicio"
-            title="OPS - Operação Política Supervisionada"
-            style="padding: 5px; margin-left: 0"
-          >
-            <img src="./assets/images/logo_ops.png" width="64" height="40" alt="OPS" />
-          </a>
+          <router-link :to="{ name: 'inicio' }" class="logo" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
+            <img src="/static/images/logo_ops.png" width="64" height="40" alt="OPS" />
+          </router-link>
         </h5>
         <nav class="my-2 my-md-0 mr-md-3 text-center">
           <div class="dropdown p-2" style="display: inline-block;">
@@ -24,10 +19,10 @@
             >Câmara</a>
             <div class="dropdown-menu dropdown-menu-left" aria-labelledby="nav-camara">
               <div class="dropdown-header">Câmara dos Deputados</div>
-              <a class="dropdown-item" href="./#!/deputado-federal/conheca">Conheça os deputados</a>
-              <a class="dropdown-item" href="./#!/deputado-federal">Cota parlamentar (CEAP)</a>
-              <a class="dropdown-item" href="./#!/deputado-federal/frequencia">Frequência</a>
-              <a class="dropdown-item" href="./#!/deputado-federal/secretario">Secretários</a>
+              <a class="dropdown-item" href="/deputado-federal/conheca">Conheça os deputados</a>
+              <a class="dropdown-item" href="/deputado-federal">Cota parlamentar (CEAP)</a>
+              <a class="dropdown-item" href="/deputado-federal/frequencia">Frequência</a>
+              <a class="dropdown-item" href="/deputado-federal/secretario">Secretários</a>
             </div>
           </div>
 
@@ -42,7 +37,7 @@
             >Senado</a>
             <div class="dropdown-menu dropdown-menu-left" aria-labelledby="nav-senado">
               <div class="dropdown-header">Senado Federal</div>
-              <a class="dropdown-item" href="./#!/senador">Cota Parlamentar (CEAPS)</a>
+              <a class="dropdown-item" href="/senador">Cota Parlamentar (CEAPS)</a>
             </div>
           </div>
 
@@ -58,7 +53,7 @@
             target="_blank"
             rel="noopener"
           >Blog</a>
-          <a id="nav-sobre" class="p-2 text-dark" href="./#!/sobre">Sobre</a>
+          <a id="nav-sobre" class="p-2 text-dark" href="./sobre">Sobre</a>
           <a
             class="p-2 text-dark social"
             href="https://www.facebook.com/operacaopoliticasupervisionada"
@@ -98,14 +93,6 @@
         <div id="container">
           <router-view />
         </div>
-
-        <!-- <div id="loading-modal">
-          <div class="modal-backdrop fade show"></div>
-          <div id="loading-modal-text">
-            <img class="loader-facebook" src="/assets/./assets/images/ajax-loader-facebook.gif" />
-            Processando
-          </div>
-        </div> -->
       </div>
     </div>
 
@@ -120,10 +107,9 @@
             OPS - Operação Política Supervisionada
           </div>
           <div class="col-sm-6 text-xs-center text-right">
-            <a href="./#!/sobre">Sobre</a>
+            <a href="/sobre">Sobre</a>
             <a
               href="https://github.com/ops-org/operacao-politica-supervisionada"
-              onclick="return trackOutboundLink(this, true);"
               target="_blank"
               rel="nofolow"
             >Repositório no GitHub</a>
@@ -137,6 +123,7 @@
       </div>
     </footer>
   </div>
+
 </template>
 
 <script>
