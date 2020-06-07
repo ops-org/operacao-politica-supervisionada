@@ -41,7 +41,7 @@ export default {
     id: Number,
   },
   data() {
-    const self = this;
+    const vm = this;
 
     return {
       deputado: {},
@@ -57,20 +57,13 @@ export default {
           };
 
           axios
-            .post(`http://localhost:5000/api/deputado/${self.id}/secretarios`, newData)
+            .post(`http://localhost:5000/api/deputado/${vm.id}/secretarios`, newData)
             .then((response) => {
               callback(response.data);
             });
         },
-        processing: true,
-        searching: false,
-        destroy: true,
-        ordering: true,
-        serverSide: true,
-        fixedHeader: true,
-        saveState: true,
-        lengthMenu: [[15, 100, 500, 1000], [15, 100, 500, 1000]],
         pageLength: 100,
+        dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
       },
       fieldsAtivos: {
         nome: {
@@ -129,20 +122,13 @@ export default {
           };
 
           axios
-            .post(`http://localhost:5000/api/deputado/${self.id}/secretarios`, newData)
+            .post(`http://localhost:5000/api/deputado/${vm.id}/secretarios`, newData)
             .then((response) => {
               callback(response.data);
             });
         },
-        processing: true,
-        searching: false,
-        destroy: true,
-        ordering: true,
-        serverSide: true,
-        fixedHeader: true,
-        saveState: true,
-        lengthMenu: [[15, 100, 500, 1000], [15, 100, 500, 1000]],
         pageLength: 100,
+        dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
       },
       fieldsInativos: {
         nome: {
@@ -191,10 +177,14 @@ export default {
     };
   },
   mounted() {
+    const loader = this.$loading.show();
+
     axios
       .get(`http://localhost:5000/api/deputado/${this.id}`)
       .then((response) => {
         this.deputado = response.data;
+
+        loader.hide();
       });
   },
 };

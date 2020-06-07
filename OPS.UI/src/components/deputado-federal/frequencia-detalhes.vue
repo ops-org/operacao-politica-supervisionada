@@ -3,7 +3,7 @@
     <h3 class="page-title">Frequência nas sessões plenárias da Câmara Federal</h3>
 
     <div class="form-group">
-        <vdtnet-table ref="table" :fields="fields" :opts="options"></vdtnet-table>
+      <vdtnet-table ref="table" :fields="fields" :opts="options"></vdtnet-table>
     </div>
 
   </div>
@@ -11,42 +11,35 @@
 
 <script>
 // this demonstrate with buttons and responsive master/details row
-import 'jquery';
 import VdtnetTable from 'vue-datatables-net';
-import 'datatables.net-bs4';
 import axios from 'axios';
 
 export default {
-  name: 'App',
   components: { VdtnetTable },
   props: {
     id: Number,
   },
   data() {
-    const self = this;
+    const vm = this;
 
     return {
       options: {
         ajax(data, callback) {
+          const loader = vm.$loading.show();
           const newData = data;
           delete newData.columns;
           delete newData.search;
 
           axios
-            .post(`http://localhost:5000/api/Deputado/Frequencia/${self.id}`, newData)
+            .post(`http://localhost:5000/api/Deputado/Frequencia/${vm.id}`, newData)
             .then((response) => {
               callback(response.data);
+
+              loader.hide();
             });
         },
-        processing: true,
-        searching: false,
-        destroy: true,
-        ordering: false,
-        serverSide: true,
-        fixedHeader: true,
-        saveState: true,
-        lengthMenu: [[15, 100, 500, 1000], [15, 100, 500, 1000]],
         pageLength: 100,
+        dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
       },
       fields: {
         nome_parlamentar: {
@@ -72,6 +65,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-</style>

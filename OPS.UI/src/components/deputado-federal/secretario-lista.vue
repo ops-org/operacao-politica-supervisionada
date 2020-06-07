@@ -27,9 +27,12 @@ export default {
   name: 'App',
   components: { VdtnetTable },
   data() {
+    const vm = this;
+
     return {
       options: {
         ajax(data, callback) {
+          const loader = vm.$loading.show();
           const newData = data;
           delete newData.columns;
           delete newData.search;
@@ -38,17 +41,12 @@ export default {
             .post('http://localhost:5000/api/Deputado/Secretarios', newData)
             .then((response) => {
               callback(response.data);
+
+              loader.hide();
             });
         },
-        processing: true,
-        searching: false,
-        destroy: true,
-        ordering: true,
-        serverSide: true,
-        fixedHeader: true,
-        saveState: true,
-        lengthMenu: [[15, 100, 500, 1000], [15, 100, 500, 1000]],
         pageLength: 100,
+        dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
       },
       fields: {
         id_cf_deputado: {

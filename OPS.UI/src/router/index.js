@@ -57,7 +57,7 @@ export default new Router({
       component: DeputadoFederalFrequenciaLista,
     },
     {
-      path: '/deputado-federal/:id/frequencia',
+      path: '/deputado-federal/frequencia/:id',
       name: 'deputado-federal-frequencia-detalhes',
       component: DeputadoFederalFrequenciaDetalhes,
       props: route => ({ id: parseInt(route.params.id, 10) }),
