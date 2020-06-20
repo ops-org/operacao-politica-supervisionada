@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.DTO;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace OPS.WebApi
@@ -60,16 +62,16 @@ namespace OPS.WebApi
             return await dao.TipoDespesa();
         }
 
-        [HttpGet("Secretarios")]
-        public async Task<dynamic> Secretarios([FromQuery]FiltroSecretarioDTO filtro)
+        [HttpPost("Secretarios")]
+        public async Task<dynamic> Secretarios(DataTablesRequest request)
         {
-            return await dao.Secretarios(filtro);
+            return await dao.Secretarios(request);
         }
 
-        [HttpGet("{id:int}/Secretarios")]
-        public async Task<dynamic> SecretariosPorDeputado(int id, [FromQuery]FiltroSecretarioDTO filtro)
+        [HttpPost("{id:int}/Secretarios")]
+        public async Task<dynamic> SecretariosPorDeputado(int id, DataTablesRequest request)
         {
-            return await dao.SecretariosPorDeputado(id, filtro);
+            return await dao.SecretariosPorDeputado(id, request);
         }
 
         [HttpGet("{id:int}/GastosMensaisPorAno")]
@@ -135,16 +137,16 @@ namespace OPS.WebApi
             return await dao.CamaraResumoAnual();
         }
 
-        [HttpGet("Frequencia/{id:int}")]
-        public async Task<dynamic> Frequencia(int id)
+        [HttpPost("Frequencia/{id:int}")]
+        public async Task<dynamic> Frequencia(int id, DataTablesRequest request)
         {
-            return await dao.Frequencia(id);
+            return await dao.Frequencia(id, request);
         }
 
-        [HttpGet("Frequencia")]
-        public async Task<dynamic> Frequencia([FromQuery]FiltroFrequenciaCamaraDTO filtro)
+        [HttpPost("Frequencia")]
+        public async Task<dynamic> Frequencia(DataTablesRequest request)
         {
-            return await dao.Frequencia(filtro);
+            return await dao.Frequencia(request);
         }
 
         [HttpGet("Imagem/{id}")]

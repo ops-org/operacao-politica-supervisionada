@@ -45,6 +45,13 @@ namespace OPS
             services.AddSingleton<ICacheKeyGenerator, DefaultCacheKeyGenerator>();
             services.AddSingleton<IApiCacheOutput, InMemoryCacheOutputProvider>();
 
+            services.AddCors(o => o.AddPolicy("OPS_CORS", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
+
             //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
@@ -53,6 +60,8 @@ namespace OPS
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostEnvironment env)
         {
+            app.UseCors("OPS_CORS");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

@@ -1,4 +1,6 @@
-﻿namespace OPS.Core.DTO
+﻿using System.Collections.Generic;
+
+namespace OPS.Core.DTO
 {
 	public class FiltroParlamentarDTO
 	{
@@ -13,9 +15,9 @@
 
 		public string Despesa { get; set; }
 
-		public string Uf { get; set; }
+		public List<int> Estado { get; set; }
 
-		public string Partido { get; set; }
+		public List<int> Partido { get; set; }
 
 		public string Fornecedor { get; set; }
 

@@ -96,22 +96,16 @@ export default {
   mounted() {
     document.title = 'OPS :: Deputado Federal';
 
-    const loader1 = this.$loading.show();
     axios
-      .get('http://localhost:5000/api/estado', this.filtro)
+      .get('http://localhost:5000/api/estado')
       .then((response) => {
         this.estados = response.data;
-
-        loader1.hide();
       });
 
-    const loader2 = this.$loading.show();
     axios
-      .get('http://localhost:5000/api/partido', this.filtro)
+      .get('http://localhost:5000/api/partido')
       .then((response) => {
         this.partidos = response.data;
-
-        loader2.hide();
       });
 
     this.Pesquisar();
