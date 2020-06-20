@@ -102,7 +102,7 @@ app.controller('DeputadoFederalListaController', ["$rootScope", "$scope", "$tabe
 
     		$("#lstParlamentar, #lstDespesa, #lstUF, #lstPartido").selectpicker('deselectAll');
     		$("#txtBeneficiario, #txtDocumento").val('');
-    		$("#lstPerido").val('8').selectpicker('refresh');
+    		$("#lstPerido").val('9').selectpicker('refresh');
     		$scope.TrocaAba(null, 1);
     	}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using MySql.Data.MySqlClient;
 using OPS.Core.DTO;
@@ -870,17 +871,17 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroEstadoDeputadoEstadual(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Partido))
+            if (filtro.Partido.Any())
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + string.Join(",", filtro.Partido) + ")) ");
             }
         }
 
         private static void AdicionaFiltroPartidoDeputadoEstadual(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Uf))
+            if (filtro.Estado.Any())
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + string.Join(",", filtro.Estado) + ")) ");
             }
         }
 

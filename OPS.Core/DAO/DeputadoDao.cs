@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using MySql.Data.MySqlClient;
 using OPS.Core.DTO;
 using System.Threading.Tasks;
 using System.Data.Common;
+using System.Linq;
 
 namespace OPS.Core.DAO
 {
@@ -495,14 +495,14 @@ namespace OPS.Core.DAO
                         break;
                 }
 
-                if (!string.IsNullOrEmpty(filtro.Partido))
+                if (filtro.Partido.Any())
                 {
-                    strSql.AppendLine("	AND d.id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ") ");
+                    strSql.AppendLine("	AND d.id_partido IN(" + string.Join(",", filtro.Partido) + ") ");
                 }
 
-                if (!string.IsNullOrEmpty(filtro.Uf))
+                if (filtro.Estado.Any())
                 {
-                    strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ") ");
+                    strSql.AppendLine("	AND d.id_estado IN(" + string.Join(",", filtro.Estado) + ") ");
                 }
 
                 strSql.AppendLine(@"
@@ -1187,17 +1187,17 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroPartidoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Partido))
+            if (filtro.Partido.Any())
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + string.Join(",", filtro.Partido) + ")) ");
             }
         }
 
         private static void AdicionaFiltroEstadoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Uf))
+            if (filtro.Estado.Any())
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + string.Join(",", filtro.Estado) + ")) ");
             }
         }
 
@@ -1604,7 +1604,7 @@ namespace OPS.Core.DAO
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT
+					SELECT 
 						s.id as id_cf_sessao
 						, s.inicio
 						, s.tipo
