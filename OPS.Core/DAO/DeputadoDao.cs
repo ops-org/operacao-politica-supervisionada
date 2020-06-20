@@ -495,14 +495,14 @@ namespace OPS.Core.DAO
                         break;
                 }
 
-                if (filtro.Partido.Any())
+                if (!string.IsNullOrEmpty(filtro.Partido))
                 {
-                    strSql.AppendLine("	AND d.id_partido IN(" + string.Join(",", filtro.Partido) + ") ");
+                    strSql.AppendLine("	AND d.id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ") ");
                 }
 
-                if (filtro.Estado.Any())
+                if (!string.IsNullOrEmpty(filtro.Uf))
                 {
-                    strSql.AppendLine("	AND d.id_estado IN(" + string.Join(",", filtro.Estado) + ") ");
+                    strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ") ");
                 }
 
                 strSql.AppendLine(@"
@@ -1187,17 +1187,17 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroPartidoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (filtro.Partido.Any())
+            if (!string.IsNullOrEmpty(filtro.Partido))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + string.Join(",", filtro.Partido) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
             }
         }
 
         private static void AdicionaFiltroEstadoDeputado(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (filtro.Estado.Any())
+            if (!string.IsNullOrEmpty(filtro.Uf))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + string.Join(",", filtro.Estado) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
             }
         }
 
