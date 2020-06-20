@@ -1292,8 +1292,14 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> Secretarios(FiltroSecretarioDTO filtro)
+        public async Task<dynamic> Secretarios(DataTablesRequest request)
         {
+            var dcFielsSort = new Dictionary<int, string>(){
+                {1, "p.nome_parlamentar" },
+                {2, "p.quantidade_secretarios" },
+                {3, "p.custo_secretarios" },
+            };
+
             using (Banco banco = new Banco())
             {
                 var strSql = new StringBuilder();
@@ -1307,15 +1313,15 @@ namespace OPS.Core.DAO
 					where p.quantidade_secretarios > 0
 				");
 
-                if (!string.IsNullOrEmpty(filtro.NomeParlamentar))
-                {
-                    strSql.AppendFormat("and p.nome_parlamentar LIKE '%{0}%' ", Utils.MySqlEscape(filtro.NomeParlamentar));
-                }
+                //if (!string.IsNullOrEmpty(filtro.NomeParlamentar))
+                //{
+                //    strSql.AppendFormat("and p.nome_parlamentar LIKE '%{0}%' ", Utils.MySqlEscape(filtro.NomeParlamentar));
+                //}
 
-                strSql.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "p.nome_parlamentar" : Utils.MySqlEscape(filtro.sorting));
-                strSql.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
+                strSql.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, "p.nome_parlamentar"));
+                strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
-                strSql.AppendLine("SELECT FOUND_ROWS(); ");
+                strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
@@ -1333,18 +1339,31 @@ namespace OPS.Core.DAO
 
                     reader.NextResult();
                     await reader.ReadAsync();
+                    string TotalCount = reader["row_count"].ToString();
 
                     return new
                     {
-                        total_count = reader[0],
-                        results = lstRetorno
+                        draw = request.Draw,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
                     };
                 }
             }
         }
 
-        public async Task<dynamic> SecretariosPorDeputado(int id, FiltroSecretarioDTO filtro)
+        public async Task<dynamic> SecretariosPorDeputado(int id, DataTablesRequest request)
         {
+            var dcFielsSort = new Dictionary<int, string>(){
+                {1, "s.nome" },
+                {2, "s.cargo" },
+                {3, "s.periodo" },
+                {4, "s.valor_bruto" },
+                {5, "s.valor_liquido" },
+                {6, "s.valor_outros+s.valor_bruto" },
+                {7, "s.referencia" },
+            };
+
             using (Banco banco = new Banco())
             {
                 var strSql = new StringBuilder();
@@ -1364,12 +1383,15 @@ namespace OPS.Core.DAO
 				");
                 banco.AddParameter("@id", id);
 
-                strSql.AppendFormat("and s.periodo LIKE '{0}%' ", filtro.Ativo ? "Desde" : "de ");
+                if (request.Filters.ContainsKey("ativo"))
+                {
+                    strSql.AppendFormat("and s.periodo LIKE '{0}%' ", Convert.ToBoolean(request.Filters["ativo"]) ? "Desde" : "de ");
+                }
 
-                strSql.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "s.nome" : Utils.MySqlEscape(filtro.sorting));
-                strSql.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
+                strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
+                strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
-                strSql.AppendLine("SELECT FOUND_ROWS(); ");
+                strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
@@ -1394,11 +1416,14 @@ namespace OPS.Core.DAO
 
                     reader.NextResult();
                     await reader.ReadAsync();
+                    string TotalCount = reader["row_count"].ToString();
 
                     return new
                     {
-                        total_count = reader[0],
-                        results = lstRetorno
+                        draw = request.Draw,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
                     };
                 }
             }
@@ -1595,16 +1620,25 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> Frequencia(FiltroFrequenciaCamaraDTO filtro)
+        public async Task<dynamic> Frequencia(DataTablesRequest request)
         {
             var sqlWhere = new StringBuilder();
+            var dcFielsSort = new Dictionary<int, string>(){
+                {1, "s.numero" },
+                {2, "s.inicio" },
+                {3, "s.tipo" },
+                {4, "sp.presenca" },
+                {5, "sp.ausencia" },
+                {6, "sp.ausencia_justificada" },
+                {7, "sp.presenca+sp.ausencia+sp.ausencia_justificada" },
+            };
 
             using (Banco banco = new Banco())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT 
+					SELECT SQL_CALC_FOUND_ROWS 
 						s.id as id_cf_sessao
 						, s.inicio
 						, s.tipo
@@ -1627,15 +1661,11 @@ namespace OPS.Core.DAO
 
                 sqlSelect.Append(sqlWhere);
 
-                sqlSelect.AppendFormat(" ORDER BY {0} ", string.IsNullOrEmpty(filtro.sorting) ? "s.inicio desc" : Utils.MySqlEscape(filtro.sorting));
-                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", (filtro.page - 1) * filtro.count, filtro.count);
+                sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.inicio desc")));
+                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
-                    @"SELECT COUNT(1) as row_count
-					FROM cf_sessao s
-					WHERE (1=1)");
-
-                sqlSelect.Append(sqlWhere);
+                    @"SELECT FOUND_ROWS() as row_count;");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -1677,22 +1707,30 @@ namespace OPS.Core.DAO
 
                     return new
                     {
-                        total_count = TotalCount,
-                        results = lstRetorno
+                        draw = request.Draw,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
                     };
                 }
             }
         }
 
-
-        public async Task<dynamic> Frequencia(int id)
+        public async Task<dynamic> Frequencia(int id, DataTablesRequest request)
         {
+            var dcFielsSort = new Dictionary<int, string>(){
+                {0, "d.nome_parlamentar" },
+                {1, "sp.presente" },
+                {2, "sp.justificativa" },
+                {3, "sp.presenca_externa" },
+            };
+
             using (Banco banco = new Banco())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendFormat(@"
-					SELECT
+					SELECT SQL_CALC_FOUND_ROWS
 						sp.id_cf_deputado
 						, d.nome_parlamentar
 						, sp.presente
@@ -1701,8 +1739,13 @@ namespace OPS.Core.DAO
 					FROM cf_sessao_presenca sp
 					INNER JOIN cf_deputado d on d.id = sp.id_cf_deputado
 					WHERE sp.id_cf_sessao = {0}
-					ORDER BY d.nome_parlamentar ASC
 				", id);
+
+                sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "d.nome_parlamentar asc")));
+                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+
+                sqlSelect.AppendLine(
+                    @"SELECT FOUND_ROWS() as row_count;");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -1746,10 +1789,16 @@ namespace OPS.Core.DAO
                         });
                     }
 
+                    reader.NextResult();
+                    await reader.ReadAsync();
+                    string TotalCount = reader["row_count"].ToString();
+
                     return new
                     {
-                        total_count = lstRetorno.Count,
-                        results = lstRetorno
+                        draw = request.Draw,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
                     };
                 }
             }
