@@ -828,42 +828,42 @@ namespace OPS.Core.DAO
             DateTime dataFim = DateTime.Today;
             switch (filtro.Periodo)
             {
-                case "1": //PERIODO_MES_ATUAL
+                case 1: //PERIODO_MES_ATUAL
                     sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
                     break;
 
-                case "2": //PERIODO_MES_ANTERIOR
+                case 2: //PERIODO_MES_ANTERIOR
                     dataIni = dataIni.AddMonths(-1);
                     sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
                     break;
 
-                case "3": //PERIODO_MES_ULT_4
+                case 3: //PERIODO_MES_ULT_4
                     dataIni = dataIni.AddMonths(-3);
                     sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyyyMM"));
                     break;
 
-                case "4": //PERIODO_ANO_ATUAL
+                case 4: //PERIODO_ANO_ATUAL
                     dataIni = new DateTime(dataIni.Year, 1, 1);
                     sqlSelect.AppendLine(string.Format(" AND l.ano_mes >= {0}01", dataIni.Year));
                     break;
 
-                case "5": //PERIODO_ANO_ANTERIOR
+                case 5: //PERIODO_ANO_ANTERIOR
                     sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0}01 AND {0}12", dataIni.Year - 1));
                     break;
 
-                case "9": //PERIODO_MANDATO_56
+                case 9: //PERIODO_MANDATO_56
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201902 AND 202301");
                     break;
 
-                case "8": //PERIODO_MANDATO_55
+                case 8: //PERIODO_MANDATO_55
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 201901");
                     break;
 
-                case "7": //PERIODO_MANDATO_54
+                case 7: //PERIODO_MANDATO_54
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201102 AND 201501");
                     break;
 
-                case "6": //PERIODO_MANDATO_53
+                case 6: //PERIODO_MANDATO_53
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 200702 AND 201101");
                     break;
             }

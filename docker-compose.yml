@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  ops.api:
+    image: ${DOCKER_REGISTRY-}opsapi
+    build:
+      context: .
+      dockerfile: OPS.API/Dockerfile
+  ops.site:
+    image: ${DOCKER_REGISTRY-}opssite
+    build:
+      context: .
+      dockerfile: OPS.Site/Dockerfile

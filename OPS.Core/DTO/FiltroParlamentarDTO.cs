@@ -21,7 +21,7 @@ namespace OPS.Core.DTO
 
 		public string Fornecedor { get; set; }
 
-		public string Periodo { get; set; }
+		public int Periodo { get; set; }
 
 		public string Documento { get; set; }
 
