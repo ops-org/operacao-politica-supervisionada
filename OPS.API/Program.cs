@@ -18,8 +18,5 @@ namespace OPS.API
                         .UseStartup<Startup>()
                         .UseUrls("http://*:5200", "http://*:5201"); ;
                 });
-                
-
-                
     }
 }
