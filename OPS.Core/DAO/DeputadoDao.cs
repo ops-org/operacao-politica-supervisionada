@@ -1243,9 +1243,9 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroEstadoDeputado(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(request.Filters["Uf"].ToString()))
+            if (!string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["Uf"].ToString()) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["Estado"].ToString()) + ")) ");
             }
         }
 

@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div class="container">
-      teste
+    <div class="container vld-parent" ref="Detalhes">
       <div class="form-group" v-if="fornecedor.genero==='nd'">
         <h2 class="page-title">Dados do Fornecedor</h2>
         <div class="col-md-12">
@@ -321,7 +320,7 @@
         <div class="col-xs-12 col-sm-6">
           <div class="card mb-3">
             <div class="card-header bg-light">Fornecedors Federais - Recebimentos mensais</div>
-            <div class="card-body" ref="RecebimentosPorMesDeputados">
+            <div class="card-body vld-parent" ref="RecebimentosPorMesDeputados">
               <highcharts
                 :options="chartRecebimentosPorMesDeputadosOptions"
                 ref="chartRecebimentosPorMesDeputados"
@@ -338,7 +337,7 @@
               >Ver lista completa</a>
               Deputados Federais (Top 10 Acumulado)
             </div>
-            <div class="card-body" ref="DeputadoFederalMaioresGastos">
+            <div class="card-body vld-parent" ref="DeputadoFederalMaioresGastos">
               <div class="table-responsive">
                 <table class="table table-striped table-hover table-sm" style="margin: 0;">
                   <thead>
@@ -372,7 +371,7 @@
         <div class="col-xs-12 col-sm-6">
           <div class="card mb-3">
             <div class="card-header bg-light">Senadores - Recebimentos mensais</div>
-            <div class="card-body" ref="RecebimentosPorMesSenadores">
+            <div class="card-body vld-parent" ref="RecebimentosPorMesSenadores">
               <highcharts
                 :options="chartRecebimentosPorMesSenadoresOptions"
                 ref="chartRecebimentosPorMesSenadores"
@@ -389,7 +388,7 @@
               >Ver lista completa</a>
               Senadores (Top 10 Acumulado)
             </div>
-            <div class="card-body" ref="SenadoresMaioresGastos">
+            <div class="card-body vld-parent" ref="SenadoresMaioresGastos">
               <div class="table-responsive">
                 <table class="table table-striped table-hover table-sm" style="margin: 0;">
                   <thead>
@@ -605,7 +604,10 @@ export default {
   },
   mounted() {
     window.document.title = 'OPS :: Fornecedor';
-    const loader = this.$loading.show();
+    const loaderDetalhes = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.Detalhes,
+    });
 
     const loaderDeputadoFederalMaioresGastos = this.$loading.show({
       fullPage: false,
@@ -652,7 +654,7 @@ export default {
       this.quadro_societario = response.data.quadro_societario;
 
       window.document.title = `OPS :: Fornecedor - ${fornecedor.nome}`;
-      loader.hide();
+      loaderDetalhes.hide();
     });
 
     axios

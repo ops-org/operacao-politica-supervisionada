@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div class="container">
+    <div class="container vld-parent" ref="Detalhes">
         <h3 class="page-title">Deputado(a) Federal</h3>
 
         <div class="row form-group">
             <div class="col-xs-12 col-md-4 col-lg-2 text-center">
-                <img class="img-thumbnail img-responsive img-deputado" v-bind:src="process.env.API + '/deputado/imagem/' + id + '_120x160'" v-bind:alt="deputado_federal.nome_parlamentar" width="130" height="170" />
+                <img class="img-thumbnail img-responsive img-deputado" v-bind:src="API + '/deputado/imagem/' + id + '_120x160'" v-bind:alt="deputado_federal.nome_parlamentar" width="130" height="170" />
             </div>
             <div class="col-xs-12 col-md-8 col-lg-10 text-left">
                 <h4 style="margin-top: 0;">{{deputado_federal.nome_parlamentar}} <small>({{deputado_federal.sigla_partido}} / {{deputado_federal.sigla_estado}})</small></h4>
@@ -53,20 +53,20 @@
             <div class="card-header bg-light">
                 Comparativo de gastos mensais com a cota parlamentar
             </div>
-            <div class="card-body">
+            <div class="card-body chart-deputado-gastos-por-mes vld-parent" ref="DeputadoGastosPorMes">
                 <highcharts :options="chartDeputadoGastosPorMesOptions" ref="chartDeputadoGastosPorMes"></highcharts>
             </div>
         </div>
 
         <div class="row form-group">
-            <div class="col-xs-12 col-sm-6" v-if="MaioresNotas.length > 0">
+            <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
                         <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=6'">Ver lista completa</a>
                         Maiores Notas/Recibos
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
+                    <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
+                        <div class="table-responsive" v-if="MaioresNotas.length > 0">
                             <table class="table table-striped table-hover table-sm" style="margin: 0;">
                                 <thead>
                                     <tr>
@@ -85,14 +85,14 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-6" v-if="MaioresFornecedores.length > 0">
+            <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
                         <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=3'">Ver lista completa</a>
                         Maiores fornecedores
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
+                    <div class="card-body maiores-fornecedores vld-parent" ref="MaioresFornecedores">
+                        <div class="table-responsive" v-if="MaioresFornecedores.length > 0">
                             <table class="table table-striped table-hover table-sm" style="margin: 0;">
                                 <thead>
                                     <tr>
@@ -117,7 +117,7 @@
             <div class="card-header bg-light">
                 Frequência nas Sessões Ordinárias
             </div>
-            <div class="card-body">
+            <div class="card-body chart-deputado-presenca vld-parent" ref="DeputadoPresenca">
                 <div class="row form-group">
                     <div class="col-xs-12 col-sm-4">
                         <highcharts :options="chartDeputadoPresencaPercentualOptions" ref="chartDeputadoPresencaPercentual"></highcharts>
@@ -147,6 +147,7 @@ export default {
   },
   data() {
     return {
+      API: '',
       deputado_federal: {},
       MaioresNotas: {},
       MaioresFornecedores: {},
@@ -246,6 +247,32 @@ export default {
   },
   mounted() {
     window.document.title = 'OPS :: Deputado Federal';
+    this.API = process.env.API;
+
+    const loaderDetalhes = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.Detalhes,
+    });
+
+    const loaderDeputadoGastosPorMes = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.DeputadoGastosPorMes,
+    });
+
+    const loaderDeputadoPresenca = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.DeputadoPresenca,
+    });
+
+    const loaderMaioresNotas = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.MaioresNotas,
+    });
+
+    const loaderMaioresFornecedores = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.MaioresFornecedores,
+    });
 
     axios
       .get(`${process.env.API}/deputado/${this.id}`)
@@ -253,12 +280,15 @@ export default {
         this.deputado_federal = response.data;
 
         window.document.title = `OPS :: Deputado Federal - ${response.data.nome_parlamentar}`;
+        loaderDetalhes.hide();
       });
 
     axios
       .get(`${process.env.API}/deputado/${this.id}/GastosMensaisPorAno`)
       .then((response) => {
         this.chartDeputadoGastosPorMesOptions.series = response.data;
+
+        loaderDeputadoGastosPorMes.hide();
       });
 
     axios
@@ -310,19 +340,35 @@ export default {
 
         this.chartDeputadoPresencaAnualOptions.xAxis.categories = response.data.frequencia_anual.categories;
         this.chartDeputadoPresencaAnualOptions.series = response.data.frequencia_anual.series;
+
+        loaderDeputadoPresenca.hide();
       });
 
     axios
       .get(`${process.env.API}/deputado/${this.id}/MaioresNotas`)
       .then((response) => {
         this.MaioresNotas = response.data;
+
+        loaderMaioresNotas.hide();
       });
 
     axios
       .get(`${process.env.API}/deputado/${this.id}/MaioresFornecedores`)
       .then((response) => {
         this.MaioresFornecedores = response.data;
+
+        loaderMaioresFornecedores.hide();
       });
   },
 };
 </script>
+
+
+<style scoped>
+  .chart-deputado-presenca, .chart-deputado-gastos-por-mes{
+    min-height: 440px;;
+  }
+  .maiores-notas, .maiores-fornecedores{
+    min-height: 100px;;
+  }
+</style>

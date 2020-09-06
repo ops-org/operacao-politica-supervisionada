@@ -103,17 +103,18 @@ namespace OPS.WebApi
         [HttpGet("Imagem/{id}")]
         public VirtualFileResult Imagem(string id)
         {
-            var file = @"images/Parlamentares/SENADOR/" + id + ".jpg";
-            var filePath = System.IO.Path.Combine(Environment.WebRootPath, file);
+            if (!string.IsNullOrEmpty(Environment.WebRootPath))
+            {
+                var file = @"images/Parlamentares/SENADOR/" + id + ".jpg";
+                var filePath = System.IO.Path.Combine(Environment.WebRootPath, file);
 
-            if (System.IO.File.Exists(filePath))
-            {
-                return File(file, "image/jpeg");
+                if (System.IO.File.Exists(filePath))
+                {
+                    return File(file, "image/jpeg");
+                }
             }
-            else
-            {
-                return File(@"images/sem_foto.jpg", "image/jpeg");
-            }
+
+            return File(@"images/sem_foto.jpg", "image/jpeg");
         }
     }
 }

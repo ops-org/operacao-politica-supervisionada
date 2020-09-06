@@ -391,7 +391,6 @@ export default {
     },
     Pesquisar() {
       const vm = this;
-      // const loader = this.$loading.show();
       vm.senador = {};
       vm.fields = null;
 
@@ -632,7 +631,7 @@ export default {
         }
 
         vm.$nextTick(() => {
-          vm.$refs.table.reload();
+          vm.$refs.table.reload(null, true);
         });
       });
     },

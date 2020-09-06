@@ -44,14 +44,18 @@
             Câmara dos Deputados
             <small>(513 deputados)</small>
           </h4>
-          <highcharts :options="chartCamaraResumoAnualOptions" ref="chartCamaraResumoAnual"></highcharts>
+          <div class="chart-resumo-anual vld-parent" ref="CamaraResumoAnual">
+            <highcharts :options="chartCamaraResumoAnualOptions" ref="chartCamaraResumoAnual"></highcharts>
+          </div>
         </div>
         <div class="col-sm-6">
           <h4>
             Senado Federal
             <small>(81 senadores)</small>
           </h4>
-          <highcharts :options="chartSenadoResumoAnualOptions" ref="chartSenadoResumoAnual"></highcharts>
+          <div class="chart-resumo-anual vld-parent" ref="SenadoResumoAnual">
+            <highcharts :options="chartSenadoResumoAnualOptions" ref="chartSenadoResumoAnual"></highcharts>
+          </div>
         </div>
       </div>
     </div>
@@ -63,49 +67,53 @@
         Câmara Federal
         <small>(513 deputados)</small>
       </h4>
-      <label>Legislatura:</label>
-      <div id="camara-legislatura" class="btn-group">
-        <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="0" v-model.number="camaraLegislatura" /> Todas
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="53" v-model.number="camaraLegislatura" /> 53º (2007-2011)
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="54" v-model.number="camaraLegislatura" /> 54º (2011-2015)
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="55" v-model.number="camaraLegislatura" /> 55º (2015-2019)
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="cl-options" value="56" v-model.number="camaraLegislatura" /> 56º (2019-2023)
-        </label>
+      <div class="chart-resumo-mensal vld-parent" ref="CamaraResumoMensal">
+        <label>Legislatura:</label>
+        <div id="camara-legislatura" class="btn-group">
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="0" v-model.number="camaraLegislatura" /> Todas
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="53" v-model.number="camaraLegislatura" /> 53º (2007-2011)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="54" v-model.number="camaraLegislatura" /> 54º (2011-2015)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="55" v-model.number="camaraLegislatura" /> 55º (2015-2019)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="56" v-model.number="camaraLegislatura" /> 56º (2019-2023)
+          </label>
+        </div>
+        <highcharts :options="chartCamaraResumoMensalOptions" ref="chartCamaraResumoMensal"></highcharts>
       </div>
-      <highcharts :options="chartCamaraResumoMensalOptions" ref="chartCamaraResumoMensal"></highcharts>
 
       <h4>
         Senado Federal
         <small>(81 senadores)</small>
       </h4>
-      <label>Legislatura:</label>
-      <div id="senado-legislatura" class="btn-group">
-        <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="0" v-model.number="senadoLegislatura" /> Todas
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="52" v-model.number="senadoLegislatura" /> 52º (2007-2011)
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="53" v-model.number="senadoLegislatura" /> 53º (2011-2015)
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="54" v-model.number="senadoLegislatura" /> 54º (2015-2019)
-        </label>
-        <label class="btn btn-light">
-          <input type="radio" name="sl-options" value="55" v-model.number="senadoLegislatura" /> 55º (2019-2023)
-        </label>
+      <div class="chart-resumo-mensal vld-parent" ref="SenadoResumoMensal">
+        <label>Legislatura:</label>
+        <div id="senado-legislatura" class="btn-group">
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="0" v-model.number="senadoLegislatura" /> Todas
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="52" v-model.number="senadoLegislatura" /> 52º (2007-2011)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="53" v-model.number="senadoLegislatura" /> 53º (2011-2015)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="54" v-model.number="senadoLegislatura" /> 54º (2015-2019)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="55" v-model.number="senadoLegislatura" /> 55º (2019-2023)
+          </label>
+        </div>
+        <highcharts :options="chartcSenadoResumoMensalOptions" ref="chartSenadoResumoMensal"></highcharts>
       </div>
-      <highcharts :options="chartcSenadoResumoMensalOptions" ref="chartSenadoResumoMensal"></highcharts>
     </div>
 
     <div class="content-section form-group">
@@ -144,7 +152,7 @@
         da verba indenizatória da atual legislatura
       </p>
       <br />
-      <div class="resumo-gastos">
+      <div class="resumo-gastos vld-parent" ref="CampeoesGastos">
         <h4>
           Deputados Federais
           <small>(Desde fevereiro de 2019)</small>
@@ -163,7 +171,7 @@
                 <div class="row no-gutters">
                   <div class="col-xs-4">
                     <img
-                      v-lazy="process.env.API + '/deputado/imagem/' + gasto.id_cf_deputado + '_120x160'"
+                      v-lazy="API + '/deputado/imagem/' + gasto.id_cf_deputado + '_120x160'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
@@ -202,7 +210,7 @@
                 <div class="row no-gutters">
                   <div class="col-sx-4">
                     <img
-                      v-lazy="process.env.API + '/senador/imagem/' + gasto.id_sf_senador + '_120x160'"
+                      v-lazy="API + '/senador/imagem/' + gasto.id_sf_senador + '_120x160'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
@@ -267,6 +275,7 @@ export default {
   },
   data() {
     return {
+      API: '',
       pageConfig: {
         url: 'http://ops.net.br',
         identifier: 'Pagina Inicial',
@@ -488,11 +497,39 @@ export default {
   mounted() {
     const chartCamaraResumoMensal = this.$refs.chartCamaraResumoMensal.chart;
     const chartSenadoResumoMensal = this.$refs.chartSenadoResumoMensal.chart;
+    this.API = process.env.API;
+
+    const loaderCampeoesGastos = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.CampeoesGastos,
+    });
+
+    const loaderCamaraResumoMensal = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.CamaraResumoMensal,
+    });
+
+    const loaderSenadoResumoMensal = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.SenadoResumoMensal,
+    });
+
+    const loaderCamaraResumoAnual = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.CamaraResumoAnual,
+    });
+
+    const loaderSenadoResumoAnual = this.$loading.show({
+      fullPage: false,
+      container: this.$refs.SenadoResumoAnual,
+    });
 
     axios
       .get(`${process.env.API}/inicio/parlamentarresumogastos`)
       .then((response) => {
         this.CampeoesGastos = response.data;
+
+        loaderCampeoesGastos.hide();
       });
 
     axios
@@ -504,6 +541,8 @@ export default {
           for (let i = 0; i <= response.data.length - 3; i += 1) {
             chartCamaraResumoMensal.series[i].hide();
           }
+
+          loaderCamaraResumoMensal.hide();
         });
       });
 
@@ -516,6 +555,8 @@ export default {
           for (let i = 0; i <= response.data.length - 3; i += 1) {
             chartSenadoResumoMensal.series[i].hide();
           }
+
+          loaderSenadoResumoMensal.hide();
         });
       });
 
@@ -524,6 +565,8 @@ export default {
       .then((response) => {
         this.chartCamaraResumoAnualOptions.series[0].data = response.data.series;
         this.chartCamaraResumoAnualOptions.xAxis.categories = response.data.categories;
+
+        loaderCamaraResumoAnual.hide();
       });
 
     axios
@@ -531,6 +574,8 @@ export default {
       .then((response) => {
         this.chartSenadoResumoAnualOptions.series[0].data = response.data.series;
         this.chartSenadoResumoAnualOptions.xAxis.categories = response.data.categories;
+
+        loaderSenadoResumoAnual.hide();
       });
   },
   methods: {
@@ -675,4 +720,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  .card-img{
+    width: 90px;
+    height: 113px;
+  }
+
+  .chart-resumo-mensal, .chart-resumo-anual{
+    min-height: 400px;
+  }
+
+  .resumo-gastos{
+    min-height: 358px;
+  }
 </style>
