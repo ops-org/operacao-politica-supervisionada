@@ -1,5 +1,4 @@
 ﻿using System;
-using MySql.Data.MySqlClient;
 
 namespace OPS.Core.DAO
 {
@@ -9,9 +8,9 @@ namespace OPS.Core.DAO
 		{
 			try
 			{
-				using (Banco banco = new Banco())
+				using (AppDb banco = new AppDb())
 				{
-					using (MySqlDataReader reader = banco.ExecuteReader("SELECT * from parametros"))
+					using (var reader = banco.ExecuteReader("SELECT * from parametros"))
 					{
 						if (reader.Read())
 						{

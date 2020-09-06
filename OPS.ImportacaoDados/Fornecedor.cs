@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+﻿using MySqlConnector;
 using Newtonsoft.Json;
 using OPS.Core;
 using System;
@@ -59,7 +59,7 @@ namespace OPS.ImportacaoDados
 
         public static void AtualizaFornecedorDoador()
         {
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 var dt = banco.GetTable("select id, cnpj_cpf from fornecedor");
 
@@ -87,7 +87,7 @@ namespace OPS.ImportacaoDados
             DataTable dtFornecedoresAtividade;
             DataTable dtFornecedoresNatJu;
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 dtFornecedores = banco.GetTable(
                     @"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
@@ -216,7 +216,7 @@ namespace OPS.ImportacaoDados
                 }
 
                 string strSql2;
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
                     //if (receita?.status == null)
                     //{
@@ -422,7 +422,7 @@ namespace OPS.ImportacaoDados
                 }
             }
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(@"
 					update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
@@ -446,7 +446,7 @@ namespace OPS.ImportacaoDados
 
         private static void InserirControle(int controle, string cnpj_cpf, string mensagem)
         {
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.AddParameter("@cnpj_cpf", cnpj_cpf);
                 banco.AddParameter("@controle", controle);
@@ -464,7 +464,7 @@ namespace OPS.ImportacaoDados
 
             if (drs.Length == 0)
             {
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
                     var strSql =
                         @"insert into fornecedor_atividade (codigo, descricao) values (@codigo, @descricao); SELECT LAST_INSERT_ID();";

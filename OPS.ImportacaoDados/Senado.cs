@@ -19,7 +19,7 @@ namespace OPS.ImportacaoDados
 
             try
             {
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
                     banco.ExecuteNonQuery("UPDATE sf_senador SET ativo = 'N'");
 
@@ -94,7 +94,7 @@ namespace OPS.ImportacaoDados
         public static void AtualizaSenadores()
         {
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 DataTable dtSenadores = banco.GetTable("SELECT id FROM sf_senador");
 
@@ -196,7 +196,7 @@ namespace OPS.ImportacaoDados
         public static void CarregaSenadores()
         {
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 for (int i = 4921; i <= 6000; i++)
                 {
@@ -355,7 +355,7 @@ namespace OPS.ImportacaoDados
             {
                 var resumoImportacao = CarregaDadosCsv(fullFileNameCsv, ano, completo);
 
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
                     banco.ExecuteNonQuery(@"
 					UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
@@ -393,7 +393,7 @@ namespace OPS.ImportacaoDados
 
             int linhaAtual = 0;
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 var lstHash = new List<string>();
                 using (var dReader = banco.ExecuteReader("select hash from sf_despesa where ano=" + ano))
@@ -524,7 +524,7 @@ namespace OPS.ImportacaoDados
                 AtualizaResumoMensal();
             }
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
                 {
@@ -540,7 +540,7 @@ namespace OPS.ImportacaoDados
             return sb.ToString();
         }
 
-        private static string ProcessarDespesasTemp(Banco banco, bool completo)
+        private static string ProcessarDespesasTemp(AppDb banco, bool completo)
         {
             var sb = new StringBuilder();
 
@@ -558,7 +558,7 @@ namespace OPS.ImportacaoDados
             return sb.ToString();
         }
 
-        private static void CorrigeDespesas(Banco banco)
+        private static void CorrigeDespesas(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				UPDATE sf_despesa_temp 
@@ -571,7 +571,7 @@ namespace OPS.ImportacaoDados
 			");
         }
 
-        private static string InsereSenadorFaltante(Banco banco)
+        private static string InsereSenadorFaltante(AppDb banco)
         {
             //object total = banco.ExecuteScalar(@"select count(1) from sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
             //if (Convert.ToInt32(total) > 0)
@@ -588,7 +588,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereFornecedorFaltante(Banco banco)
+        private static string InsereFornecedorFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				INSERT INTO fornecedor (nome, cnpj_cpf)
@@ -608,7 +608,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereDespesaFinal(Banco banco)
+        private static string InsereDespesaFinal(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				ALTER TABLE sf_despesa DISABLE KEYS;
@@ -654,7 +654,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static void InsereDespesaFinalParcial(Banco banco)
+        private static void InsereDespesaFinalParcial(AppDb banco)
         {
             var dt = banco.GetTable(
                 @"DROP TABLE IF EXISTS table_in_memory_d;
@@ -726,7 +726,7 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        private static void LimpaDespesaTemporaria(Banco banco)
+        private static void LimpaDespesaTemporaria(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				truncate table sf_despesa_temp;
@@ -735,7 +735,7 @@ namespace OPS.ImportacaoDados
 
         public static void AtualizaSenadorValores()
         {
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery("UPDATE sf_senador SET valor_total_ceaps=0;");
 
@@ -783,7 +783,7 @@ namespace OPS.ImportacaoDados
 				LEFT JOIN partido p on p.id = d.id_partido
 				LEFT JOIN estado e on e.id = d.id_estado;";
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(strSql);
             }
@@ -800,7 +800,7 @@ namespace OPS.ImportacaoDados
 						group by ano, mes
 					);";
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(strSql);
             }
@@ -810,7 +810,7 @@ namespace OPS.ImportacaoDados
         {
             var db = new StringBuilder();
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 DataTable table = banco.GetTable("SELECT id FROM sf_senador where valor_total_ceaps > 0 or ativo = 'S'");
 

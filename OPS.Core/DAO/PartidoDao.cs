@@ -8,7 +8,7 @@ namespace OPS.Core.DAO
 	{
 		public async Task<dynamic> Consultar()
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				var lstRetorno = new List<dynamic>();
 

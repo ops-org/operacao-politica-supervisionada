@@ -99,7 +99,7 @@ namespace OPS.ImportacaoDados
 
             int linhaAtual = 0;
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 //var lstHash = new Dictionary<string, long>();
                 //using (var dReader = banco.ExecuteReader("select id, hash from cl_despesa where ano=" + ano))
@@ -245,7 +245,7 @@ namespace OPS.ImportacaoDados
 
         public static void AtualizaValorTotal()
         {
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(@"
         	        UPDATE cl_deputado dp SET
@@ -255,7 +255,7 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        private static string ProcessarDespesasTemp(Banco banco)
+        private static string ProcessarDespesasTemp(AppDb banco)
         {
             var sb = new StringBuilder();
 
@@ -268,7 +268,7 @@ namespace OPS.ImportacaoDados
             return sb.ToString();
         }
 
-        private static string InsereTipoDespesaFaltante(Banco banco)
+        private static string InsereTipoDespesaFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
         	        INSERT INTO cl_despesa_tipo (descricao)
@@ -288,7 +288,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereDeputadoFaltante(Banco banco)
+        private static string InsereDeputadoFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
         	        INSERT INTO cl_deputado (nome_parlamentar, id_estado)
@@ -328,7 +328,7 @@ namespace OPS.ImportacaoDados
        //     return string.Empty;
        // }
 
-        private static string InsereDespesaFinal(Banco banco)
+        private static string InsereDespesaFinal(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
                 -- UPDATE cl_despesa_temp SET observacao = NULL WHERE observacao = 'não consta documento';
@@ -371,7 +371,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static void LimpaDespesaTemporaria(Banco banco)
+        private static void LimpaDespesaTemporaria(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				truncate table cl_despesa_temp;

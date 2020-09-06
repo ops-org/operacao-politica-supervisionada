@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MySql.Data.MySqlClient;
 using OPS.Core.DTO;
 
 namespace OPS.Core.DAO
@@ -11,7 +10,7 @@ namespace OPS.Core.DAO
     {
         public dynamic Consultar(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = @"
 					SELECT 
@@ -35,7 +34,7 @@ namespace OPS.Core.DAO
 				";
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql))
+                using (var reader = banco.ExecuteReader(strSql))
                 {
                     if (reader.Read())
                     {
@@ -65,7 +64,7 @@ namespace OPS.Core.DAO
 
         public dynamic MaioresFornecedores(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -91,7 +90,7 @@ namespace OPS.Core.DAO
 
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     while (reader.Read())
@@ -112,7 +111,7 @@ namespace OPS.Core.DAO
 
         public dynamic MaioresNotas(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -139,7 +138,7 @@ namespace OPS.Core.DAO
 
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     while (reader.Read())
@@ -161,7 +160,7 @@ namespace OPS.Core.DAO
 
         public dynamic GastosMensaisPorAno(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -173,7 +172,7 @@ namespace OPS.Core.DAO
 				");
                 banco.AddParameter("@id", id);
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
@@ -223,7 +222,7 @@ namespace OPS.Core.DAO
 
         public dynamic Busca(string value)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -254,7 +253,7 @@ namespace OPS.Core.DAO
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -279,7 +278,7 @@ namespace OPS.Core.DAO
 
         public dynamic Pesquisa()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -295,7 +294,7 @@ namespace OPS.Core.DAO
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -336,7 +335,7 @@ namespace OPS.Core.DAO
 
         private dynamic LancamentosParlamentar(FiltroParlamentarDTO filtro)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -382,7 +381,7 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (var reader = banco.ExecuteReader(sqlSelect.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -414,7 +413,7 @@ namespace OPS.Core.DAO
 
         private dynamic LancamentosFornecedor(FiltroParlamentarDTO filtro)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -457,7 +456,7 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (var reader = banco.ExecuteReader(sqlSelect.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -491,7 +490,7 @@ namespace OPS.Core.DAO
 
         private dynamic LancamentosDespesa(FiltroParlamentarDTO filtro)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -533,7 +532,7 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (var reader = banco.ExecuteReader(sqlSelect.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -563,7 +562,7 @@ namespace OPS.Core.DAO
 
         private dynamic LancamentosPartido(FiltroParlamentarDTO filtro)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -611,7 +610,7 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (var reader = banco.ExecuteReader(sqlSelect.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -643,7 +642,7 @@ namespace OPS.Core.DAO
 
         private dynamic LancamentosEstado(FiltroParlamentarDTO filtro)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -690,7 +689,7 @@ namespace OPS.Core.DAO
                 AdicionaResultadoComum(filtro, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (var reader = banco.ExecuteReader(sqlSelect.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -734,7 +733,7 @@ namespace OPS.Core.DAO
             //sqlSelect.AppendLine(", l.txNomeParlamentar as nome_parlamentar");
             //sqlSelect.AppendLine(", SUM(l.vlrLiquido) AS vlrTotal ");
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -780,7 +779,7 @@ namespace OPS.Core.DAO
                 sqlSelect.AppendFormat("SELECT FOUND_ROWS();");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sqlSelect.ToString()))
+                using (var reader = banco.ExecuteReader(sqlSelect.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -828,42 +827,42 @@ namespace OPS.Core.DAO
             DateTime dataFim = DateTime.Today;
             switch (filtro.Periodo)
             {
-                case "1": //PERIODO_MES_ATUAL
+                case 1: //PERIODO_MES_ATUAL
                     sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
                     break;
 
-                case "2": //PERIODO_MES_ANTERIOR
+                case 2: //PERIODO_MES_ANTERIOR
                     dataIni = dataIni.AddMonths(-1);
                     sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
                     break;
 
-                case "3": //PERIODO_MES_ULT_4
+                case 3: //PERIODO_MES_ULT_4
                     dataIni = dataIni.AddMonths(-3);
                     sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyyyMM"));
                     break;
 
-                case "4": //PERIODO_ANO_ATUAL
+                case 4: //PERIODO_ANO_ATUAL
                     dataIni = new DateTime(dataIni.Year, 1, 1);
                     sqlSelect.AppendLine(string.Format(" AND l.ano_mes >= {0}01", dataIni.Year));
                     break;
 
-                case "5": //PERIODO_ANO_ANTERIOR
+                case 5: //PERIODO_ANO_ANTERIOR
                     sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0}01 AND {0}12", dataIni.Year - 1));
                     break;
 
-                case "9": //PERIODO_MANDATO_56
+                case 9: //PERIODO_MANDATO_56
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201902 AND 202301");
                     break;
 
-                case "8": //PERIODO_MANDATO_55
+                case 8: //PERIODO_MANDATO_55
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 201901");
                     break;
 
-                case "7": //PERIODO_MANDATO_54
+                case 7: //PERIODO_MANDATO_54
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201102 AND 201501");
                     break;
 
-                case "6": //PERIODO_MANDATO_53
+                case 6: //PERIODO_MANDATO_53
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 200702 AND 201101");
                     break;
             }
@@ -871,17 +870,17 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroEstadoDeputadoEstadual(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Partido))
+            if (filtro.Partido.Any())
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + String.Join(",", filtro.Partido) + ")) "); ;
             }
         }
 
         private static void AdicionaFiltroPartidoDeputadoEstadual(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Uf))
+            if (filtro.Estado.Any())
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + String.Join(",", filtro.Estado) + ")) ");
             }
         }
 
@@ -895,7 +894,7 @@ namespace OPS.Core.DAO
                 {
                     if (filtro.Fornecedor.Length == 14 || filtro.Fornecedor.Length == 11)
                     {
-                        using (Banco banco = new Banco())
+                        using (AppDb banco = new AppDb())
                         {
                             var id_fornecedor =
                                 banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(filtro.Fornecedor) + "'");
@@ -943,14 +942,14 @@ namespace OPS.Core.DAO
 
         public dynamic TipoDespesa()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM cl_despesa_tipo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     while (reader.Read())
                     {
@@ -967,9 +966,9 @@ namespace OPS.Core.DAO
 
         public dynamic SenadoResumoMensal()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
-                using (MySqlDataReader reader = banco.ExecuteReader(@"select ano, mes, valor from cl_despesa_resumo_mensal"))
+                using (var reader = banco.ExecuteReader(@"select ano, mes, valor from cl_despesa_resumo_mensal"))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
@@ -1018,7 +1017,7 @@ namespace OPS.Core.DAO
 
         public dynamic SenadoResumoAnual()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -1030,7 +1029,7 @@ namespace OPS.Core.DAO
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     if (reader.HasRows)
                     {

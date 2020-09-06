@@ -3,13 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS", "OPS\OPS.csproj", "{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.Core", "OPS.Core\OPS.Core.csproj", "{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.ImportacaoDados", "OPS.ImportacaoDados\OPS.ImportacaoDados.csproj", "{BB3F2C2A-4159-488D-B18A-4490A58373AF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.ImportacaoManual", "OPS.ImportacaoManual\OPS.ImportacaoManual.csproj", "{D6B010CF-4E28-4F0B-8BF4-AB2E4706A3BD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.API", "OPS.API\OPS.API.csproj", "{4D53C319-84B9-41A6-9379-142DDB67A4DF}"
+EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "OPS.Site", "OPS.Site\OPS.Site.njsproj", "{7E4446A1-772E-4D73-97F5-27D70FFBFD33}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{11D931D0-B421-4C16-BF42-768EE308DD2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ABA30CFA-4DBD-40F8-88F7-C7FE42CE3420}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +33,18 @@ Global
 		{D6B010CF-4E28-4F0B-8BF4-AB2E4706A3BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6B010CF-4E28-4F0B-8BF4-AB2E4706A3BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6B010CF-4E28-4F0B-8BF4-AB2E4706A3BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D53C319-84B9-41A6-9379-142DDB67A4DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D53C319-84B9-41A6-9379-142DDB67A4DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D53C319-84B9-41A6-9379-142DDB67A4DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D53C319-84B9-41A6-9379-142DDB67A4DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11D931D0-B421-4C16-BF42-768EE308DD2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11D931D0-B421-4C16-BF42-768EE308DD2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11D931D0-B421-4C16-BF42-768EE308DD2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11D931D0-B421-4C16-BF42-768EE308DD2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
