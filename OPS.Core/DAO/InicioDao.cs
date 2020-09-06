@@ -4,7 +4,7 @@ using System.Text;
 
 namespace OPS.Core.DAO
 {
-    public static class IndicadoresDao
+    public static class InicioDao
 	{
 		/// <summary>
 		/// Retorna resumo (8 Itens) dos parlamentares mais e menos gastadores

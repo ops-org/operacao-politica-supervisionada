@@ -4,8 +4,8 @@
     <ProjectVersion>2.1</ProjectVersion>
     <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>11d931d0-b421-4c16-bf42-768ee308dd2c</ProjectGuid>
-    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/weatherforecast</DockerServiceUrl>
+    <DockerLaunchAction>None</DockerLaunchAction>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/indicadores/parlamentarresumogastos</DockerServiceUrl>
     <DockerServiceName>ops.api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>

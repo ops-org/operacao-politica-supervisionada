@@ -5,7 +5,7 @@
 
         <div class="row form-group">
             <div class="col-xs-12 col-md-4 col-lg-2 text-center">
-                <img class="img-thumbnail img-responsive img-deputado" v-bind:src="'//api.ops.net.br/deputado/imagem/' + id + '_120x160'" v-bind:alt="deputado_federal.nome_parlamentar" width="130" height="170" />
+                <img class="img-thumbnail img-responsive img-deputado" v-bind:src="process.env.API + '/deputado/imagem/' + id + '_120x160'" v-bind:alt="deputado_federal.nome_parlamentar" width="130" height="170" />
             </div>
             <div class="col-xs-12 col-md-8 col-lg-10 text-left">
                 <h4 style="margin-top: 0;">{{deputado_federal.nome_parlamentar}} <small>({{deputado_federal.sigla_partido}} / {{deputado_federal.sigla_estado}})</small></h4>
@@ -36,7 +36,7 @@
                         <p class="mb-0">
                             <strong>Visualizar:</strong>
                             <a v-bind:href="'//www.camara.leg.br/deputados/' + id + '/biografia'" target="_blank" onclick="return trackOutboundLink(this, true);">Biografia</a>
-                            <span data-ng-show="deputado_federal.situacao!='Fim de Mandato'">&nbsp;-
+                            <span v-if="deputado_federal.situacao!='Fim de Mandato'">&nbsp;-
                                 <a v-bind:href="'http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id=' + id" target="_blank" onclick="return trackOutboundLink(this, true);">Página Oficial</a>
                             </span>
                         </p>
@@ -184,48 +184,7 @@ export default {
         series: [],
       },
 
-      chartDeputadoPresencaPercentualOptions: {
-        // chart: {
-        //   type: 'pie',
-        // },
-
-        // title: {
-        //   text: null,
-        // },
-        // subtitle: {
-        //   text: 'Resumo Geral',
-        // },
-
-        // tooltip: {
-        //   pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: <b>{point.percentage:.2f}%</b><br/>',
-        // },
-
-        // plotOptions: {
-        //   pie: {
-        //     cursor: 'pointer',
-        //     size: '90%',
-        //     innerSize: '20%',
-        //     dataLabels: {
-        //       enabled: true,
-        //       format: '{point.percentage:.2f}%',
-        //     },
-        //     showInLegend: true,
-        //     data: [],
-        //   },
-        // },
-
-        // colors: ['#7cb5ec', '#e4d354', '#f15c80'],
-
-        // series: [{
-        //   type: 'pie',
-        //   name: 'Frequência',
-
-        //   dataLabels: {
-        //     distance: -40,
-        //     format: '{point.percentage:.2f}%',
-        //   },
-        // }],
-      },
+      chartDeputadoPresencaPercentualOptions: { },
 
       chartDeputadoPresencaAnualOptions: {
         chart: {
@@ -265,7 +224,6 @@ export default {
         }],
 
         tooltip: {
-          // pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
           pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: <b>{point.y}</b><br/>',
           shared: true,
           crosshairs: true,
@@ -288,9 +246,6 @@ export default {
   },
   mounted() {
     window.document.title = 'OPS :: Deputado Federal';
-    // const chartDeputadoGastosPorMes = this.$refs.chartDeputadoGastosPorMes.chart;
-    // const chartDeputadoPresencaPercentual = this.$refs.chartDeputadoPresencaPercentual.chart;
-    // const chartDeputadoPresencaAnual = this.$refs.chartDeputadoPresencaAnual.chart;
 
     axios
       .get(`${process.env.API}/deputado/${this.id}`)
@@ -370,43 +325,4 @@ export default {
       });
   },
 };
-
-// document.title = 'OPS :: Deputado Federal';
-// $api.get(`Deputado/${$routeParams.id.toString()}`).success((response) => {
-//   $scope.deputado_federal = response;
-
-//   document.title = `OPS :: Deputado Federal - ${response.nome_parlamentar}`;
-// });
-
-// $api.get(`Deputado/${$routeParams.id.toString()}/GastosMensaisPorAno`).success((response) => {
-//   if (response.length > 0) {
-//     $('#deputados-gastos-por-mes').highcharts({
-
-//     });
-//   } else {
-//     $('#deputados-gastos-por-mes').html('O parlamentar não fez uso da cota parlamentar até o momento!');
-//   }
-// });
-
-// $api.get(`Deputado/${$routeParams.id.toString()}/ResumoPresenca`).success((response) => {
-//   if (response.frequencia_anual.categories.length > 0) {
-//     $('#deputados-presenca-total-percentual').highcharts({
-
-//     });
-
-//     $('#deputados-presenca-anual').highcharts({
-
-//     });
-//   } else {
-//     $('#deputados-presenca .card-body').html('Ainda não há presenças registradas para esse parlamentar.');
-//   }
-// });
-
-// $api.get(`Deputado/${$routeParams.id.toString()}/MaioresNotas`).success((response) => {
-//   $scope.MaioresNotas = response;
-// });
-
-// $api.get(`Deputado/${$routeParams.id.toString()}/MaioresFornecedores`).success((response) => {
-//   $scope.MaioresFornecedores = response;
-// });
 </script>

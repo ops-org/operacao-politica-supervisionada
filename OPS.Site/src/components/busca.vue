@@ -36,7 +36,7 @@
                               <div class="row no-gutters">
                                   <div class="col-md-4">
                                       <a v-bind:href="'./senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
-                                          <img class="media-thumbnail" v-lazy="'//api.ops.net.br/senador/imagem/' + senador.id_sf_senador + '_120x160'" />
+                                          <img class="media-thumbnail" v-lazy="API + '/senador/imagem/' + senador.id_sf_senador + '_120x160'" />
                                       </a>
                                   </div>
                                   <div class="col-md-8">
@@ -70,7 +70,7 @@
                               <div class="row no-gutters">
                                   <div class="col-md-4">
                                       <a v-bind:href="'./deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
-                                          <img class="media-thumbnail" v-lazy="'//api.ops.net.br/deputado/imagem/' + deputado.id_cf_deputado" />
+                                          <img class="media-thumbnail" v-lazy="API + '/deputado/imagem/' + deputado.id_cf_deputado" />
                                       </a>
                                   </div>
                                   <div class="col-md-8">
@@ -115,16 +115,19 @@ const axios = require('axios');
 
 export default {
   name: 'Busca',
+  props: {
+    q: String,
+  },
   data() {
     return {
-      q: undefined,
+      API: '',
       deputado_federal: [],
       senador: [],
       fornecedor: [],
     };
   },
   mounted() {
-    this.q = this.$route.query.q;
+    this.API = process.env.API;
 
     this.buscar();
   },
@@ -133,10 +136,8 @@ export default {
       if (this.q) {
         const loader = this.$loading.show();
 
-        this.$router.push({ path: '/busca', query: { q: this.q } });
-
         axios
-          .get(`${process.env.API}/indicadores/busca?value=${this.q}`)
+          .get(`${process.env.API}/inicio/busca?value=${this.q}`)
           .then((response) => {
             this.deputado_federal = response.data.deputado_federal;
             this.senador = response.data.senador;

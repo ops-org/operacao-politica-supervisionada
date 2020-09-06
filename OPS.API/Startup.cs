@@ -31,10 +31,6 @@ namespace OPS.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var cultureInfo = new CultureInfo("pt-BR");
-            System.Threading.Thread.CurrentThread.CurrentCulture = cultureInfo;
-            System.Threading.Thread.CurrentThread.CurrentUICulture = cultureInfo;
-
             Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
             new ParametrosDao().CarregarPadroes();
 
@@ -98,11 +94,33 @@ namespace OPS.API
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            //var dtf = new DateTimeFormatInfo
+            //{
+            //    ShortDatePattern = "dd/MM/yyyy",
+            //    LongDatePattern = "dd/MM/yyyy HH:mm",
+            //    ShortTimePattern = "HH:mm",
+            //    LongTimePattern = "HH:mm"
+            //};
+
+            var supportedCultures = new List<CultureInfo>
+            {
+                new CultureInfo("pt-BR") // { DateTimeFormat = dtf },
+            };
+
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("pt-BR"),
+                // Formatting numbers, dates, etc.
+                SupportedCultures = supportedCultures,
+                // UI strings that we have localized.
+                SupportedUICultures = supportedCultures
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            
             //app.UseHttpsRedirection();
             app.UseCacheOutput();
             app.UseRouting();

@@ -740,9 +740,9 @@ namespace OPS.Core.DAO
                         lstRetorno.Add(new
                         {
                             id_cf_deputado = reader["id_cf_deputado"],
-                            nome_parlamentar = reader["nome_parlamentar"],
-                            sigla_estado = reader["sigla_estado"],
-                            sigla_partido = reader["sigla_partido"],
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            sigla_partido = reader["sigla_partido"].ToString(),
                             total_notas = reader["total_notas"],
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });

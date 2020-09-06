@@ -10,6 +10,7 @@ import DeputadoFederalSecretarioLista from '@/components/deputado-federal/secret
 import DeputadoFederalSecretarioDetalhes from '@/components/deputado-federal/secretario-detalhes';
 import DeputadoFederalFrequenciaLista from '@/components/deputado-federal/frequencia-lista';
 import DeputadoFederalFrequenciaDetalhes from '@/components/deputado-federal/frequencia-detalhes';
+import DeputadoFederalDocumento from '@/components/deputado-federal/documento';
 
 import SenadorLista from '@/components/senador/lista';
 import SenadorDetalhes from '@/components/senador/detalhes';
@@ -33,7 +34,7 @@ export default new Router({
       path: '/busca',
       name: 'busca',
       component: Busca,
-      // props: route => ({ q: route.query.q }),
+      props: route => ({ q: route.query.q }),
     },
     {
       path: '/deputado-federal',
@@ -66,6 +67,12 @@ export default new Router({
       path: '/deputado-federal/frequencia/:id',
       name: 'deputado-federal-frequencia-detalhes',
       component: DeputadoFederalFrequenciaDetalhes,
+      props: route => ({ id: parseInt(route.params.id, 10) }),
+    },
+    {
+      path: '/deputado-federal/documento/:id',
+      name: 'deputado-federal-documento',
+      component: DeputadoFederalDocumento,
       props: route => ({ id: parseInt(route.params.id, 10) }),
     },
     {

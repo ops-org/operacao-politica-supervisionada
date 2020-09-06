@@ -60,6 +60,7 @@ export default {
           sortable: false,
         },
         numero: {
+          isLocal: false,
           label: 'Número',
           sortable: true,
         },

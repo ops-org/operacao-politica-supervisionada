@@ -8,13 +8,13 @@ namespace OPS.WebApi
     [ApiController]
     [Route("[controller]")]
     [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
-    public class IndicadoresController : Controller
+    public class InicioController : Controller
     {
         [HttpGet]
         [Route("ParlamentarResumoGastos")]
         public dynamic ParlamentarResumoGastos()
         {
-            return IndicadoresDao.ParlamentarResumoGastos();
+            return InicioDao.ParlamentarResumoGastos();
         }
 
         [HttpGet]
@@ -28,8 +28,8 @@ namespace OPS.WebApi
             return new
             {
                 deputado_federal = await oDeputadoDao.Busca(value),
-                senador = oSenadorDao.Busca(value),
-                fornecedor = oFornecedorDao.Busca(value)
+                senador = await oSenadorDao.Busca(value),
+                fornecedor = await oFornecedorDao.Busca(value)
             };
         }
     }

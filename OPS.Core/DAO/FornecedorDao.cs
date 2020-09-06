@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using OPS.Core.Models;
 
@@ -734,22 +736,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        //public void MarcaVisitado(string Cnpj, string UserName)
-        //{
-        //	using (Banco banco = new Banco())
-        //	{
-        //		banco.AddParameter("txtCNPJCPF", Cnpj);
-        //		banco.AddParameter("UserName", UserName);
-
-        //		try
-        //		{
-        //			banco.ExecuteNonQuery("INSERT INTO fornecedores_visitado (txtCNPJCPF, UserName) VALUES (@txtCNPJCPF, @UserName)");
-        //		}
-        //		catch { }
-        //	}
-        //}
-
-        public dynamic Busca(string value)
+        public async Task<List<dynamic>> Busca(string value)
         {
             using (Banco banco = new Banco())
             {
@@ -775,18 +762,18 @@ namespace OPS.Core.DAO
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
-                {
-                    while (reader.Read())
-                    {
-                        lstRetorno.Add(new
+				using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+				{
+					while (await reader.ReadAsync())
+					{
+						lstRetorno.Add(new
                         {
                             id_fornecedor = reader["id_fornecedor"],
                             cnpj = reader["cnpj"].ToString(),
                             nome = reader["nome"].ToString(),
-                            nome_fantasia = reader["nome_fantasia"],
-                            estado = reader["estado"]
-                        });
+                            nome_fantasia = reader["nome_fantasia"].ToString(),
+                            estado = reader["estado"].ToString()
+						});
                     }
                 }
                 return lstRetorno;

@@ -6,7 +6,7 @@
         <div class="box-senador form-group">
             <div class="row">
                 <div class="col-xs-12 col-md-4 col-lg-2 text-center">
-                    <img class="img-thumbnail img-responsive img-senador" v-bind:src="'//api.ops.net.br/senador/imagem/' + senador.id_sf_senador + '_240x300'"
+                    <img class="img-thumbnail img-responsive img-senador" v-bind:src="process.env.API + '/senador/imagem/' + senador.id_sf_senador + '_240x300'"
                          v-bind:title="senador.nome_parlamentar" v-bind:alt="senador.nome_parlamentar" width="170" height="210" />
                 </div>
                 <div class="col-xs-12 col-md-8 col-lg-10 text-left">

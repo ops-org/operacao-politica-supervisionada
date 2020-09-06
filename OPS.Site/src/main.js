@@ -53,7 +53,7 @@ Vue.use(VueLazyload, {
   attempt: 1,
 });
 
-// https://jkchao.github.io/vue-loading/
+// https://github.com/jkchao/vue-loading
 Vue.use(Loading, {
   fullPage: true,
 });

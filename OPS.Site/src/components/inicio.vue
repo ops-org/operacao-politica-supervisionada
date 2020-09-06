@@ -163,7 +163,7 @@
                 <div class="row no-gutters">
                   <div class="col-xs-4">
                     <img
-                      v-lazy="'//api.ops.net.br/deputado/imagem/' + gasto.id_cf_deputado + '_120x160'"
+                      v-lazy="process.env.API + '/deputado/imagem/' + gasto.id_cf_deputado + '_120x160'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
@@ -202,7 +202,7 @@
                 <div class="row no-gutters">
                   <div class="col-sx-4">
                     <img
-                      v-lazy="'//api.ops.net.br/senador/imagem/' + gasto.id_sf_senador + '_120x160'"
+                      v-lazy="process.env.API + '/senador/imagem/' + gasto.id_sf_senador + '_120x160'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
@@ -490,7 +490,7 @@ export default {
     const chartSenadoResumoMensal = this.$refs.chartSenadoResumoMensal.chart;
 
     axios
-      .get(`${process.env.API}/indicadores/parlamentarresumogastos`)
+      .get(`${process.env.API}/inicio/parlamentarresumogastos`)
       .then((response) => {
         this.CampeoesGastos = response.data;
       });

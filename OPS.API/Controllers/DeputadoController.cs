@@ -91,7 +91,7 @@ namespace OPS.WebApi
                 return NotFound();
         }
 
-        [HttpGet("DocumentosDoMesmoDia/{id:int}")]
+        [HttpGet("{id:int}/DocumentosDoMesmoDia")]
         public async Task<dynamic> DocumentosDoMesmoDia(int id)
         {
             var result = await dao.DocumentosDoMesmoDia(id);
@@ -99,7 +99,7 @@ namespace OPS.WebApi
             return Ok(result);
         }
 
-        [HttpGet("DocumentosDaSubcotaMes/{id:int}")]
+        [HttpGet("{id:int}/DocumentosDaSubcotaMes")]
         public async Task<dynamic> DocumentosDaSubcotaMes(int id)
         {
             var result = await dao.DocumentosDaSubcotaMes(id);

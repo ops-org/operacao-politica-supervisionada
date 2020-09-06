@@ -28,11 +28,12 @@
     },
     "Docker": {
       "commandName": "Docker",
-      //"launchBrowser": true,
-      //"launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/",
+      "launchBrowser": false,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/indicadores/parlamentarresumogastos",
       "environmentVariables": {
         "ASPNETCORE_URLS": "https://+:443;http://+:80",
-        "ASPNETCORE_HTTPS_PORT": "5201"
+        "ASPNETCORE_HTTPS_PORT": "5201",
+        "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "publishAllPorts": true,
       "useSSL": true,

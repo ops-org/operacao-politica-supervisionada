@@ -15,8 +15,11 @@ namespace OPS.API
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
-                        .UseStartup<Startup>()
-                        .UseUrls("http://*:5200", "http://*:5201"); ;
+                        .UseStartup<Startup>();
+
+#if !DEBUG
+                    webBuilder.UseUrls("http://*:5200", "https://*:5201");
+#endif
                 });
     }
 }

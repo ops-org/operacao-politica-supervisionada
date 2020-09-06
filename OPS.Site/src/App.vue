@@ -135,6 +135,7 @@ export default {
 <style>
   @import "bootstrap";
   @import "font-awesome";
+  @import "datatables.net-bs4/css/dataTables.bootstrap4.min.css";
 
   @import './assets/styles/site.css';
 </style>
