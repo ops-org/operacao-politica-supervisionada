@@ -3,66 +3,20 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
 using OPS.Core.Models;
 
 namespace OPS.Core.DAO
 {
 	public class FornecedorDao
 	{
-		//internal dynamic Pesquisa(FiltroDropDownDTO filtro)
-		//{
-		//	using (Banco banco = new Banco())
-		//	{
-		//		var strSql = new StringBuilder();
-		//		strSql.Append("SELECT SQL_CALC_FOUND_ROWS txtCNPJCPF, txtBeneficiario FROM fornecedores ");
-
-		//		if (!string.IsNullOrEmpty(filtro.q))
-		//		{
-		//			strSql.AppendFormat("WHERE txtBeneficiario LIKE @q OR txtCNPJCPF LIKE @q ", filtro.q);
-		//			banco.AddParameter("@q", "%" + filtro.q + "%");
-		//		}
-		//		else if (!string.IsNullOrEmpty(filtro.qs))
-		//		{
-		//			strSql.AppendFormat("WHERE txtCNPJCPF IN({0}) ", "'" + filtro.qs.Replace(",", "','") + "'");
-		//		}
-
-		//		strSql.AppendFormat("ORDER BY txtBeneficiario, Uf ");
-		//		strSql.AppendFormat("LIMIT {0},{1}; ", ((filtro.page ?? 1) - 1) * filtro.count, filtro.count);
-
-		//		strSql.Append("SELECT FOUND_ROWS(); ");
-
-		//		var lstRetorno = new List<dynamic>();
-		//		using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
-		//		{
-		//			while (reader.Read())
-		//			{
-		//				lstRetorno.Add(new
-		//				{
-		//					id = reader[0].ToString(),
-		//					text = string.Format("{0} ({1})", reader[1].ToString(), reader[0].ToString()),
-		//				});
-		//			}
-
-		//			reader.NextResult();
-		//			reader.Read();
-
-		//			return new
-		//			{
-		//				total_count = reader[0],
-		//				results = lstRetorno
-		//			};
-		//		}
-		//	}
-		//}
 
 		public dynamic Consulta(int id)
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				banco.AddParameter("id", id);
 
-				using (MySqlDataReader reader = banco.ExecuteReader(
+				using (var reader = banco.ExecuteReader(
 						@"SELECT 
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
@@ -153,7 +107,7 @@ namespace OPS.Core.DAO
 		{
 			try
 			{
-				using (Banco banco = new Banco())
+				using (AppDb banco = new AppDb())
 				{
 					string strSql =
 						@"SELECT
@@ -168,7 +122,7 @@ namespace OPS.Core.DAO
 
 					banco.AddParameter("id", id);
 
-					using (MySqlDataReader reader = banco.ExecuteReader(strSql))
+					using (var reader = banco.ExecuteReader(strSql))
 					{
 						List<dynamic> lstRetorno = new List<dynamic>();
 						while (reader.Read())
@@ -194,7 +148,7 @@ namespace OPS.Core.DAO
 
 		public dynamic SenadoresMaioresGastos(int id)
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				var strSql =
 					@"SELECT
@@ -215,7 +169,7 @@ namespace OPS.Core.DAO
 
 				banco.AddParameter("@id", id);
 
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql))
+				using (var reader = banco.ExecuteReader(strSql))
 				{
 					List<dynamic> lstRetorno = new List<dynamic>();
 					while (reader.Read())
@@ -235,7 +189,7 @@ namespace OPS.Core.DAO
 
 		public dynamic DeputadoFederalMaioresGastos(int id)
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				var strSql = new StringBuilder();
 				strSql.Append(
@@ -257,7 +211,7 @@ namespace OPS.Core.DAO
 
 				banco.AddParameter("@id", id);
 
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				using (var reader = banco.ExecuteReader(strSql.ToString()))
 				{
 					List<dynamic> lstRetorno = new List<dynamic>();
 					while (reader.Read())
@@ -277,7 +231,7 @@ namespace OPS.Core.DAO
 
 		public dynamic RecebimentosMensaisPorAnoDeputados(int id)
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				string strSql = @"
 					SELECT l.mes, l.ano, SUM(l.valor_liquido) AS valor_total
@@ -289,7 +243,7 @@ namespace OPS.Core.DAO
 
 				banco.AddParameter("@id", id);
 
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				using (var reader = banco.ExecuteReader(strSql.ToString()))
 				{
 					List<dynamic> lstRetorno = new List<dynamic>();
 					var lstValoresMensais = new decimal?[12];
@@ -338,7 +292,7 @@ namespace OPS.Core.DAO
 
 		public dynamic RecebimentosMensaisPorAnoSenadores(int id)
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				string strSql = @"
 					SELECT l.mes, l.ano, SUM(l.valor) AS valor_total
@@ -350,7 +304,7 @@ namespace OPS.Core.DAO
 
 				banco.AddParameter("@id", id);
 
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				using (var reader = banco.ExecuteReader(strSql.ToString()))
 				{
 					List<dynamic> lstRetorno = new List<dynamic>();
 					var lstValoresMensais = new decimal?[12];
@@ -401,7 +355,7 @@ namespace OPS.Core.DAO
 		{
 			int id_fornecedor = 0;
 
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				bool fornecedor_existente = false;
 
@@ -689,7 +643,7 @@ namespace OPS.Core.DAO
 						FROM fornecedor
                         WHERE (1=1)";
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 if (!string.IsNullOrEmpty(cnpj))
                 {
@@ -719,7 +673,7 @@ namespace OPS.Core.DAO
                 sSql += " order by nome limit 100;";
 
                 var lstFornecedor = new List<dynamic>();
-                using (MySqlDataReader reader = banco.ExecuteReader(sSql))
+                using (var reader = banco.ExecuteReader(sSql))
                 {
                     while (reader.Read())
                     {
@@ -738,7 +692,7 @@ namespace OPS.Core.DAO
 
         public async Task<List<dynamic>> Busca(string value)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"

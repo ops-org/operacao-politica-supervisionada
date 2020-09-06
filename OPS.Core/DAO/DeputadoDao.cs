@@ -5,6 +5,7 @@ using OPS.Core.DTO;
 using System.Threading.Tasks;
 using System.Data.Common;
 using System.Linq;
+using MySqlConnector;
 
 namespace OPS.Core.DAO
 {
@@ -12,7 +13,7 @@ namespace OPS.Core.DAO
     {
         public async Task<dynamic> Consultar(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -94,7 +95,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> MaioresFornecedores(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -141,7 +142,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> MaioresNotas(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -190,7 +191,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> Documento(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -251,7 +252,7 @@ namespace OPS.Core.DAO
                             id_documento = await reader.GetValueOrDefaultAsync<dynamic>(1),
                             numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
                             tipo_documento = sTipoDocumento,
-                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<MySql.Data.Types.MySqlDateTime?>(4)),
+                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<MySqlDateTime?>(4)),
                             valor_documento = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(5)),
                             valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
                             valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
@@ -286,7 +287,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> DocumentosDoMesmoDia(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -333,7 +334,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> DocumentosDaSubcotaMes(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -381,7 +382,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> GastosMensaisPorAno(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -443,7 +444,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> Lista(FiltroParlamentarDTO request)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -539,7 +540,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> Busca(string value)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -595,7 +596,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> Pesquisa()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -687,7 +688,7 @@ namespace OPS.Core.DAO
 
         private async Task<dynamic> LancamentosParlamentar(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -766,7 +767,7 @@ namespace OPS.Core.DAO
 
         private async Task<dynamic> LancamentosFornecedor(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -844,7 +845,7 @@ namespace OPS.Core.DAO
 
         private async Task<dynamic> LancamentosDespesa(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -917,7 +918,7 @@ namespace OPS.Core.DAO
 
         private async Task<dynamic> LancamentosPartido(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -998,7 +999,7 @@ namespace OPS.Core.DAO
 
         private async Task<dynamic> LancamentosEstado(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -1085,7 +1086,7 @@ namespace OPS.Core.DAO
             AdicionaFiltroEstadoDeputado(request, sqlWhere);
             AdicionaFiltroDocumento(request, sqlWhere);
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -1242,9 +1243,9 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroEstadoDeputado(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(filtro.Uf))
+            if (!string.IsNullOrEmpty(request.Filters["Uf"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["Uf"].ToString()) + ")) ");
             }
         }
 
@@ -1258,7 +1259,7 @@ namespace OPS.Core.DAO
                 {
                     if (Fornecedor.Length == 14 || Fornecedor.Length == 11)
                     {
-                        using (Banco banco = new Banco())
+                        using (AppDb banco = new AppDb())
                         {
                             var id_fornecedor = banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(Fornecedor) + "'");
 
@@ -1317,7 +1318,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> TipoDespesa()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM cf_despesa_tipo ");
@@ -1347,7 +1348,7 @@ namespace OPS.Core.DAO
                 {3, "p.custo_secretarios" },
             };
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -1411,7 +1412,7 @@ namespace OPS.Core.DAO
                 {7, "s.referencia" },
             };
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -1479,7 +1480,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> ResumoPresenca(int id)
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -1587,7 +1588,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> CamaraResumoMensal()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(@"select ano, mes, valor from cf_despesa_resumo_mensal"))
                 {
@@ -1638,7 +1639,7 @@ namespace OPS.Core.DAO
 
         public async Task<dynamic> CamaraResumoAnual()
         {
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -1681,7 +1682,7 @@ namespace OPS.Core.DAO
                 {7, "sp.presenca+sp.ausencia+sp.ausencia_justificada" },
             };
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -1773,7 +1774,7 @@ namespace OPS.Core.DAO
                 {3, "sp.presenca_externa" },
             };
 
-            using (Banco banco = new Banco())
+            using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 

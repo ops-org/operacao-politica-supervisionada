@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+﻿using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OPS.Core
 {
-    public class Banco : IDisposable
+    public class AppDb : IDisposable
     {
         private bool _mBeginTransaction;
         private MySqlConnection _mConnection;
@@ -17,12 +17,12 @@ namespace OPS.Core
         private List<MySqlParameter> _mParametros;
         private MySqlTransaction _mTransaction;
 
-        public Banco()
+        public AppDb()
         {
             Initializer(Padrao.ConnectionString);
         }
 
-        public Banco(string connectionString)
+        public AppDb(string connectionString)
         {
             Initializer(connectionString);
         }

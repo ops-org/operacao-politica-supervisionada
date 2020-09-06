@@ -219,7 +219,7 @@ namespace OPS.ImportacaoDados
 
             int linhaAtual = 0;
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 //var lstHash = new Dictionary<string, long>();
                 //using (var dReader = banco.ExecuteReader("select id, hash from cl_despesa where ano=" + ano))
@@ -482,7 +482,7 @@ namespace OPS.ImportacaoDados
             //    AtualizaValorTotal();
             //}
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 using (var dReader = banco.ExecuteReader(string.Format("select sum(valor) as valor, count(1) as itens from cl_despesa where ano_mes between {0}01 and {0}12", ano)))
                 {
@@ -523,7 +523,7 @@ namespace OPS.ImportacaoDados
             // Controle, lista para remover caso não constem no XML
             var lstHashExcluir = new Dictionary<string, long>();
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 using (var dReader = banco.ExecuteReader(string.Format("select id, hash from cl_despesa where ano_mes = {0}{1:00}", ano, mes)))
                 {
@@ -681,7 +681,7 @@ namespace OPS.ImportacaoDados
             //    AtualizaValorTotal();
             //}
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 if (lstHashExcluir.Count > 0)
                 {
@@ -722,7 +722,7 @@ namespace OPS.ImportacaoDados
 
         public static void AtualizaValorTotal()
         {
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(@"
         	        UPDATE cl_deputado dp SET
@@ -732,7 +732,7 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        private static string ProcessarDespesasTemp(Banco banco, string referencia = "")
+        private static string ProcessarDespesasTemp(AppDb banco, string referencia = "")
         {
             var sb = new StringBuilder();
 
@@ -745,7 +745,7 @@ namespace OPS.ImportacaoDados
             return sb.ToString();
         }
 
-        private static string InsereTipoDespesaFaltante(Banco banco)
+        private static string InsereTipoDespesaFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
         	        INSERT INTO cl_despesa_tipo (descricao)
@@ -765,7 +765,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereDeputadoFaltante(Banco banco)
+        private static string InsereDeputadoFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
         	        INSERT INTO cl_deputado (nome_parlamentar, cpf, id_estado)
@@ -784,7 +784,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereFornecedorFaltante(Banco banco)
+        private static string InsereFornecedorFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				    INSERT INTO fornecedor (nome, cnpj_cpf)
@@ -805,7 +805,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereDespesaFinal(Banco banco, string referencia)
+        private static string InsereDespesaFinal(AppDb banco, string referencia)
         {
             if (string.IsNullOrEmpty(referencia))
             {
@@ -852,7 +852,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static void LimpaDespesaTemporaria(Banco banco)
+        private static void LimpaDespesaTemporaria(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				truncate table cl_despesa_temp;

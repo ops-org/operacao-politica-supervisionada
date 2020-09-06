@@ -1,5 +1,4 @@
-﻿using MySql.Data.MySqlClient;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace OPS.Core.DAO
@@ -14,7 +13,7 @@ namespace OPS.Core.DAO
 		/// <returns></returns>
 		public static object ParlamentarResumoGastos()
 		{
-			using (Banco banco = new Banco())
+			using (AppDb banco = new AppDb())
 			{
 				var strSql = new StringBuilder();
 
@@ -32,7 +31,7 @@ namespace OPS.Core.DAO
 
 				var lstDeputados = new List<dynamic>();
 				var lstSenadores = new List<dynamic>();
-				using (MySqlDataReader reader = banco.ExecuteReader(strSql.ToString()))
+				using (var reader = banco.ExecuteReader(strSql.ToString()))
 				{
 					while (reader.Read())
 					{

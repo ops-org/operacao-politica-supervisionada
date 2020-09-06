@@ -93,7 +93,7 @@ namespace OPS.ImportacaoDados
             var sqlFields = new StringBuilder();
             var sqlValues = new StringBuilder();
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp");
 
@@ -168,7 +168,7 @@ namespace OPS.ImportacaoDados
             var sqlFields = new StringBuilder();
             var sqlValues = new StringBuilder();
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
 
@@ -247,7 +247,7 @@ namespace OPS.ImportacaoDados
             var sqlFields = new StringBuilder();
             var sqlValues = new StringBuilder();
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
 
@@ -395,7 +395,7 @@ namespace OPS.ImportacaoDados
 
             DataTable dtMandatos;
             DataTable dtSessoes;
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 dtMandatos = banco.GetTable("select id_cf_deputado, id_legislatura, id_carteira_parlamantar from cf_mandato");
                 dtSessoes = banco.GetTable("select id, id_legislatura, data, inicio, tipo, numero, checksum from cf_sessao");
@@ -487,7 +487,7 @@ namespace OPS.ImportacaoDados
                         }
                         else
                         {
-                            using (var banco = new Banco())
+                            using (var banco = new AppDb())
                             {
                                 foreach (DataRow dr in drSessoes)
                                 {
@@ -512,7 +512,7 @@ namespace OPS.ImportacaoDados
 
                 var lstSessaoDia = new Dictionary<string, int>();
 
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
                     var count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
                     for (var i = 0; i < count; i++)
@@ -702,7 +702,7 @@ namespace OPS.ImportacaoDados
 
             Padrao.DeputadoFederalPresencaUltimaAtualizacao = DateTime.Now;
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.AddParameter("cf_deputado_presenca_ultima_atualizacao", Padrao.DeputadoFederalPresencaUltimaAtualizacao);
                 banco.ExecuteNonQuery(@"UPDATE parametros SET cf_deputado_presenca_ultima_atualizacao=@cf_deputado_presenca_ultima_atualizacao");
@@ -740,7 +740,7 @@ namespace OPS.ImportacaoDados
             //int leg = 55;
             Deputados deputados;
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(@"UPDATE cf_deputado SET id_cf_gabinete=NULL");
             }
@@ -761,7 +761,7 @@ namespace OPS.ImportacaoDados
                         Dados deputadoDetalhes = null;
                         string situacao = null;
 
-                        using (var banco = new Banco())
+                        using (var banco = new AppDb())
                         {
                             banco.AddParameter("id", deputado.id);
                             var count = banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_deputado WHERE id=@id");
@@ -961,7 +961,7 @@ namespace OPS.ImportacaoDados
 
                         if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
                         {
-                            using (var banco = new Banco())
+                            using (var banco = new AppDb())
                             {
                                 banco.AddParameter("id_cf_deputado", deputado.id);
                                 banco.AddParameter("id_legislatura", leg);
@@ -1052,7 +1052,7 @@ namespace OPS.ImportacaoDados
                     var ContentLengthLocal = new FileInfo(fullFileNameZip).Length;
                     if (ContentLength == ContentLengthLocal)
                     {
-                        using (var banco = new Banco())
+                        using (var banco = new AppDb())
                         {
                             banco.ExecuteNonQuery(@"
 								UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
@@ -1091,7 +1091,7 @@ namespace OPS.ImportacaoDados
 
             string resumoImportacao = CarregaDadosXml(fullFileNameXml, ano);
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(@"
 					UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();
@@ -1119,7 +1119,7 @@ namespace OPS.ImportacaoDados
 
             try
             {
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
 
                     using (var dt = banco.GetTable("select id, hash from cf_despesa where ano=" + ano.ToString(), 300))
@@ -1268,7 +1268,7 @@ namespace OPS.ImportacaoDados
                     }
                 }
 
-                using (var banco = new Banco())
+                using (var banco = new AppDb())
                 {
 
                     if (lstHashExcluir.Count > 0)
@@ -1318,7 +1318,7 @@ namespace OPS.ImportacaoDados
                     AtualizaCampeoesGastos();
                     AtualizaResumoMensal();
 
-                    using (var banco = new Banco())
+                    using (var banco = new AppDb())
                     {
                         var dt = banco.GetTable("SELECT id_cf_deputado as deputado, id as mandato FROM cf_mandato where id_legislatura = 55");
                         foreach (DataRow dr in dt.Rows)
@@ -1589,7 +1589,7 @@ namespace OPS.ImportacaoDados
         //     }
         // }
 
-        private static string ProcessarDespesasTemp(Banco banco)
+        private static string ProcessarDespesasTemp(AppDb banco)
         {
             var sb = new StringBuilder();
 
@@ -1612,7 +1612,7 @@ namespace OPS.ImportacaoDados
             return sb.ToString();
         }
 
-        private static void CorrigeDespesas(Banco banco)
+        private static void CorrigeDespesas(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				UPDATE cf_despesa_temp SET numero = NULL WHERE numero = 'S/N' OR numero = '';
@@ -1630,7 +1630,7 @@ namespace OPS.ImportacaoDados
 			");
         }
 
-        private static string InsereDeputadoFaltante(Banco banco)
+        private static string InsereDeputadoFaltante(AppDb banco)
         {
             // Atualiza os deputados já existentes quando efetuarem os primeiros gastos com a cota
             banco.ExecuteNonQuery(@"
@@ -1663,7 +1663,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereTipoDespesaFaltante(Banco banco)
+        private static string InsereTipoDespesaFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
         	INSERT INTO cf_despesa_tipo (id, descricao)
@@ -1682,7 +1682,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereTipoEspecificacaoFaltante(Banco banco)
+        private static string InsereTipoEspecificacaoFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
             	INSERT INTO cf_especificacao_tipo (id_cf_despesa_tipo, id_cf_especificacao, descricao)
@@ -1702,7 +1702,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereMandatoFaltante(Banco banco)
+        private static string InsereMandatoFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
@@ -1752,7 +1752,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereLegislaturaFaltante(Banco banco)
+        private static string InsereLegislaturaFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 				INSERT INTO cf_legislatura (id, ano)
@@ -1772,7 +1772,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereFornecedorFaltante(Banco banco)
+        private static string InsereFornecedorFaltante(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
@@ -1803,7 +1803,7 @@ namespace OPS.ImportacaoDados
             return string.Empty;
         }
 
-        private static string InsereDespesaFinal(Banco banco)
+        private static string InsereDespesaFinal(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
                 SET SQL_BIG_SELECTS=1;
@@ -1984,7 +1984,7 @@ namespace OPS.ImportacaoDados
         //     }
         // }
 
-        private static void LimpaDespesaTemporaria(Banco banco)
+        private static void LimpaDespesaTemporaria(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
 
@@ -1996,7 +1996,7 @@ namespace OPS.ImportacaoDados
 
         public static void AtualizaDeputadoValores()
         {
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 var dt = banco.GetTable("select id from cf_deputado");
                 //object quantidade_secretarios;
@@ -2046,7 +2046,7 @@ namespace OPS.ImportacaoDados
 				LEFT JOIN partido p on p.id = d.id_partido
 				LEFT JOIN estado e on e.id = d.id_estado;";
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(strSql);
             }
@@ -2063,7 +2063,7 @@ namespace OPS.ImportacaoDados
 					group by ano, mes
 				);";
 
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(strSql);
             }
@@ -2078,7 +2078,7 @@ namespace OPS.ImportacaoDados
             Console.WriteLine("DownloadFotosDeputados:" + dirRaiz);
 
             var sb = new StringBuilder();
-            using (var banco = new Banco())
+            using (var banco = new AppDb())
             {
                 string sql = "SELECT id FROM cf_deputado where id_deputado is not null";
                 if (!cargaInicial)

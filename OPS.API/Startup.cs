@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.DAO;
 
 namespace OPS.API
@@ -37,6 +38,8 @@ namespace OPS.API
             services.AddSingleton<CacheKeyGeneratorFactory, CacheKeyGeneratorFactory>();
             services.AddSingleton<ICacheKeyGenerator, DefaultCacheKeyGenerator>();
             services.AddSingleton<IApiCacheOutput, InMemoryCacheOutputProvider>();
+
+            //services.AddTransient<AppDb>(_ => new AppDb(Configuration["ConnectionStrings:AuditoriaContext"]));
 
             //services.AddCors(options =>
             //{
