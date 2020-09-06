@@ -871,17 +871,17 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroEstadoDeputadoEstadual(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (filtro.Partido.Any())
+            if (!string.IsNullOrEmpty(filtro.Partido))
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + string.Join(",", filtro.Partido) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + Utils.MySqlEscapeNumberToIn(filtro.Partido) + ")) ");
             }
         }
 
         private static void AdicionaFiltroPartidoDeputadoEstadual(FiltroParlamentarDTO filtro, StringBuilder sqlSelect)
         {
-            if (filtro.Estado.Any())
+            if (!string.IsNullOrEmpty(filtro.Uf))
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + string.Join(",", filtro.Estado) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(filtro.Uf) + ")) ");
             }
         }
 
