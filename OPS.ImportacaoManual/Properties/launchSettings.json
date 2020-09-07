@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OPS.ImportacaoManual": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

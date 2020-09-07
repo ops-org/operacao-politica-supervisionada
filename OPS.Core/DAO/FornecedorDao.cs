@@ -61,7 +61,7 @@ namespace OPS.Core.DAO
                         var fornecedor = new
                         {
                             id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
                             tipo = reader["tipo"].ToString(),
                             nome = reader["nome"].ToString(),
@@ -680,7 +680,7 @@ namespace OPS.Core.DAO
                         lstFornecedor.Add(new
                         {
                             id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome = reader["nome"].ToString(),
                         });
                     }
@@ -723,7 +723,7 @@ namespace OPS.Core.DAO
 						lstRetorno.Add(new
                         {
                             id_fornecedor = reader["id_fornecedor"],
-                            cnpj = reader["cnpj"].ToString(),
+                            cnpj = Utils.FormatCnpjCpf(reader["cnpj"].ToString()),
                             nome = reader["nome"].ToString(),
                             nome_fantasia = reader["nome_fantasia"].ToString(),
                             estado = reader["estado"].ToString()

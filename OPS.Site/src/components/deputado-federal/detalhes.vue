@@ -35,7 +35,7 @@
                         </p>
                         <p class="mb-0">
                             <strong>Visualizar:</strong>
-                            <a v-bind:href="'//www.camara.leg.br/deputados/' + id + '/biografia'" target="_blank" onclick="return trackOutboundLink(this, true);">Biografia</a>
+                            <a v-bind:href="'https://www.camara.leg.br/deputados/' + id + '/biografia'" target="_blank" onclick="return trackOutboundLink(this, true);">Biografia</a>
                             <span v-if="deputado_federal.situacao!='Fim de Mandato'">&nbsp;-
                                 <a v-bind:href="'http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id=' + id" target="_blank" onclick="return trackOutboundLink(this, true);">Página Oficial</a>
                             </span>

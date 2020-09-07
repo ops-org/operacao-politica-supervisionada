@@ -38,7 +38,7 @@ module.exports = {
         'state', // for vuex state
         'acc', // for reduce accumulators
         'e' // for e.returnvalue
-      ]
+      ],
     }],
     // allow optionalDependencies
     'import/no-extraneous-dependencies': ['error', {
@@ -47,5 +47,10 @@ module.exports = {
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'max-len': 'off',
+    "linebreak-style": [
+      "error",
+      "windows"
+      // swap "unix" with "windows" for windows users
+    ],
   }
 }

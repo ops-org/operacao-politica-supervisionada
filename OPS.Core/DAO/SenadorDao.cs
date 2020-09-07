@@ -101,7 +101,7 @@ namespace OPS.Core.DAO
                         lstRetorno.Add(new
                         {
                             id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
@@ -150,7 +150,7 @@ namespace OPS.Core.DAO
                         {
                             id_sf_despesa = reader["id_sf_despesa"].ToString(),
                             id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
                             valor = Utils.FormataValor(reader["valor"])
                         });
@@ -323,49 +323,56 @@ namespace OPS.Core.DAO
             {
                 case EnumAgrupamentoAuditoria.Parlamentar:
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "p.nome_parlamentar" },
-                        {2, "p.quantidade_secretarios" },
-                        {3, "p.custo_secretarios" },
+                        {1, "nome_parlamentar" },
+                        {2, "sigla_estado" },
+                        {3, "sigla_partido" },
+                        {4, "total_notas" },
+                        {5, "valor_total" },
                     };
 
                     return await LancamentosParlamentar(request, dcFielsSort);
                 case EnumAgrupamentoAuditoria.Despesa:
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "p.nome_parlamentar" },
-                        {2, "p.quantidade_secretarios" },
-                        {3, "p.custo_secretarios" },
+                        {1, "descricao" },
+                        {2, "total_notas" },
+                        {3, "valor_total" },
                     };
 
                     return await LancamentosDespesa(request, dcFielsSort);
                 case EnumAgrupamentoAuditoria.Fornecedor:
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "p.nome_parlamentar" },
-                        {2, "p.quantidade_secretarios" },
-                        {3, "p.custo_secretarios" },
+                        {1, "cnpj_cpf" },
+                        {2, "nome_fornecedor" },
+                        {3, "total_notas" },
+                        {4, "valor_total" },
                     };
 
                     return await LancamentosFornecedor(request, dcFielsSort);
                 case EnumAgrupamentoAuditoria.Partido:
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "p.nome_parlamentar" },
-                        {2, "p.quantidade_secretarios" },
-                        {3, "p.custo_secretarios" },
+                        {1, "nome_partido" },
+                        {2, "total_notas" },
+                        {3, "total_senadores" },
+                        {4, "valor_medio_por_senador" },
+                        {5, "valor_total" },
                     };
 
                     return await LancamentosPartido(request, dcFielsSort);
-                case EnumAgrupamentoAuditoria.Uf:
+                case EnumAgrupamentoAuditoria.Estado:
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "p.nome_parlamentar" },
-                        {2, "p.quantidade_secretarios" },
-                        {3, "p.custo_secretarios" },
+                        {1, "nome_estado" },
+                        {2, "total_notas" },
+                        {3, "valor_total" },
                     };
 
                     return await LancamentosEstado(request, dcFielsSort);
                 case EnumAgrupamentoAuditoria.Documento:
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "p.nome_parlamentar" },
-                        {2, "p.quantidade_secretarios" },
-                        {3, "p.custo_secretarios" },
+                        {0, "data_documento" },
+                        {1, "cnpj_cpf" },
+                        {2, "nome_fornecedor" },
+                        {3, "nome_parlamentar" },
+                        {4, "valor_total" },
                     };
 
                     return await LancamentosNotaFiscal(request, dcFielsSort);
@@ -434,7 +441,7 @@ namespace OPS.Core.DAO
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             sigla_estado = reader["sigla_estado"].ToString(),
                             sigla_partido = reader["sigla_partido"].ToString(),
-                            total_notas = reader["total_notas"],
+                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
                     }
@@ -447,6 +454,7 @@ namespace OPS.Core.DAO
                     return new
                     {
                         draw = request.Draw,
+                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -510,9 +518,9 @@ namespace OPS.Core.DAO
                             //DataUltimaNotaFiscal = Utils.FormataData(reader[DataUltimaNotaFiscalOrdinal]),
                             //Doador = reader[DoadorOrdinal],
                             id_fornecedor = reader["id_fornecedor"],
-                            cnpj_cpf = reader["cnpj_cpf"],
-                            nome_fornecedor = reader["nome_fornecedor"],
-                            total_notas = reader["total_notas"],
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
+                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
                     }
@@ -525,6 +533,7 @@ namespace OPS.Core.DAO
                     return new
                     {
                         draw = request.Draw,
+                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -584,8 +593,8 @@ namespace OPS.Core.DAO
                         lstRetorno.Add(new
                         {
                             id_sf_despesa_tipo = reader["id_sf_despesa_tipo"],
-                            descricao = reader["descricao"],
-                            total_notas = reader["total_notas"],
+                            descricao = reader["descricao"].ToString(),
+                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
                     }
@@ -598,6 +607,7 @@ namespace OPS.Core.DAO
                     return new
                     {
                         draw = request.Draw,
+                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -664,8 +674,8 @@ namespace OPS.Core.DAO
                         {
                             id_partido = reader["id_partido"],
                             nome_partido = reader["nome_partido"].ToString(),
-                            total_notas = reader["total_notas"],
-                            total_senadores = reader["total_senadores"],
+                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
+                            total_senadores = Utils.FormataValor(reader["total_senadores"], 0),
                             valor_medio_por_senador = Utils.FormataValor(reader["valor_medio_por_senador"]),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
@@ -679,6 +689,7 @@ namespace OPS.Core.DAO
                     return new
                     {
                         draw = request.Draw,
+                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -743,8 +754,8 @@ namespace OPS.Core.DAO
                         lstRetorno.Add(new
                         {
                             id_estado = reader["id_estado"],
-                            nome_estado = reader["nome_estado"],
-                            total_notas = reader["total_notas"],
+                            nome_estado = reader["nome_estado"].ToString(),
+                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
                     }
@@ -757,6 +768,7 @@ namespace OPS.Core.DAO
                     return new
                     {
                         draw = request.Draw,
+                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -767,19 +779,13 @@ namespace OPS.Core.DAO
 
         private async Task<dynamic> LancamentosNotaFiscal(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
         {
-
-            //sqlSelect.AppendLine(" p.IdeCadastro as IdCadastro");
-            //sqlSelect.AppendLine(", p.nuDeputadoId as IdDeputado");
-            //sqlSelect.AppendLine(", l.id as Id");
-            //sqlSelect.AppendLine(", l.ideDocumento as IdDocumento");
-            //sqlSelect.AppendLine(", l.txtNumero as NotaFiscal");
-            //sqlSelect.AppendLine(", l.txtCNPJCPF AS Codigo");
-            //sqlSelect.AppendLine(", l.numano as NumAno");
-            //sqlSelect.AppendLine(", l.txtNumero as Numero");
-            //sqlSelect.AppendLine(", l.datEmissao as DataEmissao");
-            //sqlSelect.AppendLine(", SUBSTRING(IFNULL(f.txtbeneficiario, l.txtbeneficiario), 1, 50) AS NomeBeneficiario");
-            //sqlSelect.AppendLine(", l.txNomeParlamentar as nome_parlamentar");
-            //sqlSelect.AppendLine(", SUM(l.vlrLiquido) AS vlrTotal ");
+            var sqlWhere = new StringBuilder();
+            AdicionaFiltroPeriodo(request, sqlWhere);
+            AdicionaFiltroSenador(request, sqlWhere);
+            AdicionaFiltroDespesa(request, sqlWhere);
+            AdicionaFiltroFornecedor(request, sqlWhere);
+            AdicionaFiltroPartidoSenador(request, sqlWhere);
+            AdicionaFiltroEstadoSenador(request, sqlWhere);
 
             using (AppDb banco = new AppDb())
             {
@@ -787,7 +793,6 @@ namespace OPS.Core.DAO
 
                 //sqlSelect.AppendLine("DROP TABLE IF EXISTS table_in_memory; ");
                 //sqlSelect.AppendLine("CREATE TEMPORARY TABLE table_in_memory ");
-                //sqlSelect.AppendLine("AS ( ");
                 sqlSelect.AppendLine(@"
 					SELECT SQL_CALC_FOUND_ROWS
 						 l.id as id_sf_despesa
@@ -804,21 +809,17 @@ namespace OPS.Core.DAO
 					WHERE (1=1)
 				");
 
-                AdicionaFiltroPeriodo(request, sqlSelect);
+                sqlSelect.Append(sqlWhere);
 
-                AdicionaFiltroSenador(request, sqlSelect);
+                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, "l.data_documento desc, l.valor desc"));
+                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
-                AdicionaFiltroDespesa(request, sqlSelect);
+                sqlSelect.AppendLine(
+                    @"SELECT count(1), sum(valor) as valor_total
+					FROM sf_despesa l
+					WHERE (1=1)");
 
-                AdicionaFiltroFornecedor(request, sqlSelect);
-
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                AdicionaResultadoComum(request, sqlSelect, dcFielsSort, "l.data_documento desc, l.valor desc");
-
-                sqlSelect.AppendFormat("SELECT FOUND_ROWS();");
+                sqlSelect.Append(sqlWhere);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -830,7 +831,7 @@ namespace OPS.Core.DAO
                             id_sf_despesa = reader["id_sf_despesa"],
                             data_documento = Utils.FormataData(reader["data_documento"]),
                             id_fornecedor = reader["id_fornecedor"],
-                            cnpj_cpf = reader["cnpj_cpf"],
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
                             id_senador = reader["id_senador"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
@@ -846,6 +847,7 @@ namespace OPS.Core.DAO
                     return new
                     {
                         draw = request.Draw,
+                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno

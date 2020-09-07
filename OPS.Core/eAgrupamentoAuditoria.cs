@@ -29,7 +29,7 @@ namespace OPS.Core
 		/// <summary>
 		/// Estado do Parlamentar
 		/// </summary>
-		Uf = 5,
+		Estado = 5,
 
 		/// <summary>
 		/// Nota Fiscal ou Recibo

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 using OPS.Core;
 using OPS.Core.DAO;
 
@@ -58,7 +59,7 @@ namespace OPS.API
                 {
                     builder
                         .AllowAnyOrigin()
-                        //.WithOrigins("http://*.ops.net.br", "https://*.ops.net.br")
+                        //.WithOrigins("http://localhost", "http://*.ops.net.br", "https://*.ops.net.br", "http://ops.net.br", "https://ops.net.br")
                         // Support https://*.domain.com
                         //.SetIsOriginAllowedToAllowWildcardSubdomains()
 
@@ -70,10 +71,9 @@ namespace OPS.API
 
                         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
                         // Without it will popup error: Request header field content-type is not allowed by Access-Control-Allow-Headers in preflight response
-                        .AllowAnyHeader()
-
+                        .WithHeaders(HeaderNames.ContentType, HeaderNames.Origin, HeaderNames.AccessControlAllowOrigin, "x-custom-header", "accept")
                         // Web Verbs like GET, POST, default enabled
-                        .AllowAnyMethod();
+                        .WithMethods("POST", "GET", "OPTIONS");
                 });
             });
 

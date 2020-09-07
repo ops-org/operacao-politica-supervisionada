@@ -7,6 +7,7 @@ using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.Models;
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace OPS.WebApi
@@ -42,11 +43,15 @@ namespace OPS.WebApi
 
         [HttpPost]
         [Route("Consulta")]
-        public dynamic Consulta(JObject jsonData)
+        public dynamic Consulta(Dictionary<string, string> jsonData)
         {
             if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
 
-            return dao.Consulta((string)jsonData["cnpj"], (string)jsonData["nome"]); ;
+            string cnpj = "", nome = "";
+            if (jsonData.ContainsKey("cnpj")) cnpj = (string)jsonData["cnpj"];
+            if (jsonData.ContainsKey("nome")) nome = (string)jsonData["nome"];
+
+            return dao.Consulta(cnpj, nome);
         }
 
         //[HttpGet]

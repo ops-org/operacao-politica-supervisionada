@@ -208,6 +208,15 @@
       </div>
     </form>
 
+    <div class="row">
+      <div class="col-md-12">
+        <div class="alert alert-warning" v-if="valorTotal">
+          <b>Valor Total no Período: R$ {{valorTotal}}</b>
+          <small class="help-block mb-0">Valor total considerando os filtros aplicados acima</small>
+        </div>
+      </div>
+    </div>
+
     <div class="form-group" v-if="fields">
       <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
     </div>
@@ -235,6 +244,46 @@
         </div>
       </div>
     </div>
+
+    <div id="modal-fornecedor" class="modal fade" tabindex="-1" role="dialog" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Pesquisar Fornecedor</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body text-justify">
+                    <form class="form-group">
+                        <div class="form-group">
+                            <label for="inputNome">Nome</label>
+                            <input type="text" class="form-control" v-model="fornecedor.nome" placeholder="Informe um nome">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputCpfCnpj">CPF / CNPJ</label>
+                            <input type="text" class="form-control" v-model="fornecedor.cnpj" placeholder="Informe um CPF ou CNPJ">
+                        </div>
+
+                        <button type="button" class="btn btn-primary" v-on:click="ConsultaFornecedor();">Pesquisar</button>
+                        <button type="reset" class="btn btn-light" v-on:click="LimparFiltroFornecedor();">Limpar</button>
+                    </form>
+
+                    <div class="list-group" v-if="fornecedores">
+                        <div class="list-group-item">
+                            Fornecedores
+                        </div>
+                        <a href="javascript:void(0);" class="list-group-item"
+                          v-for="row in fornecedores" :key="row.id_fornecedor"
+                          v-on:click="SelecionarFornecedor(row);">
+                            <small>{{row.cnpj_cpf}} </small><br>
+                            {{row.nome}}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
   </div>
 </template>
 
@@ -260,6 +309,7 @@ export default {
 
     return {
       selectedRow: {},
+      valorTotal: null,
       deputado_federal: {},
       filtro: {
         agrupar: '1',
@@ -275,6 +325,12 @@ export default {
       parlamentares: [],
       despesas: [],
       beneficiario: {},
+
+      fornecedor: {
+        nome: null,
+        cnpj: null,
+      },
+      fornecedores: [],
 
       options: {
         ajax(objData, callback) {
@@ -298,6 +354,7 @@ export default {
           axios
             .post(`${process.env.API}/deputado/lancamentos`, newData)
             .then((response) => {
+              vm.valorTotal = response.data.valorTotal;
               callback(response.data);
 
               loader.hide();
@@ -355,7 +412,31 @@ export default {
   },
   methods: {
     AbreModalConsultaFornecedor() {
+      jQuery('#modal-fornecedor').modal();
+    },
+    ConsultaFornecedor() {
+      const loader = this.$loading.show();
 
+      axios
+        .post(`${process.env.API}/fornecedor/consulta`, this.fornecedor)
+        .then((response) => {
+          this.fornecedores = response.data;
+
+          loader.hide();
+        });
+    },
+    SelecionarFornecedor(f) {
+      this.filtro.beneficiario = {
+        id: f.id_fornecedor,
+        cnpj: f.cnpj_cpf,
+        nome: f.nome,
+      };
+
+      jQuery('#modal-fornecedor').modal('hide');
+    },
+    LimparFiltroFornecedor() {
+      this.fornecedor = {};
+      this.filtro.beneficiario = {};
     },
     AbrirModalDetalhar(data) {
       this.selectedRow = data;
@@ -585,7 +666,7 @@ export default {
               },
               cnpj_cpf: {
                 label: 'CNPJ/CPF',
-                sortable: true,
+                sortable: false,
               },
               nome_fornecedor: {
                 label: 'Fornecedor',
@@ -595,11 +676,11 @@ export default {
                   }
                   return data;
                 },
-                sortable: true,
+                sortable: false,
               },
               sigla_estado_fornecedor: {
                 label: 'UF',
-                sortable: true,
+                sortable: false,
               },
               nome_parlamentar: {
                 label: 'Parlamentar',
@@ -609,7 +690,7 @@ export default {
                   }
                   return data;
                 },
-                sortable: true,
+                sortable: false,
               },
               numero_documento: {
                 label: 'Nº Recibo',

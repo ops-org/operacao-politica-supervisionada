@@ -15,12 +15,12 @@ namespace OPS.Core
 {
     public static class Utils
     {
-        public static string FormataValor(object value)
+        public static string FormataValor(object value, int decimais = 2)
         {
             if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
                 try
                 {
-                    return Convert.ToDecimal(value).ToString("#,##0.00");
+                    return Convert.ToDecimal(value).ToString("N" + decimais.ToString());
                 }
                 catch
                 {
@@ -72,6 +72,58 @@ namespace OPS.Core
                 return DBNull.Value;
             }
         }
+
+        public static string FormatCnpjCpf(string value)
+        {
+            if (value.Length == 14) return FormatCNPJ(value);
+            if (value.Length == 11) return FormatCPF(value);
+            return value;
+        }
+
+        /// <summary>
+        /// Formatar uma string CNPJ
+        /// </summary>
+        /// <param name="CNPJ">string CNPJ sem formatacao</param>
+        /// <returns>string CNPJ formatada</returns>
+        /// <example>Recebe '99999999999999' Devolve '99.999.999/9999-99'</example>
+
+        public static string FormatCNPJ(string CNPJ)
+        {
+            try
+            {
+                return Convert.ToUInt64(CNPJ).ToString(@"00\.000\.000\/0000\-00");
+            }
+            catch (Exception)
+            {
+                return CNPJ;
+            }
+
+        }
+
+        /// <summary>
+        /// Formatar uma string CPF
+        /// </summary>
+        /// <param name="CPF">string CPF sem formatacao</param>
+        /// <returns>string CPF formatada</returns>
+        /// <example>Recebe '99999999999' Devolve '999.999.999-99'</example>
+
+        public static string FormatCPF(string CPF)
+        {
+            try
+            {
+                return Convert.ToUInt64(CPF).ToString(@"000\.000\.000\-00");
+            }
+            catch (Exception)
+            {
+                return CPF;
+            }
+        }
+        /// <summary>
+        /// Retira a Formatacao de uma string CNPJ/CPF
+        /// </summary>
+        /// <param name="Codigo">string Codigo Formatada</param>
+        /// <returns>string sem formatacao</returns>
+        /// <example>Recebe '99.999.999/9999-99' Devolve '99999999999999'</example>
 
         public static string RemoveCaracteresNaoNumericos(string str)
         {
@@ -152,10 +204,10 @@ namespace OPS.Core
                 {
                     email = "envio@ops.net.br",
                     name = "[OPS] Operação Política Supervisionada"
-                }                
+                }
             };
 
-            if(ReplyTo != null)
+            if (ReplyTo != null)
             {
                 param.reply_to = new ReplyTo()
                 {
@@ -177,7 +229,7 @@ namespace OPS.Core
             request.AddParameter("application/json", JsonConvert.SerializeObject(param), ParameterType.RequestBody);
             IRestResponse response = await client.ExecuteAsync(request);
 
-            if(response.StatusCode != HttpStatusCode.Accepted)
+            if (response.StatusCode != HttpStatusCode.Accepted)
             {
                 JObject responseBody = JObject.Parse(response.Content);
 

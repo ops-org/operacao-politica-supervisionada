@@ -2,6 +2,10 @@
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
+    "iis": {
+      "applicationUrl": "http://localhost/OPS.API",
+      "sslPort": 0
+    },
     "iisExpress": {
       "applicationUrl": "http://localhost:5200",
       "sslPort": 5201
@@ -28,7 +32,6 @@
     },
     "Docker": {
       "commandName": "Docker",
-      "launchBrowser": false,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/indicadores/parlamentarresumogastos",
       "environmentVariables": {
         "ASPNETCORE_URLS": "https://+:443;http://+:80",
@@ -36,8 +39,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "publishAllPorts": true,
-      "useSSL": true,
       "httpPort": 5200,
+      "useSSL": true,
       "sslPort": 5201
     }
   }

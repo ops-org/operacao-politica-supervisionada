@@ -18,7 +18,7 @@ namespace OPS.API
                         .UseStartup<Startup>();
 
 #if !DEBUG
-                    webBuilder.UseUrls("http://*:5200", "https://*:5201");
+                    webBuilder.UseUrls("http://*:5200");
 #endif
                 });
     }

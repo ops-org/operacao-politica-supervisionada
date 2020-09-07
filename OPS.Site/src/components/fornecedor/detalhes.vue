@@ -632,7 +632,7 @@ export default {
     axios.get(`${process.env.API}/fornecedor/${this.id}`).then((response) => {
       const fornecedor = response.data.fornecedor;
 
-      if (fornecedor.cnpj_cpf.length === 14) {
+      if (fornecedor.cnpj_cpf.length === 18) {
         fornecedor.genero = 'pj';
 
         // if (authService.authentication && authService.authentication.isAuth) {
@@ -644,7 +644,7 @@ export default {
         //     }
         //   }, 100);
         // }
-      } else if (fornecedor.cnpj_cpf.length === 11) {
+      } else if (fornecedor.cnpj_cpf.length === 14) {
         fornecedor.genero = 'pf';
       } else {
         fornecedor.genero = 'nd'; // fornecedor interno / sem cnpj

@@ -45,7 +45,7 @@
                     <div class="row no-gutters">
                         <div class="col-md-4">
                             <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
-                                <img class="media-thumbnail card-img" v-lazy="'//ops.net.br/api/deputado/imagem/' + deputado.id_cf_deputado" />
+                                <img class="media-thumbnail card-img" v-lazy="API + '/deputado/imagem/' + deputado.id_cf_deputado" />
                             </a>
                         </div>
                         <div class="col-md-8">
@@ -77,6 +77,7 @@ export default {
   },
   data() {
     return {
+      API: '',
       deputado_federal: {},
       filtro: {
         periodo: 9,
@@ -95,6 +96,7 @@ export default {
   },
   mounted() {
     document.title = 'OPS :: Deputado Federal';
+    this.API = process.env.API;
 
     axios
       .get(`${process.env.API}/estado`)

@@ -387,6 +387,7 @@ namespace OPS.ImportacaoDados
 
         public static string ImportaPresencasDeputados()
         {
+            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var sb = new StringBuilder();
             Console.WriteLine("Iniciando Importação de presenças");
 
@@ -429,11 +430,8 @@ namespace OPS.ImportacaoDados
                 var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
                 var request =
                     new RestRequest(
-                        "ListarPresencasDia?data={data}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=",
+                       string.Format("ListarPresencasDia?data={0:dd/MM/yyyy}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=", dtPesquisa),
                         Method.GET);
-
-                request.AddUrlSegment("data", dtPesquisa.ToString("dd/MM/yyyy"));
-
 
                 //if (dtPesquisa < dtUltimaIntegracao && dtSessoes.Select().All(r => Convert.ToDateTime(r["data"]) != dtPesquisa))
                 //{
@@ -469,8 +467,15 @@ namespace OPS.ImportacaoDados
 
                 if (!response.Content.Contains("qtdeSessoesDia"))
                 {
-                    //sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
-                    continue;
+                    if (response.Content.Contains(@"<?xml version=""1.0"" encoding=""utf-8""?>"))
+                    {
+                        //sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
+                        continue;
+                    }
+                    else
+                    {
+                        var a = 1;
+                    }
                 }
 
                 using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
@@ -531,8 +536,8 @@ namespace OPS.ImportacaoDados
                                 .Split(new[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                         banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-                        banco.AddParameter("data", DateTime.Parse(dia["data"].InnerText));
-                        banco.AddParameter("inicio", DateTime.Parse(inicio));
+                        banco.AddParameter("data", dtPesquisa);
+                        banco.AddParameter("inicio", Convert.ToDateTime(inicio, cultureInfo));
 
                         //1=> ORDINÁRIA, 2=> EXTRAORDINÁRIA, 3=> SESSÃO PREPARATÓRIA
                         var tipo = 0;

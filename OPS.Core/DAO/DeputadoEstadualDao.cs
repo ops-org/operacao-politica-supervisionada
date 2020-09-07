@@ -98,7 +98,7 @@ namespace OPS.Core.DAO
                         lstRetorno.Add(new
                         {
                             id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
@@ -147,7 +147,7 @@ namespace OPS.Core.DAO
                         {
                             id_cl_despesa = reader["id_cl_despesa"].ToString(),
                             id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = reader["cnpj_cpf"].ToString(),
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
                             valor = Utils.FormataValor(reader["valor"])
                         });
@@ -324,7 +324,7 @@ namespace OPS.Core.DAO
                     return LancamentosFornecedor(filtro);
                 case EnumAgrupamentoAuditoria.Partido:
                     return LancamentosPartido(filtro);
-                case EnumAgrupamentoAuditoria.Uf:
+                case EnumAgrupamentoAuditoria.Estado:
                     return LancamentosEstado(filtro);
                 case EnumAgrupamentoAuditoria.Documento:
                     return LancamentosNotaFiscal(filtro);
@@ -466,7 +466,7 @@ namespace OPS.Core.DAO
                             //DataUltimaNotaFiscal = Utils.FormataData(reader[DataUltimaNotaFiscalOrdinal]),
                             //Doador = reader[DoadorOrdinal],
                             id_fornecedor = reader["id_fornecedor"],
-                            cnpj_cpf = reader["cnpj_cpf"],
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"],
                             total_notas = reader["total_notas"],
                             valor_total = Utils.FormataValor(reader["valor_total"])
@@ -796,7 +796,7 @@ namespace OPS.Core.DAO
                             id_cl_despesa = reader["id_cl_despesa"],
                             data = Utils.FormataData(reader["data"]),
                             id_fornecedor = reader["id_fornecedor"],
-                            cnpj_cpf = reader["cnpj_cpf"],
+                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = nomeFornecedor,
                             id_deputado = reader["id_deputado"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
