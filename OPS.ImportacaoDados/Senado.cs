@@ -47,7 +47,8 @@ namespace OPS.ImportacaoDados
 											id, nome, nome_completo, sexo, id_partido, id_estado, email, ativo
 										) VALUES (
 											@CodigoParlamentar, @nome_parlamentar, @NomeCompletoParlamentar, @SexoParlamentar,
-											(SELECT id FROM partido where sigla like @SiglaPartido), (SELECT id FROM estado where sigla like @SiglaUf), 
+											(SELECT id FROM partido where sigla like @SiglaPartido OR nome like @SiglaPartido), 
+                                            (SELECT id FROM estado where sigla like @SiglaUf), 
 											@EmailParlamentar, 'S'
 										)");
 
@@ -73,7 +74,7 @@ namespace OPS.ImportacaoDados
                                             nome = @nome_parlamentar
 											, nome_completo = @NomeCompletoParlamentar
 											, sexo = @SexoParlamentar
-											, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido)
+											, id_partido = (SELECT id FROM partido where sigla like @SiglaPartido OR nome like @SiglaPartido)
 											, id_estado = (SELECT id FROM estado where sigla like @SiglaUf)
 											, email = @EmailParlamentar
 											, ativo = 'S' 

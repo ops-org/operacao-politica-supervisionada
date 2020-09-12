@@ -148,242 +148,242 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        /// <summary>
-        /// Atualiza informações dos deputados em exercício na Câmara dos Deputados (1)
-        /// </summary>
-        public static string AtualizaInfoDeputados()
-        {
-            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-            string retorno = string.Empty;
-            // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
+    //    /// <summary>
+    //    /// Atualiza informações dos deputados em exercício na Câmara dos Deputados (1)
+    //    /// </summary>
+    //    public static string AtualizaInfoDeputados()
+    //    {
+    //        TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+    //        string retorno = string.Empty;
+    //        // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
 
-            var doc = new XmlDocument();
-            var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx");
-            var request = new RestRequest("ObterDeputados", Method.GET);
-            var response = client.Execute(request);
-            doc.LoadXml(response.Content);
-            XmlNode deputados = doc.DocumentElement;
+    //        var doc = new XmlDocument();
+    //        var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx");
+    //        var request = new RestRequest("ObterDeputados", Method.GET);
+    //        var response = client.Execute(request);
+    //        doc.LoadXml(response.Content);
+    //        XmlNode deputados = doc.DocumentElement;
 
-            var deputado = deputados.SelectNodes("*");
-            var sqlFields = new StringBuilder();
-            var sqlValues = new StringBuilder();
+    //        var deputado = deputados.SelectNodes("*");
+    //        var sqlFields = new StringBuilder();
+    //        var sqlValues = new StringBuilder();
 
-            using (var banco = new AppDb())
-            {
-                banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
+    //        using (var banco = new AppDb())
+    //        {
+    //            banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
 
-                foreach (XmlNode fileNode in deputado)
-                {
-                    sqlFields.Clear();
-                    sqlValues.Clear();
+    //            foreach (XmlNode fileNode in deputado)
+    //            {
+    //                sqlFields.Clear();
+    //                sqlValues.Clear();
 
-                    foreach (XmlNode item in fileNode.SelectNodes("*"))
-                    {
-                        if (item.Name != "comissoes")
-                        {
-                            sqlFields.Append(string.Format(",{0}", item.Name));
+    //                foreach (XmlNode item in fileNode.SelectNodes("*"))
+    //                {
+    //                    if (item.Name != "comissoes")
+    //                    {
+    //                        sqlFields.Append(string.Format(",{0}", item.Name));
 
-                            sqlValues.Append(string.Format(",@{0}", item.Name));
-                            if (item.Name == "nome" || item.Name == "nomeParlamentar")
-                            {
-                                banco.AddParameter(item.Name, textInfo.ToTitleCase(item.InnerText));
-                            }
-                            else
-                            {
-                                banco.AddParameter(item.Name, item.InnerText);
-                            }
+    //                        sqlValues.Append(string.Format(",@{0}", item.Name));
+    //                        if (item.Name == "nome" || item.Name == "nomeParlamentar")
+    //                        {
+    //                            banco.AddParameter(item.Name, textInfo.ToTitleCase(item.InnerText));
+    //                        }
+    //                        else
+    //                        {
+    //                            banco.AddParameter(item.Name, item.InnerText);
+    //                        }
 
-                        }
-                    }
+    //                    }
+    //                }
 
-                    banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) +
-                                          ")  values (" + sqlValues.ToString().Substring(1) + ")");
-                }
-
-
-                banco.ExecuteNonQuery(@"
-                    SET SQL_BIG_SELECTS=1;
-
-					update cf_deputado d
-					left join cf_deputado_temp dt on dt.numeroDeputadoID = d.id_deputado
-					left join partido p on p.sigla = dt.partido
-					left join estado e on e.sigla = dt.uf
-					set
-                        -- d.condicao = dt.condicao,
-						-- d.nome_civil = dt.nome,
-						-- d.nome_parlamentar = dt.nomeParlamentar,
-						-- d.url_foto = dt.urlFoto,
-						-- d.sexo = LEFT(dt.sexo, 1),
-						-- d.id_estado = e.id,
-						-- d.id_partido = p.id,
-						-- d.gabinete = dt.gabinete,
-						-- d.anexo = dt.anexo,
-						-- d.fone = dt.fone,
-						 d.email = dt.email
-					where dt.nomeParlamentar is not null;
-
-                    SET SQL_BIG_SELECTS=0;
-				");
-
-                if (banco.Rows > 0)
-                {
-                    retorno = "<p>" + banco.Rows + "+ Mandato<p>";
-                }
-
-                //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
-
-                return retorno;
-            }
-        }
-
-        /// <summary>
-        /// Atualiza informações dos deputados em exercício na Câmara dos Deputados (2)
-        /// </summary>
-        public static string AtualizaInfoDeputadosCompleto(bool cargaInicial = false)
-        {
-            string retorno = string.Empty;
-            // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
-
-            var sqlFields = new StringBuilder();
-            var sqlValues = new StringBuilder();
-
-            using (var banco = new AppDb())
-            {
-                banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
-
-                var dt = banco.GetTable("SELECT id from cf_deputado" + (!cargaInicial ? " WHERE situacao <> 'Fim de Mandato'" : ""));
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    // Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
-                    var doc = new XmlDocument();
-                    var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
-                    var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=" + (!cargaInicial ? "56" : "") + "&numeroDeputadoID=" + dr["id"].ToString(), Method.GET);
-
-                    try
-                    {
-                        var response = client.Execute(request);
-                        doc.LoadXml(response.Content);
-                    }
-                    catch (Exception)
-                    {
-                        Thread.Sleep(5000);
-
-                        try
-                        {
-                            var response = client.Execute(request);
-                            doc.LoadXml(response.Content);
-                        }
-                        catch (Exception)
-                        {
-                            continue;
-                        }
-                    }
-
-                    XmlNode deputados = doc.DocumentElement;
-                    var deputado = deputados.SelectNodes("*");
-
-                    foreach (XmlNode fileNode in deputado)
-                    {
-                        sqlFields.Clear();
-                        sqlValues.Clear();
-
-                        foreach (XmlNode item in fileNode.ChildNodes)
-                        {
-                            if (item.Name == "comissoes") break;
-                            if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
-                            {
-                                object value;
-                                if (item.Name.StartsWith("data"))
-                                    if (!string.IsNullOrEmpty(item.InnerText))
-                                        value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
-                                    else
-                                        value = DBNull.Value;
-                                else
-                                    value = item.InnerText;
-
-                                sqlFields.Append($",{item.Name}");
-                                sqlValues.Append($",@{item.Name}");
-                                banco.AddParameter(item.Name, value);
-                            }
-                            else
-                            {
-                                foreach (XmlNode item2 in item.ChildNodes)
-                                {
-                                    if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
+    //                banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) +
+    //                                      ")  values (" + sqlValues.ToString().Substring(1) + ")");
+    //            }
 
 
-                                    sqlFields.Append($",{item2.Name}");
-                                    sqlValues.Append($",@{item2.Name}");
-                                    banco.AddParameter(item2.Name, item2.InnerText);
-                                }
-                            }
-                        }
+    //            banco.ExecuteNonQuery(@"
+    //                SET SQL_BIG_SELECTS=1;
 
-                        try
-                        {
-                            banco.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
-                                                   sqlFields.ToString().Substring(1) + ")  values (" +
-                                                   sqlValues.ToString().Substring(1) + ")");
+				//	update cf_deputado d
+				//	left join cf_deputado_temp dt on dt.numeroDeputadoID = d.id_deputado
+				//	left join partido p on p.sigla = dt.partido
+				//	left join estado e on e.sigla = dt.uf
+				//	set
+    //                    -- d.condicao = dt.condicao,
+				//		-- d.nome_civil = dt.nome,
+				//		-- d.nome_parlamentar = dt.nomeParlamentar,
+				//		-- d.url_foto = dt.urlFoto,
+				//		-- d.sexo = LEFT(dt.sexo, 1),
+				//		-- d.id_estado = e.id,
+				//		-- d.id_partido = p.id,
+				//		-- d.gabinete = dt.gabinete,
+				//		-- d.anexo = dt.anexo,
+				//		-- d.fone = dt.fone,
+				//		 d.email = dt.email
+				//	where dt.nomeParlamentar is not null;
 
-                            break;
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-                }
+    //                SET SQL_BIG_SELECTS=0;
+				//");
 
-                banco.ExecuteNonQuery(@"
-                	update cf_deputado d
-                	left join (
-                		select		
-                			numeroDeputadoID,
-                			idParlamentarDeprecated,
-                			nomeCivil,
-                			nomeParlamentarAtual,
-                			sexo,
-                			nomeProfissao,
-                			dataNascimento,
-                			ufRepresentacaoAtual,
-                			max(email) as email,
-                			max(sigla) as sigla,
-                			max(numero) as numero,
-                			max(anexo) as anexo,
-                			max(telefone) as telefone,
-                			max(dataFalecimento) as dataFalecimento
-                		from cf_deputado_temp_detalhes
-                		group by 1, 2, 3, 4, 5, 6, 7, 8
-                	) dt on dt.numeroDeputadoID = d.id_cf_deputado
-                	left join partido p on p.sigla = dt.sigla
-                	left join estado e on e.sigla = dt.ufRepresentacaoAtual
-                	set
-                		d.nome_civil = dt.nomeCivil,
-                		d.nome_parlamentar = dt.nomeParlamentarAtual,
-                		d.sexo = LEFT(dt.sexo, 1),
-                		d.id_estado = e.id,
-                		d.id_partido = p.id,
-                		d.gabinete = dt.numero,
-                		d.anexo = dt.anexo,
-                		d.fone = dt.telefone,
-                		d.email = dt.email,
-                		d.profissao = dt.nomeProfissao,
-                		d.nascimento = dt.dataNascimento,
-                		d.falecimento = dt.dataFalecimento
-                	where dt.nomeParlamentarAtual is not null;
-                ");
+    //            if (banco.Rows > 0)
+    //            {
+    //                retorno = "<p>" + banco.Rows + "+ Mandato<p>";
+    //            }
 
-                if (banco.Rows > 0)
-                {
-                    retorno = "<p>" + banco.Rows + "+ Mandato<p>";
-                }
+    //            //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
 
-                //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
-            }
+    //            return retorno;
+    //        }
+    //    }
 
-            return retorno;
-        }
+    //    /// <summary>
+    //    /// Atualiza informações dos deputados em exercício na Câmara dos Deputados (2)
+    //    /// </summary>
+    //    public static string AtualizaInfoDeputadosCompleto(bool cargaInicial = false)
+    //    {
+    //        string retorno = string.Empty;
+    //        // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
+
+    //        var sqlFields = new StringBuilder();
+    //        var sqlValues = new StringBuilder();
+
+    //        using (var banco = new AppDb())
+    //        {
+    //            banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
+
+    //            var dt = banco.GetTable("SELECT id from cf_deputado" + (!cargaInicial ? " WHERE situacao <> 'Fim de Mandato'" : ""));
+
+    //            foreach (DataRow dr in dt.Rows)
+    //            {
+    //                // Retorna detalhes dos deputados com histórico de participação em comissões, períodos de exercício, filiações partidárias e lideranças.
+    //                var doc = new XmlDocument();
+    //                var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
+    //                var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=" + (!cargaInicial ? "56" : "") + "&numeroDeputadoID=" + dr["id"].ToString(), Method.GET);
+
+    //                try
+    //                {
+    //                    var response = client.Execute(request);
+    //                    doc.LoadXml(response.Content);
+    //                }
+    //                catch (Exception)
+    //                {
+    //                    Thread.Sleep(5000);
+
+    //                    try
+    //                    {
+    //                        var response = client.Execute(request);
+    //                        doc.LoadXml(response.Content);
+    //                    }
+    //                    catch (Exception)
+    //                    {
+    //                        continue;
+    //                    }
+    //                }
+
+    //                XmlNode deputados = doc.DocumentElement;
+    //                var deputado = deputados.SelectNodes("*");
+
+    //                foreach (XmlNode fileNode in deputado)
+    //                {
+    //                    sqlFields.Clear();
+    //                    sqlValues.Clear();
+
+    //                    foreach (XmlNode item in fileNode.ChildNodes)
+    //                    {
+    //                        if (item.Name == "comissoes") break;
+    //                        if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
+    //                        {
+    //                            object value;
+    //                            if (item.Name.StartsWith("data"))
+    //                                if (!string.IsNullOrEmpty(item.InnerText))
+    //                                    value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
+    //                                else
+    //                                    value = DBNull.Value;
+    //                            else
+    //                                value = item.InnerText;
+
+    //                            sqlFields.Append($",{item.Name}");
+    //                            sqlValues.Append($",@{item.Name}");
+    //                            banco.AddParameter(item.Name, value);
+    //                        }
+    //                        else
+    //                        {
+    //                            foreach (XmlNode item2 in item.ChildNodes)
+    //                            {
+    //                                if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
+
+
+    //                                sqlFields.Append($",{item2.Name}");
+    //                                sqlValues.Append($",@{item2.Name}");
+    //                                banco.AddParameter(item2.Name, item2.InnerText);
+    //                            }
+    //                        }
+    //                    }
+
+    //                    try
+    //                    {
+    //                        banco.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
+    //                                               sqlFields.ToString().Substring(1) + ")  values (" +
+    //                                               sqlValues.ToString().Substring(1) + ")");
+
+    //                        break;
+    //                    }
+    //                    catch
+    //                    {
+    //                        // ignored
+    //                    }
+    //                }
+    //            }
+
+    //            banco.ExecuteNonQuery(@"
+    //            	update cf_deputado d
+    //            	left join (
+    //            		select		
+    //            			numeroDeputadoID,
+    //            			idParlamentarDeprecated,
+    //            			nomeCivil,
+    //            			nomeParlamentarAtual,
+    //            			sexo,
+    //            			nomeProfissao,
+    //            			dataNascimento,
+    //            			ufRepresentacaoAtual,
+    //            			max(email) as email,
+    //            			max(sigla) as sigla,
+    //            			max(numero) as numero,
+    //            			max(anexo) as anexo,
+    //            			max(telefone) as telefone,
+    //            			max(dataFalecimento) as dataFalecimento
+    //            		from cf_deputado_temp_detalhes
+    //            		group by 1, 2, 3, 4, 5, 6, 7, 8
+    //            	) dt on dt.numeroDeputadoID = d.id_cf_deputado
+    //            	left join partido p on p.sigla = dt.sigla
+    //            	left join estado e on e.sigla = dt.ufRepresentacaoAtual
+    //            	set
+    //            		d.nome_civil = dt.nomeCivil,
+    //            		d.nome_parlamentar = dt.nomeParlamentarAtual,
+    //            		d.sexo = LEFT(dt.sexo, 1),
+    //            		d.id_estado = e.id,
+    //            		d.id_partido = p.id,
+    //            		d.gabinete = dt.numero,
+    //            		d.anexo = dt.anexo,
+    //            		d.fone = dt.telefone,
+    //            		d.email = dt.email,
+    //            		d.profissao = dt.nomeProfissao,
+    //            		d.nascimento = dt.dataNascimento,
+    //            		d.falecimento = dt.dataFalecimento
+    //            	where dt.nomeParlamentarAtual is not null;
+    //            ");
+
+    //            if (banco.Rows > 0)
+    //            {
+    //                retorno = "<p>" + banco.Rows + "+ Mandato<p>";
+    //            }
+
+    //            //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
+    //        }
+
+    //        return retorno;
+    //    }
 
         public static string ImportaPresencasDeputados()
         {
@@ -668,7 +668,7 @@ namespace OPS.ImportacaoDados
                                         , @id_legislatura
                                         , @id_carteira_parlamantar
                                         , (SELECT id FROM estado where sigla like @sigla_estado)
-                                        , (SELECT id FROM partido where sigla like @sigla_partido)
+                                        , (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
                                     );");
 
                                     // generate the data you want to insert
@@ -748,26 +748,23 @@ namespace OPS.ImportacaoDados
             using (var banco = new AppDb())
             {
                 banco.ExecuteNonQuery(@"UPDATE cf_deputado SET id_cf_gabinete=NULL");
-            }
 
-            for (int leg = legislaturaInicial; leg <= 56; leg++)
-            {
-                pagina = 1;
-                do
+                for (int leg = legislaturaInicial; leg <= 56; leg++)
                 {
-                    var uri = string.Format("?idLegislatura={0}&pagina={1}&itens=100", leg, pagina++);
-                    var request = new RestRequest(uri, Method.GET);
-                    request.AddHeader("Accept", "application/json");
-
-                    deputados = client.Execute<Deputados>(request).Data;
-
-                    foreach (var deputado in deputados.dados)
+                    pagina = 1;
+                    do
                     {
-                        Dados deputadoDetalhes = null;
-                        string situacao = null;
+                        var uri = string.Format("?idLegislatura={0}&pagina={1}&itens=100", leg, pagina++);
+                        var request = new RestRequest(uri, Method.GET);
+                        request.AddHeader("Accept", "application/json");
 
-                        using (var banco = new AppDb())
+                        deputados = client.Execute<Deputados>(request).Data;
+
+                        foreach (var deputado in deputados.dados)
                         {
+                            Dados deputadoDetalhes = null;
+                            string situacao = null;
+
                             banco.AddParameter("id", deputado.id);
                             var count = banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_deputado WHERE id=@id");
 
@@ -780,6 +777,8 @@ namespace OPS.ImportacaoDados
                                 Console.WriteLine(deputado.id);
                                 continue;
                             }
+
+                            Console.WriteLine("Deputado: {0} - {1} ({2})", deputado.id, textInfo.ToTitleCase(deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil), deputadoDetalhes.ultimoStatus.siglaPartido);
 
                             // TODO: salvar para exibir
                             //if (deputadoDetalhes.redeSocial.Any())
@@ -805,20 +804,20 @@ namespace OPS.ImportacaoDados
                                     banco.AddParameter("telefone", gabinete.telefone);
 
                                     banco.ExecuteNonQuery(@"INSERT INTO cf_gabinete (
-                                        id,
-                                        nome,
-                                        predio,
-                                        andar,
-                                        sala,
-                                        telefone
-                                    ) VALUES (
-                                        @id,
-                                        @nome,
-                                        @predio,
-                                        @andar,
-                                        @sala,
-                                        @telefone
-                                    )");
+                                    id,
+                                    nome,
+                                    predio,
+                                    andar,
+                                    sala,
+                                    telefone
+                                ) VALUES (
+                                    @id,
+                                    @nome,
+                                    @predio,
+                                    @andar,
+                                    @sala,
+                                    @telefone
+                                )");
 
                                     id_cf_gabinete = Convert.ToInt32(gabinete.sala);
                                 }
@@ -835,12 +834,12 @@ namespace OPS.ImportacaoDados
                                         banco.AddParameter("sala", gabinete.sala);
 
                                         banco.ExecuteNonQuery(@"UPDATE cf_gabinete SET
-                                        nome = @nome,
-                                        predio = @predio,
-                                        andar = @andar,
-                                        telefone = @telefone
-                                        WHERE sala = @sala
-                                    ");
+                                    nome = @nome,
+                                    predio = @predio,
+                                    andar = @andar,
+                                    telefone = @telefone
+                                    WHERE sala = @sala
+                                ");
                                     }
                                 }
                             }
@@ -854,10 +853,13 @@ namespace OPS.ImportacaoDados
                                 situacao = "Fim de Mandato";
                             }
 
+
+                            var siglaPartido = deputadoDetalhes.ultimoStatus.siglaPartido;
+                            
                             if (Convert.ToInt32(count) == 0)
                             {
                                 banco.AddParameter("id", deputado.id);
-                                banco.AddParameter("sigla_partido", deputadoDetalhes.ultimoStatus.siglaPartido);
+                                banco.AddParameter("sigla_partido", siglaPartido);
                                 banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
                                 banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
                                 banco.AddParameter("cpf", deputadoDetalhes.cpf);
@@ -875,42 +877,42 @@ namespace OPS.ImportacaoDados
                                 banco.AddParameter("escolaridade", deputadoDetalhes.escolaridade);
 
                                 banco.ExecuteNonQuery(@"INSERT INTO cf_deputado (
-                                    id,
-                                    id_partido, 
-                                    id_estado,
-                                    id_cf_gabinete,
-                                    cpf, 
-                                    nome_civil, 
-                                    nome_parlamentar, 
-                                    sexo, 
-                                    condicao, 
-                                    situacao, 
-                                    email, 
-                                    nascimento, 
-                                    falecimento, 
-                                    id_estado_nascimento,
-                                    municipio, 
-                                    website,
-                                    escolaridade
-                                ) VALUES (
-                                    @id,
-                                    (SELECT id FROM partido where sigla like @sigla_partido), 
-                                    (SELECT id FROM estado where sigla like @sigla_estado), 
-                                    @id_cf_gabinete,
-                                    @cpf, 
-                                    @nome_civil, 
-                                    @nome_parlamentar, 
-                                    @sexo, 
-                                    @condicao, 
-                                    @situacao, 
-                                    @email, 
-                                    @nascimento, 
-                                    @falecimento, 
-                                    (SELECT id FROM estado where sigla like @sigla_estado_nascimento), 
-                                    @municipio, 
-                                    @website,
-                                    @escolaridade
-                                )");
+                                id,
+                                id_partido, 
+                                id_estado,
+                                id_cf_gabinete,
+                                cpf, 
+                                nome_civil, 
+                                nome_parlamentar, 
+                                sexo, 
+                                condicao, 
+                                situacao, 
+                                email, 
+                                nascimento, 
+                                falecimento, 
+                                id_estado_nascimento,
+                                municipio, 
+                                website,
+                                escolaridade
+                            ) VALUES (
+                                @id,
+                                (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
+                                (SELECT id FROM estado where sigla like @sigla_estado), 
+                                @id_cf_gabinete,
+                                @cpf, 
+                                @nome_civil, 
+                                @nome_parlamentar, 
+                                @sexo, 
+                                @condicao, 
+                                @situacao, 
+                                @email, 
+                                @nascimento, 
+                                @falecimento, 
+                                (SELECT id FROM estado where sigla like @sigla_estado_nascimento), 
+                                @municipio, 
+                                @website,
+                                @escolaridade
+                            )");
 
                                 novos++;
                                 //Console.WriteLine("INSERT");
@@ -919,7 +921,7 @@ namespace OPS.ImportacaoDados
                             }
                             else
                             {
-                                banco.AddParameter("sigla_partido", deputadoDetalhes.ultimoStatus.siglaPartido);
+                                banco.AddParameter("sigla_partido", siglaPartido);
                                 banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
                                 banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
                                 banco.AddParameter("cpf", deputadoDetalhes.cpf);
@@ -938,8 +940,9 @@ namespace OPS.ImportacaoDados
                                 banco.AddParameter("id", deputado.id);
 
                                 banco.ExecuteNonQuery(@"
-                                    UPDATE cf_deputado SET 
-                                    id_partido = (SELECT id FROM partido where sigla like @sigla_partido), 
+                                UPDATE cf_deputado 
+                                SET 
+                                    id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
                                     id_estado = (SELECT id FROM estado where sigla like @sigla_estado),
                                     id_cf_gabinete = @id_cf_gabinete,
                                     cpf = @cpf, 
@@ -955,30 +958,26 @@ namespace OPS.ImportacaoDados
                                     municipio = @municipio, 
                                     website = @website,
                                     escolaridade = @escolaridade
-                                    WHERE id = @id
-                            ");
+                                WHERE id = @id
+                        ");
                             }
 
 
                             //Console.WriteLine("UPDATE");
 
-                        }
-
-                        if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
-                        {
-                            using (var banco = new AppDb())
+                            if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
                             {
                                 banco.AddParameter("id_cf_deputado", deputado.id);
                                 banco.AddParameter("id_legislatura", leg);
                                 var countMandato = banco.ExecuteScalar(@"
-                                SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura");
+                            SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura");
 
                                 if (Convert.ToInt32(countMandato) == 0)
                                 {
                                     banco.AddParameter("id_cf_deputado", deputado.id);
                                     banco.AddParameter("id_legislatura", leg);
                                     banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
-                                    banco.AddParameter("sigla_partido", deputadoDetalhes.ultimoStatus.siglaPartido);
+                                    banco.AddParameter("sigla_partido", siglaPartido);
                                     banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
 
                                     banco.ExecuteNonQuery(@"INSERT INTO cf_mandato (
@@ -987,19 +986,19 @@ namespace OPS.ImportacaoDados
                                     id_estado,
                                     id_partido,
                                     condicao
-                                    ) VALUES (
+                                ) VALUES (
                                     @id_cf_deputado,
                                     @id_legislatura,
                                     (SELECT id FROM estado where sigla like @sigla_estado), 
-                                    (SELECT id FROM partido where sigla like @sigla_partido), 
+                                    (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
                                     @condicao
                                 )");
                                 }
                             }
                         }
-                    }
-                } while (deputados.links.Any(x => x.rel == "next"));
+                    } while (deputados.links.Any(x => x.rel == "next"));
 
+                }
             }
 
             if (novos > 0)

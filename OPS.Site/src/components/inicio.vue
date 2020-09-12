@@ -126,17 +126,27 @@
           <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.
         </p>
         <p>
-          Cada um tem direito a restituir até
+          Cada deputado federal tem direito a restituir até
           <strong>
             <a
               href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
-              onclick="return trackOutboundLink(this, true);"
               target="_blank"
               rel="nofollow"
-              title="Clique para visualizar a lista official de valores por estado"
+              title="Clique para visualizar a lista oficial de valores por estado"
             >R$ 45.612,53 por mês</a>
           </strong> com sua
           <strong>alimentação, passagens aereas, combustivel, consultoria</strong>, entre outros.
+        </p>
+        <p>
+          No Senado o valor chega a
+          <strong>
+            <a
+              href="https://www12.senado.leg.br/transparencia/leg/pdf/CotaExercicioAtivParlamSenadores.pdf"
+              target="_blank"
+              rel="nofollow"
+              title="Clique para visualizar a lista official de valores por estado"
+            >R$ 44.276,60 por mês.</a>
+          </strong>
         </p>
         <p>
           Contrariando a lei de licitações, o uso deste dinheiro é feito sem licitação e
