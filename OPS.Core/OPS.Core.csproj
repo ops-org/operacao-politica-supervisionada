@@ -6,8 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="15.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.7" />
     <PackageReference Include="MySqlConnector" Version="1.0.1" />
     <PackageReference Include="RestSharp" Version="106.11.4" />
     <PackageReference Include="Sendgrid" Version="9.21.0" />

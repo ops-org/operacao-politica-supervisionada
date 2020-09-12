@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
@@ -161,15 +160,10 @@ namespace OPS.Core
                 });
         }
 
-        public static async Task SendMailAsync(IConfiguration configuration, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null)
+        public static async Task SendMailAsync(string SendGridAPIKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null)
         {
             var lstEmailTo = new MailAddressCollection() { objEmailTo };
-            await SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, subject, body, ReplyTo);
-        }
-
-        public static async Task SendMailAsync(IConfiguration configuration, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)
-        {
-            await SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, subject, body, ReplyTo);
+            await SendMailAsync(SendGridAPIKey, lstEmailTo, subject, body, ReplyTo);
         }
 
         public static async Task SendMailAsync(string APIKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)

@@ -200,7 +200,7 @@ namespace OPS.WebApi
                 }
 
                 Console.WriteLine(sb.ToString());
-                await Utils.SendMailAsync(Configuration, lstEmailTo, "OPS :: Resumo da Importação", sb.ToString());
+                await Utils.SendMailAsync(Configuration["AppSettings:SendGridAPIKey"], lstEmailTo, "OPS :: Resumo da Importação", sb.ToString());
             }
             catch (Exception ex)
             {
@@ -209,7 +209,7 @@ namespace OPS.WebApi
                 if (ex1.StackTrace != null)
                     message += ex1.StackTrace;
 
-                await Utils.SendMailAsync(Configuration, new MailAddress(Padrao.EmailEnvioErros), "OPS :: Informe de erro na Importação", message);
+                await Utils.SendMailAsync(Configuration["AppSettings:SendGridAPIKey"], new MailAddress(Padrao.EmailEnvioErros), "OPS :: Informe de erro na Importação", message);
             }
 
             return Ok(DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm", cultureInfo));

@@ -472,10 +472,6 @@ namespace OPS.ImportacaoDados
                         //sb.AppendFormat("<p>Não Houve sessão no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
                         continue;
                     }
-                    else
-                    {
-                        var a = 1;
-                    }
                 }
 
                 using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())

@@ -41,7 +41,8 @@ namespace OPS.WebApi
 
             using (var objSmtp = new SmtpClient())
             {
-                await Utils.SendMailAsync(Configuration, objEmailTo, Subject, Body, ReplyTo);
+
+                await Utils.SendMailAsync(Configuration["AppSettings:SendGridAPIKey"], objEmailTo, Subject, Body, ReplyTo);
             }
 
             return Ok();
