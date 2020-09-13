@@ -44,7 +44,7 @@
                                   target="_blank">Página Oficial</a>
                             </span>
                         </p>
-                        <p class="mb-0"><strong>Telefone:</strong> {{deputado_federal.telefone}}</p>
+                        <p class="mb-0"><strong>Telefone:</strong> (61) {{deputado_federal.telefone}}</p>
                         <p class="mb-0"><strong>Email:</strong> {{deputado_federal.email}}</p>
                     </div>
                 </div>

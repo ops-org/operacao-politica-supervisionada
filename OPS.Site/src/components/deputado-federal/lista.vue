@@ -70,7 +70,7 @@
               id="txtBeneficiario"
               class="form-control input-sm"
               disabled="disabled"
-              v-model="filtro.beneficiario.nome"
+              v-model="filtro.fornecedor.nome"
             />
             <div class="input-group-append">
               <button
@@ -258,11 +258,11 @@
                     <form class="form-group">
                         <div class="form-group">
                             <label for="inputNome">Nome</label>
-                            <input type="text" class="form-control" v-model="fornecedor.nome" placeholder="Informe um nome">
+                            <input type="text" class="form-control" v-model="fornecedor_busca.nome" placeholder="Informe um nome">
                         </div>
                         <div class="form-group">
                             <label for="inputCpfCnpj">CPF / CNPJ</label>
-                            <input type="text" class="form-control" v-model="fornecedor.cnpj" placeholder="Informe um CPF ou CNPJ">
+                            <input type="text" class="form-control" v-model="fornecedor_busca.cnpj" placeholder="Informe um CPF ou CNPJ">
                         </div>
 
                         <button type="button" class="btn btn-primary" v-on:click="ConsultaFornecedor();">Pesquisar</button>
@@ -318,18 +318,14 @@ export default {
         despesa: [],
         estado: [],
         partido: [],
-        beneficiario: {},
+        fornecedor: {},
       },
+      fornecedor_busca: {},
+
       estados: [],
       partidos: [],
       parlamentares: [],
       despesas: [],
-      beneficiario: {},
-
-      fornecedor: {
-        nome: null,
-        cnpj: null,
-      },
       fornecedores: [],
 
       options: {
@@ -346,11 +342,10 @@ export default {
             Despesa: (vm.filtro.despesa || []).join(','),
             Estado: (vm.filtro.estado || []).join(','),
             Partido: (vm.filtro.partido || []).join(','),
-            Fornecedor: vm.filtro.beneficiario.id,
+            Fornecedor: vm.filtro.fornecedor.id || null,
           };
 
           this.fields = null;
-
           axios
             .post(`${process.env.API}/deputado/lancamentos`, newData)
             .then((response) => {
@@ -358,6 +353,13 @@ export default {
               callback(response.data);
 
               loader.hide();
+              jQuery.each(newData.filters, (key, value) => {
+                if (value === '' || value === null) {
+                  delete newData.filters[key];
+                }
+              });
+
+              vm.$router.push({ path: 'deputado-federal', query: newData.filters }, () => { /* Necesario para não fazer redirect */ });
             });
         },
         pageLength: 100,
@@ -386,7 +388,7 @@ export default {
     vm.filtro.despesa = (vm.qs.Despesa ? vm.qs.Despesa.split(',') : []);
     vm.filtro.estado = (vm.qs.Estado ? vm.qs.Estado.split(',') : []);
     vm.filtro.partido = (vm.qs.Partido ? vm.qs.Partido.split(',') : []);
-    vm.filtro.beneficiario = (vm.qs.Fornecedor ? { id: vm.qs.Fornecedor, nome: vm.qs.Fornecedor } : {});
+    vm.filtro.fornecedor = (vm.qs.Fornecedor ? { id: vm.qs.Fornecedor, nome: vm.qs.Fornecedor } : {});
 
     document.title = 'OPS :: Deputado Federal';
 
@@ -426,17 +428,20 @@ export default {
         });
     },
     SelecionarFornecedor(f) {
-      this.filtro.beneficiario = {
+      this.filtro.fornecedor = {
         id: f.id_fornecedor,
         cnpj: f.cnpj_cpf,
         nome: f.nome,
       };
 
+      this.fornecedor_busca = {};
+      this.fornecedores = [];
       jQuery('#modal-fornecedor').modal('hide');
     },
     LimparFiltroFornecedor() {
-      this.fornecedor = {};
-      this.filtro.beneficiario = {};
+      this.fornecedores = [];
+      this.fornecedor_busca = {};
+      this.filtro.fornecedor = {};
     },
     AbrirModalDetalhar(data) {
       this.selectedRow = data;
@@ -453,7 +458,7 @@ export default {
           vm.filtro.despesa = [this.selectedRow.id_cf_despesa_tipo];
           break;
         case '3': // Fornecedor
-          vm.filtro.beneficiario = { id: this.selectedRow.cnpj_cpf, nome: this.selectedRow.nome_fornecedor };
+          vm.filtro.fornecedor = { id: this.selectedRow.id_fornecedor, cnpj: this.selectedRow.cnpj_cpf, nome: this.selectedRow.nome_fornecedor };
           break;
         case '4': // Partido
           vm.filtro.partido = [this.selectedRow.id_partido];
@@ -730,7 +735,7 @@ export default {
         despesa: [],
         estado: [],
         partido: [],
-        beneficiario: {},
+        fornecedor: {},
       };
     },
   },

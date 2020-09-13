@@ -8,7 +8,7 @@
         {{deputado.quantidade_secretarios}}
       </p>
       <p class="mb-0">
-        <strong>Custo Mensal Total (03/2020):</strong>
+        <strong>Custo Mensal Total:</strong>
         R$ {{deputado.custo_secretarios}}
       </p>
     </div>
