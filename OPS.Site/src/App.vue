@@ -53,7 +53,7 @@
             target="_blank"
             rel="noopener"
           >Blog</a>
-          <a id="nav-sobre" class="p-2 text-dark" href="./sobre">Sobre</a>
+          <a id="nav-sobre" class="p-2 text-dark" href="/sobre">Sobre</a>
           <a
             class="p-2 text-dark social"
             href="https://www.facebook.com/operacaopoliticasupervisionada"

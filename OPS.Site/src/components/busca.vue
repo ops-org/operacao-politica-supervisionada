@@ -29,13 +29,13 @@
                       <div class="col-xs-12 col-sm-6 col-md-4 senador" v-for="senador in senador" :key="senador.id_sf_senador">
                           <div class="card form-group">
                               <div class="card-header bg-light">
-                                  <a v-bind:href="'./senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
+                                  <a v-bind:href="'/senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
                                       {{senador.nome}}
                                   </a>
                               </div>
                               <div class="row no-gutters">
                                   <div class="col-md-4">
-                                      <a v-bind:href="'./senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
+                                      <a v-bind:href="'/senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
                                           <img class="media-thumbnail" v-lazy="API + '/senador/imagem/' + senador.id_sf_senador + '_120x160'" />
                                       </a>
                                   </div>
@@ -63,13 +63,13 @@
                       <div class="col-xs-12 col-sm-6 col-md-4 deputado" v-for="deputado in deputado_federal" :key="deputado.id_cf_deputado">
                           <div class="card form-group">
                               <div class="card-header bg-light">
-                                  <a v-bind:href="'./deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
+                                  <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
                                       {{deputado.nome_parlamentar}}
                                   </a>
                               </div>
                               <div class="row no-gutters">
                                   <div class="col-md-4">
-                                      <a v-bind:href="'./deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
+                                      <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
                                           <img class="media-thumbnail" v-lazy="API + '/deputado/imagem/' + deputado.id_cf_deputado" />
                                       </a>
                                   </div>
@@ -97,7 +97,7 @@
                           <div class="list-group-item active">
                               {{fornecedor.length}} empresas encontradas
                           </div>
-                          <a v-for="fornecedor in fornecedor" :key="fornecedor.id_fornecedor" v-bind:href="'./fornecedor/' + fornecedor.id_fornecedor" class="list-group-item">
+                          <a v-for="fornecedor in fornecedor" :key="fornecedor.id_fornecedor" v-bind:href="'/fornecedor/' + fornecedor.id_fornecedor" class="list-group-item">
                               {{fornecedor.cnpj}} - {{fornecedor.estado}}<br />
                               {{fornecedor.nome_fantasia}}<br />
                               {{fornecedor.nome}}

@@ -494,7 +494,7 @@ export default {
                 label: 'Parlamentar',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="./senador/${full.id_sf_senador}">${data}</a>`;
+                    return `<a href="/senador/${full.id_sf_senador}">${data}</a>`;
                   }
                   return data;
                 },
@@ -571,7 +571,7 @@ export default {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="./fornecedor/${full.id_fornecedor}">${data}</a>`;
+                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a>`;
                   }
                   return data;
                 },
@@ -672,7 +672,7 @@ export default {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="./fornecedor/${full.id_fornecedor}">${data}</a>`;
+                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a>`;
                   }
                   return data;
                 },
@@ -682,7 +682,7 @@ export default {
                 label: 'Parlamentar',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="./senador/${full.id_sf_senador}">${data}</a>`;
+                    return `<a href="/senador/${full.id_sf_senador}">${data}</a>`;
                   }
                   return data;
                 },

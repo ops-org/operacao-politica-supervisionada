@@ -6,8 +6,13 @@
         <div class="box-senador form-group">
             <div class="row">
                 <div class="col-xs-12 col-md-4 col-lg-2 text-center">
-                    <img class="img-thumbnail img-responsive img-senador" v-bind:src="API + '/senador/imagem/' + senador.id_sf_senador + '_240x300'"
-                         v-bind:title="senador.nome_parlamentar" v-bind:alt="senador.nome_parlamentar" width="170" height="210" />
+                    <img
+                      class="img-thumbnail img-responsive img-senador"
+                      v-bind:src="API + '/senador/imagem/' + senador.id_sf_senador + '_240x300'"
+                      v-bind:title="senador.nome_parlamentar"
+                      v-bind:alt="senador.nome_parlamentar"
+                      width="170"
+                      height="210" />
                 </div>
                 <div class="col-xs-12 col-md-8 col-lg-10 text-left">
                     <h3 style="margin-top: 0;">{{senador.nome_parlamentar}} <small>({{senador.sigla_partido}} / {{senador.sigla_estado}})</small></h3>
@@ -19,9 +24,17 @@
                     <p class="mb-0"><strong>Email:</strong> {{senador.email}}</p>
                     <p class="mb-0">
                         <strong>Gasto Acumulado CEAPS:</strong>
-                        <a v-bind:href="'./senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{senador.valor_total_ceaps}}</a>
+                        <a
+                          v-bind:href="'/senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'"
+                          title="Clique para ver os gastos com cota parlamentar em detalhes"
+                          >R$ {{senador.valor_total_ceaps}}</a>
                     </p>
-                    <p class="mb-0"><a v-bind:href="'http://www25.senado.leg.br/web/senadores/senador/-/perfil/' + senador.id_sf_senador" target="_blank" onclick="return trackOutboundLink(this, true);">Ver página oficial no senado</a></p>
+                    <p class="mb-0">
+                      <a
+                        v-bind:href="'http://www25.senado.leg.br/web/senadores/senador/-/perfil/' + senador.id_sf_senador"
+                        target="_blank"
+                        >Ver página oficial no senado</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -41,7 +54,11 @@
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'./senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=6'">Ver lista completa</a>
+                        <a
+                          class="float-right"
+                          v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=6'"
+                          >Ver lista completa</a>
+
                         Maiores Notas/Recibos
                     </div>
                     <div class="card-body">
@@ -55,7 +72,7 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresNotas" :key="row.id_sf_despesa">
-                                        <td><a v-bind:href="'./fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
                                         <td>{{row.valor}}</td>
                                     </tr>
                                 </tbody>
@@ -67,7 +84,7 @@
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'./senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=3'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=3'">Ver lista completa</a>
                         Maiores fornecedores
                     </div>
                     <div class="card-body">
@@ -81,8 +98,8 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresFornecedores"  :key="row.id_fornecedor">
-                                        <td><a v-bind:href="'./fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td><a v-bind:href="'./senador?IdParlamentar='+senador.id_sf_senador+'&Fornecedor='+row.id_fornecedor+'&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td><a v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Fornecedor='+row.id_fornecedor+'&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
                                     </tr>
                                 </tbody>
                             </table>

@@ -17,7 +17,7 @@
             <p class="mb-1">
               <strong>Nome Parlamentar:</strong>
               <a
-                v-bind:href="'./deputado-federal/' + documento.id_cf_deputado"
+                v-bind:href="'/deputado-federal/' + documento.id_cf_deputado"
                 title="Visualisar perfil do parlamentar"
               >{{documento.nome_parlamentar}}</a>
             </p>
@@ -118,7 +118,6 @@
             v-if="documento.url_documento"
             class="btn btn-danger"
             v-bind:href="documento.url_documento"
-            onclick="return trackOutboundLink(this, true);"
             target="_blank"
             rel="nofollow"
           >
@@ -129,7 +128,6 @@
             v-if="documento.url_documento_nfe"
             class="btn btn-danger"
             v-bind:href="documento.url_documento_nfe"
-            onclick="return trackOutboundLink(this, true);"
             target="_blank"
             rel="nofollow"
           >
@@ -139,7 +137,6 @@
           <a
             class="btn btn-light"
             v-bind:href="documento.url_detalhes_documento"
-            onclick="return trackOutboundLink(this, true);"
             target="_blank"
             rel="nofollow"
           >
@@ -150,11 +147,19 @@
         <a
           class="btn btn-light"
           v-bind:href="documento.url_demais_documentos_mes"
-          onclick="return trackOutboundLink(this, true);"
           target="_blank"
           rel="nofollow"
         >
           Demais Recibos do mês&nbsp;
+          <i class="fa fa-plus"></i>
+        </a>
+        <a
+          class="btn btn-light"
+          href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk="
+          target="_blank"
+          rel="nofollow"
+        >
+          Visualizar NFe&nbsp;
           <i class="fa fa-plus"></i>
         </a>
       </div>
@@ -177,13 +182,13 @@
                     <tr v-for="row in documentos_mesmo_dia" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'./fornecedor/' + row.id_fornecedor"
+                          v-bind:href="'/fornecedor/' + row.id_fornecedor"
                         >{{row.nome_fornecedor}}</a>
                       </td>
                       <td>{{row.sigla_estado_fornecedor}}</td>
                       <td>
                         <a
-                          v-bind:href="'./deputado-federal/documento/' + row.id_cf_despesa"
+                          v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa"
                         >{{row.valor_liquido}}</a>
                       </td>
                     </tr>
@@ -213,13 +218,13 @@
                     <tr v-for="row in documentos_subcota_mes" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'./fornecedor/' + row.id_fornecedor"
+                          v-bind:href="'/fornecedor/' + row.id_fornecedor"
                         >{{row.nome_fornecedor}}</a>
                       </td>
                       <td>{{row.sigla_estado_fornecedor}}</td>
                       <td>
                         <a
-                          v-bind:href="'./deputado-federal/documento/' + row.id_cf_despesa"
+                          v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa"
                         >{{row.valor_liquido}}</a>
                       </td>
                     </tr>
@@ -279,8 +284,8 @@ export default {
       doc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${doc.id_deputado}&dataInicio=${doc.mes}/${doc.ano}&dataFim=${doc.mes}/${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
       doc.url_detalhes_documento = `${urlCamara}documento?nuDeputadoId=${doc.id_deputado}&numMes=${doc.mes}&numAno=${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&cnpjFornecedor=${doc.cnpj_cpf}&idDocumento=${doc.numero_documento}`;
 
-      doc.url_beneficiario = `./fornecedor/${doc.id_fornecedor}`;
-      doc.url_documentos_Deputado_beneficiario = `./deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=0&Agrupamento=6`;
+      doc.url_beneficiario = `/fornecedor/${doc.id_fornecedor}`;
+      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=0&Agrupamento=6`;
 
       this.documento = doc;
     });

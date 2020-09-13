@@ -22,7 +22,9 @@
     </div>
 
     <p style="padding-bottom: 20px;">
-        Fonte: <a target="_blank" v-bind:href="'https://www.camara.leg.br/deputados/' + deputado.id_cf_deputado + '/pessoal-gabinete?ano=2020'">Câmara de Deputados - Pessoal de gabinete 2020</a>
+        Fonte: <a
+          v-bind:href="'https://www.camara.leg.br/deputados/' + deputado.id_cf_deputado + '/pessoal-gabinete?ano=2020'"
+          target="_blank">Câmara de Deputados - Pessoal de gabinete 2020</a>
     </p>
   </div>
 </template>

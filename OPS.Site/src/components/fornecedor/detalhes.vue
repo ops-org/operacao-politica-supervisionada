@@ -333,7 +333,7 @@
             <div class="card-header bg-light">
               <a
                 class="float-right"
-                v-bind:href="'./deputado-federal?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
+                v-bind:href="'/deputado-federal?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
               >Ver lista completa</a>
               Deputados Federais (Top 10 Acumulado)
             </div>
@@ -350,12 +350,12 @@
                     <tr v-for="row in DeputadoFederalMaioresGastos" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'./deputado-federal/'+row.id_cf_deputado"
+                          v-bind:href="'/deputado-federal/'+row.id_cf_deputado"
                         >{{row.nome_parlamentar}}</a>
                       </td>
                       <td>
                         <a
-                          v-bind:href="'./deputado-federal?IdParlamentar='+row.id_cf_deputado+'&Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
+                          v-bind:href="'/deputado-federal?IdParlamentar='+row.id_cf_deputado+'&Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
                         >{{row.valor_total}}</a>
                       </td>
                     </tr>
@@ -384,7 +384,7 @@
             <div class="card-header bg-light">
               <a
                 class="float-right"
-                v-bind:href="'./senador?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
+                v-bind:href="'/senador?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
               >Ver lista completa</a>
               Senadores (Top 10 Acumulado)
             </div>
@@ -400,11 +400,11 @@
                   <tbody>
                     <tr v-for="row in SenadoresMaioresGastos" :key="row.id_sf_senador">
                       <td>
-                        <a v-bind:href="'./senador/'+row.id_sf_senador">{{row.nome_parlamentar}}</a>
+                        <a v-bind:href="'/senador/'+row.id_sf_senador">{{row.nome_parlamentar}}</a>
                       </td>
                       <td>
                         <a
-                          v-bind:href="'./senador?IdParlamentar='+row.id_sf_senador+'&Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
+                          v-bind:href="'/senador?IdParlamentar='+row.id_sf_senador+'&Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
                         >{{row.valor_total}}</a>
                       </td>
                     </tr>
