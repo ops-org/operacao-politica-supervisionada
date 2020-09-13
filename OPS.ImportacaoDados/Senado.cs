@@ -89,7 +89,12 @@ namespace OPS.ImportacaoDados
                 Console.WriteLine(ex.ToFullDescriptionString());
             }
 
-            return novos.ToString() + " Senador(es) Inseridos";
+            if (novos > 0)
+            {
+                return novos.ToString() + " Senador(es) Inseridos";
+            }
+
+            return string.Empty;
         }
 
         public static void AtualizaSenadores()

@@ -80,7 +80,7 @@ namespace OPS.ImportacaoDados
         {
             var sb = new StringBuilder();
             var strInfoAdicional = new StringBuilder();
-            int RateLimit_Remaining = -1;
+            int RateLimit_Remaining = 3;
             int totalImportados = 0;
 
             DataTable dtFornecedores;
@@ -149,16 +149,14 @@ namespace OPS.ImportacaoDados
                         string uriString;
                         HttpResponseMessage response = null;
 
-
                         uriString = string.Format("https://www.receitaws.com.br/v1/cnpj/{0}", item["cnpj_cpf"].ToString());
                         client.BaseAddress = new Uri(uriString);
 
-                        if (RateLimit_Remaining > -1 && RateLimit_Remaining <= 1)
+                        if (RateLimit_Remaining == 0)
                         {
                             Console.WriteLine("Rate limit atingido!");
                             System.Threading.Thread.Sleep(60000);
                         }
-
 
                         //Setar o Timeout do client quando é API BASICA
                         client.Timeout = TimeSpan.FromMilliseconds(1000);
@@ -174,6 +172,10 @@ namespace OPS.ImportacaoDados
                             int temp;
                             int.TryParse(rateLimit_Remaining.Value.First(), out temp);
                             RateLimit_Remaining = temp;
+                        }
+                        else
+                        {
+                            RateLimit_Remaining = 3;
                         }
 
 

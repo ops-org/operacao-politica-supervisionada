@@ -1177,7 +1177,7 @@ namespace OPS.ImportacaoDados
                                     if (string.IsNullOrEmpty(strXmlNodeDespeza))
                                     {
                                         vazia++;
-                                        if (vazia < 100)
+                                        if (vazia < 10)
                                         {
                                             if (vazia > 1)
                                                 Console.WriteLine("Linha: " + linhaAtual + " - [vazio]" + vazia);

@@ -3,9 +3,11 @@ using OPS.Core;
 using OPS.ImportacaoDados;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OPS.ImportacaoManual
@@ -118,6 +120,10 @@ namespace OPS.ImportacaoManual
                 .AddJsonFile($"appsettings.{environmentName}.json", true, true)
                 .AddEnvironmentVariables();
             var configuration = builder.Build();
+
+            CultureInfo ci = new CultureInfo("pt-BR");
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
 
             Padrao.ConnectionString = configuration.GetConnectionString("AuditoriaContext");
             Console.WriteLine(environmentName);
@@ -306,7 +312,7 @@ namespace OPS.ImportacaoManual
                 new Core.DAO.ParametrosDao().CarregarPadroes();
                 var inicioImportacao = DateTime.UtcNow.AddHours(-3).ToString("dd/MM/yyyy HH:mm");
 
-                sb.AppendFormat("<h3>-- Importar Deputados :: {duracao} --</h3>");
+                sb.Append("<strong>-- Importar Deputados :: @duracao --</strong>");
                 sw.Restart();
                 try
                 {
@@ -317,9 +323,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Fotos Deputados :: {duracao} --</h3>");
+                sb.Append("<strong>-- Importar Fotos Deputados :: @duracao --</strong>");
                 sw.Restart();
                 try
                 {
@@ -330,9 +336,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Despesas Deputados {0} :: {duracao} --</h3>", DateTime.Now.Year - 1);
+                sb.AppendFormat("<strong>-- Importar Despesas Deputados {0} :: @duracao --</strong>", DateTime.Now.Year - 1);
                 //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
                 sw.Restart();
                 try
@@ -344,9 +350,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString() + ex.GetBaseException().StackTrace);
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Despesas Deputados {0} :: {duracao} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<strong>-- Importar Despesas Deputados {0} :: @duracao --</strong>", DateTime.Now.Year);
                 //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
                 sw.Restart();
                 try
@@ -358,9 +364,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Presenças Deputados :: {duracao} --</h3>");
+                sb.Append("<strong>-- Importar Presenças Deputados :: @duracao --</strong>");
                 sw.Restart();
                 try
                 {
@@ -371,11 +377,11 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
 
 
-                sb.AppendFormat("<h3>-- Importar Secretários parlamentares {0} :: {duracao} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<strong>-- Importar Secretários parlamentares {0} :: @duracao --</strong>", DateTime.Now.Year);
                 sw.Restart();
 
                 ////Instantiate DI container for the application  
@@ -392,10 +398,10 @@ namespace OPS.ImportacaoManual
 
                 //sb.AppendFormat(taskResult);
                 //t = sw.Elapsed;
-                //sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
 
-                sb.AppendFormat("<h3>-- Importar Senadores {0} :: {duracao} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<strong>-- Importar Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -406,9 +412,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Imagens Senadores {0} :: {duracao} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<strong>-- Importar Imagens Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -419,9 +425,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Despesas Senado {0} :: {duracao} --</h3>", DateTime.Now.Year - 1);
+                sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year - 1);
                 sw.Restart();
                 try
                 {
@@ -432,9 +438,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Importar Despesas Senado {0} :: {duracao} --</h3>", DateTime.Now.Year);
+                sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -445,9 +451,9 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<h3>-- Consultar Receita WS :: {duracao} --</h3>");
+                sb.Append("<strong>-- Consultar Receita WS :: @duracao --</strong>");
                 sw.Restart();
                 try
                 {
@@ -458,10 +464,10 @@ namespace OPS.ImportacaoManual
                     sb.Append(ex.ToFullDescriptionString());
                 }
                 t = sw.Elapsed;
-                sb = sb.Replace("{duracao}", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
                 t = swGeral.Elapsed;
-                sb.AppendFormat("<h3>Inicio da importação: {0} - Duração Total: {1:D2}h:{2:D2}m:{3:D2}s</h3>", inicioImportacao, t.Hours, t.Minutes, t.Seconds);
+                sb.AppendFormat("<strong>Inicio da importação: {0} - Duração Total: {1:D2}h:{2:D2}m:{3:D2}s</strong>", inicioImportacao, t.Hours, t.Minutes, t.Seconds);
 
                 using (WebClient client = new WebClient())
                 {
