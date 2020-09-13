@@ -10,21 +10,13 @@
 ![MySQL](https://img.shields.io/badge/DB-MySQL-lightgrey.svg)
 ![.NET Core Workflow](https://github.com/ops-org/operacao-politica-supervisionada/workflows/.NET%20Core/badge.svg)
 
-## Quem?
+## Quem Somos?
 
 A **Operação Política Supervisionada** conta com a ajuda de seus colaboradores voluntários, espalhados pelo Brasil, para a leitura e interpretação de dados dos portais públicos da transparência brasileira e exibição simplificada dessas informações.
 
 Além disso, qualquer um pode ser um fiscal dos gastos públicos e este site oferece dados suficientes para isso.
 
 Este projeto é político e social, mas não possui vínculo a partido político e não possui ligação privada ou fim lucrativo.
-
-## Como Funciona
-
-Seu uso é muito simples e pode ser através de smartphones, tablets e PCs.
-
-Você pode fiscalizar de forma detalhada os gastos realizados via Cota para Atividade Parlamentar. 
-
-Até o momento já foram economizados mais de R$ 5,5 milhões do dinheiro público graças a estas fiscalizações e às exigências feitas diretamente aos parlamentares para que devolvam o dinheiro público indevidamente utilizado.
 
 ## Fale Conosco
 * [Homepage](http://ops.net.br) - Homepage
