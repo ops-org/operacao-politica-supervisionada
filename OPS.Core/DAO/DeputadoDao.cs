@@ -1250,7 +1250,7 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroPartidoDeputado(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
+            if (request.Filters.ContainsKey("Partido") && !string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
             {
                 sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
             }
@@ -1258,7 +1258,7 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroEstadoDeputado(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
+            if (request.Filters.ContainsKey("Estado") && !string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
             {
                 sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["Estado"].ToString()) + ")) ");
             }
@@ -1298,7 +1298,7 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroDespesa(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(request.Filters["Despesa"].ToString()))
+            if (request.Filters.ContainsKey("Despesa") && !string.IsNullOrEmpty(request.Filters["Despesa"].ToString()))
             {
                 sqlSelect.AppendLine("	AND l.id_cf_despesa_tipo IN (" + Utils.MySqlEscapeNumberToIn(request.Filters["Despesa"].ToString()) + ") ");
             }
@@ -1306,7 +1306,7 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroDeputado(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            if (!string.IsNullOrEmpty(request.Filters["IdParlamentar"].ToString()))
+            if (request.Filters.ContainsKey("IdParlamentar") && !string.IsNullOrEmpty(request.Filters["IdParlamentar"].ToString()))
             {
                 sqlSelect.AppendLine("	AND l.id_cf_deputado IN (" + Utils.MySqlEscapeNumberToIn(request.Filters["IdParlamentar"].ToString()) + ") ");
             }

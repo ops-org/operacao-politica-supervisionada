@@ -22,7 +22,7 @@ import Erro404 from '@/components/erro/404';
 
 Vue.use(Router);
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   routes: [
     {
@@ -110,6 +110,14 @@ export default new Router({
     },
   ],
 });
+
+// router.beforeEach((to, from, next) => {
+//   console.log(from.fullPath);
+//   console.log(to.fullPath);
+//   next();
+// });
+
+export default router;
 
 // nginx
 // location / {

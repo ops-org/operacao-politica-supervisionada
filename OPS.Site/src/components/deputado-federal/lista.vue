@@ -194,7 +194,7 @@
           <input
             type="button"
             id="ButtonPesquisar"
-            v-on:click="Pesquisar();"
+            v-on:click="Pesquisar(false);"
             value="Pesquisar"
             class="btn btn-danger btn-sm"
           />
@@ -308,6 +308,7 @@ export default {
     const vm = this;
 
     return {
+      pageLoad: true,
       selectedRow: {},
       valorTotal: null,
       deputado_federal: {},
@@ -345,6 +346,16 @@ export default {
             Fornecedor: vm.filtro.fornecedor.id || null,
           };
 
+          jQuery.each(newData.filters, (key, value) => {
+            if (value === '' || value === null) {
+              delete newData.filters[key];
+            }
+          });
+
+          if (!vm.pageLoad) {
+            vm.$router.push({ path: 'deputado-federal', query: newData.filters }, () => { /* Necesario para não fazer redirect */ });
+          }
+
           this.fields = null;
           axios
             .post(`${process.env.API}/deputado/lancamentos`, newData)
@@ -353,13 +364,6 @@ export default {
               callback(response.data);
 
               loader.hide();
-              jQuery.each(newData.filters, (key, value) => {
-                if (value === '' || value === null) {
-                  delete newData.filters[key];
-                }
-              });
-
-              vm.$router.push({ path: 'deputado-federal', query: newData.filters }, () => { /* Necesario para não fazer redirect */ });
             });
         },
         pageLength: 100,
@@ -410,7 +414,7 @@ export default {
       this.parlamentares = response.data;
     });
 
-    this.Pesquisar();
+    this.Pesquisar(true);
   },
   methods: {
     AbreModalConsultaFornecedor() {
@@ -473,12 +477,13 @@ export default {
       vm.filtro.agrupar = agrupar;
       jQuery('#modal-detalhar').modal('hide');
 
-      vm.Pesquisar();
+      vm.Pesquisar(false);
     },
-    Pesquisar() {
+    Pesquisar(pageLoad) {
       const vm = this;
       vm.deputado_federal = {};
       vm.fields = null;
+      vm.pageLoad = pageLoad;
 
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
