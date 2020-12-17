@@ -14,7 +14,7 @@
     "axios": "^0.20.0",
     "bootstrap": "^4.5.2",
     "bootstrap-select": "^1.13.18",
-    "datatables.net": "^1.10.21",
+    "datatables.net": "^1.10.22",
     "datatables.net-bs4": "^1.10.21",
     "font-awesome": "^4.7.0",
     "highcharts": "^8.2.0",
