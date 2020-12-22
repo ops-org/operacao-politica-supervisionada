@@ -32,6 +32,10 @@ export default {
       selectedTextFormat: 'count > 3',
       maxOptions: 50,
       style: 'btn-light',
+      noneSelectedText: 'Nada selecionado',
+      noneResultsText: 'Nenhum resultado encontrado {0}',
+      selectAllText: 'Selecionar tudo',
+      deselectAllText: 'Deselecionar tudo',
     });
 
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(window.navigator.userAgent)) {

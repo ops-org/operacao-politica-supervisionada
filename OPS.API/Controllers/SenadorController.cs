@@ -103,10 +103,10 @@ namespace OPS.WebApi
         [HttpGet("Imagem/{id}")]
         public VirtualFileResult Imagem(string id)
         {
-            if (!string.IsNullOrEmpty(Environment.WebRootPath))
+            if (!string.IsNullOrEmpty(Environment.ContentRootPath))
             {
-                var file = @"images/Parlamentares/SENADOR/" + id + ".jpg";
-                var filePath = System.IO.Path.Combine(Environment.WebRootPath, file);
+                var file = @"images/senador/" + id + ".jpg";
+                var filePath = System.IO.Path.Combine(Environment.ContentRootPath, file);
 
                 if (System.IO.File.Exists(filePath))
                 {
@@ -115,6 +115,52 @@ namespace OPS.WebApi
             }
 
             return File(@"images/sem_foto.jpg", "image/jpeg");
+        }
+
+        [HttpGet]
+        [Route("Lotacao")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> Lotacao()
+        {
+            return await dao.Lotacao();
+        }
+
+        [HttpGet]
+        [Route("Cargo")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> Cargo()
+        {
+            return await dao.Cargo();
+        }
+
+        [HttpGet]
+        [Route("Categoria")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> Categoria()
+        {
+            return await dao.Categoria();
+        }
+
+        [HttpGet]
+        [Route("Vinculo")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> Vinculo()
+        {
+            return await dao.Vinculo();
+        }
+
+        [HttpPost]
+        [Route("Remuneracao")]
+        public async Task<dynamic> Remuneracao(DataTablesRequest request)
+        {
+            return await dao.Remuneracao(request);
+        }
+
+        [HttpGet]
+        [Route("Remuneracao/{id:int}")]
+        public async Task<dynamic> Remuneracao(int id)
+        {
+            return await dao.Remuneracao(id);
         }
     }
 }

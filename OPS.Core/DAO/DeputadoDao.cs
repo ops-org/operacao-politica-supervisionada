@@ -44,6 +44,7 @@ namespace OPS.Core.DAO
 						, d.valor_total_ceap
 						, d.quantidade_secretarios
 						, d.custo_secretarios
+						, d.custo_total_secretarios
 					FROM cf_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado -- eleito
@@ -84,7 +85,8 @@ namespace OPS.Core.DAO
                             nome_municipio_nascimento = reader["nome_municipio_nascimento"].ToString(),
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
                             quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
-                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"])
+                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"]),
+                            custo_total_secretarios = Utils.FormataValor(reader["custo_total_secretarios"])
                         };
                     }
 
@@ -1360,7 +1362,8 @@ namespace OPS.Core.DAO
             var dcFielsSort = new Dictionary<int, string>(){
                 {1, "p.nome_parlamentar" },
                 {2, "p.quantidade_secretarios" },
-                {3, "p.custo_secretarios" },
+                {3, "p.custo_mensal_secretarios" },
+                {4, "p.custo_total_secretarios" },
             };
 
             using (AppDb banco = new AppDb())
@@ -1372,6 +1375,7 @@ namespace OPS.Core.DAO
 						, p.nome_parlamentar
 						, p.quantidade_secretarios
 						, p.custo_secretarios
+						, p.custo_total_secretarios
 					from cf_deputado p
 					where p.quantidade_secretarios > 0
 				");
@@ -1396,7 +1400,8 @@ namespace OPS.Core.DAO
                             id_cf_deputado = reader["id_cf_deputado"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
-                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"])
+                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"]),
+                            custo_total_secretarios = Utils.FormataValor(reader["custo_total_secretarios"])
                         });
                     }
 
@@ -1415,7 +1420,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> SecretariosPorDeputado(int id, DataTablesRequest request)
+        public async Task<dynamic> SecretariosAtivosPorDeputado(int id, DataTablesRequest request)
         {
             var dcFielsSort = new Dictionary<int, string>(){
                 {1, "s.nome" },
@@ -1472,6 +1477,67 @@ namespace OPS.Core.DAO
                             valor_outros = Utils.FormataValor(reader["valor_outros"]),
                             custo_total = Utils.FormataValor(reader["custo_total"]),
                             referencia = reader["referencia"].ToString(),
+                            link = reader["link"].ToString()
+                        });
+
+
+                    }
+
+                    reader.NextResult();
+                    await reader.ReadAsync();
+                    string TotalCount = reader["row_count"].ToString();
+
+                    return new
+                    {
+                        draw = request.Draw,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
+                    };
+                }
+            }
+        }
+
+
+        public async Task<dynamic> SecretariosPorDeputado(int id, DataTablesRequest request)
+        {
+            var dcFielsSort = new Dictionary<int, string>(){
+                {1, "s.nome" },
+                {2, "custo_total" }
+            };
+
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT SQL_CALC_FOUND_ROWS
+	                    s.nome
+	                    , SUM(r.valor_outros + r.valor_bruto) as custo_total
+	                    , s.link
+                    from cf_secretario_remuneracao r
+                    left join (
+	                    select distinct id_cf_deputado, nome, link
+	                    from cf_secretario s
+                    ) s on s.link = r.id_cf_secretario
+                    WHERE s.id_cf_deputado = @id
+                    group by s.link, s.nome
+				");
+                banco.AddParameter("@id", id);
+
+                strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
+                strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+
+                strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    var lstRetorno = new List<dynamic>();
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            nome = reader["nome"].ToString(),
+                            custo_total = Utils.FormataValor(reader["custo_total"]),
                             link = reader["link"].ToString()
                         });
 

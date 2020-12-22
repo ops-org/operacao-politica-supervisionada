@@ -6,13 +6,6 @@
         <vdtnet-table ref="table" :fields="fields" :opts="options"></vdtnet-table>
     </div>
 
-    <p style="padding-bottom: 20px;">
-      Fonte:
-      <a
-        target="_blank"
-        href="http://www2.camara.leg.br/atividade-legislativa/plenario/resultadoVotacao"
-      >Câmara de Deputados - Resultado da votação eletrônica e lista de presença</a>
-    </p>
   </div>
 </template>
 
@@ -65,13 +58,17 @@ export default {
           sortable: true,
         },
         quantidade_secretarios: {
-          label: 'Secretários',
+          label: 'Secretários Ativos',
           sortable: true,
         },
         custo_secretarios: {
           label: 'Custo Mensal',
           sortable: true,
         },
+        // custo_total_secretarios: {
+        //   label: 'Custo Total',
+        //   sortable: true,
+        // },
       },
     };
   },

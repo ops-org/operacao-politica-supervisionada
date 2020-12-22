@@ -68,7 +68,13 @@ namespace OPS.WebApi
             return await dao.Secretarios(request);
         }
 
-        [HttpPost("{id:int}/Secretarios")]
+        [HttpPost("{id:int}/SecretariosAtivos")]
+        public async Task<dynamic> SecretariosAtivosPorDeputado(int id, DataTablesRequest request)
+        {
+            return await dao.SecretariosAtivosPorDeputado(id, request);
+        }
+
+        [HttpPost("{id:int}/SecretariosHistorico")]
         public async Task<dynamic> SecretariosPorDeputado(int id, DataTablesRequest request)
         {
             return await dao.SecretariosPorDeputado(id, request);
@@ -152,10 +158,10 @@ namespace OPS.WebApi
         [HttpGet("Imagem/{id}")]
         public VirtualFileResult Imagem(string id)
         {
-            if (!string.IsNullOrEmpty(Environment.WebRootPath))
+            if (!string.IsNullOrEmpty(Environment.ContentRootPath))
             {
-                var file = @"images/Parlamentares/DEPFEDERAL/" + id + ".jpg";
-                var filePath = System.IO.Path.Combine(Environment.WebRootPath, file);
+                var file = @"images/depfederal/" + id + ".jpg";
+                var filePath = System.IO.Path.Combine(Environment.ContentRootPath, file);
 
                 if (System.IO.File.Exists(filePath))
                 {

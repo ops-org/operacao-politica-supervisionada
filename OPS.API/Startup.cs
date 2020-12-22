@@ -40,7 +40,7 @@ namespace OPS.API
             services.AddSingleton<ICacheKeyGenerator, DefaultCacheKeyGenerator>();
             services.AddSingleton<IApiCacheOutput, InMemoryCacheOutputProvider>();
 
-            //services.AddTransient<AppDb>(_ => new AppDb(Configuration["ConnectionStrings:AuditoriaContext"]));
+            //services.AddScoped(_ => new AppDb(Configuration["ConnectionStrings:AuditoriaContext"]));
 
             //services.AddCors(options =>
             //{

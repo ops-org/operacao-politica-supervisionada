@@ -45,7 +45,7 @@
                     <div class="row no-gutters">
                         <div class="col-md-4">
                             <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
-                                <img class="media-thumbnail card-img" v-lazy="API + '/deputado/imagem/' + deputado.id_cf_deputado" />
+                                <img class="media-thumbnail card-img" v-lazy="'/static/img/depfederal/' + deputado.id_cf_deputado + '.jpg'" />
                             </a>
                         </div>
                         <div class="col-md-8">

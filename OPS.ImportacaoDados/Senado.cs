@@ -7,6 +7,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Text;
+using CsvHelper;
 using OPS.Core;
 
 namespace OPS.ImportacaoDados
@@ -396,6 +397,7 @@ namespace OPS.ImportacaoDados
             int DATA = indice++;
             int DETALHAMENTO = indice++;
             int VALOR_REEMBOLSADO = indice++;
+            int COD_DOCUMENTO = indice++;
 
             int linhaAtual = 0;
 
@@ -458,8 +460,11 @@ namespace OPS.ImportacaoDados
                                     (valores[DOCUMENTO] != "DOCUMENTO") ||
                                     (valores[DATA] != "DATA") ||
                                     (valores[DETALHAMENTO] != "DETALHAMENTO") ||
-                                    (valores[VALOR_REEMBOLSADO] != "VALOR_REEMBOLSADO")
+                                    (valores[VALOR_REEMBOLSADO] != "VALOR_REEMBOLSADO") ||
+                                    (valores[COD_DOCUMENTO] != "COD_DOCUMENTO")
+                                    
                                 )
+
                             {
                                 throw new Exception("Mudança de integração detectada para o Senado Federal");
                             }
@@ -478,6 +483,7 @@ namespace OPS.ImportacaoDados
                         banco.AddParameter("data", !string.IsNullOrEmpty(valores[DATA]) ? (object)Convert.ToDateTime(valores[DATA], cultureInfo) : DBNull.Value);
                         banco.AddParameter("detalhamento", valores[DETALHAMENTO]);
                         banco.AddParameter("valor_reembolsado", Convert.ToDouble(valores[VALOR_REEMBOLSADO], cultureInfo));
+                        banco.AddParameter("cod_documento", Convert.ToUInt64(valores[COD_DOCUMENTO], cultureInfo));
 
                         string hash = banco.ParametersHash();
                         if (lstHash.Remove(hash))
@@ -490,9 +496,9 @@ namespace OPS.ImportacaoDados
 
                         banco.ExecuteNonQuery(
                             @"INSERT INTO sf_despesa_temp (
-								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado, hash
+								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado, cod_documento, hash
 							) VALUES (
-								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @hash
+								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @cod_documento, @hash
 							)");
                     }
 
@@ -512,9 +518,9 @@ namespace OPS.ImportacaoDados
                 {
                     foreach (var hash in lstHash)
                     {
-                        banco.ExecuteNonQuery(string.Format("delete from sf_despesa where hash = '{0}'", hash));
+                        banco.ExecuteNonQuery(string.Format("update sf_despesa set deletado = NOW() where hash = '{0}'", hash));
                     }
-                    
+
 
                     Console.WriteLine("Registros para exluir: " + lstHash.Count);
                     sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
@@ -616,10 +622,12 @@ namespace OPS.ImportacaoDados
 
         private static string InsereDespesaFinal(AppDb banco)
         {
+            var retorno = "";
             banco.ExecuteNonQuery(@"
 				ALTER TABLE sf_despesa DISABLE KEYS;
 
-				INSERT INTO sf_despesa (
+				INSERT IGNORE INTO sf_despesa (
+                    id,
 					id_sf_senador,
 					id_sf_despesa_tipo,
 					id_fornecedor,
@@ -633,6 +641,7 @@ namespace OPS.ImportacaoDados
 					hash
 				)
 				SELECT 
+                    d.cod_documento,
 					p.id,
 					dt.id,
 					f.id,
@@ -652,11 +661,42 @@ namespace OPS.ImportacaoDados
 				ALTER TABLE sf_despesa ENABLE KEYS;
 			", 3600);
 
+
             if (banco.Rows > 0)
             {
-                return "<p>" + banco.Rows + "+ Despesa</p>";
+                retorno =  + banco.Rows + "+ Despesa nova! ";
             }
 
+            banco.ExecuteNonQuery(@"
+				UPDATE sf_despesa_temp t 
+				inner join sf_senador p on ifnull(p.nome_importacao, p.nome) = t.senador
+				inner join sf_despesa_tipo dt on dt.descricao = t.tipo_despesa
+				inner join fornecedor f on f.cnpj_cpf = t.cnpj_cpf
+                inner join sf_despesa d on d.id = t.cod_documento and p.id = d.id_sf_senador
+                set
+					d.id_sf_despesa_tipo = dt.id,
+					d.id_fornecedor = f.id,
+					d.ano_mes = concat(t.ano, LPAD(t.mes, 2, '0')),
+					d.ano = t.ano,
+					d.mes = t.mes,
+					d.documento = t.documento,
+					d.data_documento = t.`data`,
+					d.detalhamento = t.detalhamento,
+					d.valor = t.valor_reembolsado,
+					d.hash = t.hash,
+				    d.deletado = null
+                where deletado is not null
+			", 3600);
+
+            if (banco.Rows > 0)
+            {
+                retorno += banco.Rows + "+ Despesa alterada! ";
+            }
+
+            if (!string.IsNullOrEmpty(retorno.Trim()))
+            {
+                return "<p>" + retorno.Trim() + "</p>";
+            }
             return string.Empty;
         }
 
@@ -854,6 +894,259 @@ namespace OPS.ImportacaoDados
             }
 
             return db.ToString();
+        }
+
+        public static string ImportarRemuneracao(string atualDir, int anomes)
+        {
+            var downloadUrl = string.Format("http://www.senado.leg.br/transparencia/LAI/secrh/SF_ConsultaRemuneracaoServidoresParlamentares_{0}.csv", anomes);
+            var fullFileNameCsv = System.IO.Path.Combine(atualDir, anomes + ".csv");
+
+            if (!Directory.Exists(atualDir))
+                Directory.CreateDirectory(atualDir);
+
+            var request = (HttpWebRequest)WebRequest.Create(downloadUrl);
+
+            request.UserAgent = "Other";
+            request.Method = "HEAD";
+            request.ContentType = "application/json;charset=UTF-8";
+            request.Timeout = 1000000;
+
+            using (var resp = request.GetResponse())
+            {
+                if (File.Exists(fullFileNameCsv))
+                {
+                    var ContentLength = Convert.ToInt64(resp.Headers.Get("Content-Length"));
+                    long ContentLengthLocal = 0;
+
+                    if (File.Exists(fullFileNameCsv))
+                        ContentLengthLocal = new FileInfo(fullFileNameCsv).Length;
+
+                    if (ContentLength == ContentLengthLocal)
+                    {
+                        Console.WriteLine("Não há novos itens para importar!");
+                        return "<p>Não há novos itens para importar!</p>";
+                    }
+                }
+
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent: Other");
+                    client.DownloadFile(downloadUrl, fullFileNameCsv);
+                }
+            }
+
+            try
+            {
+                var resumoImportacao = CarregaRemuneracaoCsv(fullFileNameCsv, anomes);
+
+                //            using (var banco = new AppDb())
+                //            {
+                //                banco.ExecuteNonQuery(@"
+                //	UPDATE parametros SET sf_senador_ultima_atualizacao=NOW();
+                //");
+                //            }
+
+                return resumoImportacao;
+            }
+            catch (Exception ex)
+            {
+                // Excluir o arquivo para tentar importar novamente na proxima execução
+                File.Delete(fullFileNameCsv);
+
+                return "Erro ao importar:" + ex.ToFullDescriptionString();
+            }
+        }
+
+        private static string CarregaRemuneracaoCsv(string file, int anomes)
+        {
+            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+            var sb = new StringBuilder();
+            string sResumoValores = string.Empty;
+
+            int indice = 0;
+            int VÍNCULO = indice++;
+            int CATEGORIA = indice++;
+            int CARGO = indice++;
+            int REFERÊNCIA_CARGO = indice++;
+            int SÍMBOLO_FUNÇÃO = indice++;
+            int ANO_EXERCÍCIO = indice++;
+            int LOTAÇÃO_EXERCÍCIO = indice++;
+            int TIPO_FOLHA = indice++;
+            int REMUN_BASICA = indice++;
+            int VANT_PESSOAIS = indice++;
+            int FUNC_COMISSIONADA = indice++;
+            int GRAT_NATALINA = indice++;
+            int HORAS_EXTRAS = indice++;
+            int OUTRAS_EVENTUAIS = indice++;
+            int ABONO_PERMANENCIA = indice++;
+            int REVERSAO_TETO_CONST = indice++;
+            int IMPOSTO_RENDA = indice++;
+            int PREVIDENCIA = indice++;
+            int FALTAS = indice++;
+            int REM_LIQUIDA = indice++;
+            int DIARIAS = indice++;
+            int AUXILIOS = indice++;
+            int VANT_INDENIZATORIAS = indice++;
+
+            int linhaAtual = 0;
+
+            using (var banco = new AppDb())
+            {
+                //var lstHash = new List<string>();
+                //using (var dReader = banco.ExecuteReader("select hash from sf_despesa where ano=" + ano))
+                //{
+                //    while (dReader.Read())
+                //    {
+                //        try
+                //        {
+                //            lstHash.Add(dReader["hash"].ToString());
+                //        }
+                //        catch (Exception)
+                //        {
+                //            // Vai ter duplicado mesmo
+                //        }
+                //    }
+                //}
+
+                //using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
+                //{
+                //    if (dReader.Read())
+                //    {
+                //        sResumoValores = string.Format("[{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
+                //    }
+                //}
+
+                LimpaRemuneracaoTemporaria(banco);
+
+                using (var reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
+                {
+                    short count = 0;
+
+                    using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
+                    {
+                        while (csv.Read())
+                        {
+                            count++;
+                            if (count == 1) //Pula primeira linha, data da atualização
+                                continue;
+
+                            if (count == 2)
+                            {
+                                if (
+                                        (csv[VÍNCULO] != "VÍNCULO") ||
+                                        (csv[VANT_INDENIZATORIAS].Trim() != "VANT_INDENIZATORIAS")
+                                    )
+                                {
+                                    throw new Exception("Mudança de integração detectada para o Senado Federal");
+                                }
+
+                                // Pular linha de titulo
+                                continue;
+                            }
+
+                            banco.AddParameter("ano_mes", anomes);
+                            banco.AddParameter("vinculo", csv[VÍNCULO]);
+                            banco.AddParameter("categoria", csv[CATEGORIA]);
+                            banco.AddParameter("cargo", csv[CARGO]);
+                            banco.AddParameter("referencia_cargo", csv[REFERÊNCIA_CARGO]);
+                            banco.AddParameter("simbolo_funcao", csv[SÍMBOLO_FUNÇÃO]);
+                            banco.AddParameter("admissao", Convert.ToInt32(csv[ANO_EXERCÍCIO]));
+                            banco.AddParameter("lotacao_exercicio", csv[LOTAÇÃO_EXERCÍCIO]);
+                            banco.AddParameter("tipo_folha", csv[TIPO_FOLHA]);
+
+                            banco.AddParameter("remun_basica", Convert.ToDouble(csv[REMUN_BASICA], cultureInfo));
+                            banco.AddParameter("vant_pessoais", Convert.ToDouble(csv[VANT_PESSOAIS], cultureInfo));
+                            banco.AddParameter("func_comissionada", Convert.ToDouble(csv[FUNC_COMISSIONADA], cultureInfo));
+                            banco.AddParameter("grat_natalina", Convert.ToDouble(csv[GRAT_NATALINA], cultureInfo));
+                            banco.AddParameter("horas_extras", Convert.ToDouble(csv[HORAS_EXTRAS], cultureInfo));
+                            banco.AddParameter("outras_eventuais", Convert.ToDouble(csv[OUTRAS_EVENTUAIS], cultureInfo));
+                            banco.AddParameter("abono_permanencia", Convert.ToDouble(csv[ABONO_PERMANENCIA], cultureInfo));
+                            banco.AddParameter("reversao_teto_const", Convert.ToDouble(csv[REVERSAO_TETO_CONST], cultureInfo));
+                            banco.AddParameter("imposto_renda", Convert.ToDouble(csv[IMPOSTO_RENDA], cultureInfo));
+                            banco.AddParameter("previdencia", Convert.ToDouble(!string.IsNullOrEmpty(csv[PREVIDENCIA]) ? csv[PREVIDENCIA] : "0", cultureInfo));
+                            banco.AddParameter("faltas", Convert.ToDouble(!string.IsNullOrEmpty(csv[FALTAS]) ? csv[FALTAS] : "0", cultureInfo));
+                            banco.AddParameter("rem_liquida", Convert.ToDouble(!string.IsNullOrEmpty(csv[REM_LIQUIDA]) ? csv[REM_LIQUIDA] : "0", cultureInfo));
+                            banco.AddParameter("diarias", Convert.ToDouble(!string.IsNullOrEmpty(csv[DIARIAS]) ? csv[DIARIAS] : "0", cultureInfo));
+                            banco.AddParameter("auxilios", Convert.ToDouble(!string.IsNullOrEmpty(csv[AUXILIOS]) ? csv[AUXILIOS] : "0", cultureInfo));
+                            banco.AddParameter("vant_indenizatorias", Convert.ToDouble(!string.IsNullOrEmpty(csv[VANT_INDENIZATORIAS]) ? csv[VANT_INDENIZATORIAS] : "0".Trim(), cultureInfo));
+
+                            //string hash = banco.ParametersHash();
+                            //if (lstHash.Remove(hash))
+                            //{
+                            //    banco.ClearParameters();
+                            //    continue;
+                            //}
+
+                            //banco.AddParameter("hash", hash);
+
+                            banco.ExecuteNonQuery(
+                                @"INSERT INTO sf_remuneracao_temp (
+								ano_mes, vinculo,categoria,cargo,referencia_cargo,simbolo_funcao,admissao,lotacao_exercicio,tipo_folha,
+                                remun_basica ,vant_pessoais ,func_comissionada ,grat_natalina ,horas_extras ,outras_eventuais ,abono_permanencia ,
+                                reversao_teto_const ,imposto_renda ,previdencia ,faltas ,rem_liquida ,diarias ,auxilios ,vant_indenizatorias
+							) VALUES (
+								@ano_mes,@vinculo,@categoria,@cargo,@referencia_cargo,@simbolo_funcao,@admissao,@lotacao_exercicio,@tipo_folha,
+                                @remun_basica ,@vant_pessoais ,@func_comissionada ,@grat_natalina ,@horas_extras ,@outras_eventuais ,@abono_permanencia ,
+                                @reversao_teto_const ,@imposto_renda ,@previdencia ,@faltas ,@rem_liquida ,@diarias ,@auxilios ,@vant_indenizatorias
+							)");
+                        }
+                    }
+
+                    //if (++linhaAtual % 100 == 0)
+                    //{
+                    //    Console.WriteLine(linhaAtual);
+                    //}
+                }
+
+                //if (lstHash.Count == 0 && linhaAtual == 0)
+                //{
+                //    sb.AppendFormat("<p>Não há novos itens para importar! #2</p>");
+                //    return sb.ToString();
+                //}
+
+                //if (lstHash.Count > 0)
+                //{
+                //    foreach (var hash in lstHash)
+                //    {
+                //        banco.ExecuteNonQuery(string.Format("delete from sf_despesa where hash = '{0}'", hash));
+                //    }
+
+
+                //    Console.WriteLine("Registros para exluir: " + lstHash.Count);
+                //    sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
+                //}
+
+                //sb.Append(ProcessarDespesasTemp(banco, completo));
+            }
+
+            //if (ano == DateTime.Now.Year)
+            //{
+            //    AtualizaSenadorValores();
+            //    AtualizaCampeoesGastos();
+            //    AtualizaResumoMensal();
+            //}
+
+            //using (var banco = new AppDb())
+            //{
+            //    using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
+            //    {
+            //        if (dReader.Read())
+            //        {
+            //            sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
+            //        }
+            //    }
+
+            //    sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
+            //}
+
+            return sb.ToString();
+        }
+
+        private static void LimpaRemuneracaoTemporaria(AppDb banco)
+        {
+            banco.ExecuteNonQuery(@"
+				truncate table sf_remuneracao_temp;
+			");
         }
     }
 }

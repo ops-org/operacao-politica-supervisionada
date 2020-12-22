@@ -1081,5 +1081,403 @@ namespace OPS.Core.DAO
                 };
             }
         }
+
+        public async Task<dynamic> Remuneracao(DataTablesRequest request)
+        {
+            if (request == null) throw new BusinessException("Parâmetro request não informado!");
+            Dictionary<int, string> dcFielsSort;
+            string strSelectFiels, sqlGroupBy;
+
+            EnumAgrupamentoRemuneracao eAgrupamento = (EnumAgrupamentoRemuneracao)Convert.ToInt32(request.Filters["ag"].ToString());
+            switch (eAgrupamento)
+            {
+                case EnumAgrupamentoRemuneracao.Lotacao:
+                    strSelectFiels = "l.id, l.descricao";
+                    sqlGroupBy = "GROUP BY r.id_lotacao";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "descricao" },
+                        {2, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracao.Cargo:
+                    strSelectFiels = "cr.id, cr.descricao";
+                    sqlGroupBy = "GROUP BY r.id_cargo";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "descricao" },
+                        {2, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracao.Categoria:
+                    strSelectFiels = "ct.id, ct.descricao";
+                    sqlGroupBy = "GROUP BY r.id_categoria";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "descricao" },
+                        {2, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracao.Vinculo:
+                    strSelectFiels = "v.id, v.descricao";
+                    sqlGroupBy = "GROUP BY r.id_vinculo";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "descricao" },
+                        {2, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracao.Ano:
+                    strSelectFiels = "CAST(r.ano_mes/100 AS UNSIGNED) as id, CAST(r.ano_mes/100 AS UNSIGNED) as descricao";
+                    sqlGroupBy = "GROUP BY CAST(r.ano_mes/100 AS UNSIGNED)";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "descricao" },
+                        {2, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracao.AnoMes:
+                    strSelectFiels = "";
+                    sqlGroupBy = "";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "vinculo" },
+                        {2, "categoria" },
+                        {3, "cargo" },
+                        {4, "referencia_cargo" },
+                        {5, "simbolo_funcao" },
+                        {6, "lotacao" },
+                        {7, "tipo_folha" },
+                        {8, "ano_mes" },
+                        {9, "valor_total" },
+                    };
+
+                    break;
+                default:
+                    throw new BusinessException("Parâmetro Agrupamento (ag) não informado!");
+            }
+
+
+            var sqlWhere = new StringBuilder();
+
+            if (request.Filters.ContainsKey("lt") && !string.IsNullOrEmpty(request.Filters["lt"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.id_lotacao IN(" + request.Filters["lt"].ToString() + ") ");
+            }
+            if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.id_cargo IN(" + request.Filters["cr"].ToString() + ") ");
+            }
+            if (request.Filters.ContainsKey("ct") && !string.IsNullOrEmpty(request.Filters["ct"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.id_categoria IN(" + request.Filters["ct"].ToString() + ") ");
+            }
+            if (request.Filters.ContainsKey("vn") && !string.IsNullOrEmpty(request.Filters["vn"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.id_vinculo IN(" + request.Filters["vn"].ToString() + ") ");
+            }
+
+            if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.ano_mes = " + request.Filters["an"].ToString() + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + " ");
+            }
+            else //if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + request.Filters["an"].ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
+            }
+
+            using (AppDb banco = new AppDb())
+            {
+                var sqlSelect = new StringBuilder();
+                if (eAgrupamento != EnumAgrupamentoRemuneracao.AnoMes)
+                {
+                    sqlSelect.AppendLine($@"
+SELECT
+	{strSelectFiels},
+    SUM(r.custo_total) AS valor_total
+FROM sf_remuneracao r
+JOIN sf_vinculo v ON v.id = r.id_vinculo
+JOIN sf_categoria ct ON ct.id = r.id_categoria
+LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
+JOIN sf_lotacao l ON l.id = r.id_lotacao
+WHERE (1=1)
+");
+                }
+                else
+                {
+
+                    sqlSelect.AppendLine(@"
+SELECT
+    r.id,
+	v.descricao as vinculo, 
+	ct.descricao as categoria, 
+	ct.descricao as cargo, 
+	rc.descricao as referencia_cargo, 
+	f.descricao as funcao, 
+	l.descricao as lotacao, 
+	tf.descricao as tipo_folha, 
+	r.ano_mes, 
+	r.custo_total as valor_total
+FROM sf_remuneracao r
+JOIN sf_lotacao l ON l.id = r.id_lotacao
+JOIN sf_vinculo v ON v.id = r.id_vinculo
+JOIN sf_categoria ct ON ct.id = r.id_categoria
+JOIN sf_tipo_folha tf ON tf.id = r.id_tipo_folha
+LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
+LEFT JOIN sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
+LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
+WHERE (1=1) 
+");
+                }
+
+                sqlSelect.Append(sqlWhere);
+                sqlSelect.Append(sqlGroupBy);
+
+                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, " valor_total desc"));
+                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+
+                sqlSelect.AppendLine(
+                    @"SELECT FOUND_ROWS() as total, sum(custo_total) as valor_total
+					FROM sf_remuneracao r
+					WHERE (1=1)");
+
+                sqlSelect.Append(sqlWhere);
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                {
+                    if (eAgrupamento != EnumAgrupamentoRemuneracao.AnoMes)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lstRetorno.Add(new
+                            {
+                                id = reader["id"],
+                                descricao = reader["descricao"].ToString(),
+                                valor_total = Utils.FormataValor(reader["valor_total"])
+                            });
+                        }
+                    }
+                    else
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lstRetorno.Add(new
+                            {
+                                id = reader["id"],
+                                vinculo = reader["vinculo"].ToString(),
+                                categoria = reader["categoria"].ToString(),
+                                cargo = reader["cargo"].ToString(),
+                                referencia_cargo = reader["referencia_cargo"].ToString(),
+                                simbolo_funcao = reader["funcao"].ToString(),
+                                lotacao = reader["lotacao"].ToString(),
+                                tipo_folha = reader["tipo_folha"].ToString(),
+                                ano_mes = Convert.ToInt32(reader["ano_mes"].ToString()).ToString("0000-00"),
+                                valor_total = Utils.FormataValor(reader["valor_total"])
+                            });
+                        }
+                    }
+
+                    string TotalCount = "0", ValorTotal = "0";
+                    await reader.NextResultAsync();
+                    await reader.ReadAsync();
+                    TotalCount = reader[0].ToString();
+                    ValorTotal = Utils.FormataValor(reader[1]);
+
+                    return new
+                    {
+                        draw = request.Draw,
+                        valorTotal = ValorTotal,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
+                    };
+                }
+            }
+
+        }
+
+        public async Task<dynamic> Remuneracao(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var sqlSelect = new StringBuilder();
+
+                sqlSelect.AppendLine(@"
+SELECT
+    r.id,
+    r.admissao,
+    r.ano_mes, 
+	v.descricao as vinculo, 
+	ct.descricao as categoria, 
+	ct.descricao as cargo, 
+	rc.descricao as referencia_cargo, 
+	f.descricao as funcao, 
+	l.descricao as lotacao, 
+	tf.descricao as tipo_folha, 
+    r.remun_basica,
+    r.vant_pessoais,
+    r.func_comissionada,
+    r.grat_natalina,
+    r.horas_extras,
+    r.outras_eventuais,
+    r.abono_permanencia,
+    r.reversao_teto_const,
+    r.imposto_renda,
+    r.previdencia,
+    r.faltas,
+    r.rem_liquida,
+    r.diarias,
+    r.auxilios,
+    r.vant_indenizatorias,
+    r.custo_total
+FROM sf_remuneracao r
+JOIN sf_lotacao l ON l.id = r.id_lotacao
+JOIN sf_vinculo v ON v.id = r.id_vinculo
+JOIN sf_categoria ct ON ct.id = r.id_categoria
+JOIN sf_tipo_folha tf ON tf.id = r.id_tipo_folha
+LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
+LEFT JOIN sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
+LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
+WHERE r.id = @id
+");
+
+                var lstRetorno = new List<dynamic>();
+
+                banco.AddParameter("@id", id);
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new
+                        {
+                            id = reader["id"],
+                            vinculo = reader["vinculo"].ToString(),
+                            categoria = reader["categoria"].ToString(),
+                            cargo = reader["cargo"].ToString(),
+                            referencia_cargo = reader["referencia_cargo"].ToString(),
+                            simbolo_funcao = reader["funcao"].ToString(),
+                            lotacao = reader["lotacao"].ToString(),
+                            tipo_folha = reader["tipo_folha"].ToString(),
+                            ano_mes = Convert.ToInt32(reader["ano_mes"].ToString()).ToString("0000-00"),
+                            admissao = Convert.ToInt32(reader["admissao"].ToString()),
+                            remun_basica = Utils.FormataValor(reader["remun_basica"]),
+                            vant_pessoais = Utils.FormataValor(reader["vant_pessoais"]),
+                            func_comissionada = Utils.FormataValor(reader["func_comissionada"]),
+                            grat_natalina = Utils.FormataValor(reader["grat_natalina"]),
+                            horas_extras = Utils.FormataValor(reader["horas_extras"]),
+                            outras_eventuais = Utils.FormataValor(reader["outras_eventuais"]),
+                            abono_permanencia = Utils.FormataValor(reader["abono_permanencia"]),
+                            reversao_teto_const = Utils.FormataValor(reader["reversao_teto_const"]),
+                            imposto_renda = Utils.FormataValor(reader["imposto_renda"]),
+                            previdencia = Utils.FormataValor(reader["previdencia"]),
+                            faltas = Utils.FormataValor(reader["faltas"]),
+                            rem_liquida = Utils.FormataValor(reader["rem_liquida"]),
+                            diarias = Utils.FormataValor(reader["diarias"]),
+                            auxilios = Utils.FormataValor(reader["auxilios"]),
+                            vant_indenizatorias = Utils.FormataValor(reader["vant_indenizatorias"]),
+                            custo_total = Utils.FormataValor(reader["custo_total"])
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<dynamic> Lotacao()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine("SELECT id, descricao FROM sf_lotacao ");
+                strSql.AppendFormat("ORDER BY descricao ");
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["descricao"].ToString(),
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
+        public async Task<dynamic> Cargo()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine("SELECT id, descricao FROM sf_cargo ");
+                strSql.AppendFormat("ORDER BY descricao ");
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["descricao"].ToString(),
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
+        public async Task<dynamic> Categoria()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine("SELECT id, descricao FROM sf_categoria ");
+                strSql.AppendFormat("ORDER BY descricao ");
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["descricao"].ToString(),
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
+        public async Task<dynamic> Vinculo()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine("SELECT id, descricao FROM sf_vinculo ");
+                strSql.AppendFormat("ORDER BY descricao ");
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["descricao"].ToString(),
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
     }
 }

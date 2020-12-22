@@ -135,15 +135,48 @@ namespace OPS.ImportacaoManual
             }
             else
             {
-                ImportacaoDadosCompleto(configuration).Wait();
+                //ImportacaoDadosCompleto(configuration).Wait();
 
-                //var rootPath = configuration["AppSettings:SiteRootFolder"];
-                //var tempPath = System.IO.Path.Combine(rootPath, "wwwroot/temp");
-                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/DEPFEDERAL/");
-                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/SENADOR/");
+
+                var sb = new StringBuilder();
+                var rootPath = configuration["AppSettings:SiteRootFolder"];
+                var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
+                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
+                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
                 //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
 
-                //var tempPath = configuration["AppSettings:SiteTempFolder"];
+                ////var tempPath = configuration["AppSettings:SiteTempFolder"];
+                //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
+                //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
+
+
+                var data = new DateTime(2012, 9, 1);
+                do
+                {
+                    sb.Append(Camara.ImportarRemuneracao(tempPath, data.Year, data.Month));
+
+                    data = data.AddMonths(1);
+                } while (data < DateTime.Now.Date);
+
+                //try
+                //{
+                //    var inicio = new DateTime(2018, 01, 01);
+                //    var fim = new DateTime(2020, 12, 01);
+                //    while (true)
+                //    {
+                //        sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(inicio.ToString("yyyyMM"))));
+
+                //        inicio = inicio.AddMonths(1);
+                //        if (inicio > fim) break;
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    sb.Append(ex.ToFullDescriptionString());
+                //}
+                //t = sw.Elapsed;
+                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+
 
                 ////ConverterXmlParaCsvDespesasCamara(tempPath);
 
@@ -291,17 +324,18 @@ namespace OPS.ImportacaoManual
 
                 //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
 
-                //Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
-                //Console.ReadKey();
+                Console.WriteLine(sb.ToString());
+                Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
+                Console.ReadKey();
             }
         }
 
         private static async Task ImportacaoDadosCompleto(IConfiguration configuration)
         {
             var rootPath = configuration["AppSettings:SiteRootFolder"];
-            var tempPath = System.IO.Path.Combine(rootPath, "wwwroot/temp");
-            var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/DEPFEDERAL/");
-            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "wwwroot/images/Parlamentares/SENADOR/");
+            var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
+            var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
+            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
 
             try
             {
@@ -367,17 +401,17 @@ namespace OPS.ImportacaoManual
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
                 sb.Append("<strong>-- Importar Presenças Deputados :: @duracao --</strong>");
-                sw.Restart();
-                try
-                {
-                    sb.Append(Camara.ImportaPresencasDeputados());
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                //sw.Restart();
+                //try
+                //{
+                //    sb.Append(Camara.ImportaPresencasDeputados());
+                //}
+                //catch (Exception ex)
+                //{
+                //    sb.Append(ex.ToFullDescriptionString());
+                //}
+                //t = sw.Elapsed;
+                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
 
 
@@ -400,7 +434,7 @@ namespace OPS.ImportacaoManual
                 //t = sw.Elapsed;
                 //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-
+                sb.AppendLine();
                 sb.AppendFormat("<strong>-- Importar Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
                 sw.Restart();
                 try
@@ -414,6 +448,7 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
+                sb.AppendLine();
                 sb.AppendFormat("<strong>-- Importar Imagens Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
                 sw.Restart();
                 try
@@ -427,6 +462,7 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
+                sb.AppendLine();
                 sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year - 1);
                 sw.Restart();
                 try
@@ -453,6 +489,18 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
+                try
+                {
+                    var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
+                    sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
+                }
+                catch (Exception ex)
+                {
+                    sb.Append(ex.ToFullDescriptionString());
+                }
+                t = sw.Elapsed;
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+
                 sb.Append("<strong>-- Consultar Receita WS :: @duracao --</strong>");
                 sw.Restart();
                 try
@@ -471,7 +519,7 @@ namespace OPS.ImportacaoManual
 
                 using (WebClient client = new WebClient())
                 {
-                    await client.DownloadDataTaskAsync("http://127.0.0.1:5000/api/tarefa/limparcache");
+                    await client.DownloadDataTaskAsync("http://127.0.0.1:5200/tarefa/limparcache");
                 }
 
                 var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');

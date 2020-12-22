@@ -260,3 +260,4 @@ ModelManifest.xml
 /OPS/appsettings.Production.json
 /OPS/appsettings.Development.json
 /OPS/wwwroot/temp
+/OPS/static/temp
