@@ -2289,7 +2289,7 @@ namespace OPS.ImportacaoDados
 
                             var cargo = csv[CargoIndividualizadodoServidor].Split(" ");
                             var id = cargo[cargo.Length - 1];
-                            if(cargo[0].Trim() == "(*)")
+                            if (cargo[0].Trim() == "(*)")
                             {
                                 break;
                             }
@@ -2299,7 +2299,7 @@ namespace OPS.ImportacaoDados
                             banco.AddParameter("cargo", csv[CargoIndividualizadodoServidor].Replace(id, "").Trim());
                             banco.AddParameter("grupo_funcional", csv[GrupoFuncional]);
                             banco.AddParameter("tipo_folha", csv[FolhadePagamento]);
-                            banco.AddParameter("admissao", Convert.ToInt32(csv[AnoIngresso].Replace(",00", "")));
+                            banco.AddParameter("admissao", csv[AnoIngresso] != "null" && csv[AnoIngresso] != "" ? Convert.ToInt32(csv[AnoIngresso].Replace(",00", "")) : (int?)null);
 
                             banco.AddParameter("remun_basica", Convert.ToDouble(csv[RemuneraçãoFixa], cultureInfo));
                             banco.AddParameter("vant_pessoais", Convert.ToDouble(csv[VantagensdeNaturezaPessoal], cultureInfo));
