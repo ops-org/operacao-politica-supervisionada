@@ -150,13 +150,13 @@ namespace OPS.ImportacaoManual
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
 
 
-                var data = new DateTime(2012, 9, 1);
-                do
-                {
-                    sb.Append(Camara.ImportarRemuneracao(tempPath, data.Year, data.Month));
+                //var data = new DateTime(2012, 9, 1);
+                //do
+                //{
+                //    sb.Append(Camara.ImportarRemuneracao(tempPath, data.Year, data.Month));
 
-                    data = data.AddMonths(1);
-                } while (data < DateTime.Now.Date);
+                //    data = data.AddMonths(1);
+                //} while (data < DateTime.Now.Date);
 
                 //try
                 //{
