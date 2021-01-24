@@ -439,7 +439,7 @@ namespace OPS.ImportacaoManual
                 sw.Restart();
                 try
                 {
-                    sb.Append(Senado.CarregaSenadoresAtuais());
+                    sb.Append(Senado.AtualizaCadastroSenadores());
                 }
                 catch (Exception ex)
                 {
@@ -489,17 +489,17 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                try
-                {
-                    var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
-                    sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                //try
+                //{
+                //    var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
+                //    sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
+                //}
+                //catch (Exception ex)
+                //{
+                //    sb.Append(ex.ToFullDescriptionString());
+                //}
+                //t = sw.Elapsed;
+                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
                 sb.Append("<strong>-- Consultar Receita WS :: @duracao --</strong>");
                 sw.Restart();

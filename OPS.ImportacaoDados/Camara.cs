@@ -801,20 +801,20 @@ namespace OPS.ImportacaoDados
                                     banco.AddParameter("telefone", gabinete.telefone);
 
                                     banco.ExecuteNonQuery(@"INSERT INTO cf_gabinete (
-                                    id,
-                                    nome,
-                                    predio,
-                                    andar,
-                                    sala,
-                                    telefone
-                                ) VALUES (
-                                    @id,
-                                    @nome,
-                                    @predio,
-                                    @andar,
-                                    @sala,
-                                    @telefone
-                                )");
+                                        id,
+                                        nome,
+                                        predio,
+                                        andar,
+                                        sala,
+                                        telefone
+                                    ) VALUES (
+                                        @id,
+                                        @nome,
+                                        @predio,
+                                        @andar,
+                                        @sala,
+                                        @telefone
+                                    )");
 
                                     id_cf_gabinete = Convert.ToInt32(gabinete.sala);
                                 }
@@ -831,12 +831,12 @@ namespace OPS.ImportacaoDados
                                         banco.AddParameter("sala", gabinete.sala);
 
                                         banco.ExecuteNonQuery(@"UPDATE cf_gabinete SET
-                                    nome = @nome,
-                                    predio = @predio,
-                                    andar = @andar,
-                                    telefone = @telefone
-                                    WHERE sala = @sala
-                                ");
+                                            nome = @nome,
+                                            predio = @predio,
+                                            andar = @andar,
+                                            telefone = @telefone
+                                            WHERE sala = @sala
+                                        ");
                                     }
                                 }
                             }
@@ -860,8 +860,8 @@ namespace OPS.ImportacaoDados
                                 banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
                                 banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
                                 banco.AddParameter("cpf", deputadoDetalhes.cpf);
-                                banco.AddParameter("nome_civil", textInfo.ToTitleCase(deputadoDetalhes.nomeCivil));
-                                banco.AddParameter("nome_parlamentar", textInfo.ToTitleCase(deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil));
+                                banco.AddParameter("nome_civil", textInfo.ToTitleCase(deputadoDetalhes.nomeCivil.ToLower()).Replace("De", "de").Replace("Da", "da"));
+                                banco.AddParameter("nome_parlamentar", textInfo.ToTitleCase((deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToLower()).Replace("De", "de").Replace("Da", "da"));
                                 banco.AddParameter("sexo", deputadoDetalhes.sexo);
                                 banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
                                 banco.AddParameter("situacao", situacao);
@@ -874,42 +874,42 @@ namespace OPS.ImportacaoDados
                                 banco.AddParameter("escolaridade", deputadoDetalhes.escolaridade);
 
                                 banco.ExecuteNonQuery(@"INSERT INTO cf_deputado (
-                                id,
-                                id_partido, 
-                                id_estado,
-                                id_cf_gabinete,
-                                cpf, 
-                                nome_civil, 
-                                nome_parlamentar, 
-                                sexo, 
-                                condicao, 
-                                situacao, 
-                                email, 
-                                nascimento, 
-                                falecimento, 
-                                id_estado_nascimento,
-                                municipio, 
-                                website,
-                                escolaridade
-                            ) VALUES (
-                                @id,
-                                (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
-                                (SELECT id FROM estado where sigla like @sigla_estado), 
-                                @id_cf_gabinete,
-                                @cpf, 
-                                @nome_civil, 
-                                @nome_parlamentar, 
-                                @sexo, 
-                                @condicao, 
-                                @situacao, 
-                                @email, 
-                                @nascimento, 
-                                @falecimento, 
-                                (SELECT id FROM estado where sigla like @sigla_estado_nascimento), 
-                                @municipio, 
-                                @website,
-                                @escolaridade
-                            )");
+                                    id,
+                                    id_partido, 
+                                    id_estado,
+                                    id_cf_gabinete,
+                                    cpf, 
+                                    nome_civil, 
+                                    nome_parlamentar, 
+                                    sexo, 
+                                    condicao, 
+                                    situacao, 
+                                    email, 
+                                    nascimento, 
+                                    falecimento, 
+                                    id_estado_nascimento,
+                                    municipio, 
+                                    website,
+                                    escolaridade
+                                ) VALUES (
+                                    @id,
+                                    (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
+                                    (SELECT id FROM estado where sigla like @sigla_estado), 
+                                    @id_cf_gabinete,
+                                    @cpf, 
+                                    @nome_civil, 
+                                    @nome_parlamentar, 
+                                    @sexo, 
+                                    @condicao, 
+                                    @situacao, 
+                                    @email, 
+                                    @nascimento, 
+                                    @falecimento, 
+                                    (SELECT id FROM estado where sigla like @sigla_estado_nascimento), 
+                                    @municipio, 
+                                    @website,
+                                    @escolaridade
+                                )");
 
                                 novos++;
                                 //Console.WriteLine("INSERT");
@@ -967,7 +967,7 @@ namespace OPS.ImportacaoDados
                                 banco.AddParameter("id_cf_deputado", deputado.id);
                                 banco.AddParameter("id_legislatura", leg);
                                 var countMandato = banco.ExecuteScalar(@"
-                            SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura");
+                                    SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura");
 
                                 if (Convert.ToInt32(countMandato) == 0)
                                 {
@@ -978,18 +978,18 @@ namespace OPS.ImportacaoDados
                                     banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
 
                                     banco.ExecuteNonQuery(@"INSERT INTO cf_mandato (
-                                    id_cf_deputado,
-                                    id_legislatura,
-                                    id_estado,
-                                    id_partido,
-                                    condicao
-                                ) VALUES (
-                                    @id_cf_deputado,
-                                    @id_legislatura,
-                                    (SELECT id FROM estado where sigla like @sigla_estado), 
-                                    (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
-                                    @condicao
-                                )");
+                                        id_cf_deputado,
+                                        id_legislatura,
+                                        id_estado,
+                                        id_partido,
+                                        condicao
+                                    ) VALUES (
+                                        @id_cf_deputado,
+                                        @id_legislatura,
+                                        (SELECT id FROM estado where sigla like @sigla_estado), 
+                                        (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
+                                        @condicao
+                                    )");
                                 }
                             }
                         }
@@ -2234,7 +2234,7 @@ namespace OPS.ImportacaoDados
             int Auxílios = indice++;
             int VantagensIndenizatórias = indice++;
 
-            int linhaAtual = 0;
+            //int linhaAtual = 0;
 
             using (var banco = new AppDb())
             {

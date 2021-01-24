@@ -110,7 +110,7 @@ body { /* Margin bottom by footer height */
 }
 
 .resumo-gastos .card-body {
-    padding: 1rem .5rem;
+    padding: .3rem;
 }
 
 .resumo-gastos .col-xs-12, .resumo-gastos .col-sm-6, .resumo-gastos .col-md-3 {
