@@ -1,6 +1,7 @@
 ﻿using AspNetCore.CacheOutput;
 using Microsoft.AspNetCore.Mvc;
 using OPS.Core.DAO;
+using System.Threading.Tasks;
 
 namespace OPS.WebApi
 {
@@ -18,9 +19,11 @@ namespace OPS.WebApi
 
 		[HttpGet]
         [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-        public dynamic Consultar()
-		{
-			return dao.Consultar();
-		}
-	}
+        public async Task<IActionResult> Consultar()
+        {
+            var result = await dao.Consultar();
+
+            return Ok(result);
+        }
+    }
 }
