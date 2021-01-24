@@ -17,24 +17,39 @@
                 <div class="col-xs-12 col-md-8 col-lg-10 text-left">
                     <h3 style="margin-top: 0;">{{senador.nome_parlamentar}} <small>({{senador.sigla_partido}} / {{senador.sigla_estado}})</small></h3>
 
-                    <p class="mb-0"><strong>Nome civil:</strong> {{senador.nome_civil}}</p>
-                    <p class="mb-0"><strong>Partido:</strong> {{senador.nome_partido}}</p>
-                    <p class="mb-0"><strong>Estado:</strong> {{senador.nome_estado}}</p>
-                    <p class="mb-0"><strong>Nascimento:</strong> {{senador.nascimento}}</p>
-                    <p class="mb-0"><strong>Email:</strong> {{senador.email}}</p>
-                    <p class="mb-0">
-                        <strong>Gasto Acumulado CEAPS:</strong>
-                        <a
-                          v-bind:href="'/senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'"
-                          title="Clique para ver os gastos com cota parlamentar em detalhes"
-                          >R$ {{senador.valor_total_ceaps}}</a>
-                    </p>
-                    <p class="mb-0">
-                      <a
-                        v-bind:href="'http://www25.senado.leg.br/web/senadores/senador/-/perfil/' + senador.id_sf_senador"
-                        target="_blank"
-                        >Ver página oficial no senado</a>
-                    </p>
+                    <div class="row">
+                      <div class="col-sm-6">
+                        <p class="mb-0"><strong>Nome civil:</strong> {{senador.nome_civil}}</p>
+                        <p class="mb-0"><strong>Partido:</strong> {{senador.nome_partido}}</p>
+                        <p class="mb-0"><strong>Estado:</strong> {{senador.nome_estado}}</p>
+                        <p class="mb-0"><strong>Condição:</strong> {{senador.condicao}}</p>
+                        <p class="mb-0"><strong>Naturalidade:</strong> {{senador.naturalidade}}</p>
+                        <p class="mb-0"><strong>Nascimento:</strong> {{senador.nascimento}}</p>
+                      </div>
+                      <div class="col-sm-6">
+                        <p class="mb-0">
+                            <strong>Gasto Acumulado com Pessoal:</strong>
+                            <a
+                              v-bind:href="'/senado/remuneracao?ag=6&sn=' + senador.id_sf_senador"
+                              title="Clique para ver os gastos com pessoal em detalhes"
+                              >R$ {{senador.valor_total_remuneracao}}</a>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Gasto Acumulado CEAPS:</strong>
+                            <a
+                              v-bind:href="'/senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'"
+                              title="Clique para ver os gastos com cota parlamentar em detalhes"
+                              >R$ {{senador.valor_total_ceaps}}</a>
+                        </p>
+                        <p class="mb-0">
+                          <a
+                            v-bind:href="'http://www25.senado.leg.br/web/senadores/senador/-/perfil/' + senador.id_sf_senador"
+                            target="_blank"
+                            >Ver página oficial no senado</a>
+                        </p>
+                        <p class="mb-0"><strong>Email:</strong> {{senador.email}}</p>
+                      </div>
+                    </div>
                 </div>
             </div>
         </div>

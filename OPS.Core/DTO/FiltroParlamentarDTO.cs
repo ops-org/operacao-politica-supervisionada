@@ -15,9 +15,9 @@ namespace OPS.Core.DTO
 
 		public string Despesa { get; set; }
 
-		public List<int> Estado { get; set; }
+		public string Estado { get; set; }
 
-		public List<int> Partido { get; set; }
+		public string Partido { get; set; }
 
 		public string Fornecedor { get; set; }
 

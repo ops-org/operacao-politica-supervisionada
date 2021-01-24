@@ -25,7 +25,7 @@ namespace OPS.Core
                 {
                     // ignored
                 }
-            return "0,00";
+            return Convert.ToDecimal(0).ToString("N" + decimais.ToString());
         }
 
         public static string FormataData(object value)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,9 +31,15 @@ namespace OPS.Core.DAO
 						, e.nome as nome_estado
 						, d.email
 						, d.valor_total_ceaps
+                        , d.valor_total_remuneracao
+                        , d.ativo
+                        , (SELECT m.participacao from sf_mandato m WHERE m.id_sf_senador = d.id ORDER BY m.id desc LIMIT 1) as participacao
+                        , d.naturalidade
+                        , e.sigla as silga_estado_naturalidade
 					FROM sf_senador d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
+					LEFT JOIN estado en on e.id = d.id_estado_naturalidade
 					WHERE d.id = @id
 				";
                 banco.AddParameter("@id", id);
@@ -41,6 +48,21 @@ namespace OPS.Core.DAO
                 {
                     if (await reader.ReadAsync())
                     {
+                        var exercicio = "";
+                        switch (reader["ativo"].ToString())
+                        {
+                            case "S": exercicio = "Em exercício"; break;
+                            case "N": exercicio = "Fora de Exercício"; break;
+                        }
+
+                        var participacao = "";
+                        switch (reader["participacao"].ToString())
+                        {
+                            case "T": participacao = "Titular"; break;
+                            case "1": participacao = "1º Suplente"; break;
+                            case "2": participacao = "2º Suplente"; break;
+                        }
+
                         return new
                         {
                             id_sf_senador = reader["id_sf_senador"],
@@ -55,8 +77,10 @@ namespace OPS.Core.DAO
                             sigla_partido = reader["sigla_partido"].ToString(),
                             nome_estado = reader["nome_estado"].ToString(),
                             email = reader["email"].ToString(),
-
+                            condicao = $"{participacao} ({exercicio})",
+                            naturalidade = reader["naturalidade"].ToString() + (!string.IsNullOrEmpty(reader["silga_estado_naturalidade"].ToString()) ? "(" + reader["silga_estado_naturalidade"].ToString() + ")" : ""),
                             valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
+                            valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
                         };
                     }
 
@@ -64,6 +88,92 @@ namespace OPS.Core.DAO
                 }
             }
         }
+
+        public async Task<dynamic> Lista(FiltroParlamentarDTO request)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT 
+						d.id as id_sf_senador
+						, d.nome as nome_parlamentar 
+						, d.nome_completo as nome_civil
+						, p.sigla as sigla_partido
+						, p.nome as nome_partido
+						, e.sigla as sigla_estado
+						, e.nome as nome_estado
+                        , d.valor_total_ceaps
+                        , d.valor_total_remuneracao
+                        , d.ativo
+					FROM sf_senador d
+					LEFT JOIN partido p on p.id = d.id_partido
+					LEFT JOIN estado e on e.id = d.id_estado
+                    JOIN sf_mandato m ON m.id_sf_senador = d.id
+					JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
+                    WHERE m.exerceu = 1");
+
+                switch (request.Periodo)
+                {
+                    case 9: //PERIODO_MANDATO_56
+                        strSql.AppendLine(" AND ml.id_sf_legislatura = 56");
+                        break;
+
+                    case 8: //PERIODO_MANDATO_55
+                        strSql.AppendLine(" AND ml.id_sf_legislatura = 55");
+                        break;
+
+                    case 7: //PERIODO_MANDATO_54
+                        strSql.AppendLine(" AND ml.id_sf_legislatura = 54");
+                        break;
+
+                    case 6: //PERIODO_MANDATO_53
+                        strSql.AppendLine(" AND ml.id_sf_legislatura = 53");
+                        break;
+                }
+
+                if (!string.IsNullOrEmpty(request.Partido))
+                {
+                    strSql.AppendLine("	AND d.id_partido IN(" + Utils.MySqlEscapeNumberToIn(request.Partido) + ") ");
+                }
+
+                if (!string.IsNullOrEmpty(request.Estado))
+                {
+                    strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Estado) + ") ");
+                }
+
+                strSql.AppendLine(@"
+                    ORDER BY nome_parlamentar
+                    -- LIMIT 1000
+				");
+
+                TextInfo textInfo = new CultureInfo("pt-BR", false).TextInfo;
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id_sf_senador = reader["id_sf_senador"],
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            nome_civil = reader["nome_civil"].ToString(),
+                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
+                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            nome_estado = reader["nome_estado"].ToString(),
+                            ativo = reader["ativo"].ToString() == "S",
+                            situacao = reader["ativo"].ToString() == "S" ? "Em exercício" : "Fora de Exercício",
+
+                            valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
+                            valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
+                        }); ;
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
 
         public async Task<dynamic> MaioresFornecedores(int id)
         {
@@ -1140,15 +1250,22 @@ namespace OPS.Core.DAO
                     strSelectFiels = "";
                     sqlGroupBy = "";
                     dcFielsSort = new Dictionary<int, string>(){
-                        {1, "vinculo" },
-                        {2, "categoria" },
-                        {3, "cargo" },
-                        {4, "referencia_cargo" },
-                        {5, "simbolo_funcao" },
-                        {6, "lotacao" },
-                        {7, "tipo_folha" },
-                        {8, "ano_mes" },
-                        {9, "valor_total" },
+                        {0, "vinculo" },
+                        {1, "categoria" },
+                        {2, "cargo" },
+                        {3, "lotacao" },
+                        {4, "tipo_folha" },
+                        {5, "ano_mes" },
+                        {6, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracao.Senador:
+                    strSelectFiels = "s.id, s.nome as descricao";
+                    sqlGroupBy = "GROUP BY s.id";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "descricao" },
+                        {2, "valor_total" },
                     };
 
                     break;
@@ -1161,28 +1278,37 @@ namespace OPS.Core.DAO
 
             if (request.Filters.ContainsKey("lt") && !string.IsNullOrEmpty(request.Filters["lt"].ToString()))
             {
-                sqlWhere.AppendLine("	AND r.id_lotacao IN(" + request.Filters["lt"].ToString() + ") ");
+                sqlWhere.AppendLine("	AND r.id_lotacao IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["lt"].ToString()) + ") ");
             }
             if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
             {
-                sqlWhere.AppendLine("	AND r.id_cargo IN(" + request.Filters["cr"].ToString() + ") ");
+                sqlWhere.AppendLine("	AND r.id_cargo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["cr"].ToString()) + ") ");
             }
             if (request.Filters.ContainsKey("ct") && !string.IsNullOrEmpty(request.Filters["ct"].ToString()))
             {
-                sqlWhere.AppendLine("	AND r.id_categoria IN(" + request.Filters["ct"].ToString() + ") ");
+                sqlWhere.AppendLine("	AND r.id_categoria IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["ct"].ToString()) + ") ");
             }
             if (request.Filters.ContainsKey("vn") && !string.IsNullOrEmpty(request.Filters["vn"].ToString()))
             {
-                sqlWhere.AppendLine("	AND r.id_vinculo IN(" + request.Filters["vn"].ToString() + ") ");
+                sqlWhere.AppendLine("	AND r.id_vinculo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["vn"].ToString()) + ") ");
+            }
+            if (request.Filters.ContainsKey("sn") && !string.IsNullOrEmpty(request.Filters["sn"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND s.id IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["sn"].ToString()) + ") ");
             }
 
             if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
             {
-                sqlWhere.AppendLine("	AND r.ano_mes = " + request.Filters["an"].ToString() + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + " ");
+                sqlWhere.AppendLine("	AND r.ano_mes = " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + " ");
             }
             else //if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
             {
-                sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + request.Filters["an"].ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
+                sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
+            }
+
+            if (eAgrupamento == EnumAgrupamentoRemuneracao.Senador)
+            {
+                sqlWhere.AppendLine("	AND s.id IS NOT NULL ");
             }
 
             using (AppDb banco = new AppDb())
@@ -1199,6 +1325,7 @@ JOIN sf_vinculo v ON v.id = r.id_vinculo
 JOIN sf_categoria ct ON ct.id = r.id_categoria
 LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
 JOIN sf_lotacao l ON l.id = r.id_lotacao
+LEFT JOIN sf_senador s on s.id = l.id_senador
 WHERE (1=1)
 ");
                 }
@@ -1225,6 +1352,7 @@ JOIN sf_tipo_folha tf ON tf.id = r.id_tipo_folha
 LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
 LEFT JOIN sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
 LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
+LEFT JOIN sf_senador s on s.id = l.id_senador
 WHERE (1=1) 
 ");
                 }
@@ -1235,12 +1363,30 @@ WHERE (1=1)
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, " valor_total desc"));
                 sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
-                sqlSelect.AppendLine(
-                    @"SELECT FOUND_ROWS() as total, sum(custo_total) as valor_total
-					FROM sf_remuneracao r
-					WHERE (1=1)");
-
-                sqlSelect.Append(sqlWhere);
+                if (!string.IsNullOrEmpty(sqlGroupBy))
+                {
+                    sqlSelect.AppendLine($@"
+                        SELECT COUNT(1) as total, sum(valor_total) as valor_total 
+                        FROM (
+                            SELECT sum(custo_total) as valor_total
+					        FROM sf_remuneracao r
+                            JOIN sf_lotacao l ON l.id = r.id_lotacao
+                            LEFT JOIN sf_senador s on s.id = l.id_senador
+					        WHERE (1=1)
+                            {sqlWhere}
+                            {sqlGroupBy}
+                        ) tmp");
+                }
+                else
+                {
+                    sqlSelect.AppendLine($@"
+                        SELECT COUNT(1) as total, sum(custo_total) as valor_total
+					    FROM sf_remuneracao r
+                        JOIN sf_lotacao l ON l.id = r.id_lotacao
+                        LEFT JOIN sf_senador s on s.id = l.id_senador
+					    WHERE (1=1)
+                        {sqlWhere}");
+                }
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))

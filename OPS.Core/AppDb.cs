@@ -151,6 +151,55 @@ namespace OPS.Core
             return await _mCommand.ExecuteReaderAsync();
         }
 
+        /// <summary>
+        ///  Executes a SQL statement against the connection and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="data"></param>
+        /// <returns>Number of rows affected</returns>
+        public List<Dictionary<string, object>> ExecuteDict(string sql, int timeOut = 600)
+        {
+            if (_mCommand == null)
+                _mCommand = _mConnection.CreateCommand();
+            else
+                _mCommand.Parameters.Clear();
+
+            if (_mBeginTransaction)
+                _mCommand.Transaction = _mTransaction;
+
+            if (_mParametros.Count > 0)
+            {
+                _mCommand.Parameters.AddRange(_mParametros.ToArray());
+                _mParametros.Clear();
+            }
+
+            _mCommand.CommandText = sql;
+            _mCommand.CommandTimeout = timeOut;
+
+            // Execute the query
+            List<Dictionary<string, object>> Rows = new List<Dictionary<string, object>>();
+            using (DbDataReader reader = _mCommand.ExecuteReader())
+            {
+
+                // If we have rows, add them to the list
+                if (reader.HasRows)
+                {
+                    // Add each row to the rows list
+                    while (reader.Read())
+                    {
+                        Dictionary<string, object> Row = new Dictionary<string, object>(reader.FieldCount);
+                        for (int i = 0; i < reader.FieldCount; ++i)
+                            Row.Add(reader.GetName(i), reader.GetValue(i));
+
+                        Rows.Add(Row);
+                    }
+                }
+            }
+
+            // Return Rows
+            return Rows;
+        }
+
         public DataTable GetTable(string sql, int timeOut = 600)
         {
             DataTable table;

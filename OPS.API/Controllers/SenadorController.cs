@@ -35,6 +35,13 @@ namespace OPS.WebApi
             return await dao.Consultar(id);
         }
 
+        [HttpPost("Lista")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
+        {
+            return await dao.Lista(filtro);
+        }
+
         [HttpGet]
         [Route("")]
         [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]

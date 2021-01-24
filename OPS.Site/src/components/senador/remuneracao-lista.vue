@@ -7,7 +7,8 @@
         <div class="form-group col-md-2">
           <label>Ano</label>
           <select class="form-control input-sm" v-model="filtro.ano">
-            <option value="2020" selected>2020</option>
+            <option value="2021" selected>2021</option>
+            <option value="2020">2020</option>
             <option value="2019">2019</option>
             <option value="2018">2018</option>
             <option value="2017">2017</option>
@@ -69,11 +70,21 @@
             data-actions-box="true"
           />
         </div>
-        <div class="form-group col-md-8">
+        <div class="form-group col-md-4">
           <label>Lotação</label>
           <v-select
             :options="lotacoes"
             v-model="filtro.lotacao"
+            class="form-control input-sm"
+            multiple
+            data-actions-box="true"
+          />
+        </div>
+        <div class="form-group col-md-4">
+          <label>Senador</label>
+          <v-select
+            :options="parlamentares"
+            v-model="filtro.parlamentar"
             class="form-control input-sm"
             multiple
             data-actions-box="true"
@@ -88,6 +99,7 @@
             <option value="2">Cargo</option>
             <option value="3">Categoria</option>
             <option value="4">Vinculo</option>
+            <option value="7">Senador(a)</option>
             <option value="5">Ano</option>
             <option value="6">Não agrupar</option>
           </select>
@@ -139,6 +151,7 @@
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Cargo</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Categoria</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Vinculo</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('7')">Senador(a)</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('5')">Ano</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('6')">Detalhes</button>
           </div>
@@ -179,18 +192,20 @@ export default {
       valorTotal: null,
       filtro: {
         agrupar: '1',
-        ano: '2020',
+        ano: '2021',
         mes: '',
         lotacao: [],
         cargo: [],
         categori: [],
         vinculo: [],
+        parlamentar: [],
       },
 
       lotacoes: [],
       cargos: [],
       categorias: [],
       vinculos: [],
+      parlamentares: [],
 
       options: {
         ajax(objData, callback) {
@@ -211,6 +226,7 @@ export default {
             cr: (vm.filtro.cargo || []).join(','),
             ct: (vm.filtro.categoria || []).join(','),
             vn: (vm.filtro.vinculo || []).join(','),
+            sn: (vm.filtro.parlamentar || []).join(','),
           };
 
           jQuery.each(newData.filters, (key, value) => {
@@ -255,12 +271,13 @@ export default {
     const vm = this;
 
     vm.filtro.agrupar = vm.qs.ag || '1';
-    vm.filtro.ano = vm.qs.an || '2020';
+    vm.filtro.ano = vm.qs.an || '2021';
     vm.filtro.mes = vm.qs.ms || '';
     vm.filtro.lotacao = (vm.qs.lt ? vm.qs.lt.split(',') : []);
     vm.filtro.cargo = (vm.qs.cr ? vm.qs.cr.split(',') : []);
     vm.filtro.categoria = (vm.qs.ct ? vm.qs.ct.split(',') : []);
     vm.filtro.vinculo = (vm.qs.vn ? vm.qs.vn.split(',') : []);
+    vm.filtro.parlamentar = (vm.qs.sn ? vm.qs.sn.split(',') : []);
 
     document.title = 'OPS :: Remuneração no Senado';
 
@@ -278,6 +295,10 @@ export default {
 
     axios.get(`${process.env.API}/senador/vinculo`).then((response) => {
       this.vinculos = response.data;
+    });
+
+    axios.get(`${process.env.API}/senador`).then((response) => {
+      this.parlamentares = response.data;
     });
 
     this.Pesquisar(true);
@@ -302,6 +323,9 @@ export default {
           break;
         case '4': // Vinculo
           vm.filtro.vinculo = [this.selectedRow.id];
+          break;
+        case '6': // Senador
+          vm.filtro.parlamentar = [this.selectedRow.id];
           break;
         default:
           break;
@@ -442,6 +466,30 @@ export default {
             };
             break;
 
+          case '7': // Senador
+            vm.fields = {
+              id: {
+                label: '&nbsp;',
+                render: (data, type) => {
+                  if (type === 'display') {
+                    return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
+                  }
+                  return data;
+                },
+                sortable: false,
+              },
+              descricao: {
+                label: 'Senador',
+                sortable: true,
+              },
+              valor_total: {
+                label: 'Custo Total',
+                sortable: true,
+                className: 'text-right',
+              },
+            };
+            break;
+
           case '6': // Mês
             vm.fields = {
               vinculo: {
@@ -504,12 +552,13 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        ano: '2020',
+        ano: '2021',
         mes: '',
         lotacao: [],
         cargo: [],
         categori: [],
         vinculo: [],
+        parlamentar: [],
       };
     },
   },

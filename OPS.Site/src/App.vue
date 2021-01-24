@@ -37,6 +37,7 @@
             >Senado</a>
             <div class="dropdown-menu dropdown-menu-left" aria-labelledby="nav-senado">
               <div class="dropdown-header">Senado Federal</div>
+              <a class="dropdown-item" href="/senador/conheca">Conheça os senadores</a>
               <a class="dropdown-item" href="/senador">Cota Parlamentar (CEAPS)</a>
               <a class="dropdown-item" href="/senado/remuneracao">Remuneração/Subsídio</a>
             </div>
