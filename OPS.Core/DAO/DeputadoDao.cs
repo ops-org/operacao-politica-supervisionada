@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MySqlConnector;
 using OPS.Core.DTO;
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
-using MySqlConnector;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace OPS.Core.DAO
 {
@@ -450,7 +449,7 @@ namespace OPS.Core.DAO
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT 
+                    SELECT 
 						d.id as id_cf_deputado
 						, d.nome_parlamentar 
 						, d.nome_civil
@@ -461,22 +460,22 @@ namespace OPS.Core.DAO
 						, d.id_estado
 						, e.sigla as sigla_estado
 						, e.nome as nome_estado
-                        , s.total_sessoes
-                        , s.total_presencas
+                        -- , s.total_sessoes
+                        -- , s.total_presencas
 					FROM cf_deputado d
                     INNER JOIN cf_mandato m on m.id_cf_deputado = d.id
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
-                    LEFT JOIN (
-                        SELECT 
-                            sp.id_cf_deputado
-                            , s.id_legislatura
-                            , sum(1) as total_sessoes
-						    , sum(IF(sp.presente = 1, 1, 0)) as total_presencas
-					    FROM cf_sessao_presenca sp
-					    inner join cf_sessao s on s.id = sp.id_cf_sessao
-					    group by sp.id_cf_deputado, s.id_legislatura
-                    ) s on s.id_cf_deputado = d.id and s.id_legislatura = m.id_legislatura
+                    -- LEFT JOIN (
+                    --     SELECT 
+                    --         sp.id_cf_deputado
+                    --         , s.id_legislatura
+                    --         , sum(1) as total_sessoes
+					-- 	    , sum(IF(sp.presente = 1, 1, 0)) as total_presencas
+					--     FROM cf_sessao_presenca sp
+					--     inner join cf_sessao s on s.id = sp.id_cf_sessao
+					--     group by sp.id_cf_deputado, s.id_legislatura
+                    -- ) s on s.id_cf_deputado = d.id and s.id_legislatura = m.id_legislatura
                     WHERE 1=1");
 
                 switch (request.Periodo)
@@ -498,14 +497,14 @@ namespace OPS.Core.DAO
                         break;
                 }
 
-                if (request.Partido.Any())
+                if (!string.IsNullOrEmpty(request.Partido))
                 {
-                    strSql.AppendLine("	AND d.id_partido IN(" + string.Join(",", request.Partido) + ") ");
+                    strSql.AppendLine("	AND d.id_partido IN(" + Utils.MySqlEscapeNumberToIn(request.Partido) + ") ");
                 }
 
-                if (request.Estado.Any())
+                if (!string.IsNullOrEmpty(request.Estado))
                 {
-                    strSql.AppendLine("	AND d.id_estado IN(" + string.Join(",", request.Estado) + ") ");
+                    strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Estado) + ") ");
                 }
 
                 strSql.AppendLine(@"
@@ -524,15 +523,13 @@ namespace OPS.Core.DAO
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             nome_civil = reader["nome_civil"].ToString(),
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
-                            id_partido = reader["id_partido"],
                             sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
                             nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
-                            id_estado = reader["id_estado"],
                             sigla_estado = reader["sigla_estado"].ToString(),
                             nome_estado = reader["nome_estado"].ToString(),
-                            total_sessoes = reader["total_sessoes"],
-                            total_presencas = reader["total_presencas"],
-                            frequencia = Utils.FormataValor(reader.GetValueOrDefault<decimal?>("total_presencas") * 100 / reader.GetValueOrDefault<decimal?>("total_sessoes"))
+                            //total_sessoes = Utils.FormataValor(reader["total_sessoes"],  0),
+                            //total_presencas = Utils.FormataValor(reader["total_presencas"], 0),
+                            //frequencia = Utils.FormataValor(reader.GetValueOrDefault<decimal?>("total_presencas") * 100 / reader.GetValueOrDefault<decimal?>("total_sessoes"))
                         });
                     }
                 }

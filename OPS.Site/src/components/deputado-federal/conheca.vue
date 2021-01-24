@@ -32,13 +32,22 @@
     </form>
     <hr />
 
+    <div class="row">
+      <div class="col-md-12">
+        <div class="alert alert-warning" v-if="deputado_federal.length > 0">
+          <b>Exibindo {{deputado_federal.length}} deputados</b>
+        </div>
+      </div>
+    </div>
+
     <div class="row deputado-conheca">
         <div class="col-xs-12 col-sm-6 col-md-3" v-for="deputado in deputado_federal" :key="deputado.id_cf_deputado">
 
-            <div class="card mb-3">
-                <div class="card-header bg-light text-truncate">
+            <div class="card border-primary mb-3">
+                <div class="card-header text-white bg-primary text-truncate">
                     <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
-                        {{deputado.nome_parlamentar}}
+                        {{deputado.nome_parlamentar}}<br>
+                        <small>{{deputado.nome_civil}}</small>
                     </a>
                 </div>
                 <div class="card-body p-2">
@@ -50,11 +59,11 @@
                         </div>
                         <div class="col-md-8">
                             <div class="card-body p-0">
-                                <h5 class="card-title mb-1"><span v-bind:title="deputado.nome_partido">{{deputado.sigla_partido}}</span> - <span v-bind:title="deputado.nome_estado">{{deputado.sigla_estado}}</span></h5>
+                                <h6 class="card-title mb-1"><span v-bind:title="deputado.nome_partido">{{deputado.sigla_partido}}</span> - <span v-bind:title="deputado.nome_estado">{{deputado.sigla_estado}}</span></h6>
                                 <small class="text-muted">Cota parlamentar</small>
                                 <h6 class="card-text">R$ {{deputado.valor_total_ceap}}</h6>
-                                <small class="text-muted">Frequência nas sessões plenárias</small>
-                                <h6 class="card-text" v-bind:title="'Compareceu à ' + deputado.total_presencas + ' de ' + deputado.total_sessoes + ' sessões'">{{deputado.total_presencas}}/{{deputado.total_sessoes}} - {{deputado.frequencia}}%</h6>
+                                <!-- <small class="text-muted">Frequência nas sessões plenárias</small>
+                                <h6 class="card-text" v-bind:title="'Compareceu à ' + deputado.total_presencas + ' de ' + deputado.total_sessoes + ' sessões'">{{deputado.frequencia}}% - {{deputado.total_presencas||0}}/{{deputado.total_sessoes||0}}</h6> -->
                             </div>
                         </div>
                     </div>
@@ -67,6 +76,7 @@
 </template>
 
 <script>
+import jQuery from 'jquery';
 import VSelect from '../vue-bootstrap-select';
 
 const axios = require('axios');
@@ -114,11 +124,24 @@ export default {
   },
   methods: {
     Pesquisar() {
+      const vm = this;
       const loader = this.$loading.show();
       this.deputado_federal = {};
 
+      const filtro = {
+        periodo: vm.filtro.periodo,
+        estado: (vm.filtro.estado || []).join(','),
+        partido: (vm.filtro.partido || []).join(','),
+      };
+
+      jQuery.each(filtro, (key, value) => {
+        if (value === '' || value === null) {
+          delete filtro[key];
+        }
+      });
+
       axios
-        .post(`${process.env.API}/deputado/lista`, this.filtro)
+        .post(`${process.env.API}/deputado/lista`, filtro)
         .then((response) => {
           this.deputado_federal = response.data;
 
@@ -137,10 +160,10 @@ export default {
 </script>
 
 <style scoped>
-    .deputado-conheca a {
-        color: #333333;
-        text-decoration: none;
-    }
+  .deputado-conheca a {
+    color: #FFF !important;
+    text-decoration: none;
+  }
 
     img.card-img {
         width: 90px;
