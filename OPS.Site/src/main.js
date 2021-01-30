@@ -9,12 +9,16 @@ import VueGoogleTagManager from 'vue-gtm';
 import 'vue-datatables-net';
 import 'bootstrap-select';
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'font-awesome/css/font-awesome.min.css';
+import 'datatables.net-bs4/css/dataTables.bootstrap4.min.css';
 import 'vue-loading-overlay/dist/vue-loading.css';
 
 import Vue from 'vue';
 import App from './App';
 import router from './router';
 
+require('dotenv').config();
 require('bootstrap');
 
 window.$ = jQuery;
@@ -29,7 +33,10 @@ window.$.extend(true, window.$.fn.dataTable.defaults, {
   serverSide: true,
   fixedHeader: true,
   saveState: true,
-  lengthMenu: [[15, 100, 500, 1000], [15, 100, 500, 1000]],
+  lengthMenu: [
+    [15, 100, 500, 1000],
+    [15, 100, 500, 1000]
+  ],
   language: {
     url: 'https://cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json',
   },
@@ -71,14 +78,11 @@ Vue.use(VueGoogleTagManager, {
 
 Vue.config.productionTip = false;
 
-/* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
-  components: { App },
-  template: '<App/>',
-});
-
+  render: h => h(App)
+})
 
 // eslint-disable-next-line no-underscore-dangle
 window._urq = window._urq || [];
@@ -92,9 +96,12 @@ jQuery(() => {
     // eslint-disable-next-line no-underscore-dangle
     window._urq.push(['initSite', '9cf4c59a-d438-48b0-aa5e-e16f549b9c8c']);
 
-    const ur = document.createElement('script'); ur.type = 'text/javascript'; ur.async = true;
+    const ur = document.createElement('script');
+    ur.type = 'text/javascript';
+    ur.async = true;
     ur.src = `${document.location.protocol}//cdn.userreport.com/userreport.js`;
-    const s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ur, s);
+    const s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(ur, s);
 
     const interval = setInterval(() => {
       if (jQuery('#crowd-shortcut').length === 1) {
