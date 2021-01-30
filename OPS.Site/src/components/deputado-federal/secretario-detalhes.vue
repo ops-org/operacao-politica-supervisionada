@@ -61,7 +61,7 @@ export default {
           };
 
           axios
-            .post(`${process.env.API}/deputado/${vm.id}/secretariosativos`, newData)
+            .post(`${process.env.VUE_APP_API}/deputado/${vm.id}/secretariosativos`, newData)
             .then((response) => {
               callback(response.data);
             });
@@ -126,7 +126,7 @@ export default {
       //     };
 
       //     axios
-      //       .post(`${process.env.API}/deputado/${vm.id}/secretarioshistorico`, newData)
+      //       .post(`${process.env.VUE_APP_API}/deputado/${vm.id}/secretarioshistorico`, newData)
       //       .then((response) => {
       //         callback(response.data);
       //       });
@@ -157,7 +157,7 @@ export default {
     const loader = this.$loading.show();
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}`)
       .then((response) => {
         this.deputado = response.data;
 

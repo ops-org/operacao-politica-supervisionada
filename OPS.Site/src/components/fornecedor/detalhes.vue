@@ -629,7 +629,7 @@ export default {
       container: this.$refs.RecebimentosPorMesSenadores,
     });
 
-    axios.get(`${process.env.API}/fornecedor/${this.id}`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/fornecedor/${this.id}`).then((response) => {
       const fornecedor = response.data.fornecedor;
 
       if (fornecedor.cnpj_cpf.length === 18) {
@@ -659,7 +659,7 @@ export default {
 
     axios
       .get(
-        `${process.env.API}/fornecedor/${this.id}/DeputadoFederalMaioresGastos`,
+        `${process.env.VUE_APP_API}/fornecedor/${this.id}/DeputadoFederalMaioresGastos`,
       )
       .then((response) => {
         this.DeputadoFederalMaioresGastos = response.data;
@@ -667,7 +667,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/fornecedor/${this.id}/SenadoresMaioresGastos`)
+      .get(`${process.env.VUE_APP_API}/fornecedor/${this.id}/SenadoresMaioresGastos`)
       .then((response) => {
         this.SenadoresMaioresGastos = response.data;
         loaderSenadoresMaioresGastos.hide();
@@ -675,7 +675,7 @@ export default {
 
     axios
       .get(
-        `${process.env.API}/fornecedor/${this.id}/RecebimentosMensaisPorAnoDeputados`,
+        `${process.env.VUE_APP_API}/fornecedor/${this.id}/RecebimentosMensaisPorAnoDeputados`,
       )
       .then((response) => {
         this.chartRecebimentosPorMesDeputadosOptions.series = response.data;
@@ -684,7 +684,7 @@ export default {
 
     axios
       .get(
-        `${process.env.API}/fornecedor/${this.id}/RecebimentosMensaisPorAnoSenadores`,
+        `${process.env.VUE_APP_API}/fornecedor/${this.id}/RecebimentosMensaisPorAnoSenadores`,
       )
       .then((response) => {
         this.chartRecebimentosPorMesSenadoresOptions.series = response.data;

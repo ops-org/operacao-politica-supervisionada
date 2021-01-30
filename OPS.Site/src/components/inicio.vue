@@ -507,7 +507,7 @@ export default {
   mounted() {
     const chartCamaraResumoMensal = this.$refs.chartCamaraResumoMensal.chart;
     const chartSenadoResumoMensal = this.$refs.chartSenadoResumoMensal.chart;
-    this.API = process.env.API;
+    this.API = process.env.VUE_APP_API;
 
     const loaderCampeoesGastos = this.$loading.show({
       fullPage: false,
@@ -535,7 +535,7 @@ export default {
     });
 
     axios
-      .get(`${process.env.API}/inicio/parlamentarresumogastos`)
+      .get(`${process.env.VUE_APP_API}/inicio/parlamentarresumogastos`)
       .then((response) => {
         this.CampeoesGastos = response.data;
 
@@ -543,7 +543,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/deputado/camararesumomensal`)
+      .get(`${process.env.VUE_APP_API}/deputado/camararesumomensal`)
       .then((response) => {
         this.chartCamaraResumoMensalOptions.series = response.data;
 
@@ -557,7 +557,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/senador/senadoresumomensal`)
+      .get(`${process.env.VUE_APP_API}/senador/senadoresumomensal`)
       .then((response) => {
         this.chartcSenadoResumoMensalOptions.series = response.data;
 
@@ -571,7 +571,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/deputado/camararesumoanual`)
+      .get(`${process.env.VUE_APP_API}/deputado/camararesumoanual`)
       .then((response) => {
         this.chartCamaraResumoAnualOptions.series[0].data = response.data.series;
         this.chartCamaraResumoAnualOptions.xAxis.categories = response.data.categories;
@@ -580,7 +580,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/senador/senadoresumoanual`)
+      .get(`${process.env.VUE_APP_API}/senador/senadoresumoanual`)
       .then((response) => {
         this.chartSenadoResumoAnualOptions.series[0].data = response.data.series;
         this.chartSenadoResumoAnualOptions.xAxis.categories = response.data.categories;

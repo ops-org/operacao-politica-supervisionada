@@ -108,16 +108,16 @@ export default {
   },
   mounted() {
     document.title = 'OPS :: Senador';
-    this.API = process.env.API;
+    this.API = process.env.VUE_APP_API;
 
     axios
-      .get(`${process.env.API}/estado`)
+      .get(`${process.env.VUE_APP_API}/estado`)
       .then((response) => {
         this.estados = response.data;
       });
 
     axios
-      .get(`${process.env.API}/partido`)
+      .get(`${process.env.VUE_APP_API}/partido`)
       .then((response) => {
         this.partidos = response.data;
       });
@@ -143,7 +143,7 @@ export default {
       });
 
       axios
-        .post(`${process.env.API}/senador/lista`, filtro)
+        .post(`${process.env.VUE_APP_API}/senador/lista`, filtro)
         .then((response) => {
           this.senadores = response.data;
 

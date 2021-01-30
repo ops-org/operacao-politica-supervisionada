@@ -183,13 +183,13 @@ export default {
   },
   mounted() {
     window.document.title = 'OPS  Senador';
-    this.API = process.env.API;
+    this.API = process.env.VUE_APP_API;
     // const chartSenadorGastosPorMes = this.$refs.chartSenadorGastosPorMes.chart;
     // const chartSenadorPresencaPercentual = this.$refs.chartSenadorPresencaPercentual.chart;
     // const chartSenadorPresencaAnual = this.$refs.chartSenadorPresencaAnual.chart;
 
     axios
-      .get(`${process.env.API}/senador/${this.id}`)
+      .get(`${process.env.VUE_APP_API}/senador/${this.id}`)
       .then((response) => {
         this.senador = response.data;
 
@@ -197,19 +197,19 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/senador/${this.id}/GastosMensaisPorAno`)
+      .get(`${process.env.VUE_APP_API}/senador/${this.id}/GastosMensaisPorAno`)
       .then((response) => {
         this.chartSenadorGastosPorMesOptions.series = response.data;
       });
 
     axios
-      .get(`${process.env.API}/senador/${this.id}/MaioresNotas`)
+      .get(`${process.env.VUE_APP_API}/senador/${this.id}/MaioresNotas`)
       .then((response) => {
         this.MaioresNotas = response.data;
       });
 
     axios
-      .get(`${process.env.API}/senador/${this.id}/MaioresFornecedores`)
+      .get(`${process.env.VUE_APP_API}/senador/${this.id}/MaioresFornecedores`)
       .then((response) => {
         this.MaioresFornecedores = response.data;
       });

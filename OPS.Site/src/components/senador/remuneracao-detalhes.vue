@@ -174,7 +174,7 @@ export default {
     const loader = vm.$loading.show();
 
     axios
-      .get(`${process.env.API}/senador/remuneracao/${vm.id}`)
+      .get(`${process.env.VUE_APP_API}/senador/remuneracao/${vm.id}`)
       .then((response) => {
         this.remuneracao = response.data;
         loader.hide();

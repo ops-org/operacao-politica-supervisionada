@@ -251,7 +251,7 @@ export default {
   },
   mounted() {
     window.document.title = 'OPS :: Deputado Federal';
-    this.API = process.env.API;
+    this.API = process.env.VUE_APP_API;
 
     const loaderDetalhes = this.$loading.show({
       fullPage: false,
@@ -279,7 +279,7 @@ export default {
     });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}`)
       .then((response) => {
         this.deputado_federal = response.data;
 
@@ -288,7 +288,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}/GastosMensaisPorAno`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/GastosMensaisPorAno`)
       .then((response) => {
         this.chartDeputadoGastosPorMesOptions.series = response.data;
 
@@ -296,7 +296,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}/ResumoPresenca`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/ResumoPresenca`)
       .then((response) => {
         // TODO: pq não dá pra deixar isso no data
         this.chartDeputadoPresencaPercentualOptions = {
@@ -349,7 +349,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}/MaioresNotas`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/MaioresNotas`)
       .then((response) => {
         this.MaioresNotas = response.data;
 
@@ -357,7 +357,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}/MaioresFornecedores`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/MaioresFornecedores`)
       .then((response) => {
         this.MaioresFornecedores = response.data;
 

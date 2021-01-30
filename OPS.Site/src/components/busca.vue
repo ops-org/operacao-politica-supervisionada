@@ -127,7 +127,7 @@ export default {
     };
   },
   mounted() {
-    this.API = process.env.API;
+    this.API = process.env.VUE_APP_API;
 
     this.buscar();
   },
@@ -137,7 +137,7 @@ export default {
         const loader = this.$loading.show();
 
         axios
-          .get(`${process.env.API}/inicio/busca?value=${this.q}`)
+          .get(`${process.env.VUE_APP_API}/inicio/busca?value=${this.q}`)
           .then((response) => {
             this.deputado_federal = response.data.deputado_federal;
             this.senador = response.data.senador;

@@ -260,7 +260,7 @@ export default {
   mounted() {
     window.document.title = 'OPS :: Deputado Federal - Recibo';
 
-    axios.get(`${process.env.API}/deputado/documento/${this.id}`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/deputado/documento/${this.id}`).then((response) => {
       window.document.title = `OPS :: Deputado Federal - Recibo: ${(response.data.numero_documento || response.data.id_documento)}`;
       const doc = response.data;
 
@@ -291,13 +291,13 @@ export default {
     });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}/documentosdomesmodia`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/documentosdomesmodia`)
       .then((response) => {
         this.documentos_mesmo_dia = response.data;
       });
 
     axios
-      .get(`${process.env.API}/deputado/${this.id}/documentosdasubcotames`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/documentosdasubcotames`)
       .then((response) => {
         this.documentos_subcota_mes = response.data;
       });

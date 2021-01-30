@@ -31,7 +31,7 @@ export default {
           delete newData.search;
 
           axios
-            .post(`${process.env.API}/deputado/frequencia/${vm.id}`, newData)
+            .post(`${process.env.VUE_APP_API}/deputado/frequencia/${vm.id}`, newData)
             .then((response) => {
               callback(response.data);
 

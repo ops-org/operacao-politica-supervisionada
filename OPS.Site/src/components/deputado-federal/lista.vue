@@ -360,7 +360,7 @@ export default {
 
           this.fields = null;
           axios
-            .post(`${process.env.API}/deputado/lancamentos`, newData)
+            .post(`${process.env.VUE_APP_API}/deputado/lancamentos`, newData)
             .then((response) => {
               vm.valorTotal = response.data.valorTotal;
               callback(response.data);
@@ -398,21 +398,21 @@ export default {
 
     document.title = 'OPS :: Deputado Federal';
 
-    axios.get(`${process.env.API}/estado`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/estado`).then((response) => {
       this.estados = response.data;
     });
 
-    axios.get(`${process.env.API}/partido`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/partido`).then((response) => {
       this.partidos = response.data;
     });
 
     axios
-      .get(`${process.env.API}/deputado/tipodespesa`)
+      .get(`${process.env.VUE_APP_API}/deputado/tipodespesa`)
       .then((response) => {
         this.despesas = response.data;
       });
 
-    axios.get(`${process.env.API}/deputado/pesquisa`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/deputado/pesquisa`).then((response) => {
       this.parlamentares = response.data;
     });
 
@@ -426,7 +426,7 @@ export default {
       const loader = this.$loading.show();
 
       axios
-        .post(`${process.env.API}/fornecedor/consulta`, this.fornecedor)
+        .post(`${process.env.VUE_APP_API}/fornecedor/consulta`, this.fornecedor)
         .then((response) => {
           this.fornecedores = response.data;
 

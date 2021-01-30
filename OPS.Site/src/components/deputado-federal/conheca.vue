@@ -106,16 +106,16 @@ export default {
   },
   mounted() {
     document.title = 'OPS :: Deputado Federal';
-    this.API = process.env.API;
+    this.API = process.env.VUE_APP_API;
 
     axios
-      .get(`${process.env.API}/estado`)
+      .get(`${process.env.VUE_APP_API}/estado`)
       .then((response) => {
         this.estados = response.data;
       });
 
     axios
-      .get(`${process.env.API}/partido`)
+      .get(`${process.env.VUE_APP_API}/partido`)
       .then((response) => {
         this.partidos = response.data;
       });
@@ -141,7 +141,7 @@ export default {
       });
 
       axios
-        .post(`${process.env.API}/deputado/lista`, filtro)
+        .post(`${process.env.VUE_APP_API}/deputado/lista`, filtro)
         .then((response) => {
           this.deputado_federal = response.data;
 

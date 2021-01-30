@@ -241,7 +241,7 @@ export default {
           this.fields = null;
 
           axios
-            .post(`${process.env.API}/senador/remuneracao`, newData)
+            .post(`${process.env.VUE_APP_API}/senador/remuneracao`, newData)
             .then((response) => {
               vm.loading = false;
               vm.valorTotal = response.data.valorTotal;
@@ -281,23 +281,23 @@ export default {
 
     document.title = 'OPS :: Remuneração no Senado';
 
-    axios.get(`${process.env.API}/senador/lotacao`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/senador/lotacao`).then((response) => {
       this.lotacoes = response.data;
     });
 
-    axios.get(`${process.env.API}/senador/cargo`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/senador/cargo`).then((response) => {
       this.cargos = response.data;
     });
 
-    axios.get(`${process.env.API}/senador/categoria`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/senador/categoria`).then((response) => {
       this.categorias = response.data;
     });
 
-    axios.get(`${process.env.API}/senador/vinculo`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/senador/vinculo`).then((response) => {
       this.vinculos = response.data;
     });
 
-    axios.get(`${process.env.API}/senador`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/senador`).then((response) => {
       this.parlamentares = response.data;
     });
 
