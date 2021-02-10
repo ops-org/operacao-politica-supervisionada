@@ -389,22 +389,85 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> Pesquisa()
+        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro = null)
         {
             using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT 
-						id, nome, nome_completo
-					FROM sf_senador
-					WHERE id IN (
-						/* Somente senadores com despesas */
-						select distinct id_sf_senador 
-						from sf_despesa
-					)
-					ORDER BY nome
+					SELECT DISTINCT
+						d.id, d.nome, d.nome_completo
+					FROM sf_senador d
 				");
+
+                if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
+                {
+                    strSql.AppendLine(@"
+                        JOIN sf_mandato m on m.id_sf_senador = d.id and m.exerceu = 1
+                        JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
+                        WHERE (1=1) ");
+
+                    if (!string.IsNullOrEmpty(filtro.Busca))
+                    {
+                        var busca = Utils.MySqlEscape(filtro.Busca);
+                        strSql.AppendLine(@" AND (d.nome like '%" + busca + "%' or d.nome_completo like '%" + busca + "%') ");
+                    }
+
+                    if (filtro.Periodo > 0)
+                    {
+                        switch (filtro.Periodo)
+                        {
+                            //case 9: //PERIODO_MANDATO_56
+                            //    strSql.AppendLine(" AND m.id_legislatura = 56");
+                            //    break;
+
+                            case 8: //PERIODO_MANDATO_55
+                                strSql.AppendLine(" AND ml.id_sf_legislatura = 55");
+                                break;
+
+                            case 7: //PERIODO_MANDATO_54
+                                strSql.AppendLine(" AND ml.id_sf_legislatura = 54");
+                                break;
+
+                            case 6: //PERIODO_MANDATO_53
+                                strSql.AppendLine(" AND ml.id_sf_legislatura = 53");
+                                break;
+
+                            default:
+                                strSql.AppendLine(" AND ml.id_sf_legislatura = 56");
+                                break;
+                        }
+                    }
+
+                    strSql.AppendLine(@"
+                        ORDER BY d.nome
+                        limit 30
+				    ");
+                }
+                else
+                {
+                    strSql.AppendLine(@"
+                        WHERE (1=1) ");
+
+                    if (filtro != null && !string.IsNullOrEmpty(filtro.Ids))
+                    {
+                        var Ids = Utils.MySqlEscapeNumberToIn(filtro.Ids);
+                        strSql.AppendLine(@" AND d.id IN(" + Ids + ") ");
+                    }
+                    else
+                    {
+                        strSql.AppendLine(@"
+                            AND d.id IN(
+                                /* Somente senadores com despesas */
+                                select distinct id_sf_senador
+                                from sf_despesa
+                            ) ");
+                    }
+
+                    strSql.AppendLine(@"
+                        ORDER BY d.nome
+				    ");
+                }
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
@@ -737,7 +800,7 @@ namespace OPS.Core.DAO
 					CREATE TEMPORARY TABLE table_in_memory
 					AS (
 						SELECT
-						 d.id_partido
+						 p.id as id_partido
 						, p.nome as nome_partido
 						, sum(l1.total_notas) as total_notas
                         , count(l1.id_sf_senador) as total_senadores
@@ -819,7 +882,7 @@ namespace OPS.Core.DAO
 					CREATE TEMPORARY TABLE table_in_memory
 					AS (
 						SELECT
-						 d.id_estado
+						 e.id as id_estado
 						, e.nome as nome_estado
 						, count(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
@@ -943,7 +1006,7 @@ namespace OPS.Core.DAO
                             id_fornecedor = reader["id_fornecedor"],
                             cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            id_senador = reader["id_senador"],
+                            id_sf_senador = reader["id_senador"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
@@ -1017,7 +1080,7 @@ namespace OPS.Core.DAO
         {
             if (request.Filters.ContainsKey("Estado") && !string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_partido IN(" + request.Filters["Estado"].ToString() + ")) ");
+                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_estado IN(" + request.Filters["Estado"].ToString() + ")) ");
             }
         }
 
@@ -1025,7 +1088,7 @@ namespace OPS.Core.DAO
         {
             if (request.Filters.ContainsKey("Partido") && !string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_estado IN(" + request.Filters["Partido"].ToString() + ")) ");
+                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
             }
         }
 

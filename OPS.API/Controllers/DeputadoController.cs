@@ -42,11 +42,11 @@ namespace OPS.WebApi
             return await dao.Lista(filtro);
         }
 
-        [HttpGet("Pesquisa")]
+        [HttpPost("Pesquisa")]
         [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-        public async Task<dynamic> Pesquisa()
+        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro)
         {
-            return await dao.Pesquisa();
+            return await dao.Pesquisa(filtro);
         }
 
         [HttpPost("Lancamentos")]

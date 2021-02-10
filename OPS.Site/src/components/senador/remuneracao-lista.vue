@@ -127,7 +127,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="alert alert-warning" v-if="valorTotal">
-          <b>Custo Total no Período: R$ {{valorTotal}}</b>
+          <strong>Custo Total no Período: R$ {{valorTotal}}</strong>
           <small class="help-block mb-0">Custo Total considerando os filtros aplicados acima</small>
         </div>
       </div>
@@ -167,17 +167,12 @@
 
 <script>
 import jQuery from 'jquery';
-import 'datatables.net-bs4';
-import VdtnetTable from 'vue-datatables-net';
-
 import VSelect from '../vue-bootstrap-select';
-
 const axios = require('axios');
 
 export default {
   components: {
     VSelect,
-    VdtnetTable,
   },
   props: {
     qs: Object,

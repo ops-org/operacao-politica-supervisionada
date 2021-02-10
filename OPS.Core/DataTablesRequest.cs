@@ -50,7 +50,9 @@ namespace OPS.Core
                     if (dcColumns.ContainsKey(item.Column))
                         lstSort.Add(string.Format("{0} {1}", dcColumns[item.Column], item.Dir));
                 }
-                return Utils.MySqlEscape(string.Join(",", lstSort));
+
+                if (lstSort.Any())
+                    return Utils.MySqlEscape(string.Join(",", lstSort));
             }
 
             return defaultSort;

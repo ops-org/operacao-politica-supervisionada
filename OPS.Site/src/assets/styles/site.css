@@ -373,3 +373,7 @@ form.ng-submitted .form-control.ng-invalid {
     width: 120px;
     height: 160px;
 }
+
+.bootstrap-select {
+    border: 1px solid #e8e8e8;
+}

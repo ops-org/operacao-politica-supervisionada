@@ -35,7 +35,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="alert alert-warning" v-if="deputado_federal.length > 0">
-          <b>Exibindo {{deputado_federal.length}} deputados</b>
+          <strong>Exibindo {{deputado_federal.length}} deputados</strong>
         </div>
       </div>
     </div>
@@ -54,7 +54,7 @@
                     <div class="row no-gutters">
                         <div class="col-md-4">
                             <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
-                                <img class="media-thumbnail card-img" v-lazy="'/static/img/depfederal/' + deputado.id_cf_deputado + '.jpg'" />
+                                <img class="media-thumbnail card-img" v-lazy="'/img/depfederal/' + deputado.id_cf_deputado + '.jpg'" />
                             </a>
                         </div>
                         <div class="col-md-8">
@@ -77,14 +77,10 @@
 
 <script>
 import jQuery from 'jquery';
-import VSelect from '../vue-bootstrap-select';
 
 const axios = require('axios');
 
 export default {
-  components: {
-    VSelect,
-  },
   data() {
     return {
       API: '',

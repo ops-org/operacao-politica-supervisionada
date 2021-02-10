@@ -56,7 +56,7 @@
                     <div class="row no-gutters">
                         <div class="col-md-4">
                             <a v-bind:href="'/senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
-                                <img class="media-thumbnail card-img" v-lazy="'/static/img/senador/' + senador.id_sf_senador + '.jpg'" />
+                                <img class="media-thumbnail card-img" v-lazy="'/img/senador/' + senador.id_sf_senador + '.jpg'" />
                             </a>
                         </div>
                         <div class="col-md-8">
@@ -80,7 +80,6 @@
 <script>
 import jQuery from 'jquery';
 import VSelect from '../vue-bootstrap-select';
-
 const axios = require('axios');
 
 export default {

@@ -21,13 +21,16 @@
         </div>
         <div class="form-group col-md-4">
           <label>Senador</label>
-          <v-select
-            :options="parlamentares"
-            v-model="filtro.parlamentar"
-            class="form-control input-sm"
-            multiple
-            data-actions-box="true"
-          />
+          <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :searchable="true" :loading="isLoadingParlamentar" :internal-search="false" @search-change="BuscaParlamentar">
+
+            <template slot="selection" slot-scope="{ values, isOpen }">
+              <span class="multiselect__single" v-if="values.length > 1 && !isOpen">{{ values.length }} item(ns) selecionado(s)</span>
+            </template>
+            <span slot="noResult">Oops! Nenhum resultado encontrado.</span>
+            <span slot="noOptions">Digite o nome do parlamentar.</span>
+          </multiselect>
         </div>
         <div class="form-group col-md-4">
           <label>Tipo de Despesa</label>
@@ -199,7 +202,7 @@
             v-on:click="Pesquisar(false);"
             value="Pesquisar"
             class="btn btn-danger btn-sm"
-          />
+          />&nbsp;
           <input
             type="button"
             value="Limpar filtros"
@@ -213,7 +216,7 @@
     <div class="row">
       <div class="col-md-12">
         <div class="alert alert-warning" v-if="valorTotal">
-          <b>Valor Total no Período: R$ {{valorTotal}}</b>
+          <strong>Valor Total no Período: R$ {{valorTotal}}</strong>
           <small class="help-block mb-0">Valor total considerando os filtros aplicados acima</small>
         </div>
       </div>
@@ -291,17 +294,12 @@
 
 <script>
 import jQuery from 'jquery';
-import 'datatables.net-bs4';
-import VdtnetTable from 'vue-datatables-net';
-
 import VSelect from '../vue-bootstrap-select';
-
 const axios = require('axios');
 
 export default {
   components: {
     VSelect,
-    VdtnetTable,
   },
   props: {
     qs: Object,
@@ -311,6 +309,7 @@ export default {
 
     return {
       pageLoad: true,
+      isLoadingParlamentar: null,
       selectedRow: {},
       valorTotal: null,
       senador: {},
@@ -341,7 +340,7 @@ export default {
           newData.filters = {
             Agrupamento: vm.filtro.agrupar,
             Periodo: vm.filtro.periodo,
-            IdParlamentar: (vm.filtro.parlamentar || []).join(','),
+            IdParlamentar: window.GetIds(vm.filtro.parlamentar).join(','),
             Despesa: (vm.filtro.despesa || []).join(','),
             Estado: (vm.filtro.estado || []).join(','),
             Partido: (vm.filtro.partido || []).join(','),
@@ -388,15 +387,25 @@ export default {
   mounted() {
     const vm = this;
 
+    var lstPromises = [];
+
+    if(vm.qs.IdParlamentar){
+      var pDeputado = axios.post(`${process.env.VUE_APP_API}/senador/pesquisa`, { ids: vm.qs.IdParlamentar })
+      pDeputado.then((response) => {
+        vm.filtro.parlamentar = response.data;
+      });
+
+      lstPromises.push(pDeputado);
+    }
+
     vm.filtro.agrupar = vm.qs.Agrupamento || '1';
     vm.filtro.periodo = vm.qs.Periodo || '9';
-    vm.filtro.parlamentar = (vm.qs.IdParlamentar ? vm.qs.IdParlamentar.split(',') : []);
     vm.filtro.despesa = (vm.qs.Despesa ? vm.qs.Despesa.split(',') : []);
     vm.filtro.estado = (vm.qs.Estado ? vm.qs.Estado.split(',') : []);
     vm.filtro.partido = (vm.qs.Partido ? vm.qs.Partido.split(',') : []);
     vm.filtro.fornecedor = (vm.qs.Fornecedor ? { id: vm.qs.Fornecedor, nome: vm.qs.Fornecedor } : {});
 
-    document.title = 'OPS :: Deputado Federal';
+    document.title = 'OPS :: Cota Parlamentar no Senado';
 
     axios.get(`${process.env.VUE_APP_API}/estado`).then((response) => {
       this.estados = response.data;
@@ -412,13 +421,30 @@ export default {
         this.despesas = response.data;
       });
 
-    axios.get(`${process.env.VUE_APP_API}/senador`).then((response) => {
-      this.parlamentares = response.data;
-    });
+    // if(vm.filtro.parlamentar.length > 0){
+    //   axios.get(`${process.env.VUE_APP_API}/senador`).then((response) => {
+    //     this.parlamentares = response.data;
+    //   });
+    // }
 
-    this.Pesquisar(true);
+    if(lstPromises.length == 0){
+        this.Pesquisar(true);
+    }else{
+      Promise.all(lstPromises).then(() => vm.Pesquisar(true));
+    }
   },
   methods: {
+    BuscaParlamentar(busca) {
+      this.isLoadingParlamentar = true;
+
+      axios
+        .post(`${process.env.VUE_APP_API}/senador/pesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
+        .then((response) => {
+          this.parlamentares = response.data;
+
+          this.isLoadingParlamentar = false;
+        });
+    },
     AbreModalConsultaFornecedor() {
       jQuery('#modal-fornecedor').modal();
     },
@@ -457,7 +483,7 @@ export default {
 
       switch (vm.filtro.agrupar) {
         case '1': // Deputado
-          vm.filtro.parlamentar = [this.selectedRow.id_sf_senador];
+          window.AddIfDontExists(vm.filtro.parlamentar, this.selectedRow.id_sf_senador, this.selectedRow.nome_parlamentar);
           break;
         case '2': // Despesa
           vm.filtro.despesa = [this.selectedRow.id_sf_despesa_tipo];
@@ -710,9 +736,9 @@ export default {
           default: break;
         }
 
-        vm.$nextTick(() => {
-          vm.$refs.table.reload(null, true);
-        });
+        // vm.$nextTick(() => {
+        //   vm.$refs.table.reload(null, true);
+        // });
       });
     },
     LimparFiltros() {

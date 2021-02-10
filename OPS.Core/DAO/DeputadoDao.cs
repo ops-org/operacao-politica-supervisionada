@@ -593,17 +593,75 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> Pesquisa()
+        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro = null)
         {
             using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT 
-						id, nome_civil, nome_parlamentar 
-					FROM cf_deputado 
-					ORDER BY nome_parlamentar
+					SELECT DISTINCT
+						d.id, d.nome_civil, d.nome_parlamentar 
+					FROM cf_deputado d
 				");
+
+                if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
+                {
+                    strSql.AppendLine(@"
+                        INNER JOIN cf_mandato m on m.id_cf_deputado = d.id
+                        WHERE (1=1) ");
+
+                    if (!string.IsNullOrEmpty(filtro.Busca))
+                    {
+                        var busca = Utils.MySqlEscape(filtro.Busca);
+                        strSql.AppendLine(@" AND (d.nome_parlamentar like '%" + busca + "%' or d.nome_civil like '%" + busca + "%') ");
+                    }
+
+                    if (filtro.Periodo > 0)
+                    {
+                        switch (filtro.Periodo)
+                        {
+                            //case 9: //PERIODO_MANDATO_56
+                            //    strSql.AppendLine(" AND m.id_legislatura = 56");
+                            //    break;
+
+                            case 8: //PERIODO_MANDATO_55
+                                strSql.AppendLine(" AND m.id_legislatura = 55");
+                                break;
+
+                            case 7: //PERIODO_MANDATO_54
+                                strSql.AppendLine(" AND m.id_legislatura = 54");
+                                break;
+
+                            case 6: //PERIODO_MANDATO_53
+                                strSql.AppendLine(" AND m.id_legislatura = 53");
+                                break;
+
+                            default:
+                                strSql.AppendLine(" AND m.id_legislatura = 56");
+                                break;
+                        }
+                    }
+
+                    strSql.AppendLine(@"
+                        ORDER BY d.nome_parlamentar
+                        limit 30
+				    ");
+                }
+                else
+                {
+                    strSql.AppendLine(@"
+                        WHERE (1=1) ");
+
+                    if (filtro != null && !string.IsNullOrEmpty(filtro.Ids))
+                    {
+                        var Ids = Utils.MySqlEscapeNumberToIn(filtro.Ids);
+                        strSql.AppendLine(@" AND d.id IN(" + Ids + ") ");
+                    }
+
+                    strSql.AppendLine(@"
+                        ORDER BY d.nome_parlamentar
+				    ");
+                }
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
@@ -1359,7 +1417,7 @@ namespace OPS.Core.DAO
             var dcFielsSort = new Dictionary<int, string>(){
                 {1, "p.nome_parlamentar" },
                 {2, "p.quantidade_secretarios" },
-                {3, "p.custo_mensal_secretarios" },
+                {3, "p.custo_secretarios" },
                 {4, "p.custo_total_secretarios" },
             };
 

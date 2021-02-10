@@ -19,12 +19,9 @@
 <script>
 // this demonstrate with buttons and responsive master/details row
 import 'jquery';
-import VdtnetTable from 'vue-datatables-net';
-import 'datatables.net-bs4';
 import axios from 'axios';
 
 export default {
-  components: { VdtnetTable },
   data() {
     const vm = this;
 

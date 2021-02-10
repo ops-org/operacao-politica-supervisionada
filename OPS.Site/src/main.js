@@ -2,17 +2,20 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import jQuery from 'jquery';
 import datatable from 'datatables.net';
+import VdtnetTable from 'vue-datatables-net';
 import Highcharts from 'highcharts';
 import VueLazyload from 'vue-lazyload';
 import Loading from 'vue-loading-overlay';
 import VueGoogleTagManager from 'vue-gtm';
-import 'vue-datatables-net';
+import Multiselect from 'vue-multiselect';
 import 'bootstrap-select';
+import 'datatables.net-bs4';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import 'datatables.net-bs4/css/dataTables.bootstrap4.min.css';
 import 'vue-loading-overlay/dist/vue-loading.css';
+import 'vue-multiselect/dist/vue-multiselect.min.css';
 
 import Vue from 'vue';
 import App from './App';
@@ -55,8 +58,8 @@ Highcharts.setOptions({
 // https://github.com/hilongjw/vue-lazyload
 Vue.use(VueLazyload, {
   preLoad: 1.3,
-  error: '/static/img/sem_foto.jpg',
-  loading: '/static/img/loading.svg',
+  error: '/img/sem_foto.jpg',
+  loading: '/img/loading.svg',
   attempt: 1,
 });
 
@@ -76,7 +79,25 @@ Vue.use(VueGoogleTagManager, {
   trackOnNextTick: false, // Whether or not call trackView in Vue.nextTick
 });
 
+Vue.component('Multiselect', Multiselect);
+Vue.component('VdtnetTable', VdtnetTable);
+
 Vue.config.productionTip = false;
+Vue.config.devtools = false;
+
+window.AddIfDontExists = function(arr, id, text) {
+  if(arr.find(x => x.id == id) == null) {
+    arr.push({id: id, text: text});
+  }
+}
+
+window.GetIds = function(arr) {
+  var ids = jQuery.map(arr, function (obj){
+    return obj.id;
+  });
+
+  return ids;
+}
 
 new Vue({
   el: '#app',

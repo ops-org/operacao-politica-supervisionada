@@ -29,6 +29,7 @@
     "vue-lazyload": "^1.3.3",
     "vue-loading-overlay": "^3.4.0",
     "vue-loading-template": "^1.3.2",
+    "vue-multiselect": "^2.1.6",
     "vue-router": "^3.4.3"
   },
   "devDependencies": {
