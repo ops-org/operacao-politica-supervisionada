@@ -1,5 +1,5 @@
 
-![Operação Política Supervisionada](https://github.com/ops-org/operacao-politica-supervisionada/blob/master/OPS.Site/static/img/logo_grande.png?raw=true)
+![Operação Política Supervisionada](https://github.com/ops-org/operacao-politica-supervisionada/blob/master/OPS.Site/public/img/logo_grande.png?raw=true)
 
 ## Operação Política Supervisionada
 
