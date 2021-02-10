@@ -5,7 +5,7 @@
       Você pode ter digitado incorretamente o endereço ou a página pode ter sido movida. Gostaria de voltar para o
       <a href="/">início</a>?
     </p>
-    <img src="/static/img/404.gif" alt="Travolta está desesperadamente perdido" />
+    <img src="/img/404.gif" alt="Travolta está desesperadamente perdido" />
   </div>
 </template>
 

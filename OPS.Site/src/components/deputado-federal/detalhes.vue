@@ -5,7 +5,7 @@
 
         <div class="row form-group">
             <div class="col-xs-12 col-md-4 col-lg-2 text-center">
-                <img class="img-thumbnail img-responsive img-deputado" v-bind:src="'/static/img/depfederal/' + id + '_120x160.jpg'" v-bind:alt="deputado_federal.nome_parlamentar" width="130" height="170" />
+                <img class="img-thumbnail img-responsive img-deputado" v-bind:src="'/img/depfederal/' + id + '_120x160.jpg'" v-bind:alt="deputado_federal.nome_parlamentar" width="130" height="170" />
             </div>
             <div class="col-xs-12 col-md-8 col-lg-10 text-left">
                 <h4 style="margin-top: 0;">{{deputado_federal.nome_parlamentar}} <small>({{deputado_federal.sigla_partido}} / {{deputado_federal.sigla_estado}})</small></h4>

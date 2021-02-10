@@ -36,7 +36,7 @@
                               <div class="row no-gutters">
                                   <div class="col-md-4">
                                       <a v-bind:href="'/senador/' + senador.id_sf_senador" title="Clique para visualizar o perfil do senador(a)">
-                                          <img class="media-thumbnail" v-lazy="'/static/img/senador/' + senador.id_sf_senador + '_120x160.jpg'" />
+                                          <img class="media-thumbnail" v-lazy="'/img/senador/' + senador.id_sf_senador + '_120x160.jpg'" alt="" />
                                       </a>
                                   </div>
                                   <div class="col-md-8">
@@ -70,7 +70,7 @@
                               <div class="row no-gutters">
                                   <div class="col-md-4">
                                       <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
-                                          <img class="media-thumbnail" v-lazy="'/static/img/depfederal/' + deputado.id_cf_deputado + '.jpg'" />
+                                          <img class="media-thumbnail" v-lazy="'/img/depfederal/' + deputado.id_cf_deputado + '.jpg'" alt="" />
                                       </a>
                                   </div>
                                   <div class="col-md-8">

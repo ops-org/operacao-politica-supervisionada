@@ -4,7 +4,7 @@
       <div class="container d-flex flex-column flex-md-row align-items-center">
         <h5 class="my-0 mr-md-auto font-weight-normal">
           <router-link :to="{ name: 'inicio' }" class="logo" title="OPS - Operação Política Supervisionada" style="padding: 5px; margin-left: 0">
-            <img src="/static/img/logo_ops.png" width="64" height="40" alt="OPS" />
+            <img src="/img/logo_ops.png" width="64" height="40" alt="OPS" />
           </router-link>
         </h5>
         <nav class="my-2 my-md-0 mr-md-3 text-center">

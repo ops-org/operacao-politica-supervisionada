@@ -8,7 +8,7 @@
                 <div class="col-xs-12 col-md-4 col-lg-2 text-center">
                     <img
                       class="img-thumbnail img-responsive img-senador"
-                      v-bind:src="'/static/img/senador/' + senador.id_sf_senador + '_240x300.jpg'"
+                      v-bind:src="'/img/senador/' + senador.id_sf_senador + '_240x300.jpg'"
                       v-bind:title="senador.nome_parlamentar"
                       v-bind:alt="senador.nome_parlamentar"
                       width="170"

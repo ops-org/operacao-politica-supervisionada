@@ -181,7 +181,7 @@
                 <div class="row no-gutters">
                   <div class="col-xs-4">
                     <img
-                      v-lazy="'/static/img/depfederal/' + gasto.id_cf_deputado + '_120x160.jpg'"
+                      v-lazy="'/img/depfederal/' + gasto.id_cf_deputado + '_120x160.jpg'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
@@ -220,7 +220,7 @@
                 <div class="row no-gutters">
                   <div class="col-sx-4">
                     <img
-                      v-lazy="'/static/img/senador/' + gasto.id_sf_senador + '_120x160.jpg'"
+                      v-lazy="'/img/senador/' + gasto.id_sf_senador + '_120x160.jpg'"
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
