@@ -356,6 +356,11 @@ export default {
                 label: 'Lotação',
                 sortable: true,
               },
+              quantidade: {
+                label: 'Qtd.',
+                sortable: true,
+                className: 'text-right',
+              },
               valor_total: {
                 label: 'Custo Total',
                 sortable: true,
@@ -381,6 +386,11 @@ export default {
                 label: 'Cargo',
                 sortable: true,
               },
+              quantidade: {
+                label: 'Qtd.',
+                sortable: true,
+                className: 'text-right',
+              },
               valor_total: {
                 label: 'Custo Total',
                 sortable: true,
@@ -404,6 +414,11 @@ export default {
               descricao: {
                 label: 'Categoria',
                 sortable: true,
+              },
+              quantidade: {
+                label: 'Qtd.',
+                sortable: true,
+                className: 'text-right',
               },
               valor_total: {
                 label: 'Custo Total',
@@ -429,6 +444,11 @@ export default {
                 label: 'Vinculo',
                 sortable: true,
               },
+              quantidade: {
+                label: 'Qtd.',
+                sortable: true,
+                className: 'text-right',
+              },
               valor_total: {
                 label: 'Custo Total',
                 sortable: true,
@@ -453,6 +473,11 @@ export default {
                 label: 'Ano',
                 sortable: true,
               },
+              quantidade: {
+                label: 'Qtd.',
+                sortable: true,
+                className: 'text-right',
+              },
               valor_total: {
                 label: 'Custo Total',
                 sortable: true,
@@ -476,6 +501,11 @@ export default {
               descricao: {
                 label: 'Senador',
                 sortable: true,
+              },
+              quantidade: {
+                label: 'Qtd.',
+                sortable: true,
+                className: 'text-right',
               },
               valor_total: {
                 label: 'Custo Total',
