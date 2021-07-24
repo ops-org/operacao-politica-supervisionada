@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="1.1.0" />
+    <PackageReference Include="MySqlConnector" Version="1.3.4" />
     <PackageReference Include="RestSharp" Version="106.11.7" />
-    <PackageReference Include="Sendgrid" Version="9.21.1" />
+    <PackageReference Include="Sendgrid" Version="9.23.0" />
     <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
   </ItemGroup>
 
