@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <div class="container form-group">
+    <!-- <div class="container form-group">
       <h2 class="page-title">Resumo mensal da cota parlamentar</h2>
 
       <h4>
@@ -114,7 +114,7 @@
         </div>
         <highcharts :options="chartcSenadoResumoMensalOptions" ref="chartSenadoResumoMensal"></highcharts>
       </div>
-    </div>
+    </div> -->
 
     <div class="content-section form-group">
       <div class="container text-justify">
@@ -252,7 +252,7 @@
             href="/deputado-federal"
             class="btn btn-danger btn-lg"
             style="margin-bottom: 15px;"
-          >Câmara dos Deputados</a>
+          >Câmara dos Deputados</a>&nbsp;
           <a
             href="/senador"
             class="btn btn-danger btn-lg"
@@ -290,107 +290,107 @@ export default {
         url: 'http://ops.net.br',
         identifier: 'Pagina Inicial',
       },
-      camaraLegislatura: 56,
-      senadoLegislatura: 55,
+      // camaraLegislatura: 56,
+      // senadoLegislatura: 55,
       CampeoesGastos: [],
-      chartCamaraResumoMensalOptions: {
-        chart: {
-          type: 'column',
-        },
+      // chartCamaraResumoMensalOptions: {
+      //   chart: {
+      //     type: 'column',
+      //   },
 
-        title: {
-          text: null, // 'Gasto mensal com a cota parlamentar'
-        },
+      //   title: {
+      //     text: null, // 'Gasto mensal com a cota parlamentar'
+      //   },
 
-        xAxis: {
-          categories: [
-            'Jan',
-            'Fev',
-            'Mar',
-            'Abr',
-            'Maio',
-            'Jun',
-            'Jul',
-            'Ago',
-            'Set',
-            'Out',
-            'Nov',
-            'Dez',
-          ],
-        },
+      //   xAxis: {
+      //     categories: [
+      //       'Jan',
+      //       'Fev',
+      //       'Mar',
+      //       'Abr',
+      //       'Maio',
+      //       'Jun',
+      //       'Jul',
+      //       'Ago',
+      //       'Set',
+      //       'Out',
+      //       'Nov',
+      //       'Dez',
+      //     ],
+      //   },
 
-        yAxis: [
-          {
-            // left y axis
-            title: {
-              text: 'Valor (em reais)',
-            },
-            labels: {
-              align: 'left',
-              x: 3,
-              y: 16,
-              format: '{value:.,0f}',
-            },
-            showFirstLabel: false,
-          },
-        ],
+      //   yAxis: [
+      //     {
+      //       // left y axis
+      //       title: {
+      //         text: 'Valor (em reais)',
+      //       },
+      //       labels: {
+      //         align: 'left',
+      //         x: 3,
+      //         y: 16,
+      //         format: '{value:.,0f}',
+      //       },
+      //       showFirstLabel: false,
+      //     },
+      //   ],
 
-        tooltip: {
-          shared: true,
-          crosshairs: true,
-          pointFormat:
-            '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
-        },
+      //   tooltip: {
+      //     shared: true,
+      //     crosshairs: true,
+      //     pointFormat:
+      //       '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
+      //   },
 
-        dataLabels: {
-          enabled: true,
-          rotation: -90,
-          color: '#FFFFFF',
-          align: 'right',
-          format: '{point.y:.2f}', // one decimal
-          y: 10, // 10 pixels down from the top
-          style: {
-            fontSize: '13px',
-            fontFamily: 'Verdana, sans-serif',
-          },
-        },
+      //   dataLabels: {
+      //     enabled: true,
+      //     rotation: -90,
+      //     color: '#000',
+      //     align: 'right',
+      //     format: '{point.y:.2f}', // one decimal
+      //     y: 10, // 10 pixels down from the top
+      //     style: {
+      //       fontSize: '13px',
+      //       fontFamily: 'Verdana, sans-serif',
+      //     },
+      //   },
 
-        series: [],
-      },
-      chartcSenadoResumoMensalOptions: {
-        chart: {
-          type: 'column',
-        },
+      //   series: [],
+      // },
+      // chartcSenadoResumoMensalOptions: {
+      //   chart: {
+      //     type: 'column',
+      //   },
 
-        title: {
-          text: null, // 'Gasto mensal com a cota parlamentar'
-        },
+      //   title: {
+      //     text: null, // 'Gasto mensal com a cota parlamentar'
+      //   },
 
-        xAxis: {
-          categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-        },
+      //   xAxis: {
+      //     categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+      //   },
 
-        yAxis: [{ // left y axis
-          title: {
-            text: 'Valor (em reais)',
-          },
-          labels: {
-            align: 'left',
-            x: 3,
-            y: 16,
-            format: '{value:.,0f}',
-          },
-          showFirstLabel: false,
-        }],
+      //   yAxis: [{ // left y axis
+      //     title: {
+      //       text: 'Valor (em reais)',
+      //     },
+      //     labels: {
+      //       align: 'left',
+      //       x: 3,
+      //       y: 16,
+      //       format: '{value:.,0f}',
+      //     },
+      //     showFirstLabel: false,
+      //   }],
 
-        tooltip: {
-          shared: true,
-          crosshairs: true,
-          pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
-        },
+      //   tooltip: {
+      //     shared: true,
+      //     crosshairs: true,
+      //     pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
+      //   },
 
-        series: [],
-      },
+      //   series: [],
+      // },
       chartCamaraResumoAnualOptions: {
         chart: {
           type: 'bar',
@@ -436,7 +436,7 @@ export default {
           dataLabels: {
             enabled: true,
             // rotation: -90,
-            color: '#FFFFFF',
+            color: '#000',
             align: 'right',
             format: '{point.y:,.2f}', // one decimal
             y: -1, // -1 pixels down from the top
@@ -491,7 +491,7 @@ export default {
           dataLabels: {
             enabled: true,
             // rotation: -90,
-            color: '#FFFFFF',
+            color: '#000',
             align: 'right',
             format: '{point.y:,.2f}', // one decimal
             y: -1, // -1 pixels down from the top
@@ -505,8 +505,8 @@ export default {
     };
   },
   mounted() {
-    const chartCamaraResumoMensal = this.$refs.chartCamaraResumoMensal.chart;
-    const chartSenadoResumoMensal = this.$refs.chartSenadoResumoMensal.chart;
+    // const chartCamaraResumoMensal = this.$refs.chartCamaraResumoMensal.chart;
+    // const chartSenadoResumoMensal = this.$refs.chartSenadoResumoMensal.chart;
     this.API = process.env.VUE_APP_API;
 
     const loaderCampeoesGastos = this.$loading.show({
@@ -514,15 +514,15 @@ export default {
       container: this.$refs.CampeoesGastos,
     });
 
-    const loaderCamaraResumoMensal = this.$loading.show({
-      fullPage: false,
-      container: this.$refs.CamaraResumoMensal,
-    });
+    // const loaderCamaraResumoMensal = this.$loading.show({
+    //   fullPage: false,
+    //   container: this.$refs.CamaraResumoMensal,
+    // });
 
-    const loaderSenadoResumoMensal = this.$loading.show({
-      fullPage: false,
-      container: this.$refs.SenadoResumoMensal,
-    });
+    // const loaderSenadoResumoMensal = this.$loading.show({
+    //   fullPage: false,
+    //   container: this.$refs.SenadoResumoMensal,
+    // });
 
     const loaderCamaraResumoAnual = this.$loading.show({
       fullPage: false,
@@ -542,33 +542,33 @@ export default {
         loaderCampeoesGastos.hide();
       });
 
-    axios
-      .get(`${process.env.VUE_APP_API}/deputado/camararesumomensal`)
-      .then((response) => {
-        this.chartCamaraResumoMensalOptions.series = response.data;
+    // axios
+    //   .get(`${process.env.VUE_APP_API}/deputado/camararesumomensal`)
+    //   .then((response) => {
+    //     this.chartCamaraResumoMensalOptions.series = response.data;
 
-        this.$nextTick(() => {
-          for (let i = 0; i <= response.data.length - 3; i += 1) {
-            chartCamaraResumoMensal.series[i].hide();
-          }
+    //     this.$nextTick(() => {
+    //       for (let i = 0; i <= response.data.length - 3; i += 1) {
+    //         chartCamaraResumoMensal.series[i].hide();
+    //       }
 
-          loaderCamaraResumoMensal.hide();
-        });
-      });
+    //       loaderCamaraResumoMensal.hide();
+    //     });
+    //   });
 
-    axios
-      .get(`${process.env.VUE_APP_API}/senador/senadoresumomensal`)
-      .then((response) => {
-        this.chartcSenadoResumoMensalOptions.series = response.data;
+    // axios
+    //   .get(`${process.env.VUE_APP_API}/senador/senadoresumomensal`)
+    //   .then((response) => {
+    //     this.chartcSenadoResumoMensalOptions.series = response.data;
 
-        this.$nextTick(() => {
-          for (let i = 0; i <= response.data.length - 3; i += 1) {
-            chartSenadoResumoMensal.series[i].hide();
-          }
+    //     this.$nextTick(() => {
+    //       for (let i = 0; i <= response.data.length - 3; i += 1) {
+    //         chartSenadoResumoMensal.series[i].hide();
+    //       }
 
-          loaderSenadoResumoMensal.hide();
-        });
-      });
+    //       loaderSenadoResumoMensal.hide();
+    //     });
+    //   });
 
     axios
       .get(`${process.env.VUE_APP_API}/deputado/camararesumoanual`)
@@ -593,138 +593,138 @@ export default {
       this.$router.push(`/busca?q=${this.q || ''}`);
     },
   },
-  watch: {
-    camaraLegislatura() {
-      const chart = this.$refs.chartCamaraResumoMensal.chart;
+  // watch: {
+  //   camaraLegislatura() {
+  //     const chart = this.$refs.chartCamaraResumoMensal.chart;
 
-      switch (this.camaraLegislatura) {
-        case 56:
-          chart.series[0].hide(); // 2009
-          chart.series[1].hide(); // 2010
-          chart.series[2].hide(); // 2011
-          chart.series[3].hide(); // 2012
-          chart.series[4].hide(); // 2013
-          chart.series[5].hide(); // 2014
-          chart.series[6].hide(); // 2015
-          chart.series[7].hide(); // 2016
-          chart.series[8].hide(); // 2017
-          chart.series[9].hide(); // 2018
-          chart.series[10].show(); // 2019
-          break;
-        case 55:
-          chart.series[0].hide(); // 2009
-          chart.series[1].hide(); // 2010
-          chart.series[2].hide(); // 2011
-          chart.series[3].hide(); // 2012
-          chart.series[4].hide(); // 2013
-          chart.series[5].hide(); // 2014
-          chart.series[6].show(); // 2015
-          chart.series[7].show(); // 2016
-          chart.series[8].show(); // 2017
-          chart.series[9].show(); // 2018
-          chart.series[10].hide(); // 2019
-          break;
-        case 54:
-          chart.series[0].hide(); // 2009
-          chart.series[1].hide(); // 2010
-          chart.series[2].show(); // 2011
-          chart.series[3].show(); // 2012
-          chart.series[4].show(); // 2013
-          chart.series[5].show(); // 2014
-          chart.series[6].hide(); // 2015
-          chart.series[7].hide(); // 2016
-          chart.series[8].hide(); // 2017
-          chart.series[9].hide(); // 2018
-          chart.series[10].hide(); // 2019
-          break;
-        case 53:
-          chart.series[0].show(); // 2009
-          chart.series[1].show(); // 2010
-          chart.series[2].hide(); // 2011
-          chart.series[3].hide(); // 2012
-          chart.series[4].hide(); // 2013
-          chart.series[5].hide(); // 2014
-          chart.series[6].hide(); // 2015
-          chart.series[7].hide(); // 2016
-          chart.series[8].hide(); // 2017
-          chart.series[9].hide(); // 2018
-          chart.series[10].hide(); // 2019
-          break;
-        default:
-          for (let i = 0; i < chart.series.length; i += 1) {
-            chart.series[i].show();
-          }
-          break;
-      }
-    },
-    senadoLegislatura() {
-      const chart = this.$refs.chartSenadoResumoMensal.chart;
+  //     switch (this.camaraLegislatura) {
+  //       case 56:
+  //         chart.series[0].hide(); // 2009
+  //         chart.series[1].hide(); // 2010
+  //         chart.series[2].hide(); // 2011
+  //         chart.series[3].hide(); // 2012
+  //         chart.series[4].hide(); // 2013
+  //         chart.series[5].hide(); // 2014
+  //         chart.series[6].hide(); // 2015
+  //         chart.series[7].hide(); // 2016
+  //         chart.series[8].hide(); // 2017
+  //         chart.series[9].hide(); // 2018
+  //         chart.series[10].show(); // 2019
+  //         break;
+  //       case 55:
+  //         chart.series[0].hide(); // 2009
+  //         chart.series[1].hide(); // 2010
+  //         chart.series[2].hide(); // 2011
+  //         chart.series[3].hide(); // 2012
+  //         chart.series[4].hide(); // 2013
+  //         chart.series[5].hide(); // 2014
+  //         chart.series[6].show(); // 2015
+  //         chart.series[7].show(); // 2016
+  //         chart.series[8].show(); // 2017
+  //         chart.series[9].show(); // 2018
+  //         chart.series[10].hide(); // 2019
+  //         break;
+  //       case 54:
+  //         chart.series[0].hide(); // 2009
+  //         chart.series[1].hide(); // 2010
+  //         chart.series[2].show(); // 2011
+  //         chart.series[3].show(); // 2012
+  //         chart.series[4].show(); // 2013
+  //         chart.series[5].show(); // 2014
+  //         chart.series[6].hide(); // 2015
+  //         chart.series[7].hide(); // 2016
+  //         chart.series[8].hide(); // 2017
+  //         chart.series[9].hide(); // 2018
+  //         chart.series[10].hide(); // 2019
+  //         break;
+  //       case 53:
+  //         chart.series[0].show(); // 2009
+  //         chart.series[1].show(); // 2010
+  //         chart.series[2].hide(); // 2011
+  //         chart.series[3].hide(); // 2012
+  //         chart.series[4].hide(); // 2013
+  //         chart.series[5].hide(); // 2014
+  //         chart.series[6].hide(); // 2015
+  //         chart.series[7].hide(); // 2016
+  //         chart.series[8].hide(); // 2017
+  //         chart.series[9].hide(); // 2018
+  //         chart.series[10].hide(); // 2019
+  //         break;
+  //       default:
+  //         for (let i = 0; i < chart.series.length; i += 1) {
+  //           chart.series[i].show();
+  //         }
+  //         break;
+  //     }
+  //   },
+  //   senadoLegislatura() {
+  //     const chart = this.$refs.chartSenadoResumoMensal.chart;
 
-      switch (this.senadoLegislatura) {
-        case 55:
-          chart.series[0].hide(); // 2008
-          chart.series[1].hide(); // 2009
-          chart.series[2].hide(); // 2010
-          chart.series[3].hide(); // 2011
-          chart.series[4].hide(); // 2012
-          chart.series[5].hide(); // 2013
-          chart.series[6].hide(); // 2014
-          chart.series[7].hide(); // 2015
-          chart.series[8].hide(); // 2016
-          chart.series[9].hide(); // 2017
-          chart.series[10].hide(); // 2018
-          chart.series[11].show(); // 2019
-          break;
-        case 54:
-          chart.series[0].hide(); // 2008
-          chart.series[1].hide(); // 2009
-          chart.series[2].hide(); // 2010
-          chart.series[3].hide(); // 2011
-          chart.series[4].hide(); // 2012
-          chart.series[5].hide(); // 2013
-          chart.series[6].hide(); // 2014
-          chart.series[7].show(); // 2015
-          chart.series[8].show(); // 2016
-          chart.series[9].show(); // 2017
-          chart.series[10].show(); // 2018
-          chart.series[11].hide(); // 2019
-          break;
-        case 53:
-          chart.series[0].hide(); // 2008
-          chart.series[1].hide(); // 2009
-          chart.series[2].hide(); // 2010
-          chart.series[3].show(); // 2011
-          chart.series[4].show(); // 2012
-          chart.series[5].show(); // 2013
-          chart.series[6].show(); // 2014
-          chart.series[7].hide(); // 2015
-          chart.series[8].hide(); // 2016
-          chart.series[9].hide(); // 2017
-          chart.series[10].hide(); // 2018
-          chart.series[11].hide(); // 2019
-          break;
-        case 52:
-          chart.series[0].show(); // 2008
-          chart.series[1].show(); // 2009
-          chart.series[2].show(); // 2010
-          chart.series[3].hide(); // 2011
-          chart.series[4].hide(); // 2012
-          chart.series[5].hide(); // 2013
-          chart.series[6].hide(); // 2014
-          chart.series[7].hide(); // 2015
-          chart.series[8].hide(); // 2016
-          chart.series[9].hide(); // 2017
-          chart.series[10].hide(); // 2018
-          chart.series[11].hide(); // 2019
-          break;
-        default:
-          for (let i = 0; i < chart.series.length; i += 1) {
-            chart.series[i].show();
-          }
-          break;
-      }
-    },
-  },
+  //     switch (this.senadoLegislatura) {
+  //       case 55:
+  //         chart.series[0].hide(); // 2008
+  //         chart.series[1].hide(); // 2009
+  //         chart.series[2].hide(); // 2010
+  //         chart.series[3].hide(); // 2011
+  //         chart.series[4].hide(); // 2012
+  //         chart.series[5].hide(); // 2013
+  //         chart.series[6].hide(); // 2014
+  //         chart.series[7].hide(); // 2015
+  //         chart.series[8].hide(); // 2016
+  //         chart.series[9].hide(); // 2017
+  //         chart.series[10].hide(); // 2018
+  //         chart.series[11].show(); // 2019
+  //         break;
+  //       case 54:
+  //         chart.series[0].hide(); // 2008
+  //         chart.series[1].hide(); // 2009
+  //         chart.series[2].hide(); // 2010
+  //         chart.series[3].hide(); // 2011
+  //         chart.series[4].hide(); // 2012
+  //         chart.series[5].hide(); // 2013
+  //         chart.series[6].hide(); // 2014
+  //         chart.series[7].show(); // 2015
+  //         chart.series[8].show(); // 2016
+  //         chart.series[9].show(); // 2017
+  //         chart.series[10].show(); // 2018
+  //         chart.series[11].hide(); // 2019
+  //         break;
+  //       case 53:
+  //         chart.series[0].hide(); // 2008
+  //         chart.series[1].hide(); // 2009
+  //         chart.series[2].hide(); // 2010
+  //         chart.series[3].show(); // 2011
+  //         chart.series[4].show(); // 2012
+  //         chart.series[5].show(); // 2013
+  //         chart.series[6].show(); // 2014
+  //         chart.series[7].hide(); // 2015
+  //         chart.series[8].hide(); // 2016
+  //         chart.series[9].hide(); // 2017
+  //         chart.series[10].hide(); // 2018
+  //         chart.series[11].hide(); // 2019
+  //         break;
+  //       case 52:
+  //         chart.series[0].show(); // 2008
+  //         chart.series[1].show(); // 2009
+  //         chart.series[2].show(); // 2010
+  //         chart.series[3].hide(); // 2011
+  //         chart.series[4].hide(); // 2012
+  //         chart.series[5].hide(); // 2013
+  //         chart.series[6].hide(); // 2014
+  //         chart.series[7].hide(); // 2015
+  //         chart.series[8].hide(); // 2016
+  //         chart.series[9].hide(); // 2017
+  //         chart.series[10].hide(); // 2018
+  //         chart.series[11].hide(); // 2019
+  //         break;
+  //       default:
+  //         for (let i = 0; i < chart.series.length; i += 1) {
+  //           chart.series[i].show();
+  //         }
+  //         break;
+  //     }
+  //   },
+  // },
 };
 </script>
 
