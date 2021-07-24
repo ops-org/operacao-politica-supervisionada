@@ -87,7 +87,7 @@ namespace OPS.ImportacaoDados
             // http://www.camara.leg.br/internet/deputado/DeputadosXML_52a55.zip
 
             var doc = new XmlDocument();
-            doc.Load(@"D:\GitHub\operacao-politica-supervisionada\OPS\temp\DeputadosXML_52a55\Deputados.xml");
+            doc.Load(@"C:\Users\Lenovo\Downloads\Deputados.xml");
             XmlNode deputados = doc.DocumentElement;
 
             var deputado = deputados.SelectNodes("Deputados/Deputado");
@@ -2005,20 +2005,28 @@ namespace OPS.ImportacaoDados
 
                 foreach (DataRow dr in dt.Rows)
                 {
-                    banco.AddParameter("id_cf_deputado", dr["id"]);
-                    valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
+                    try
+                    {
+                        banco.AddParameter("id_cf_deputado", dr["id"]);
+                        valor_total_ceap = banco.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;");
 
-                    //banco.AddParameter("id_cf_deputado", dr["id"]);
-                    //quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
-                    //banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
+                        //banco.AddParameter("id_cf_deputado", dr["id"]);
+                        //quantidade_secretarios = banco.ExecuteScalar("select count(1) from cf_secretario where id_cf_deputado=@id_cf_deputado;");
+                        //banco.AddParameter("quantidade_secretarios", quantidade_secretarios);
 
-                    banco.AddParameter("valor_total_ceap", valor_total_ceap);
-                    banco.AddParameter("id_cf_deputado", dr["id"]);
-                    banco.ExecuteNonQuery(
-                        @"update cf_deputado set 
+                        banco.AddParameter("valor_total_ceap", valor_total_ceap);
+                        banco.AddParameter("id_cf_deputado", dr["id"]);
+                        banco.ExecuteNonQuery(@"
+                            update cf_deputado set 
 						    valor_total_ceap=@valor_total_ceap 
-						where id=@id_cf_deputado"
-                    );
+						    where id=@id_cf_deputado"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!ex.GetBaseException().Message.Contains("Out of range"))
+                            throw;
+                    }
                 }
             }
         }
