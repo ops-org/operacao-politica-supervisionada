@@ -15,7 +15,7 @@
         <div class="row">
           <div class="col-md-8">
             <p class="mb-1">
-              <strong>Nome Parlamentar:</strong>
+              <strong>Nome Parlamentar: </strong>
               <a
                 v-bind:href="'/deputado-federal/' + documento.id_cf_deputado"
                 title="Visualisar perfil do parlamentar"
@@ -24,7 +24,7 @@
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Partido / UF:</strong>
+              <strong>Partido / UF: </strong>
               {{documento.sigla_partido}} / {{documento.sigla_estado}}
             </p>
           </div>
@@ -32,16 +32,13 @@
         <div class="row">
           <div class="col-md-8">
             <p class="mb-1">
-              <strong>Beneficiário:</strong>
-              <a
-                v-bind:href="documento.url_beneficiario"
-                title="Visualizar perfil do beneficiario"
-              >{{documento.nome_fornecedor}}</a>
+              <strong>Beneficiário: </strong>
+              <a v-bind:href="documento.url_beneficiario" title="Visualizar perfil do beneficiario">{{documento.nome_fornecedor}}</a>
             </p>
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>CNPJ / CPF:</strong>
+              <strong>CNPJ / CPF: </strong>
               <a
                 v-bind:href="documento.url_beneficiario"
                 title="Visualizar perfil do beneficiario"
@@ -52,13 +49,13 @@
         <div class="row">
           <div class="col-md-8">
             <p class="mb-1">
-              <strong>Despesa:</strong>
+              <strong>Despesa: </strong>
               {{documento.descricao_despesa}}
             </p>
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Data do pedido de reembolso:</strong>
+              <strong>Data do pedido de reembolso: </strong>
               {{documento.competencia}}
             </p>
           </div>
@@ -66,19 +63,19 @@
         <div class="row">
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Valor da Despesa:</strong>
+              <strong>Valor da Despesa: </strong>
               {{documento.valor_documento}}
             </p>
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Valor Reembolsado:</strong>
+              <strong>Valor Reembolsado: </strong>
               {{documento.valor_liquido}}
             </p>
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Data da Despesa:</strong>
+              <strong>Data da Despesa: </strong>
               {{documento.data_emissao}}
             </p>
           </div>
@@ -86,19 +83,19 @@
         <div class="row">
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Tipo do Documento:</strong>
+              <strong>Tipo do Documento: </strong>
               {{documento.tipo_documento}}
             </p>
           </div>
           <div class="col-md-4" v-if="documento.nome_passageiro">
             <p class="mb-1">
-              <strong>Nome do Passageiro:</strong>
+              <strong>Nome do Passageiro: </strong>
               {{documento.nome_passageiro}}
             </p>
           </div>
           <div class="col-md-4" v-if="documento.trecho_viagem">
             <p class="mb-1">
-              <strong>Trecho da Viagem:</strong>
+              <strong>Trecho da Viagem: </strong>
               {{documento.trecho_viagem}}
             </p>
           </div>
@@ -120,10 +117,10 @@
             v-bind:href="documento.url_documento"
             target="_blank"
             rel="nofollow"
-          >
+          >&nbsp;
             Recibo&nbsp;
             <i class="fa fa-download"></i>
-          </a>
+          </a>&nbsp;
           <a
             v-if="documento.url_documento_nfe"
             class="btn btn-danger"
@@ -133,7 +130,7 @@
           >
             Recibo (NF-e)&nbsp;
             <i class="fa fa-download"></i>
-          </a>
+          </a>&nbsp;
           <a
             class="btn btn-light"
             v-bind:href="documento.url_detalhes_documento"
@@ -142,8 +139,8 @@
           >
             Detalhes do recibo&nbsp;
             <i class="fa fa-plus"></i>
-          </a>
-        </span>
+          </a>&nbsp;
+        </span>&nbsp;
         <a
           class="btn btn-light"
           v-bind:href="documento.url_demais_documentos_mes"
@@ -152,7 +149,7 @@
         >
           Demais Recibos do mês&nbsp;
           <i class="fa fa-plus"></i>
-        </a>
+        </a>&nbsp;
         <a
           class="btn btn-light"
           href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk="
