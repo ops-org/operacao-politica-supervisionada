@@ -7,17 +7,17 @@ using OPS.Core.Models;
 
 namespace OPS.Core.DAO
 {
-	public class FornecedorDao
-	{
+    public class FornecedorDao
+    {
 
-		public dynamic Consulta(int id)
-		{
-			using (AppDb banco = new AppDb())
-			{
-				banco.AddParameter("id", id);
+        public dynamic Consulta(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                banco.AddParameter("id", id);
 
-				using (var reader = banco.ExecuteReader(
-						@"SELECT 
+                using (var reader = banco.ExecuteReader(
+                        @"SELECT 
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
 							, pji.tipo
@@ -54,10 +54,10 @@ namespace OPS.Core.DAO
                         FROM fornecedor_atividade_secundaria fas 
                         INNER JOIN fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
                         where id_fornecedor = @id;"
-					))
-				{
-					if (reader.Read())
-					{
+                    ))
+                {
+                    if (reader.Read())
+                    {
                         var fornecedor = new
                         {
                             id_fornecedor = reader["id_fornecedor"].ToString(),
@@ -98,19 +98,19 @@ namespace OPS.Core.DAO
                         return fornecedor;
                     }
 
-					return null;
-				}
-			}
-		}
+                    return null;
+                }
+            }
+        }
 
-		public dynamic QuadroSocietario(int id)
-		{
-			try
-			{
-				using (AppDb banco = new AppDb())
-				{
-					string strSql =
-						@"SELECT
+        public dynamic QuadroSocietario(int id)
+        {
+            try
+            {
+                using (AppDb banco = new AppDb())
+                {
+                    string strSql =
+                        @"SELECT
 							fs.nome
 							, fsq1.descricao as qualificacao
 							, fs.nome_representante as nome_representante_legal
@@ -120,38 +120,38 @@ namespace OPS.Core.DAO
 						LEFT JOIN fornecedor_socio_qualificacao fsq2 on fsq2.id = fs.id_fornecedor_socio_representante_qualificacao
 						where fs.id_fornecedor = @id";
 
-					banco.AddParameter("id", id);
+                    banco.AddParameter("id", id);
 
-					using (var reader = banco.ExecuteReader(strSql))
-					{
-						List<dynamic> lstRetorno = new List<dynamic>();
-						while (reader.Read())
-						{
-							lstRetorno.Add(new
-							{
-								nome = reader["nome"].ToString(),
-								qualificacao = reader["qualificacao"].ToString(),
-								nome_representante_legal = reader["nome_representante_legal"].ToString(),
-								qualificacao_representante_legal = reader["qualificacao_representante_legal"].ToString()
-							});
-						}
+                    using (var reader = banco.ExecuteReader(strSql))
+                    {
+                        List<dynamic> lstRetorno = new List<dynamic>();
+                        while (reader.Read())
+                        {
+                            lstRetorno.Add(new
+                            {
+                                nome = reader["nome"].ToString(),
+                                qualificacao = reader["qualificacao"].ToString(),
+                                nome_representante_legal = reader["nome_representante_legal"].ToString(),
+                                qualificacao_representante_legal = reader["qualificacao_representante_legal"].ToString()
+                            });
+                        }
 
-						return lstRetorno;
-					}
-				}
-			}
-			catch (Exception)
-			{ } //TODO: logar erro
+                        return lstRetorno;
+                    }
+                }
+            }
+            catch (Exception)
+            { } //TODO: logar erro
 
-			return null;
-		}
+            return null;
+        }
 
-		public dynamic SenadoresMaioresGastos(int id)
-		{
-			using (AppDb banco = new AppDb())
-			{
-				var strSql =
-					@"SELECT
+        public dynamic SenadoresMaioresGastos(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql =
+                    @"SELECT
 						l1.id_sf_senador
 						, p.nome as nome_parlamentar
 						, l1.valor_total
@@ -167,274 +167,324 @@ namespace OPS.Core.DAO
 					) l1
 					LEFT JOIN sf_senador p ON p.id = l1.id_sf_senador";
 
-				banco.AddParameter("@id", id);
+                banco.AddParameter("@id", id);
 
-				using (var reader = banco.ExecuteReader(strSql))
-				{
-					List<dynamic> lstRetorno = new List<dynamic>();
-					while (reader.Read())
-					{
-						lstRetorno.Add(new
-						{
-							id_sf_senador = reader["id_sf_senador"].ToString(),
-							nome_parlamentar = reader["nome_parlamentar"].ToString(),
-							valor_total = Utils.FormataValor(reader["valor_total"])
-						});
-					}
+                using (var reader = banco.ExecuteReader(strSql))
+                {
+                    List<dynamic> lstRetorno = new List<dynamic>();
+                    while (reader.Read())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id_sf_senador = reader["id_sf_senador"].ToString(),
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            valor_total = Utils.FormataValor(reader["valor_total"])
+                        });
+                    }
 
-					return lstRetorno;
-				}
-			}
-		}
+                    return lstRetorno;
+                }
+            }
+        }
 
-		public dynamic DeputadoFederalMaioresGastos(int id)
-		{
-			using (AppDb banco = new AppDb())
-			{
-				var strSql = new StringBuilder();
-				strSql.Append(
-					@"SELECT
-						l1.id_cf_deputado
-						, p.nome_parlamentar
-						, l1.valor_total
-					FROM (
-						select 
-							SUM(l.valor_liquido) AS valor_total
-							, l.id_cf_deputado
-						from cf_despesa l
-						WHERE l.id_fornecedor = @id
-						GROUP BY l.id_cf_deputado
-						ORDER BY valor_total desc
-						LIMIT 10
-					) l1
-					LEFT JOIN cf_deputado p ON p.id = l1.id_cf_deputado");
+        public dynamic MaioresGastos(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.Append(@"
+SELECT id, tipo, nome_parlamentar, sigla_partido, sigla_estado, valor_total
+FROM (
+	SELECT
+		l1.id_cf_deputado AS id
+		, p.nome_parlamentar
+		, pr.sigla as sigla_partido
+		, e.sigla as sigla_estado
+		, 'Deputado Federal' as tipo
+		, l1.valor_total
+	FROM (
+		select 
+			SUM(l.valor_liquido) AS valor_total
+			, l.id_cf_deputado
+		from cf_despesa l
+		WHERE l.id_fornecedor = @id
+		GROUP BY l.id_cf_deputado
+		ORDER BY valor_total desc
+		LIMIT 10
+	) l1
+	JOIN cf_deputado p ON p.id = l1.id_cf_deputado
+	LEFT JOIN partido pr on pr.id = p.id_partido
+	LEFT JOIN estado e on e.id = p.id_estado
 
-				banco.AddParameter("@id", id);
+	UNION ALL
 
-				using (var reader = banco.ExecuteReader(strSql.ToString()))
-				{
-					List<dynamic> lstRetorno = new List<dynamic>();
-					while (reader.Read())
-					{
-						lstRetorno.Add(new
-						{
-							id_cf_deputado = reader["id_cf_deputado"].ToString(),
-							nome_parlamentar = reader["nome_parlamentar"].ToString(),
-							valor_total = Utils.FormataValor(reader["valor_total"])
-						});
-					}
+	SELECT
+		l1.id_sf_senador AS id
+		, p.nome as nome_parlamentar
+		, pr.sigla as sigla_partido
+		, e.sigla as sigla_estado
+		, 'Senador' as tipo
+		, l1.valor_total
+	FROM (
+		select 
+			SUM(l.valor) AS valor_total
+			, l.id_sf_senador
+		from sf_despesa l
+		WHERE l.id_fornecedor = @id
+		GROUP BY l.id_sf_senador
+		ORDER BY valor_total desc
+		LIMIT 10
+	) l1
+	JOIN sf_senador p ON p.id = l1.id_sf_senador
+	LEFT JOIN partido pr on pr.id = p.id_partido
+	LEFT JOIN estado e on e.id = p.id_estado
+) tmp
+ORDER BY valor_total desc
+LIMIT 10 ");
 
-					return lstRetorno;
-				}
-			}
-		}
+                banco.AddParameter("@id", id);
 
-		public dynamic RecebimentosMensaisPorAnoDeputados(int id)
-		{
-			using (AppDb banco = new AppDb())
-			{
-				string strSql = @"
-					SELECT l.mes, l.ano, SUM(l.valor_liquido) AS valor_total
-					FROM cf_despesa l
-					WHERE l.id_fornecedor = @id
-					group by l.ano, l.mes
-					order by l.ano, l.mes;
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
+                {
+                    List<dynamic> lstRetorno = new List<dynamic>();
+                    while (reader.Read())
+                    {
+                        string link_parlamentar = "", link_despesas = "";
+                        var tipo = reader["tipo"].ToString();
+                        var id_parlamentar = Convert.ToInt32(reader["id"]);
+
+                        if (tipo == "Deputado Federal")
+                        {
+                            // Deputado Federal
+                            link_parlamentar = $"/deputado-federal/{id_parlamentar}";
+                            link_despesas = $"/deputado-federal?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+
+                        }
+                        else
+                        {
+                            // Senador
+                            link_parlamentar = $"/senador/{id_parlamentar}";
+                            link_despesas = $"/senador?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+                        }
+
+                        lstRetorno.Add(new
+                        {
+                            id = id_parlamentar,
+                            tipo,
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            sigla_partido = reader["sigla_partido"].ToString(),
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            valor_total = Utils.FormataValor(reader["valor_total"]),
+                            link_parlamentar,
+                            link_despesas
+                        }); ;
+                    }
+
+                    return lstRetorno;
+                }
+            }
+        }
+
+        public async Task<dynamic> RecebimentosPorAno(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                string strSql = @"
+SELECT ano, SUM(valor) AS valor
+FROM (
+    SELECT l.ano, SUM(l.valor_liquido) AS valor
+    FROM cf_despesa l
+    WHERE l.id_fornecedor = @id
+    group by l.ano
+
+
+    UNION ALL
+
+    SELECT l.ano, SUM(l.valor) AS valor
+    FROM sf_despesa l
+    WHERE l.id_fornecedor = @id
+    group by l.ano
+) tmp
+group by ano
+order by ano
 				";
 
-				banco.AddParameter("@id", id);
+                banco.AddParameter("@id", id);
 
-				using (var reader = banco.ExecuteReader(strSql.ToString()))
-				{
-					List<dynamic> lstRetorno = new List<dynamic>();
-					var lstValoresMensais = new decimal?[12];
-					string anoControle = string.Empty;
-					bool existeGastoNoAno = false;
+                var categories = new List<dynamic>();
+                var series = new List<dynamic>();
 
-					while (reader.Read())
-					{
-						if (reader["ano"].ToString() != anoControle)
-						{
-							if (existeGastoNoAno)
-							{
-								lstRetorno.Add(new
-								{
-									name = anoControle.ToString(),
-									data = lstValoresMensais
-								});
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        categories.Add(Convert.ToInt32(reader["ano"]));
+                        series.Add(Convert.ToDecimal(reader["valor"]));
+                    }
+                }
 
-								lstValoresMensais = new decimal?[12];
-								existeGastoNoAno = false;
-							}
+                return new
+                {
+                    categories,
+                    series
+                };
+            }
+        }
 
-							anoControle = reader["ano"].ToString();
-						}
-
-						if (Convert.ToDecimal(reader["valor_total"]) > 0)
-						{
-							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
-							existeGastoNoAno = true;
-						}
-					}
-					if (existeGastoNoAno)
-					{
-						lstRetorno.Add(new
-						{
-							name = anoControle.ToString(),
-							data = lstValoresMensais
-						});
-					}
+        //		public dynamic RecebimentosMensaisPorAno(int id)
+        //		{
+        //			using (AppDb banco = new AppDb())
+        //			{
+        //				string strSql = @"
+        //SELECT l.mes, l.ano, SUM(l.valor_liquido) AS valor_total
+        //FROM cf_despesa l
+        //WHERE l.id_fornecedor = @id
+        //group by l.ano, l.mes
 
 
-					return lstRetorno;
-				}
-			}
-		}
+        //UNION ALL
 
-		public dynamic RecebimentosMensaisPorAnoSenadores(int id)
-		{
-			using (AppDb banco = new AppDb())
-			{
-				string strSql = @"
-					SELECT l.mes, l.ano, SUM(l.valor) AS valor_total
-					FROM sf_despesa l
-					WHERE l.id_fornecedor = @id
-					group by l.ano, l.mes
-					order by l.ano, l.mes;
-				";
+        //SELECT l.mes, l.ano, SUM(l.valor) AS valor_total
+        //FROM sf_despesa l
+        //WHERE l.id_fornecedor = @id
+        //group by l.ano, l.mes
 
-				banco.AddParameter("@id", id);
+        //order by ano, mes
+        //				";
 
-				using (var reader = banco.ExecuteReader(strSql.ToString()))
-				{
-					List<dynamic> lstRetorno = new List<dynamic>();
-					var lstValoresMensais = new decimal?[12];
-					string anoControle = string.Empty;
-					bool existeGastoNoAno = false;
+        //				banco.AddParameter("@id", id);
 
-					while (reader.Read())
-					{
-						if (reader["ano"].ToString() != anoControle)
-						{
-							if (existeGastoNoAno)
-							{
-								lstRetorno.Add(new
-								{
-									name = anoControle.ToString(),
-									data = lstValoresMensais
-								});
+        //				using (var reader = banco.ExecuteReader(strSql.ToString()))
+        //				{
+        //					List<dynamic> lstRetorno = new List<dynamic>();
+        //					var lstValoresMensais = new decimal?[12];
+        //					string anoControle = string.Empty;
+        //					bool existeGastoNoAno = false;
 
-								lstValoresMensais = new decimal?[12];
-								existeGastoNoAno = false;
-							}
+        //					while (reader.Read())
+        //					{
+        //						if (reader["ano"].ToString() != anoControle)
+        //						{
+        //							if (existeGastoNoAno)
+        //							{
+        //								lstRetorno.Add(new
+        //								{
+        //									name = anoControle.ToString(),
+        //									data = lstValoresMensais
+        //								});
 
-							anoControle = reader["ano"].ToString();
-						}
+        //								lstValoresMensais = new decimal?[12];
+        //								existeGastoNoAno = false;
+        //							}
 
-						if (Convert.ToDecimal(reader["valor_total"]) > 0)
-						{
-							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
-							existeGastoNoAno = true;
-						}
-					}
-					if (existeGastoNoAno)
-					{
-						lstRetorno.Add(new
-						{
-							name = anoControle.ToString(),
-							data = lstValoresMensais
-						});
-					}
+        //							anoControle = reader["ano"].ToString();
+        //						}
+
+        //						if (Convert.ToDecimal(reader["valor_total"]) > 0)
+        //						{
+        //							lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
+        //							existeGastoNoAno = true;
+        //						}
+        //					}
+        //					if (existeGastoNoAno)
+        //					{
+        //						lstRetorno.Add(new
+        //						{
+        //							name = anoControle.ToString(),
+        //							data = lstValoresMensais
+        //						});
+        //					}
 
 
-					return lstRetorno;
-				}
-			}
-		}
+        //					return lstRetorno;
+        //				}
+        //			}
+        //		}
 
-		public int AtualizaDados(Fornecedor fornecedor)
-		{
-			int id_fornecedor = 0;
+        public int AtualizaDados(Fornecedor fornecedor)
+        {
+            int id_fornecedor = 0;
 
-			using (AppDb banco = new AppDb())
-			{
-				bool fornecedor_existente = false;
+            using (AppDb banco = new AppDb())
+            {
+                bool fornecedor_existente = false;
 
-				string strSqlLocaliza = @"
+                string strSqlLocaliza = @"
 					SELECT f.id, fi.id_fornecedor
 					FROM fornecedor f
 					LEFT JOIN fornecedor_info fi on fi.id_fornecedor = f.id
 					where f.cnpj_cpf = @cnpj_cpf
 				";
-				banco.AddParameter("cnpj_cpf", fornecedor.CnpjCpf);
+                banco.AddParameter("cnpj_cpf", fornecedor.CnpjCpf);
 
-				using (var dReader = banco.ExecuteReader(strSqlLocaliza))
-				{
-					if (dReader.Read())
-					{
-						id_fornecedor = Convert.ToInt32(dReader["id"]);
-						fornecedor_existente = !Convert.IsDBNull(dReader["id_fornecedor"]);
-					}
-					else
-					{
-						throw new BusinessException("Fornecedor inexistente.");
-					}
-				}
+                using (var dReader = banco.ExecuteReader(strSqlLocaliza))
+                {
+                    if (dReader.Read())
+                    {
+                        id_fornecedor = Convert.ToInt32(dReader["id"]);
+                        fornecedor_existente = !Convert.IsDBNull(dReader["id_fornecedor"]);
+                    }
+                    else
+                    {
+                        throw new BusinessException("Fornecedor inexistente.");
+                    }
+                }
 
-				object id_fornecedor_atividade_principal;
-				object id_fornecedor_natureza_juridica;
+                object id_fornecedor_atividade_principal;
+                object id_fornecedor_natureza_juridica;
 
-				try
-				{
-					banco.AddParameter("codigo", fornecedor.AtividadePrincipal.Split(' ')[0]);
-					id_fornecedor_atividade_principal = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
-				}
-				catch (Exception)
-				{
-					id_fornecedor_atividade_principal = DBNull.Value;
-				}
+                try
+                {
+                    banco.AddParameter("codigo", fornecedor.AtividadePrincipal.Split(' ')[0]);
+                    id_fornecedor_atividade_principal = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
+                }
+                catch (Exception)
+                {
+                    id_fornecedor_atividade_principal = DBNull.Value;
+                }
 
-				try
-				{
-					banco.AddParameter("codigo", fornecedor.NaturezaJuridica.Split(' ')[0]);
-					id_fornecedor_natureza_juridica = banco.ExecuteScalar("select id from fornecedor_natureza_juridica where codigo=@codigo");
-				}
-				catch (Exception)
-				{
-					id_fornecedor_natureza_juridica = DBNull.Value;
-				}
+                try
+                {
+                    banco.AddParameter("codigo", fornecedor.NaturezaJuridica.Split(' ')[0]);
+                    id_fornecedor_natureza_juridica = banco.ExecuteScalar("select id from fornecedor_natureza_juridica where codigo=@codigo");
+                }
+                catch (Exception)
+                {
+                    id_fornecedor_natureza_juridica = DBNull.Value;
+                }
 
-				banco.AddParameter("tipo", fornecedor.Tipo);
-				banco.AddParameter("nome", fornecedor.RazaoSocial);
-				banco.AddParameter("data_de_abertura", Utils.ParseDateTime(fornecedor.DataAbertura));
-				banco.AddParameter("nome_fantasia", fornecedor.NomeFantasia);
-				banco.AddParameter("id_fornecedor_atividade_principal", id_fornecedor_atividade_principal);
-				banco.AddParameter("id_fornecedor_natureza_juridica", id_fornecedor_natureza_juridica);
-				banco.AddParameter("logradouro", fornecedor.Logradouro);
-				banco.AddParameter("numero", fornecedor.Numero);
-				banco.AddParameter("complemento", fornecedor.Complemento);
-				banco.AddParameter("cep", fornecedor.Cep);
-				banco.AddParameter("bairro", fornecedor.Bairro);
-				banco.AddParameter("municipio", fornecedor.Cidade);
-				banco.AddParameter("estado", fornecedor.Uf);
-				banco.AddParameter("situacao_cadastral", fornecedor.Situacao);
-				banco.AddParameter("data_da_situacao_cadastral", Utils.ParseDateTime(fornecedor.DataSituacao));
-				banco.AddParameter("motivo_situacao_cadastral", fornecedor.MotivoSituacao);
-				banco.AddParameter("situacao_especial", fornecedor.SituacaoEspecial);
-				banco.AddParameter("data_situacao_especial", Utils.ParseDateTime(fornecedor.DataSituacaoEspecial));
-				banco.AddParameter("endereco_eletronico", fornecedor.Email);
-				banco.AddParameter("telefone", fornecedor.Telefone);
-				banco.AddParameter("ente_federativo_responsavel", fornecedor.EnteFederativoResponsavel);
-				banco.AddParameter("capital_social", ObterValor(fornecedor.CapitalSocial));
-				//banco.AddParameter("ip_colaborador", fornecedor.UsuarioInclusao);
-				banco.AddParameter("id_fornecedor", id_fornecedor);
+                banco.AddParameter("tipo", fornecedor.Tipo);
+                banco.AddParameter("nome", fornecedor.RazaoSocial);
+                banco.AddParameter("data_de_abertura", Utils.ParseDateTime(fornecedor.DataAbertura));
+                banco.AddParameter("nome_fantasia", fornecedor.NomeFantasia);
+                banco.AddParameter("id_fornecedor_atividade_principal", id_fornecedor_atividade_principal);
+                banco.AddParameter("id_fornecedor_natureza_juridica", id_fornecedor_natureza_juridica);
+                banco.AddParameter("logradouro", fornecedor.Logradouro);
+                banco.AddParameter("numero", fornecedor.Numero);
+                banco.AddParameter("complemento", fornecedor.Complemento);
+                banco.AddParameter("cep", fornecedor.Cep);
+                banco.AddParameter("bairro", fornecedor.Bairro);
+                banco.AddParameter("municipio", fornecedor.Cidade);
+                banco.AddParameter("estado", fornecedor.Uf);
+                banco.AddParameter("situacao_cadastral", fornecedor.Situacao);
+                banco.AddParameter("data_da_situacao_cadastral", Utils.ParseDateTime(fornecedor.DataSituacao));
+                banco.AddParameter("motivo_situacao_cadastral", fornecedor.MotivoSituacao);
+                banco.AddParameter("situacao_especial", fornecedor.SituacaoEspecial);
+                banco.AddParameter("data_situacao_especial", Utils.ParseDateTime(fornecedor.DataSituacaoEspecial));
+                banco.AddParameter("endereco_eletronico", fornecedor.Email);
+                banco.AddParameter("telefone", fornecedor.Telefone);
+                banco.AddParameter("ente_federativo_responsavel", fornecedor.EnteFederativoResponsavel);
+                banco.AddParameter("capital_social", ObterValor(fornecedor.CapitalSocial));
+                //banco.AddParameter("ip_colaborador", fornecedor.UsuarioInclusao);
+                banco.AddParameter("id_fornecedor", id_fornecedor);
 
-				string sql;
-				if (!fornecedor_existente)
-				{
-					banco.AddParameter("cnpj", fornecedor.CnpjCpf);
+                string sql;
+                if (!fornecedor_existente)
+                {
+                    banco.AddParameter("cnpj", fornecedor.CnpjCpf);
 
-					sql =
-						@"INSERT INTO fornecedor_info (
+                    sql =
+                        @"INSERT INTO fornecedor_info (
 							tipo,
 							nome,
 							data_de_abertura,
@@ -488,11 +538,11 @@ namespace OPS.Core.DAO
 							@cnpj
 						)
 					";
-				}
-				else
-				{
-					sql =
-						@"UPDATE fornecedor_info SET
+                }
+                else
+                {
+                    sql =
+                        @"UPDATE fornecedor_info SET
 							tipo								= @tipo,
 							nome								= @nome,
 							data_de_abertura					= @data_de_abertura,
@@ -518,77 +568,77 @@ namespace OPS.Core.DAO
 							obtido_em							= NOW()
 						WHERE id_fornecedor						= @id_fornecedor
 					";
-				}
+                }
 
-				banco.ExecuteNonQuery(sql.ToString());
+                banco.ExecuteNonQuery(sql.ToString());
 
-				banco.AddParameter("id_fornecedor", id_fornecedor);
-				banco.ExecuteScalar("DELETE FROM fornecedor_atividade_secundaria WHERE id_fornecedor = @id_fornecedor");
+                banco.AddParameter("id_fornecedor", id_fornecedor);
+                banco.ExecuteScalar("DELETE FROM fornecedor_atividade_secundaria WHERE id_fornecedor = @id_fornecedor");
 
-				if (fornecedor.lstFornecedorQuadroSocietario != null)
-				{
-					foreach (var atividade in fornecedor.AtividadeSecundaria)
-					{
-						if (string.IsNullOrEmpty(atividade) || atividade == "********") continue;
+                if (fornecedor.lstFornecedorQuadroSocietario != null)
+                {
+                    foreach (var atividade in fornecedor.AtividadeSecundaria)
+                    {
+                        if (string.IsNullOrEmpty(atividade) || atividade == "********") continue;
 
-						object id_fornecedor_atividade;
+                        object id_fornecedor_atividade;
 
-						try
-						{
-							banco.AddParameter("codigo", atividade.Split(' ')[0]);
-							id_fornecedor_atividade = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
-						}
-						catch (Exception)
-						{
-							continue;
-						}
+                        try
+                        {
+                            banco.AddParameter("codigo", atividade.Split(' ')[0]);
+                            id_fornecedor_atividade = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
 
-						banco.AddParameter("id_fornecedor", id_fornecedor);
-						banco.AddParameter("id_fornecedor_atividade", id_fornecedor_atividade);
+                        banco.AddParameter("id_fornecedor", id_fornecedor);
+                        banco.AddParameter("id_fornecedor_atividade", id_fornecedor_atividade);
 
-						banco.ExecuteNonQuery(
-							@"INSERT fornecedor_atividade_secundaria (
+                        banco.ExecuteNonQuery(
+                            @"INSERT fornecedor_atividade_secundaria (
 								id_fornecedor, 
 								id_fornecedor_atividade
 							) VALUES (
 								@id_fornecedor, 
 								@id_fornecedor_atividade
 							)");
-					}
-				}
+                    }
+                }
 
-				banco.AddParameter("id_fornecedor", id_fornecedor);
-				banco.ExecuteScalar("DELETE FROM fornecedor_socio WHERE id_fornecedor = @id_fornecedor");
+                banco.AddParameter("id_fornecedor", id_fornecedor);
+                banco.ExecuteScalar("DELETE FROM fornecedor_socio WHERE id_fornecedor = @id_fornecedor");
 
-				if (fornecedor.lstFornecedorQuadroSocietario != null)
-				{
-					foreach (var qas in fornecedor.lstFornecedorQuadroSocietario)
-					{
-						banco.AddParameter("id_fornecedor", id_fornecedor);
-						banco.AddParameter("nome", qas.Nome);
+                if (fornecedor.lstFornecedorQuadroSocietario != null)
+                {
+                    foreach (var qas in fornecedor.lstFornecedorQuadroSocietario)
+                    {
+                        banco.AddParameter("id_fornecedor", id_fornecedor);
+                        banco.AddParameter("nome", qas.Nome);
 
-						if (!string.IsNullOrEmpty(qas.Qualificacao))
-						{
-							banco.AddParameter("id_fornecedor_socio_qualificacao", Convert.ToInt32(qas.Qualificacao.Split('-')[0]));
-						}
-						else
-						{
-							banco.AddParameter("id_fornecedor_socio_qualificacao", DBNull.Value);
-						}
+                        if (!string.IsNullOrEmpty(qas.Qualificacao))
+                        {
+                            banco.AddParameter("id_fornecedor_socio_qualificacao", Convert.ToInt32(qas.Qualificacao.Split('-')[0]));
+                        }
+                        else
+                        {
+                            banco.AddParameter("id_fornecedor_socio_qualificacao", DBNull.Value);
+                        }
 
-						banco.AddParameter("nome_representante", qas.NomeRepresentanteLegal);
+                        banco.AddParameter("nome_representante", qas.NomeRepresentanteLegal);
 
-						if (!string.IsNullOrEmpty(qas.QualificacaoRepresentanteLegal))
-						{
-							banco.AddParameter("id_fornecedor_socio_representante_qualificacao", Convert.ToInt32(qas.QualificacaoRepresentanteLegal.Split('-')[0]));
-						}
-						else
-						{
-							banco.AddParameter("id_fornecedor_socio_representante_qualificacao", DBNull.Value);
-						}
+                        if (!string.IsNullOrEmpty(qas.QualificacaoRepresentanteLegal))
+                        {
+                            banco.AddParameter("id_fornecedor_socio_representante_qualificacao", Convert.ToInt32(qas.QualificacaoRepresentanteLegal.Split('-')[0]));
+                        }
+                        else
+                        {
+                            banco.AddParameter("id_fornecedor_socio_representante_qualificacao", DBNull.Value);
+                        }
 
-						banco.ExecuteNonQuery(
-							@"INSERT fornecedor_socio (
+                        banco.ExecuteNonQuery(
+                            @"INSERT fornecedor_socio (
 								id_fornecedor, 
 								nome, 
 								id_fornecedor_socio_qualificacao, 
@@ -601,37 +651,37 @@ namespace OPS.Core.DAO
 								@nome_representante, 
 								@id_fornecedor_socio_representante_qualificacao
 							)");
-					}
-				}
+                    }
+                }
 
-				banco.AddParameter("@id", id_fornecedor);
-				banco.AddParameter("@controle", null);
-				banco.AddParameter("@mensagem", null);
+                banco.AddParameter("@id", id_fornecedor);
+                banco.AddParameter("@controle", null);
+                banco.AddParameter("@mensagem", null);
 
-				banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where id=@id;");
-			}
+                banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where id=@id;");
+            }
 
-			return id_fornecedor;
-		}
+            return id_fornecedor;
+        }
 
-		private object ObterValor(object d)
-		{
-			if (string.IsNullOrEmpty(d as string) || Convert.IsDBNull(d))
-			{
-				return DBNull.Value;
-			}
-			else
-			{
-				try
-				{
-					return Convert.ToDecimal(d.ToString().Split(' ')[0].Replace("R$", "").Trim());
-				}
-				catch (Exception)
-				{
-					return DBNull.Value;
-				}
-			}
-		}
+        private object ObterValor(object d)
+        {
+            if (string.IsNullOrEmpty(d as string) || Convert.IsDBNull(d))
+            {
+                return DBNull.Value;
+            }
+            else
+            {
+                try
+                {
+                    return Convert.ToDecimal(d.ToString().Split(' ')[0].Replace("R$", "").Trim());
+                }
+                catch (Exception)
+                {
+                    return DBNull.Value;
+                }
+            }
+        }
 
         public dynamic Consulta(string cnpj, string nome)
         {
@@ -659,7 +709,7 @@ namespace OPS.Core.DAO
                         banco.AddParameter("cnpj", cnpj + "%");
                         sSql += " AND cnpj_cpf like @cnpj";
                     }
-                    
+
                 }
                 else
                 {
@@ -716,18 +766,18 @@ namespace OPS.Core.DAO
 				");
 
                 var lstRetorno = new List<dynamic>();
-				using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
-				{
-					while (await reader.ReadAsync())
-					{
-						lstRetorno.Add(new
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
                         {
                             id_fornecedor = reader["id_fornecedor"],
                             cnpj = Utils.FormatCnpjCpf(reader["cnpj"].ToString()),
                             nome = reader["nome"].ToString(),
                             nome_fantasia = reader["nome_fantasia"].ToString(),
                             estado = reader["estado"].ToString()
-						});
+                        });
                     }
                 }
                 return lstRetorno;

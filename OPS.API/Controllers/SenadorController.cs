@@ -66,10 +66,10 @@ namespace OPS.WebApi
         }
 
         [HttpGet]
-        [Route("{id:int}/GastosMensaisPorAno")]
-        public async Task<dynamic> GastosMensaisPorAno(int id)
+        [Route("{id:int}/GastosPorAno")]
+        public async Task<dynamic> GastosPorAno(int id)
         {
-            return await dao.GastosMensaisPorAno(id);
+            return await dao.GastosPorAno(id);
         }
 
         //[HttpGet]

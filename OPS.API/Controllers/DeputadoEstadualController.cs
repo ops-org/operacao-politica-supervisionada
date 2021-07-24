@@ -49,10 +49,10 @@ namespace OPS.WebApi
 		}
 
 		[HttpGet]
-		[Route("{id:int}/GastosMensaisPorAno")]
-		public dynamic GastosMensaisPorAno(int id)
+		[Route("{id:int}/GastosPorAno")]
+		public dynamic GastosPorAno(int id)
 		{
-			return dao.GastosMensaisPorAno(id);
+			return dao.GastosPorAno(id);
 		}
 
 		//[HttpGet]

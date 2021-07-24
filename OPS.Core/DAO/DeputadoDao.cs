@@ -246,6 +246,7 @@ namespace OPS.Core.DAO
                             case 1: sTipoDocumento = "Recibo"; break;
                             case 2: case 3: sTipoDocumento = "Despesa no Exterior"; break;
                         }
+                        string cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(23));
 
                         var result = new
                         {
@@ -272,7 +273,7 @@ namespace OPS.Core.DAO
                             sigla_estado = await reader.GetValueOrDefaultAsync<string>(20),
                             sigla_partido = await reader.GetValueOrDefaultAsync<string>(21),
                             id_fornecedor = await reader.GetValueOrDefaultAsync<dynamic>(22),
-                            cnpj_cpf = await reader.GetValueOrDefaultAsync<string>(23),
+                            cnpj_cpf = cnpj_cpf,
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(24),
                             competencia = string.Format("{0:00}/{1:0000}", await reader.GetValueOrDefaultAsync<ushort>(13), await reader.GetValueOrDefaultAsync<ushort>(12)),
                             link = await reader.GetValueOrDefaultAsync<dynamic>(25),
@@ -381,65 +382,83 @@ namespace OPS.Core.DAO
             }
         }
 
-        public async Task<dynamic> GastosMensaisPorAno(int id)
+        public async Task<dynamic> GastosPorAno(int id)
         {
             using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT d.ano, d.mes, SUM(d.valor_liquido) AS valor_total
+					SELECT d.ano, SUM(d.valor_liquido) AS valor_total
 					FROM cf_despesa d
 					WHERE d.id_cf_deputado = @id
-					group by d.ano, d.mes
-					order by d.ano, d.mes
+					group by d.ano
+					order by d.ano
 				");
                 banco.AddParameter("@id", id);
 
+                var categories = new List<dynamic>();
+                var series = new List<dynamic>();
+
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    List<dynamic> lstRetorno = new List<dynamic>();
-                    var lstValoresMensais = new decimal?[12];
-                    string anoControle = string.Empty;
-                    bool existeGastoNoAno = false;
-
                     while (await reader.ReadAsync())
                     {
-                        if (reader["ano"].ToString() != anoControle)
-                        {
-                            if (existeGastoNoAno)
-                            {
-                                lstRetorno.Add(new
-                                {
-                                    name = anoControle.ToString(),
-                                    data = lstValoresMensais
-                                });
-
-                                lstValoresMensais = new decimal?[12];
-                                existeGastoNoAno = false;
-                            }
-
-                            anoControle = reader["ano"].ToString();
-                        }
-
-                        if (Convert.ToDecimal(reader["valor_total"]) > 0)
-                        {
-                            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
-                            existeGastoNoAno = true;
-                        }
+                        categories.Add(Convert.ToInt32(reader["ano"]));
+                        series.Add(Convert.ToDecimal(reader["valor_total"]));
                     }
-
-                    if (existeGastoNoAno)
-                    {
-                        lstRetorno.Add(new
-                        {
-                            name = anoControle.ToString(),
-                            data = lstValoresMensais
-                        });
-                    }
-
-                    return lstRetorno;
-                    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
                 }
+
+                return new
+                {
+                    categories,
+                    series
+                };
+
+                //using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                //{
+                //    List<dynamic> lstRetorno = new List<dynamic>();
+                //    var lstValoresMensais = new decimal?[12];
+                //    string anoControle = string.Empty;
+                //    bool existeGastoNoAno = false;
+
+                //    while (await reader.ReadAsync())
+                //    {
+                //        if (reader["ano"].ToString() != anoControle)
+                //        {
+                //            if (existeGastoNoAno)
+                //            {
+                //                lstRetorno.Add(new
+                //                {
+                //                    name = anoControle.ToString(),
+                //                    data = lstValoresMensais
+                //                });
+
+                //                lstValoresMensais = new decimal?[12];
+                //                existeGastoNoAno = false;
+                //            }
+
+                //            anoControle = reader["ano"].ToString();
+                //        }
+
+                //        if (Convert.ToDecimal(reader["valor_total"]) > 0)
+                //        {
+                //            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
+                //            existeGastoNoAno = true;
+                //        }
+                //    }
+
+                //    if (existeGastoNoAno)
+                //    {
+                //        lstRetorno.Add(new
+                //        {
+                //            name = anoControle.ToString(),
+                //            data = lstValoresMensais
+                //        });
+                //    }
+
+                //    return lstRetorno;
+                //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
+                //}
             }
         }
 

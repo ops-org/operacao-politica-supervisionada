@@ -28,14 +28,14 @@
                       </div>
                       <div class="col-sm-6">
                         <p class="mb-0">
-                            <strong>Gasto Acumulado com Pessoal:</strong>
+                            <strong>Gasto Acumulado com Pessoal: </strong>
                             <a
                               v-bind:href="'/senado/remuneracao?ag=6&sn=' + senador.id_sf_senador"
                               title="Clique para ver os gastos com pessoal em detalhes"
                               >R$ {{senador.valor_total_remuneracao}}</a>
                         </p>
                         <p class="mb-0">
-                            <strong>Gasto Acumulado CEAPS:</strong>
+                            <strong>Gasto Acumulado CEAPS: </strong>
                             <a
                               v-bind:href="'/senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'"
                               title="Clique para ver os gastos com cota parlamentar em detalhes"
@@ -53,19 +53,43 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="container-fluid">
+  
         <div class="card mb-3">
             <div class="card-header bg-light">
-                Comparativo de gastos mensais com a cota parlamentar
+                Gastos anuais com a cota parlamentar
             </div>
             <div class="card-body">
-              <highcharts :options="chartSenadorGastosPorMesOptions" ref="chartSenadorGastosPorMes"></highcharts>
+              <highcharts :options="chartSenadorGastosPorAnoOptions" ref="chartSenadorGastosPorAno"></highcharts>
             </div>
         </div>
 
         <div class="row form-group">
+            <div class="col-xs-12 col-sm-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <a class="float-right" v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=3'">Ver lista completa</a>
+                        Maiores fornecedores
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-sm" style="margin: 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:80%">Fornecedor</th>
+                                        <th style="width:20%" class="text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="row in MaioresFornecedores"  :key="row.id_fornecedor">
+                                        <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Fornecedor='+row.id_fornecedor+'&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
@@ -82,39 +106,13 @@
                                 <thead>
                                     <tr>
                                         <th style="width:80%">Fornecedor</th>
-                                        <th style="width:20%">Valor</th>
+                                        <th style="width:20%" class="text-right">Valor</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresNotas" :key="row.id_sf_despesa">
                                         <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td>{{row.valor}}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-6">
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=3'">Ver lista completa</a>
-                        Maiores fornecedores
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover table-sm" style="margin: 0;">
-                                <thead>
-                                    <tr>
-                                        <th style="width:80%">Fornecedor</th>
-                                        <th style="width:20%">Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in MaioresFornecedores"  :key="row.id_fornecedor">
-                                        <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td><a v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Fornecedor='+row.id_fornecedor+'&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td class="text-right">{{row.valor}}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -147,9 +145,9 @@ export default {
       MaioresNotas: {},
       MaioresFornecedores: {},
 
-      chartSenadorGastosPorMesOptions: {
+      chartSenadorGastosPorAnoOptions: {
         chart: {
-          type: 'column',
+          type: 'bar',
         },
 
         title: {
@@ -157,7 +155,7 @@ export default {
         },
 
         xAxis: {
-          categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+          categories: [],
         },
 
         yAxis: [{ // left y axis
@@ -171,20 +169,40 @@ export default {
           showFirstLabel: false,
         }],
 
+        legend: {
+          enabled: false,
+        },
+
         tooltip: {
           pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: <b>{point.y}</b><br/>',
           shared: true,
           crosshairs: true,
         },
 
-        series: [],
+        series: [{
+          pointWidth: 20,
+          name: 'Valor (em reais)',
+          data: [],
+          dataLabels: {
+            enabled: true,
+            // rotation: -90,
+            color: '#000',
+            align: 'right',
+            format: '{point.y:,.2f}', // one decimal
+            y: -1, // -1 pixels down from the top
+            style: {
+              fontSize: '13px',
+              fontFamily: 'Verdana, sans-serif',
+            },
+          },
+        }],
       },
     };
   },
   mounted() {
     window.document.title = 'OPS  Senador';
     this.API = process.env.VUE_APP_API;
-    // const chartSenadorGastosPorMes = this.$refs.chartSenadorGastosPorMes.chart;
+    // const chartSenadorGastosPorAno = this.$refs.chartSenadorGastosPorAno.chart;
     // const chartSenadorPresencaPercentual = this.$refs.chartSenadorPresencaPercentual.chart;
     // const chartSenadorPresencaAnual = this.$refs.chartSenadorPresencaAnual.chart;
 
@@ -197,9 +215,10 @@ export default {
       });
 
     axios
-      .get(`${process.env.VUE_APP_API}/senador/${this.id}/GastosMensaisPorAno`)
+      .get(`${process.env.VUE_APP_API}/senador/${this.id}/GastosPorAno`)
       .then((response) => {
-        this.chartSenadorGastosPorMesOptions.series = response.data;
+        this.chartSenadorGastosPorAnoOptions.series[0].data = response.data.series;
+        this.chartSenadorGastosPorAnoOptions.xAxis.categories = response.data.categories;
       });
 
     axios

@@ -158,7 +158,7 @@ namespace OPS.Core.DAO
             }
         }
 
-        public dynamic GastosMensaisPorAno(int id)
+        public dynamic GastosPorAno(int id)
         {
             using (AppDb banco = new AppDb())
             {

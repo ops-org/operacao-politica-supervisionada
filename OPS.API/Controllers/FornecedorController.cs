@@ -9,6 +9,7 @@ using OPS.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace OPS.WebApi
 {
@@ -67,31 +68,17 @@ namespace OPS.WebApi
         //}
 
         [HttpGet]
-        [Route("{id:int}/RecebimentosMensaisPorAnoDeputados")]
-        public dynamic RecebimentosMensaisPorAnoDeputados(int id)
+        [Route("{id:int}/RecebimentosPorAno")]
+        public async Task<dynamic> RecebimentosPorAno(int id)
         {
-            return dao.RecebimentosMensaisPorAnoDeputados(id);
+            return await dao.RecebimentosPorAno(id);
         }
 
         [HttpGet]
-        [Route("{id:int}/RecebimentosMensaisPorAnoSenadores")]
-        public dynamic RecebimentosMensaisPorAnoSenadores(int id)
+        [Route("{id:int}/MaioresGastos")]
+        public dynamic MaioresGastos(int id)
         {
-            return dao.RecebimentosMensaisPorAnoSenadores(id);
-        }
-
-        [HttpGet]
-        [Route("{id:int}/DeputadoFederalMaioresGastos")]
-        public dynamic DeputadoFederalMaioresGastos(int id)
-        {
-            return dao.DeputadoFederalMaioresGastos(id);
-        }
-
-        [HttpGet]
-        [Route("{id:int}/SenadoresMaioresGastos")]
-        public dynamic SenadoresMaioresGastos(int id)
-        {
-            return dao.SenadoresMaioresGastos(id);
+            return dao.MaioresGastos(id);
         }
 
         private const string urlBaseReceitaFederal = "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/";

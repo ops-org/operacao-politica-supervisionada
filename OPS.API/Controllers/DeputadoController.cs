@@ -80,10 +80,10 @@ namespace OPS.WebApi
             return await dao.SecretariosPorDeputado(id, request);
         }
 
-        [HttpGet("{id:int}/GastosMensaisPorAno")]
-        public async Task<dynamic> GastosMensaisPorAno(int id)
+        [HttpGet("{id:int}/GastosPorAno")]
+        public async Task<dynamic> GastosPorAno(int id)
         {
-            return await dao.GastosMensaisPorAno(id);
+            return await dao.GastosPorAno(id);
         }
 
         [HttpGet("Documento/{id:int}")]

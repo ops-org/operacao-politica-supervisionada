@@ -22,19 +22,19 @@
                     </div>
                     <div class="col-sm-6">
                         <p class="mb-0" title="Secretários Parlamentares">
-                            <strong>Pessoal do Gabinete:</strong>
+                            <strong>Pessoal do Gabinete: </strong>
                             <a v-bind:href="'/deputado-federal/' + id + '/secretario'" title="Clique para ver a lista de secretários">{{deputado_federal.quantidade_secretarios}} Secretário(s)</a>
                         </p>
                         <p class="mb-0">
-                            <strong>Custo Mensal do Gabinete:</strong>
+                            <strong>Custo Mensal do Gabinete: </strong>
                             <a v-bind:href="'/deputado-federal/' + id + '/secretario'" title="Clique para ver a lista de secretários">R$ {{deputado_federal.custo_secretarios}}</a>
                         </p>
                         <p class="mb-0">
-                            <strong>Gasto Acumulado CEAP:</strong>
+                            <strong>Gasto Acumulado CEAP: </strong>
                             <a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_federal.valor_total_ceap}}</a>
                         </p>
                         <p class="mb-0">
-                            <strong>Visualizar:</strong>
+                            <strong>Visualizar: </strong>
                             <a
                               v-bind:href="'https://www.camara.leg.br/deputados/' + id + '/biografia'"
                               target="_blank">Biografia</a>
@@ -50,45 +50,17 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="container-fluid">
+  
         <div class="card mb-3">
             <div class="card-header bg-light">
-                Comparativo de gastos mensais com a cota parlamentar
+                Gastos anuais com a cota parlamentar
             </div>
-            <div class="card-body chart-deputado-gastos-por-mes vld-parent" ref="DeputadoGastosPorMes">
-                <highcharts :options="chartDeputadoGastosPorMesOptions" ref="chartDeputadoGastosPorMes"></highcharts>
+            <div class="card-body chart-deputado-gastos-por-mes vld-parent" ref="DeputadoGastosPorAno">
+                <highcharts :options="chartDeputadoGastosPorAnoOptions" ref="chartDeputadoGastosPorAno"></highcharts>
             </div>
         </div>
 
         <div class="row form-group">
-            <div class="col-xs-12 col-sm-6">
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=6'">Ver lista completa</a>
-                        Maiores Notas/Recibos
-                    </div>
-                    <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
-                        <div class="table-responsive" v-if="MaioresNotas.length > 0">
-                            <table class="table table-striped table-hover table-sm" style="margin: 0;">
-                                <thead>
-                                    <tr>
-                                        <th style="width:80%">Fornecedor</th>
-                                        <th style="width:20%">Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in MaioresNotas" :key="row.id_cf_despesa">
-                                        <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td><a v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa">{{row.valor_liquido}}</a></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
@@ -101,13 +73,13 @@
                                 <thead>
                                     <tr>
                                         <th style="width:80%">Fornecedor</th>
-                                        <th style="width:20%">Valor</th>
+                                        <th style="width:20%" class="text-right">Valor</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresFornecedores" :key="row.id_fornecedor">
                                         <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td><a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -115,21 +87,49 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="card mb-3" id="deputados-presenca">
-            <div class="card-header bg-light">
-                Frequência nas Sessões Ordinárias
-            </div>
-            <div class="card-body chart-deputado-presenca vld-parent" ref="DeputadoPresenca">
-                <div class="row form-group">
-                    <div class="col-xs-12 col-sm-4">
-                        <highcharts :options="chartDeputadoPresencaPercentualOptions" ref="chartDeputadoPresencaPercentual"></highcharts>
+             <div class="col-xs-12 col-sm-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=6'">Ver lista completa</a>
+                        Maiores Notas/Recibos
                     </div>
-                    <div class="col-xs-12 col-sm-8">
-                        <highcharts :options="chartDeputadoPresencaAnualOptions" ref="chartDeputadoPresencaAnual"></highcharts>
+                    <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
+                        <div class="table-responsive" v-if="MaioresNotas.length > 0">
+                            <table class="table table-striped table-hover table-sm" style="margin: 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:80%">Fornecedor</th>
+                                        <th style="width:20%" class="text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="row in MaioresNotas" :key="row.id_cf_despesa">
+                                        <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa">{{row.valor_liquido}}</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+            </div>
+       
+            <div class="col-sm-12">
+              <div class="card mb-3" id="deputados-presenca">
+                  <div class="card-header bg-light">
+                      Frequência nas Sessões Ordinárias
+                  </div>
+                  <div class="card-body chart-deputado-presenca vld-parent" ref="DeputadoPresenca">
+                      <div class="row form-group">
+                          <div class="col-xs-12 col-sm-4">
+                              <highcharts :options="chartDeputadoPresencaPercentualOptions" ref="chartDeputadoPresencaPercentual"></highcharts>
+                          </div>
+                          <div class="col-xs-12 col-sm-8">
+                              <highcharts :options="chartDeputadoPresencaAnualOptions" ref="chartDeputadoPresencaAnual"></highcharts>
+                          </div>
+                      </div>
+                  </div>
+              </div>
             </div>
         </div>
     </div>
@@ -156,17 +156,17 @@ export default {
       MaioresNotas: {},
       MaioresFornecedores: {},
 
-      chartDeputadoGastosPorMesOptions: {
+      chartDeputadoGastosPorAnoOptions: {
         chart: {
-          type: 'column',
+          type: 'bar',
         },
 
-        title: {
+         title: {
           text: null, // 'Gasto mensal com a cota parlamentar'
         },
 
         xAxis: {
-          categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+          categories: [],
         },
 
         yAxis: [{ // left y axis
@@ -180,13 +180,33 @@ export default {
           showFirstLabel: false,
         }],
 
+        legend: {
+          enabled: false,
+        },
+
         tooltip: {
           pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: <b>{point.y}</b><br/>',
           shared: true,
           crosshairs: true,
         },
 
-        series: [],
+        series: [{
+          pointWidth: 20,
+          name: 'Valor (em reais)',
+          data: [],
+          dataLabels: {
+            enabled: true,
+            // rotation: -90,
+            color: '#000',
+            align: 'right',
+            format: '{point.y:,.2f}', // one decimal
+            y: -1, // -1 pixels down from the top
+            style: {
+              fontSize: '13px',
+              fontFamily: 'Verdana, sans-serif',
+            },
+          },
+        }],
       },
 
       chartDeputadoPresencaPercentualOptions: { },
@@ -258,9 +278,9 @@ export default {
       container: this.$refs.Detalhes,
     });
 
-    const loaderDeputadoGastosPorMes = this.$loading.show({
+    const loaderDeputadoGastosPorAno = this.$loading.show({
       fullPage: false,
-      container: this.$refs.DeputadoGastosPorMes,
+      container: this.$refs.DeputadoGastosPorAno,
     });
 
     const loaderDeputadoPresenca = this.$loading.show({
@@ -288,11 +308,12 @@ export default {
       });
 
     axios
-      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/GastosMensaisPorAno`)
+      .get(`${process.env.VUE_APP_API}/deputado/${this.id}/GastosPorAno`)
       .then((response) => {
-        this.chartDeputadoGastosPorMesOptions.series = response.data;
+        this.chartDeputadoGastosPorAnoOptions.series[0].data = response.data.series;
+        this.chartDeputadoGastosPorAnoOptions.xAxis.categories = response.data.categories;
 
-        loaderDeputadoGastosPorMes.hide();
+        loaderDeputadoGastosPorAno.hide();
       });
 
     axios

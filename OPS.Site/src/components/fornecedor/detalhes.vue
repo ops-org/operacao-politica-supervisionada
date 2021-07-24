@@ -103,7 +103,8 @@
               class="btn btn-primary"
               data-toggle="modal"
               data-target="#dvQueProcurar"
-            >O Que Procurar?</a>
+            >O Que Procurar?</a>&nbsp;
+
             <input
               id="btnReconsultarDadosReceita"
               type="button"
@@ -112,14 +113,16 @@
               title="Reconsultar dados a partir da Receita Federal"
               class="btn btn-primary btn-sm"
               style="display: none;"
-            />
+            />&nbsp;
+
             <input
               type="button"
               v-on:click="PesquisarNoMaps(fornecedor)"
               value="Pesquisar no Maps"
               title="Pesquisar Fornecedor no Maps"
               class="btn btn-light"
-            />
+            />&nbsp;
+
             <input
               type="button"
               v-on:click="PesquisarNoGoogle(fornecedor)"
@@ -138,19 +141,19 @@
         <div class="row mb-2">
           <div class="col-md-3">
             <p class="mb-1">
-              <strong>CNPJ:</strong>
+              <strong>CNPJ: </strong>
               {{fornecedor.cnpj_cpf}}
             </p>
           </div>
           <div class="col-md-3">
             <p class="mb-1">
-              <strong>Tipo:</strong>
+              <strong>Tipo: </strong>
               {{fornecedor.tipo}}
             </p>
           </div>
           <div class="col-md-3">
             <p class="mb-1">
-              <strong>Situação Cadastral:</strong>
+              <strong>Situação Cadastral: </strong>
               <span
                 v-bind:class="fornecedor.situacao_cadastral == 'ATIVA' ? 'text-success' : 'text-warning'"
               >{{fornecedor.situacao_cadastral}}</span>
@@ -158,25 +161,25 @@
           </div>
           <div class="col-md-3">
             <p class="mb-1">
-              <strong>Doador de campanha:</strong>
+              <strong>Doador de campanha: </strong>
               <span>{{fornecedor.doador == 1 ? 'Sim' : 'Não'}}</span>
             </p>
           </div>
           <div class="col-md-12">
             <p class="mb-1">
-              <strong>Razão social:</strong>
+              <strong>Razão social: </strong>
               {{fornecedor.nome}}
             </p>
           </div>
           <div class="col-md-12">
             <p class="mb-1">
-              <strong>Nome fantasia:</strong>
+              <strong>Nome fantasia: </strong>
               {{fornecedor.nome_fantasia}}
             </p>
           </div>
           <div class="col-md-12">
             <p class="mb-1">
-              <strong>Endereço:</strong>
+              <strong>Endereço: </strong>
               {{fornecedor.logradouro}}, {{fornecedor.numero}} - {{fornecedor.bairro}}
               <span
                 v-if="fornecedor.complemento"
@@ -186,25 +189,25 @@
           </div>
           <div class="col-md-6">
             <p class="mb-1">
-              <strong>Data de abertura:</strong>
+              <strong>Data de abertura: </strong>
               {{fornecedor.data_de_abertura}}
             </p>
           </div>
           <div class="col-md-6">
             <p class="mb-1">
-              <strong>E-mail:</strong>
+              <strong>E-mail: </strong>
               {{fornecedor.endereco_eletronico}}
             </p>
           </div>
           <div class="col-md-6" v-if="fornecedor.capital_social">
             <p class="mb-1">
-              <strong>Capital Social:</strong>
+              <strong>Capital Social: </strong>
               R$ {{fornecedor.capital_social}}
             </p>
           </div>
           <div class="col-md-6">
             <p class="mb-1">
-              <strong>Telefone:</strong>
+              <strong>Telefone: </strong>
               {{fornecedor.telefone}}
             </p>
           </div>
@@ -238,7 +241,7 @@
           <div class="row">
             <div class="col-md-12">
               <p class="mb-1">
-                <strong>Código e descrição da natureza jurídica:</strong>
+                <strong>Código e descrição da natureza jurídica: </strong>
                 {{fornecedor.natureza_juridica}}
               </p>
             </div>
@@ -246,31 +249,31 @@
           <div class="row">
             <div class="col-md-4">
               <p class="mb-1">
-                <strong>Data da situação cadastral:</strong>
+                <strong>Data da situação cadastral: </strong>
                 {{fornecedor.data_da_situacao_cadastral}}
               </p>
             </div>
             <div class="col-md-8" v-if="fornecedor.motivo_situacao_cadastral">
               <p class="mb-1">
-                <strong>Motivo de situação cadastral:</strong>
+                <strong>Motivo de situação cadastral: </strong>
                 {{fornecedor.motivo_situacao_cadastral}}
               </p>
             </div>
             <div class="col-md-4" v-if="fornecedor.situacao_especial">
               <p class="mb-1">
-                <strong>Situação especial:</strong>
+                <strong>Situação especial: </strong>
                 {{fornecedor.situacao_especial}}
               </p>
             </div>
             <div class="col-md-4" v-if="fornecedor.data_situacao_especial">
               <p class="mb-1">
-                <strong>Data da situação especial:</strong>
+                <strong>Data da situação especial: </strong>
                 {{fornecedor.data_situacao_especial}}
               </p>
             </div>
             <div class="col-md-4" v-if="fornecedor.ente_federativo_responsavel">
               <p class="mb-1">
-                <strong>Ente federativo responsável (EFR):</strong>
+                <strong>Ente federativo responsável (EFR): </strong>
                 {{fornecedor.ente_federativo_responsavel}}
               </p>
             </div>
@@ -313,99 +316,51 @@
           </fieldset>
         </div>
       </div>
-    </div>
-
-    <div class="container-fluid">
+   
       <div class="row form-group">
-        <div class="col-xs-12 col-sm-6">
+        <div class="col-sm-12">
           <div class="card mb-3">
-            <div class="card-header bg-light">Fornecedors Federais - Recebimentos mensais</div>
-            <div class="card-body vld-parent" ref="RecebimentosPorMesDeputados">
-              <highcharts
-                :options="chartRecebimentosPorMesDeputadosOptions"
-                ref="chartRecebimentosPorMesDeputados"
-              ></highcharts>
+            <div class="card-header bg-light">
+              Recebimentos por ano
+            </div>
+            <div class="card-body vld-parent" ref="RecebimentosPorAno">
+              <highcharts :options="chartRecebimentosPorAnoOptions" ref="chartRecebimentosPorAno"></highcharts>
             </div>
           </div>
         </div>
-        <div class="col-xs-12 col-sm-6">
+        <div class="col-sm-12">
           <div class="card mb-3">
             <div class="card-header bg-light">
-              <a
-                class="float-right"
-                v-bind:href="'/deputado-federal?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
-              >Ver lista completa</a>
-              Deputados Federais (Top 10 Acumulado)
-            </div>
-            <div class="card-body vld-parent" ref="DeputadoFederalMaioresGastos">
-              <div class="table-responsive">
-                <table class="table table-striped table-hover table-sm" style="margin: 0;">
-                  <thead>
-                    <tr>
-                      <th style="width:80%">Parlamentar</th>
-                      <th style="width:20%">Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="row in DeputadoFederalMaioresGastos" :key="row.id_fornecedor">
-                      <td>
-                        <a
-                          v-bind:href="'/deputado-federal/'+row.id_cf_deputado"
-                        >{{row.nome_parlamentar}}</a>
-                      </td>
-                      <td>
-                        <a
-                          v-bind:href="'/deputado-federal?IdParlamentar='+row.id_cf_deputado+'&Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
-                        >{{row.valor_total}}</a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div class="float-right">
+                Ver lista completa por
+                <a v-bind:href="'/deputado-federal?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'">Deputado Federal</a> ou 
+                <a v-bind:href="'/senador?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'">Senador</a>
               </div>
+              Parlamentares (Top 10 Acumulado)
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row form-group">
-        <div class="col-xs-12 col-sm-6">
-          <div class="card mb-3">
-            <div class="card-header bg-light">Senadores - Recebimentos mensais</div>
-            <div class="card-body vld-parent" ref="RecebimentosPorMesSenadores">
-              <highcharts
-                :options="chartRecebimentosPorMesSenadoresOptions"
-                ref="chartRecebimentosPorMesSenadores"
-              ></highcharts>
-            </div>
-          </div>
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <div class="card mb-3">
-            <div class="card-header bg-light">
-              <a
-                class="float-right"
-                v-bind:href="'/senador?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
-              >Ver lista completa</a>
-              Senadores (Top 10 Acumulado)
-            </div>
-            <div class="card-body vld-parent" ref="SenadoresMaioresGastos">
+            <div class="card-body vld-parent" ref="MaioresGastos">
               <div class="table-responsive">
                 <table class="table table-striped table-hover table-sm" style="margin: 0;">
+                  <caption class="d-none"></caption>
                   <thead>
                     <tr>
-                      <th style="width:80%">Parlamentar</th>
-                      <th style="width:20%">Valor</th>
+                      <th id="parlamentar">Parlamentar</th>
+                      <th id="tipo">Tipo</th>
+                      <th id="estado">Estado</th>
+                      <th id="partido">Partido</th>
+                      <th id="valor" class="text-right">Valor</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="row in SenadoresMaioresGastos" :key="row.id_sf_senador">
+                    <tr v-for="row in MaioresGastos" :key="row.id_fornecedor">
                       <td>
-                        <a v-bind:href="'/senador/'+row.id_sf_senador">{{row.nome_parlamentar}}</a>
+                        <a v-bind:href="row.link_parlamentar">{{row.nome_parlamentar}}</a>
                       </td>
-                      <td>
-                        <a
-                          v-bind:href="'/senador?IdParlamentar='+row.id_sf_senador+'&Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'"
-                        >{{row.valor_total}}</a>
+                      <td>{{row.tipo}}</td>
+                      <td>{{row.sigla_estado}}</td>
+                      <td>{{row.sigla_partido}}</td>
+                      <td class="text-right">
+                        <a v-bind:href="row.link_despesas">{{row.valor_total}}</a>
                       </td>
                     </tr>
                   </tbody>
@@ -442,7 +397,7 @@
 
 <style scoped>
 .card-body {
-  min-height: 440px;
+  min-height: 100px;
 }
 </style>
 
@@ -464,141 +419,139 @@ export default {
     return {
       fornecedor: {},
       quadro_societario: {},
-      DeputadoFederalMaioresGastos: {},
-      SenadoresMaioresGastos: {},
+      MaioresGastos: {},
 
-      chartRecebimentosPorMesSenadoresOptions: {
+      // chartRecebimentosPorAnoOptions: {
+      //   chart: {
+      //     type: 'bar',
+      //   },
+
+      //   title: {
+      //     text: null,
+      //   },
+
+      //   xAxis: {
+      //     categories: [
+      //       'Jan',
+      //       'Fev',
+      //       'Mar',
+      //       'Abr',
+      //       'Maio',
+      //       'Jun',
+      //       'Jul',
+      //       'Ago',
+      //       'Set',
+      //       'Out',
+      //       'Nov',
+      //       'Dez',
+      //     ],
+      //   },
+
+      //   yAxis: [
+      //     {
+      //       tickAmount: 10,
+      //       title: {
+      //         text: 'Valor (em reais)',
+      //       },
+      //       labels: {
+      //         align: 'left',
+      //         x: 3,
+      //         y: 16,
+      //         format: '{value:.,0f}',
+      //       },
+      //       showFirstLabel: false,
+      //     },
+      //   ],
+
+      //   tooltip: {
+      //     shared: true,
+      //     crosshairs: true,
+      //     pointFormat:
+      //       '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
+      //   },
+
+      //   plotOptions: {
+      //     series: {
+      //       stacking: 'normal',
+      //     },
+      //   },
+
+      //   legend: {
+      //     layout: 'vertical',
+      //     align: 'right',
+      //     verticalAlign: 'top',
+      //     floating: true,
+      //     borderWidth: 1,
+      //     shadow: true,
+      //   },
+
+      //   series: [],
+      // },
+
+      chartRecebimentosPorAnoOptions: {
         chart: {
           type: 'bar',
+          // height: 500,
         },
 
         title: {
           text: null,
         },
 
-        xAxis: {
-          categories: [
-            'Jan',
-            'Fev',
-            'Mar',
-            'Abr',
-            'Maio',
-            'Jun',
-            'Jul',
-            'Ago',
-            'Set',
-            'Out',
-            'Nov',
-            'Dez',
-          ],
+        xAxis:
+        {
+          categories: [],
         },
 
-        yAxis: [
-          {
-            tickAmount: 10,
-            title: {
-              text: 'Valor (em reais)',
-            },
-            labels: {
-              align: 'left',
-              x: 3,
-              y: 16,
-              format: '{value:.,0f}',
-            },
-            showFirstLabel: false,
+        yAxis: [{ // left y axis
+          title: {
+            text: 'Valor (em reais)',
           },
-        ],
+          // labels: {
+          //    align: 'left',
+          //    x: 3,
+          //    y: 16,
+          //    format: '{value:,.0f}'
+          // },
+          showFirstLabel: false,
+        }],
+
+        legend: {
+          enabled: false,
+        },
 
         tooltip: {
           shared: true,
           crosshairs: true,
-          pointFormat:
-            '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
+          pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>',
         },
 
         plotOptions: {
-          series: {
-            stacking: 'normal',
-          },
+            series: {
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true
+                }
+            }
         },
 
-        legend: {
-          layout: 'vertical',
-          align: 'right',
-          verticalAlign: 'top',
-          floating: true,
-          borderWidth: 1,
-          shadow: true,
-        },
-
-        series: [],
-      },
-
-      chartRecebimentosPorMesDeputadosOptions: {
-        chart: {
-          type: 'bar',
-        },
-
-        title: {
-          text: null,
-        },
-
-        xAxis: {
-          categories: [
-            'Jan',
-            'Fev',
-            'Mar',
-            'Abr',
-            'Maio',
-            'Jun',
-            'Jul',
-            'Ago',
-            'Set',
-            'Out',
-            'Nov',
-            'Dez',
-          ],
-        },
-
-        yAxis: [
-          {
-            tickAmount: 10,
-            title: {
-              text: 'Valor (em reais)',
+        series: [{
+          pointWidth: 20,
+          name: 'Fornecedor',
+          data: [],
+          dataLabels: {
+            enabled: true,
+            // rotation: -90,
+            color: '#000',
+            align: 'right',
+            format: '{point.y:,.2f}', // one decimal
+            y: -1, // -1 pixels down from the top
+            style: {
+              fontSize: '13px',
+              fontFamily: 'Verdana, sans-serif',
             },
-            labels: {
-              align: 'left',
-              x: 3,
-              y: 16,
-              format: '{value:.,0f}',
-            },
-            showFirstLabel: false,
           },
-        ],
-
-        tooltip: {
-          shared: true,
-          crosshairs: true,
-          pointFormat:
-            '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:.,2f}</b><br/>',
-        },
-
-        plotOptions: {
-          series: {
-            stacking: 'normal',
-          },
-        },
-
-        legend: {
-          layout: 'vertical',
-          align: 'right',
-          verticalAlign: 'top',
-          floating: true,
-          borderWidth: 1,
-          shadow: true,
-        },
-
-        series: [],
+        }],
       },
     };
   },
@@ -609,24 +562,14 @@ export default {
       container: this.$refs.Detalhes,
     });
 
-    const loaderDeputadoFederalMaioresGastos = this.$loading.show({
+    const loaderMaioresGastos = this.$loading.show({
       fullPage: false,
-      container: this.$refs.DeputadoFederalMaioresGastos,
+      container: this.$refs.MaioresGastos,
     });
 
-    const loaderSenadoresMaioresGastos = this.$loading.show({
+    const loaderRecebimentosPorMes = this.$loading.show({
       fullPage: false,
-      container: this.$refs.SenadoresMaioresGastos,
-    });
-
-    const loaderRecebimentosPorMesDeputados = this.$loading.show({
-      fullPage: false,
-      container: this.$refs.RecebimentosPorMesDeputados,
-    });
-
-    const loaderRecebimentosPorMesSenadores = this.$loading.show({
-      fullPage: false,
-      container: this.$refs.RecebimentosPorMesSenadores,
+      container: this.$refs.RecebimentosPorMes,
     });
 
     axios.get(`${process.env.VUE_APP_API}/fornecedor/${this.id}`).then((response) => {
@@ -659,36 +602,21 @@ export default {
 
     axios
       .get(
-        `${process.env.VUE_APP_API}/fornecedor/${this.id}/DeputadoFederalMaioresGastos`,
+        `${process.env.VUE_APP_API}/fornecedor/${this.id}/MaioresGastos`,
       )
       .then((response) => {
-        this.DeputadoFederalMaioresGastos = response.data;
-        loaderDeputadoFederalMaioresGastos.hide();
-      });
-
-    axios
-      .get(`${process.env.VUE_APP_API}/fornecedor/${this.id}/SenadoresMaioresGastos`)
-      .then((response) => {
-        this.SenadoresMaioresGastos = response.data;
-        loaderSenadoresMaioresGastos.hide();
+        this.MaioresGastos = response.data;
+        loaderMaioresGastos.hide();
       });
 
     axios
       .get(
-        `${process.env.VUE_APP_API}/fornecedor/${this.id}/RecebimentosMensaisPorAnoDeputados`,
+        `${process.env.VUE_APP_API}/fornecedor/${this.id}/RecebimentosPorAno`,
       )
       .then((response) => {
-        this.chartRecebimentosPorMesDeputadosOptions.series = response.data;
-        loaderRecebimentosPorMesDeputados.hide();
-      });
-
-    axios
-      .get(
-        `${process.env.VUE_APP_API}/fornecedor/${this.id}/RecebimentosMensaisPorAnoSenadores`,
-      )
-      .then((response) => {
-        this.chartRecebimentosPorMesSenadoresOptions.series = response.data;
-        loaderRecebimentosPorMesSenadores.hide();
+        this.chartRecebimentosPorAnoOptions.series[0].data = response.data.series;
+        this.chartRecebimentosPorAnoOptions.xAxis.categories = response.data.categories;
+        loaderRecebimentosPorMes.hide();
       });
   },
   methods: {
