@@ -57,9 +57,14 @@ namespace OPS.API
                 options.AddPolicy("CorsPolicy",
                 builder =>
                 {
+#if DEBUG
                     builder
                         .AllowAnyOrigin()
-                        //.WithOrigins("http://localhost", "http://*.ops.net.br", "https://*.ops.net.br", "http://ops.net.br", "https://ops.net.br")
+                        .WithHeaders(HeaderNames.ContentType, HeaderNames.Origin, HeaderNames.AccessControlAllowOrigin, "x-custom-header", "accept")
+                        .WithMethods("POST", "GET", "OPTIONS");
+#else
+                    builder
+                        .WithOrigins("http://*.ops.net.br", "https://*.ops.net.br", "http://ops.net.br", "https://ops.net.br")
                         // Support https://*.domain.com
                         //.SetIsOriginAllowedToAllowWildcardSubdomains()
 
@@ -74,6 +79,8 @@ namespace OPS.API
                         .WithHeaders(HeaderNames.ContentType, HeaderNames.Origin, HeaderNames.AccessControlAllowOrigin, "x-custom-header", "accept")
                         // Web Verbs like GET, POST, default enabled
                         .WithMethods("POST", "GET", "OPTIONS");
+#endif
+
                 });
             });
 

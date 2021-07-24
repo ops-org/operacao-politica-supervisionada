@@ -2,10 +2,6 @@
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
-    "iis": {
-      "applicationUrl": "http://localhost/OPS.API",
-      "sslPort": 0
-    },
     "iisExpress": {
       "applicationUrl": "http://localhost:5200",
       "sslPort": 5201
@@ -13,17 +9,9 @@
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "launchUrl": "indicadores/parlamentarresumogastos",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "OPS.API": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "inicio/parlamentarresumogastos",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
