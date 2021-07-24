@@ -7,7 +7,9 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace OPS.ImportacaoDados
 {
@@ -76,8 +78,16 @@ namespace OPS.ImportacaoDados
             }
         }
 
-        public static string ConsultarReceitaWS()
+        public static async Task<string> ConsultarReceitaWS(string receitaWsApiToken, string telegramApiToken)
         {
+            var telegram = new TelegramApi(telegramApiToken);
+            var telegraMessage = new Core.Entity.TelegramMessage()
+            {
+                ChatId = "-1001378778982", // OPS - Alertas
+                ParseMode = "html",
+                Text = ""
+            };
+
             var sb = new StringBuilder();
             var strInfoAdicional = new StringBuilder();
             int RateLimit_Remaining = 3;
@@ -96,16 +106,18 @@ namespace OPS.ImportacaoDados
                     where char_length(f.cnpj_cpf) = 14
                     and f.cnpj_cpf <> '00000000000000'
                     -- and obtido_em < '2018-01-01'
-                    and fi.id_fornecedor is null
+                    -- and fi.id_fornecedor is null
                     -- and ip_colaborador not like '1805%'
                     -- and fi.id_fornecedor is null
                     -- and ip_colaborador is null -- not in ('170509', '170510', '170511', '170512')
                     -- and controle is null
                     -- and controle <> 0
 					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
-					-- and controle <> 5
-					and (controle is null or controle NOT IN (2, 3, 5))
-                    order by f.id desc");
+					-- and (controle is null or controle NOT IN (0, 2, 3, 5))
+                    and (controle is null or controle NOT IN (0, 3))
+                    AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
+                    order by fi.obtido_em asc
+                    LIMIT 2, 10000");
 
                 if (dtFornecedores.Rows.Count == 0)
                 {
@@ -118,7 +130,7 @@ namespace OPS.ImportacaoDados
             }
 
             Console.WriteLine("Consultando CNPJ's Local: {0} itens.", dtFornecedores.Rows.Count);
-            //var watch = System.Diagnostics.Stopwatch.StartNew();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
 
             int i = 0;
             foreach (DataRow item in dtFornecedores.Rows)
@@ -135,32 +147,38 @@ namespace OPS.ImportacaoDados
                     Console.WriteLine("CNPJ Invalido: " + item["cnpj_cpf"] + " - " + i);
 
                     strInfoAdicional.Append("<p>Empresa invalida importada:" + item["id"].ToString() + " - " + item["cnpj_cpf"].ToString() + " - " + item["nome"].ToString() + "; Motivo: CNPJ Invalido</p>");
+
+                    telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
+                    telegram.SendMessage(telegraMessage);
                     continue;
                 }
 
-                Console.WriteLine("Consultando CNPJ: " + item["cnpj_cpf"] + " - " + i);
+                //Console.WriteLine("Consultando CNPJ: " + item["cnpj_cpf"] + " - " + i);
                 FornecedorInfo receita = null;
 
                 try
                 {
                     using (HttpClient client = new HttpClient())
                     {
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", receitaWsApiToken);
+
                         //--------------------------------
                         string uriString;
-                        HttpResponseMessage response = null;
 
                         uriString = string.Format("https://www.receitaws.com.br/v1/cnpj/{0}", item["cnpj_cpf"].ToString());
                         client.BaseAddress = new Uri(uriString);
 
                         if (RateLimit_Remaining == 0)
                         {
-                            Console.WriteLine("Rate limit atingido!");
-                            System.Threading.Thread.Sleep(60000);
+                            watch.Stop();
+                            Console.WriteLine("Rate limit atingido! " + (60 - watch.Elapsed.TotalSeconds).ToString());
+                            System.Threading.Thread.Sleep(60100 - (int)watch.ElapsedMilliseconds);
+                            watch.Restart();
                         }
 
                         //Setar o Timeout do client quando é API BASICA
-                        client.Timeout = TimeSpan.FromMilliseconds(1000);
-                        response = client.GetAsync(string.Empty).Result;
+                        //client.Timeout = TimeSpan.FromMilliseconds(5000);
+                        HttpResponseMessage response = await client.GetAsync(string.Empty);
 
                         //var rateLimit = response.Headers.FirstOrDefault(x => x.Key == "X-RateLimit-Limit");
                         //var retryAfter = response.Headers.FirstOrDefault(x => x.Key == "RetryAfter"); // A API do ReceitaWS infelizmente não retorna um valor de retryAfter, então temos que usar um sleep num valor padrão.
@@ -181,15 +199,21 @@ namespace OPS.ImportacaoDados
 
                         if (response.IsSuccessStatusCode)
                         {
-                            var responseContent = response.Content;
-
-                            string responseString = responseContent.ReadAsStringAsync().Result;
-
+                            string responseString = await response.Content.ReadAsStringAsync();
                             receita = (FornecedorInfo)JsonConvert.DeserializeObject(responseString, typeof(FornecedorInfo));
                         }
                         else
                         {
-                            InserirControle(1, item["cnpj_cpf"].ToString(), response.RequestMessage.ToString());
+                            if(response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                            {
+                                Console.WriteLine(response.ReasonPhrase);
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                            else
+                            {
+                                InserirControle(1, item["cnpj_cpf"].ToString(), response.ReasonPhrase.ToString());
+                            }
+                            
                             continue;
                         }
                     }
@@ -402,13 +426,37 @@ namespace OPS.ImportacaoDados
 
                             if (receita.situacao != "ATIVA")
                             {
-                                strInfoAdicional.Append("<p>Empresa inativa importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + receita.nome + "</p>");
+                                var enviarAlerta = false;
+
+                                if (!string.IsNullOrEmpty(receita.data_situacao_especial))
+                                {
+                                    banco.AddParameter("@id", Convert.ToInt32(item["id"]));
+                                    var ulimaNota = banco.ExecuteScalar(@"
+SELECT MAX(DATA) as data FROM (
+	SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = @id
+	UNION
+	SELECT MAX(d.data_documento) FROM sf_despesa d WHERE d.id_fornecedor = @id
+	UNION
+	SELECT MAX(d.data) FROM cl_despesa d WHERE d.id_fornecedor = @id
+)
+");
+                                    if (ulimaNota != null && Convert.ToDateTime(ulimaNota) > Convert.ToDateTime(receita.data_situacao_especial))
+                                        enviarAlerta = true;
+                                }
+
+                                if (enviarAlerta)
+                                {
+                                    strInfoAdicional.Append("<p>Empresa inativa importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + receita.nome + "</p>");
+
+                                    telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>";
+                                    telegram.SendMessage(telegraMessage);
+                                }
                             }
 
                             banco.CommitTransaction();
 
                             InserirControle(0, item["cnpj_cpf"].ToString(), "");
-                            Console.WriteLine("Atualizando CNPJ: " + item["cnpj_cpf"] + " - " + i);
+                            Console.WriteLine($"Atualizando CNPJ: {receita.cnpj} {receita.nome} - " + i);
                         }
                         catch (Exception)
                         {
@@ -420,6 +468,9 @@ namespace OPS.ImportacaoDados
                         InserirControle(2, item["cnpj_cpf"].ToString(), receita.message);
 
                         strInfoAdicional.Append("<p>Empresa invalida importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + item["nome"].ToString() + "; Motivo: " + receita.message + "</p>");
+
+                        telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>; Motivo: {receita.message}";
+                        telegram.SendMessage(telegraMessage);
                     }
                 }
             }

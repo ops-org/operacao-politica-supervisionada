@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using CsvHelper;
+using Microsoft.Extensions.Configuration;
 using OPS.Core;
 using OPS.ImportacaoDados;
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -135,20 +138,25 @@ namespace OPS.ImportacaoManual
             }
             else
             {
-                //ImportacaoDadosCompleto(configuration).Wait();
-
-
+                var TelegramApiToken = configuration["AppSettings:TelegramApiToken"];
+                var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
                 var sb = new StringBuilder();
                 var rootPath = configuration["AppSettings:SiteRootFolder"];
-                var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
-                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
-                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
+                var tempPath = System.IO.Path.Combine(rootPath, "temp");
+                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "img/depfederal/");
+                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "img/senador/");
                 //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
 
                 ////var tempPath = configuration["AppSettings:SiteTempFolder"];
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
 
+
+                //var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
+                //sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
+
+                //Camara.ImportarMandatos();
+                //ImportarPartidos().Wait();
 
                 //var data = new DateTime(2012, 9, 1);
                 //do
@@ -225,7 +233,7 @@ namespace OPS.ImportacaoManual
                 //Senado.ImportarDespesas(tempPath, 2017, false);
                 //#endregion Senado
 
-                //Fornecedor.ConsultarReceitaWS();
+                Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken).Wait();
 
                 //var s = Camara.ImportarDeputados(
                 //    @"D:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
@@ -312,7 +320,7 @@ namespace OPS.ImportacaoManual
 
                 //                File.Move(fileName, fileNameOK);
                 //            }
-                //            catch (Exception e)
+                //            catch (Exception e)r
                 //            {
                 //                //Console.WriteLine(e.Message);
                 //            }
@@ -333,9 +341,11 @@ namespace OPS.ImportacaoManual
         private static async Task ImportacaoDadosCompleto(IConfiguration configuration)
         {
             var rootPath = configuration["AppSettings:SiteRootFolder"];
-            var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
-            var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
-            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
+            var TelegramApiToken = configuration["AppSettings:TelegramApiToken"];
+            var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
+            var tempPath = System.IO.Path.Combine(rootPath, "temp");
+            var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "img/depfederal/");
+            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "img/senador/");
 
             try
             {
@@ -400,7 +410,7 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.Append("<strong>-- Importar Presenças Deputados :: @duracao --</strong>");
+                //sb.AppendLine("<strong>-- Importar Presenças Deputados :: @duracao --</strong>");
                 //sw.Restart();
                 //try
                 //{
@@ -415,8 +425,9 @@ namespace OPS.ImportacaoManual
 
 
 
-                sb.AppendFormat("<strong>-- Importar Secretários parlamentares {0} :: @duracao --</strong>", DateTime.Now.Year);
-                sw.Restart();
+                //sb.AppendFormat("<strong>-- Importar Secretários parlamentares {0} :: @duracao --</strong>", DateTime.Now.Year);
+                //sb.AppendLine();
+                //sw.Restart();
 
                 ////Instantiate DI container for the application  
                 //var serviceCollection = new ServiceCollection();
@@ -434,8 +445,9 @@ namespace OPS.ImportacaoManual
                 //t = sw.Elapsed;
                 //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendLine();
+
                 sb.AppendFormat("<strong>-- Importar Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
+                sb.AppendLine();
                 sw.Restart();
                 try
                 {
@@ -450,6 +462,7 @@ namespace OPS.ImportacaoManual
 
                 sb.AppendLine();
                 sb.AppendFormat("<strong>-- Importar Imagens Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
+                sb.AppendLine();
                 sw.Restart();
                 try
                 {
@@ -464,6 +477,7 @@ namespace OPS.ImportacaoManual
 
                 sb.AppendLine();
                 sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year - 1);
+                sb.AppendLine();
                 sw.Restart();
                 try
                 {
@@ -476,7 +490,9 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
+                sb.AppendLine();
                 sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year);
+                sb.AppendLine();
                 sw.Restart();
                 try
                 {
@@ -489,23 +505,23 @@ namespace OPS.ImportacaoManual
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                //try
-                //{
-                //    var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
-                //    sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
-                //}
-                //catch (Exception ex)
-                //{
-                //    sb.Append(ex.ToFullDescriptionString());
-                //}
-                //t = sw.Elapsed;
-                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                try
+                {
+                    var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
+                    sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
+                }
+                catch (Exception ex)
+                {
+                    sb.Append(ex.ToFullDescriptionString());
+                }
+                t = sw.Elapsed;
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
                 sb.Append("<strong>-- Consultar Receita WS :: @duracao --</strong>");
                 sw.Restart();
                 try
                 {
-                    sb.Append(Fornecedor.ConsultarReceitaWS());
+                    sb.Append(await Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken));
                 }
                 catch (Exception ex)
                 {
@@ -563,5 +579,99 @@ namespace OPS.ImportacaoManual
         //    }
         //    return pages;
         //}
+
+
+        private static async Task ImportarPartidos()
+        {
+            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+            var sb = new StringBuilder();
+            var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
+
+            int indice = 0;
+            int Legenda = indice++;
+            int Imagem = indice++;
+            int Sigla = indice++;
+            int Nome = indice++;
+            int Sede = indice++;
+            int Fundacao = indice++;
+            int RegistroSolicitacao = indice++;
+            int RegistroProvisorio = indice++;
+            int RegistroDefinitivo = indice++;
+            int Extincao = indice++;
+            int Motivo = indice++;
+
+            using (var banco = new AppDb())
+            {
+                using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
+                {
+                    using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
+                    {
+                        //csv.Configuration.Delimiter = ",";
+
+                        using (WebClient client = new WebClient())
+                        {
+                            client.Headers.Add("User-Agent: Other");
+
+                            while (csv.Read())
+                            {
+                                if (csv[Imagem] == "LOGO") continue;
+
+                                if (csv[Imagem] != "")
+                                {
+                                    try
+                                    {
+                                        MatchCollection m1 = Regex.Matches(csv[Imagem], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
+                                        if (m1.Count > 0)
+                                        {
+                                            var link = m1[0].Groups[1].Value;
+
+                                            var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
+                                            if (!File.Exists(arquivo))
+                                                client.DownloadFile(link, arquivo);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+
+                                banco.AddParameter("legenda", csv[Legenda] != "-" ? csv[Legenda] : null);
+                                banco.AddParameter("sigla", csv[Sigla] != "??" ? csv[Sigla] : null);
+                                banco.AddParameter("nome", csv[Nome]);
+                                banco.AddParameter("sede", csv[Sede] != "??" ? csv[Sede] : null);
+                                banco.AddParameter("fundacao", AjustarData(csv[Fundacao]));
+                                banco.AddParameter("registro_solicitacao", AjustarData(csv[RegistroSolicitacao]));
+                                banco.AddParameter("registro_provisorio", AjustarData(csv[RegistroProvisorio]));
+                                banco.AddParameter("registro_definitivo", AjustarData(csv[RegistroDefinitivo]));
+                                banco.AddParameter("extincao", AjustarData(csv[Extincao]));
+                                banco.AddParameter("motivo", csv[Motivo]);
+
+                                banco.ExecuteNonQuery(
+                                    @"INSERT INTO partido_todos (
+                                        legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
+                                    ) VALUES (
+                                        @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
+                                    )");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static DateTime? AjustarData(string d)
+        {
+            if (!d.Contains("??/??/??") && d != "ATUAL" && d != "-")
+            {
+                d = d.Replace("??", "01");
+                if (d.Length == 10)
+                    return DateTime.Parse(d);
+                else
+                    return DateTime.ParseExact(d, "dd/MM/yy", CultureInfo.InvariantCulture);
+            }
+
+            return null;
+        }
     }
 }
