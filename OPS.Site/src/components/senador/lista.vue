@@ -729,6 +729,12 @@ export default {
                 label: 'Valor',
                 sortable: true,
                 className: 'text-right',
+                render: (data, type, full) => {
+                  if (type === 'display') {
+                    return `<a href="https://www6g.senado.leg.br/transparencia/sen/download/cotas/documento/${full.id_sf_despesa}">${data}</a>`;
+                  }
+                  return data;
+                },
               },
             };
             break;
