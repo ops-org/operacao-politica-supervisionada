@@ -14,13 +14,19 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
+using AngleSharp;
 using CsvHelper;
 using ICSharpCode.SharpZipLib.Zip;
 using OPS.Core;
 using RestSharp;
+using AngleSharp.Html.Dom;
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace OPS.ImportacaoDados
 {
@@ -2402,6 +2408,629 @@ namespace OPS.ImportacaoDados
             banco.ExecuteNonQuery(@"
 				truncate table cf_remuneracao_temp;
 			");
+        }
+
+        public static void ColetaDadosDeputados()
+        {
+            //            var sqlDeputados = @"
+            //SELECT DISTINCT cd.id as id_cf_deputado
+            //FROM cf_deputado cd 
+            //JOIN cf_funcionario_contratacao c ON c.id_cf_deputado = cd.id AND c.periodo_ate IS NULL
+            //-- WHERE id_legislatura = 56                                 
+            //-- and cd.id >= 141428
+            //and cd.processado = 0
+            //order by cd.id
+            //";
+
+            var sqlDeputados = @"
+SELECT DISTINCT cd.id as id_cf_deputado, cd.situacao
+FROM cf_deputado cd 
+JOIN cf_mandato m ON m.id_cf_deputado = cd.id
+WHERE id_legislatura = 56                                 
+-- and cd.id >= 141428
+-- and cd.processado = 0
+order by cd.situacao, cd.id
+";
+
+            ConcurrentQueue<Dictionary<string, object>> queue;
+            using (var db = new AppDb())
+            {
+                var dcDeputado = db.ExecuteDict(sqlDeputados);
+                queue = new ConcurrentQueue<Dictionary<string, object>>(dcDeputado);
+            }
+
+            int totalRecords = 20;
+            Task[] tasks = new Task[totalRecords];
+            for (int i = 0; i < totalRecords; ++i)
+            {
+                int j = i;
+                tasks[j] = Task.Factory.StartNew(() =>
+                {
+                    ProcessaFilaColetaDadosDeputados(queue).Wait();
+                });
+            }
+
+            Task.WaitAll(tasks);
+        }
+
+        private static async Task ProcessaFilaColetaDadosDeputados(ConcurrentQueue<Dictionary<string, object>> queue)
+        {
+            Dictionary<string, object> deputado = null;
+            var config = Configuration.Default.WithDefaultLoader();
+            var context = BrowsingContext.New(config);
+
+            var sqlInsertImovelFuncional = "insert ignore into cf_deputado_imovel_funcional (id_cf_deputado, uso_de, uso_ate, total_dias) values (@id_cf_deputado, @uso_de, @uso_ate, @total_dias)";
+
+            using (var db = new AppDb())
+            {
+                while (queue.TryDequeue(out deputado))
+                {
+                    var idDeputado = Convert.ToInt32(deputado["id_cf_deputado"]);
+                    Console.WriteLine($"Deputado: {idDeputado}");
+
+                    var address = $"https://www.camara.leg.br/deputados/{idDeputado}";
+                    var document = await context.OpenAsync(address);
+                    if (document.StatusCode != HttpStatusCode.OK)
+                    {
+                        Console.WriteLine(document.StatusCode);
+                    };
+
+                    bool possuiPassaporteDiplimatico = false;
+
+                    var anosmandatos = document.QuerySelectorAll(".linha-tempo li").Select(x => Convert.ToInt32(x.TextContent.Trim()));
+                    if (!anosmandatos.Any()) continue;
+
+                    foreach (var ano in anosmandatos)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"Ano: {ano}");
+                        address = $"https://www.camara.leg.br/deputados/{idDeputado}/_recursos?ano={ano}";
+                        document = await context.OpenAsync(address);
+
+                        var lstInfo = document.QuerySelectorAll(".beneficio");
+                        foreach (var info in lstInfo)
+                        {
+                            try
+                            {
+                                var titulo = info.QuerySelector(".beneficio__titulo")?.TextContent?.Replace(" ?", "")?.Trim();
+                                var valor = info.QuerySelector(".beneficio__info")?.TextContent?.Trim(); //Replace \n
+
+                                switch (titulo)
+                                {
+                                    case "Pessoal de gabinete":
+                                        if (valor != "0 pessoas")
+                                        {
+                                            await ColetaPessoalGabinete(db, context, idDeputado, ano);
+                                        }
+                                        break;
+                                    case "Salário mensal bruto":
+                                        // Nada
+                                        break;
+                                    case "Imóvel funcional":
+                                        if (valor != "Não fez uso" && valor != "Não faz uso")
+                                        {
+                                            var lstImovelFuncional = valor.Split("\n");
+                                            foreach (var item in lstImovelFuncional)
+                                            {
+                                                var periodos = item.Trim().Split(" ");
+
+                                                var dataInicial = DateTime.Parse(periodos[3]);
+                                                DateTime? dataFinal = null;
+                                                int? dias = null;
+
+                                                if (!item.Contains("desde"))
+                                                {
+                                                    dataFinal = DateTime.Parse(periodos[5]);
+                                                    dias = (int)dataFinal.Value.Subtract(dataInicial).TotalDays;
+                                                }
+
+                                                db.AddParameter("@id_cf_deputado", idDeputado);
+                                                db.AddParameter("@uso_de", dataInicial);
+                                                db.AddParameter("@uso_ate", dataFinal);
+                                                db.AddParameter("@total_dias", dias);
+                                                db.ExecuteNonQuery(sqlInsertImovelFuncional);
+                                            }
+                                        }
+                                        break;
+                                    case "Auxílio-moradia":
+                                        if (valor != "Não recebe o auxílio")
+                                        {
+                                            await ColetaAuxilioMoradia(db, context, idDeputado, ano);
+                                        }
+                                        break;
+                                    case "Viagens em missão oficial":
+                                        if (valor != "0")
+                                        {
+                                            await ColetaMissaoOficial(db, context, idDeputado, ano);
+                                        }
+                                        break;
+                                    case "Passaporte diplomático":
+                                        if (valor != "Não possui")
+                                        {
+                                            possuiPassaporteDiplimatico = true;
+                                        }
+                                        break;
+                                    default:
+                                        throw new NotImplementedException($"Vefificar beneficios do deputado {idDeputado} para o ano {ano}.");
+                                }
+
+                                Console.WriteLine($"{titulo}: {valor}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                        }
+                    }
+
+                    db.AddParameter("@id_cf_deputado", idDeputado);
+                    db.AddParameter("@passaporte", possuiPassaporteDiplimatico);
+                    db.ExecuteNonQuery("update cf_deputado set passaporte_diplomatico = @passaporte, processado = 1 where id = @id_cf_deputado");
+                }
+            }
+        }
+
+        private static async Task ColetaPessoalGabinete(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+        {
+            var address = $"https://www.camara.leg.br/deputados/{idDeputado}/pessoal-gabinete?ano={ano}";
+            var document = await context.OpenAsync(address);
+
+            var tabelas = document.QuerySelectorAll(".secao-conteudo .table");
+            foreach (var tabela in tabelas)
+            {
+                var linhas = tabela.QuerySelectorAll("tbody tr");
+                foreach (var linha in linhas)
+                {
+                    int idSecretario;
+                    var colunas = linha.QuerySelectorAll("td");
+                    var nome = colunas[0].TextContent.Trim();
+                    var grupo = colunas[1].TextContent.Trim();
+                    var cargo = colunas[2].TextContent.Trim();
+                    var periodo = colunas[3].TextContent.Trim();
+                    var link = (colunas[4].FirstElementChild as IHtmlAnchorElement).Href; // todo?
+                    var chave = link.Replace("https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/", "");
+
+                    var periodoPartes = periodo.Split(" ");
+                    DateTime? dataInicial = Convert.ToDateTime(periodoPartes[1]);
+                    DateTime? dataFinal = periodoPartes.Length == 4 ? Convert.ToDateTime(periodoPartes[3]) : null;
+
+                    var sqlSelectSecretario = "select id from cf_funcionario where chave = @chave";
+                    db.AddParameter("@chave", chave);
+                    var objId = db.ExecuteScalar(sqlSelectSecretario);
+                    if (objId is not null)
+                    {
+                        idSecretario = Convert.ToInt32(objId);
+                    }
+                    else
+                    {
+                        var sqlInsertSecretario = "insert into cf_funcionario (chave, nome, processado) values (@chave, @nome, 0);";
+                        db.AddParameter("@chave", chave);
+                        db.AddParameter("@nome", nome);
+                        db.ExecuteNonQuery(sqlInsertSecretario);
+
+                        idSecretario = Convert.ToInt32(db.ExecuteScalar("select LAST_INSERT_ID()"));
+                    }
+
+                    var sqlInsertSecretarioContratacao = @"
+insert IGNORE into cf_funcionario_contratacao (id_cf_funcionario, id_cf_deputado, id_cf_funcionario_grupo_funcional, id_cf_funcionario_cargo, periodo_de, periodo_ate) 
+values (@id_cf_funcionario, @id_cf_deputado, (select id from cf_funcionario_grupo_funcional where nome like @grupo), (select id from cf_funcionario_cargo where nome like @cargo), @periodo_de, @periodo_ate)
+ON DUPLICATE KEY UPDATE periodo_ate = @periodo_ate";
+
+                    db.AddParameter("@id_cf_funcionario", idSecretario);
+                    db.AddParameter("@id_cf_deputado", idDeputado);
+                    db.AddParameter("@grupo", grupo);
+                    db.AddParameter("@cargo", cargo);
+                    db.AddParameter("@periodo_de", dataInicial);
+                    db.AddParameter("@periodo_ate", dataFinal);
+                    db.ExecuteNonQuery(sqlInsertSecretarioContratacao);
+
+                    if (objId is not null)
+                    {
+                        var sqlUpdateSecretario = "UPDATE cf_funcionario set processado = 0 where id = @idSecretario;";
+                        db.AddParameter("@idSecretario", idSecretario);
+                        db.ExecuteNonQuery(sqlUpdateSecretario);
+                    }
+                }
+            }
+        }
+
+        private static async Task ColetaAuxilioMoradia(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+        {
+            var sqlInsertAuxilioMoradia = "insert ignore into cf_deputado_auxilio_moradia (id_cf_deputado, ano, mes, valor) values (@id_cf_deputado, @ano, @mes, @valor)";
+            var address = $"https://www.camara.leg.br/deputados/{idDeputado}/auxilio-moradia/?ano={ano}";
+            var document = await context.OpenAsync(address);
+
+            var tabelas = document.QuerySelectorAll(".secao-conteudo .table");
+            foreach (var tabela in tabelas)
+            {
+                var linhas = tabela.QuerySelectorAll("tbody tr");
+                foreach (var linha in linhas)
+                {
+                    var colunas = linha.QuerySelectorAll("td");
+                    var mes = Convert.ToInt32(colunas[0].TextContent.Trim());
+                    var valor = Convert.ToDecimal(colunas[1].TextContent.Trim());
+
+                    db.AddParameter("@id_cf_deputado", idDeputado);
+                    db.AddParameter("@ano", ano);
+                    db.AddParameter("@mes", mes);
+                    db.AddParameter("@valor", valor);
+                    db.ExecuteNonQuery(sqlInsertAuxilioMoradia);
+                }
+            }
+        }
+
+        private static async Task ColetaMissaoOficial(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+        {
+            var sqlInsertAuxilioMoradia =
+                "insert ignore into cf_deputado_missao_oficial (id_cf_deputado, periodo, assunto, destino, passagens, diarias, relatorio) values (@id_cf_deputado, @periodo, @assunto, @destino, @passagens, @diarias, @relatorio)";
+            var address = $"https://www.camara.leg.br/deputados/{idDeputado}/missao-oficial/?ano={ano}";
+            var document = await context.OpenAsync(address);
+
+            var tabelas = document.QuerySelectorAll(".secao-conteudo .table");
+            foreach (var tabela in tabelas)
+            {
+                var linhas = tabela.QuerySelectorAll("tbody tr");
+                foreach (var linha in linhas)
+                {
+                    var colunas = linha.QuerySelectorAll("td");
+                    var periodo = colunas[0].TextContent.Trim();
+                    var assunto = colunas[1].TextContent.Trim();
+                    var destino = colunas[2].TextContent.Trim();
+                    var passagens = Convert.ToDecimal(colunas[3].TextContent.Trim());
+                    var diarias = Convert.ToDecimal(colunas[4].TextContent.Trim());
+                    var relatorio = (colunas[5].FirstElementChild as IHtmlAnchorElement)?.Href;
+
+                    db.AddParameter("@id_cf_deputado", idDeputado);
+                    db.AddParameter("@periodo", periodo);
+                    db.AddParameter("@assunto", assunto);
+                    db.AddParameter("@destino", destino);
+                    db.AddParameter("@passagens", passagens);
+                    db.AddParameter("@diarias", diarias);
+                    db.AddParameter("@relatorio", relatorio);
+                    db.ExecuteNonQuery(sqlInsertAuxilioMoradia);
+                }
+            }
+        }
+
+
+        public static void ColetaRemuneracaoSecretarios()
+        {
+            var sqlDeputados = @"
+SELECT DISTINCT c.id_cf_funcionario, f.chave 
+FROM cf_funcionario_contratacao c
+JOIN cf_funcionario f ON f.id = c.id_cf_funcionario
+WHERE f.processado = 0
+and f.id > 32000
+order BY c.id_cf_funcionario
+";
+
+            ConcurrentQueue<Dictionary<string, object>> queue;
+            using (var db = new AppDb())
+            {
+                var dcDeputado = db.ExecuteDict(sqlDeputados);
+                queue = new ConcurrentQueue<Dictionary<string, object>>(dcDeputado);
+            }
+
+            int totalRecords = 25;
+            Task[] tasks = new Task[totalRecords];
+            for (int i = 0; i < totalRecords; ++i)
+            {
+                int j = i;
+                tasks[j] = Task.Factory.StartNew(() =>
+                {
+                    ProcessaFilaColetaRemuneracaoSecretarios(queue).Wait();
+                });
+            }
+
+            Task.WaitAll(tasks);
+        }
+
+        private static async Task ProcessaFilaColetaRemuneracaoSecretarios(ConcurrentQueue<Dictionary<string, object>> queue)
+        {
+            Dictionary<string, string> colunasBanco = new Dictionary<string, string>();
+            // 1 - Remuneração Básica
+            colunasBanco.Add("a - Remuneração Fixa", "remuneracao_fixa");
+            colunasBanco.Add("b - Vantagens de Natureza Pessoal", "vantagens_natureza_pessoal");
+            // 2 - Remuneração Eventual/Provisória
+            colunasBanco.Add("a - Função ou Cargo em Comissão", "funcao_ou_cargo_em_comissao");
+            colunasBanco.Add("b - Gratificação Natalina", "gratificacao_natalina");
+            colunasBanco.Add("c - Férias (1/3 Constitucional)", "ferias");
+            colunasBanco.Add("d - Outras Remunerações Eventuais/Provisórias(*)", "outras_remuneracoes");
+            // 3 - Abono Permanência
+            colunasBanco.Add("a - Abono Permanência", "abono_permanencia");
+            // 4 - Descontos Obrigatórios(-)
+            colunasBanco.Add("a - Redutor Constitucional", "redutor_constitucional");
+            colunasBanco.Add("b - Contribuição Previdenciária", "contribuicao_previdenciaria");
+            colunasBanco.Add("c - Imposto de Renda", "imposto_renda");
+            // 5 - Remuneração após Descontos Obrigatórios
+            colunasBanco.Add("a - Remuneração após Descontos Obrigatórios", "valor_liquido");
+            // 6 - Outros
+            colunasBanco.Add("a - Diárias", "valor_diarias");
+            colunasBanco.Add("b - Auxílios", "valor_auxilios");
+            colunasBanco.Add("c - Vantagens Indenizatórias", "valor_vantagens");
+
+            Dictionary<string, object> secretario = null;
+            var config = Configuration.Default.WithDefaultLoader();
+            var context = BrowsingContext.New(config);
+
+            using (var db = new AppDb())
+            {
+                while (queue.TryDequeue(out secretario))
+                {
+                    var idFuncionario = Convert.ToInt32(secretario["id_cf_funcionario"]);
+                    var chave = secretario["chave"].ToString();
+                    Console.WriteLine($"Secretario: {idFuncionario}");
+
+                    var address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}";
+                    var document = await context.OpenAsync(address);
+                    if (document.StatusCode != HttpStatusCode.OK)
+                    {
+                        Console.WriteLine(document.StatusCode);
+                    }
+                    else
+                    {
+                        int anoSelecionado = 0, mesSelecionado = 0;
+                        try
+                        {
+                            Regex myRegex = new Regex(@"ano=(\d{4})&mes=(\d{1,2})", RegexOptions.Singleline);
+                            // window.location.href = 'https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/BDEdGyYrxGdG42MO7egk?ano=2021&mes=7';
+                            var linkMatch = myRegex.Match(document.Scripts[1].InnerHtml);
+                            anoSelecionado = Convert.ToInt32(linkMatch.Groups[1].Value);
+                            mesSelecionado = Convert.ToInt32(linkMatch.Groups[2].Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            if (document.QuerySelector(".remuneracao-funcionario") != null)
+                                Console.WriteLine(document.QuerySelector(".remuneracao-funcionario").TextContent);
+
+                            continue;
+                        }
+
+                        document = await context.OpenAsync(address + $"?ano={anoSelecionado}&mes={mesSelecionado}");
+                        if (document.StatusCode != HttpStatusCode.OK)
+                        {
+                            Console.WriteLine(document.StatusCode);
+                        }
+                        else
+                        {
+                            var anos = (document.GetElementById("anoRemuneracao") as IHtmlSelectElement).Options.OrderByDescending(x => Convert.ToInt32(x.Text));
+                            if (anos.Any())
+                            {
+                                foreach (var ano in anos)
+                                {
+                                    if (ano.OuterHtml.Contains("display: none;")) continue;
+
+                                    //Console.WriteLine();
+                                    //Console.WriteLine($"Ano: {ano.Text}");
+                                    if (!ano.IsSelected)
+                                    {
+                                        address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{ano.Value}";
+                                        document = await context.OpenAsync(address);
+                                    }
+
+                                    var calendario = document.QuerySelectorAll(".linha-tempo li");
+                                    var meses = (document.GetElementById("mesRemuneracao") as IHtmlSelectElement).Options.OrderByDescending(x => Convert.ToInt32(x.Value));
+                                    foreach (var mes in meses)
+                                    {
+                                        if ((calendario[Convert.ToInt32(mes.Value) - 1] as IHtmlListItemElement).IsHidden || Convert.ToInt32(mes.Value) > mesSelecionado) continue;
+
+                                        //Console.WriteLine();
+                                        //Console.WriteLine($"Mes: {mes.Text}");
+                                        if (Convert.ToInt32(mes.Value) == mesSelecionado)
+                                        {
+                                            address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}?ano={ano.Text}&mes={mes.Value}";
+                                            document = await context.OpenAsync(address);
+                                        }
+
+                                        var folhasPagamento = document.QuerySelectorAll(".remuneracao-funcionario__info");
+                                        if (!folhasPagamento.Any()) continue;
+
+                                        foreach (var folhaPagamento in folhasPagamento)
+                                        {
+                                            var titulo = folhaPagamento.QuerySelector(".remuneracao-funcionario__mes-ano").TextContent;
+                                            var nivel = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item")[3].TextContent.Replace("Função/cargo em comissão:", "").Trim();
+                                            var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
+                                            foreach (var linha in linhas)
+                                            {
+                                                var colunas = linha.QuerySelectorAll("td");
+                                                if (!colunas.Any()) continue;
+
+                                                var descricao = colunas[0].TextContent.Trim();
+                                                var valor = Convert.ToDecimal(colunas[1].TextContent.Trim());
+
+                                                db.AddParameter(colunasBanco[descricao], valor);
+                                            }
+
+                                            int tipo = 0;
+                                            switch (titulo.Split("–")[1].Trim())
+                                            {
+                                                case "FOLHA NORMAL":
+                                                    tipo = 1;
+                                                    break;
+                                                case "FOLHA COMPLEMENTAR":
+                                                    tipo = 2;
+                                                    break;
+                                                case "FOLHA COMPLEMENTAR ESPECIAL":
+                                                    tipo = 3;
+                                                    break;
+                                                case "FOLHA DE ADIANTAMENTO GRATIFICAÇÃO NATALINA":
+                                                    tipo = 4;
+                                                    break;
+                                                case "FOLHA DE GRATIFICAÇÃO NATALINA":
+                                                    tipo = 5;
+                                                    break;
+                                                default:
+                                                    throw new NotImplementedException();
+                                            }
+
+                                            var sqlInsertRemuneracao = @"
+INSERT IGNORE INTO cf_funcionario_remuneracao (
+    id_cf_funcionario, referencia, tipo, remuneracao_fixa, vantagens_natureza_pessoal, 
+    funcao_ou_cargo_em_comissao, gratificacao_natalina, ferias, outras_remuneracoes, abono_permanencia, valor_bruto, 
+    redutor_constitucional, contribuicao_previdenciaria, imposto_renda, valor_liquido, 
+    valor_diarias, valor_auxilios, valor_vantagens, valor_outros, valor_total, nivel
+) VALUES (
+    @id_cf_funcionario, @referencia, @tipo, @remuneracao_fixa, @vantagens_natureza_pessoal, 
+    @funcao_ou_cargo_em_comissao, @gratificacao_natalina, @ferias, @outras_remuneracoes, @abono_permanencia, null, 
+    @redutor_constitucional, @contribuicao_previdenciaria, @imposto_renda, @valor_liquido,
+    @valor_diarias, @valor_auxilios, @valor_vantagens, null, null, @nivel
+)";
+
+                                            db.AddParameter("@id_cf_funcionario", idFuncionario);
+                                            db.AddParameter("@tipo", tipo);
+                                            db.AddParameter("@nivel", nivel);
+                                            db.AddParameter("@referencia", new DateTime(Convert.ToInt32(ano.Text), Convert.ToInt32(mes.Value), 1));
+                                            db.ExecuteNonQuery(sqlInsertRemuneracao);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    db.AddParameter("@id", idFuncionario);
+                    db.ExecuteNonQuery("update cf_funcionario set processado = 1 where id = @id");
+                }
+            }
+        }
+
+        public static async Task ColetaDadosFuncionarios()
+        {
+            var addresses = new string[]
+            {
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=Secretário%20Parlamentar&areaDeAtuacao=&situacao=Em%20exerc%C3%ADcio&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=Servidor%20Efetivo&areaDeAtuacao=&situacao=Em%20exerc%C3%ADcio&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=Cargo%20de%20Natureza%20Especial&areaDeAtuacao=&situacao=Em%20exerc%C3%ADcio&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=Deputado&areaDeAtuacao=&situacao=Em%20exerc%C3%ADcio&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncionalEstagiário=&areaDeAtuacao=&situacao=Em%20exerc%C3%ADcio&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=&areaDeAtuacao=&situacao=Aposentado&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=&areaDeAtuacao=&situacao=Licenciado&pagina=",
+                "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=&areaDeAtuacao=&situacao=Cedido&pagina="
+            };
+
+            var sqlInsert = @"
+insert ignore into cf_funcionario_temp (chave, nome, categoria_funcional, area_atuacao, situacao{0})
+values (@chave, @nome, @categoria_funcional, @area_atuacao, @situacao{1})
+";
+            var config = Configuration.Default.WithDefaultLoader();
+            var context = BrowsingContext.New(config);
+
+            using (var db = new AppDb())
+            {
+                db.ExecuteNonQuery("truncate table cf_funcionario_temp");
+
+                foreach (var address in addresses)
+                {
+                    var pagina = 0;
+                    while (true)
+                    {
+                        var document = await context.OpenAsync(address + (++pagina).ToString());
+                        if (document.StatusCode != HttpStatusCode.OK)
+                        {
+                            Console.WriteLine(document.StatusCode);
+                            Thread.Sleep(TimeSpan.FromSeconds(30));
+
+                            document = await context.OpenAsync(address + (++pagina).ToString());
+                            if (document.StatusCode != HttpStatusCode.OK)
+                            {
+                                Console.WriteLine(document.StatusCode);
+                                break;
+                            };
+                        };
+
+                        var linhas = document.QuerySelectorAll(".l-busca__secao--resultados table.tabela-responsiva tbody tr");
+                        foreach (var linha in linhas)
+                        {
+                            string colunasDB = "", valoresDB = "";
+
+                            var colunas = linha.QuerySelectorAll("td");
+                            var nome = colunas[0].TextContent.Trim();
+                            var categoria = colunas[1].TextContent.Trim();
+                            var area = colunas[2].TextContent.Trim();
+                            var situacao = colunas[3].TextContent.Trim();
+
+                            var chave = (colunas[0].FirstElementChild as IHtmlAnchorElement).GetAttribute("data-target");
+
+                            if (categoria.StartsWith("Deputado")) categoria = "Deputado";
+                            if (categoria.StartsWith("Ex-deputado")) categoria = "Ex-deputado";
+                            if (area == "—") area = null;
+
+                            Console.WriteLine();
+                            Console.WriteLine($"Funcionario: {nome}");
+
+                            var lstInfo = document.QuerySelectorAll(".modal--funcionario" + chave + " .lista-funcionario__item");
+                            foreach (var info in lstInfo)
+                            {
+                                try
+                                {
+                                    var titulo = info.QuerySelector(".lista-funcionario__titulo")?.TextContent.Trim();
+                                    var valor = info?.TextContent?.Replace(titulo, "").Trim();
+
+                                    switch (titulo.Replace(":", ""))
+                                    {
+                                        case "Cargo":
+                                            colunasDB += ", cargo";
+                                            valoresDB += ", @cargo";
+                                            db.AddParameter("@cargo", valor);
+                                            break;
+                                        case "Nível":
+                                            colunasDB += ", nivel";
+                                            valoresDB += ", @nivel";
+                                            db.AddParameter("@nivel", valor);
+                                            break;
+                                        case "Função comissionada":
+                                            colunasDB += ", funcao_comissionada";
+                                            valoresDB += ", @funcao_comissionada";
+                                            db.AddParameter("@funcao_comissionada", valor);
+                                            break;
+                                        case "Local de trabalho":
+                                            colunasDB += ", local_trabalho";
+                                            valoresDB += ", @local_trabalho";
+                                            db.AddParameter("@local_trabalho", valor);
+                                            break;
+                                        case "Data da designação da função":
+                                            colunasDB += ", data_designacao_funcao";
+                                            valoresDB += ", @data_designacao_funcao";
+                                            db.AddParameter("@data_designacao_funcao", Convert.ToDateTime(valor));
+                                            break;
+                                        case "Situação":
+                                        case "Categoria funcional":
+                                        case "Área de atuação":
+                                            break;
+                                        default:
+                                            throw new NotImplementedException($"Vefificar beneficios do funcionario {nome}.");
+                                    }
+
+                                    Console.WriteLine($"{titulo}: {valor}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            db.AddParameter("@chave", chave.Replace("#", ""));
+                            db.AddParameter("@nome", nome);
+                            db.AddParameter("@categoria_funcional", categoria);
+                            db.AddParameter("@area_atuacao", area);
+                            db.AddParameter("@situacao", situacao);
+                            db.ExecuteNonQuery(string.Format(sqlInsert, colunasDB, valoresDB));
+
+                            if (db.Rows > 0)
+                            {
+                                Console.WriteLine("############################################################################");
+                            }
+                        }
+
+                        if (linhas.Count() < 20)
+                        {
+                            Console.WriteLine($"Parando na pagina {pagina}!");
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
     }

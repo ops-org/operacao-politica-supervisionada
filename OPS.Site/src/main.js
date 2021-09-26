@@ -82,8 +82,13 @@ Vue.use(VueGoogleTagManager, {
 Vue.component('Multiselect', Multiselect);
 Vue.component('VdtnetTable', VdtnetTable);
 
-Vue.config.productionTip = false;
-Vue.config.devtools = false;
+if(process.env.NODE_ENV === 'production'){
+  Vue.config.productionTip = false;
+  Vue.config.devtools = false;
+}else{
+  Vue.config.productionTip = true;
+  Vue.config.devtools = true;
+}
 
 window.AddIfDontExists = function(arr, id, text) {
   if(arr.find(x => x.id == id) == null) {

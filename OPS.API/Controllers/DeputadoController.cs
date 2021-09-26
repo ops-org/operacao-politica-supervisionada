@@ -62,6 +62,13 @@ namespace OPS.WebApi
             return await dao.TipoDespesa();
         }
 
+        [HttpPost("SecretarioPesquisa")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> SecretarioPesquisa(MultiSelectRequest filtro)
+        {
+            return await dao.SecretarioPesquisa(filtro);
+        }
+
         [HttpPost("Secretarios")]
         public async Task<dynamic> Secretarios(DataTablesRequest request)
         {
@@ -170,6 +177,36 @@ namespace OPS.WebApi
             }
 
             return File(@"images/sem_foto.jpg", "image/jpeg");
+        }
+
+        [HttpGet]
+        [Route("GrupoFuncional")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> GrupoFuncional()
+        {
+            return await dao.GrupoFuncional();
+        }
+
+        [HttpGet]
+        [Route("Cargo")]
+        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> Cargo()
+        {
+            return await dao.Cargo();
+        }
+
+        [HttpPost]
+        [Route("Remuneracao")]
+        public async Task<dynamic> Remuneracao(DataTablesRequest request)
+        {
+            return await dao.Remuneracao(request);
+        }
+
+        [HttpGet]
+        [Route("Remuneracao/{id:int}")]
+        public async Task<dynamic> Remuneracao(int id)
+        {
+            return await dao.Remuneracao(id);
         }
     }
 }

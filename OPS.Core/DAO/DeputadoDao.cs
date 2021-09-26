@@ -1431,6 +1431,65 @@ namespace OPS.Core.DAO
             }
         }
 
+        public async Task<dynamic> SecretarioPesquisa(MultiSelectRequest filtro = null)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT DISTINCT
+						s.id, s.nome
+					FROM cf_funcionario s
+				");
+
+                if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
+                {
+                    strSql.AppendLine(@"
+                        WHERE (1=1) ");
+
+                    if (!string.IsNullOrEmpty(filtro.Busca))
+                    {
+                        var busca = Utils.MySqlEscape(filtro.Busca);
+                        strSql.AppendLine(@" AND (s.nome like '%" + busca + "%') ");
+                    }
+
+                    strSql.AppendLine(@"
+                        ORDER BY s.nome
+                        limit 30
+				    ");
+                }
+                else
+                {
+                    strSql.AppendLine(@"
+                        WHERE (1=1) ");
+
+                    if (filtro != null && !string.IsNullOrEmpty(filtro.Ids))
+                    {
+                        var Ids = Utils.MySqlEscapeNumberToIn(filtro.Ids);
+                        strSql.AppendLine(@" AND s.id IN(" + Ids + ") ");
+                    }
+
+                    strSql.AppendLine(@"
+                        ORDER BY s.nome
+				    ");
+                }
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["nome"].ToString()
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
         public async Task<dynamic> Secretarios(DataTablesRequest request)
         {
             var dcFielsSort = new Dictionary<int, string>(){
@@ -1510,26 +1569,34 @@ namespace OPS.Core.DAO
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
-						s.nome
-						, s.cargo
-						, s.periodo
-						, s.valor_bruto
-						, s.valor_liquido
-						, s.valor_outros
-						, s.valor_outros + s.valor_bruto as custo_total
-                        , s.referencia
-						, s.link
-					FROM cf_secretario s
-					WHERE s.id_cf_deputado = @id
+SELECT DISTINCT SQL_CALC_FOUND_ROWS
+	co.id_cf_funcionario
+	, s.nome
+	, ca.nome as cargo
+	, gf.nome AS grupo_funcional
+	, r.valor_bruto
+	, r.valor_liquido
+	, r.valor_outros
+	, r.valor_total
+    , r.referencia
+	, s.chave
+FROM cf_funcionario s
+JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+left JOIN cf_funcionario_remuneracao r ON r.id_cf_funcionario = s.id -- AND r.id_cf_deputado = co.id_cf_deputado
+JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+WHERE co.id_cf_deputado = @id
+AND r.referencia = '2021-07-01'
+AND ca.nome = r.cargo
+AND co.periodo_ate IS null
 				");
                 banco.AddParameter("@id", id);
 
-                if (request.Filters.ContainsKey("ativo"))
-                {
-                    banco.AddParameter("@ativo", Convert.ToInt32(request.Filters["ativo"].ToString()));
-                    strSql.Append("and s.em_exercicio = @ativo");
-                }
+                //if (request.Filters.ContainsKey("ativo"))
+                //{
+                //    banco.AddParameter("@ativo", Convert.ToInt32(request.Filters["ativo"].ToString()));
+                //    strSql.Append("and s.em_exercicio = @ativo");
+                //}
 
                 strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
                 strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
@@ -1543,18 +1610,17 @@ namespace OPS.Core.DAO
                     {
                         lstRetorno.Add(new
                         {
+                            id_cf_funcionario = Convert.ToInt32(reader["id_cf_funcionario"]),
                             nome = reader["nome"].ToString(),
                             cargo = reader["cargo"].ToString(),
-                            periodo = reader["periodo"].ToString(),
+                            grupo_funcional = reader["grupo_funcional"].ToString(),
                             valor_bruto = Utils.FormataValor(reader["valor_bruto"]),
                             valor_liquido = Utils.FormataValor(reader["valor_liquido"]),
                             valor_outros = Utils.FormataValor(reader["valor_outros"]),
-                            custo_total = Utils.FormataValor(reader["custo_total"]),
-                            referencia = reader["referencia"].ToString(),
-                            link = reader["link"].ToString()
+                            custo_total = Utils.FormataValor(reader["valor_total"]),
+                            referencia = Convert.ToDateTime(reader["referencia"]).ToString("yyyy-MM"),
+                            chave = reader["chave"].ToString()
                         });
-
-
                     }
 
                     reader.NextResult();
@@ -1588,11 +1654,11 @@ namespace OPS.Core.DAO
 	                    s.nome
 	                    , SUM(r.valor_outros + r.valor_bruto) as custo_total
 	                    , s.link
-                    from cf_secretario_remuneracao r
+                    from cf_funcionario_remuneracao r
                     left join (
 	                    select distinct id_cf_deputado, nome, link
-	                    from cf_secretario s
-                    ) s on s.link = r.id_cf_secretario
+	                    from cf_funcionario s
+                    ) s on s.link = r.id_cf_funcionario
                     WHERE s.id_cf_deputado = @id
                     group by s.link, s.nome
 				");
@@ -2006,6 +2072,378 @@ namespace OPS.Core.DAO
                     };
                 }
             }
+        }
+
+        public async Task<dynamic> GrupoFuncional()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine("SELECT id, nome FROM cf_funcionario_grupo_funcional ");
+                strSql.AppendFormat("ORDER BY nome ");
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["nome"].ToString(),
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
+        public async Task<dynamic> Cargo()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine("SELECT id, nome FROM cf_funcionario_cargo ");
+                strSql.AppendFormat("ORDER BY nome ");
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        lstRetorno.Add(new
+                        {
+                            id = reader["id"].ToString(),
+                            text = reader["nome"].ToString(),
+                        });
+                    }
+                }
+                return lstRetorno;
+            }
+        }
+
+        public async Task<dynamic> Remuneracao(DataTablesRequest request)
+        {
+            if (request == null) throw new BusinessException("Parâmetro request não informado!");
+            Dictionary<int, string> dcFielsSort;
+            string strSelectFiels, sqlGroupBy;
+
+            EnumAgrupamentoRemuneracaoCamara eAgrupamento = (EnumAgrupamentoRemuneracaoCamara)Convert.ToInt32(request.Filters["ag"].ToString());
+            switch (eAgrupamento)
+            {
+                case EnumAgrupamentoRemuneracaoCamara.GrupoFuncional:
+                    strSelectFiels = "gf.id, gf.nome";
+                    sqlGroupBy = "GROUP BY co.id_cf_funcionario_grupo_funcional";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "nome" },
+                        {2, "quantidade" },
+                        {3, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracaoCamara.Cargo:
+                    strSelectFiels = "ca.id, ca.NOME";
+                    sqlGroupBy = "GROUP BY co.id_cf_funcionario_cargo";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "nome" },
+                        {2, "quantidade" },
+                        {3, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracaoCamara.Deputado:
+                    strSelectFiels = "d.id, d.nome_parlamentar as nome";
+                    sqlGroupBy = "GROUP BY co.id_cf_deputado";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "nome" },
+                        {2, "quantidade" },
+                        {3, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracaoCamara.Secretario:
+                    strSelectFiels = "s.id, s.nome";
+                    sqlGroupBy = "GROUP BY co.id_cf_funcionario";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "nome" },
+                        {2, "quantidade" },
+                        {3, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracaoCamara.Ano:
+                    strSelectFiels = "YEAR(r.referencia) as id, YEAR(r.referencia) as nome";
+                    sqlGroupBy = "GROUP BY YEAR(r.referencia)";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {1, "nome" },
+                        {2, "quantidade" },
+                        {3, "valor_total" },
+                    };
+
+                    break;
+                case EnumAgrupamentoRemuneracaoCamara.AnoMes:
+                    strSelectFiels = "";
+                    sqlGroupBy = "";
+                    dcFielsSort = new Dictionary<int, string>(){
+                        {0, "deputado" },
+                        {1, "secretario" },
+                        {2, "grupo_funcional" },
+                        {3, "cargo" },
+                        {4, "tipo_folha" },
+                        {5, "referencia" },
+                        {6, "valor_total" },
+                    };
+
+                    break;
+                default:
+                    throw new BusinessException("Parâmetro Agrupamento (ag) não informado!");
+            }
+
+
+            var sqlWhere = new StringBuilder();
+
+            if (request.Filters.ContainsKey("gf") && !string.IsNullOrEmpty(request.Filters["gf"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND co.id_cf_funcionario_grupo_funcional IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["gf"].ToString()) + ") ");
+            }
+            if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND co.id_cf_funcionario_cargo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["cr"].ToString()) + ") ");
+            }
+            if (request.Filters.ContainsKey("df") && !string.IsNullOrEmpty(request.Filters["df"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND co.id_cf_deputado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["df"].ToString()) + ") ");
+            }
+            if (request.Filters.ContainsKey("sc") && !string.IsNullOrEmpty(request.Filters["sc"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND co.id_cf_funcionario IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["sc"].ToString()) + ") ");
+            }
+            if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND r.referencia = '" + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "-" + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + "-01' ");
+            }
+            else if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
+            {
+                sqlWhere.AppendLine("	AND YEAR(r.referencia) BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + " AND " + Convert.ToInt32(request.Filters["an"].ToString()) + " ");
+            }
+
+            if (eAgrupamento == EnumAgrupamentoRemuneracaoCamara.Deputado)
+            {
+                sqlWhere.AppendLine("	AND co.id_cf_deputado IS NOT NULL ");
+            }
+
+            using (AppDb banco = new AppDb())
+            {
+                var sqlSelect = new StringBuilder();
+                if (eAgrupamento != EnumAgrupamentoRemuneracaoCamara.AnoMes)
+                {
+                    sqlSelect.AppendLine($@"
+SELECT
+	{strSelectFiels},
+    COUNT(1) AS quantidade,
+    SUM(r.valor_total) AS valor_total
+FROM cf_funcionario s
+LEFT JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+LEFT JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
+WHERE (1=1)
+");
+                }
+                else
+                {
+
+                    sqlSelect.AppendLine(@"
+SELECT
+    r.id
+    , s.nome as secretario
+    , d.nome_parlamentar as deputado
+	, ca.nome as cargo
+	, gf.nome AS grupo_funcional
+	, tf.nome as tipo_folha
+	, r.referencia
+    , r.valor_bruto
+    , r.valor_outros
+	, r.valor_total
+FROM cf_funcionario s
+JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+LEFT JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+LEFT JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+LEFT JOIN cf_funcionario_tipo_folha tf on tf.id = r.tipo
+LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
+WHERE (1=1) 
+");
+                }
+
+                sqlSelect.Append(sqlWhere);
+                sqlSelect.Append(sqlGroupBy);
+
+                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, " valor_total desc"));
+                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+
+                if (!string.IsNullOrEmpty(sqlGroupBy))
+                {
+                    sqlSelect.AppendLine($@"
+SELECT COUNT(1) as total, sum(valor_total) as valor_total 
+FROM (
+    SELECT sum(r.valor_total) as valor_total
+	FROM cf_funcionario s
+    JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+    JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+	WHERE (1=1)
+    {sqlWhere}
+    {sqlGroupBy}
+) tmp");
+                }
+                else
+                {
+                    sqlSelect.AppendLine($@"
+SELECT COUNT(1) as total, sum(r.valor_total) as valor_total
+FROM cf_funcionario s
+JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+WHERE (1=1)
+{sqlWhere}");
+                }
+
+                var lstRetorno = new List<dynamic>();
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                {
+                    if (eAgrupamento != EnumAgrupamentoRemuneracaoCamara.AnoMes)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lstRetorno.Add(new
+                            {
+                                id = Convert.IsDBNull(reader["id"]) ? (int?)null : Convert.ToInt32(reader["id"]),
+                                descricao = reader["nome"].ToString(),
+                                quantidade = Utils.FormataValor(reader["quantidade"], 0),
+                                valor_total = Utils.FormataValor(reader["valor_total"])
+                            });
+                        }
+                    }
+                    else
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            lstRetorno.Add(new
+                            {
+                                id = Convert.ToInt32(reader["id"]),
+                                secretario = reader["secretario"].ToString(),
+                                deputado = reader["deputado"].ToString(),
+                                grupo_funcional = reader["grupo_funcional"].ToString(),
+                                cargo = reader["cargo"].ToString(),
+                                tipo_folha = reader["tipo_folha"].ToString(),
+                                ano_mes = Convert.ToDateTime(reader["referencia"].ToString()).ToString("yyyy-MM"),
+                                valor_bruto = Utils.FormataValor(reader["valor_bruto"]),
+                                valor_outros = Utils.FormataValor(reader["valor_outros"]),
+                                valor_total = Utils.FormataValor(reader["valor_total"])
+                            });
+                        }
+                    }
+
+                    string TotalCount = "0", ValorTotal = "0";
+                    await reader.NextResultAsync();
+                    await reader.ReadAsync();
+                    TotalCount = reader[0].ToString();
+                    ValorTotal = Utils.FormataValor(reader[1]);
+
+                    return new
+                    {
+                        draw = request.Draw,
+                        valorTotal = ValorTotal,
+                        recordsTotal = Convert.ToInt32(TotalCount),
+                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        data = lstRetorno
+                    };
+                }
+            }
+
+        }
+
+        public async Task<dynamic> Remuneracao(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var sqlSelect = new StringBuilder();
+
+                sqlSelect.AppendLine(@"
+SELECT
+    d.id as id_cf_deputado
+    , s.chave
+    , s.nome as secretario
+    , d.nome_parlamentar as deputado
+    , r.referencia
+	, ca.nome as cargo
+	, gf.nome as grupo_funcional
+	, tf.nome as tipo_folha
+    , r.remuneracao_fixa as remun_basica
+    , r.vantagens_natureza_pessoal as vant_pessoais
+    , r.funcao_ou_cargo_em_comissao as func_comissionada
+    , r.gratificacao_natalina as grat_natalina
+    , r.ferias
+    , r.outras_remuneracoes as outras_eventuais
+    , r.abono_permanencia as abono_permanencia
+    , r.redutor_constitucional as reversao_teto_const
+    , r.contribuicao_previdenciaria as previdencia
+    , r.imposto_renda as imposto_renda
+    , r.valor_liquido as rem_liquida
+    , r.valor_diarias as diarias
+    , r.valor_auxilios as auxilios
+    , r.valor_vantagens as vant_indenizatorias
+    , r.valor_outros
+    , r.valor_total
+FROM cf_funcionario s
+LEFT JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+LEFT JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+JOIN cf_funcionario_tipo_folha tf on tf.id = r.tipo
+LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
+WHERE r.id = @id
+");
+
+                var lstRetorno = new List<dynamic>();
+
+                banco.AddParameter("@id", id);
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new
+                        {
+                            chave = reader["chave"].ToString(),
+                            id_cf_deputado = Convert.ToInt32(reader["id_cf_deputado"]),
+                            deputado = reader["deputado"].ToString(),
+                            secretario = reader["secretario"].ToString(),
+                            cargo = reader["cargo"].ToString(),
+                            grupo_funcional = reader["grupo_funcional"].ToString(),
+                            tipo_folha = reader["tipo_folha"].ToString(),
+                            ano_mes = Convert.ToDateTime(reader["referencia"].ToString()).ToString("yyyy-MM"),
+                            remun_basica = Utils.FormataValor(reader["remun_basica"]),
+                            vant_pessoais = Utils.FormataValor(reader["vant_pessoais"]),
+                            func_comissionada = Utils.FormataValor(reader["func_comissionada"]),
+                            grat_natalina = Utils.FormataValor(reader["grat_natalina"]),
+                            ferias = Utils.FormataValor(reader["ferias"]),
+                            outras_eventuais = Utils.FormataValor(reader["outras_eventuais"]),
+                            abono_permanencia = Utils.FormataValor(reader["abono_permanencia"]),
+                            reversao_teto_const = Utils.FormataValor(reader["reversao_teto_const"]),
+                            imposto_renda = Utils.FormataValor(reader["imposto_renda"]),
+                            previdencia = Utils.FormataValor(reader["previdencia"]),
+                            rem_liquida = Utils.FormataValor(reader["rem_liquida"]),
+                            diarias = Utils.FormataValor(reader["diarias"]),
+                            auxilios = Utils.FormataValor(reader["auxilios"]),
+                            vant_indenizatorias = Utils.FormataValor(reader["vant_indenizatorias"]),
+                            valor_outros = Utils.FormataValor(reader["valor_outros"]),
+                            custo_total = Utils.FormataValor(reader["valor_total"])
+                        };
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

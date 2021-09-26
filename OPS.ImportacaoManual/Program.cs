@@ -233,7 +233,11 @@ namespace OPS.ImportacaoManual
                 //Senado.ImportarDespesas(tempPath, 2017, false);
                 //#endregion Senado
 
-                Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken).Wait();
+                //Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken).Wait();
+
+                //Camara.ColetaDadosDeputados();
+                //Camara.ColetaDadosFuncionarios().Wait();
+                //Camara.ColetaRemuneracaoSecretarios();
 
                 //var s = Camara.ImportarDeputados(
                 //    @"D:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");

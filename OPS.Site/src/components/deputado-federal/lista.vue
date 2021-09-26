@@ -447,7 +447,7 @@ export default {
       const loader = this.$loading.show();
 
       axios
-        .post(`${process.env.VUE_APP_API}/fornecedor/consulta`, this.fornecedor)
+        .post(`${process.env.VUE_APP_API}/fornecedor/consulta`, this.fornecedor_busca)
         .then((response) => {
           this.fornecedores = response.data;
 

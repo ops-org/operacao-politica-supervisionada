@@ -114,10 +114,10 @@ namespace OPS.ImportacaoDados
                     -- and controle <> 0
 					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
 					-- and (controle is null or controle NOT IN (0, 2, 3, 5))
-                    and (controle is null or controle NOT IN (0, 3))
+                    and (controle is null or controle NOT IN (0, 2, 3))
                     AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
                     order by fi.obtido_em asc
-                    LIMIT 2, 10000");
+                    LIMIT 1000");
 
                 if (dtFornecedores.Rows.Count == 0)
                 {
@@ -160,7 +160,7 @@ namespace OPS.ImportacaoDados
                 {
                     using (HttpClient client = new HttpClient())
                     {
-                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", receitaWsApiToken);
+                        //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", receitaWsApiToken);
 
                         //--------------------------------
                         string uriString;
@@ -170,10 +170,20 @@ namespace OPS.ImportacaoDados
 
                         if (RateLimit_Remaining == 0)
                         {
-                            watch.Stop();
-                            Console.WriteLine("Rate limit atingido! " + (60 - watch.Elapsed.TotalSeconds).ToString());
-                            System.Threading.Thread.Sleep(60100 - (int)watch.ElapsedMilliseconds);
-                            watch.Restart();
+                            try
+                            {
+                                watch.Stop();
+                                Console.WriteLine("Rate limit atingido! " + (60 - watch.Elapsed.TotalSeconds).ToString());
+                                System.Threading.Thread.Sleep(60100 - (int)watch.ElapsedMilliseconds);
+                            }
+                            catch (Exception)
+                            {
+                                System.Threading.Thread.Sleep(60000);
+                            }
+                            finally
+                            {
+                                watch.Restart();
+                            }
                         }
 
                         //Setar o Timeout do client quando é API BASICA
@@ -204,16 +214,16 @@ namespace OPS.ImportacaoDados
                         }
                         else
                         {
-                            if(response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
                                 Console.WriteLine(response.ReasonPhrase);
-                                System.Threading.Thread.Sleep(1000);
+                                System.Threading.Thread.Sleep(5000);
                             }
                             else
                             {
                                 InserirControle(1, item["cnpj_cpf"].ToString(), response.ReasonPhrase.ToString());
                             }
-                            
+
                             continue;
                         }
                     }
@@ -221,22 +231,7 @@ namespace OPS.ImportacaoDados
                 }
                 catch (Exception ex)
                 {
-                    //if (receita == null)
-                    //{
-                    //    receita = new ReceitaWSData();
-                    //    receita.status = ReceitaWSData.STATUS_ERROR;
-                    //    receita.ultima_atualizacao = DateTime.Now.ToString(DateMask_UltimaAtualizacao);
-
-                    //    if (ex is AggregateException)
-                    //    {
-                    //        receita.message = "API Básica -- Gateway Time-out -- Exception: " + ex.InnerException.Message;
-                    //        receita.ControleProcessamento = ReceitaWSData.ControleProcessamentoReceitaWS.Ignorar;
-                    //    }
-                    //    else
-                    //    {
-                    //        receita.message = ex.Message;
-                    //    }
-                    //}
+                    Console.WriteLine(ex.GetBaseException().Message);
                     InserirControle(1, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
                     continue;
                 }
@@ -507,6 +502,8 @@ SELECT MAX(DATA) as data FROM (
 
                 banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where cnpj_cpf=@cnpj_cpf;");
             }
+
+            Console.WriteLine($"{controle} - {mensagem}");
         }
 
         private static DataRow LocalizaInsereAtividade(DataTable dtFornecedoresAtividade, IAtividade atividadesSecundaria)

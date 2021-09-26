@@ -22,7 +22,8 @@
               <a class="dropdown-item" href="/deputado-federal/conheca">Conheça os deputados</a>
               <a class="dropdown-item" href="/deputado-federal">Cota parlamentar (CEAP)</a>
               <a class="dropdown-item" href="/deputado-federal/frequencia">Frequência</a>
-              <a class="dropdown-item" href="/deputado-federal/secretario">Secretários</a>
+              <!-- <a class="dropdown-item" href="/deputado-federal/secretario">Secretários</a> -->
+              <a class="dropdown-item" href="/deputado-federal/remuneracao">Remuneração/Subsídio</a>
             </div>
           </div>
 

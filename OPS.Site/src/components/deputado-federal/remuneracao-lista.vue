@@ -1,12 +1,13 @@
 <template>
   <div class="container-fluid">
-    <h3 class="page-title">[BETA] Remuneração no Senado</h3>
+    <h3 class="page-title">[BETA] Remuneração no Câmara Federal</h3>
 
     <form id="form" autocomplete="off">
       <div class="row">
         <div class="form-group col-md-2">
           <label>Ano</label>
           <select class="form-control input-sm" v-model="filtro.ano">
+            <option value=""></option>
             <option value="2021" selected>2021</option>
             <option value="2020">2020</option>
             <option value="2019">2019</option>
@@ -37,30 +38,17 @@
             <option value="12">Dezembro</option>
           </select>
         </div>
-        <div class="form-group col-md-4">
-          <label>Vinculo</label>
+        <div class="form-group col-md-5">
+          <label>Grupo Funcional</label>
           <v-select
-            :options="vinculos"
-            v-model="filtro.vinculo"
+            :options="grupos_funcionais"
+            v-model="filtro.grupo_funcional"
             class="form-control input-sm"
             multiple
             data-actions-box="true"
           />
         </div>
-        <div class="form-group col-md-4">
-          <label>Categoria</label>
-          <v-select
-            :options="categorias"
-            v-model="filtro.categoria"
-            class="form-control input-sm"
-            multiple
-            data-actions-box="true"
-          />
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
           <label>Cargo</label>
           <v-select
             :options="cargos"
@@ -70,39 +58,44 @@
             data-actions-box="true"
           />
         </div>
-        <div class="form-group col-md-4">
-          <label>Lotação</label>
-          <v-select
-            :options="lotacoes"
-            v-model="filtro.lotacao"
-            class="form-control input-sm"
-            multiple
-            data-actions-box="true"
-          />
-        </div>
-        <div class="form-group col-md-4">
-          <label>Senador</label>
-          <v-select
-            :options="parlamentares"
-            v-model="filtro.parlamentar"
-            class="form-control input-sm"
-            multiple
-            data-actions-box="true"
-          />
-        </div>
       </div>
       <div class="row">
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-2">
           <label>Agrupar por</label>
           <select class="form-control input-sm" v-model="filtro.agrupar">
-            <option value="1" selected="true">Lotação</option>
+            <option value="1" selected="true">Grupo Funcional</option>
             <option value="2">Cargo</option>
-            <option value="3">Categoria</option>
-            <option value="4">Vinculo</option>
-            <option value="7">Senador(a)</option>
+            <option value="3">Deputado(a)</option>
+            <option value="4">Secretario(a)</option>
             <option value="5">Ano</option>
             <option value="6">Não agrupar</option>
           </select>
+        </div>
+        <div class="form-group col-md-5">
+          <label>Deputado(a)</label>
+          <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :searchable="true" :loading="isLoadingParlamentar" :internal-search="false" @search-change="BuscaParlamentar">
+
+            <template slot="selection" slot-scope="{ values, isOpen }">
+              <span class="multiselect__single" v-if="values.length > 1 && !isOpen">{{ values.length }} item(ns) selecionado(s)</span>
+            </template>
+            <span slot="noResult">Oops! Nenhum resultado encontrado.</span>
+            <span slot="noOptions">Digite o nome do parlamentar.</span>
+          </multiselect>
+        </div>
+        <div class="form-group col-md-5">
+          <label>Secretario(a)</label>
+          <multiselect v-model="filtro.secretario" :options="secretarios" :multiple="true" placeholder="Selecione"
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :searchable="true" :loading="isLoadingSecretario" :internal-search="false" @search-change="BuscaSecretario">
+
+            <template slot="selection" slot-scope="{ values, isOpen }">
+              <span class="multiselect__single" v-if="values.length > 1 && !isOpen">{{ values.length }} item(ns) selecionado(s)</span>
+            </template>
+            <span slot="noResult">Oops! Nenhum resultado encontrado.</span>
+            <span slot="noOptions">Digite o nome do parlamentar.</span>
+          </multiselect>
         </div>
       </div>
       <div class="row">
@@ -147,11 +140,10 @@
             </button>
           </div>
             <div class="list-group list-group-flush">
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Lotação</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Grupo Funcional</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Cargo</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Categoria</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Vinculo</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('7')">Senador(a)</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Deputado(a)</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Secretario(a)</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('5')">Ano</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('6')">Detalhes</button>
           </div>
@@ -181,6 +173,8 @@ export default {
     const vm = this;
 
     return {
+      isLoadingParlamentar: false,
+      isLoadingSecretario: false,
       loading: false,
       pageLoad: true,
       selectedRow: {},
@@ -189,18 +183,16 @@ export default {
         agrupar: '1',
         ano: '2021',
         mes: '',
-        lotacao: [],
+        grupo_funcional: [],
         cargo: [],
-        categori: [],
-        vinculo: [],
         parlamentar: [],
+        secretario: [],
       },
 
-      lotacoes: [],
+      grupos_funcionais: [],
       cargos: [],
-      categorias: [],
-      vinculos: [],
       parlamentares: [],
+      secretarios: [],
 
       options: {
         ajax(objData, callback) {
@@ -213,15 +205,17 @@ export default {
           delete newData.columns;
           delete newData.search;
 
+           /* eslint-disable no-debugger */
+        debugger;
+        /* eslint-enable no-debugger */
           newData.filters = {
             ag: vm.filtro.agrupar,
             an: vm.filtro.ano,
             ms: vm.filtro.mes,
-            lt: (vm.filtro.lotacao || []).join(','),
+            gf: (vm.filtro.grupo_funcional || []).join(','),
             cr: (vm.filtro.cargo || []).join(','),
-            ct: (vm.filtro.categoria || []).join(','),
-            vn: (vm.filtro.vinculo || []).join(','),
-            sn: (vm.filtro.parlamentar || []).join(','),
+            df: window.GetIds(vm.filtro.parlamentar).join(','),
+            sc: window.GetIds(vm.filtro.secretario).join(','),
           };
 
           jQuery.each(newData.filters, (key, value) => {
@@ -236,7 +230,7 @@ export default {
           this.fields = null;
 
           axios
-            .post(`${process.env.VUE_APP_API}/senador/remuneracao`, newData)
+            .post(`${process.env.VUE_APP_API}/deputado/remuneracao`, newData)
             .then((response) => {
               vm.loading = false;
               vm.valorTotal = response.data.valorTotal;
@@ -264,41 +258,71 @@ export default {
   },
   mounted() {
     const vm = this;
+    var lstPromises = [];
 
     vm.filtro.agrupar = vm.qs.ag || '1';
     vm.filtro.ano = vm.qs.an || '2021';
     vm.filtro.mes = vm.qs.ms || '';
-    vm.filtro.lotacao = (vm.qs.lt ? vm.qs.lt.split(',') : []);
+    vm.filtro.grupo_funcional = (vm.qs.gf ? vm.qs.gf.split(',') : []);
     vm.filtro.cargo = (vm.qs.cr ? vm.qs.cr.split(',') : []);
-    vm.filtro.categoria = (vm.qs.ct ? vm.qs.ct.split(',') : []);
-    vm.filtro.vinculo = (vm.qs.vn ? vm.qs.vn.split(',') : []);
-    vm.filtro.parlamentar = (vm.qs.sn ? vm.qs.sn.split(',') : []);
 
-    document.title = 'OPS :: Remuneração no Senado';
+    if(vm.qs.df){
+      var pDeputado = axios.post(`${process.env.VUE_APP_API}/deputado/pesquisa`, { ids: vm.qs.df })
+      pDeputado.then((response) => {
+        vm.filtro.parlamentar = response.data;
+      });
 
-    axios.get(`${process.env.VUE_APP_API}/senador/lotacao`).then((response) => {
-      this.lotacoes = response.data;
+      lstPromises.push(pDeputado);
+    }
+
+    if(vm.qs.sc){
+      var pSecretario = axios.post(`${process.env.VUE_APP_API}/deputado/secretariopesquisa`, { ids: vm.qs.sc })
+      pSecretario.then((response) => {
+        vm.filtro.secretario = response.data;
+      });
+
+      lstPromises.push(pSecretario);
+    }
+
+    document.title = 'OPS :: Remuneração na Câmara Federal';
+
+    axios.get(`${process.env.VUE_APP_API}/deputado/grupofuncional`).then((response) => {
+      this.grupos_funcionais = response.data;
     });
 
-    axios.get(`${process.env.VUE_APP_API}/senador/cargo`).then((response) => {
+    axios.get(`${process.env.VUE_APP_API}/deputado/cargo`).then((response) => {
       this.cargos = response.data;
     });
 
-    axios.get(`${process.env.VUE_APP_API}/senador/categoria`).then((response) => {
-      this.categorias = response.data;
-    });
-
-    axios.get(`${process.env.VUE_APP_API}/senador/vinculo`).then((response) => {
-      this.vinculos = response.data;
-    });
-
-    axios.get(`${process.env.VUE_APP_API}/senador`).then((response) => {
-      this.parlamentares = response.data;
-    });
-
-    this.Pesquisar(true);
+    if(lstPromises.length == 0){
+        this.Pesquisar(true);
+    }else{
+      Promise.all(lstPromises).then(() => vm.Pesquisar(true));
+    }
   },
   methods: {
+    BuscaParlamentar(busca) {
+      this.isLoadingParlamentar = true;
+
+      axios
+        .post(`${process.env.VUE_APP_API}/deputado/pesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
+        .then((response) => {
+          this.parlamentares = response.data;
+
+          this.isLoadingParlamentar = false;
+        });
+    },
+    BuscaSecretario(busca) {
+      this.isLoadingsecretario = true;
+
+      axios
+        .post(`${process.env.VUE_APP_API}/deputado/secretariopesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
+        .then((response) => {
+          this.secretarios = response.data;
+
+          this.isLoadingsecretario = false;
+        });
+    },
     AbrirModalDetalhar(data) {
       this.selectedRow = data;
       jQuery('#modal-detalhar').modal();
@@ -307,20 +331,17 @@ export default {
       const vm = this;
 
       switch (vm.filtro.agrupar) {
-        case '1': // Lotação
-          vm.filtro.lotacao = [this.selectedRow.id];
+        case '1': // Grupo Funcional
+          vm.filtro.grupo_funcional = [this.selectedRow.id];
           break;
         case '2': // Cargo
           vm.filtro.cargo = [this.selectedRow.id];
           break;
-        case '3': // Categoria
-          vm.filtro.categoria = [this.selectedRow.id];
+        case '3': // Deputado
+          vm.filtro.parlamentar = [{ id: this.selectedRow.id, text: this.selectedRow.descricao }];
           break;
-        case '4': // Vinculo
-          vm.filtro.vinculo = [this.selectedRow.id];
-          break;
-        case '6': // Senador
-          vm.filtro.parlamentar = [this.selectedRow.id];
+        case '4': // Secretario
+          vm.filtro.secretario = [{ id: this.selectedRow.id, text: this.selectedRow.descricao }];
           break;
         default:
           break;
@@ -333,13 +354,13 @@ export default {
     },
     Pesquisar(pageLoad) {
       const vm = this;
-      vm.senador = {};
+      vm.deputado = {};
       vm.fields = null;
       vm.pageLoad = pageLoad;
 
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
-          case '1': // Lotação
+          case '1': // Grupo Funcional
             vm.fields = {
               id: {
                 isLocal: true,
@@ -353,7 +374,7 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Lotação',
+                label: 'Grupo Funcional',
                 sortable: true,
               },
               quantidade: {
@@ -399,62 +420,62 @@ export default {
             };
             break;
 
-          case '3': // Categoria
-            vm.fields = {
-              id: {
-                label: '&nbsp;',
-                render: (data, type) => {
-                  if (type === 'display') {
-                    return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
-                  }
-                  return data;
+            case '3': // Deputado Federal
+              vm.fields = {
+                id: {
+                  label: '&nbsp;',
+                  render: (data, type) => {
+                    if (type === 'display') {
+                      return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
+                    }
+                    return data;
+                  },
+                  sortable: false,
                 },
-                sortable: false,
-              },
-              descricao: {
-                label: 'Categoria',
-                sortable: true,
-              },
-              quantidade: {
-                label: 'Qtd.',
-                sortable: true,
-                className: 'text-right',
-              },
-              valor_total: {
-                label: 'Custo Total',
-                sortable: true,
-                className: 'text-right',
-              },
-            };
+                descricao: {
+                  label: 'Deputado',
+                  sortable: true,
+                },
+                quantidade: {
+                  label: 'Qtd.',
+                  sortable: true,
+                  className: 'text-right',
+                },
+                valor_total: {
+                  label: 'Custo Total',
+                  sortable: true,
+                  className: 'text-right',
+                },
+              };
             break;
 
-          case '4': // Vinculo
-            vm.fields = {
-              id: {
-                label: '&nbsp;',
-                render: (data, type) => {
-                  if (type === 'display') {
-                    return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
-                  }
-                  return data;
+            case '4': // Secretario
+              vm.fields = {
+                id: {
+                  label: '&nbsp;',
+                  render: (data, type) => {
+                    if (type === 'display') {
+                      return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
+                    }
+                    return data;
+                  },
+                  sortable: false,
                 },
-                sortable: false,
-              },
-              descricao: {
-                label: 'Vinculo',
-                sortable: true,
-              },
-              quantidade: {
-                label: 'Qtd.',
-                sortable: true,
-                className: 'text-right',
-              },
-              valor_total: {
-                label: 'Custo Total',
-                sortable: true,
-                className: 'text-right',
-              },
-            };
+                descricao: {
+                  label: 'Secretario',
+                  sortable: true,
+                },
+                quantidade: {
+                  label: 'Qtd.',
+                  sortable: true,
+                  className: 'text-right',
+                },
+                valor_total: {
+                  label: 'Custo Total',
+                  sortable: true,
+                  className: 'text-right',
+                },
+              };
             break;
 
           case '5': // Ano
@@ -486,62 +507,22 @@ export default {
             };
             break;
 
-          case '7': // Senador
-            vm.fields = {
-              id: {
-                label: '&nbsp;',
-                render: (data, type) => {
-                  if (type === 'display') {
-                    return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
-                  }
-                  return data;
-                },
-                sortable: false,
-              },
-              descricao: {
-                label: 'Senador',
-                sortable: true,
-              },
-              quantidade: {
-                label: 'Qtd.',
-                sortable: true,
-                className: 'text-right',
-              },
-              valor_total: {
-                label: 'Custo Total',
-                sortable: true,
-                className: 'text-right',
-              },
-            };
-            break;
-
           case '6': // Mês
             vm.fields = {
-              vinculo: {
-                label: 'Vinculo',
+              deputado: {
+                label: 'Deputado',
                 sortable: true,
               },
-              categoria: {
-                label: 'Categoria',
-                render: (data, type, full) => {
-                  if (type === 'display') {
-                    return data + (full.simbolo_funcao ? ` (${full.simbolo_funcao})` : '');
-                  }
-                  return data;
-                },
+              secretario: {
+                label: 'Secretario',
+                sortable: true,
+              },
+              grupo_funcional: {
+                label: 'Grupo Funcional',
                 sortable: true,
               },
               cargo: {
                 label: 'Cargo',
-                render: (data, type, full) => {
-                  if (type === 'display') {
-                    return data + (full.referencia_cargo ? ` (${full.referencia_cargo})` : '');
-                  }
-                  return data;
-                },
-              },
-              lotacao: {
-                label: 'Lotação',
                 sortable: true,
               },
               tipo_folha: {
@@ -552,11 +533,21 @@ export default {
                 label: 'Ano/Mês',
                 sortable: true,
               },
+               valor_bruto: {
+                label: 'Valor Bruto',
+                sortable: true,
+                className: 'text-right',
+              },
+              valor_outros: {
+                label: 'Vantagens',
+                sortable: true,
+                className: 'text-right',
+              },
               valor_total: {
                 label: 'Custo Total',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/senado/remuneracao/${full.id}">${data}</a>`;
+                    return `<a href="/deputado-federal/remuneracao/${full.id}">${data}</a>`;
                   }
                   return data;
                 },
@@ -579,10 +570,8 @@ export default {
         agrupar: '1',
         ano: '2021',
         mes: '',
-        lotacao: [],
+        grupo_funcional: [],
         cargo: [],
-        categori: [],
-        vinculo: [],
         parlamentar: [],
       };
     },

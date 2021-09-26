@@ -76,17 +76,17 @@ export default {
           searchable: true,
           render: (data, type, full) => {
             if (type === 'display') {
-              return `<a href="https://www.camara.leg.br/deputados/remuneracao-pessoal-gabinete/${full.link}" target="_blank">${data}</a>`;
+              return `<a href="https://www.camara.leg.br/deputados/remuneracao-pessoal-gabinete/${full.chave}" target="_blank">${data}</a>`;
             }
             return data;
           },
         },
-        cargo: {
-          label: 'Cargo/Função',
+        grupo_funcional: {
+          label: 'Grupo Funcional',
           sortable: true,
         },
-        periodo: {
-          label: 'Período do Exercício',
+        cargo: {
+          label: 'Cargo',
           sortable: true,
         },
         valor_bruto: {

@@ -10,6 +10,8 @@ import DeputadoFederalSecretarioLista from '@/components/deputado-federal/secret
 import DeputadoFederalSecretarioDetalhes from '@/components/deputado-federal/secretario-detalhes';
 import DeputadoFederalFrequenciaLista from '@/components/deputado-federal/frequencia-lista';
 import DeputadoFederalFrequenciaDetalhes from '@/components/deputado-federal/frequencia-detalhes';
+import DeputadoFederalRemuneracaoLista from '@/components/deputado-federal/remuneracao-lista';
+import DeputadoFederalRemuneracaoDetalhes from '@/components/deputado-federal/remuneracao-detalhes';
 import DeputadoFederalDocumento from '@/components/deputado-federal/documento';
 
 import SenadorLista from '@/components/senador/lista';
@@ -70,6 +72,18 @@ const router = new Router({
       path: '/deputado-federal/frequencia/:id',
       name: 'deputado-federal-frequencia-detalhes',
       component: DeputadoFederalFrequenciaDetalhes,
+      props: route => ({ id: parseInt(route.params.id, 10) }),
+    },
+    {
+      path: '/deputado-federal/remuneracao',
+      name: 'deputado-federal-remuneracao-lista',
+      component: DeputadoFederalRemuneracaoLista,
+      props: route => ({ qs: route.query }),
+    },
+    {
+      path: '/deputado-federal/remuneracao/:id',
+      name: 'deputado-federal-remuneracao-detalhes',
+      component: DeputadoFederalRemuneracaoDetalhes,
       props: route => ({ id: parseInt(route.params.id, 10) }),
     },
     {
