@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace OPS.ImportacaoDados
+namespace OPS.Importador
 {
     public partial class Parlamentar
     {

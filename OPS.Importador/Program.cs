@@ -1,7 +1,6 @@
 ﻿using CsvHelper;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
-using OPS.ImportacaoDados;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -13,7 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OPS.ImportacaoManual
+namespace OPS.Importador
 {
     internal class Program
     {

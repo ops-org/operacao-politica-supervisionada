@@ -28,7 +28,7 @@ using AngleSharp.Html.Dom;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-namespace OPS.ImportacaoDados
+namespace OPS.Importador
 {
     public static class Camara
     {

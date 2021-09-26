@@ -14,7 +14,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OPS.ImportacaoDados
+namespace OPS.Importador
 {
     public static class CamaraDistritoFederal
     {

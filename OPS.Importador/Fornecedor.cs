@@ -11,7 +11,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OPS.ImportacaoDados
+namespace OPS.Importador
 {
     public static class Fornecedor
     {

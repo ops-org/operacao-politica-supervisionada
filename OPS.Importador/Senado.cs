@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 using OPS.Core;
 using RestSharp;
 
-namespace OPS.ImportacaoDados
+namespace OPS.Importador
 {
     public class Senado
     {
