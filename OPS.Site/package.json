@@ -14,7 +14,7 @@
     "bootstrap": "^4.5.2",
     "bootstrap-select": "^1.13.18",
     "core-js": "^3.6.5",
-    "datatables.net": "^1.10.22",
+    "datatables.net": "^1.11.3",
     "datatables.net-bs4": "^1.10.21",
     "dotenv": "^8.2.0",
     "font-awesome": "^4.7.0",
