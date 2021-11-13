@@ -434,7 +434,9 @@ namespace OPS.Importador
 
                 var doc = new XmlDocument();
                 IRestResponse response;
-                var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
+                var restClient = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
+                restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
                 var request =
                     new RestRequest(
                        string.Format("ListarPresencasDia?data={0:dd/MM/yyyy}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=", dtPesquisa),
@@ -451,7 +453,7 @@ namespace OPS.Importador
 
                 try
                 {
-                    response = client.Execute(request);
+                    response = restClient.Execute(request);
                 }
                 catch (Exception ex)
                 {
@@ -743,7 +745,8 @@ namespace OPS.Importador
             var sb = new StringBuilder();
             int novos = 0;
             int pagina;
-            var client = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
+            var restClient = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
+            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
             //int leg = 55;
             Deputados deputados;
@@ -761,7 +764,7 @@ namespace OPS.Importador
                         var request = new RestRequest(uri, Method.GET);
                         request.AddHeader("Accept", "application/json");
 
-                        deputados = client.Execute<Deputados>(request).Data;
+                        deputados = restClient.Execute<Deputados>(request).Data;
 
                         foreach (var deputado in deputados.dados)
                         {
@@ -773,7 +776,7 @@ namespace OPS.Importador
 
                             request = new RestRequest(deputado.id.ToString(), Method.GET);
                             request.AddHeader("Accept", "application/json");
-                            deputadoDetalhes = client.Execute<DeputadoDetalhes>(request).Data.dados;
+                            deputadoDetalhes = restClient.Execute<DeputadoDetalhes>(request).Data.dados;
 
                             if (deputadoDetalhes == null)
                             {
@@ -2482,6 +2485,8 @@ order by cd.situacao, cd.id
 
                     foreach (var ano in anosmandatos)
                     {
+                        if (ano != 2021) continue;
+
                         Console.WriteLine();
                         Console.WriteLine($"Ano: {ano}");
                         address = $"https://www.camara.leg.br/deputados/{idDeputado}/_recursos?ano={ano}";
@@ -2624,7 +2629,7 @@ ON DUPLICATE KEY UPDATE periodo_ate = @periodo_ate";
                     db.AddParameter("@periodo_ate", dataFinal);
                     db.ExecuteNonQuery(sqlInsertSecretarioContratacao);
 
-                    if (objId is not null)
+                    if (objId is not null && (dataFinal == null || dataFinal >= new DateTime(2021, 6, 1)))
                     {
                         var sqlUpdateSecretario = "UPDATE cf_funcionario set processado = 0 where id = @idSecretario;";
                         db.AddParameter("@idSecretario", idSecretario);
@@ -2700,7 +2705,7 @@ SELECT DISTINCT c.id_cf_funcionario, f.chave
 FROM cf_funcionario_contratacao c
 JOIN cf_funcionario f ON f.id = c.id_cf_funcionario
 WHERE f.processado = 0
-and f.id > 32000
+-- and f.id > 32000
 order BY c.id_cf_funcionario
 ";
 
@@ -2759,7 +2764,12 @@ order BY c.id_cf_funcionario
                 {
                     var idFuncionario = Convert.ToInt32(secretario["id_cf_funcionario"]);
                     var chave = secretario["chave"].ToString();
-                    Console.WriteLine($"Secretario: {idFuncionario}");
+                    //Console.WriteLine($"Secretario: {idFuncionario}");
+
+                    var sqlUltimaRemuneracao = @"SELECT MAX(referencia) FROM cf_funcionario_remuneracao WHERE id_cf_funcionario = @id_cf_funcionario";
+                    db.AddParameter("@id_cf_funcionario", idFuncionario);
+                    var objUltimaRemuneracaoColetada = db.ExecuteScalar(sqlUltimaRemuneracao);
+                    var dtUltimaRemuneracaoColetada = !Convert.IsDBNull(objUltimaRemuneracaoColetada) ? Convert.ToDateTime(objUltimaRemuneracaoColetada) : DateTime.MinValue;
 
                     var address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}";
                     var document = await context.OpenAsync(address);
@@ -2775,8 +2785,16 @@ order BY c.id_cf_funcionario
                             Regex myRegex = new Regex(@"ano=(\d{4})&mes=(\d{1,2})", RegexOptions.Singleline);
                             // window.location.href = 'https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/BDEdGyYrxGdG42MO7egk?ano=2021&mes=7';
                             var linkMatch = myRegex.Match(document.Scripts[1].InnerHtml);
-                            anoSelecionado = Convert.ToInt32(linkMatch.Groups[1].Value);
-                            mesSelecionado = Convert.ToInt32(linkMatch.Groups[2].Value);
+                            if (linkMatch.Length > 0)
+                            {
+                                anoSelecionado = Convert.ToInt32(linkMatch.Groups[1].Value);
+                                mesSelecionado = Convert.ToInt32(linkMatch.Groups[2].Value);
+                            }
+                            else
+                            {
+                                MarcarComoProcessado(db, idFuncionario);
+                                continue;
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -2784,6 +2802,7 @@ order BY c.id_cf_funcionario
                             if (document.QuerySelector(".remuneracao-funcionario") != null)
                                 Console.WriteLine(document.QuerySelector(".remuneracao-funcionario").TextContent);
 
+                            MarcarComoProcessado(db, idFuncionario);
                             continue;
                         }
 
@@ -2800,6 +2819,7 @@ order BY c.id_cf_funcionario
                                 foreach (var ano in anos)
                                 {
                                     if (ano.OuterHtml.Contains("display: none;")) continue;
+                                    if (Convert.ToInt32(ano.InnerHtml) < dtUltimaRemuneracaoColetada.Year) continue;
 
                                     //Console.WriteLine();
                                     //Console.WriteLine($"Ano: {ano.Text}");
@@ -2814,6 +2834,7 @@ order BY c.id_cf_funcionario
                                     foreach (var mes in meses)
                                     {
                                         if ((calendario[Convert.ToInt32(mes.Value) - 1] as IHtmlListItemElement).IsHidden || Convert.ToInt32(mes.Value) > mesSelecionado) continue;
+                                        if (new DateTime(Convert.ToInt32(ano.InnerHtml), Convert.ToInt32(mes.Value), 1) <= dtUltimaRemuneracaoColetada) continue;
 
                                         //Console.WriteLine();
                                         //Console.WriteLine($"Mes: {mes.Text}");
@@ -2889,10 +2910,15 @@ INSERT IGNORE INTO cf_funcionario_remuneracao (
                         }
                     }
 
-                    db.AddParameter("@id", idFuncionario);
-                    db.ExecuteNonQuery("update cf_funcionario set processado = 1 where id = @id");
+                    MarcarComoProcessado(db, idFuncionario);
                 }
             }
+        }
+
+        private static void MarcarComoProcessado(AppDb db, int idFuncionario)
+        {
+            db.AddParameter("@id", idFuncionario);
+            db.ExecuteNonQuery("update cf_funcionario set processado = 1 where id = @id");
         }
 
         public static async Task ColetaDadosFuncionarios()
