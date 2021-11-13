@@ -12,28 +12,22 @@
 
 # Visual Studio 2015 cache/options directory
 .vs/
-# Uncomment if you have tasks that create the project's static files in wwwroot
-#wwwroot/
 
 # Click-Once directory
 publish/
 app.publish/
 
-
-
 # Others
 node_modules/
+
 # Custom
 *.suo
 */bin
-*/obj/
+*/obj
 *.pubxml
-/OPS/.vs/config
-/OPS/Content/images/Parlamentares
-
-/OPS/wwwroot/images/Parlamentares
-/OPS/wwwroot/bundles
-/OPS/wwwroot/partidos
-/OPS/wwwroot/temp
-/OPS/static/temp
+/OPS.Site/public/img/Parlamentares
+/OPS.Site/public/img/partidos
+/OPS.Site/public/temp
 appsettings.*.json
+/OPS.Site/temp
+/OPS.Site/static/temp

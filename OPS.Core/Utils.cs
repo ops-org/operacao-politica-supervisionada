@@ -210,7 +210,8 @@ namespace OPS.Core
                 };
             }
 
-            var client = new RestClient("https://api.sendgrid.com/v3/mail/send");
+            var restClient = new RestClient("https://api.sendgrid.com/v3/mail/send");
+            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
             var request = new RestRequest(Method.POST);
             request.AddHeader("cache-control", "no-cache");
             request.AddHeader("Connection", "keep-alive");
@@ -221,7 +222,7 @@ namespace OPS.Core
             request.AddHeader("content-type", "application/json");
             request.AddHeader("authorization", "Bearer " + APIKey);
             request.AddParameter("application/json", JsonConvert.SerializeObject(param), ParameterType.RequestBody);
-            IRestResponse response = await client.ExecuteAsync(request);
+            IRestResponse response = await restClient.ExecuteAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Accepted)
             {

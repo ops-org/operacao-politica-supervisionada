@@ -114,6 +114,8 @@ namespace OPS.Importador
 
         public static void Main(string[] args)
         {
+            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+
             var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (string.IsNullOrEmpty(environmentName)) environmentName = "Development";
 
@@ -141,18 +143,18 @@ namespace OPS.Importador
                 var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
                 var sb = new StringBuilder();
                 var rootPath = configuration["AppSettings:SiteRootFolder"];
-                var tempPath = System.IO.Path.Combine(rootPath, "temp");
-                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "img/depfederal/");
-                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "img/senador/");
+                var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
+                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
+                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
                 //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
+
+
+                Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
+                Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
 
                 ////var tempPath = configuration["AppSettings:SiteTempFolder"];
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
-
-
-                //var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
-                //sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
 
                 //Camara.ImportarMandatos();
                 //ImportarPartidos().Wait();
@@ -245,7 +247,6 @@ namespace OPS.Importador
 
                 ////Fornecedor.AtualizaFornecedorDoador();
                 //Fornecedor.ConsultarCNPJ();
-                //Fornecedor.ConsultarReceitaWS();
                 //var s = Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
                 //var s = Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year - 1);
 
@@ -256,7 +257,6 @@ namespace OPS.Importador
                 //var a = Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year - 1);
                 //var b = Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year);
 
-                //Fornecedor.ConsultarReceitaWS();
                 //Camara.ImportarDeputados();
 
                 //tempPath = System.AppDomain.CurrentDomain.BaseDirectory;
@@ -359,7 +359,7 @@ namespace OPS.Importador
                 new Core.DAO.ParametrosDao().CarregarPadroes();
                 var inicioImportacao = DateTime.UtcNow.AddHours(-3).ToString("dd/MM/yyyy HH:mm");
 
-                sb.Append("<strong>-- Importar Deputados :: @duracao --</strong>");
+                sb.Append("<div style='font-weight: bold;'>-- Importar Deputados :: @duracao --</div>");
                 sw.Restart();
                 try
                 {
@@ -372,7 +372,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.Append("<strong>-- Importar Fotos Deputados :: @duracao --</strong>");
+                sb.Append("<div style='font-weight: bold;'>-- Importar Fotos Deputados :: @duracao --</div>");
                 sw.Restart();
                 try
                 {
@@ -385,7 +385,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<strong>-- Importar Despesas Deputados {0} :: @duracao --</strong>", DateTime.Now.Year - 1);
+                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Deputados {0} :: @duracao --</div>", DateTime.Now.Year - 1);
                 //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
                 sw.Restart();
                 try
@@ -399,7 +399,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<strong>-- Importar Despesas Deputados {0} :: @duracao --</strong>", DateTime.Now.Year);
+                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Deputados {0} :: @duracao --</div>", DateTime.Now.Year);
                 //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
                 sw.Restart();
                 try
@@ -413,7 +413,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                //sb.AppendLine("<strong>-- Importar Presenças Deputados :: @duracao --</strong>");
+                //sb.AppendLine("<div style='font-weight: bold;'>-- Importar Presenças Deputados :: @duracao --</div>");
                 //sw.Restart();
                 //try
                 //{
@@ -428,7 +428,7 @@ namespace OPS.Importador
 
 
 
-                //sb.AppendFormat("<strong>-- Importar Secretários parlamentares {0} :: @duracao --</strong>", DateTime.Now.Year);
+                //sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Secretários parlamentares {0} :: @duracao --</div>", DateTime.Now.Year);
                 //sb.AppendLine();
                 //sw.Restart();
 
@@ -448,9 +448,7 @@ namespace OPS.Importador
                 //t = sw.Elapsed;
                 //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-
-                sb.AppendFormat("<strong>-- Importar Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
-                sb.AppendLine();
+                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Senadores {0} :: @duracao --</div>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -463,9 +461,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendLine();
-                sb.AppendFormat("<strong>-- Importar Imagens Senadores {0} :: @duracao --</strong>", DateTime.Now.Year);
-                sb.AppendLine();
+                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Imagens Senadores {0} :: @duracao --</div>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -478,9 +474,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendLine();
-                sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year - 1);
-                sb.AppendLine();
+                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Senado {0} :: @duracao --</div>", DateTime.Now.Year - 1);
                 sw.Restart();
                 try
                 {
@@ -493,9 +487,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendLine();
-                sb.AppendFormat("<strong>-- Importar Despesas Senado {0} :: @duracao --</strong>", DateTime.Now.Year);
-                sb.AppendLine();
+                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Senado {0} :: @duracao --</div>", DateTime.Now.Year);
                 sw.Restart();
                 try
                 {
@@ -520,7 +512,7 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.Append("<strong>-- Consultar Receita WS :: @duracao --</strong>");
+                sb.Append("<div style='font-weight: bold;'>-- Consultar Receita WS :: @duracao --</div>");
                 sw.Restart();
                 try
                 {
@@ -534,7 +526,7 @@ namespace OPS.Importador
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
                 t = swGeral.Elapsed;
-                sb.AppendFormat("<strong>Inicio da importação: {0} - Duração Total: {1:D2}h:{2:D2}m:{3:D2}s</strong>", inicioImportacao, t.Hours, t.Minutes, t.Seconds);
+                sb.AppendFormat("<div style='font-weight: bold;'>Inicio da importação: {0} - Duração Total: {1:D2}h:{2:D2}m:{3:D2}s</div>", inicioImportacao, t.Hours, t.Minutes, t.Seconds);
 
                 using (WebClient client = new WebClient())
                 {
@@ -584,7 +576,7 @@ namespace OPS.Importador
         //}
 
 
-        private static async Task ImportarPartidos()
+        private static void ImportarPartidos()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var sb = new StringBuilder();

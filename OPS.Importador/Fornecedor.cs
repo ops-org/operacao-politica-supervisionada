@@ -170,20 +170,20 @@ namespace OPS.Importador
 
                         if (RateLimit_Remaining == 0)
                         {
-                            try
-                            {
-                                watch.Stop();
-                                Console.WriteLine("Rate limit atingido! " + (60 - watch.Elapsed.TotalSeconds).ToString());
-                                System.Threading.Thread.Sleep(60100 - (int)watch.ElapsedMilliseconds);
-                            }
-                            catch (Exception)
-                            {
+                            //try
+                            //{
+                            //    watch.Stop();
+                            //    Console.WriteLine("Rate limit atingido! " + (60 - watch.Elapsed.TotalSeconds).ToString());
+                            //    System.Threading.Thread.Sleep(70000 - (int)watch.ElapsedMilliseconds);
+                            //}
+                            //catch (Exception)
+                            //{
                                 System.Threading.Thread.Sleep(60000);
-                            }
-                            finally
-                            {
-                                watch.Restart();
-                            }
+                            //}
+                            //finally
+                            //{
+                            //    watch.Restart();
+                            //}
                         }
 
                         //Setar o Timeout do client quando é API BASICA
@@ -217,7 +217,7 @@ namespace OPS.Importador
                             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
                                 Console.WriteLine(response.ReasonPhrase);
-                                System.Threading.Thread.Sleep(5000);
+                                System.Threading.Thread.Sleep(60000);
                             }
                             else
                             {

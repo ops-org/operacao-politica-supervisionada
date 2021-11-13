@@ -263,14 +263,13 @@
     </div>
 
     <div class="container">
-      <Disqus shortname='ops-net-br' :pageConfig="pageConfig" />
+      
     </div>
   </div>
 </template>
 
 <script>
 import { Chart } from 'highcharts-vue';
-import { Disqus } from 'vue-disqus';
 
 const axios = require('axios');
 
@@ -278,7 +277,6 @@ export default {
   name: 'Inicio',
   components: {
     highcharts: Chart,
-    Disqus,
   },
   props: {
     q: String,

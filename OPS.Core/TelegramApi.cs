@@ -36,9 +36,12 @@ namespace OPS.Core
             request.AddJsonBody(jsonContent);
 
             IRestResponse response;
+            var restClient = new RestClient(url);
+            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
             try
             {
-                response = new RestClient(url).Execute(request);
+                response = restClient.Execute(request);
                 if (response.StatusCode.GetHashCode() == 429) //TooManyRequests
                 {
                     int retryAfter = 30;
@@ -52,7 +55,7 @@ namespace OPS.Core
 
                     //Log.Verbose("Rate limit atingido, aguardando {Aguardar} segundos.", retryAfter);
                     Thread.Sleep(TimeSpan.FromSeconds(retryAfter));
-                    response = new RestClient(url).Execute(request);
+                    response = restClient.Execute(request);
                 }
             }
             catch (System.Exception ex)
@@ -60,7 +63,7 @@ namespace OPS.Core
                 Console.WriteLine(ex.GetBaseException().Message);
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
-                response = new RestClient(url).Execute(request);
+                response = restClient.Execute(request);
             }
 
             return response.Content;
