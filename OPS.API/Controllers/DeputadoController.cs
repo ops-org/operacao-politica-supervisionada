@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

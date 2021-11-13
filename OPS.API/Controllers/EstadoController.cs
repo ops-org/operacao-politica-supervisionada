@@ -3,21 +3,21 @@ using Microsoft.AspNetCore.Mvc;
 using OPS.Core.DAO;
 using System.Threading.Tasks;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-	[CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class EstadoController : Controller
     {
-		EstadoDao dao;
+        EstadoDao dao;
 
-		public EstadoController()
-		{
-			dao = new EstadoDao();
-		}
+        public EstadoController()
+        {
+            dao = new EstadoDao();
+        }
 
-		[HttpGet]
+        [HttpGet]
         [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<IActionResult> Consultar()
         {

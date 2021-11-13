@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -49,8 +49,8 @@ namespace OPS.WebApi
             if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
 
             string cnpj = "", nome = "";
-            if (jsonData.ContainsKey("cnpj")) cnpj = (string)jsonData["cnpj"];
-            if (jsonData.ContainsKey("nome")) nome = (string)jsonData["nome"];
+            if (jsonData.ContainsKey("cnpj")) cnpj = jsonData["cnpj"];
+            if (jsonData.ContainsKey("nome")) nome = jsonData["nome"];
 
             return dao.Consulta(cnpj, nome);
         }
@@ -112,7 +112,7 @@ namespace OPS.WebApi
 
                     CacheHelper.Add("CookieReceitaFederal_" + value, _cookies);
 
-                    return "data:image/jpeg;base64," + System.Convert.ToBase64String(data, 0, data.Length);
+                    return "data:image/jpeg;base64," + Convert.ToBase64String(data, 0, data.Length);
                 }
             }
 
@@ -122,7 +122,7 @@ namespace OPS.WebApi
         [HttpPost]
         [IgnoreCacheOutput, InvalidateCacheOutput(nameof(Consulta))]
         [Route("ConsultarDadosCnpj")]
-        public dynamic ConsultarDadosCnpj(Newtonsoft.Json.Linq.JObject jsonData)
+        public dynamic ConsultarDadosCnpj(JObject jsonData)
         {
             if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
 

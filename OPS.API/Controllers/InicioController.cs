@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OPS.Core.DAO;
 using System.Threading.Tasks;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -19,7 +19,7 @@ namespace OPS.WebApi
 
         [HttpGet]
         [Route("Busca")]
-        public async Task<dynamic> Busca([FromQuery]string value)
+        public async Task<dynamic> Busca([FromQuery] string value)
         {
             var oDeputadoDao = new DeputadoDao();
             var oSenadorDao = new SenadorDao();

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core.DAO;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -31,6 +31,6 @@ namespace OPS.WebApi
             await Cache.RemoveStartsWithAsync("*");
         }
 
-        
+
     }
 }

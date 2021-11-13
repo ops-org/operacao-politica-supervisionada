@@ -6,7 +6,7 @@ using OPS.Core;
 using System;
 using System.Net.Mail;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

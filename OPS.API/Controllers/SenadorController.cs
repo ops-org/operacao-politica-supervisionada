@@ -7,7 +7,7 @@ using OPS.Core.DAO;
 using OPS.Core.DTO;
 using System.Threading.Tasks;
 
-namespace OPS.WebApi
+namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
