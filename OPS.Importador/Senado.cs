@@ -31,13 +31,14 @@ namespace OPS.Importador
 
                 banco.ExecuteNonQuery("UPDATE sf_senador SET ativo = 'N' WHERE ativo = 'S'");
 
-                var client = new RestClient();
+                var restClient = new RestClient();
+                restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
                 #region Importar novos senadores
                 var request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/lista/atual", Method.GET);
                 request.AddHeader("Accept", "application/json");
 
-                IRestResponse resSenadores = client.Execute(request);
+                IRestResponse resSenadores = restClient.Execute(request);
                 JObject jSenadores = JObject.Parse(resSenadores.Content);
                 JArray arrIdentificacaoParlamentar = (JArray)jSenadores["ListaParlamentarEmExercicio"]["Parlamentares"]["Parlamentar"];
 
@@ -142,7 +143,7 @@ namespace OPS.Importador
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador, Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    var resSenador = client.Execute(request);
+                    var resSenador = restClient.Execute(request);
                     JObject jSenador = JObject.Parse(resSenador.Content);
                     JObject arrParlamentar = (JObject)jSenador["DetalheParlamentar"]["Parlamentar"];
 
@@ -275,12 +276,12 @@ namespace OPS.Importador
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos", Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resSenadorMandato = client.Execute(request);
+                    IRestResponse resSenadorMandato = restClient.Execute(request);
                     JObject jSenadorMandato = JObject.Parse(resSenadorMandato.Content);
                     JToken arrPalamentar = jSenadorMandato["MandatoParlamentar"]["Parlamentar"];
                     JToken arrMandatosPalamentar = arrPalamentar["Mandatos"];
 
-                    Console.WriteLine("Consultando mandatos do senador {0}: {1}", idSenador, arrPalamentar["IdentificacaoParlamentar"]["NomeParlamentar"].ToString());
+                    Console.WriteLine("Consultando mandatos do senador {0}: {1}", idSenador, arrPalamentar["Nome"].ToString());
 
                     if (arrMandatosPalamentar != null)
                     {
@@ -457,7 +458,8 @@ namespace OPS.Importador
                     }
                 }
 
-                var client = new RestClient();
+                var restClient = new RestClient();
+                restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
                 #region Atualizar senadores ativos e os que estavam ativos antes da importação
 
@@ -625,7 +627,7 @@ namespace OPS.Importador
                     var request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos", Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resSenadorMandato = client.Execute(request);
+                    IRestResponse resSenadorMandato = restClient.Execute(request);
                     JObject jSenadorMandato = JObject.Parse(resSenadorMandato.Content);
                     JToken arrPalamentar = jSenadorMandato["MandatoParlamentar"]["Parlamentar"];
                     JToken arrMandatosPalamentar = arrPalamentar["Mandatos"];
@@ -798,7 +800,7 @@ namespace OPS.Importador
 
         public static string ImportarDespesas(string atualDir, int ano, bool completo)
         {
-            var downloadUrl = string.Format("http://www.senado.gov.br/transparencia/LAI/verba/{0}.csv", ano);
+            var downloadUrl = string.Format("https://www.senado.gov.br/transparencia/LAI/verba/despesa_ceaps_{0}.csv", ano);
             var fullFileNameCsv = System.IO.Path.Combine(atualDir, ano + ".csv");
 
             if (!Directory.Exists(atualDir))
@@ -1335,7 +1337,7 @@ namespace OPS.Importador
 
             using (var banco = new AppDb())
             {
-                DataTable table = banco.GetTable("SELECT id FROM sf_senador where valor_total_ceaps > 0 or ativo = 'S'");
+                DataTable table = banco.GetTable("SELECT id FROM sf_senador where ativo = 'S'");
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -1575,7 +1577,7 @@ namespace OPS.Importador
                 INSERT IGNORE INTO sf_cargo  (descricao)
                 SELECT DISTINCT cargo FROM sf_remuneracao_temp WHERE cargo <> '' ORDER BY cargo;
 
-                INSERT INTO sf_categoria  (descricao)
+                INSERT IGNORE INTO sf_categoria  (descricao)
                 SELECT DISTINCT categoria FROM sf_remuneracao_temp WHERE categoria <> '' ORDER BY categoria;
 
                 INSERT IGNORE INTO sf_vinculo  (descricao)
