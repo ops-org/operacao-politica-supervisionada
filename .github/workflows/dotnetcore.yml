@@ -38,7 +38,7 @@ jobs:
         dotnet build OPS.API --configuration Release --no-restore
         dotnet build OPS.Importador --configuration Release --no-restore
     
-    - name: Install Node.js dependencies
+    - name: Publish Node.js
       run: npm run build
       working-directory: OPS.Site
       
