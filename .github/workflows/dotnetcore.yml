@@ -13,16 +13,35 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.205
         
-    - name: Restore
+    - name: Setup Node.js Core
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+        cache: 'npm'
+        
+    - name: Install .NET dependencies
       run: dotnet restore
+    
+    - name: Install Node.js dependencies
+      run: npm install
+      working-directory: "OPS.Site"
       
-    - name: Build with dotnet
-      run: dotnet build OPS.API --configuration Release
+    - name: Build .NET
+      run: |
+        dotnet build OPS.API --configuration Release --no-restore
+        dotnet build OPS.Importador --configuration Release --no-restore
+    
+    - name: Install Node.js dependencies
+      run: npm run build
+      working-directory: "OPS.Site"
       
-    - name: Build with dotnet
-      run: dotnet publish OPS.API --configuration Release -o netcore
+    - name: Publish .NET
+      run: |
+        dotnet publish OPS.API --configuration Release -o ops-api
+        dotnet publish OPS.Importador --configuration Release -o ops-importador
