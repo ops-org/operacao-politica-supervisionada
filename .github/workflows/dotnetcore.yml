@@ -23,14 +23,15 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'
-        cache: 'npm'      
+        cache: 'npm'
+        cache-dependency-path: OPS.Site/package-lock.json
         
     - name: Install .NET dependencies
       run: dotnet restore
     
     - name: Install Node.js dependencies
       run: npm install
-      working-directory: ./OPS.Site
+      working-directory: OPS.Site
       
     - name: Build .NET
       run: |
@@ -39,7 +40,7 @@ jobs:
     
     - name: Install Node.js dependencies
       run: npm run build
-      working-directory: ./OPS.Site
+      working-directory: OPS.Site
       
     - name: Publish .NET
       run: |
