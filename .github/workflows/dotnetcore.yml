@@ -25,12 +25,20 @@ jobs:
         node-version: '14'
         cache: 'npm'
         cache-dependency-path: OPS.Site/package-lock.json
-        
+      
+    - name: Cache Node Modules
+      id: cache-node-modules
+      uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: node-modules-${{ hashFiles('**/package-lock.json') }}
+            
     - name: Install .NET dependencies
       run: dotnet restore
     
     - name: Install Node.js dependencies
-      run: npm install
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: npm ci
       working-directory: OPS.Site
       
     - name: Build .NET
@@ -39,7 +47,7 @@ jobs:
         dotnet build OPS.Importador --configuration Release --no-restore
     
     - name: Publish Node.js
-      run: npm run build
+      run: npm run build --if-present
       working-directory: OPS.Site
       
     - name: Publish .NET
