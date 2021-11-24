@@ -19,18 +19,18 @@ jobs:
       with:
         dotnet-version: 5.0.205
         
-    - name: Setup Node.js Core
+    - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '14'
-        cache: 'npm'
+        cache: 'npm'      
         
     - name: Install .NET dependencies
       run: dotnet restore
     
     - name: Install Node.js dependencies
       run: npm install
-      working-directory: "OPS.Site"
+      working-directory: ./OPS.Site
       
     - name: Build .NET
       run: |
@@ -39,7 +39,7 @@ jobs:
     
     - name: Install Node.js dependencies
       run: npm run build
-      working-directory: "OPS.Site"
+      working-directory: ./OPS.Site
       
     - name: Publish .NET
       run: |
