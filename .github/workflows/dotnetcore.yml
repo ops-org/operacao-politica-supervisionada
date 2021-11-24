@@ -17,5 +17,15 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.205
+        
+    - name: Restore
+      run: dotnet restore
+      working-directory: ./publish
+      
     - name: Build with dotnet
       run: dotnet build OPS.API --configuration Release
+      working-directory: ./publish
+      
+    - name: Build with dotnet
+      run: dotnet publish OPS.API --configuration Release -o netcore
+      working-directory: ./publish
