@@ -4,7 +4,7 @@ using System.Web;
 
 namespace OPS.Core
 {
-    public enum EnumAgrupamentoRemuneracaoCamara
+    public enum AgrupamentoRemuneracaoCamara
     {
         GrupoFuncional = 1,
         Cargo,

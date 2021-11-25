@@ -2128,10 +2128,10 @@ AND co.periodo_ate IS null
             Dictionary<int, string> dcFielsSort;
             string strSelectFiels, sqlGroupBy;
 
-            EnumAgrupamentoRemuneracaoCamara eAgrupamento = (EnumAgrupamentoRemuneracaoCamara)Convert.ToInt32(request.Filters["ag"].ToString());
+            AgrupamentoRemuneracaoCamara eAgrupamento = (AgrupamentoRemuneracaoCamara)Convert.ToInt32(request.Filters["ag"].ToString());
             switch (eAgrupamento)
             {
-                case EnumAgrupamentoRemuneracaoCamara.GrupoFuncional:
+                case AgrupamentoRemuneracaoCamara.GrupoFuncional:
                     strSelectFiels = "gf.id, gf.nome";
                     sqlGroupBy = "GROUP BY co.id_cf_funcionario_grupo_funcional";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -2141,7 +2141,7 @@ AND co.periodo_ate IS null
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoCamara.Cargo:
+                case AgrupamentoRemuneracaoCamara.Cargo:
                     strSelectFiels = "ca.id, ca.NOME";
                     sqlGroupBy = "GROUP BY co.id_cf_funcionario_cargo";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -2151,7 +2151,7 @@ AND co.periodo_ate IS null
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoCamara.Deputado:
+                case AgrupamentoRemuneracaoCamara.Deputado:
                     strSelectFiels = "d.id, d.nome_parlamentar as nome";
                     sqlGroupBy = "GROUP BY co.id_cf_deputado";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -2161,7 +2161,7 @@ AND co.periodo_ate IS null
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoCamara.Secretario:
+                case AgrupamentoRemuneracaoCamara.Secretario:
                     strSelectFiels = "s.id, s.nome";
                     sqlGroupBy = "GROUP BY co.id_cf_funcionario";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -2171,7 +2171,7 @@ AND co.periodo_ate IS null
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoCamara.Ano:
+                case AgrupamentoRemuneracaoCamara.Ano:
                     strSelectFiels = "YEAR(r.referencia) as id, YEAR(r.referencia) as nome";
                     sqlGroupBy = "GROUP BY YEAR(r.referencia)";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -2181,7 +2181,7 @@ AND co.periodo_ate IS null
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoCamara.AnoMes:
+                case AgrupamentoRemuneracaoCamara.AnoMes:
                     strSelectFiels = "";
                     sqlGroupBy = "";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -2227,7 +2227,7 @@ AND co.periodo_ate IS null
                 sqlWhere.AppendLine("	AND YEAR(r.referencia) BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + " AND " + Convert.ToInt32(request.Filters["an"].ToString()) + " ");
             }
 
-            if (eAgrupamento == EnumAgrupamentoRemuneracaoCamara.Deputado)
+            if (eAgrupamento == AgrupamentoRemuneracaoCamara.Deputado)
             {
                 sqlWhere.AppendLine("	AND co.id_cf_deputado IS NOT NULL ");
             }
@@ -2235,7 +2235,7 @@ AND co.periodo_ate IS null
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
-                if (eAgrupamento != EnumAgrupamentoRemuneracaoCamara.AnoMes)
+                if (eAgrupamento != AgrupamentoRemuneracaoCamara.AnoMes)
                 {
                     sqlSelect.AppendLine($@"
 SELECT
@@ -2311,7 +2311,7 @@ WHERE (1=1)
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    if (eAgrupamento != EnumAgrupamentoRemuneracaoCamara.AnoMes)
+                    if (eAgrupamento != AgrupamentoRemuneracaoCamara.AnoMes)
                     {
                         while (await reader.ReadAsync())
                         {

@@ -1285,10 +1285,10 @@ namespace OPS.Core.DAO
             Dictionary<int, string> dcFielsSort;
             string strSelectFiels, sqlGroupBy;
 
-            EnumAgrupamentoRemuneracaoSenado eAgrupamento = (EnumAgrupamentoRemuneracaoSenado)Convert.ToInt32(request.Filters["ag"].ToString());
+            AgrupamentoRemuneracaoSenado eAgrupamento = (AgrupamentoRemuneracaoSenado)Convert.ToInt32(request.Filters["ag"].ToString());
             switch (eAgrupamento)
             {
-                case EnumAgrupamentoRemuneracaoSenado.Lotacao:
+                case AgrupamentoRemuneracaoSenado.Lotacao:
                     strSelectFiels = "l.id, l.descricao";
                     sqlGroupBy = "GROUP BY r.id_lotacao";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1298,7 +1298,7 @@ namespace OPS.Core.DAO
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoSenado.Cargo:
+                case AgrupamentoRemuneracaoSenado.Cargo:
                     strSelectFiels = "cr.id, cr.descricao";
                     sqlGroupBy = "GROUP BY r.id_cargo";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1308,7 +1308,7 @@ namespace OPS.Core.DAO
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoSenado.Categoria:
+                case AgrupamentoRemuneracaoSenado.Categoria:
                     strSelectFiels = "ct.id, ct.descricao";
                     sqlGroupBy = "GROUP BY r.id_categoria";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1318,7 +1318,7 @@ namespace OPS.Core.DAO
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoSenado.Vinculo:
+                case AgrupamentoRemuneracaoSenado.Vinculo:
                     strSelectFiels = "v.id, v.descricao";
                     sqlGroupBy = "GROUP BY r.id_vinculo";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1328,7 +1328,7 @@ namespace OPS.Core.DAO
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoSenado.Ano:
+                case AgrupamentoRemuneracaoSenado.Ano:
                     strSelectFiels = "CAST(r.ano_mes/100 AS UNSIGNED) as id, CAST(r.ano_mes/100 AS UNSIGNED) as descricao";
                     sqlGroupBy = "GROUP BY CAST(r.ano_mes/100 AS UNSIGNED)";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1338,7 +1338,7 @@ namespace OPS.Core.DAO
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoSenado.AnoMes:
+                case AgrupamentoRemuneracaoSenado.AnoMes:
                     strSelectFiels = "";
                     sqlGroupBy = "";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1352,7 +1352,7 @@ namespace OPS.Core.DAO
                     };
 
                     break;
-                case EnumAgrupamentoRemuneracaoSenado.Senador:
+                case AgrupamentoRemuneracaoSenado.Senador:
                     strSelectFiels = "s.id, s.nome as descricao";
                     sqlGroupBy = "GROUP BY s.id";
                     dcFielsSort = new Dictionary<int, string>(){
@@ -1399,7 +1399,7 @@ namespace OPS.Core.DAO
                 sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
             }
 
-            if (eAgrupamento == EnumAgrupamentoRemuneracaoSenado.Senador)
+            if (eAgrupamento == AgrupamentoRemuneracaoSenado.Senador)
             {
                 sqlWhere.AppendLine("	AND s.id IS NOT NULL ");
             }
@@ -1407,7 +1407,7 @@ namespace OPS.Core.DAO
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
-                if (eAgrupamento != EnumAgrupamentoRemuneracaoSenado.AnoMes)
+                if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
                 {
                     sqlSelect.AppendLine($@"
 SELECT
@@ -1485,7 +1485,7 @@ WHERE (1=1)
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
-                    if (eAgrupamento != EnumAgrupamentoRemuneracaoSenado.AnoMes)
+                    if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
                     {
                         while (await reader.ReadAsync())
                         {

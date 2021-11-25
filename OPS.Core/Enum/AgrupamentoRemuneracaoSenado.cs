@@ -4,7 +4,7 @@ using System.Web;
 
 namespace OPS.Core
 {
-    public enum EnumAgrupamentoRemuneracaoSenado
+    public enum AgrupamentoRemuneracaoSenado
     {
         Lotacao = 1,
         Cargo = 2,
