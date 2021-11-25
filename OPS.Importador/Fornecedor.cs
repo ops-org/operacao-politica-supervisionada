@@ -1,5 +1,4 @@
 ﻿using MySqlConnector;
-using Newtonsoft.Json;
 using OPS.Core;
 using System;
 using System.Collections.Generic;
@@ -7,8 +6,8 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OPS.Importador
@@ -210,7 +209,7 @@ namespace OPS.Importador
                         if (response.IsSuccessStatusCode)
                         {
                             string responseString = await response.Content.ReadAsStringAsync();
-                            receita = (FornecedorInfo)JsonConvert.DeserializeObject(responseString, typeof(FornecedorInfo));
+                            receita = JsonSerializer.Deserialize<FornecedorInfo>(responseString);
                         }
                         else
                         {

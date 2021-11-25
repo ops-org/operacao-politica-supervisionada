@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
 using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OPS.API.Controllers
@@ -122,15 +122,17 @@ namespace OPS.API.Controllers
         [HttpPost]
         [IgnoreCacheOutput, InvalidateCacheOutput(nameof(Consulta))]
         [Route("ConsultarDadosCnpj")]
-        public dynamic ConsultarDadosCnpj(JObject jsonData)
+        public dynamic ConsultarDadosCnpj(JsonDocument jsonData)
         {
             if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
 
-            string aCNPJ = jsonData["cnpj"].ToString();
+            JsonElement root = jsonData.RootElement;
+
+            string aCNPJ = root.GetProperty("cnpj").ToString();
             CookieContainer _cookies = CacheHelper.Get<CookieContainer>("CookieReceitaFederal_" + aCNPJ);
 
             var oFormatarDados = new FormatarDados();
-            var fornecedor = oFormatarDados.ObterDados(_cookies, aCNPJ, jsonData["captcha"].ToString());
+            var fornecedor = oFormatarDados.ObterDados(_cookies, aCNPJ, root.GetProperty("captcha").ToString());
 
             // Testar
             ////now get cache instance

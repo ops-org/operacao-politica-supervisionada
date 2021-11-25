@@ -1,16 +1,16 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace OPS.Core.Entity
 {
     public class TelegramMessage
     {
-        [JsonProperty("parse_mode")]
+        [JsonPropertyName("parse_mode")]
         public string ParseMode { get; set; }
 
-        [JsonProperty("chat_id")]
+        [JsonPropertyName("chat_id")]
         public string ChatId { get; set; }
 
-        [JsonProperty("text")]
+        [JsonPropertyName("text")]
         public string Text { get; set; }
     }
 }

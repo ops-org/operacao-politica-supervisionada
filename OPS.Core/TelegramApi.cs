@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using OPS.Core.Entity;
+﻿using OPS.Core.Entity;
 using RestSharp;
 using System;
+using System.Text.Json;
 using System.Threading;
 
 namespace OPS.Core
@@ -28,7 +27,7 @@ namespace OPS.Core
         {
             var url = $"{UrlTelegram}/sendMessage";
 
-            var jsonContent = JsonConvert.SerializeObject(message);
+            var jsonContent = JsonSerializer.Serialize(message);
             var request = new RestRequest(Method.POST);
 
             request.AddHeader("Content-Type", "application/json");
@@ -48,8 +47,7 @@ namespace OPS.Core
                     try
                     {
                         // { "ok":false,"error_code":429,"description":"Too Many Requests: retry after 35","parameters":{ "retry_after":35} }
-                        var value = ((Newtonsoft.Json.Linq.JValue)JObject.Parse(response.Content)["parameters"]["retry_after"]).Value;
-                        retryAfter = Convert.ToInt32(value);
+                        retryAfter = JsonDocument.Parse(response.Content).RootElement.GetProperty("parameters").GetProperty("retry_after").GetInt32();
                     }
                     catch { }
 

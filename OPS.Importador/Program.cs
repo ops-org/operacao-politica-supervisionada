@@ -149,8 +149,9 @@ namespace OPS.Importador
                 //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
 
 
-                Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
-                Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
+                //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
+                //Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
+                Senado.AtualizaCadastroSenadores();
 
                 ////var tempPath = configuration["AppSettings:SiteTempFolder"];
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));

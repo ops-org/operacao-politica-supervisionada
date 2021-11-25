@@ -1,4 +1,8 @@
-﻿using System;
+﻿using CsvHelper;
+using OPS.Core;
+using OPS.Core.Entity;
+using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -6,10 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using CsvHelper;
-using Newtonsoft.Json.Linq;
-using OPS.Core;
-using RestSharp;
+using System.Text.Json;
 
 namespace OPS.Importador
 {
@@ -19,13 +20,13 @@ namespace OPS.Importador
         {
             using (var banco = new AppDb())
             {
-                var lstSenadorAtivo = new List<int>();
-                var lstSenador = new List<int>();
+                var lstSenadorAtivo = new List<string>();
+                var lstSenador = new List<string>();
                 using (var reader = banco.ExecuteReader("SELECT id FROM sf_senador where ativo = 'S' order by id"))
                 {
                     while (reader.Read())
                     {
-                        lstSenador.Add(Convert.ToInt32(reader["id"]));
+                        lstSenador.Add(reader["id"].ToString());
                     }
                 }
 
@@ -39,14 +40,16 @@ namespace OPS.Importador
                 request.AddHeader("Accept", "application/json");
 
                 IRestResponse resSenadores = restClient.Execute(request);
-                JObject jSenadores = JObject.Parse(resSenadores.Content);
-                JArray arrIdentificacaoParlamentar = (JArray)jSenadores["ListaParlamentarEmExercicio"]["Parlamentares"]["Parlamentar"];
+                JsonDocument jSenadores = JsonDocument.Parse(resSenadores.Content);
+                JsonElement arrIdentificacaoParlamentar = jSenadores.RootElement.GetProperty("ListaParlamentarEmExercicio").GetProperty("Parlamentares").GetProperty("Parlamentar");
+                var senadores = arrIdentificacaoParlamentar.EnumerateArray();
 
-                foreach (var senador in arrIdentificacaoParlamentar)
+                while (senadores.MoveNext())
                 {
                     try
                     {
-                        var parlamentar = senador["IdentificacaoParlamentar"].ToObject<IdentificacaoParlamentar>();
+                        var senador = senadores.Current;
+                        var parlamentar = JsonSerializer.Deserialize<IdentificacaoParlamentar>(senador.GetProperty("IdentificacaoParlamentar"));
 
                         banco.ClearParameters();
                         banco.AddParameter("id", parlamentar.CodigoParlamentar);
@@ -111,12 +114,12 @@ namespace OPS.Importador
 
                 #region Atualizar senadores ativos e os que estavam ativos antes da importação
 
-                var lstLegislatura = new List<int>();
+                var lstLegislatura = new List<string>();
                 using (var reader = banco.ExecuteReader("SELECT id FROM sf_legislatura"))
                 {
                     while (reader.Read())
                     {
-                        lstLegislatura.Add(Convert.ToInt32(reader["id"]));
+                        lstLegislatura.Add(reader["id"].ToString());
                     }
                 }
 
@@ -144,60 +147,67 @@ namespace OPS.Importador
                     request.AddHeader("Accept", "application/json");
 
                     var resSenador = restClient.Execute(request);
-                    JObject jSenador = JObject.Parse(resSenador.Content);
-                    JObject arrParlamentar = (JObject)jSenador["DetalheParlamentar"]["Parlamentar"];
+                    JsonDocument jSenador = JsonDocument.Parse(resSenador.Content);
+                    Senador senador = JsonSerializer.Deserialize<Senador>(resSenador.Content);
+                    var parlamentar = senador.DetalheParlamentar.Parlamentar;
+                    var identificacaoParlamentar = parlamentar.IdentificacaoParlamentar;
+                    var jParlamentar = jSenador.RootElement.GetProperty("DetalheParlamentar").GetProperty("Parlamentar");
 
-                    var parlamentarCompleto = arrParlamentar.ToObject<Parlamentar>();
-                    Console.WriteLine("Consultando dados do senador {0}: {1}", idSenador, parlamentarCompleto.IdentificacaoParlamentar.NomeParlamentar);
+                    Console.WriteLine("Consultando dados do senador {0}: {1}", idSenador, identificacaoParlamentar.NomeParlamentar);
 
-                    var parlamentar = parlamentarCompleto.IdentificacaoParlamentar;
 
-                    if (string.IsNullOrEmpty(parlamentar.UfParlamentar))
+                    if (jParlamentar.GetProperty("Telefones").GetProperty("Telefone").ValueKind == JsonValueKind.Array)
                     {
-                        try
-                        {
-                            var jUltimoMandato = jSenador["DetalheParlamentar"]["Parlamentar"]["UltimoMandato"];
-                            if (jUltimoMandato is JArray)
-                                parlamentar.UfParlamentar = jUltimoMandato[0]["UfParlamentar"].ToString();
-                            else
-                                parlamentar.UfParlamentar = jUltimoMandato["UfParlamentar"].ToString();
-                        }
-                        catch (Exception)
-                        { }
+                        parlamentar.Telefones = JsonSerializer.Deserialize<Telefones>(jParlamentar.GetProperty("Telefones"));
+                    }
+                    else
+                    {
+                        parlamentar.Telefones = new Telefones();
+                        parlamentar.Telefones.Telefone = new Telefone[1];
+                        parlamentar.Telefones.Telefone[0] = JsonSerializer.Deserialize<Telefone>(jParlamentar.GetProperty("Telefones").GetProperty("Telefone"));
                     }
 
-                    if (string.IsNullOrEmpty(parlamentar.NomeParlamentar))
+                    if (string.IsNullOrEmpty(identificacaoParlamentar.NomeParlamentar))
                     {
-                        parlamentar.NomeParlamentar = parlamentar.NomeCompletoParlamentar;
+                        identificacaoParlamentar.NomeParlamentar = identificacaoParlamentar.NomeCompletoParlamentar;
                     }
 
-                    banco.AddParameter("id", parlamentar.CodigoParlamentar);
-                    banco.AddParameter("codigo", parlamentar.CodigoPublicoNaLegAtual);
-                    banco.AddParameter("nome", parlamentar.NomeParlamentar);
-                    banco.AddParameter("nome_completo", parlamentar.NomeCompletoParlamentar);
-                    banco.AddParameter("sexo", parlamentar.SexoParlamentar[0].ToString());
-                    banco.AddParameter("sigla_partido", parlamentar.SiglaPartidoParlamentar);
-                    banco.AddParameter("sigla_uf", parlamentar.UfParlamentar);
-                    banco.AddParameter("email", parlamentar.EmailParlamentar);
-                    banco.AddParameter("site", parlamentar.UrlPaginaParticular);
+                    banco.AddParameter("id", identificacaoParlamentar.CodigoParlamentar);
+                    banco.AddParameter("codigo", identificacaoParlamentar.CodigoPublicoNaLegAtual);
+                    banco.AddParameter("nome", identificacaoParlamentar.NomeParlamentar);
+                    banco.AddParameter("nome_completo", identificacaoParlamentar.NomeCompletoParlamentar);
+                    banco.AddParameter("sexo", identificacaoParlamentar.SexoParlamentar[0].ToString());
+                    banco.AddParameter("sigla_partido", identificacaoParlamentar.SiglaPartidoParlamentar);
+                    banco.AddParameter("sigla_uf", identificacaoParlamentar.UfParlamentar);
+                    banco.AddParameter("email", identificacaoParlamentar.EmailParlamentar);
+                    banco.AddParameter("site", identificacaoParlamentar.UrlPaginaParticular);
 
-                    var dadosBasicos = parlamentarCompleto.DadosBasicosParlamentar;
+                    var dadosBasicos = senador.DetalheParlamentar.Parlamentar.DadosBasicosParlamentar;
                     banco.AddParameter("nascimento", dadosBasicos.DataNascimento);
                     banco.AddParameter("naturalidade", dadosBasicos.Naturalidade);
                     banco.AddParameter("sigla_uf_naturalidade", dadosBasicos.UfNaturalidade);
 
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/profissao?v=1", Method.GET);
+                    request.AddHeader("Accept", "application/json");
+
+                    IRestResponse resProfissoes = restClient.Execute(request);
+                    JsonDocument jSenadorProfissoes = JsonDocument.Parse(resProfissoes.Content);
+                    var jParlamentarProfissoes = jSenadorProfissoes.RootElement.GetProperty("ProfissaoParlamentar").GetProperty("Parlamentar");
+
                     var lstSenadorProfissao = new List<Profissao>();
-                    if (arrParlamentar["Profissoes"] != null)
+                    JsonElement jProfissoes;
+                    if (jParlamentarProfissoes.TryGetProperty("Profissoes", out jProfissoes))
                     {
-                        if (arrParlamentar["Profissoes"]["Profissao"] is JArray)
+                        if (jProfissoes.GetProperty("Profissao").ValueKind == JsonValueKind.Array)
                         {
-                            lstSenadorProfissao = arrParlamentar["Profissoes"]["Profissao"].ToObject<List<Profissao>>();
+                            lstSenadorProfissao = JsonSerializer.Deserialize<List<Profissao>>(jProfissoes.GetProperty("Profissao"));
                         }
                         else
                         {
-                            lstSenadorProfissao.Add(arrParlamentar["Profissoes"]["Profissao"].ToObject<Profissao>());
+                            lstSenadorProfissao.Add(JsonSerializer.Deserialize<Profissao>(jProfissoes.GetProperty("Profissao")));
                         }
                     }
+
                     if (lstSenadorProfissao.Any())
                     {
                         banco.AddParameter("profissao", string.Join(", ", lstSenadorProfissao.Select(obj => obj.NomeProfissao)));
@@ -207,7 +217,7 @@ namespace OPS.Importador
                         banco.AddParameter("profissao", DBNull.Value);
                     }
 
-                    banco.AddParameter("ativo", lstSenadorAtivo.Contains(parlamentar.CodigoParlamentar) ? "S" : "N");
+                    banco.AddParameter("ativo", lstSenadorAtivo.Contains(identificacaoParlamentar.CodigoParlamentar) ? "S" : "N");
 
                     banco.ExecuteNonQuery(@"
                         UPDATE sf_senador SET
@@ -244,53 +254,59 @@ namespace OPS.Importador
 
                             banco.ExecuteNonQuery(@"INSERT IGNORE INTO sf_senador_profissao (id_sf_senador, id_profissao) values (@id_sf_senador, @id_profissao)");
                         }
-
                     }
 
-                    var lstHistoricoAcademico = new List<Curso>();
-                    if (arrParlamentar["HistoricoAcademico"] != null)
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/historicoAcademico?v=1", Method.GET);
+                    request.AddHeader("Accept", "application/json");
+
+                    IRestResponse resHistoricoAcademico = restClient.Execute(request);
+                    JsonDocument jSenadorHistoricoAcademico = JsonDocument.Parse(resHistoricoAcademico.Content);
+                    var jHistoricoAcademico = jSenadorHistoricoAcademico.RootElement.GetProperty("HistoricoAcademicoParlamentar").GetProperty("Parlamentar");
+
+                    var lstCursos = new List<SenadorCurso>();
+                    JsonElement jCursos;
+                    if (jHistoricoAcademico.TryGetProperty("HistoricoAcademico", out jCursos))
                     {
-                        if (arrParlamentar["HistoricoAcademico"]["Curso"] is JArray)
+                        if (jCursos.GetProperty("Curso").ValueKind == JsonValueKind.Array)
                         {
-                            lstHistoricoAcademico = arrParlamentar["HistoricoAcademico"]["Curso"].ToObject<List<Curso>>();
+                            lstCursos = JsonSerializer.Deserialize<List<SenadorCurso>>(jCursos.GetProperty("Curso"));
                         }
                         else
                         {
-                            lstHistoricoAcademico.Add(arrParlamentar["HistoricoAcademico"]["Curso"].ToObject<Curso>());
+                            lstCursos.Add(JsonSerializer.Deserialize<SenadorCurso>(jCursos.GetProperty("Curso")));
+                        }
+
+                        if (lstCursos != null)
+                        {
+                            foreach (var curso in lstCursos)
+                            {
+                                banco.AddParameter("id_sf_senador", idSenador);
+                                banco.AddParameter("nome_curso", curso.NomeCurso);
+                                banco.AddParameter("grau_instrucao", curso.GrauInstrucao);
+                                banco.AddParameter("estabelecimento", curso.Estabelecimento);
+                                banco.AddParameter("local", curso.Local);
+
+                                banco.ExecuteNonQuery(@"
+                                INSERT IGNORE INTO sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
+                                values (@id_sf_senador, @nome_curso, @grau_instrucao, @estabelecimento, @local)");
+                            }
                         }
                     }
-                    foreach (var curso in lstHistoricoAcademico)
-                    {
-                        banco.AddParameter("id_sf_senador", idSenador);
-                        banco.AddParameter("nome_curso", curso.NomeCurso);
-                        banco.AddParameter("grau_instrucao", curso.GrauInstrucao);
-                        banco.AddParameter("estabelecimento", curso.Estabelecimento);
-                        banco.AddParameter("local", curso.Local);
 
-                        banco.ExecuteNonQuery(@"
-                            INSERT IGNORE INTO sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
-                            values (@id_sf_senador, @nome_curso, @grau_instrucao, @estabelecimento, @local)");
-                    }
-
-
-                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos", Method.GET);
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos?v=5", Method.GET);
                     request.AddHeader("Accept", "application/json");
 
                     IRestResponse resSenadorMandato = restClient.Execute(request);
-                    JObject jSenadorMandato = JObject.Parse(resSenadorMandato.Content);
-                    JToken arrPalamentar = jSenadorMandato["MandatoParlamentar"]["Parlamentar"];
-                    JToken arrMandatosPalamentar = arrPalamentar["Mandatos"];
+                    var senadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
+                    var arrPalamentar = senadorMandato.MandatoParlamentar.Parlamentar;
+                    var arrMandatosPalamentar = arrPalamentar.Mandatos.Mandato;
 
-                    Console.WriteLine("Consultando mandatos do senador {0}: {1}", idSenador, arrPalamentar["Nome"].ToString());
+                    Console.WriteLine("Consultando mandatos do senador {0}: {1}", idSenador, arrPalamentar.Nome);
 
                     if (arrMandatosPalamentar != null)
                     {
-                        JArray arrMandatoParlamentar = (JArray)arrMandatosPalamentar["Mandato"];
-
-                        foreach (var jMandato in arrMandatoParlamentar)
+                        foreach (var mandato in arrMandatosPalamentar)
                         {
-                            var mandato = jMandato.ToObject<Mandato>();
-
                             //Ignorar mandatos muito antigos
                             if (mandato.CodigoMandato == null) continue;
 
@@ -347,7 +363,7 @@ namespace OPS.Importador
                                 {
                                     #region Mandato Legislatura
 
-                                    var lstLegislaturaMandato = new List<ALegislaturaDoMandato>();
+                                    var lstLegislaturaMandato = new List<LegislaturaDoMandato>();
                                     lstLegislaturaMandato.Add(mandato.PrimeiraLegislaturaDoMandato);
                                     lstLegislaturaMandato.Add(mandato.SegundaLegislaturaDoMandato);
 
@@ -441,7 +457,7 @@ namespace OPS.Importador
         {
             using (var banco = new AppDb())
             {
-                var lstSenadorNovo = new List<int>();
+                var lstSenadorNovo = new List<string>();
                 var lstSenador = new List<int>();
                 using (var reader = banco.ExecuteReader("SELECT s.id FROM sf_senador s left join sf_mandato m ON m.id_sf_senador = s.id WHERE m.id IS null"))
                 {
@@ -454,7 +470,7 @@ namespace OPS.Importador
                 {
                     while (reader.Read())
                     {
-                        lstSenadorNovo.Add(Convert.ToInt32(reader["id"]));
+                        lstSenadorNovo.Add(reader["id"].ToString());
                     }
                 }
 
@@ -463,12 +479,12 @@ namespace OPS.Importador
 
                 #region Atualizar senadores ativos e os que estavam ativos antes da importação
 
-                var lstLegislatura = new List<int>();
+                var lstLegislatura = new List<string>();
                 using (var reader = banco.ExecuteReader("SELECT id FROM sf_legislatura"))
                 {
                     while (reader.Read())
                     {
-                        lstLegislatura.Add(Convert.ToInt32(reader["id"]));
+                        lstLegislatura.Add(reader["id"].ToString());
                     }
                 }
 
@@ -628,19 +644,16 @@ namespace OPS.Importador
                     request.AddHeader("Accept", "application/json");
 
                     IRestResponse resSenadorMandato = restClient.Execute(request);
-                    JObject jSenadorMandato = JObject.Parse(resSenadorMandato.Content);
-                    JToken arrPalamentar = jSenadorMandato["MandatoParlamentar"]["Parlamentar"];
-                    JToken arrMandatosPalamentar = arrPalamentar["Mandatos"];
+                    SenadorMandato jSenadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
+                    var arrPalamentar = jSenadorMandato.MandatoParlamentar.Parlamentar;
+                    var arrMandatosPalamentar = arrPalamentar.Mandatos.Mandato;
 
-                    Console.WriteLine("Consultando mandatos do senador {0}: {1}", idSenador, arrPalamentar["IdentificacaoParlamentar"]["NomeParlamentar"].ToString());
+                    Console.WriteLine("Consultando mandatos do senador {0}: {1}", idSenador, arrPalamentar.Nome.ToString());
 
                     if (arrMandatosPalamentar != null)
                     {
-                        JArray arrMandatoParlamentar = (JArray)arrMandatosPalamentar["Mandato"];
-
-                        foreach (var jMandato in arrMandatoParlamentar)
+                        foreach (var mandato in arrMandatosPalamentar)
                         {
-                            var mandato = jMandato.ToObject<Mandato>();
                             try
                             {
                                 //Ignorar mandatos muito antigos
@@ -698,7 +711,7 @@ namespace OPS.Importador
                                 {
                                     #region Mandato Legislatura
 
-                                    var lstLegislaturaMandato = new List<ALegislaturaDoMandato>();
+                                    var lstLegislaturaMandato = new List<LegislaturaDoMandato>();
                                     lstLegislaturaMandato.Add(mandato.PrimeiraLegislaturaDoMandato);
                                     lstLegislaturaMandato.Add(mandato.SegundaLegislaturaDoMandato);
 

@@ -1,12 +1,11 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using RestSharp;
+﻿using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -160,13 +159,13 @@ namespace OPS.Core
                 });
         }
 
-        public static async Task SendMailAsync(string SendGridAPIKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null)
+        public static async Task SendMailAsync(string apiKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null)
         {
             var lstEmailTo = new MailAddressCollection() { objEmailTo };
-            await SendMailAsync(SendGridAPIKey, lstEmailTo, subject, body, ReplyTo);
+            await SendMailAsync(apiKey, lstEmailTo, subject, body, ReplyTo);
         }
 
-        public static async Task SendMailAsync(string APIKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)
+        public static async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)
         {
             var lstTo = new List<To>();
             foreach (MailAddress objEmailTo in lstEmailTo)
@@ -212,6 +211,7 @@ namespace OPS.Core
 
             var restClient = new RestClient("https://api.sendgrid.com/v3/mail/send");
             restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
             var request = new RestRequest(Method.POST);
             request.AddHeader("cache-control", "no-cache");
             request.AddHeader("Connection", "keep-alive");
@@ -220,13 +220,13 @@ namespace OPS.Core
             request.AddHeader("Cache-Control", "no-cache");
             request.AddHeader("Accept", "*/*");
             request.AddHeader("content-type", "application/json");
-            request.AddHeader("authorization", "Bearer " + APIKey);
-            request.AddParameter("application/json", JsonConvert.SerializeObject(param), ParameterType.RequestBody);
+            request.AddHeader("authorization", "Bearer " + apiKey);
+            request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
             IRestResponse response = await restClient.ExecuteAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Accepted)
             {
-                JObject responseBody = JObject.Parse(response.Content);
+                var responseBody = JsonSerializer.Deserialize<dynamic>(response.Content);
 
                 throw new Exception(responseBody["errors"][0]["message"].ToString());
             }
