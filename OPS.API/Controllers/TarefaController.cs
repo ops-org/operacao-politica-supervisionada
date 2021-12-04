@@ -1,5 +1,4 @@
-﻿using AspNetCore.CacheOutput;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core.DAO;
@@ -13,22 +12,18 @@ namespace OPS.API.Controllers
 
         private IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
-        public IApiCacheOutput Cache { get; }
 
-        public TarefaController(IConfiguration configuration, IWebHostEnvironment env, IApiCacheOutput cache)
+        public TarefaController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;
-            Cache = cache;
         }
 
         [HttpGet]
         [Route("LimparCache")]
-        public async void LimparCache()
+        public void LimparCache()
         {
             new ParametrosDao().CarregarPadroes();
-
-            await Cache.RemoveStartsWithAsync("*");
         }
 
 

@@ -1,5 +1,4 @@
-﻿using AspNetCore.CacheOutput;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OPS.Core.DAO;
 using System.Threading.Tasks;
 
@@ -7,7 +6,7 @@ namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+    // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class InicioController : Controller
     {
         [HttpGet]

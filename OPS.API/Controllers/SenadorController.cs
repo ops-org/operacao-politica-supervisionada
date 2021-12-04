@@ -1,5 +1,4 @@
-﻿using AspNetCore.CacheOutput;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
@@ -11,7 +10,7 @@ namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+    //[CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class SenadorController : Controller
     {
 
@@ -36,7 +35,7 @@ namespace OPS.API.Controllers
         }
 
         [HttpPost("Lista")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
         {
             return await dao.Lista(filtro);
@@ -44,7 +43,7 @@ namespace OPS.API.Controllers
 
 
         [HttpPost("Pesquisa")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Pesquisa(MultiSelectRequest filtro)
         {
             return await dao.Pesquisa(filtro);
@@ -59,7 +58,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("TipoDespesa")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> TipoDespesa()
         {
             return await dao.TipoDespesa();
@@ -126,7 +125,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("Lotacao")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Lotacao()
         {
             return await dao.Lotacao();
@@ -134,7 +133,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("Cargo")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Cargo()
         {
             return await dao.Cargo();
@@ -142,7 +141,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("Categoria")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Categoria()
         {
             return await dao.Categoria();
@@ -150,7 +149,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("Vinculo")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Vinculo()
         {
             return await dao.Vinculo();

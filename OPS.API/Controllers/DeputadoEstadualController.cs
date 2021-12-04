@@ -1,14 +1,12 @@
-﻿using OPS.Core;
+﻿using Microsoft.AspNetCore.Mvc;
 using OPS.Core.DAO;
 using OPS.Core.DTO;
-using Microsoft.AspNetCore.Mvc;
-using AspNetCore.CacheOutput;
 
 namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+    // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoEstadualController : Controller
     {
         DeputadoEstadualDao dao;
@@ -27,7 +25,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public dynamic Pesquisa()
         {
             return dao.Pesquisa();
@@ -42,7 +40,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("TipoDespesa")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public dynamic TipoDespesa()
         {
             return dao.TipoDespesa();

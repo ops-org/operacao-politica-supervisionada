@@ -1,5 +1,4 @@
-﻿using AspNetCore.CacheOutput;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
@@ -15,7 +14,7 @@ namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+    // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class FornecedorController : Controller
     {
         private IWebHostEnvironment Environment { get; }
@@ -32,7 +31,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("{id:int}")]
-        [IgnoreCacheOutput]
+        //[IgnoreCacheOutput]
         public dynamic Consulta(int id)
         {
             var _fornecedor = dao.Consulta(id);
@@ -88,7 +87,7 @@ namespace OPS.API.Controllers
         //private const string paginaQuadroSocietario = "Cnpjreva_qsa.asp";
 
         [HttpGet]
-        [IgnoreCacheOutput]
+        //[IgnoreCacheOutput]
         [Route("Captcha/{value}")]
         public string Captcha(string value)
         {
@@ -120,7 +119,7 @@ namespace OPS.API.Controllers
         }
 
         [HttpPost]
-        [IgnoreCacheOutput, InvalidateCacheOutput(nameof(Consulta))]
+        //[IgnoreCacheOutput, InvalidateCacheOutput(nameof(Consulta))]
         [Route("ConsultarDadosCnpj")]
         public dynamic ConsultarDadosCnpj(JsonDocument jsonData)
         {

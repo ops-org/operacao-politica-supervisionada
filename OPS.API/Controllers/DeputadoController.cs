@@ -1,19 +1,16 @@
-﻿using AspNetCore.CacheOutput;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.DTO;
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
+    // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoController : Controller
     {
         private IWebHostEnvironment Environment { get; }
@@ -36,14 +33,14 @@ namespace OPS.API.Controllers
         }
 
         [HttpPost("Lista")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
         {
             return await dao.Lista(filtro);
         }
 
         [HttpPost("Pesquisa")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Pesquisa(MultiSelectRequest filtro)
         {
             return await dao.Pesquisa(filtro);
@@ -56,14 +53,14 @@ namespace OPS.API.Controllers
         }
 
         [HttpGet("TipoDespesa")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> TipoDespesa()
         {
             return await dao.TipoDespesa();
         }
 
         [HttpPost("SecretarioPesquisa")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> SecretarioPesquisa(MultiSelectRequest filtro)
         {
             return await dao.SecretarioPesquisa(filtro);
@@ -181,7 +178,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("GrupoFuncional")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> GrupoFuncional()
         {
             return await dao.GrupoFuncional();
@@ -189,7 +186,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("Cargo")]
-        [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Cargo()
         {
             return await dao.Cargo();

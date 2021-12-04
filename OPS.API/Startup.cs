@@ -1,4 +1,3 @@
-using AspNetCore.CacheOutput;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -29,10 +28,6 @@ namespace OPS.API
         {
             Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
             new ParametrosDao().CarregarPadroes();
-
-            services.AddSingleton<CacheKeyGeneratorFactory, CacheKeyGeneratorFactory>();
-            services.AddSingleton<ICacheKeyGenerator, DefaultCacheKeyGenerator>();
-            services.AddSingleton<IApiCacheOutput, InMemoryCacheOutputProvider>();
 
             //services.AddScoped(_ => new AppDb(Configuration["ConnectionStrings:AuditoriaContext"]));
 
@@ -137,6 +132,21 @@ namespace OPS.API
 
             // Enable compression
             app.UseResponseCompression();
+
+            app.UseResponseCaching();
+            app.Use(async (context, next) =>
+            {
+                context.Response.GetTypedHeaders().CacheControl =
+                    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+                    {
+                        Public = true,
+                        MaxAge = TimeSpan.FromHours(6)
+                    };
+
+                context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
+
+                await next();
+            });
 
             app.UseEndpoints(endpoints =>
             {
