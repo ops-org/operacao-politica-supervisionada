@@ -61,7 +61,6 @@ namespace OPS.Importador
                     file.Close();
             }
         }
-
         private static bool processaZip(ZipFile zip)
         {
             // YYYYMM_NFe_NotaFiscal.csv
@@ -99,16 +98,27 @@ namespace OPS.Importador
 
             var nfs = processaNFs(arquivoFiscal);
             var itens = processaProdutos(arquivoItens);
-            // o mais eficiente é distribuir os itens nas notas,
-            // porém desconfio que podem haver itens sem nota e nota sem itens,
-            // Ex.: A NF 13211002660659000108550010000010821080300097
-            //  > não tem o item 2 no arquivo do mês 10, apenas os itens 1 e 3
-            // Vou testar depois usando hashsets
 
             // Distribuir produtos por chave
             var dicItens = itens.GroupBy(i => i.Chave)
                                 .ToDictionary(o => o.Key, e => e.ToArray());
 
+            // o mais eficiente é distribuir os itens nas notas,
+            // porém desconfio que podem haver itens sem nota e nota sem itens,
+            // Ex.: A NF 13211002660659000108550010000010821080300097
+            //  > não tem o item 2 no arquivo do mês 10, apenas os itens 1 e 3
+
+            // Como nos meses 09, 10 e 11 não tem nenhum ocorrência, vou comentar
+            /*
+                HashSet<string> chaveNFs = nfs.Select(n => n.Chave).ToHashSet();
+                // Notas sem Itens
+                var notasSemItens = nfs.Where(nf => !dicItens.ContainsKey(nf.Chave)).ToArray();
+                if (notasSemItens.Length > 0) { }
+                var itensSemNotas = dicItens.Where(i => !chaveNFs.Contains(i.Key)).ToArray();
+                if (itensSemNotas.Length > 0) { }
+            */
+
+            // Preencher
             foreach (var n in nfs)
             {
                 // Se tiver nota sem itens, ele vai quebrar aqui
@@ -121,12 +131,14 @@ namespace OPS.Importador
             nfs = null;
             itens = null;
             dicItens = null;
-            
-            // Processa eventos
-
             arquivoFiscal.Dispose();
-            arquivoEventos.Dispose();
             arquivoItens.Dispose();
+
+            // Processa eventos
+            var eventos = processaEventos(arquivoEventos);
+            gravaEventosBD(eventos);
+
+            arquivoEventos.Dispose();
 
             return true;
         }
@@ -199,8 +211,50 @@ namespace OPS.Importador
             }
             return lst.ToArray();
         }
+        private static Evento[] processaEventos(Stream arquivoItem)
+        {
+            using var reader = new StreamReader(arquivoItem, Encoding.GetEncoding("ISO-8859-1"));
+            using var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR"));
+
+            List<Evento> lst = new List<Evento>();
+
+            csv.Read(); // Avança para a linha[0] 
+            csv.ReadHeader(); // carrega, na linha zero, os headers
+            while (csv.Read())
+            {
+                string chave = csv["CHAVE DE ACESSO"];
+                string descricaoEvento = csv["DESCRIÇÃO EVENTO"];
+                string protocolo = "";
+                // Protocolo não tem campo específico e parece estar em todos os "DESCRIÇÃO EVENTO"
+                if (descricaoEvento.Contains("Protocolo"))
+                {
+                    protocolo = descricaoEvento.Split(':')[1];
+                }
+                if (protocolo.Length != 16)
+                {
+                    Console.WriteLine($"Evento sem Protocolo para {chave}");
+                }
+
+                lst.Add(new Evento()
+                {
+                    Chave = chave,
+                    // Vou ignorar os dados base da NF do evento
+                    EventoTexto = csv["EVENTO"],
+                    EventoData = csv.GetField<DateTime>("DATA/HORA EVENTO"),
+                    EventoDescricao = descricaoEvento,
+                    EventoMotivo = csv["MOTIVO EVENTO"],
+                    Protocolo = protocolo,
+
+                });
+            }
+            return lst.ToArray();
+        }
 
         private static void gravarNFeBD(NotaFiscal[] nfs)
+        {
+            // TODO
+        }
+        private static void gravaEventosBD(Evento[] eventos)
         {
             // TODO
         }
@@ -211,7 +265,7 @@ namespace OPS.Importador
         {
             return $"http://www.portaltransparencia.gov.br/download-de-dados/notas-fiscais/{ano}{mes:00}";
         }
-
+        /* -- Models -- */
         public class NotaFiscal
         {
             // Campos:
@@ -268,6 +322,7 @@ namespace OPS.Importador
             // "CFOP";"QUANTIDADE";"UNIDADE";"VALOR UNITÁRIO";"VALOR TOTAL"
 
             // O par (Chave/Indice) é único
+            // Acredito que o [PK da NF]+[Indice] seja um bom Key
 
             public string Chave { get; set; }
             // Todos os dados da NFe base são irrelevantes, não vou ler para não gastar memória na leitura
@@ -288,19 +343,23 @@ namespace OPS.Importador
         }
         public class Evento
         {
-            // "CHAVE DE ACESSO";"MODELO";"SÉRIE";"NÚMERO";"NATUREZA DA OPERAÇÃO";"DATA EMISSÃO";"EVENTO";"DATA/HORA EVENTO";"DESCRIÇÃO EVENTO";"MOTIVO EVENTO"
+            // "CHAVE DE ACESSO";"MODELO";"SÉRIE";"NÚMERO";"NATUREZA DA OPERAÇÃO";"DATA EMISSÃO";
+            // "EVENTO";"DATA/HORA EVENTO";"DESCRIÇÃO EVENTO";"MOTIVO EVENTO"
             public string Chave { get; set; }
-            // 55: NFe, 65: NFCe, 59: SAT (SP)
-            public int Modelo { get; set; }
-            public int Serie { get; set; }
-            public int Numero { get; set; }
-            public string Natureza { get; set; }
-            public DateTime DataEmissao { get; set; }
-
+            // Não precisa os dados da NF de novo
+            /*
+                public int Modelo { get; set; }
+                public int Serie { get; set; }
+                public int Numero { get; set; }
+                public string Natureza { get; set; }
+                public DateTime DataEmissao { get; set; }
+            */
             public string EventoTexto { get; set; }
             public DateTime EventoData { get; set; }
             public string EventoDescricao { get; set; }
             public string EventoMotivo { get; set; }
+            // Protocolo é um bom campo-chave porém não tem campo próprio
+            public string Protocolo { get; set; }
         }
     }
 }
