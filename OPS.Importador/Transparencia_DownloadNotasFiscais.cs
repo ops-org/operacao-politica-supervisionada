@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text;
+using CsvHelper;
 using ICSharpCode.SharpZipLib.Zip;
 using OPS.Core;
 
@@ -20,18 +23,21 @@ namespace OPS.Importador
             if (!Directory.Exists(atualDir))
                 Directory.CreateDirectory(atualDir);
             string nomeArquivoZip = $"NFe_{ano}{mes:00}.zip";
-
-            string url = geraUrlDownload(ano, mes);
-
-            var response = client.GetAsync(url).Result;
-            // Se não conseguiu fazer o download, retorna um HttpRequestException
-            response.EnsureSuccessStatusCode();
-
-            // Salva a stream
             string caminhoZip = Path.Combine(atualDir, nomeArquivoZip);
-            using (var fs = new FileStream(caminhoZip, FileMode.CreateNew))
+            // Durante testes, baixar de novo a cada teste é complicado
+            if (!File.Exists(caminhoZip))
             {
-                var ResponseTask = response.Content.CopyToAsync(fs);
+                string url = geraUrlDownload(ano, mes);
+                var response = client.GetAsync(url).Result;
+                // Se não conseguiu fazer o download, retorna um HttpRequestException
+                response.EnsureSuccessStatusCode();
+
+                // Salva a stream
+                using (var fs = new FileStream(caminhoZip, FileMode.CreateNew))
+                {
+                    var ResponseTask = response.Content.CopyToAsync(fs);
+                    ResponseTask.Wait();
+                }
             }
 
             // Desempacota
@@ -79,13 +85,27 @@ namespace OPS.Importador
             // Deu erado?
             if (arquivoFiscal == null || arquivoEventos == null || arquivoItens == null)
             {
-                if (arquivoFiscal != null)  arquivoFiscal.Dispose();
+                if (arquivoFiscal != null) arquivoFiscal.Dispose();
                 if (arquivoEventos != null) arquivoEventos.Dispose();
-                if (arquivoItens != null)   arquivoItens.Dispose();
+                if (arquivoItens != null) arquivoItens.Dispose();
                 return false;
             }
 
-            
+            // Eventos podem ser de datas diferentes
+            // Um evento do mês 10, pode ser referente à uma NF emitida no mês 09
+            // Portando, os eventos não precisam ser processados junto com as notas do mês
+            // não vou tentar omitizar a gravação
+
+            var nfs = processaNFs(arquivoFiscal);
+            var itens = processaProdutos(arquivoItens);
+            // o mais eficiente é distribuir os itens nas notas,
+            // porém desconfio que podem haver itens sem nota e nota sem itens,
+            // Ex.: A NF 13211002660659000108550010000010821080300097
+            //  > não tem o item 2 no arquivo do mês 10, apenas os itens 1 e 3
+
+
+
+
 
 
             arquivoFiscal.Dispose();
@@ -95,14 +115,80 @@ namespace OPS.Importador
             return true;
         }
 
+        private static NotaFiscal[] processaNFs(Stream arquivoFiscal)
+        {
+            using var reader = new StreamReader(arquivoFiscal, Encoding.GetEncoding("ISO-8859-1"));
+            using var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR"));
 
+            List<NotaFiscal> lst = new List<NotaFiscal>();
+
+            csv.Read(); // Avança para a linha[0] 
+            csv.ReadHeader(); // carrega, na linha zero, os headers
+            while (csv.Read())
+            {
+                lst.Add(new NotaFiscal()
+                {
+                    Chave = csv["CHAVE DE ACESSO"],
+                    Modelo = int.Parse(csv["MODELO"].Split('-')[0]),
+                    Serie = int.Parse(csv["SÉRIE"]),
+                    Numero = int.Parse(csv["NÚMERO"]),
+                    Natureza = csv["NATUREZA DA OPERAÇÃO"],
+                    DataEmissao = csv.GetField<DateTime>("DATA EMISSÃO"),
+                    EventoMaisRecente = csv["EVENTO MAIS RECENTE"],
+                    DataEventoMaisRecente = csv.GetField<DateTime>("DATA/HORA EVENTO MAIS RECENTE"),
+
+                    Emitente_Documento = csv["CPF/CNPJ Emitente"],
+                    Emitente_Razao = csv["RAZÃO SOCIAL EMITENTE"],
+                    Emitente_IE = csv["INSCRIÇÃO ESTADUAL EMITENTE"],
+                    Emitente_UF = csv["UF EMITENTE"],
+                    Emitente_Municipio = csv["MUNICÍPIO EMITENTE"],
+
+                    Destinatario_Documento = csv["CNPJ DESTINATÁRIO"],
+                    Destinatario_Nome = csv["NOME DESTINATÁRIO"],
+                    Destinatario_UF = csv["UF DESTINATÁRIO"],
+                    Destinatario_IndicadorIE = csv["INDICADOR IE DESTINATÁRIO"],
+
+                    DestinoOperacao = int.Parse(csv["DESTINO DA OPERAÇÃO"].Split('-')[0]),
+                    ConsumidorFinal = int.Parse(csv["CONSUMIDOR FINAL"].Split('-')[0]),
+                    IndicadorPresenca = int.Parse(csv["PRESENÇA DO COMPRADOR"].Split('-')[0]),
+                    ValorOperacao = csv.GetField<decimal>("VALOR NOTA FISCAL"),
+                });
+            }
+            return lst.ToArray();
+        }
+        private static Item[] processaProdutos(Stream arquivoItem)
+        {
+            using var reader = new StreamReader(arquivoItem, Encoding.GetEncoding("ISO-8859-1"));
+            using var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR"));
+
+            List<Item> lst = new List<Item>();
+
+            csv.Read(); // Avança para a linha[0] 
+            csv.ReadHeader(); // carrega, na linha zero, os headers
+            while (csv.Read())
+            {
+                lst.Add(new Item()
+                {
+                    Chave = csv["CHAVE DE ACESSO"],
+                    Indice = int.Parse(csv["NÚMERO PRODUTO"]),
+                    NomeProduto = csv["DESCRIÇÃO DO PRODUTO/SERVIÇO"],
+                    NCM = csv["CÓDIGO NCM/SH"],
+                    // Vou ignorar a descrição do NCM
+                    CFOP = int.Parse(csv["CFOP"]),
+                    Quantidade = csv.GetField<decimal>("QUANTIDADE"),
+                    Unidade = csv["UNIDADE"],
+                    ValorUnitario = csv.GetField<decimal>("VALOR UNITÁRIO"),
+                    ValorTotal = csv.GetField<decimal>("VALOR TOTAL"),
+                });
+            }
+            return lst.ToArray();
+        }
 
         /* -- Auxiliares -- */
         private static string geraUrlDownload(int ano, int mes)
         {
             return $"http://www.portaltransparencia.gov.br/download-de-dados/notas-fiscais/{ano}{mes:00}";
         }
-
 
         public class NotaFiscal
         {
@@ -117,7 +203,7 @@ namespace OPS.Importador
             public int Modelo { get; set; }
             public int Serie { get; set; }
             public int Numero { get; set; }
-            
+
             // Natureza é irrelevante, é texto livre e o software emissor pode fazer o que quiser
             // Talvez seja útil com a implementação de um bom (complexo) parser textual
             // Que coloque o texto como um Enum
@@ -126,8 +212,8 @@ namespace OPS.Importador
             public DateTime DataEmissao { get; set; }
             // Evento mais recente não é relevante aqui, todos os eventos são catalogados
             public string EventoMaisRecente { get; set; }
-            public DateTime DataEventoMaisRecente { get; set;}
-            public string Emitente_Documento{ get; set; }
+            public DateTime DataEventoMaisRecente { get; set; }
+            public string Emitente_Documento { get; set; }
             public string Emitente_Razao { get; set; }
             public string Emitente_IE { get; set; }
             public string Emitente_UF { get; set; }
@@ -136,7 +222,7 @@ namespace OPS.Importador
             public string Destinatario_Documento { get; set; }
             public string Destinatario_Nome { get; set; }
             public string Destinatario_UF { get; set; }
-            public string Destinatario_IndicadorIE{ get; set; }
+            public string Destinatario_IndicadorIE { get; set; }
             public int DestinoOperacao { get; set; }
             public int ConsumidorFinal { get; set; }
             public int IndicadorPresenca { get; set; }
@@ -144,6 +230,28 @@ namespace OPS.Importador
         }
         public class Item
         {
+            // "CHAVE DE ACESSO";"MODELO";"SÉRIE";"NÚMERO";"NATUREZA DA OPERAÇÃO";"DATA EMISSÃO";
+            // "CPF/CNPJ Emitente";"RAZÃO SOCIAL EMITENTE";"INSCRIÇÃO ESTADUAL EMITENTE";
+            // "UF EMITENTE";"MUNICÍPIO EMITENTE";"CNPJ DESTINATÁRIO";"NOME DESTINATÁRIO";"UF DESTINATÁRIO";
+            // "INDICADOR IE DESTINATÁRIO";"DESTINO DA OPERAÇÃO";"CONSUMIDOR FINAL";"PRESENÇA DO COMPRADOR";
+            // "NÚMERO PRODUTO";"DESCRIÇÃO DO PRODUTO/SERVIÇO";"CÓDIGO NCM/SH";"NCM/SH (TIPO DE PRODUTO)";
+            // "CFOP";"QUANTIDADE";"UNIDADE";"VALOR UNITÁRIO";"VALOR TOTAL"
+            public string Chave { get; set; }
+            // Todos os dados da NFe base são irrelevantes, não vou ler para não gastar memória na leitura
+            // Vou ignorar tudo até chegar na parte do produto
+            public int Indice { get; set; } // Idx é base 1, não base 0
+            public string NomeProduto { get; set; }
+            public string NCM { get; set; }
+            // Significado do NCM é irrelevante
+            // Não vou ler o "NCM/SH (TIPO DE PRODUTO)"
+            public int CFOP { get; set; }
+            public decimal Quantidade { get; set; } // Não sei se é quantidade tributada ou quantidade comerciada
+            public string Unidade { get; set; }
+            public decimal ValorUnitario { get; set; }
+            // Se o valor for o vProd, ele já inclui descontos e acréscimos
+            // > vSeg, vFrete, vDesc, vOutro
+            public decimal ValorTotal { get; set; }
+
         }
         public class Evento
         {
