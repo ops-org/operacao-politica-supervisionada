@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using CsvHelper;
@@ -102,11 +103,26 @@ namespace OPS.Importador
             // porém desconfio que podem haver itens sem nota e nota sem itens,
             // Ex.: A NF 13211002660659000108550010000010821080300097
             //  > não tem o item 2 no arquivo do mês 10, apenas os itens 1 e 3
+            // Vou testar depois usando hashsets
 
+            // Distribuir produtos por chave
+            var dicItens = itens.GroupBy(i => i.Chave)
+                                .ToDictionary(o => o.Key, e => e.ToArray());
 
+            foreach (var n in nfs)
+            {
+                // Se tiver nota sem itens, ele vai quebrar aqui
+                // Ainda não vou tratar, pois se ocorrer é um problema que deve imterromper a importação
+                n.ItensNota = dicItens[n.Chave];
+            }
+            gravarNFeBD(nfs);
 
-
-
+            // Após a gravação, pode liberar a memória
+            nfs = null;
+            itens = null;
+            dicItens = null;
+            
+            // Processa eventos
 
             arquivoFiscal.Dispose();
             arquivoEventos.Dispose();
@@ -184,6 +200,12 @@ namespace OPS.Importador
             return lst.ToArray();
         }
 
+        private static void gravarNFeBD(NotaFiscal[] nfs)
+        {
+            // TODO
+        }
+
+
         /* -- Auxiliares -- */
         private static string geraUrlDownload(int ano, int mes)
         {
@@ -192,12 +214,17 @@ namespace OPS.Importador
 
         public class NotaFiscal
         {
+            // Campos:
             // "CHAVE DE ACESSO";"MODELO";"SÉRIE";"NÚMERO";"NATUREZA DA OPERAÇÃO";
             // "DATA EMISSÃO";"EVENTO MAIS RECENTE";"DATA/HORA EVENTO MAIS RECENTE";
             // "CPF/CNPJ Emitente";"RAZÃO SOCIAL EMITENTE";"INSCRIÇÃO ESTADUAL EMITENTE";
             // "UF EMITENTE";"MUNICÍPIO EMITENTE";"CNPJ DESTINATÁRIO";"NOME DESTINATÁRIO";
             // "UF DESTINATÁRIO";"INDICADOR IE DESTINATÁRIO";"DESTINO DA OPERAÇÃO";
             // "CONSUMIDOR FINAL";"PRESENÇA DO COMPRADOR";"VALOR NOTA FISCAL"
+
+            // A Chave de acesso é única 
+            // O par (Série/Número) é única por CNPJ do Emitente (Emitente_Documento)
+
             public string Chave { get; set; }
             // 55: NFe, 65: NFCe, 59: SAT (SP)
             public int Modelo { get; set; }
@@ -227,15 +254,21 @@ namespace OPS.Importador
             public int ConsumidorFinal { get; set; }
             public int IndicadorPresenca { get; set; }
             public decimal ValorOperacao { get; set; }
+
+            public Item[] ItensNota { get; set; }
         }
         public class Item
         {
+            // Campos:
             // "CHAVE DE ACESSO";"MODELO";"SÉRIE";"NÚMERO";"NATUREZA DA OPERAÇÃO";"DATA EMISSÃO";
             // "CPF/CNPJ Emitente";"RAZÃO SOCIAL EMITENTE";"INSCRIÇÃO ESTADUAL EMITENTE";
             // "UF EMITENTE";"MUNICÍPIO EMITENTE";"CNPJ DESTINATÁRIO";"NOME DESTINATÁRIO";"UF DESTINATÁRIO";
             // "INDICADOR IE DESTINATÁRIO";"DESTINO DA OPERAÇÃO";"CONSUMIDOR FINAL";"PRESENÇA DO COMPRADOR";
             // "NÚMERO PRODUTO";"DESCRIÇÃO DO PRODUTO/SERVIÇO";"CÓDIGO NCM/SH";"NCM/SH (TIPO DE PRODUTO)";
             // "CFOP";"QUANTIDADE";"UNIDADE";"VALOR UNITÁRIO";"VALOR TOTAL"
+
+            // O par (Chave/Indice) é único
+
             public string Chave { get; set; }
             // Todos os dados da NFe base são irrelevantes, não vou ler para não gastar memória na leitura
             // Vou ignorar tudo até chegar na parte do produto
