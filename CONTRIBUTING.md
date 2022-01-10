@@ -21,7 +21,7 @@ Grupo de discussão: [Robops no Telegram](https://t.me/joinchat/ByZCHlJ3VPEc8guz
 
 1. Baixe (clone) o repositório
 2. [BD] Subir um banco dedados MySql
-3. [BD] Importar os arquivos de Schema
+3. [BD] Importar os arquivos de [Schema](https://github.com/ops-org/operacao-politica-supervisionada/tree/master/Docs/BD/Schemas)
 4. [Backend] Com o SDK do .Net6 instalado, abra a solução com o VisualStudio
 5. [Backend] Definir o Projeto OPS.API como principal (`Set as Startup Project`)
 6. [Backend]Iniciar o backend com F5
