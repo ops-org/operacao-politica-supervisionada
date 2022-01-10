@@ -1,6 +1,6 @@
 Esta documentação ainda está sendo desenvolvida
 
-Dados específicos serão disponibilizados em [Docs](https://github.com/ops-org/operacao-politica-supervisionada/tree/Documenta%C3%A7%C3%A3o/Docs)
+Dados específicos serão disponibilizados em [Docs](https://github.com/ops-org/operacao-politica-supervisionada/tree/master/Docs)
 
 - [Contribuindo com o Projeto](#contribuindo-com-o-projeto)
   - [Como começar?](#como-começar)
