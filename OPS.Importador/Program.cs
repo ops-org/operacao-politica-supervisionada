@@ -143,7 +143,10 @@ namespace OPS.Importador
                 var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
                 var sb = new StringBuilder();
                 var rootPath = configuration["AppSettings:SiteRootFolder"];
-                var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
+                var tempPath = Path.Combine(rootPath, "static", "temp");
+
+                Transparencia_DownloadNotasFiscais.ImportarNotas(tempPath, 2021, 10);
+
                 //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
                 //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
                 //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
@@ -151,7 +154,7 @@ namespace OPS.Importador
 
                 //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
                 //Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
-                Senado.AtualizaCadastroSenadores();
+                //Senado.AtualizaCadastroSenadores();
 
                 ////var tempPath = configuration["AppSettings:SiteTempFolder"];
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
