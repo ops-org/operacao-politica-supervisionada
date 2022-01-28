@@ -1,14 +1,11 @@
-﻿using CsvHelper;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using OPS.Core;
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,102 +13,6 @@ namespace OPS.Importador
 {
     internal class Program
     {
-        //public static void ConverterXmlParaCsvDespesasCamara(string tempPath)
-        //{
-        //	string[] ColunasXmlDespesasCamara = new string[]
-        //   {
-        //	"txNomeParlamentar",
-        //	"ideCadastro",
-        //	"nuCarteiraParlamentar",
-        //	"nuLegislatura",
-        //	"sgUF",
-        //	"sgPartido",
-        //	"codLegislatura",
-        //	"numSubCota",
-        //	"txtDescricao",
-        //	"numEspecificacaoSubCota",
-        //	"txtDescricaoEspecificacao",
-        //	"txtFornecedor",
-        //	"txtCNPJCPF",
-        //	"txtNumero",
-        //	"indTipoDocumento",
-        //	"datEmissao",
-        //	"vlrDocumento",
-        //	"vlrGlosa",
-        //	"vlrLiquido",
-        //	"numMes",
-        //	"numAno",
-        //	"numParcela",
-        //	"txtPassageiro",
-        //	"txtTrecho",
-        //	"numLote",
-        //	"numRessarcimento",
-        //	"ideDocumento",
-        //	"vlrRestituicao",
-        //	"nuDeputadoId"
-        //   };
-
-        //	string fullFileNameXml = tempPath + @"\AnoAtual.xml";
-        //	StreamReader stream = null;
-
-        //	try
-        //	{
-        //		if (fullFileNameXml.EndsWith("AnoAnterior.xml"))
-        //			stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding(850)); //"ISO-8859-1"
-        //		else
-        //			stream = new StreamReader(fullFileNameXml, Encoding.GetEncoding("ISO-8859-1"));
-
-        //		using (XmlReader reader = XmlReader.Create(stream, new XmlReaderSettings() { IgnoreComments = true }))
-        //		{
-        //			reader.ReadToDescendant("DESPESAS");
-        //			reader.ReadToDescendant("DESPESA");
-
-        //			using (StreamWriter outputFile = new StreamWriter(fullFileNameXml.Replace(".xml", ".csv")))
-        //			{
-        //				do
-        //				{
-        //					var lstCsv = new List<string>();
-        //					var strXmlNodeDespeza = reader.ReadOuterXml();
-        //					if (string.IsNullOrEmpty(strXmlNodeDespeza))
-        //						break;
-
-        //					XmlDocument doc = new XmlDocument();
-        //					doc.LoadXml(strXmlNodeDespeza);
-        //					XmlNodeList files = doc.DocumentElement.SelectNodes("*");
-
-        //					int indexXml = 0;
-        //					for (int i = 0; i < 29; i++)
-        //					{
-        //						if (files[indexXml].Name == ColunasXmlDespesasCamara[i])
-        //						{
-        //							lstCsv.Add(files[indexXml++].InnerText);
-        //						}
-        //						else
-        //						{
-        //							lstCsv.Add("");
-        //						}
-
-        //					}
-
-        //					outputFile.WriteLine(string.Join(";", lstCsv));
-        //				}
-        //				while (true);
-        //			}
-
-        //			reader.Close();
-        //		}
-        //	}
-        //	catch (Exception)
-        //	{
-        //		throw;
-        //	}
-        //	finally
-        //	{
-        //		stream.Close();
-        //		stream.Dispose();
-        //	}
-        //}
-
         public static void Main(string[] args)
         {
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
@@ -139,11 +40,16 @@ namespace OPS.Importador
             }
             else
             {
-                var TelegramApiToken = configuration["AppSettings:TelegramApiToken"];
-                var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
-                var sb = new StringBuilder();
-                var rootPath = configuration["AppSettings:SiteRootFolder"];
-                var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
+                //new Core.DAO.ParametrosDao().CarregarPadroes();
+
+                ////ImportacaoDadosCompleto(configuration).Wait();
+                //Camara.ImportaPresencasDeputados();
+
+                //var TelegramApiToken = configuration["AppSettings:TelegramApiToken"];
+                //var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
+                //var sb = new StringBuilder();
+                //var rootPath = configuration["AppSettings:SiteRootFolder"];
+                //var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
                 //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
                 //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
                 //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
@@ -151,7 +57,7 @@ namespace OPS.Importador
 
                 //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
                 //Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
-                Senado.AtualizaCadastroSenadores();
+                //Senado.AtualizaCadastroSenadores();
 
                 ////var tempPath = configuration["AppSettings:SiteTempFolder"];
                 //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
@@ -207,14 +113,12 @@ namespace OPS.Importador
                 //Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2016));
                 //Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2017));
                 //Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2018));
-                ////Camara.AtualizaDeputadoValores();
                 //Camara.ImportaPresencasDeputados();
 
                 //Camara.AtualizaDeputadoValores();
                 //Camara.AtualizaCampeoesGastos();
                 //Camara.AtualizaResumoMensal();
                 //Camara.ImportarMandatos();
-                //Camara.ImportaPresencasDeputados();
 
                 //Camara.AtualizaInfoDeputadosCompleto();
                 //Camara.ImportarDeputados(52);
@@ -237,8 +141,8 @@ namespace OPS.Importador
 
                 //Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken).Wait();
 
-                //Camara.ColetaDadosDeputados();
                 //Camara.ColetaDadosFuncionarios().Wait();
+                //Camara.ColetaDadosDeputados();
                 //Camara.ColetaRemuneracaoSecretarios();
 
                 //var s = Camara.ImportarDeputados(
@@ -260,83 +164,11 @@ namespace OPS.Importador
 
                 //Camara.ImportarDeputados();
 
-                //tempPath = System.AppDomain.CurrentDomain.BaseDirectory;
-                //using (var banco = new Banco())
-                //{
-                //    string sql = @"
-                //        SELECT ds.id, dp.id_deputado, ds.id_documento, ds.ano 
-                //        FROM cf_despesa ds
-                //        INNER JOIN cf_deputado dp on dp.id = ds.id_cf_deputado
-                //        WHERE ds.ano >= 2015
-                //        and ds.id_fornecedor IN(78823, 89903, 102626) 
-                //        and id_documento is not null
-                //        order by ds.id DESC";
 
-                //    DataTable table = banco.GetTable(sql, 0);
-
-                //    if (table.Rows.Count > 0)
-                //    {
-                //        Console.WriteLine("Total: " + table.Rows.Count);
-
-                //        var ilegivel = 0;
-                //        foreach (DataRow dr in table.Rows)
-                //        {
-                //            string downloadUrl = "http://www.camara.gov.br/cota-parlamentar/documentos/publ/" + dr["id_deputado"].ToString() + "/" + dr["ano"].ToString() + "/" + dr["id_documento"].ToString() + ".pdf";
-                //            string fileName = tempPath + "\\pdf\\" + dr["id"].ToString() + ".pdf";
-                //            string fileNameOK = tempPath + "\\pdf_ok\\" + dr["id"].ToString() + ".pdf";
-                //            string fileNameSuspeito = tempPath + "\\pdf_suspeito\\" + dr["id"].ToString() + ".pdf";
-
-                //            if (!File.Exists(fileName) && !File.Exists(fileNameOK) && !File.Exists(fileNameSuspeito))
-                //            {
-                //                try
-                //                {
-                //                    using (var client = new WebClient())
-                //                    {
-                //                        client.Headers.Add("User-Agent: Other");
-                //                        client.DownloadFile(downloadUrl, fileName);
-                //                    }
-                //                }
-                //                catch (WebException e)
-                //                {
-                //                    if (e.Message.Contains("404")) continue;
-
-                //                    Console.WriteLine(e);
-                //                    throw;
-                //                }
-                //            }
-
-                //            try
-                //            {
-                //                var lstUber = ReadPdfFile(fileName, "Uber");
-                //                if (!lstUber.Any())
-                //                {
-                //                    ilegivel++; //Console.WriteLine("Ilegivel:" + dr["id"].ToString() + " - " + downloadUrl);
-                //                    continue;
-                //                }
-
-                //                var lstExtra = ReadPdfFile(fileName, "Extra");
-                //                if (lstExtra.Any())
-                //                {
-                //                    File.Move(fileName, fileNameSuspeito);
-                //                    //Console.WriteLine(dr["id"].ToString() + " - " + downloadUrl);
-                //                    continue;
-                //                }
-
-                //                File.Move(fileName, fileNameOK);
-                //            }
-                //            catch (Exception e)r
-                //            {
-                //                //Console.WriteLine(e.Message);
-                //            }
-                //        }
-
-                //        Console.WriteLine("Ilegivel: " + ilegivel);
-                //    }
-                //}
 
                 //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
 
-                Console.WriteLine(sb.ToString());
+                //Console.WriteLine(sb.ToString());
                 Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
                 Console.ReadKey();
             }
@@ -414,40 +246,19 @@ namespace OPS.Importador
                 t = sw.Elapsed;
                 sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                //sb.AppendLine("<div style='font-weight: bold;'>-- Importar Presenças Deputados :: @duracao --</div>");
-                //sw.Restart();
-                //try
-                //{
-                //    sb.Append(Camara.ImportaPresencasDeputados());
-                //}
-                //catch (Exception ex)
-                //{
-                //    sb.Append(ex.ToFullDescriptionString());
-                //}
-                //t = sw.Elapsed;
-                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                sb.AppendLine("<div style='font-weight: bold;'>-- Importar Presenças Deputados :: @duracao --</div>");
+                sw.Restart();
+                try
+                {
+                    sb.Append(Camara.ImportaPresencasDeputados());
+                }
+                catch (Exception ex)
+                {
+                    sb.Append(ex.ToFullDescriptionString());
+                }
+                t = sw.Elapsed;
+                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-
-
-                //sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Secretários parlamentares {0} :: @duracao --</div>", DateTime.Now.Year);
-                //sb.AppendLine();
-                //sw.Restart();
-
-                ////Instantiate DI container for the application  
-                //var serviceCollection = new ServiceCollection();
-
-                ////Register NodeServices  
-                //serviceCollection.AddNodeServices();
-
-                ////Request the DI container to supply the shared INodeServices instance  
-                //var nodeService = serviceCollection.BuildServiceProvider().GetRequiredService<INodeServices>();
-
-                ////Invoke the javascript module with parameters to execute in Node environment.  
-                //var taskResult = await nodeService.InvokeAsync<string>(@"D:\GitHub\operacao-politica-supervisionada\OPS.ImportacaoNodejs\app.js");
-
-                //sb.AppendFormat(taskResult);
-                //t = sw.Elapsed;
-                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
                 sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Senadores {0} :: @duracao --</div>", DateTime.Now.Year);
                 sw.Restart();
@@ -553,121 +364,6 @@ namespace OPS.Importador
 
                 await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], new MailAddress(Padrao.EmailEnvioErros), "OPS :: Informe de erro na Importação", message);
             }
-        }
-
-        //public static List<int> ReadPdfFile(string fileName, String searthText)
-        //{
-        //    List<int> pages = new List<int>();
-        //    if (File.Exists(fileName))
-        //    {
-        //        PdfReader pdfReader = new PdfReader(fileName);
-        //        for (int page = 1; page <= pdfReader.NumberOfPages; page++)
-        //        {
-        //            ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
-
-        //            string currentPageText = PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
-        //            if (currentPageText.Contains(searthText))
-        //            {
-        //                pages.Add(page);
-        //            }
-        //        }
-        //        pdfReader.Close();
-        //    }
-        //    return pages;
-        //}
-
-
-        private static void ImportarPartidos()
-        {
-            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-            var sb = new StringBuilder();
-            var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
-
-            int indice = 0;
-            int Legenda = indice++;
-            int Imagem = indice++;
-            int Sigla = indice++;
-            int Nome = indice++;
-            int Sede = indice++;
-            int Fundacao = indice++;
-            int RegistroSolicitacao = indice++;
-            int RegistroProvisorio = indice++;
-            int RegistroDefinitivo = indice++;
-            int Extincao = indice++;
-            int Motivo = indice++;
-
-            using (var banco = new AppDb())
-            {
-                using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
-                {
-                    using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
-                    {
-                        //csv.Configuration.Delimiter = ",";
-
-                        using (WebClient client = new WebClient())
-                        {
-                            client.Headers.Add("User-Agent: Other");
-
-                            while (csv.Read())
-                            {
-                                if (csv[Imagem] == "LOGO") continue;
-
-                                if (csv[Imagem] != "")
-                                {
-                                    try
-                                    {
-                                        MatchCollection m1 = Regex.Matches(csv[Imagem], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
-                                        if (m1.Count > 0)
-                                        {
-                                            var link = m1[0].Groups[1].Value;
-
-                                            var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
-                                            if (!File.Exists(arquivo))
-                                                client.DownloadFile(link, arquivo);
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                }
-
-                                banco.AddParameter("legenda", csv[Legenda] != "-" ? csv[Legenda] : null);
-                                banco.AddParameter("sigla", csv[Sigla] != "??" ? csv[Sigla] : null);
-                                banco.AddParameter("nome", csv[Nome]);
-                                banco.AddParameter("sede", csv[Sede] != "??" ? csv[Sede] : null);
-                                banco.AddParameter("fundacao", AjustarData(csv[Fundacao]));
-                                banco.AddParameter("registro_solicitacao", AjustarData(csv[RegistroSolicitacao]));
-                                banco.AddParameter("registro_provisorio", AjustarData(csv[RegistroProvisorio]));
-                                banco.AddParameter("registro_definitivo", AjustarData(csv[RegistroDefinitivo]));
-                                banco.AddParameter("extincao", AjustarData(csv[Extincao]));
-                                banco.AddParameter("motivo", csv[Motivo]);
-
-                                banco.ExecuteNonQuery(
-                                    @"INSERT INTO partido_todos (
-                                        legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
-                                    ) VALUES (
-                                        @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
-                                    )");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static DateTime? AjustarData(string d)
-        {
-            if (!d.Contains("??/??/??") && d != "ATUAL" && d != "-")
-            {
-                d = d.Replace("??", "01");
-                if (d.Length == 10)
-                    return DateTime.Parse(d);
-                else
-                    return DateTime.ParseExact(d, "dd/MM/yy", CultureInfo.InvariantCulture);
-            }
-
-            return null;
-        }
+        }        
     }
 }

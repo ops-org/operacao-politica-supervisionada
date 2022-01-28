@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace OPS.Importador
 {
-	public static class ImportacaoUtils
+    public static class ImportacaoUtils
 	{
 		public static List<string> ParseCsvRowToList(string separator, string row)
 		{
@@ -29,5 +29,26 @@ namespace OPS.Importador
 
 			thumbnail.Save(sourcePath.Replace(".jpg", "_" + width + "x" + height + ".jpg"), System.Drawing.Imaging.ImageFormat.Jpeg);
 		}
+
+		//public static List<int> ReadPdfFile(string fileName, String searthText)
+		//{
+		//    List<int> pages = new List<int>();
+		//    if (File.Exists(fileName))
+		//    {
+		//        PdfReader pdfReader = new PdfReader(fileName);
+		//        for (int page = 1; page <= pdfReader.NumberOfPages; page++)
+		//        {
+		//            ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
+
+		//            string currentPageText = PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
+		//            if (currentPageText.Contains(searthText))
+		//            {
+		//                pages.Add(page);
+		//            }
+		//        }
+		//        pdfReader.Close();
+		//    }
+		//    return pages;
+		//}
 	}
 }
