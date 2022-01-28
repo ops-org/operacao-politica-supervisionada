@@ -2415,7 +2415,7 @@ WHERE r.id = @id
                         return new
                         {
                             chave = reader["chave"].ToString(),
-                            id_cf_deputado = Convert.ToInt32(reader["id_cf_deputado"]),
+                            id_cf_deputado = !Convert.IsDBNull(reader["id_cf_deputado"]) ? Convert.ToInt32(reader["id_cf_deputado"]) : (int?)null,
                             deputado = reader["deputado"].ToString(),
                             secretario = reader["secretario"].ToString(),
                             cargo = reader["cargo"].ToString(),

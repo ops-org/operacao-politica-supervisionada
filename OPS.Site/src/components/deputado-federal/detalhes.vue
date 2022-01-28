@@ -23,11 +23,11 @@
                     <div class="col-sm-6">
                         <p class="mb-0" title="Secretários Parlamentares">
                             <strong>Pessoal do Gabinete: </strong>
-                            <a v-bind:href="'/deputado-federal/' + id + '/secretario'" title="Clique para ver a lista de secretários">{{deputado_federal.quantidade_secretarios}} Secretário(s)</a>
+                            <a v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">{{deputado_federal.quantidade_secretarios}} Secretário(s)</a>
                         </p>
                         <p class="mb-0">
                             <strong>Custo Mensal do Gabinete: </strong>
-                            <a v-bind:href="'/deputado-federal/' + id + '/secretario'" title="Clique para ver a lista de secretários">R$ {{deputado_federal.custo_secretarios}}</a>
+                            <a v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">R$ {{deputado_federal.custo_secretarios}}</a>
                         </p>
                         <p class="mb-0">
                             <strong>Gasto Acumulado CEAP: </strong>
