@@ -150,6 +150,7 @@
                 <option value="2019">2019</option>
                 <option value="2020">2020</option>
                 <option value="2021">2021</option>
+                <option value="2022">2022</option>
               </select>
             </div>
             <div class="input-group" style="width: 225px">
@@ -187,6 +188,7 @@
                 <option value="2019">2019</option>
                 <option value="2020">2020</option>
                 <option value="2021">2021</option>
+                <option value="2022">2022</option>
               </select>
             </div>
 

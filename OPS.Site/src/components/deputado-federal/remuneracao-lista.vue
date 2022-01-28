@@ -8,7 +8,8 @@
           <label>Ano</label>
           <select class="form-control input-sm" v-model="filtro.ano">
             <option value=""></option>
-            <option value="2021" selected>2021</option>
+            <option value="2022" selected>2022</option>
+            <option value="2021">2021</option>
             <option value="2020">2020</option>
             <option value="2019">2019</option>
             <option value="2018">2018</option>
@@ -181,7 +182,7 @@ export default {
       valorTotal: null,
       filtro: {
         agrupar: '1',
-        ano: '2021',
+        ano: '2022',
         mes: '',
         grupo_funcional: [],
         cargo: [],
@@ -261,7 +262,7 @@ export default {
     var lstPromises = [];
 
     vm.filtro.agrupar = vm.qs.ag || '1';
-    vm.filtro.ano = vm.qs.an || '2021';
+    vm.filtro.ano = vm.qs.an || '2022';
     vm.filtro.mes = vm.qs.ms || '';
     vm.filtro.grupo_funcional = (vm.qs.gf ? vm.qs.gf.split(',') : []);
     vm.filtro.cargo = (vm.qs.cr ? vm.qs.cr.split(',') : []);
@@ -568,7 +569,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        ano: '2021',
+        ano: '2022',
         mes: '',
         grupo_funcional: [],
         cargo: [],
