@@ -27,7 +27,7 @@ namespace OPS.Core
             Initializer(connectionString);
         }
 
-        public long Rows { get; set; }
+        public long RowsAffected { get; set; }
         public long LastInsertedId { get; set; }
 
         public void Dispose()
@@ -78,7 +78,7 @@ namespace OPS.Core
             _mCommand.CommandText = sql;
             _mCommand.CommandTimeout = timeOut;
 
-            Rows = _mCommand.ExecuteNonQuery();
+            RowsAffected = _mCommand.ExecuteNonQuery();
 
             LastInsertedId = _mCommand.LastInsertedId;
 
@@ -265,12 +265,12 @@ namespace OPS.Core
             _mParametros.Add(new MySqlParameter(name, value));
         }
 
-        public string ParametersHash()
+        public byte[] ParametersHash()
         {
             var lst = _mParametros.Select(x => x.Value?.ToString() ?? string.Empty);
             var str = string.Join(",", lst);
 
-            return Utils.Hash(str);
+            return Utils.SHA1Hash(str);
         }
 
         public void ClearParameters()

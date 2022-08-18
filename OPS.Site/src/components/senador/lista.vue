@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid">
+  <div class="container">
     <h3 class="page-title">Cota para Exercício da Atividade Parlamentar no Senado (CEAPS)</h3>
 
     <form id="form" autocomplete="off">
@@ -7,16 +7,16 @@
         <div class="form-group col-md-4">
           <label>Periodo</label>
           <select class="form-control input-sm" v-model="filtro.periodo">
-            <option value="1">Mês Atual</option>
+            <!-- <option value="1">Mês Atual</option>
             <option value="2">Mês Anterior</option>
             <option value="3">Últimos 4 Meses</option>
             <option value="4">Ano Atual</option>
-            <option value="5">Ano Anterior</option>
-            <option value="9">56º (2019-2023)</option>
-            <option value="8">55º (2015-2019)</option>
-            <option value="7">54º (2011-2015)</option>
-            <option value="6">53º (2007-2011)</option>
-            <option value="0">Todas as Legislaturas</option>
+            <option value="5">Ano Anterior</option> -->
+            <option value="56">56º (fev/2019 à jan/2023)</option>
+            <option value="55">55º (fev/2015 à jan/2019)</option>
+            <option value="54">54º (fev/2011 à jan/2015)</option>
+            <option value="53">53º (fev/2007 à jan/2011)</option>
+            <!-- <option value="0">Todas as Legislaturas</option> -->
           </select>
         </div>
         <div class="form-group col-md-4">
@@ -108,7 +108,7 @@
             <option value="6">Recibo</option>
           </select>
         </div>
-        <div class="form-group col-md-4" v-if="filtro.agrupar=='6'">
+        <!-- <div class="form-group col-md-4" v-if="filtro.agrupar=='6'">
           <label>Recibo</label>
           <input type="text" v-model="filtro.documento" class="form-control input-sm" />
         </div>
@@ -194,7 +194,7 @@
 
             <div class="clearfix"></div>
           </div>
-        </div>
+        </div> -->
       </div>
       <div class="row">
         <div class="form-group col-md-12">
@@ -311,13 +311,14 @@ export default {
 
     return {
       pageLoad: true,
+      ultimoAgrupamento: 0,
       isLoadingParlamentar: null,
       selectedRow: {},
       valorTotal: null,
       senador: {},
       filtro: {
         agrupar: '1',
-        periodo: '9',
+        periodo: '56',
         parlamentar: [],
         despesa: [],
         estado: [],
@@ -367,9 +368,18 @@ export default {
               callback(response.data);
 
               loader.hide();
+
+              if(!vm.pageLoad){
+                setTimeout(function(){
+                  jQuery('html, body').animate({
+                    scrollTop: jQuery(".vdtnet-container").offset().top
+                  }, 500);
+                }, 100);
+              }
+
             });
         },
-        pageLength: 100,
+        pageLength: 50,
         ordering: true,
         dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
 
@@ -382,6 +392,7 @@ export default {
         serverSide: true,
         fixedHeader: true,
         saveState: true,
+        order: [],
       },
       fields: {},
     };
@@ -401,7 +412,7 @@ export default {
     }
 
     vm.filtro.agrupar = vm.qs.Agrupamento || '1';
-    vm.filtro.periodo = vm.qs.Periodo || '9';
+    vm.filtro.periodo = vm.qs.Periodo || '56';
     vm.filtro.despesa = (vm.qs.Despesa ? vm.qs.Despesa.split(',') : []);
     vm.filtro.estado = (vm.qs.Estado ? vm.qs.Estado.split(',') : []);
     vm.filtro.partido = (vm.qs.Partido ? vm.qs.Partido.split(',') : []);
@@ -511,9 +522,14 @@ export default {
     Pesquisar(pageLoad) {
       const vm = this;
       vm.senador = {};
-      vm.fields = null;
       vm.pageLoad = pageLoad;
 
+      if(vm.ultimoAgrupamento == vm.filtro.agrupar) {
+        vm.$refs.table.reload();
+        return;
+      }
+
+      vm.fields = null;
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
           case '1': // Senador
@@ -548,7 +564,7 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -556,6 +572,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -578,7 +595,7 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -586,6 +603,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -602,22 +620,18 @@ export default {
                 },
                 sortable: false,
               },
-              cnpj_cpf: {
-                label: 'CNPJ/CPF',
-                sortable: true,
-              },
               nome_fornecedor: {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a>`;
+                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -625,6 +639,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -664,6 +679,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -685,7 +701,7 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -693,25 +709,22 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
 
           case '6': // Recibo
             vm.fields = {
-              data_documento: {
+              data_emissao: {
                 label: 'Emissão',
-                sortable: true,
-              },
-              cnpj_cpf: {
-                label: 'CNPJ/CPF',
                 sortable: true,
               },
               nome_fornecedor: {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a>`;
+                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
@@ -721,7 +734,7 @@ export default {
                 label: 'Parlamentar',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/senador/${full.id_sf_senador}">${data}</a>`;
+                    return `<a href="/senador/${full.id_sf_senador}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
                   }
                   return data;
                 },
@@ -733,7 +746,7 @@ export default {
                 className: 'text-right',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="https://www6g.senado.leg.br/transparencia/sen/download/cotas/documento/${full.id_sf_despesa}">${data}</a>`;
+                    return `<a href="https://www6g.senado.leg.br/transparencia/sen/download/cotas/documento/${full.id_sf_despesa-2000000}" target="_blank">${data}</a>`;
                   }
                   return data;
                 },
@@ -744,6 +757,11 @@ export default {
           default: break;
         }
 
+        vm.ultimoAgrupamento = vm.filtro.agrupar;
+        if(!pageLoad && vm.options.order.length > 0){
+          vm.options.order = [];
+        }
+
         // vm.$nextTick(() => {
         //   vm.$refs.table.reload(null, true);
         // });
@@ -752,7 +770,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        periodo: '9',
+        periodo: '56',
         parlamentar: [],
         despesa: [],
         estado: [],

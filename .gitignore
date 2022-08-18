@@ -29,5 +29,6 @@ node_modules/
 /OPS.Site/public/img/partidos
 /OPS.Site/public/temp
 appsettings.*.json
-/OPS.Site/temp
 /OPS.Site/static/temp
+/OPS.Site/public/img/depfederal
+/OPS.Site/public/img/senador

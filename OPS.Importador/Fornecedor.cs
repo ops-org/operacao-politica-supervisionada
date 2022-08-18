@@ -1,4 +1,6 @@
-﻿using MySqlConnector;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using OPS.Core;
 using System;
 using System.Collections.Generic;
@@ -12,9 +14,16 @@ using System.Threading.Tasks;
 
 namespace OPS.Importador
 {
-    public static class Fornecedor
+    public class Fornecedor
     {
-        //public static void ConsultarCNPJ()
+        public IConfiguration _configuration { get; private set; }
+
+        public Fornecedor(ILogger<Fornecedor> logger, IConfiguration configuration)
+        {
+            this._configuration = configuration;
+        }
+
+        //public  void ConsultarCNPJ()
         //{
         //	int totalErros = 0, totalAcertos = 0;
 
@@ -58,7 +67,7 @@ namespace OPS.Importador
         //	};
         //}
 
-        public static void AtualizaFornecedorDoador()
+        public void AtualizaFornecedorDoador()
         {
             using (var banco = new AppDb())
             {
@@ -77,8 +86,11 @@ namespace OPS.Importador
             }
         }
 
-        public static async Task<string> ConsultarReceitaWS(string receitaWsApiToken, string telegramApiToken)
+        public async Task<string> ConsultarReceitaWS()
         {
+            var telegramApiToken = _configuration["AppSettings:TelegramApiToken"];
+            var receitaWsApiToken = _configuration["AppSettings:ReceitaWsApiToken"];
+
             var telegram = new TelegramApi(telegramApiToken);
             var telegraMessage = new Core.Entity.TelegramMessage()
             {
@@ -177,7 +189,7 @@ namespace OPS.Importador
                             //}
                             //catch (Exception)
                             //{
-                                System.Threading.Thread.Sleep(60000);
+                            System.Threading.Thread.Sleep(60000);
                             //}
                             //finally
                             //{
@@ -429,7 +441,7 @@ namespace OPS.Importador
 SELECT MAX(DATA) as data FROM (
 	SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = @id
 	UNION
-	SELECT MAX(d.data_documento) FROM sf_despesa d WHERE d.id_fornecedor = @id
+	SELECT MAX(d.data_emissao) FROM sf_despesa d WHERE d.id_fornecedor = @id
 	UNION
 	SELECT MAX(d.data) FROM cl_despesa d WHERE d.id_fornecedor = @id
 )
@@ -491,7 +503,7 @@ SELECT MAX(DATA) as data FROM (
             return string.Format("<p>{0} de {1} fornecedores novos importados</p>", totalImportados, dtFornecedores.Rows.Count) + strInfoAdicional.ToString();
         }
 
-        private static void InserirControle(int controle, string cnpj_cpf, string mensagem)
+        private void InserirControle(int controle, string cnpj_cpf, string mensagem)
         {
             using (var banco = new AppDb())
             {
@@ -505,7 +517,7 @@ SELECT MAX(DATA) as data FROM (
             Console.WriteLine($"{controle} - {mensagem}");
         }
 
-        private static DataRow LocalizaInsereAtividade(DataTable dtFornecedoresAtividade, IAtividade atividadesSecundaria)
+        private DataRow LocalizaInsereAtividade(DataTable dtFornecedoresAtividade, IAtividade atividadesSecundaria)
         {
             var drs = dtFornecedoresAtividade.Select("codigo='" + atividadesSecundaria.code + "'");
 
@@ -533,7 +545,7 @@ SELECT MAX(DATA) as data FROM (
             return drs[0];
         }
 
-        private static object ObterValor(object d)
+        private object ObterValor(object d)
         {
             if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()))
                 return DBNull.Value;
@@ -556,7 +568,7 @@ SELECT MAX(DATA) as data FROM (
             }
         }
 
-        private static object ParseDate(object d)
+        private object ParseDate(object d)
         {
             if (Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
                 d.ToString().StartsWith("*"))
@@ -571,7 +583,7 @@ SELECT MAX(DATA) as data FROM (
             }
         }
 
-        public static bool validarCNPJ(string cnpj)
+        public bool validarCNPJ(string cnpj)
         {
 
             int[] mt1 = new int[12] { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };

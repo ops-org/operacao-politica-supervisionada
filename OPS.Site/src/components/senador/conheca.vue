@@ -1,9 +1,9 @@
 <template>
-<div class="container-fluid">
+<div class="container">
     <h3 class="page-title">Senadores</h3>
 
     <p>
-        Lista dos senadores ativos, seus respectivos gastos com a cota parlamentar (CEAPS) e com Folha de pagamento (Propria e de seus secretários).<br>
+        Lista dos senadores, seus respectivos gastos com a cota parlamentar (CEAPS) e com Folha de pagamento (Propria e de seus secretários).<br>
         <small>* Valores acumulados de todas as legislaturas.</small>
     </p>
     <hr />
@@ -42,7 +42,7 @@
     </div>
 
     <div class="row senador-conheca">
-        <div class="col-xs-12 col-sm-6 col-md-3" v-for="senador in senadores" :key="senador.id_sf_senador">
+        <div class="col-xs-12 col-sm-6 col-md-4" v-for="senador in senadores" :key="senador.id_sf_senador">
 
             <div class="card border-primary mb-3">
                 <div class="card-header text-truncate" v-bind:class="{ 'text-white bg-primary': senador.ativo }">
@@ -91,15 +91,15 @@ export default {
       API: '',
       senadores: [],
       filtro: {
-        periodo: 9,
+        periodo: 56,
         estado: [],
         partido: [],
       },
       periodos: [
-        { id: 9, text: '56º (2019-2023)' },
-        { id: 8, text: '55º (2015-2019)' },
-        { id: 7, text: '54º (2011-2015)' },
-        { id: 6, text: '53º (2007-2011)' },
+        { id: 56, text: '56º (2019-2023)' },
+        { id: 55, text: '55º (2015-2019)' },
+        { id: 54, text: '54º (2011-2015)' },
+        { id: 53, text: '53º (2007-2011)' },
       ],
       estados: [],
       partidos: [],

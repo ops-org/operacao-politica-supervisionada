@@ -1,9 +1,10 @@
 <template>
-<div class="container-fluid">
+<div class="container">
     <h3 class="page-title">Deputados federais</h3>
 
     <p>
-        Resumo dos deputados federais, seus respectivos gastos com a cota parlamentar (CEAP) e frequência nas sessões plenárias por legislatura (mandato).
+        Resumo dos deputados federais, seus respectivos gastos com a cota parlamentar (CEAP) e com Folha de pagamento (Propria e de seus secretários).
+        * Valores acumulados de todas as legislaturas.
     </p>
     <hr />
 
@@ -41,11 +42,12 @@
     </div>
 
     <div class="row deputado-conheca">
-        <div class="col-xs-12 col-sm-6 col-md-3" v-for="deputado in deputado_federal" :key="deputado.id_cf_deputado">
+        <div class="col-xs-12 col-sm-6 col-md-4" v-for="deputado in deputado_federal" :key="deputado.id_cf_deputado">
 
             <div class="card border-primary mb-3">
-                <div class="card-header text-white bg-primary text-truncate">
+                <div class="card-header text-truncate" v-bind:class="{ 'text-white bg-primary': deputado.ativo }">
                     <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
+                        <small class="float-right">* {{deputado.situacao}}</small>
                         {{deputado.nome_parlamentar}}<br>
                         <small>{{deputado.nome_civil}}</small>
                     </a>
@@ -62,8 +64,8 @@
                                 <h6 class="card-title mb-1"><span v-bind:title="deputado.nome_partido">{{deputado.sigla_partido}}</span> - <span v-bind:title="deputado.nome_estado">{{deputado.sigla_estado}}</span></h6>
                                 <small class="text-muted">Cota parlamentar</small>
                                 <h6 class="card-text">R$ {{deputado.valor_total_ceap}}</h6>
-                                <!-- <small class="text-muted">Frequência nas sessões plenárias</small>
-                                <h6 class="card-text" v-bind:title="'Compareceu à ' + deputado.total_presencas + ' de ' + deputado.total_sessoes + ' sessões'">{{deputado.frequencia}}% - {{deputado.total_presencas||0}}/{{deputado.total_sessoes||0}}</h6> -->
+                                <small class="text-muted">Folha de Pagamento</small>
+                                <h6 class="card-text">R$ {{deputado.valor_total_remuneracao}}</h6>
                             </div>
                         </div>
                     </div>
@@ -78,23 +80,27 @@
 <script>
 import jQuery from 'jquery';
 
+import VSelect from '../vue-bootstrap-select';
 const axios = require('axios');
 
 export default {
+   components: {
+    VSelect
+  },
   data() {
     return {
       API: '',
       deputado_federal: {},
       filtro: {
-        periodo: 9,
+        periodo: 56,
         estado: [],
         partido: [],
       },
       periodos: [
-        { id: 9, text: '56º (2019-2023)' },
-        { id: 8, text: '55º (2015-2019)' },
-        { id: 7, text: '54º (2011-2015)' },
-        { id: 6, text: '53º (2007-2011)' },
+        { id: 56, text: '56º (2019-2023)' },
+        { id: 55, text: '55º (2015-2019)' },
+        { id: 54, text: '54º (2011-2015)' },
+        { id: 53, text: '53º (2007-2011)' },
       ],
       estados: [],
       partidos: [],
@@ -157,8 +163,12 @@ export default {
 
 <style scoped>
   .deputado-conheca a {
-    color: #FFF !important;
-    text-decoration: none;
+      color: #000;
+      text-decoration: none;
+  }
+
+  .deputado-conheca div.text-white a {
+    color: #FFF;
   }
 
     img.card-img {

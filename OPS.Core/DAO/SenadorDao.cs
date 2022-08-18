@@ -111,26 +111,8 @@ namespace OPS.Core.DAO
 					LEFT JOIN estado e on e.id = d.id_estado
                     JOIN sf_mandato m ON m.id_sf_senador = d.id
 					JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
-                    WHERE m.exerceu = 1");
-
-                switch (request.Periodo)
-                {
-                    case 9: //PERIODO_MANDATO_56
-                        strSql.AppendLine(" AND ml.id_sf_legislatura = 56");
-                        break;
-
-                    case 8: //PERIODO_MANDATO_55
-                        strSql.AppendLine(" AND ml.id_sf_legislatura = 55");
-                        break;
-
-                    case 7: //PERIODO_MANDATO_54
-                        strSql.AppendLine(" AND ml.id_sf_legislatura = 54");
-                        break;
-
-                    case 6: //PERIODO_MANDATO_53
-                        strSql.AppendLine(" AND ml.id_sf_legislatura = 53");
-                        break;
-                }
+                    WHERE m.exerceu = 1
+                    AND ml.id_sf_legislatura = " + request.Periodo.ToString());
 
                 if (!string.IsNullOrEmpty(request.Partido))
                 {
@@ -173,7 +155,6 @@ namespace OPS.Core.DAO
                 return lstRetorno;
             }
         }
-
 
         public async Task<dynamic> MaioresFornecedores(int id)
         {
@@ -427,8 +408,6 @@ namespace OPS.Core.DAO
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
                 {
                     strSql.AppendLine(@"
-                        JOIN sf_mandato m on m.id_sf_senador = d.id and m.exerceu = 1
-                        JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
                         WHERE (1=1) ");
 
                     if (!string.IsNullOrEmpty(filtro.Busca))
@@ -439,28 +418,7 @@ namespace OPS.Core.DAO
 
                     if (filtro.Periodo > 0)
                     {
-                        switch (filtro.Periodo)
-                        {
-                            //case 9: //PERIODO_MANDATO_56
-                            //    strSql.AppendLine(" AND m.id_legislatura = 56");
-                            //    break;
-
-                            case 8: //PERIODO_MANDATO_55
-                                strSql.AppendLine(" AND ml.id_sf_legislatura = 55");
-                                break;
-
-                            case 7: //PERIODO_MANDATO_54
-                                strSql.AppendLine(" AND ml.id_sf_legislatura = 54");
-                                break;
-
-                            case 6: //PERIODO_MANDATO_53
-                                strSql.AppendLine(" AND ml.id_sf_legislatura = 53");
-                                break;
-
-                            default:
-                                strSql.AppendLine(" AND ml.id_sf_legislatura = 56");
-                                break;
-                        }
+                        strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from sf_mandato m JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura = {filtro.Periodo.ToString()})");
                     }
 
                     strSql.AppendLine(@"
@@ -513,66 +471,22 @@ namespace OPS.Core.DAO
         public async Task<dynamic> Lancamentos(DataTablesRequest request)
         {
             if (request == null) throw new BusinessException("Parâmetro request não informado!");
-            Dictionary<int, string> dcFielsSort = null;
 
             EnumAgrupamentoAuditoria eAgrupamento = (EnumAgrupamentoAuditoria)Convert.ToInt32(request.Filters["Agrupamento"].ToString());
             switch (eAgrupamento)
             {
                 case EnumAgrupamentoAuditoria.Parlamentar:
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "nome_parlamentar" },
-                        {2, "sigla_estado" },
-                        {3, "sigla_partido" },
-                        {4, "total_notas" },
-                        {5, "valor_total" },
-                    };
-
-                    return await LancamentosParlamentar(request, dcFielsSort);
+                    return await LancamentosParlamentar(request);
                 case EnumAgrupamentoAuditoria.Despesa:
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "total_notas" },
-                        {3, "valor_total" },
-                    };
-
-                    return await LancamentosDespesa(request, dcFielsSort);
+                    return await LancamentosDespesa(request);
                 case EnumAgrupamentoAuditoria.Fornecedor:
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "cnpj_cpf" },
-                        {2, "nome_fornecedor" },
-                        {3, "total_notas" },
-                        {4, "valor_total" },
-                    };
-
-                    return await LancamentosFornecedor(request, dcFielsSort);
+                    return await LancamentosFornecedor(request);
                 case EnumAgrupamentoAuditoria.Partido:
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "nome_partido" },
-                        {2, "total_notas" },
-                        {3, "total_senadores" },
-                        {4, "valor_medio_por_senador" },
-                        {5, "valor_total" },
-                    };
-
-                    return await LancamentosPartido(request, dcFielsSort);
+                    return await LancamentosPartido(request);
                 case EnumAgrupamentoAuditoria.Estado:
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "nome_estado" },
-                        {2, "total_notas" },
-                        {3, "valor_total" },
-                    };
-
-                    return await LancamentosEstado(request, dcFielsSort);
+                    return await LancamentosEstado(request);
                 case EnumAgrupamentoAuditoria.Documento:
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {0, "data_documento" },
-                        {1, "cnpj_cpf" },
-                        {2, "nome_fornecedor" },
-                        {3, "nome_parlamentar" },
-                        {4, "valor_total" },
-                    };
-
-                    return await LancamentosNotaFiscal(request, dcFielsSort);
+                    return await LancamentosNotaFiscal(request);
                 default:
                     break;
             }
@@ -580,52 +494,45 @@ namespace OPS.Core.DAO
             throw new BusinessException("Parâmetro request.Agrupamento não informado!");
         }
 
-        private async Task<dynamic> LancamentosParlamentar(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
+        private async Task<dynamic> LancamentosParlamentar(DataTablesRequest request)
         {
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					DROP TABLE IF EXISTS table_in_memory;
-					CREATE TEMPORARY TABLE table_in_memory
-					SELECT
-						count(l.id) AS total_notas
-					, sum(l.valor) as valor_total
-					, l.id_sf_senador
-					FROM sf_despesa l
-					WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-
-                AdicionaFiltroSenador(request, sqlSelect);
-
-                AdicionaFiltroDespesa(request, sqlSelect);
-
-                AdicionaFiltroFornecedor(request, sqlSelect);
-
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-					GROUP BY id_sf_senador;
-					
-					SELECT
+                    SELECT SQL_CALC_FOUND_ROWS
 						 d.id as id_sf_senador
 						, d.nome as nome_parlamentar
 						, e.sigla as sigla_estado
 						, p.sigla as sigla_partido
 						, l1.total_notas
 						, l1.valor_total
-						from table_in_memory l1
+					FROM (
+					    SELECT 
+						    count(l.id) AS total_notas
+					    , sum(l.valor) as valor_total
+					    , l.id_sf_senador
+					    FROM sf_despesa l
+					    WHERE (1=1)
+				");
+
+                AdicionaFiltroPeriodo(request, sqlSelect);
+                AdicionaFiltroSenador(request, sqlSelect);
+                AdicionaFiltroDespesa(request, sqlSelect);
+                AdicionaFiltroFornecedor(request, sqlSelect);
+                AdicionaFiltroPartidoSenador(request, sqlSelect);
+                AdicionaFiltroEstadoSenador(request, sqlSelect);
+
+                sqlSelect.AppendLine(@"
+					    GROUP BY id_sf_senador
+                    ) l1
 					LEFT JOIN sf_senador d on d.id = l1.id_sf_senador
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
 				");
 
-                AdicionaResultadoComum(request, sqlSelect, dcFielsSort);
+                AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -643,66 +550,54 @@ namespace OPS.Core.DAO
                         });
                     }
 
-                    reader.NextResult();
-                    await reader.ReadAsync();
-                    string TotalCount = reader[0].ToString();
-                    string ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
-                        recordsTotal = Convert.ToInt32(TotalCount),
-                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        recordsTotal = TotalCount,
+                        recordsFiltered = TotalCount,
                         data = lstRetorno
                     };
                 }
             }
         }
 
-        private async Task<dynamic> LancamentosFornecedor(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
+        private async Task<dynamic> LancamentosFornecedor(DataTablesRequest request)
         {
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					DROP TABLE IF EXISTS table_in_memory;
-					CREATE TEMPORARY TABLE table_in_memory
-					SELECT
-						l.id_fornecedor
-						, count(l.id) AS total_notas
-						, sum(l.valor) as valor_total
-					FROM sf_despesa l
-					WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-
-                AdicionaFiltroSenador(request, sqlSelect);
-
-                AdicionaFiltroDespesa(request, sqlSelect);
-
-                AdicionaFiltroFornecedor(request, sqlSelect);
-
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-					GROUP BY l.id_fornecedor;
-
-					select
+                    SELECT SQL_CALC_FOUND_ROWS
 						l1.id_fornecedor
-						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
 						, l1.total_notas
 						, l1.valor_total
-					from table_in_memory l1
+                        , pj.cnpj_cpf
+					FROM (
+					    SELECT 
+						    l.id_fornecedor
+						    , count(l.id) AS total_notas
+						    , sum(l.valor) as valor_total
+					    FROM sf_despesa l
+					    WHERE (1=1)
+				");
+
+                AdicionaFiltroPeriodo(request, sqlSelect);
+                AdicionaFiltroSenador(request, sqlSelect);
+                AdicionaFiltroDespesa(request, sqlSelect);
+                AdicionaFiltroFornecedor(request, sqlSelect);
+                AdicionaFiltroPartidoSenador(request, sqlSelect);
+                AdicionaFiltroEstadoSenador(request, sqlSelect);
+
+                sqlSelect.AppendLine(@"
+					    GROUP BY l.id_fornecedor
+                    ) l1
 					LEFT JOIN fornecedor pj on pj.id = l1.id_fornecedor
 				");
 
-                AdicionaResultadoComum(request, sqlSelect, dcFielsSort);
+                AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -711,9 +606,6 @@ namespace OPS.Core.DAO
                     {
                         lstRetorno.Add(new
                         {
-                            //SgUf = reader[SgUfOrdinal],
-                            //DataUltimaNotaFiscal = Utils.FormataData(reader[DataUltimaNotaFiscalOrdinal]),
-                            //Doador = reader[DoadorOrdinal],
                             id_fornecedor = reader["id_fornecedor"],
                             cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
@@ -722,65 +614,53 @@ namespace OPS.Core.DAO
                         });
                     }
 
-                    reader.NextResult();
-                    await reader.ReadAsync();
-                    string TotalCount = reader[0].ToString();
-                    string ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
-                        recordsTotal = Convert.ToInt32(TotalCount),
-                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        recordsTotal = TotalCount,
+                        recordsFiltered = TotalCount,
                         data = lstRetorno
                     };
                 }
             }
         }
 
-        private async Task<dynamic> LancamentosDespesa(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
+        private async Task<dynamic> LancamentosDespesa(DataTablesRequest request)
         {
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					DROP TABLE IF EXISTS table_in_memory;
-					CREATE TEMPORARY TABLE table_in_memory
-					SELECT
-						count(l.id) AS total_notas
-						, sum(l.valor) as valor_total
-						, l.id_sf_despesa_tipo
-					FROM sf_despesa l
-					WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-
-                AdicionaFiltroSenador(request, sqlSelect);
-
-                AdicionaFiltroDespesa(request, sqlSelect);
-
-                AdicionaFiltroFornecedor(request, sqlSelect);
-
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-					GROUP BY id_sf_despesa_tipo;
-					
-					SELECT
+                    SELECT SQL_CALC_FOUND_ROWS
 						l1.id_sf_despesa_tipo
 						, td.descricao
 						, l1.total_notas
 						, l1.valor_total
-					from table_in_memory l1
+					FROM (
+					    SELECT 
+						    count(l.id) AS total_notas
+						    , sum(l.valor) as valor_total
+						    , l.id_sf_despesa_tipo
+					    FROM sf_despesa l
+					    WHERE (1=1)
+				");
+
+                AdicionaFiltroPeriodo(request, sqlSelect);
+                AdicionaFiltroSenador(request, sqlSelect);
+                AdicionaFiltroDespesa(request, sqlSelect);
+                AdicionaFiltroFornecedor(request, sqlSelect);
+                AdicionaFiltroPartidoSenador(request, sqlSelect);
+                AdicionaFiltroEstadoSenador(request, sqlSelect);
+
+                sqlSelect.AppendLine(@"
+					    GROUP BY id_sf_despesa_tipo
+                    ) l1
 					LEFT JOIN sf_despesa_tipo td on td.id = l1.id_sf_despesa_tipo
 				");
 
-                AdicionaResultadoComum(request, sqlSelect, dcFielsSort);
+                AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -796,59 +676,46 @@ namespace OPS.Core.DAO
                         });
                     }
 
-                    reader.NextResult();
-                    await reader.ReadAsync();
-                    string TotalCount = reader[0].ToString();
-                    string ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
-                        recordsTotal = Convert.ToInt32(TotalCount),
-                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        recordsTotal = TotalCount,
+                        recordsFiltered = TotalCount,
                         data = lstRetorno
                     };
                 }
             }
         }
 
-        private async Task<dynamic> LancamentosPartido(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
+        private async Task<dynamic> LancamentosPartido(DataTablesRequest request)
         {
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					DROP TABLE IF EXISTS table_in_memory;
-					CREATE TEMPORARY TABLE table_in_memory
-					AS (
-						SELECT
-						 p.id as id_partido
-						, p.nome as nome_partido
-						, sum(l1.total_notas) as total_notas
+					SELECT SQL_CALC_FOUND_ROWS
+						p.id as id_partido
+					    , p.nome as nome_partido
+					    , sum(l1.total_notas) as total_notas
                         , count(l1.id_sf_senador) as total_senadores
                         , sum(l1.valor_total) / count(l1.id_sf_senador) as valor_medio_por_senador
-						, sum(l1.valor_total) as valor_total
-						from (
-							SELECT
-							 count(l.id) AS total_notas
-							, sum(l.valor) as valor_total
-							, l.id_sf_senador
-							FROM sf_despesa l
-							WHERE (1=1)
+					    , sum(l1.valor_total) as valor_total
+					FROM (
+						SELECT
+							count(l.id) AS total_notas
+						    , sum(l.valor) as valor_total
+						    , l.id_sf_senador
+						FROM sf_despesa l
+						WHERE (1=1)
 				");
 
                 AdicionaFiltroPeriodo(request, sqlSelect);
-
                 AdicionaFiltroSenador(request, sqlSelect);
-
                 AdicionaFiltroDespesa(request, sqlSelect);
-
                 AdicionaFiltroFornecedor(request, sqlSelect);
-
                 AdicionaFiltroPartidoSenador(request, sqlSelect);
-
                 AdicionaFiltroEstadoSenador(request, sqlSelect);
 
                 sqlSelect.AppendLine(@"
@@ -857,10 +724,9 @@ namespace OPS.Core.DAO
 					INNER JOIN sf_senador d on d.id = l1.id_sf_senador
 					LEFT JOIN partido p on p.id = d.id_partido
 					GROUP BY p.id, p.nome
-				);"); //end table_in_memory
+				");
 
-                sqlSelect.AppendLine("select * from table_in_memory ");
-                AdicionaResultadoComum(request, sqlSelect, dcFielsSort);
+                AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -878,70 +744,55 @@ namespace OPS.Core.DAO
                         });
                     }
 
-                    reader.NextResult();
-                    await reader.ReadAsync();
-                    string TotalCount = reader[0].ToString();
-                    string ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
-                        recordsTotal = Convert.ToInt32(TotalCount),
-                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        recordsTotal = TotalCount,
+                        recordsFiltered = TotalCount,
                         data = lstRetorno
                     };
                 }
             }
         }
 
-        private async Task<dynamic> LancamentosEstado(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
+        private async Task<dynamic> LancamentosEstado(DataTablesRequest request)
         {
             using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					DROP TABLE IF EXISTS table_in_memory;
-					CREATE TEMPORARY TABLE table_in_memory
-					AS (
+					SELECT SQL_CALC_FOUND_ROWS
+						e.id as id_estado
+					    , e.nome as nome_estado
+					    , count(l1.total_notas) as total_notas
+					    , sum(l1.valor_total) as valor_total
+					FROM (
 						SELECT
-						 e.id as id_estado
-						, e.nome as nome_estado
-						, count(l1.total_notas) as total_notas
-						, sum(l1.valor_total) as valor_total
-						from (
-
-							SELECT
-							 count(l.id) AS total_notas
-							, sum(l.valor) as valor_total
-							, l.id_sf_senador
-							FROM sf_despesa l
-							WHERE (1=1)
+							count(l.id) AS total_notas
+						    , sum(l.valor) as valor_total
+						    , l.id_sf_senador
+						FROM sf_despesa l
+						WHERE (1=1)
 				");
 
                 AdicionaFiltroPeriodo(request, sqlSelect);
-
                 AdicionaFiltroSenador(request, sqlSelect);
-
                 AdicionaFiltroDespesa(request, sqlSelect);
-
                 AdicionaFiltroFornecedor(request, sqlSelect);
-
                 AdicionaFiltroPartidoSenador(request, sqlSelect);
-
                 AdicionaFiltroEstadoSenador(request, sqlSelect);
 
                 sqlSelect.AppendLine(@"
 						GROUP BY id_sf_senador
 					) l1
-					INNER JOIN sf_senador d on d.id = l1.id_sf_senador
+					JOIN sf_senador d on d.id = l1.id_sf_senador
 					LEFT JOIN estado e on e.id = d.id_estado
 					GROUP BY e.id, e.nome
-				); "); //end table_in_memory
+				");
 
-                sqlSelect.AppendLine(@"select * from table_in_memory ");
-                AdicionaResultadoComum(request, sqlSelect, dcFielsSort);
+                AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -957,24 +808,19 @@ namespace OPS.Core.DAO
                         });
                     }
 
-                    reader.NextResult();
-                    await reader.ReadAsync();
-                    string TotalCount = reader[0].ToString();
-                    string ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
-                        recordsTotal = Convert.ToInt32(TotalCount),
-                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        recordsTotal = TotalCount,
+                        recordsFiltered = TotalCount,
                         data = lstRetorno
                     };
                 }
             }
         }
 
-        private async Task<dynamic> LancamentosNotaFiscal(DataTablesRequest request, Dictionary<int, string> dcFielsSort)
+        private async Task<dynamic> LancamentosNotaFiscal(DataTablesRequest request)
         {
             var sqlWhere = new StringBuilder();
             AdicionaFiltroPeriodo(request, sqlWhere);
@@ -988,33 +834,33 @@ namespace OPS.Core.DAO
             {
                 var sqlSelect = new StringBuilder();
 
-                //sqlSelect.AppendLine("DROP TABLE IF EXISTS table_in_memory; ");
-                //sqlSelect.AppendLine("CREATE TEMPORARY TABLE table_in_memory ");
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
-						 l.id as id_sf_despesa
-						, l.data_documento
-						, l.id_fornecedor
-						, pj.cnpj_cpf
+					SELECT
+						l.data_emissao
 						, pj.nome AS nome_fornecedor
-						, d.id as id_senador
 						, d.nome as nome_parlamentar
 						, l.valor as valor_total
+                        , d.id as id_senador
+                        , l.id_fornecedor
+                        , l.id as id_sf_despesa
+                        , pj.cnpj_cpf
+                        , e.sigla as sigla_estado
+						, p.sigla as sigla_partido
 					FROM sf_despesa l
-					LEFT JOIN sf_senador d on d.id = l.id_sf_senador
+					JOIN sf_senador d on d.id = l.id_sf_senador
 					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
+                    LEFT JOIN partido p on p.id = d.id_partido
+					LEFT JOIN estado e on e.id = d.id_estado
 					WHERE (1=1)
 				");
 
                 sqlSelect.Append(sqlWhere);
 
-                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, "l.data_documento desc, l.valor desc"));
+                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor DESC"));
                 sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
-                    @"SELECT count(1), sum(valor) as valor_total
-					FROM sf_despesa l
-					WHERE (1=1)");
+                    @"SELECT count(1) FROM sf_despesa l WHERE (1=1) ");
 
                 sqlSelect.Append(sqlWhere);
 
@@ -1026,27 +872,24 @@ namespace OPS.Core.DAO
                         lstRetorno.Add(new
                         {
                             id_sf_despesa = reader["id_sf_despesa"],
-                            data_documento = Utils.FormataData(reader["data_documento"]),
+                            data_emissao = Utils.FormataData(reader["data_emissao"]),
                             id_fornecedor = reader["id_fornecedor"],
                             cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             nome_fornecedor = reader["nome_fornecedor"].ToString(),
                             id_sf_senador = reader["id_senador"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            sigla_estado = reader["sigla_estado"].ToString(),
+                            sigla_partido = reader["sigla_partido"].ToString(),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
                     }
 
-                    reader.NextResult();
-                    await reader.ReadAsync();
-                    string TotalCount = reader[0].ToString();
-                    string ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
-                        recordsTotal = Convert.ToInt32(TotalCount),
-                        recordsFiltered = Convert.ToInt32(TotalCount),
+                        recordsTotal = TotalCount,
+                        recordsFiltered = TotalCount,
                         data = lstRetorno
                     };
                 }
@@ -1055,46 +898,46 @@ namespace OPS.Core.DAO
 
         private static void AdicionaFiltroPeriodo(DataTablesRequest request, StringBuilder sqlSelect)
         {
-            DateTime dataIni = DateTime.Today;
-            DateTime dataFim = DateTime.Today;
+            //DateTime dataIni = DateTime.Today;
+            //DateTime dataFim = DateTime.Today;
             switch (request.Filters["Periodo"].ToString())
             {
-                case "1": //PERIODO_MES_ATUAL
-                    sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
-                    break;
+                //case "1": //PERIODO_MES_ATUAL
+                //    sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
+                //    break;
 
-                case "2": //PERIODO_MES_ANTERIOR
-                    dataIni = dataIni.AddMonths(-1);
-                    sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
-                    break;
+                //case "2": //PERIODO_MES_ANTERIOR
+                //    dataIni = dataIni.AddMonths(-1);
+                //    sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyyyMM"));
+                //    break;
 
-                case "3": //PERIODO_MES_ULT_4
-                    dataIni = dataIni.AddMonths(-3);
-                    sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyyyMM"));
-                    break;
+                //case "3": //PERIODO_MES_ULT_4
+                //    dataIni = dataIni.AddMonths(-3);
+                //    sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyyyMM"));
+                //    break;
 
-                case "4": //PERIODO_ANO_ATUAL
-                    dataIni = new DateTime(dataIni.Year, 1, 1);
-                    sqlSelect.AppendLine(string.Format(" AND l.ano_mes >= {0}01", dataIni.Year));
-                    break;
+                //case "4": //PERIODO_ANO_ATUAL
+                //    dataIni = new DateTime(dataIni.Year, 1, 1);
+                //    sqlSelect.AppendLine(string.Format(" AND l.ano_mes >= {0}01", dataIni.Year));
+                //    break;
 
-                case "5": //PERIODO_ANO_ANTERIOR
-                    sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0}01 AND {0}12", dataIni.Year - 1));
-                    break;
+                //case "5": //PERIODO_ANO_ANTERIOR
+                //    sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0}01 AND {0}12", dataIni.Year - 1));
+                //    break;
 
-                case "9": //PERIODO_MANDATO_56
+                case "56": //PERIODO_MANDATO_56
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201902 AND 202301");
                     break;
 
-                case "8": //PERIODO_MANDATO_55
+                case "55": //PERIODO_MANDATO_55
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201502 AND 201901");
                     break;
 
-                case "7": //PERIODO_MANDATO_54
+                case "54": //PERIODO_MANDATO_54
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201102 AND 201501");
                     break;
 
-                case "6": //PERIODO_MANDATO_53
+                case "53": //PERIODO_MANDATO_53
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 200702 AND 201101");
                     break;
             }
@@ -1161,15 +1004,12 @@ namespace OPS.Core.DAO
             }
         }
 
-        private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect, Dictionary<int, string> dcFielsSort, string defaultSort = "valor_total desc")
+        private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect, string defaultSort = "valor_total desc")
         {
-            //sqlSelect.AppendLine("select * from table_in_memory ");
-            sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, defaultSort));
+            sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(defaultSort));
             sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine(
-                @"SELECT count(1), sum(valor_total) as valor_total
-				FROM table_in_memory; ");
+            sqlSelect.AppendLine("SELECT FOUND_ROWS();");
         }
 
         public async Task<dynamic> TipoDespesa()
@@ -1454,7 +1294,7 @@ WHERE (1=1)
                 sqlSelect.Append(sqlWhere);
                 sqlSelect.Append(sqlGroupBy);
 
-                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, " valor_total desc"));
+                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(" valor_total desc"));
                 sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
 
                 if (!string.IsNullOrEmpty(sqlGroupBy))

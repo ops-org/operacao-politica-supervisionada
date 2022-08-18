@@ -1,11 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using CsvHelper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OPS.Core;
+using Serilog;
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,324 +31,102 @@ namespace OPS.Importador
                 .AddEnvironmentVariables();
             var configuration = builder.Build();
 
+            var loggerConfiguration = new LoggerConfiguration()
+              .ReadFrom.Configuration(configuration)
+              .Enrich.FromLogContext();
+
+            Log.Logger = loggerConfiguration.CreateLogger();
+
+            var services = new ServiceCollection().AddLogging();
+            services.AddSingleton<IConfiguration>(configuration);
+            services.AddSingleton<ILogger>(Log.Logger);
+            services.AddScoped<Senado>();
+            services.AddScoped<Camara>();
+            services.AddScoped<CamaraDistritoFederal>();
+            services.AddScoped<CamaraSantaCatarina>();
+            services.AddScoped<Fornecedor>();
+
+            var serviceProvider = services.BuildServiceProvider();
+            serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>().AddSerilog(Log.Logger, true);
+
             CultureInfo ci = new CultureInfo("pt-BR");
             Thread.CurrentThread.CurrentCulture = ci;
             Thread.CurrentThread.CurrentUICulture = ci;
 
             Padrao.ConnectionString = configuration.GetConnectionString("AuditoriaContext");
-            Console.WriteLine(environmentName);
-
-
-            if (environmentName == "Production")
-            {
-                ImportacaoDadosCompleto(configuration).Wait();
-            }
-            else
-            {
-                //new Core.DAO.ParametrosDao().CarregarPadroes();
-
-                ////ImportacaoDadosCompleto(configuration).Wait();
-                //Camara.ImportaPresencasDeputados();
-
-                //var TelegramApiToken = configuration["AppSettings:TelegramApiToken"];
-                //var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
-                //var sb = new StringBuilder();
-                //var rootPath = configuration["AppSettings:SiteRootFolder"];
-                //var tempPath = System.IO.Path.Combine(rootPath, "static/temp");
-                //var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "static/img/depfederal/");
-                //var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "static/img/senador/");
-                //Camara.DownloadFotosDeputados(sDeputadosImagesPath);
-
-
-                //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
-                //Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
-                //Senado.AtualizaCadastroSenadores();
-
-                ////var tempPath = configuration["AppSettings:SiteTempFolder"];
-                //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
-                //sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
-
-                //Camara.ImportarMandatos();
-                //ImportarPartidos().Wait();
-
-                //var data = new DateTime(2012, 9, 1);
-                //do
-                //{
-                //    sb.Append(Camara.ImportarRemuneracao(tempPath, data.Year, data.Month));
-
-                //    data = data.AddMonths(1);
-                //} while (data < DateTime.Now.Date);
-
-                //try
-                //{
-                //    var inicio = new DateTime(2018, 01, 01);
-                //    var fim = new DateTime(2020, 12, 01);
-                //    while (true)
-                //    {
-                //        sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(inicio.ToString("yyyyMM"))));
-
-                //        inicio = inicio.AddMonths(1);
-                //        if (inicio > fim) break;
-                //    }
-                //}
-                //catch (Exception ex)
-                //{
-                //    sb.Append(ex.ToFullDescriptionString());
-                //}
-                //t = sw.Elapsed;
-                //sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
-
-
-                ////ConverterXmlParaCsvDespesasCamara(tempPath);
-
-                //#region Camara
-                //Camara.AtualizaInfoDeputados();
-                //Camara.AtualizaInfoDeputadosCompleto();
-
-                //Camara.ImportarMandatos();
-                //Camara.DownloadFotosDeputados(@"D:\GitHub\OPS\OPS\wwwroot\images\Parlamentares\DEPFEDERAL\");
-
-                //Importação na nova estrutura
-                //for (int ano = 2009; ano <= 2018; ano++)
-                //{
-                //    Camara.ImportarDespesas(tempPath, ano, true);
-                //}
-                //Camara.ImportarDespesas(tempPath, 2017, false);
-
-                //Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2016));
-                //Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2017));
-                //Console.WriteLine(Camara.ImportarDespesasXml(tempPath, 2018));
-                //Camara.ImportaPresencasDeputados();
-
-                //Camara.AtualizaDeputadoValores();
-                //Camara.AtualizaCampeoesGastos();
-                //Camara.AtualizaResumoMensal();
-                //Camara.ImportarMandatos();
-
-                //Camara.AtualizaInfoDeputadosCompleto();
-                //Camara.ImportarDeputados(52);
-
-                ////Camara.ValidarLinkRecibos();
-                //Camara.AtualizaResumoMensal();
-                ////#endregion Camara
-
-                ////#region Senado
-                ////Senado.CarregaSenadores();
-                //Senado.DownloadFotosSenadores(@"D:\GitHub\OPS\OPS\wwwroot\images\Parlamentares\SENADOR\");
-                //Senado.CarregaSenadoresAtuais();
-
-                //for (int ano = 2008; ano <= 2017; ano++)
-                //{
-                //	Senado.ImportarDespesas(tempPath, ano, true);
-                //}
-                //Senado.ImportarDespesas(tempPath, 2017, false);
-                //#endregion Senado
-
-                //Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken).Wait();
-
-                //Camara.ColetaDadosFuncionarios().Wait();
-                //Camara.ColetaDadosDeputados();
-                //Camara.ColetaRemuneracaoSecretarios();
-
-                //var s = Camara.ImportarDeputados(
-                //    @"D:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
-
-                //      Console.Write(s);
-
-                ////Fornecedor.AtualizaFornecedorDoador();
-                //Fornecedor.ConsultarCNPJ();
-                //var s = Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false);
-                //var s = Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year - 1);
-
-
-                //Senado.CarregaSenadoresAtuais();
-
-                //var d = Camara.ImportarDeputados();
-                //var a = Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year - 1);
-                //var b = Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year);
-
-                //Camara.ImportarDeputados();
-
-
-
-                //Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false);
-
-                //Console.WriteLine(sb.ToString());
-                Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
-                Console.ReadKey();
-            }
-        }
-
-        private static async Task ImportacaoDadosCompleto(IConfiguration configuration)
-        {
-            var rootPath = configuration["AppSettings:SiteRootFolder"];
-            var TelegramApiToken = configuration["AppSettings:TelegramApiToken"];
-            var ReceitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
-            var tempPath = System.IO.Path.Combine(rootPath, "temp");
-            var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "img/depfederal/");
-            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "img/senador/");
 
             try
             {
-                var sb = new StringBuilder();
-                TimeSpan t;
-                Stopwatch sw = Stopwatch.StartNew();
-                Stopwatch swGeral = Stopwatch.StartNew();
                 new Core.DAO.ParametrosDao().CarregarPadroes();
-                var inicioImportacao = DateTime.UtcNow.AddHours(-3).ToString("dd/MM/yyyy HH:mm");
 
-                sb.Append("<div style='font-weight: bold;'>-- Importar Deputados :: @duracao --</div>");
-                sw.Restart();
-                try
+                if (environmentName == "Production")
                 {
-                    sb.Append(Camara.ImportarDeputados());
+                    ImportacaoDadosCompleto(serviceProvider, configuration).Wait();
                 }
-                catch (Exception ex)
+                else
                 {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                    Senado objSenado = serviceProvider.GetService<Senado>();
+                    Camara objCamara = serviceProvider.GetService<Camara>();
+                    CamaraDistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<CamaraDistritoFederal>();
+                    CamaraSantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<CamaraSantaCatarina>();
+                    Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
+                   
+                    objSenado.ImportarParlamentares();
+                    objSenado.ImportarCompleto();
+                    objCamara.ImportarCompleto();
+                    objCamaraDistritoFederal.ImportarCompleto();
+                    objCamaraSantaCatarina.ImportarCompleto();
+                    objCamara.ImportaPresencasDeputados();
 
-                sb.Append("<div style='font-weight: bold;'>-- Importar Fotos Deputados :: @duracao --</div>");
-                sw.Restart();
-                try
-                {
-                    sb.Append(Camara.DownloadFotosDeputados(sDeputadosImagesPath));
+                    objFornecedor.ConsultarReceitaWS().Wait();
+                   
+                    Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
+                    Console.ReadKey();
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                // Log.Logger will likely be internal type "Serilog.Core.Pipeline.SilentLogger".
+                if (Log.Logger == null || Log.Logger.GetType().Name == "SilentLogger")
                 {
-                    sb.Append(ex.ToFullDescriptionString());
+                    // Loading configuration or Serilog failed.
+                    Log.Logger = new LoggerConfiguration()
+                        .WriteTo.Console()
+                        .CreateLogger();
                 }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
 
-                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Deputados {0} :: @duracao --</div>", DateTime.Now.Year - 1);
-                //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
-                sw.Restart();
-                try
-                {
-                    sb.Append(Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year - 1));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString() + ex.GetBaseException().StackTrace);
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                Log.Fatal(ex, "Host terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
+        }
 
-                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Deputados {0} :: @duracao --</div>", DateTime.Now.Year);
-                //sb.AppendFormat("<p>" + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm") + "</p>");
-                sw.Restart();
-                try
-                {
-                    sb.Append(Camara.ImportarDespesasXml(tempPath, DateTime.Now.Year));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+        private static async Task ImportacaoDadosCompleto(ServiceProvider serviceProvider, IConfiguration configuration)
+        {
+            Senado objSenado = serviceProvider.GetService<Senado>();
+            Camara objCamara = serviceProvider.GetService<Camara>();
+            CamaraDistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<CamaraDistritoFederal>();
+            CamaraSantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<CamaraSantaCatarina>();
+            Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
 
-                sb.AppendLine("<div style='font-weight: bold;'>-- Importar Presenças Deputados :: @duracao --</div>");
-                sw.Restart();
-                try
-                {
-                    sb.Append(Camara.ImportaPresencasDeputados());
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+            try
+            {
+                new Core.DAO.ParametrosDao().CarregarPadroes();
 
+                objSenado.ImportarCompleto();
+                objCamara.ImportarCompleto();
+                objCamaraDistritoFederal.ImportarCompleto();
+                objCamaraSantaCatarina.ImportarCompleto();
+                objCamara.ImportaPresencasDeputados();
 
-                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Senadores {0} :: @duracao --</div>", DateTime.Now.Year);
-                sw.Restart();
-                try
-                {
-                    sb.Append(Senado.AtualizaCadastroSenadores());
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
+                objFornecedor.ConsultarReceitaWS().Wait();
 
-                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Imagens Senadores {0} :: @duracao --</div>", DateTime.Now.Year);
-                sw.Restart();
-                try
-                {
-                    sb.Append(Senado.DownloadFotosSenadores(sSenadoressImagesPath));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
-
-                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Senado {0} :: @duracao --</div>", DateTime.Now.Year - 1);
-                sw.Restart();
-                try
-                {
-                    sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year - 1, false));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
-
-                sb.AppendFormat("<div style='font-weight: bold;'>-- Importar Despesas Senado {0} :: @duracao --</div>", DateTime.Now.Year);
-                sw.Restart();
-                try
-                {
-                    sb.Append(Senado.ImportarDespesas(tempPath, DateTime.Now.Year, false));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
-
-                try
-                {
-                    var data = new DateTime(DateTime.Now.Year, DateTime.Now.Month - (DateTime.Now.Day < 10 ? 1 : 0), 01);
-                    sb.Append(Senado.ImportarRemuneracao(tempPath, Convert.ToInt32(data.ToString("yyyyMM"))));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
-
-                sb.Append("<div style='font-weight: bold;'>-- Consultar Receita WS :: @duracao --</div>");
-                sw.Restart();
-                try
-                {
-                    sb.Append(await Fornecedor.ConsultarReceitaWS(ReceitaWsApiToken, TelegramApiToken));
-                }
-                catch (Exception ex)
-                {
-                    sb.Append(ex.ToFullDescriptionString());
-                }
-                t = sw.Elapsed;
-                sb = sb.Replace("@duracao", string.Format("{0:D2}h:{1:D2}m:{2:D2}s", t.Hours, t.Minutes, t.Seconds));
-
-                t = swGeral.Elapsed;
-                sb.AppendFormat("<div style='font-weight: bold;'>Inicio da importação: {0} - Duração Total: {1:D2}h:{2:D2}m:{3:D2}s</div>", inicioImportacao, t.Hours, t.Minutes, t.Seconds);
-
-                using (WebClient client = new WebClient())
-                {
-                    await client.DownloadDataTaskAsync("http://127.0.0.1:5200/tarefa/limparcache");
-                }
+                //using (WebClient client = new WebClient())
+                //{
+                //    await client.DownloadDataTaskAsync("http://127.0.0.1:5200/tarefa/limparcache");
+                //}
 
                 var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');
                 var lstEmailTo = new MailAddressCollection();
@@ -352,18 +135,110 @@ namespace OPS.Importador
                     lstEmailTo.Add(email);
                 }
 
-                Console.WriteLine(sb.ToString());
-                await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, "OPS :: Resumo da Importação - " + DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm"), sb.ToString());
+                var data = DateTime.Now;
+                var tempPath = configuration["AppSettings:SiteTempFolder"];
+                var log = Utils.ReadAllText($"{tempPath}/log{data:yyyyMMdd}.txt");
+                await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, "OPS :: Resumo da Importação - " + data.ToString("dd/MM/yyyy HH:mm"), log, null, false);
             }
             catch (Exception ex)
             {
-                var ex1 = ex.GetBaseException();
-                var message = ex1.Message;
-                if (ex1.StackTrace != null)
-                    message += ex1.StackTrace;
+                Log.Error(ex, ex.Message);
 
-                await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], new MailAddress(Padrao.EmailEnvioErros), "OPS :: Informe de erro na Importação", message);
+                await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], new MailAddress(Padrao.EmailEnvioErros), "OPS :: Informe de erro na Importação", ex.GetBaseException().Message, null, false);
             }
-        }        
+        }
+
+        private static void ImportarPartidos()
+        {
+            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+            var sb = new StringBuilder();
+            var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
+
+            int indice = 0;
+            int Legenda = indice++;
+            int Imagem = indice++;
+            int Sigla = indice++;
+            int Nome = indice++;
+            int Sede = indice++;
+            int Fundacao = indice++;
+            int RegistroSolicitacao = indice++;
+            int RegistroProvisorio = indice++;
+            int RegistroDefinitivo = indice++;
+            int Extincao = indice++;
+            int Motivo = indice++;
+
+            using (var banco = new AppDb())
+            {
+                using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
+                {
+                    using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
+                    {
+                        //csv.Configuration.Delimiter = ",";
+
+                        using (WebClient client = new WebClient())
+                        {
+                            client.Headers.Add("User-Agent: Other");
+
+                            while (csv.Read())
+                            {
+                                if (csv[Imagem] == "LOGO") continue;
+
+                                if (csv[Imagem] != "")
+                                {
+                                    try
+                                    {
+                                        MatchCollection m1 = Regex.Matches(csv[Imagem], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
+                                        if (m1.Count > 0)
+                                        {
+                                            var link = m1[0].Groups[1].Value;
+
+                                            var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
+                                            if (!File.Exists(arquivo))
+                                                client.DownloadFile(link, arquivo);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+
+                                banco.AddParameter("legenda", csv[Legenda] != "-" ? csv[Legenda] : null);
+                                banco.AddParameter("sigla", csv[Sigla] != "??" ? csv[Sigla] : null);
+                                banco.AddParameter("nome", csv[Nome]);
+                                banco.AddParameter("sede", csv[Sede] != "??" ? csv[Sede] : null);
+                                banco.AddParameter("fundacao", AjustarData(csv[Fundacao]));
+                                banco.AddParameter("registro_solicitacao", AjustarData(csv[RegistroSolicitacao]));
+                                banco.AddParameter("registro_provisorio", AjustarData(csv[RegistroProvisorio]));
+                                banco.AddParameter("registro_definitivo", AjustarData(csv[RegistroDefinitivo]));
+                                banco.AddParameter("extincao", AjustarData(csv[Extincao]));
+                                banco.AddParameter("motivo", csv[Motivo]);
+
+                                banco.ExecuteNonQuery(
+                                    @"INSERT INTO partido_todos (
+                                        legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
+                                    ) VALUES (
+                                        @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
+                                    )");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static DateTime? AjustarData(string d)
+        {
+            if (!d.Contains("??/??/??") && d != "ATUAL" && d != "-")
+            {
+                d = d.Replace("??", "01");
+                if (d.Length == 10)
+                    return DateTime.Parse(d);
+                else
+                    return DateTime.ParseExact(d, "dd/MM/yy", CultureInfo.InvariantCulture);
+            }
+
+            return null;
+        }
     }
 }

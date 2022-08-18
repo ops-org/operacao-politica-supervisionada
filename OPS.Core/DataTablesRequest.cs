@@ -57,6 +57,23 @@ namespace OPS.Core
 
             return defaultSort;
         }
+
+        public string GetSorting(string defaultSort = "")
+        {
+            if (Order.Any())
+            {
+                var lstSort = new List<string>();
+                foreach (var item in Order)
+                {
+                    lstSort.Add(string.Format("{0} {1}", item.Column+1, item.Dir));
+                }
+
+                if (lstSort.Any())
+                    return Utils.MySqlEscape(string.Join(",", lstSort));
+            }
+
+            return defaultSort;
+        }
     }
 
 

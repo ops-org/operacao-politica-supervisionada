@@ -59,29 +59,29 @@ namespace OPS.API.Controllers
             return await dao.TipoDespesa();
         }
 
-        [HttpPost("SecretarioPesquisa")]
+        [HttpPost("FuncionarioPesquisa")]
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-        public async Task<dynamic> SecretarioPesquisa(MultiSelectRequest filtro)
+        public async Task<dynamic> FuncionarioPesquisa(MultiSelectRequest filtro)
         {
-            return await dao.SecretarioPesquisa(filtro);
+            return await dao.FuncionarioPesquisa(filtro);
         }
 
-        [HttpPost("Secretarios")]
-        public async Task<dynamic> Secretarios(DataTablesRequest request)
+        [HttpPost("Funcionarios")]
+        public async Task<dynamic> Funcionarios(DataTablesRequest request)
         {
-            return await dao.Secretarios(request);
+            return await dao.Funcionarios(request);
         }
 
-        [HttpPost("{id:int}/SecretariosAtivos")]
-        public async Task<dynamic> SecretariosAtivosPorDeputado(int id, DataTablesRequest request)
+        [HttpPost("{id:int}/FuncionariosAtivos")]
+        public async Task<dynamic> FuncionariosAtivosPorDeputado(int id, DataTablesRequest request)
         {
-            return await dao.SecretariosAtivosPorDeputado(id, request);
+            return await dao.FuncionariosAtivosPorDeputado(id, request);
         }
 
-        [HttpPost("{id:int}/SecretariosHistorico")]
-        public async Task<dynamic> SecretariosPorDeputado(int id, DataTablesRequest request)
+        [HttpPost("{id:int}/FuncionariosHistorico")]
+        public async Task<dynamic> FuncionariosPorDeputado(int id, DataTablesRequest request)
         {
-            return await dao.SecretariosPorDeputado(id, request);
+            return await dao.FuncionariosPorDeputado(id, request);
         }
 
         [HttpGet("{id:int}/GastosPorAno")]

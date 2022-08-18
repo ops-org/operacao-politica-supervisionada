@@ -11,27 +11,27 @@
                 <h4 style="margin-top: 0;">{{deputado_federal.nome_parlamentar}} <small>({{deputado_federal.sigla_partido}} / {{deputado_federal.sigla_estado}})</small></h4>
                 <div class="row">
                     <div class="col-sm-6">
-                        <p class="mb-0"><strong>Nome civil:</strong> {{deputado_federal.nome_civil}}</p>
+                        <p class="mb-0"><strong>Nome:</strong> {{deputado_federal.nome_civil}}</p>
                         <p class="mb-0"><strong>Partido:</strong> {{deputado_federal.nome_partido}}</p>
-                        <p class="mb-0"><strong>Estado:</strong> {{deputado_federal.nome_estado}}</p>
-                        <p class="mb-0"><strong>Condição:</strong> {{deputado_federal.condicao}} ({{deputado_federal.situacao}})</p>
-                        <p class="mb-0" v-if="deputado_federal.profissao"><strong>Profissão:</strong> {{deputado_federal.profissao}}</p>
-                        <p class="mb-0" v-if="deputado_federal.nome_municipio_nascimento"><strong>Naturalidade:</strong> {{deputado_federal.nome_municipio_nascimento}} - {{deputado_federal.sigla_estado_nascimento}}</p>
-                        <p class="mb-0"><strong>Nascimento:</strong> {{deputado_federal.nascimento}}</p>
-                        <p class="mb-0" v-if="deputado_federal.falecimento"><strong>Falecimento:</strong> {{deputado_federal.falecimento}}</p>
+                        <p class="mb-0" v-if="id>100"><strong>Estado:</strong> {{deputado_federal.nome_estado}}</p>
+                        <p class="mb-0" v-if="id>100"><strong>Condição:</strong> {{deputado_federal.condicao}} ({{deputado_federal.situacao}})</p>
+                        <p class="mb-0" v-if="id>100 && deputado_federal.profissao"><strong>Profissão:</strong> {{deputado_federal.profissao}}</p>
+                        <p class="mb-0" v-if="id>100 && deputado_federal.nome_municipio_nascimento"><strong>Naturalidade:</strong> {{deputado_federal.nome_municipio_nascimento}} - {{deputado_federal.sigla_estado_nascimento}}</p>
+                        <p class="mb-0" v-if="id>100"><strong>Nascimento:</strong> {{deputado_federal.nascimento}}</p>
+                        <p class="mb-0" v-if="id>100 && deputado_federal.falecimento"><strong>Falecimento:</strong> {{deputado_federal.falecimento}}</p>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-6" v-if="id>100">
                         <p class="mb-0" title="Secretários Parlamentares">
                             <strong>Pessoal do Gabinete: </strong>
-                            <a v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">{{deputado_federal.quantidade_secretarios}} Secretário(s)</a>
+                            <a v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">{{deputado_federal.secretarios_ativos}} Secretário(s)</a>
                         </p>
                         <p class="mb-0">
-                            <strong>Custo Mensal do Gabinete: </strong>
-                            <a v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">R$ {{deputado_federal.custo_secretarios}}</a>
+                            <strong>Folha de Pagamento (Acumulado): </strong>
+                            <a v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">R$ {{deputado_federal.valor_total_remuneracao}}</a>
                         </p>
                         <p class="mb-0">
-                            <strong>Gasto Acumulado CEAP: </strong>
-                            <a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_federal.valor_total_ceap}}</a>
+                            <strong>Cota Parlamentar (Acumulado): </strong>
+                            <a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=56&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_federal.valor_total_ceap}}</a>
                         </p>
                         <p class="mb-0">
                             <strong>Visualizar: </strong>
@@ -64,7 +64,7 @@
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=3'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=56&Agrupamento=3'">Ver lista completa</a>
                         Maiores fornecedores
                     </div>
                     <div class="card-body maiores-fornecedores vld-parent" ref="MaioresFornecedores">
@@ -79,7 +79,7 @@
                                 <tbody>
                                     <tr v-for="row in MaioresFornecedores" :key="row.id_fornecedor">
                                         <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td class="text-right"><a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=56&Agrupamento=6'">{{row.valor_total}}</a></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -90,7 +90,7 @@
              <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=0&Agrupamento=6'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/deputado-federal?IdParlamentar=' + id + '&Periodo=56&Agrupamento=6'">Ver lista completa</a>
                         Maiores Notas/Recibos
                     </div>
                     <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
@@ -114,7 +114,7 @@
                 </div>
             </div>
        
-            <div class="col-sm-12">
+            <div class="col-sm-12" v-if="id>100">
               <div class="card mb-3" id="deputados-presenca">
                   <div class="card-header bg-light">
                       Frequência nas Sessões Ordinárias

@@ -12,7 +12,7 @@ namespace OPS.Core
 		/// <summary>
 		/// Quantidade padrão de Itens a Exibir nas Grids
 		/// </summary>
-		public static readonly int ITENS_POR_PAGINA = 100;
+		public static readonly int ITENS_POR_PAGINA = 50;
 
 		/// <summary>
 		/// Data da Ultima Importação da CEAP (Cota dos Deputados)

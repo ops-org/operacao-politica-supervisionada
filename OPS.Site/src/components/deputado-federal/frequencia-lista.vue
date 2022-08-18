@@ -41,8 +41,10 @@ export default {
               loader.hide();
             });
         },
-        pageLength: 100,
+        pageLength: 50,
         dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+
+        order: [],
       },
       fields: {
         id_cf_sessao: {
@@ -83,7 +85,7 @@ export default {
           label: 'Ausencias',
           sortable: true,
           render: (data, type, full) => {
-            if (type === 'display') {
+            if (type === 'display' && full.ausencia > 0) {
               return `${data} <small class="text-muted">(${full.ausencia_percentual}%)</small>`;
             }
             return data;
@@ -93,7 +95,7 @@ export default {
           label: 'Ausencias Justificadas',
           sortable: true,
           render: (data, type, full) => {
-            if (type === 'display' && full.ausencia_justificada_percentual > 0) {
+            if (type === 'display' && full.ausencia_justificada > 0) {
               return `${data} <small class="text-muted">(${full.ausencia_justificada_percentual}%)</small>`;
             }
             return data;

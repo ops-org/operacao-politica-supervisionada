@@ -1,22 +1,21 @@
 <template>
-  <div class="container-fluid">
+  <div class="container">
     <h3 class="page-title">Cota para Exercício da Atividade Parlamentar (CEAP)</h3>
 
     <form id="form" autocomplete="off">
       <div class="row">
         <div class="form-group col-md-4">
-          <label>Periodo</label>
+          <label>Legislatura</label>
           <select class="form-control input-sm" v-model="filtro.periodo">
-            <option value="1">Mês Atual</option>
+            <!--<option value="1">Mês Atual</option>
             <option value="2">Mês Anterior</option>
             <option value="3">Últimos 4 Meses</option>
             <option value="4">Ano Atual</option>
-            <option value="5">Ano Anterior</option>
-            <option value="9">56º (2019-2023)</option>
-            <option value="8">55º (2015-2019)</option>
-            <option value="7">54º (2011-2015)</option>
-            <option value="6">53º (2007-2011)</option>
-            <option value="0">Todas as Legislaturas</option>
+            <option value="5">Ano Anterior</option>-->
+            <option value="56">56º (fev/2019 à jan/2023)</option>
+            <option value="55">55º (fev/2015 à jan/2019)</option>
+            <option value="54">54º (fev/2011 à jan/2015)</option>
+            <option value="53">53º (fev/2007 à jan/2011)</option>
           </select>
         </div>
         <div class="form-group col-md-4">
@@ -100,7 +99,7 @@
         <div class="form-group col-md-4">
           <label>Agrupar por</label>
           <select class="form-control input-sm" v-model="filtro.agrupar">
-            <option value="1">Deputado</option>
+            <option value="1">Deputado / Liderança</option>
             <option value="2">Despesa</option>
             <option value="3">Fornecedor</option>
             <option value="4">Partido</option>
@@ -108,7 +107,7 @@
             <option value="6">Recibo</option>
           </select>
         </div>
-        <div class="form-group col-md-4" v-if="filtro.agrupar=='6'">
+        <!--<div class="form-group col-md-4" v-if="filtro.agrupar=='6'">
           <label>Recibo</label>
           <input type="text" v-model="filtro.documento" class="form-control input-sm" />
         </div>
@@ -194,7 +193,7 @@
 
             <div class="clearfix"></div>
           </div>
-        </div>
+        </div>-->
       </div>
       <div class="row">
         <div class="form-group col-md-12">
@@ -238,7 +237,7 @@
             </button>
           </div>
             <div class="list-group list-group-flush">
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Deputado</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Deputado / Liderança</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Despesa</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Fornecedor</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Partido</button>
@@ -313,13 +312,14 @@ export default {
 
     return {
       pageLoad: true,
+      ultimoAgrupamento: 0,
       isLoadingParlamentar: null,
       selectedRow: {},
       valorTotal: null,
       deputado_federal: {},
       filtro: {
         agrupar: '1',
-        periodo: '9',
+        periodo: '56',
         parlamentar: [],
         despesa: [],
         estado: [],
@@ -362,6 +362,9 @@ export default {
           }
 
           this.fields = null;
+          //this.fnSort([]);
+          // vm.options.orders = [];
+          
           axios
             .post(`${process.env.VUE_APP_API}/deputado/lancamentos`, newData)
             .then((response) => {
@@ -369,9 +372,18 @@ export default {
               callback(response.data);
 
               loader.hide();
+
+              if(!vm.pageLoad){
+                setTimeout(function(){
+                  jQuery('html, body').animate({
+                    scrollTop: jQuery(".vdtnet-container").offset().top
+                  }, 500);
+                }, 100);
+              }
             });
+            
         },
-        pageLength: 100,
+        pageLength: 50,
         ordering: true,
         dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
 
@@ -384,6 +396,7 @@ export default {
         serverSide: true,
         fixedHeader: true,
         saveState: true,
+        order: [],
       },
       fields: {},
     };
@@ -402,7 +415,7 @@ export default {
     }
 
     vm.filtro.agrupar = vm.qs.Agrupamento || '1';
-    vm.filtro.periodo = vm.qs.Periodo || '9';
+    vm.filtro.periodo = vm.qs.Periodo || '56';
     vm.filtro.despesa = (vm.qs.Despesa ? vm.qs.Despesa.split(',') : []);
     vm.filtro.estado = (vm.qs.Estado ? vm.qs.Estado.split(',') : []);
     vm.filtro.partido = (vm.qs.Partido ? vm.qs.Partido.split(',') : []);
@@ -435,7 +448,7 @@ export default {
       this.isLoadingParlamentar = true;
 
       axios
-        .post(`${process.env.VUE_APP_API}/deputado/pesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
+        .post(`${process.env.VUE_APP_API}/deputado/pesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "56") })
         .then((response) => {
           this.parlamentares = response.data;
 
@@ -507,9 +520,14 @@ export default {
     Pesquisar(pageLoad) {
       const vm = this;
       vm.deputado_federal = {};
-      vm.fields = null;
       vm.pageLoad = pageLoad;
 
+      if(vm.ultimoAgrupamento == vm.filtro.agrupar) {
+        vm.$refs.table.reload();
+        return;
+      }
+
+      vm.fields = null;
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
           case '1': // Deputado
@@ -544,7 +562,7 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -552,6 +570,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -574,7 +593,7 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -582,6 +601,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -598,22 +618,18 @@ export default {
                 },
                 sortable: false,
               },
-              cnpj_cpf: {
-                label: 'CNPJ/CPF',
-                sortable: true,
-              },
               nome_fornecedor: {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a>`;
+                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -621,6 +637,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -660,6 +677,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -681,7 +699,7 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Total Recibos',
+                label: 'Qtd. Recibos',
                 sortable: true,
                 className: 'text-right',
               },
@@ -689,6 +707,7 @@ export default {
                 label: 'Valor Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -699,41 +718,25 @@ export default {
                 label: 'Emissão',
                 sortable: true,
               },
-              cnpj_cpf: {
-                label: 'CNPJ/CPF',
-                sortable: false,
-              },
               nome_fornecedor: {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a>`;
+                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
-                sortable: false,
-              },
-              sigla_estado_fornecedor: {
-                label: 'UF',
                 sortable: false,
               },
               nome_parlamentar: {
                 label: 'Parlamentar',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a>`;
+                    return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
                   }
                   return data;
                 },
                 sortable: false,
-              },
-              numero_documento: {
-                label: 'Nº Recibo',
-                sortable: true,
-              },
-              trecho_viagem: {
-                label: 'Trecho',
-                sortable: true,
               },
               valor_liquido: {
                 label: 'Valor',
@@ -752,15 +755,20 @@ export default {
           default: break;
         }
 
+        vm.ultimoAgrupamento = vm.filtro.agrupar;
+        if(!pageLoad && vm.options.order.length > 0){
+          vm.options.order = [];
+        }
+
         // vm.$nextTick(() => {
         //   vm.$refs.table.reload();
-        // });
+        // }); 
       });
     },
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        periodo: '9',
+        periodo: '56',
         parlamentar: [],
         despesa: [],
         estado: [],

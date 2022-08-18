@@ -9,7 +9,7 @@ namespace OPS.Core
         GrupoFuncional = 1,
         Cargo,
         Deputado,
-        Secretario,
+        Funcionario,
         Ano,
         AnoMes,
     }

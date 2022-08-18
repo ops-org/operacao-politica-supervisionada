@@ -1,12 +1,12 @@
 <template>
-  <div class="container-fluid">
-    <h3 class="page-title">[BETA] Remuneração no Câmara Federal</h3>
+  <div class="container">
+    <h3 class="page-title">[BETA] Folha de Pagamento na Câmara de Deputados Federais</h3>
 
     <form id="form" autocomplete="off">
       <div class="row">
         <div class="form-group col-md-2">
           <label>Ano</label>
-          <select class="form-control input-sm" v-model="filtro.ano">
+          <select class="form-control form-control-sm" v-model="filtro.ano">
             <option value=""></option>
             <option value="2022" selected>2022</option>
             <option value="2021">2021</option>
@@ -23,7 +23,7 @@
         </div>
         <div class="form-group col-md-2">
           <label>Mês</label>
-          <select class="form-control input-sm" v-model="filtro.mes">
+          <select class="form-control form-control-sm" v-model="filtro.mes">
             <option value></option>
             <option value="1">Janeiro</option>
             <option value="2">Fevereiro</option>
@@ -39,37 +39,37 @@
             <option value="12">Dezembro</option>
           </select>
         </div>
-        <div class="form-group col-md-5">
+        <div class="form-group col-md-8">
           <label>Grupo Funcional</label>
           <v-select
             :options="grupos_funcionais"
             v-model="filtro.grupo_funcional"
-            class="form-control input-sm"
+            class="form-control form-control-sm"
             multiple
             data-actions-box="true"
           />
         </div>
-        <div class="form-group col-md-3">
+        <!-- <div class="form-group col-md-5">
           <label>Cargo</label>
           <v-select
             :options="cargos"
             v-model="filtro.cargo"
-            class="form-control input-sm"
+            class="form-control form-control-sm"
             multiple
             data-actions-box="true"
           />
-        </div>
+        </div> -->
       </div>
       <div class="row">
         <div class="form-group col-md-2">
           <label>Agrupar por</label>
-          <select class="form-control input-sm" v-model="filtro.agrupar">
+          <select class="form-control form-control-sm" v-model="filtro.agrupar">
             <option value="1" selected="true">Grupo Funcional</option>
-            <option value="2">Cargo</option>
+            <!-- <option value="2">Cargo</option> -->
             <option value="3">Deputado(a)</option>
-            <option value="4">Secretario(a)</option>
+            <option value="4">Funcionário(a)</option>
             <option value="5">Ano</option>
-            <option value="6">Não agrupar</option>
+            <option value="6">Não Agrupar</option>
           </select>
         </div>
         <div class="form-group col-md-5">
@@ -86,10 +86,10 @@
           </multiselect>
         </div>
         <div class="form-group col-md-5">
-          <label>Secretario(a)</label>
-          <multiselect v-model="filtro.secretario" :options="secretarios" :multiple="true" placeholder="Selecione"
+          <label>Funcionário(a)</label>
+          <multiselect v-model="filtro.funcionario" :options="funcionarios" :multiple="true" placeholder="Selecione"
             :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
-            :searchable="true" :loading="isLoadingSecretario" :internal-search="false" @search-change="BuscaSecretario">
+            :searchable="true" :loading="isLoadingFuncionario" :internal-search="false" @search-change="BuscaFuncionario">
 
             <template slot="selection" slot-scope="{ values, isOpen }">
               <span class="multiselect__single" v-if="values.length > 1 && !isOpen">{{ values.length }} item(ns) selecionado(s)</span>
@@ -108,6 +108,7 @@
             value="Pesquisar"
             class="btn btn-danger btn-sm"
           />
+          &nbsp;
           <input
             type="button"
             value="Limpar filtros"
@@ -118,14 +119,14 @@
       </div>
     </form>
 
-    <div class="row">
+    <!-- <div class="row">
       <div class="col-md-12">
         <div class="alert alert-warning" v-if="valorTotal">
           <strong>Custo Total no Período: R$ {{valorTotal}}</strong>
           <small class="help-block mb-0">&nbsp;Custo Total considerando os filtros aplicados acima</small>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div class="form-group" v-if="fields">
       <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
@@ -142,11 +143,11 @@
           </div>
             <div class="list-group list-group-flush">
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Grupo Funcional</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Cargo</button>
+              <!-- <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Cargo</button> -->
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Deputado(a)</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Secretario(a)</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Funcionário</button>
               <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('5')">Ano</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('6')">Detalhes</button>
+              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('6')">Não Agrupar</button>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -175,8 +176,9 @@ export default {
 
     return {
       isLoadingParlamentar: false,
-      isLoadingSecretario: false,
+      isLoadingFuncionario: false,
       loading: false,
+      ultimoAgrupamento: 0,
       pageLoad: true,
       selectedRow: {},
       valorTotal: null,
@@ -187,13 +189,13 @@ export default {
         grupo_funcional: [],
         cargo: [],
         parlamentar: [],
-        secretario: [],
+        funcionario: [],
       },
 
       grupos_funcionais: [],
       cargos: [],
       parlamentares: [],
-      secretarios: [],
+      funcionarios: [],
 
       options: {
         ajax(objData, callback) {
@@ -216,7 +218,7 @@ export default {
             gf: (vm.filtro.grupo_funcional || []).join(','),
             cr: (vm.filtro.cargo || []).join(','),
             df: window.GetIds(vm.filtro.parlamentar).join(','),
-            sc: window.GetIds(vm.filtro.secretario).join(','),
+            sc: window.GetIds(vm.filtro.funcionario).join(','),
           };
 
           jQuery.each(newData.filters, (key, value) => {
@@ -253,6 +255,7 @@ export default {
         serverSide: true,
         fixedHeader: true,
         saveState: true,
+        order: [],
       },
       fields: {},
     };
@@ -277,12 +280,12 @@ export default {
     }
 
     if(vm.qs.sc){
-      var pSecretario = axios.post(`${process.env.VUE_APP_API}/deputado/secretariopesquisa`, { ids: vm.qs.sc })
-      pSecretario.then((response) => {
-        vm.filtro.secretario = response.data;
+      var pFuncionario = axios.post(`${process.env.VUE_APP_API}/deputado/funcionariopesquisa`, { ids: vm.qs.sc })
+      pFuncionario.then((response) => {
+        vm.filtro.funcionario = response.data;
       });
 
-      lstPromises.push(pSecretario);
+      lstPromises.push(pFuncionario);
     }
 
     document.title = 'OPS :: Remuneração na Câmara Federal';
@@ -313,15 +316,15 @@ export default {
           this.isLoadingParlamentar = false;
         });
     },
-    BuscaSecretario(busca) {
-      this.isLoadingsecretario = true;
+    BuscaFuncionario(busca) {
+      this.isLoadingFuncionario = true;
 
       axios
-        .post(`${process.env.VUE_APP_API}/deputado/secretariopesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
+        .post(`${process.env.VUE_APP_API}/deputado/funcionariopesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
         .then((response) => {
-          this.secretarios = response.data;
+          this.funcionarios = response.data;
 
-          this.isLoadingsecretario = false;
+          this.isLoadingFuncionario = false;
         });
     },
     AbrirModalDetalhar(data) {
@@ -341,8 +344,8 @@ export default {
         case '3': // Deputado
           vm.filtro.parlamentar = [{ id: this.selectedRow.id, text: this.selectedRow.descricao }];
           break;
-        case '4': // Secretario
-          vm.filtro.secretario = [{ id: this.selectedRow.id, text: this.selectedRow.descricao }];
+        case '4': // Funcionario
+          vm.filtro.funcionario = [{ id: this.selectedRow.id, text: this.selectedRow.descricao }];
           break;
         default:
           break;
@@ -356,9 +359,14 @@ export default {
     Pesquisar(pageLoad) {
       const vm = this;
       vm.deputado = {};
-      vm.fields = null;
       vm.pageLoad = pageLoad;
 
+      if(vm.ultimoAgrupamento == vm.filtro.agrupar) {
+        vm.$refs.table.reload();
+        return;
+      }
+
+      vm.fields = null;
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
           case '1': // Grupo Funcional
@@ -379,7 +387,7 @@ export default {
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: 'Flh(s). Pgto.',
                 sortable: true,
                 className: 'text-right',
               },
@@ -387,39 +395,41 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
 
 
-          case '2': // Cargo
-            vm.fields = {
-              id: {
-                label: '&nbsp;',
-                render: (data, type) => {
-                  if (type === 'display') {
-                    return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
-                  }
-                  return data;
-                },
-                sortable: false,
-              },
-              descricao: {
-                label: 'Cargo',
-                sortable: true,
-              },
-              quantidade: {
-                label: 'Qtd.',
-                sortable: true,
-                className: 'text-right',
-              },
-              valor_total: {
-                label: 'Custo Total',
-                sortable: true,
-                className: 'text-right',
-              },
-            };
-            break;
+          // case '2': // Cargo
+          //   vm.fields = {
+          //     id: {
+          //       label: '&nbsp;',
+          //       render: (data, type) => {
+          //         if (type === 'display') {
+          //           return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
+          //         }
+          //         return data;
+          //       },
+          //       sortable: false,
+          //     },
+          //     descricao: {
+          //       label: 'Cargo',
+          //       sortable: true,
+          //     },
+          //     quantidade: {
+          //       label: 'Flh(s). Pgto.',
+          //       sortable: true,
+          //       className: 'text-right',
+          //     },
+          //     valor_total: {
+          //       label: 'Custo Total',
+          //       sortable: true,
+          //       className: 'text-right',
+          //       defaultOrder: 'desc',
+          //     },
+          //   };
+          //   break;
 
             case '3': // Deputado Federal
               vm.fields = {
@@ -436,9 +446,15 @@ export default {
                 descricao: {
                   label: 'Deputado',
                   sortable: true,
+                  render: (data, type, full) => {
+                  if (type === 'display') {
+                    return `<a href="/deputado-federal/${full.id}">${data}</a>`;
+                  }
+                  return data;
+                },
                 },
                 quantidade: {
-                  label: 'Qtd.',
+                  label: 'Flh(s). Pgto.',
                   sortable: true,
                   className: 'text-right',
                 },
@@ -446,11 +462,12 @@ export default {
                   label: 'Custo Total',
                   sortable: true,
                   className: 'text-right',
+                  defaultOrder: 'desc',
                 },
               };
             break;
 
-            case '4': // Secretario
+            case '4': // Funcionario
               vm.fields = {
                 id: {
                   label: '&nbsp;',
@@ -463,11 +480,11 @@ export default {
                   sortable: false,
                 },
                 descricao: {
-                  label: 'Secretario',
+                  label: 'Funcionário',
                   sortable: true,
                 },
                 quantidade: {
-                  label: 'Qtd.',
+                  label: 'Flh(s). Pgto.',
                   sortable: true,
                   className: 'text-right',
                 },
@@ -475,6 +492,7 @@ export default {
                   label: 'Custo Total',
                   sortable: true,
                   className: 'text-right',
+                  defaultOrder: 'desc',
                 },
               };
             break;
@@ -496,7 +514,7 @@ export default {
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: 'Flh(s). Pgto.',
                 sortable: true,
                 className: 'text-right',
               },
@@ -504,6 +522,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -514,25 +533,38 @@ export default {
                 label: 'Deputado',
                 sortable: true,
               },
-              secretario: {
-                label: 'Secretario',
+              funcionario: {
+                label: 'Funcionário',
                 sortable: true,
+                render: (data, type, full) => {
+                  if (type === 'display') {
+                    return `${data}<br><small title='Grupo Funcional: ${full.grupo_funcional}'>${full.grupo_funcional}</small>`;
+                  }
+                  return data;
+                },
               },
-              grupo_funcional: {
-                label: 'Grupo Funcional',
-                sortable: true,
-              },
-              cargo: {
-                label: 'Cargo',
-                sortable: true,
-              },
-              tipo_folha: {
-                label: 'Tipo Folha',
-                sortable: true,
-              },
+              // grupo_funcional: {
+              //   label: 'Grupo Funcional',
+              //   sortable: true,
+              // },
+              // cargo: {
+              //   label: 'Cargo',
+              //   sortable: true,
+              // },
+              // tipo_folha: {
+              //   label: 'Tipo Folha',
+              //   sortable: true,
+              // },
               ano_mes: {
                 label: 'Ano/Mês',
                 sortable: true,
+                render: (data, type, full) => {
+                  if (type === 'display') {
+                    return `${data}<br><small title='Tipo Folha: ${full.tipo_folha}'>${full.tipo_folha}</small>`;
+                  }
+                  return data;
+                },
+                defaultOrder: 'desc',
               },
                valor_bruto: {
                 label: 'Valor Bruto',
@@ -554,11 +586,17 @@ export default {
                 },
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
 
           default: break;
+        }
+
+        vm.ultimoAgrupamento = vm.filtro.agrupar;
+        if(!pageLoad && vm.options.order.length > 0){
+          vm.options.order = [];
         }
 
         vm.$nextTick(() => {

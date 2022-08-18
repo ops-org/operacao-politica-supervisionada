@@ -38,7 +38,7 @@ export default {
               loader.hide();
             });
         },
-        pageLength: 100,
+        pageLength: 50,
         dom: "tr<'row vdtnet-footer'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
       },
       fields: {
@@ -54,12 +54,14 @@ export default {
         },
         presenca: {
           label: 'Presença',
+          render: (data, type, full) => {
+            if (type === 'display') {
+              return `${data}<br><small>${full.justificativa}</small>`;
+            }
+            return data;
+          },
           sortable: true,
-        },
-        justificativa: {
-          label: 'Justificativa',
-          sortable: true,
-        },
+        }
       },
     };
   },

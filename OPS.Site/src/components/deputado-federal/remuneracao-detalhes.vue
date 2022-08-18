@@ -1,12 +1,12 @@
 <template>
   <div class="container">
-    <h3 class="page-title">[BETA] Remuneração na Câmara</h3>
+    <h3 class="page-title">[BETA] Folha de Pagamento na Câmara de Deputados Federais</h3>
 
     <div class="row mb-2">
       <div class="col-md-6">
         <p class="mb-1"><strong>Grupo Funcional:</strong> {{ remuneracao.grupo_funcional }}</p>
       </div>
-      <div class="col-md-2">
+      <div class="col-md-2" v-if="remuneracao.cargo">
         <p class="mb-1">
           <strong>Cargo:</strong> {{ remuneracao.cargo }}
         </p>

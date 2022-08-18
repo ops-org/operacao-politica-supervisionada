@@ -24,8 +24,8 @@
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>Partido / UF: </strong>
-              {{documento.sigla_partido}} / {{documento.sigla_estado}}
+              <strong>Partido/UF: </strong>
+              {{documento.sigla_partido}}/{{documento.sigla_estado}}
             </p>
           </div>
         </div>
@@ -38,7 +38,7 @@
           </div>
           <div class="col-md-4">
             <p class="mb-1">
-              <strong>CNPJ / CPF: </strong>
+              <strong>CNPJ/CPF: </strong>
               <a
                 v-bind:href="documento.url_beneficiario"
                 title="Visualizar perfil do beneficiario"
@@ -47,46 +47,60 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-md-8">
+          <div class="col-md-12">
             <p class="mb-1">
               <strong>Despesa: </strong>
               {{documento.descricao_despesa}}
             </p>
           </div>
-          <div class="col-md-4">
-            <p class="mb-1">
-              <strong>Data do pedido de reembolso: </strong>
-              {{documento.competencia}}
-            </p>
-          </div>
         </div>
         <div class="row">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <p class="mb-1">
-              <strong>Valor da Despesa: </strong>
-              {{documento.valor_documento}}
-            </p>
-          </div>
-          <div class="col-md-4">
-            <p class="mb-1">
-              <strong>Valor Reembolsado: </strong>
-              {{documento.valor_liquido}}
-            </p>
-          </div>
-          <div class="col-md-4">
-            <p class="mb-1">
-              <strong>Data da Despesa: </strong>
+              <strong>Data da Nota: </strong>
               {{documento.data_emissao}}
             </p>
           </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4">
+          <div class="col-md-3">
+            <p class="mb-1">
+              <strong>Competência: </strong>
+              {{documento.competencia}}
+            </p>
+          </div>
+          <div class="col-md-3" >
             <p class="mb-1">
               <strong>Tipo do Documento: </strong>
               {{documento.tipo_documento}}
             </p>
           </div>
+        </div>
+        <div class="row">
+          <div class="col-md-3" v-if="documento.valor_restituicao != '0,00' || documento.valor_glosa != '0,00'">
+            <p class="mb-1">
+              <strong>Valor da Despesa: </strong>
+              {{documento.valor_documento}}
+            </p>
+          </div>
+          <div class="col-md-3" v-if="documento.valor_glosa != '0,00'">
+            <p class="mb-1">
+              <strong>Glosas: </strong>
+              {{documento.valor_glosa}}
+            </p>
+          </div>
+          <div class="col-md-3" v-if="documento.valor_restituicao != '0,00'">
+            <p class="mb-1">
+              <strong>Restituições: </strong>
+              {{documento.valor_restituicao}}
+            </p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1">
+              <strong>Valor Reembolsado: </strong>
+              {{documento.valor_liquido}}
+            </p>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-md-4" v-if="documento.nome_passageiro">
             <p class="mb-1">
               <strong>Nome do Passageiro: </strong>
@@ -263,26 +277,17 @@ export default {
 
       const urlCamara = 'http://www.camara.gov.br/cota-parlamentar/';
 
-      if (doc.url_documento) { // NF-e
-        if (doc.url_documento.toLowerCase().indexOf('idedocumentofiscal') !== -1) {
-          doc.url_documento = doc.url_documento.toLowerCase().replace('http://camara.leg.br/', 'https://www.camara.gov.br/').replace('idedocumentofiscal', 'ideDocumentoFiscal');
-        } else {
-          doc.url_documento_nfe = doc.url_documento.toLowerCase();
-        }
-      } else if (doc.link === 2) { // NF-e
+      if (doc.link === 2) { // NF-e
         doc.url_documento = `${urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal=${doc.id_documento}`;
-      } else if (doc.link === 3) {
+      } else if (doc.link === 1) {
         doc.url_documento = `${urlCamara}documentos/publ/${doc.id_deputado}/${doc.ano}/${doc.id_documento}.pdf`;
-      } else if (doc.link !== 1) {
-        doc.url_documento_nfe = `${urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal=${doc.id_documento}`;
-        doc.url_documento = `${urlCamara}documentos/publ/${doc.id_deputado}/${doc.ano}/${doc.id_documento}.pdf`;
-      }
+      } 
 
-      doc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${doc.id_deputado}&dataInicio=${doc.mes}/${doc.ano}&dataFim=${doc.mes}/${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
+      doc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${doc.id_deputado}&dataInicio=${doc.competencia}&dataFim=${doc.competencia}&despesa=${doc.id_cf_despesa_tipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
       doc.url_detalhes_documento = `${urlCamara}documento?nuDeputadoId=${doc.id_deputado}&numMes=${doc.mes}&numAno=${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&cnpjFornecedor=${doc.cnpj_cpf}&idDocumento=${doc.numero_documento}`;
 
       doc.url_beneficiario = `/fornecedor/${doc.id_fornecedor}`;
-      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=0&Agrupamento=6`;
+      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=56&Agrupamento=6`;
 
       this.documento = doc;
     });

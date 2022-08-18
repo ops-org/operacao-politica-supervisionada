@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/0.5.26-alpha">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>7e4446a1-772e-4d73-97f5-27d70ffbfd33</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupCommand>npm run build</StartupCommand>
+    <JavaScriptTestRoot>.\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>
+    </JavaScriptTestFramework>
+    <BuildCommand>npm run serve</BuildCommand>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\.dockerignore">
+      <DependentUpon>$(DockerDefaultDockerfile)</DependentUpon>
+      <Link>.dockerignore</Link>
+    </None>
+  </ItemGroup>
+</Project>

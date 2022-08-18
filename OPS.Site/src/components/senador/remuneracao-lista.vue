@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid">
+  <div class="container">
     <h3 class="page-title">[BETA] Remuneração no Senado</h3>
 
     <form id="form" autocomplete="off">

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 
 namespace OPS.Core.DAO
 {
@@ -23,8 +24,7 @@ namespace OPS.Core.DAO
 			}
 			catch (Exception ex)
 			{
-				var e = ex;
-				// TODO: Logar Erro
+				Log.Error(ex, ex.Message);
 			}
 		}
 	}

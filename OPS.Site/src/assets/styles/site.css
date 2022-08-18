@@ -377,3 +377,10 @@ form.ng-submitted .form-control.ng-invalid {
 .bootstrap-select {
     border: 1px solid #e8e8e8;
 }
+
+.dataTables_wrapper td {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }

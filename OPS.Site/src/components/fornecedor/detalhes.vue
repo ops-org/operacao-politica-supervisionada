@@ -117,6 +117,14 @@
 
             <input
               type="button"
+              v-on:click="SituacaoCadastral(fornecedor)"
+              value="Situação Cadastral Atualizada"
+              title="Pesquisar Fornecedor na Receita Federal"
+              class="btn btn-light"
+            />
+
+            <input
+              type="button"
               v-on:click="PesquisarNoMaps(fornecedor)"
               value="Pesquisar no Maps"
               title="Pesquisar Fornecedor no Maps"
@@ -130,6 +138,7 @@
               title="Pesquisar Fornecedor no Google"
               class="btn btn-light"
             />
+
           </div>
         </div>
 
@@ -234,7 +243,7 @@
             <div class="col-md-12">
               <div class="form-group">
                 <strong>Código e descrição das atividades econômicas secundárias:</strong>
-                <div v-for="row in fornecedor.atividade_secundaria" :key="row" v-bind="row"></div>
+                <div v-for="atividade in fornecedor.atividade_secundaria" :key="atividade">{{atividade}}</div>
               </div>
             </div>
           </div>
@@ -632,6 +641,11 @@ export default {
     PesquisarNoGoogle(f) {
       window.open(
         `https://www.google.com.br/search?q=${f.nome},${f.cidade},${f.estado}`,
+      );
+    },
+    SituacaoCadastral(f) {
+      window.open(
+        `https://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/cnpjreva_solicitacao.asp?cnpj=${f.cnpj_cpf}`,
       );
     },
     ExpandirContrairInformacoesAdicional(e) {

@@ -25,7 +25,7 @@ namespace OPS.Core.DTO
 
 		public string Documento { get; set; }
 
-	    public string PeriodoCustom { get; set; }
+	    //public string PeriodoCustom { get; set; }
 
         public EnumAgrupamentoAuditoria Agrupamento { get; set; }
 

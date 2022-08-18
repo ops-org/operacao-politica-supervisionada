@@ -1,6 +1,7 @@
 ﻿using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
@@ -159,13 +160,13 @@ namespace OPS.Core
                 });
         }
 
-        public static async Task SendMailAsync(string apiKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null)
+        public static async Task SendMailAsync(string apiKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
         {
             var lstEmailTo = new MailAddressCollection() { objEmailTo };
-            await SendMailAsync(apiKey, lstEmailTo, subject, body, ReplyTo);
+            await SendMailAsync(apiKey, lstEmailTo, subject, body, ReplyTo, htmlContent);
         }
 
-        public static async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null)
+        public static async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
         {
             var lstTo = new List<To>();
             foreach (MailAddress objEmailTo in lstEmailTo)
@@ -189,7 +190,7 @@ namespace OPS.Core
                 content = new List<Content>(){
                     new Content()
                     {
-                        type = "text/html",
+                        type = htmlContent ? "text/html" : "text/plain",
                         value = body
                     }
                 },
@@ -222,7 +223,7 @@ namespace OPS.Core
             request.AddHeader("content-type", "application/json");
             request.AddHeader("authorization", "Bearer " + apiKey);
             request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
-            IRestResponse response = await restClient.ExecuteAsync(request);
+            IRestResponse response = restClient.Post(request);
 
             if (response.StatusCode != HttpStatusCode.Accepted)
             {
@@ -237,21 +238,17 @@ namespace OPS.Core
             return new Regex(@"\s{2,}").Replace(s, " ");
         }
 
-        public static string Hash(string input)
+        public static byte[] SHA1Hash(string input)
         {
-            using (SHA1Managed sha1 = new SHA1Managed())
-            {
-                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
-                var sb = new StringBuilder(hash.Length * 2);
+            using var sha1 = SHA1.Create();
+            return sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+        }
 
-                foreach (byte b in hash)
-                {
-                    // can be "x2" if you want lowercase
-                    sb.Append(b.ToString("X2"));
-                }
-
-                return sb.ToString();
-            }
+        public static string ReadAllText(string file)
+        {
+            using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var textReader = new StreamReader(fileStream))
+                return textReader.ReadToEnd();
         }
 
         //public static string GetIPAddress()
@@ -270,6 +267,27 @@ namespace OPS.Core
 
         //    return context.Request.ServerVariables["REMOTE_ADDR"];
         //}
+
+        public static string NullIfEmpty(this string value)
+        {
+            if (!string.IsNullOrEmpty(value.Trim()))
+                return value;
+
+            return null;
+        }
+
+        public static T NullIfEmpty<T>(this T value) where T : class
+        {
+            if (!string.IsNullOrEmpty(value?.ToString().Trim()))
+                return value;
+
+            return (T)null;
+        }
+
+        public static T? NullIf<T>(this T left, T right) where T : struct
+        {
+            return EqualityComparer<T>.Default.Equals(left, right) ? (T?)null : left;
+        }
 
 
 

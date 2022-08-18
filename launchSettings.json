@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchServiceName": "ops.api",
+      "composeLaunchUrl": "http://localhost:8080/",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "ops.api": "StartDebugging",
+        "ops.site": "StartWithoutDebugging"
+      }
+    }
+  }
+}
