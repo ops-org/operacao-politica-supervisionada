@@ -1,9 +1,9 @@
-﻿using System;
+﻿using OPS.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
-using OPS.Core.Models;
 
 namespace OPS.Core.DAO
 {

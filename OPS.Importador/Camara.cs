@@ -1,25 +1,22 @@
-﻿using System;
+﻿using AngleSharp;
+using AngleSharp.Html.Dom;
+using CsvHelper;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
+using RestSharp;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using AngleSharp;
-using CsvHelper;
-using ICSharpCode.SharpZipLib.Zip;
-using OPS.Core;
-using RestSharp;
-using AngleSharp.Html.Dom;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador
@@ -1730,7 +1727,7 @@ where id=@id_cf_deputado"
                 urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/copy_of_2014/{1}-de-{0}-csv", ano, meses[mes - 1]);
             else if (ano > 2013 || (ano == 2013 && (mes >= 7 || mes == 4)))
                 urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-de-{0}-csv", ano, meses[mes - 1]);
-            else if(ano == 2022)
+            else if (ano == 2022)
                 urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/copy_of_2021/{1}-{0}-csv", ano, meses[mes - 1]);
             else
                 urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-{0}-csv", ano, meses[mes - 1]);

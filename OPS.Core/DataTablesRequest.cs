@@ -23,7 +23,6 @@ THE SOFTWARE.
 */
 #endregion Copyright
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -65,7 +64,7 @@ namespace OPS.Core
                 var lstSort = new List<string>();
                 foreach (var item in Order)
                 {
-                    lstSort.Add(string.Format("{0} {1}", item.Column+1, item.Dir));
+                    lstSort.Add(string.Format("{0} {1}", item.Column + 1, item.Dir));
                 }
 
                 if (lstSort.Any())

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Web;
-
-namespace OPS.Core
+﻿namespace OPS.Core
 {
     public enum AgrupamentoRemuneracaoSenado
     {

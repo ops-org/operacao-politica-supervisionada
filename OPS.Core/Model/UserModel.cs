@@ -2,7 +2,7 @@
 
 namespace OPS.Core.Models
 {
-	public class UserModel
+    public class UserModel
     {
         [Required]
         [Display(Name = "E-mail")]

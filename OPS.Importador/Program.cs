@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using OPS.Core;
 using Serilog;
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -70,7 +69,7 @@ namespace OPS.Importador
                     CamaraDistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<CamaraDistritoFederal>();
                     CamaraSantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<CamaraSantaCatarina>();
                     Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
-                   
+
                     objSenado.ImportarParlamentares();
                     objSenado.ImportarCompleto();
                     objCamara.ImportarCompleto();
@@ -79,7 +78,7 @@ namespace OPS.Importador
                     objCamara.ImportaPresencasDeputados();
 
                     objFornecedor.ConsultarReceitaWS().Wait();
-                   
+
                     Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
                     Console.ReadKey();
                 }

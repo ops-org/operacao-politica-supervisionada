@@ -6,7 +6,7 @@ namespace OPS.Core.DAO
 {
     public class EstadoDao
     {
-	    public async Task<dynamic> Consultar()
+        public async Task<dynamic> Consultar()
         {
             using (AppDb banco = new AppDb())
             {
