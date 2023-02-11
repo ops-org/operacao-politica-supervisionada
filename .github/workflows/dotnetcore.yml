@@ -63,7 +63,9 @@ jobs:
     - name: Publish .NET
       run: |
         dotnet publish OPS.API --configuration Release -o ops-api
+        rm -r ops-api/runtimes
         dotnet publish OPS.Importador --configuration Release -o ops-importador
+        rm -r ops-importador/runtimes
 
     - uses: actions/upload-artifact@v3
       with:
@@ -90,4 +92,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: ops-importador
-        path: ~/ops-importador/   
+        path: ~/ops-importador/
+    - name: Deploy dos arquivos na pasta final
+      ./${{ github.workspace }}/ops-importador-deploy.sh
+      ./${{ github.workspace }}/ops-api-deploy.sh
