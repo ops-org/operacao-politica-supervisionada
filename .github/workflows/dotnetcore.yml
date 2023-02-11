@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -17,8 +17,19 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
         
+    - uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    - name: Install .NET dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: dotnet restore
+      
     - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
@@ -32,10 +43,7 @@ jobs:
       with:
         path: '**/node_modules'
         key: node-modules-${{ hashFiles('**/package-lock.json') }}
-            
-    - name: Install .NET dependencies
-      run: dotnet restore
-    
+          
     - name: Install Node.js dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: npm ci
@@ -54,3 +62,27 @@ jobs:
       run: |
         dotnet publish OPS.API --configuration Release -o ops-api
         dotnet publish OPS.Importador --configuration Release -o ops-importador
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ops-api
+        path: ops-api/**
+        if-no-files-found: error
+      with:
+        name: ops-importador
+        path: ops-importador/**
+        if-no-files-found: error
+
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, king-host]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@v3
+      with:
+        name: ops-api
+        path: ~/ops-api/
+      with:
+        name: ops-importador
+        path: ~/ops-importador/   
