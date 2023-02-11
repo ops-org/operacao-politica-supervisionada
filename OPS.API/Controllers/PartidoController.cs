@@ -6,21 +6,19 @@ namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class PartidoController : Controller
     {
-        PartidoDao dao;
+        PartidoRepository repository;
 
-        public PartidoController()
+        public PartidoController(PartidoRepository repository)
         {
-            dao = new PartidoDao();
+            this.repository = repository;
         }
 
         [HttpGet]
-        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<IActionResult> Consultar()
         {
-            var result = await dao.Consultar();
+            var result = await repository.Consultar();
 
             return Ok(result);
         }

@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using OPS.Core;
+using OPS.Core.Entity;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,86 +12,50 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace OPS.Importador
 {
     public class Fornecedor
     {
-        public IConfiguration _configuration { get; private set; }
+        public ILogger<Fornecedor> logger { get; private set; }
 
-        public Fornecedor(ILogger<Fornecedor> logger, IConfiguration configuration)
+        private readonly IDbConnection connection;
+
+        public IConfiguration configuration { get; private set; }
+
+        public Fornecedor(ILogger<Fornecedor> logger, IDbConnection connection, IConfiguration configuration)
         {
-            this._configuration = configuration;
+            this.logger = logger;
+            this.connection = connection;
+            this.configuration = configuration;
         }
 
-        //public  void ConsultarCNPJ()
+        //public void AtualizaFornecedorDoador()
         //{
-        //	int totalErros = 0, totalAcertos = 0;
+        //    using (var banco = new AppDb())
+        //    {
+        //        var dt = banco.GetTable("select id, cnpj_cpf from fornecedor");
 
-        //	while (true)
-        //	{
-        //		DataTable dtFornecedores;
-        //		using (var banco = new Banco())
-        //		{
-        //			dtFornecedores = banco.GetTable(
-        //				@"select cnpj_cpf, f.id, fi.id_fornecedor
-        //                  from fornecedor f
-        //                  left join fornecedor_info fi on f.id = fi.id_fornecedor
-        //                  where char_length(f.cnpj_cpf) = 14
-        //                  and f.cnpj_cpf <> '00000000000000'
-        //                  -- and obtido_em < '2017-01-01'
-        //                  and fi.id_fornecedor is null
-        //                  -- and ip_colaborador is null -- not in ('170509', '170510', '170511', '170512')
-        //                  -- and controle is null
-        //                  -- and controle = 1
-        //			and controle <> 5
-        //                  -- and (f.mensagem is null or f.mensagem <> 'O número do CNPJ não foi localizado na Receita Federal')
-        //                  order by 1 desc");
-        //		}
-
-        //		if (dtFornecedores.Rows.Count == 0) break;
-
-        //		Console.WriteLine("Consultando CNPJ's Local: {0} itens.", dtFornecedores.Rows.Count);
-
-        //		foreach (DataRow item in dtFornecedores.Rows)
-        //		{
-        //			try
-        //			{
-        //				Receita.ConsultarCNPJ(item["cnpj_cpf"].ToString(), ref totalAcertos, ref totalErros);
-        //			}
-        //			catch (Exception e)
-        //			{
-        //				Console.WriteLine(e.Message);
-        //				System.Threading.Thread.Sleep(3600000);
-        //			}
-        //		}
-        //	};
+        //        foreach (DataRow dr in dt.Rows)
+        //        {
+        //            banco.AddParameter("cnpj", dr["cnpj_cpf"]);
+        //            var existe = banco.ExecuteScalar("select 1 from eleicao_doacao where raiz_cnpj_cpf_doador=@cnpj;");
+        //            if (existe != null)
+        //            {
+        //                banco.AddParameter("id", dr["id"]);
+        //                banco.ExecuteNonQuery("update fornecedor set doador=1 where id=@id");
+        //            }
+        //        }
+        //    }
         //}
 
-        public void AtualizaFornecedorDoador()
+        public async Task ConsultarReceitaWS()
         {
-            using (var banco = new AppDb())
-            {
-                var dt = banco.GetTable("select id, cnpj_cpf from fornecedor");
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    banco.AddParameter("cnpj", dr["cnpj_cpf"]);
-                    var existe = banco.ExecuteScalar("select 1 from eleicao_doacao where raiz_cnpj_cpf_doador=@cnpj;");
-                    if (existe != null)
-                    {
-                        banco.AddParameter("id", dr["id"]);
-                        banco.ExecuteNonQuery("update fornecedor set doador=1 where id=@id");
-                    }
-                }
-            }
-        }
-
-        public async Task<string> ConsultarReceitaWS()
-        {
-            var telegramApiToken = _configuration["AppSettings:TelegramApiToken"];
-            var receitaWsApiToken = _configuration["AppSettings:ReceitaWsApiToken"];
+            var telegramApiToken = configuration["AppSettings:TelegramApiToken"];
+            var receitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
 
             var telegram = new TelegramApi(telegramApiToken);
             var telegraMessage = new Core.Entity.TelegramMessage()
@@ -99,14 +65,11 @@ namespace OPS.Importador
                 Text = ""
             };
 
-            var sb = new StringBuilder();
-            var strInfoAdicional = new StringBuilder();
-            int RateLimit_Remaining = 3;
             int totalImportados = 0;
 
             DataTable dtFornecedores;
-            DataTable dtFornecedoresAtividade;
-            DataTable dtFornecedoresNatJu;
+            List<FornecedorAtividade> lstFornecedoresAtividade;
+            List<NaturezaJuridica> lstNaturezaJuridica;
 
             using (var banco = new AppDb())
             {
@@ -115,7 +78,7 @@ namespace OPS.Importador
                     from fornecedor f
                     left join fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
-                    and f.cnpj_cpf <> '00000000000000'
+                    -- and f.cnpj_cpf <> '00000000000000'
                     -- and obtido_em < '2018-01-01'
                     -- and fi.id_fornecedor is null
                     -- and ip_colaborador not like '1805%'
@@ -125,109 +88,68 @@ namespace OPS.Importador
                     -- and controle <> 0
 					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
 					-- and (controle is null or controle NOT IN (0, 2, 3, 5))
-                    and (controle is null or controle NOT IN (0, 2, 3))
-                    AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
-                    order by fi.obtido_em asc
-                    LIMIT 1000");
+                    -- and fi.situacao_cadastral = 'ATIVA'
+                    and (controle is null or controle NOT IN (0, 1, 2, 3))
+                    -- AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
+                    AND fi.id_fornecedor IS null
+                    order by fi.id_fornecedor asc
+                    -- LIMIT 1000");
 
                 if (dtFornecedores.Rows.Count == 0)
                 {
-                    Console.WriteLine("Não há fornecedores para consultar");
-                    return "<p>Não há fornecedores para consultar</p>";
+                    logger.LogInformation("Não há fornecedores para consultar");
+                    return;
                 }
 
-                dtFornecedoresAtividade = banco.GetTable("SELECT * FROM fornecedor_atividade;");
-                dtFornecedoresNatJu = banco.GetTable("SELECT * FROM fornecedor_natureza_juridica;");
+
+                lstFornecedoresAtividade = connection.GetList<FornecedorAtividade>().ToList();
+                lstNaturezaJuridica = connection.GetList<NaturezaJuridica>().ToList();
             }
 
-            Console.WriteLine("Consultando CNPJ's Local: {0} itens.", dtFornecedores.Rows.Count);
+            logger.LogInformation("Consultando CNPJ's Local: {Total} itens.", dtFornecedores.Rows.Count);
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            int i = 0;
+            int atual = 0;
+            int total = dtFornecedores.Rows.Count;
             foreach (DataRow item in dtFornecedores.Rows)
             {
                 // the code that you want to measure comes here
                 //watch.Stop();
-                //Console.WriteLine(watch.ElapsedMilliseconds);
+                //_logger.LogInformation(watch.ElapsedMilliseconds);
                 //watch.Restart();
 
-                i++;
+                atual++;
                 if (!validarCNPJ(item["cnpj_cpf"].ToString()))
                 {
                     InserirControle(3, item["cnpj_cpf"].ToString(), "CNPJ Invalido");
-                    Console.WriteLine("CNPJ Invalido: " + item["cnpj_cpf"] + " - " + i);
+                    logger.LogInformation("CNPJ Invalido [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, item["cnpj_cpf"].ToString(), item["nome"]);
 
-                    strInfoAdicional.Append("<p>Empresa invalida importada:" + item["id"].ToString() + " - " + item["cnpj_cpf"].ToString() + " - " + item["nome"].ToString() + "; Motivo: CNPJ Invalido</p>");
-
-                    telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
-                    telegram.SendMessage(telegraMessage);
+                    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
+                    //telegram.SendMessage(telegraMessage);
                     continue;
                 }
 
-                //Console.WriteLine("Consultando CNPJ: " + item["cnpj_cpf"] + " - " + i);
-                FornecedorInfo receita = null;
+                //_logger.LogInformation("Consultando CNPJ: " + item["cnpj_cpf"] + " - " + i);
+                FornecedorInfo fornecedor = null;
 
                 try
                 {
-                    using (HttpClient client = new HttpClient())
+                    using (HttpClient client = new())
                     {
-                        //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", receitaWsApiToken);
-
-                        //--------------------------------
-                        string uriString;
-
-                        uriString = string.Format("https://www.receitaws.com.br/v1/cnpj/{0}", item["cnpj_cpf"].ToString());
-                        client.BaseAddress = new Uri(uriString);
-
-                        if (RateLimit_Remaining == 0)
-                        {
-                            //try
-                            //{
-                            //    watch.Stop();
-                            //    Console.WriteLine("Rate limit atingido! " + (60 - watch.Elapsed.TotalSeconds).ToString());
-                            //    System.Threading.Thread.Sleep(70000 - (int)watch.ElapsedMilliseconds);
-                            //}
-                            //catch (Exception)
-                            //{
-                            System.Threading.Thread.Sleep(60000);
-                            //}
-                            //finally
-                            //{
-                            //    watch.Restart();
-                            //}
-                        }
-
-                        //Setar o Timeout do client quando é API BASICA
-                        //client.Timeout = TimeSpan.FromMilliseconds(5000);
+                        client.BaseAddress = new Uri($"https://minhareceita.org/{item["cnpj_cpf"]}");
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
                         HttpResponseMessage response = await client.GetAsync(string.Empty);
-
-                        //var rateLimit = response.Headers.FirstOrDefault(x => x.Key == "X-RateLimit-Limit");
-                        //var retryAfter = response.Headers.FirstOrDefault(x => x.Key == "RetryAfter"); // A API do ReceitaWS infelizmente não retorna um valor de retryAfter, então temos que usar um sleep num valor padrão.
-                        var rateLimit_Remaining = response.Headers.FirstOrDefault(x => x.Key == "X-RateLimit-Remaining");
-
-
-                        if (rateLimit_Remaining.Value != null)
-                        {
-                            int temp;
-                            int.TryParse(rateLimit_Remaining.Value.First(), out temp);
-                            RateLimit_Remaining = temp;
-                        }
-                        else
-                        {
-                            RateLimit_Remaining = 3;
-                        }
-
 
                         if (response.IsSuccessStatusCode)
                         {
                             string responseString = await response.Content.ReadAsStringAsync();
-                            receita = JsonSerializer.Deserialize<FornecedorInfo>(responseString);
+                            fornecedor = JsonSerializer.Deserialize<FornecedorInfo>(responseString);
                         }
                         else
                         {
                             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                             {
-                                Console.WriteLine(response.ReasonPhrase);
+                                logger.LogInformation(response.ReasonPhrase);
                                 System.Threading.Thread.Sleep(60000);
                             }
                             else
@@ -242,265 +164,156 @@ namespace OPS.Importador
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.GetBaseException().Message);
+                    logger.LogError(ex, ex.Message);
                     InserirControle(1, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
                     continue;
                 }
 
-                string strSql2;
-                using (var banco = new AppDb())
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+
+                var transaction = connection.BeginTransaction();
+
+                try
                 {
-                    //if (receita?.status == null)
-                    //{
-                    //    Thread.Sleep(60000); //1 MINUTO
-                    //    continue;
-                    //}
+                    fornecedor.Id = Convert.ToInt32(item["id"]);
+                    fornecedor.ObtidoEm = DateTime.Today;
 
-                    if (receita.status == "OK")
+                    fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8); //13.106.352/0001-78
+
+                    if (item["id_fornecedor"] != DBNull.Value)
                     {
+                        connection.Execute(@"
+delete from fornecedor_info where id_fornecedor=@id;
+delete from fornecedor_atividade_secundaria where id_fornecedor=@id;
+delete from fornecedor_socio where id_fornecedor=@id;
+                            ", new { id = fornecedor.Id }, transaction);
+                    }
 
-                        banco.BeginTransaction();
-
-                        try
-                        {
-                            if (item["id_fornecedor"] != DBNull.Value)
-                            {
-                                banco.AddParameter("@id_fornecedor", item["id_fornecedor"]);
-
-                                banco.ExecuteNonQuery(@"
-                                delete from fornecedor_info where id_fornecedor=@id_fornecedor;
-                                delete from fornecedor_atividade_secundaria where id_fornecedor=@id_fornecedor;
-                                delete from fornecedor_socio where id_fornecedor=@id_fornecedor;
-                            ");
-                            }
-
-                            var strSql =
-                                @"insert into fornecedor_info(
-							    id_fornecedor,
-							    cnpj,
-								tipo,
-							    nome,
-							    data_de_abertura,
-							    nome_fantasia,
-							    id_fornecedor_atividade_principal,
-							    id_fornecedor_natureza_juridica,
-							    logradouro,
-							    numero,
-							    complemento,
-							    cep,
-							    bairro,
-							    municipio,
-							    estado,
-							    endereco_eletronico,
-							    telefone,
-							    ente_federativo_responsavel,
-							    situacao_cadastral,
-							    data_da_situacao_cadastral,
-							    motivo_situacao_cadastral,
-							    situacao_especial,
-							    data_situacao_especial,
-							    capital_social,
-								obtido_em,
-                                ip_colaborador
-						    ) values (
-							    @id_fornecedor,
-							    @cnpj,
-								@tipo,
-							    @nome,
-							    @data_de_abertura,
-							    @nome_fantasia,
-							    @id_fornecedor_atividade_principal,
-							    @id_fornecedor_natureza_juridica,
-							    @logradouro,
-							    @numero,
-							    @complemento,
-							    @cep,
-							    @bairro,
-							    @municipio,
-							    @estado,
-							    @endereco_eletronico,
-							    @telefone,
-							    @ente_federativo_responsavel,
-							    @situacao_cadastral,
-							    @data_da_situacao_cadastral,
-							    @motivo_situacao_cadastral,
-							    @situacao_especial,
-							    @data_situacao_especial,
-							    @capital_social,
-								@obtido_em,
-                                @ip_colaborador
-						    )";
-
-                            banco.AddParameter("@id_fornecedor", item["id"]);
-                            banco.AddParameter("@cnpj", item["cnpj_cpf"]);
-                            banco.AddParameter("@tipo", receita.tipo);
-                            banco.AddParameter("@nome", receita.nome);
-                            banco.AddParameter("@data_de_abertura", ParseDate(receita.abertura));
-                            banco.AddParameter("@nome_fantasia", receita.fantasia);
-
-                            if (receita.atividade_principal != null && receita.atividade_principal.Count > 0)
-                            {
-                                var drAt = LocalizaInsereAtividade(dtFornecedoresAtividade, receita.atividade_principal[0]);
-                                banco.AddParameter("@id_fornecedor_atividade_principal", drAt["id"]);
-                            }
-                            else
-                            {
-                                banco.AddParameter("@id_fornecedor_atividade_principal", DBNull.Value);
-                            }
-
-                            if (receita.atividade_principal != null)
-                            {
-                                var drNj =
-                                    dtFornecedoresNatJu.Select("codigo='" + receita.natureza_juridica.Split(' ')[0] + "'");
-                                banco.AddParameter("@id_fornecedor_natureza_juridica",
-                                    drNj.Length > 0 ? drNj[0]["id"] : DBNull.Value);
-                            }
-                            else
-                            {
-                                banco.AddParameter("@id_fornecedor_natureza_juridica", DBNull.Value);
-                            }
-
-                            banco.AddParameter("@logradouro", receita.logradouro);
-                            banco.AddParameter("@numero", receita.numero);
-                            banco.AddParameter("@complemento", receita.complemento);
-                            banco.AddParameter("@cep", receita.cep);
-                            banco.AddParameter("@bairro", receita.bairro);
-                            banco.AddParameter("@municipio", receita.municipio);
-                            banco.AddParameter("@estado", receita.uf);
-                            banco.AddParameter("@endereco_eletronico", receita.email);
-                            banco.AddParameter("@telefone", receita.telefone);
-                            banco.AddParameter("@ente_federativo_responsavel", receita.efr);
-                            banco.AddParameter("@situacao_cadastral", receita.situacao);
-                            banco.AddParameter("@data_da_situacao_cadastral", ParseDate(receita.data_situacao));
-                            banco.AddParameter("@motivo_situacao_cadastral", receita.motivo_situacao);
-                            banco.AddParameter("@situacao_especial", receita.situacao_especial);
-                            banco.AddParameter("@data_situacao_especial", ParseDate(receita.data_situacao_especial));
-                            banco.AddParameter("@capital_social", ObterValor(receita.capital_social));
-                            banco.AddParameter("@obtido_em", ParseDate(receita.ultima_atualizacao));
-                            banco.AddParameter("@ip_colaborador", DateTime.Now.ToString("yyMMdd"));
-
-                            banco.ExecuteNonQuery(strSql);
-
-
-                            banco.AddParameter("@id", item["id"]);
-                            banco.AddParameter("@nome", receita.nome);
-                            banco.ExecuteNonQuery(@"update fornecedor set nome=@nome where id=@id");
-
-
-                            strSql2 = @"insert into fornecedor_atividade_secundaria values (@id_fornecedor_info, @id_fornecedor_atividade)";
-                            foreach (var atividadesSecundaria in receita.atividades_secundarias)
-                            {
-                                banco.ClearParameters();
-
-                                try
-                                {
-                                    var drAt = LocalizaInsereAtividade(dtFornecedoresAtividade, atividadesSecundaria);
-                                    banco.AddParameter("@id_fornecedor_info", item["id"]);
-                                    banco.AddParameter("@id_fornecedor_atividade", drAt["id"]);
-
-                                    banco.ExecuteNonQuery(strSql2);
-                                }
-                                catch (MySqlException ex)
-                                {
-                                    if (!ex.Message.Contains("Duplicate entry")) throw;
-                                }
-                            }
-
-                            strSql2 =
-                                @"insert into fornecedor_socio 
-                                (id_fornecedor, nome, pais_origem, id_fornecedor_socio_qualificacao, nome_representante, id_fornecedor_socio_representante_qualificacao) 
-                            values 
-                                (@id_fornecedor, @nome, @pais_origem, @id_fornecedor_socio_qualificacao, @nome_representante, @id_fornecedor_socio_representante_qualificacao)";
-
-                            foreach (var qsa in receita.qsa)
-                            {
-                                banco.ClearParameters();
-
-                                banco.AddParameter("@id_fornecedor", item["id"]);
-                                banco.AddParameter("@nome", qsa.nome);
-                                banco.AddParameter("@pais_origem", qsa.pais_origem);
-                                banco.AddParameter("@id_fornecedor_socio_qualificacao", qsa.qual.Split('-')[0]);
-
-                                banco.AddParameter("@nome_representante", qsa.nome_rep_legal);
-                                banco.AddParameter("@id_fornecedor_socio_representante_qualificacao",
-                                    !string.IsNullOrEmpty(qsa.qual_rep_legal) && qsa.qual_rep_legal.Contains("-") ? (object)qsa.qual_rep_legal.Split('-')[0] : DBNull.Value);
-
-                                banco.ExecuteNonQuery(strSql2);
-                            }
-
-                            totalImportados++;
-
-                            if (receita.situacao != "ATIVA")
-                            {
-                                var enviarAlerta = false;
-
-                                if (!string.IsNullOrEmpty(receita.data_situacao_especial))
-                                {
-                                    banco.AddParameter("@id", Convert.ToInt32(item["id"]));
-                                    var ulimaNota = banco.ExecuteScalar(@"
-SELECT MAX(DATA) as data FROM (
-	SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = @id
-	UNION
-	SELECT MAX(d.data_emissao) FROM sf_despesa d WHERE d.id_fornecedor = @id
-	UNION
-	SELECT MAX(d.data) FROM cl_despesa d WHERE d.id_fornecedor = @id
-)
-");
-                                    if (ulimaNota != null && Convert.ToDateTime(ulimaNota) > Convert.ToDateTime(receita.data_situacao_especial))
-                                        enviarAlerta = true;
-                                }
-
-                                if (enviarAlerta)
-                                {
-                                    strInfoAdicional.Append("<p>Empresa inativa importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + receita.nome + "</p>");
-
-                                    telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>";
-                                    telegram.SendMessage(telegraMessage);
-                                }
-                            }
-
-                            banco.CommitTransaction();
-
-                            InserirControle(0, item["cnpj_cpf"].ToString(), "");
-                            Console.WriteLine($"Atualizando CNPJ: {receita.cnpj} {receita.nome} - " + i);
-                        }
-                        catch (Exception)
-                        {
-                            banco.RollBackTransaction();
-                        }
+                    if (fornecedor.IdAtividadePrincipal > 0)
+                    {
+                        fornecedor.IdAtividadePrincipal = LocalizaInsereAtividade(transaction, lstFornecedoresAtividade, fornecedor.IdAtividadePrincipal, fornecedor.AtividadePrincipal);
                     }
                     else
                     {
-                        InserirControle(2, item["cnpj_cpf"].ToString(), receita.message);
-
-                        strInfoAdicional.Append("<p>Empresa invalida importada:" + item["id"].ToString() + " - " + receita.cnpj + " - " + item["nome"].ToString() + "; Motivo: " + receita.message + "</p>");
-
-                        telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>; Motivo: {receita.message}";
-                        telegram.SendMessage(telegraMessage);
+                        throw new NotImplementedException();
                     }
+
+                    if (fornecedor.IdNaturezaJuridica > 0)
+                    {
+                        fornecedor.IdNaturezaJuridica = LocalizaInsereNaturezaJuridica(transaction, lstNaturezaJuridica, fornecedor.IdNaturezaJuridica, fornecedor.NaturezaJuridica);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+
+                    if (fornecedor.MotivoSituacaoCadastral == "SEM MOTIVO")
+                        fornecedor.MotivoSituacaoCadastral = null;
+
+                    connection.Insert(fornecedor, transaction);
+
+                    connection.Execute(@"update fornecedor set nome=@nome where id=@id", new
+                    {
+                        id = fornecedor.Id,
+                        nome = fornecedor.RazaoSocial
+                    }, transaction);
+
+
+                    foreach (var atividadesSecundaria in fornecedor.CnaesSecundarios)
+                    {
+                        try
+                        {
+                            var idAtividade = LocalizaInsereAtividade(transaction, lstFornecedoresAtividade, atividadesSecundaria.Id, atividadesSecundaria.Descricao);
+
+                            var atividade = new FornecedorAtividadeSecundaria();
+                            atividade.IdFornecedor = fornecedor.Id;
+                            atividade.IdAtividade = idAtividade;
+
+                            connection.Insert(atividade, transaction);
+                        }
+                        catch (MySqlException ex)
+                        {
+                            if (!ex.Message.Contains("Duplicate entry")) throw;
+                        }
+                    }
+
+                    if (fornecedor.Qsa != null)
+                        foreach (var qsa in fornecedor.Qsa)
+                        {
+                            qsa.IdFornecedor = fornecedor.Id;
+
+                            if (qsa.CpfRepresentante == "***000000**")
+                                qsa.CpfRepresentante = null;
+
+                            connection.Insert(qsa, transaction);
+                        }
+
+                    totalImportados++;
+
+                    if (fornecedor.SituacaoCadastral != "ATIVA")
+                    {
+                        if (fornecedor.DataSituacaoEspecial != null)
+                        {
+                            var ulimaNota = connection.ExecuteScalar(@"
+SELECT MAX(DATA) as data FROM (
+	SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = @id
+	UNION ALL
+	SELECT MAX(d.data_emissao) FROM sf_despesa d WHERE d.id_fornecedor = @id
+	UNION ALL
+	SELECT MAX(d.data_emissao) FROM cl_despesa d WHERE d.id_fornecedor = @id
+) tmp
+", new { id = fornecedor.Id }, transaction);
+                            if (ulimaNota != null && Convert.ToDateTime(ulimaNota) > Convert.ToDateTime(fornecedor.DataSituacaoEspecial))
+                            {
+                                logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, fornecedor.Cnpj, fornecedor.NomeFantasia);
+
+                                telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{fornecedor.Cnpj} - {fornecedor.NomeFantasia}</a>";
+                                telegram.SendMessage(telegraMessage);
+                            }
+                        }
+                    }
+
+                    transaction.Commit();
+
+                    InserirControle(0, item["cnpj_cpf"].ToString(), "");
+                    logger.LogInformation("Atualizando [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, fornecedor.Cnpj, fornecedor.NomeFantasia);
                 }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                }
+
+                //    else
+                //{
+                //    InserirControle(2, item["cnpj_cpf"].ToString(), receita.message);
+                //    _logger.LogInformation("Empresa {Status} [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", receita.message, atual, total, receita.cnpj, receita.nome);
+
+                //    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>; Motivo: {receita.message}";
+                //    //telegram.SendMessage(telegraMessage);
+                //}
             }
 
-            using (var banco = new AppDb())
-            {
-                banco.ExecuteNonQuery(@"
-					update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
-					update fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
-					update fornecedor_info set numero=null where numero = '' or numero = '********';
-					update fornecedor_info set complemento=null where complemento = '' or complemento = '********';
-					update fornecedor_info set cep=null where cep = '' or cep = '********';
-					update fornecedor_info set bairro=null where bairro = '' or bairro = '********';
-					update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
-					update fornecedor_info set estado=null where estado = '' or estado = '**';
-					update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
-					update fornecedor_info set telefone=null where telefone = '' or telefone = '********';
-					update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
-					update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
-					update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
-				");
-            }
+            //        using (var banco = new AppDb())
+            //        {
+            //            banco.ExecuteNonQuery(@"
+            //	update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
+            //	update fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
+            //	update fornecedor_info set numero=null where numero = '' or numero = '********';
+            //	update fornecedor_info set complemento=null where complemento = '' or complemento = '********';
+            //	update fornecedor_info set cep=null where cep = '' or cep = '********';
+            //	update fornecedor_info set bairro=null where bairro = '' or bairro = '********';
+            //	update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
+            //	update fornecedor_info set estado=null where estado = '' or estado = '**';
+            //	update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
+            //	update fornecedor_info set telefone=null where telefone = '' or telefone = '********';
+            //	update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
+            //	update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
+            //	update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
+            //");
+            //        }
 
-            return string.Format("<p>{0} de {1} fornecedores novos importados</p>", totalImportados, dtFornecedores.Rows.Count) + strInfoAdicional.ToString();
+            //_logger.LogInformation("{0} de {1} fornecedores novos importados</p>", totalImportados, dtFornecedores.Rows.Count) + strInfoAdicional.ToString();
         }
 
         private void InserirControle(int controle, string cnpj_cpf, string mensagem)
@@ -514,35 +327,48 @@ SELECT MAX(DATA) as data FROM (
                 banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where cnpj_cpf=@cnpj_cpf;");
             }
 
-            Console.WriteLine($"{controle} - {mensagem}");
+            if (controle > 0)
+                logger.LogInformation($"{controle} - {mensagem}");
         }
 
-        private DataRow LocalizaInsereAtividade(DataTable dtFornecedoresAtividade, IAtividade atividadesSecundaria)
+        private int LocalizaInsereAtividade(IDbTransaction transaction, List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
         {
-            var drs = dtFornecedoresAtividade.Select("codigo='" + atividadesSecundaria.code + "'");
-
-            var dr = dtFornecedoresAtividade.NewRow();
-
-            if (drs.Length == 0)
+            var codigoFormatado = codigo.ToString(@"00\.00-0-00");
+            var item = lstFornecedoresAtividade.FirstOrDefault(x => x.Codigo == codigoFormatado);
+            if (item == null)
             {
-                using (var banco = new AppDb())
+                var atividade = new FornecedorAtividade()
                 {
-                    var strSql =
-                        @"insert into fornecedor_atividade (codigo, descricao) values (@codigo, @descricao); SELECT LAST_INSERT_ID();";
-                    banco.AddParameter("@codigo", atividadesSecundaria.code);
-                    banco.AddParameter("@descricao", atividadesSecundaria.text);
+                    Codigo = codigoFormatado,
+                    Descricao = descricao
+                };
+                atividade.Id = (int)connection.Insert(atividade, transaction);
 
-                    dr["id"] = Convert.ToInt32(banco.ExecuteScalar(strSql));
-                    dr["codigo"] = atividadesSecundaria.code;
-                    dr["descricao"] = atividadesSecundaria.text;
-
-                    dtFornecedoresAtividade.Rows.Add(dr);
-
-                    return dr;
-                }
+                lstFornecedoresAtividade.Add(atividade);
+                return atividade.Id;
             }
 
-            return drs[0];
+            return item.Id;
+        }
+
+        private int LocalizaInsereNaturezaJuridica(IDbTransaction transaction, List<NaturezaJuridica> lstFornecedoresAtividade, int codigo, string descricao)
+        {
+            var codigoFormatado = codigo.ToString("000-0");
+            var item = lstFornecedoresAtividade.FirstOrDefault(x => x.Codigo == codigoFormatado);
+            if (item == null)
+            {
+                var atividade = new NaturezaJuridica()
+                {
+                    Codigo = codigoFormatado,
+                    Descricao = descricao
+                };
+                atividade.Id = (int)connection.Insert(atividade, transaction);
+
+                lstFornecedoresAtividade.Add(atividade);
+                return atividade.Id;
+            }
+
+            return item.Id;
         }
 
         private object ObterValor(object d)
@@ -632,70 +458,4 @@ SELECT MAX(DATA) as data FROM (
             return cnpj.EndsWith(digito);
         }
     }
-
-    #region ReceitaWS DTO
-    public interface IAtividade
-    {
-        string text { get; set; }
-        string code { get; set; }
-    }
-
-    public class AtividadePrincipal : IAtividade
-    {
-        public string text { get; set; }
-        public string code { get; set; }
-    }
-
-    public class AtividadesSecundaria : IAtividade
-    {
-        public string text { get; set; }
-        public string code { get; set; }
-    }
-
-    public class Qsa
-    {
-        public string qual { get; set; }
-        public string nome { get; set; }
-        public string pais_origem { get; set; }
-        public string nome_rep_legal { get; set; }
-        public string qual_rep_legal { get; set; }
-    }
-
-    public class Extra
-    {
-    }
-
-    public class FornecedorInfo
-    {
-        public List<AtividadePrincipal> atividade_principal { get; set; }
-        public string data_situacao { get; set; }
-        public string complemento { get; set; }
-        public string nome { get; set; }
-        public string uf { get; set; }
-        public string telefone { get; set; }
-        public List<AtividadesSecundaria> atividades_secundarias { get; set; }
-        public List<Qsa> qsa { get; set; }
-        public string situacao { get; set; }
-        public string bairro { get; set; }
-        public string logradouro { get; set; }
-        public string numero { get; set; }
-        public string cep { get; set; }
-        public string municipio { get; set; }
-        public string abertura { get; set; }
-        public string natureza_juridica { get; set; }
-        public string fantasia { get; set; }
-        public string cnpj { get; set; }
-        public string ultima_atualizacao { get; set; }
-        public string status { get; set; }
-        public string message { get; set; }
-        public string tipo { get; set; }
-        public string email { get; set; }
-        public string efr { get; set; }
-        public string motivo_situacao { get; set; }
-        public string situacao_especial { get; set; }
-        public string data_situacao_especial { get; set; }
-        public string capital_social { get; set; }
-        public Extra extra { get; set; }
-    }
-    #endregion ReceitaWS DTO
 }

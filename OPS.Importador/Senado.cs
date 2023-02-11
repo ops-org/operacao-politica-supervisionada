@@ -1,4 +1,5 @@
 ﻿using CsvHelper;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
@@ -11,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -24,7 +26,8 @@ namespace OPS.Importador
     /// </summary>
     public class Senado : ImportadorCotaParlamentarBase
     {
-        public Senado(ILogger<Senado> logger, IConfiguration configuration) : base("Senado Federal", logger, configuration)
+        public Senado(ILogger<Senado> logger, IConfiguration configuration, IDbConnection connection) :
+            base("SF", logger, configuration, connection)
         {
         }
 
@@ -52,7 +55,7 @@ namespace OPS.Importador
                 var request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/lista/atual", Method.GET);
                 request.AddHeader("Accept", "application/json");
 
-                IRestResponse resSenadores = restClient.Execute(request);
+                IRestResponse resSenadores = restClient.ExecuteWithAutoRetry(request);
                 JsonDocument jSenadores = JsonDocument.Parse(resSenadores.Content);
                 JsonElement arrIdentificacaoParlamentar = jSenadores.RootElement.GetProperty("ListaParlamentarEmExercicio").GetProperty("Parlamentares").GetProperty("Parlamentar");
                 var senadores = arrIdentificacaoParlamentar.EnumerateArray();
@@ -105,6 +108,7 @@ namespace OPS.Importador
                                     , @email
                                     , @site
                                     , 'S'
+                                )
                             ");
 
                             lstSenador.Add(parlamentar.CodigoParlamentar);
@@ -153,7 +157,7 @@ namespace OPS.Importador
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador, Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    var resSenador = restClient.Execute(request);
+                    var resSenador = restClient.ExecuteWithAutoRetry(request);
                     JsonDocument jSenador = JsonDocument.Parse(resSenador.Content);
                     Senador senador = JsonSerializer.Deserialize<Senador>(resSenador.Content);
                     var parlamentar = senador.DetalheParlamentar.Parlamentar;
@@ -199,7 +203,7 @@ namespace OPS.Importador
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/profissao?v=1", Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resProfissoes = restClient.Execute(request);
+                    IRestResponse resProfissoes = restClient.ExecuteWithAutoRetry(request);
                     JsonDocument jSenadorProfissoes = JsonDocument.Parse(resProfissoes.Content);
                     var jParlamentarProfissoes = jSenadorProfissoes.RootElement.GetProperty("ProfissaoParlamentar").GetProperty("Parlamentar");
 
@@ -268,7 +272,7 @@ namespace OPS.Importador
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/historicoAcademico?v=1", Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resHistoricoAcademico = restClient.Execute(request);
+                    IRestResponse resHistoricoAcademico = restClient.ExecuteWithAutoRetry(request);
                     JsonDocument jSenadorHistoricoAcademico = JsonDocument.Parse(resHistoricoAcademico.Content);
                     var jHistoricoAcademico = jSenadorHistoricoAcademico.RootElement.GetProperty("HistoricoAcademicoParlamentar").GetProperty("Parlamentar");
 
@@ -305,7 +309,7 @@ namespace OPS.Importador
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos?v=5", Method.GET);
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resSenadorMandato = restClient.Execute(request);
+                    IRestResponse resSenadorMandato = restClient.ExecuteWithAutoRetry(request);
                     var senadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
                     var arrPalamentar = senadorMandato.MandatoParlamentar.Parlamentar;
                     var arrMandatosPalamentar = arrPalamentar.Mandatos.Mandato;
@@ -900,7 +904,7 @@ namespace OPS.Importador
                         banco.AddParameter("hash", hash);
 
                         banco.ExecuteNonQuery(
-                            @"INSERT INTO tmp.sf_despesa_temp (
+                            @"INSERT INTO ops_tmp.sf_despesa_temp (
 								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado, cod_documento, hash
 							) VALUES (
 								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @cod_documento, @hash
@@ -929,9 +933,9 @@ namespace OPS.Importador
 
                 if (ano == DateTime.Now.Year)
                 {
-                    AtualizaParlamentarValores(banco);
-                    AtualizaCampeoesGastos(banco);
-                    AtualizaResumoMensal(banco);
+                    AtualizaParlamentarValores();
+                    AtualizaCampeoesGastos();
+                    AtualizaResumoMensal();
                 }
             }
         }
@@ -948,11 +952,11 @@ namespace OPS.Importador
         private void CorrigeDespesas(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
-				UPDATE tmp.sf_despesa_temp 
+				UPDATE ops_tmp.sf_despesa_temp 
 				SET tipo_despesa = 'Aquisição de material de consumo para uso no escritório político' 
 				WHERE tipo_despesa LIKE 'Aquisição de material de consumo para uso no escritório político%';
 
-				UPDATE tmp.sf_despesa_temp 
+				UPDATE ops_tmp.sf_despesa_temp 
 				SET tipo_despesa = 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços' 
 				WHERE tipo_despesa LIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';	
 			");
@@ -960,12 +964,12 @@ namespace OPS.Importador
 
         private string InsereSenadorFaltante(AppDb banco)
         {
-            //object total = banco.ExecuteScalar(@"select count(1) from tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+            //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
             //if (Convert.ToInt32(total) > 0)
             //{
             //	CarregaSenadoresAtuais();
 
-            object total = banco.ExecuteScalar(@"select count(1) from tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+            object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
             if (Convert.ToInt32(total) > 0)
             {
                 throw new Exception("Existem despesas de senadores que não estão cadastrados!");
@@ -980,7 +984,7 @@ namespace OPS.Importador
             banco.ExecuteNonQuery(@"
 				INSERT INTO fornecedor (nome, cnpj_cpf)
 				select MAX(dt.fornecedor), dt.cnpj_cpf
-				from tmp.sf_despesa_temp dt
+				from ops_tmp.sf_despesa_temp dt
 				left join fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
 				where dt.cnpj_cpf is not null
 				and f.id is null
@@ -1028,7 +1032,7 @@ namespace OPS.Importador
 					d.detalhamento,
 					d.valor_reembolsado,
 					d.hash
-				FROM tmp.sf_despesa_temp d
+				FROM ops_tmp.sf_despesa_temp d
 				inner join sf_senador p on ifnull(p.nome_importacao, p.nome) = d.senador
 				inner join sf_despesa_tipo dt on dt.descricao = d.tipo_despesa
 				inner join fornecedor f on f.cnpj_cpf = d.cnpj_cpf;
@@ -1043,7 +1047,7 @@ namespace OPS.Importador
             }
 
             //         banco.ExecuteNonQuery(@"
-            //	UPDATE tmp.sf_despesa_temp t 
+            //	UPDATE ops_tmp.sf_despesa_temp t 
             //	inner join sf_senador p on ifnull(p.nome_importacao, p.nome) = t.senador
             //	inner join sf_despesa_tipo dt on dt.descricao = t.tipo_despesa
             //	inner join fornecedor f on f.cnpj_cpf = t.cnpj_cpf
@@ -1089,7 +1093,7 @@ namespace OPS.Importador
                 CREATE TEMPORARY TABLE table_in_memory_dt
                 AS (
 	                select p.id as id_sf_senador, mes, sum(valor_reembolsado) as total
-	                from tmp.sf_despesa_temp d
+	                from ops_tmp.sf_despesa_temp d
                     inner join sf_senador p on p.nome = d.senador
 	                GROUP BY p.id, mes
                 );
@@ -1135,7 +1139,7 @@ namespace OPS.Importador
 					        d.valor_reembolsado
 					    from (
 						    select d.*, p.id					        
-						    from tmp.sf_despesa_temp d
+						    from ops_tmp.sf_despesa_temp d
                             inner join sf_senador p on p.nome = d.senador
 						    WHERE p.id=@id_sf_senador and mes=@mes
 					    ) d
@@ -1148,38 +1152,39 @@ namespace OPS.Importador
         private void LimpaDespesaTemporaria(AppDb banco)
         {
             banco.ExecuteNonQuery(@"
-				truncate table tmp.sf_despesa_temp;
+				truncate table ops_tmp.sf_despesa_temp;
 			");
         }
 
-        public override void AtualizaParlamentarValores(AppDb banco)
+        public override void AtualizaParlamentarValores()
         {
-            banco.ExecuteNonQuery("UPDATE sf_senador SET valor_total_ceaps=0;");
+            connection.Execute("UPDATE sf_senador SET valor_total_ceaps=0;");
 
-            var dt = banco.GetTable(@"select id from sf_senador
+            var dt = connection.Query(@"select id from sf_senador
 						WHERE id IN (
 						select distinct id_sf_senador
 						from sf_despesa
 					)");
             object valor_total_ceaps;
 
-            foreach (DataRow dr in dt.Rows)
+            foreach (var dr in dt)
             {
-                banco.AddParameter("id_sf_senador", dr["id"]);
-                valor_total_ceaps =
-                    banco.ExecuteScalar("select sum(valor) from sf_despesa where id_sf_senador=@id_sf_senador;");
+                valor_total_ceaps = connection.ExecuteScalar("select sum(valor) from sf_despesa where id_sf_senador=@id_sf_senador;",
+                    new { id_sf_senador = Convert.ToInt32(dr.id) });
 
-                banco.AddParameter("valor_total_ceaps", valor_total_ceaps);
-                banco.AddParameter("id_sf_senador", dr["id"]);
-                banco.ExecuteNonQuery(
+                connection.Execute(
                     @"update sf_senador set 
 						valor_total_ceaps=@valor_total_ceaps
-						where id=@id_sf_senador"
+						where id=@id_sf_senador", new
+                    {
+                        valor_total_ceaps = valor_total_ceaps,
+                        id_sf_senador = Convert.ToInt32(dr.id)
+                    }
                 );
             }
         }
 
-        public override void AtualizaCampeoesGastos(AppDb banco)
+        public override void AtualizaCampeoesGastos()
         {
             var strSql =
                 @"truncate table sf_senador_campeao_gasto;
@@ -1199,10 +1204,10 @@ namespace OPS.Importador
 				LEFT JOIN partido p on p.id = d.id_partido
 				LEFT JOIN estado e on e.id = d.id_estado;";
 
-            banco.ExecuteNonQuery(strSql);
+            connection.Execute(strSql);
         }
 
-        public override void AtualizaResumoMensal(AppDb banco)
+        public override void AtualizaResumoMensal()
         {
             var strSql =
                 @"truncate table sf_despesa_resumo_mensal;
@@ -1213,10 +1218,10 @@ namespace OPS.Importador
 						group by ano, mes
 					);";
 
-            banco.ExecuteNonQuery(strSql);
+            connection.Execute(strSql);
         }
 
-        public override void DownloadFotosParlamentares()
+        public override async void DownloadFotosParlamentares()
         {
             var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "public/img/senador/");
 
@@ -1235,10 +1240,10 @@ namespace OPS.Importador
 
                     try
                     {
-                        using (WebClient client = new WebClient())
+                        using (HttpClient client = new())
                         {
-                            client.Headers.Add("User-Agent: Other");
-                            client.DownloadFile(url, src);
+                            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
+                            await client.DownloadFile(url, src);
 
                             ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
                             ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
@@ -1318,7 +1323,7 @@ namespace OPS.Importador
 
             using (var banco = new AppDb())
             {
-                LimpaRemuneracaoTemporaria(banco);
+                LimpaRemuneracaoTemporaria();
 
                 using (var reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
                 {
@@ -1373,7 +1378,7 @@ namespace OPS.Importador
                             banco.AddParameter("vant_indenizatorias", Convert.ToDouble(!string.IsNullOrEmpty(csv[VANT_INDENIZATORIAS]) ? csv[VANT_INDENIZATORIAS] : "0".Trim(), cultureInfo));
 
                             banco.ExecuteNonQuery(
-                                @"INSERT INTO tmp.sf_remuneracao_temp (
+                                @"INSERT INTO ops_tmp.sf_remuneracao_temp (
 								ano_mes, vinculo,categoria,cargo,referencia_cargo,simbolo_funcao,admissao,lotacao_exercicio,tipo_folha,
                                 remun_basica ,vant_pessoais ,func_comissionada ,grat_natalina ,horas_extras ,outras_eventuais ,abono_permanencia ,
                                 reversao_teto_const ,imposto_renda ,previdencia ,faltas ,rem_liquida ,diarias ,auxilios ,vant_indenizatorias
@@ -1417,26 +1422,26 @@ namespace OPS.Importador
 
         private void ProcessarRemuneracaoTemp(AppDb banco)
         {
-            var total = banco.ExecuteScalar(@"select count(1) from tmp.sf_remuneracao_temp");
+            var total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_remuneracao_temp");
 
             banco.ExecuteNonQuery(@"
                 INSERT IGNORE INTO sf_funcao  (descricao)
-                SELECT DISTINCT simbolo_funcao FROM tmp.sf_remuneracao_temp WHERE simbolo_funcao <> '' ORDER BY simbolo_funcao;
+                SELECT DISTINCT simbolo_funcao FROM ops_tmp.sf_remuneracao_temp WHERE simbolo_funcao <> '' ORDER BY simbolo_funcao;
 
                 INSERT IGNORE INTO sf_cargo  (descricao)
-                SELECT DISTINCT cargo FROM tmp.sf_remuneracao_temp WHERE cargo <> '' ORDER BY cargo;
+                SELECT DISTINCT cargo FROM ops_tmp.sf_remuneracao_temp WHERE cargo <> '' ORDER BY cargo;
 
                 INSERT IGNORE INTO sf_categoria  (descricao)
-                SELECT DISTINCT categoria FROM tmp.sf_remuneracao_temp WHERE categoria <> '' ORDER BY categoria;
+                SELECT DISTINCT categoria FROM ops_tmp.sf_remuneracao_temp WHERE categoria <> '' ORDER BY categoria;
 
                 INSERT IGNORE INTO sf_vinculo  (descricao)
-                SELECT DISTINCT vinculo FROM tmp.sf_remuneracao_temp WHERE vinculo <> '' ORDER BY vinculo;
+                SELECT DISTINCT vinculo FROM ops_tmp.sf_remuneracao_temp WHERE vinculo <> '' ORDER BY vinculo;
 
                 INSERT IGNORE INTO sf_referencia_cargo  (descricao)
-                SELECT DISTINCT referencia_cargo FROM tmp.sf_remuneracao_temp WHERE referencia_cargo IS NOT NULL ORDER BY referencia_cargo;
+                SELECT DISTINCT referencia_cargo FROM ops_tmp.sf_remuneracao_temp WHERE referencia_cargo IS NOT NULL ORDER BY referencia_cargo;
 
                 INSERT IGNORE INTO sf_lotacao( descricao)
-                SELECT DISTINCT lotacao_exercicio FROM tmp.sf_remuneracao_temp WHERE lotacao_exercicio <> '' ORDER BY lotacao_exercicio;
+                SELECT DISTINCT lotacao_exercicio FROM ops_tmp.sf_remuneracao_temp WHERE lotacao_exercicio <> '' ORDER BY lotacao_exercicio;
             ", 3600);
 
             banco.ExecuteNonQuery(@"
@@ -1446,14 +1451,14 @@ namespace OPS.Importador
 	                v.id AS vinculo, ct.id AS categoria, cr.id AS cargo, rc.id as referencia_cargo, sf.id as simbolo_funcao, le.id as lotacao_exercicio, tf.id as tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias,
 	                -- (remun_basica + vant_pessoais + func_comissionada + grat_natalina + horas_extras + outras_eventuais + abono_permanencia + reversao_teto_const + faltas + diarias + auxilios + vant_indenizatorias) AS custo_total,
 	                (rem_liquida - imposto_renda - previdencia - faltas + diarias + auxilios + vant_indenizatorias) AS custo_total
-                FROM tmp.sf_remuneracao_temp tmp
-                JOIN sf_vinculo v ON v.descricao LIKE tmp.vinculo
-                JOIN sf_categoria ct ON ct.descricao LIKE tmp.categoria
-                LEFT JOIN sf_cargo cr ON cr.descricao LIKE tmp.cargo
-                LEFT JOIN sf_referencia_cargo rc ON rc.descricao LIKE tmp.referencia_cargo
-                LEFT JOIN sf_funcao sf ON sf.descricao LIKE tmp.simbolo_funcao
-                JOIN sf_lotacao le ON le.descricao LIKE tmp.lotacao_exercicio
-                JOIN sf_tipo_folha tf ON tf.descricao LIKE tmp.tipo_folha
+                FROM ops_tmp.sf_remuneracao_temp tmp
+                JOIN sf_vinculo v ON v.descricao LIKE ops_tmp.vinculo
+                JOIN sf_categoria ct ON ct.descricao LIKE ops_tmp.categoria
+                LEFT JOIN sf_cargo cr ON cr.descricao LIKE ops_tmp.cargo
+                LEFT JOIN sf_referencia_cargo rc ON rc.descricao LIKE ops_tmp.referencia_cargo
+                LEFT JOIN sf_funcao sf ON sf.descricao LIKE ops_tmp.simbolo_funcao
+                JOIN sf_lotacao le ON le.descricao LIKE ops_tmp.lotacao_exercicio
+                JOIN sf_tipo_folha tf ON tf.descricao LIKE ops_tmp.tipo_folha
 			", 3600);
 
             if (Convert.ToInt32(total) != banco.RowsAffected)
@@ -1461,13 +1466,13 @@ namespace OPS.Importador
                 throw new Exception("Existem relacionamentos não mapeados!");
             }
 
-            LimpaRemuneracaoTemporaria(banco);
+            LimpaRemuneracaoTemporaria();
         }
 
-        private void LimpaRemuneracaoTemporaria(AppDb banco)
+        private void LimpaRemuneracaoTemporaria()
         {
-            banco.ExecuteNonQuery(@"
-				truncate table tmp.sf_remuneracao_temp;
+            connection.Execute(@"
+				truncate table ops_tmp.sf_remuneracao_temp;
 			");
         }
     }

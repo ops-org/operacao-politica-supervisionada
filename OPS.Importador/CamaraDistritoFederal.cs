@@ -1,25 +1,198 @@
-﻿using CsvHelper;
-using Microsoft.Extensions.Configuration;
+﻿using AngleSharp;
+using AngleSharp.Html.Dom;
+using CsvHelper;
+using Dapper;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using OfficeOpenXml;
 using OPS.Core;
+using OPS.Core.Entity;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador
 {
     public class CamaraDistritoFederal : ImportadorCotaParlamentarBase
     {
-        public CamaraDistritoFederal(ILogger<CamaraSantaCatarina> logger, IConfiguration configuration)
-            : base("Câmara Legislativa do Distrito Federal", logger, configuration)
+        public CamaraDistritoFederal(ILogger<CamaraSantaCatarina> logger, IConfiguration configuration, IDbConnection connection)
+            : base("DF", logger, configuration, connection)
         {
-
         }
 
+        public override void ImportarParlamentares()
+        {
+            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+            var config = Configuration.Default.WithDefaultLoader();
+            var context = BrowsingContext.New(config);
+
+            using (var db = new AppDb())
+            {
+                var address = $"https://www.cl.df.gov.br/web/guest/deputados-2019-2022";
+                var task = context.OpenAsync(address);
+                task.Wait();
+                var document = task.Result;
+                if (document.StatusCode != HttpStatusCode.OK)
+                {
+                    Console.WriteLine($"{address} {document.StatusCode}");
+                };
+
+                var parlamentares = document.QuerySelectorAll(".deputados-interno div");
+                foreach (var parlamentar in parlamentares)
+                {
+                    var deputado = new DeputadoEstadual();
+                    deputado.IdEstado = (ushort)idEstado;
+
+                    deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
+                    deputado.NomeParlamentar = parlamentar.QuerySelector(".card-title").TextContent.Trim();
+                    var partido = parlamentar.QuerySelector(".card-text").TextContent.Trim();
+                    if (partido.Contains("("))
+                    {
+                        var arrPartidos = partido.Split(new[] { '(', ')' });
+                        if (arrPartidos[0].Length > arrPartidos[1].Length)
+                            partido = arrPartidos[1].Trim();
+                        else
+                            partido = arrPartidos[0].Trim();
+                    }
+
+                    Thread.Sleep(TimeSpan.FromSeconds(15));
+                    var taskSub = context.OpenAsync(deputado.UrlPerfil);
+                    taskSub.Wait();
+                    var subDocument = taskSub.Result;
+                    if (subDocument.StatusCode != HttpStatusCode.OK)
+                    {
+                        Console.WriteLine($"{deputado.UrlPerfil} {subDocument.StatusCode}");
+                        continue;
+                    };
+
+                    deputado.UrlFoto = (subDocument.QuerySelector(".informacoes-pessoais img") as IHtmlImageElement)?.Source;
+
+                    var detalhes = subDocument.QuerySelectorAll(".informacoes-pessoais .row .col-md-9 p span");
+                    deputado.NomeCivil = detalhes[0].TextContent.Trim();
+                    deputado.Naturalidade = detalhes[1].TextContent.Trim();
+                    deputado.Nascimento = DateOnly.Parse(detalhes[2].TextContent.Trim(), cultureInfo);
+                    deputado.Profissao = detalhes[3].TextContent.Trim();
+                    //var gabinete = detalhes[3].TextContent.Trim();
+
+                    var rodape = subDocument.QuerySelectorAll(".journal-content-article a b");
+                    if (rodape.Length == 0)
+                        rodape = subDocument.QuerySelectorAll(".journal-content-article a h5");
+
+                    deputado.Telefone = rodape[0].TextContent.Trim();
+                    deputado.Email = rodape[1].TextContent.Trim();
+
+                    var IdPartido = connection.GetList<Core.Entity.Partido>(new { Sigla = partido }).FirstOrDefault()?.Id;
+                    if (IdPartido == null)
+                    {
+                        IdPartido = connection.GetList<Core.Entity.Partido>(new { Nome = partido }).FirstOrDefault()?.Id;
+                        if (IdPartido == null)
+                            throw new Exception("Partido Inexistenete");
+                    }
+
+                    deputado.IdPartido = IdPartido.Value;
+
+                    var IdDeputado = connection.GetList<DeputadoEstadual>(new { id_estado = idEstado, nome_parlamentar = deputado.NomeParlamentar }).FirstOrDefault()?.Id;
+                    if (IdDeputado == null)
+                        connection.Insert(deputado);
+                    else
+                    {
+                        deputado.Id = IdDeputado.Value;
+                        connection.Update(deputado);
+                    }
+                }
+            }
+        }
+
+        //        public override async void ImportarParlamentares()
+        //        {
+        //            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+        //            var config = Configuration.Default.WithDefaultLoader();
+        //            var context = BrowsingContext.New(config);
+
+        //            using (var db = new AppDb())
+        //            {
+        //                //var address = $"https://www.cl.df.gov.br/web/guest/deputados-2019-2022";
+        //                var address = $"https://www.cl.df.gov.br/web/guest/legislaturas-anteriores/-/asset_publisher/2jS3/content/-2015-2018-s-c3-a9tima-legislatura?_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_assetEntryId=10794633&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_redirect=https%3A%2F%2Fwww.cl.df.gov.br%2Fweb%2Fguest%2Flegislaturas-anteriores%3Fp_p_id%3Dcom_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3%26p_p_lifecycle%3D0%26p_p_state%3Dnormal%26p_p_mode%3Dview%26_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_cur%3D0%26p_r_p_resetCur%3Dfalse%26_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_assetEntryId%3D10794633";
+        //                var document = await context.OpenAsync(address);
+        //                if (document.StatusCode != HttpStatusCode.OK)
+        //                {
+        //                    Console.WriteLine($"{address} {document.StatusCode}");
+        //                };
+
+        //                var parlamentares = document.QuerySelectorAll(".journal-content-article table p");
+        //                foreach (var parlamentar in parlamentares)
+        //                {
+        //                    if (parlamentar.ToHtml() == "<p>&nbsp;</p>") continue;
+
+        //                    var urlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
+        //                    var nome = parlamentar.QuerySelector("strong").TextContent.Trim();
+        //                    var partido = parlamentar.QuerySelector("p>span").TextContent.Trim();
+        //                    if (partido.Contains("("))
+        //                        partido = partido.Split(new[] { '(', ')' })[1];
+
+        //                    //Thread.Sleep(TimeSpan.FromSeconds(15));
+        //                    //var subDocument = await context.OpenAsync(urlPerfil);
+        //                    //if (document.StatusCode != HttpStatusCode.OK)
+        //                    //{
+        //                    //    Console.WriteLine($"{urlPerfil} {subDocument.StatusCode}");
+        //                    //    continue;
+        //                    //};
+
+        //                    //var urlImagem = (subDocument.QuerySelector(".informacoes-pessoais img") as IHtmlImageElement)?.Source;
+
+        //                    //var detalhes = subDocument.QuerySelectorAll(".informacoes-pessoais .row .col-md-9 p span");
+        //                    //var nomeCivil = detalhes[0].TextContent.Trim();
+        //                    //var naturalidade = detalhes[1].TextContent.Trim();
+        //                    //var nascimento = Convert.ToDateTime(detalhes[2].TextContent.Trim(), cultureInfo);
+        //                    //var profissao = detalhes[3].TextContent.Trim();
+        //                    ////var gabinete = detalhes[3].TextContent.Trim();
+
+        //                    //var rodape = subDocument.QuerySelectorAll(".journal-content-article a b");
+        //                    //var telefone = rodape[0].TextContent.Trim();
+        //                    //var email = rodape[1].TextContent.Trim();
+
+
+        //                    db.AddParameter("@partido", partido);
+        //                    //db.AddParameter("@nascimento", nascimento.ToString("yyyy-MM-dd"));
+        //                    //db.AddParameter("@nomeCivil", nomeCivil);
+        //                    //db.AddParameter("@email", email);
+        //                    //db.AddParameter("@naturalidade", naturalidade);
+        //                    //db.AddParameter("@escolaridade", profissao);
+        //                    //db.AddParameter("@telefone", telefone);
+        //                    db.AddParameter("@nome", nome);
+        //                    db.ExecuteNonQuery(@"
+        //update cl_deputado set 
+        //    id_partido = (SELECT id FROM partido where sigla like @partido OR nome like @partido) -- ,
+        //    -- nascimento = @nascimento, 
+        //    -- nome_civil = @nomeCivil, 
+        //    -- email = @email, 
+        //    -- naturalidade = @naturalidade,
+        //    -- escolaridade = @profissao,
+        //    -- telefone = @telefone
+        //where id_estado = 53
+        //and nome_parlamentar = @nome");
+
+        //                    if (db.RowsAffected != 1)
+        //                        Console.WriteLine(nome);
+
+        //                }
+        //            }
+        //        }
+
+        /// <summary>
+        /// Dados a partir de 2013
+        /// </summary>
+        /// <param name="ano"></param>
+        /// <returns></returns>
         public override Dictionary<string, string> DefinirOrigemDestino(int ano)
         {
             Dictionary<string, string> arquivos = new();
@@ -73,44 +246,57 @@ namespace OPS.Importador
         {
             using (var banco = new AppDb())
             {
-                LimpaDespesaTemporaria(banco);
+                LimpaDespesaTemporaria();
 
                 var dc = new Dictionary<string, UInt32>();
                 using (var dReader = banco.ExecuteReader(
-                    $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = 53 and d.ano_mes between {ano}01 and {ano}12"))
+                    $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12"))
                     while (dReader.Read())
-                        dc.Add(Convert.ToHexString((byte[])dReader["hash"]), (UInt32)dReader["id"]);
+                    {
+                        var hex = Convert.ToHexString((byte[])dReader["hash"]);
+                        if (!dc.ContainsKey(hex))
+                            dc.Add(hex, (UInt32)dReader["id"]);
+                    }
 
-                foreach (var arquivo in arquivos)
+                if (caminhoArquivo.EndsWith(".xlsx"))
+                    CarregaDadosXlsx(banco, caminhoArquivo, ano, dc);
+                else
+                    CarregaDadosCsv(banco, caminhoArquivo, ano, dc);
+
+                if (!completo && ano != 2019 && dc.Values.Any()) // 2019 tem os arquivos separados por mês
                 {
-                    //var _urlOrigem = arquivo.Key;
-                    caminhoArquivo = arquivo.Value;
+                    logger.LogInformation("{Total} despesas removidas!", dc.Values.Count);
 
-                    if (caminhoArquivo.EndsWith(".xlsx"))
-                        CarregaDadosXlsx(banco, caminhoArquivo, ano, dc);
-                    else
-                        CarregaDadosCsv(banco, caminhoArquivo, ano, dc);
+                    foreach (var id in dc.Values)
+                    {
+                        banco.AddParameter("id", id);
+                        banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
+                    }
                 }
 
-                foreach (var id in dc.Values)
-                {
-                    banco.AddParameter("id", id);
-                    banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
-                }
-
-                InsereTipoDespesaFaltante(banco);
-                InsereDeputadoFaltante(banco);
-                InsereFornecedorFaltante(banco);
-                InsereDespesaFinal(banco);
-                LimpaDespesaTemporaria(banco);
+                AjustarDados();
+                InsereTipoDespesaFaltante();
+                InsereDeputadoFaltante();
+                InsereFornecedorFaltante();
+                InsereDespesaFinal();
+                LimpaDespesaTemporaria();
 
                 if (ano == DateTime.Now.Year)
                 {
                     //AtualizaCampeoesGastos(banco);
                     //AtualizaResumoMensal(banco);
-                    AtualizaValorTotal(banco);
+                    AtualizaValorTotal();
                 }
             }
+        }
+
+        private void AjustarDados()
+        {
+            connection.Execute(@"
+UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = NULL WHERE cnpj_cpf = '';
+UPDATE ops_tmp.cl_despesa_temp SET observacao = NULL WHERE observacao = 'não consta documento';
+UPDATE ops_tmp.cl_despesa_temp SET despesa_tipo = null WHERE despesa_tipo IN('', 'VII', 'VIII', 'IV');
+");
         }
 
         private void CarregaDadosCsv(AppDb banco, string file, int ano, Dictionary<string, UInt32> lstHash)
@@ -342,8 +528,8 @@ namespace OPS.Importador
                         banco.AddParameter("hash", hash);
 
                         banco.ExecuteNonQuery(
-                            @"INSERT INTO tmp.cl_despesa_temp (
-								nome, cpf, empresa, cnpj_cpf, data_emissao, documento, valor, tipo_despesa, observacao, ano, hash
+                            @"INSERT INTO ops_tmp.cl_despesa_temp (
+								nome, cpf, empresa, cnpj_cpf, data_emissao, documento, valor, despesa_tipo, observacao, ano, hash
 							) VALUES (
 								@Nome, @CPF, @Empresa, @CNPJ_CPF, @DataEmissao, @Documento, @Valor, @TipoDespesa, @Observacao, @Ano, @hash
 							)");
@@ -493,7 +679,7 @@ namespace OPS.Importador
                             banco.AddParameter("Valor", !string.IsNullOrEmpty(valor) ? (object)Convert.ToDouble(valor) : 0);
                         }
 
-                        banco.AddParameter("TipoDespesa", worksheet.Cells[i, CLASSIFICACAO].Value.ToString());
+                        banco.AddParameter("TipoDespesa", worksheet.Cells[i, CLASSIFICACAO].Value.ToString().Trim());
 
                         if (!string.IsNullOrEmpty(worksheet.Cells[i, OBSERVACAO].Value?.ToString()))
                         {
@@ -517,8 +703,8 @@ namespace OPS.Importador
                         banco.AddParameter("hash", hash);
 
                         banco.ExecuteNonQuery(
-                            @"INSERT INTO tmp.cl_despesa_temp (
-								nome, cpf, empresa, cnpj_cpf, data_emissao, documento, valor, tipo_despesa, observacao, ano, hash
+                            @"INSERT INTO ops_tmp.cl_despesa_temp (
+								nome, cpf, empresa, cnpj_cpf, data_emissao, documento, valor, despesa_tipo, observacao, ano, hash
 							) VALUES (
 								@Nome, @CPF, @Empresa, @CNPJ_CPF, @DataEmissao, @Documento, @Valor, @TipoDespesa, @Observacao, @Ano, @hash
 							)");
@@ -527,119 +713,6 @@ namespace OPS.Importador
                     }
                 }
             }
-        }
-
-        public void AtualizaValorTotal(AppDb banco)
-        {
-            banco.ExecuteNonQuery(@"
-        	    UPDATE cl_deputado dp SET
-                    valor_total = IFNULL((
-                        SELECT SUM(ds.valor) FROM cl_despesa ds WHERE ds.id_cl_deputado = dp.id
-                    ), 0);");
-        }
-
-        private void InsereTipoDespesaFaltante(AppDb banco)
-        {
-            banco.ExecuteNonQuery(@"
-        	        INSERT INTO cl_despesa_tipo (descricao)
-        	        select distinct tipo_despesa
-        	        from tmp.cl_despesa_temp
-        	        where tipo_despesa is not null
-                    and tipo_despesa not in (
-        		        select descricao from cl_despesa_tipo
-        	        );
-                ");
-
-            if (banco.RowsAffected > 0)
-            {
-                logger.LogInformation("{Itens} tipos de despesas incluidos!", banco.RowsAffected);
-            }
-        }
-
-        private void InsereDeputadoFaltante(AppDb banco)
-        {
-            banco.ExecuteNonQuery(@"
-        	        INSERT INTO cl_deputado (nome_parlamentar, cpf, id_estado)
-        	        select distinct Nome, cpf, 53
-        	        from tmp.cl_despesa_temp
-        	        where cpf not in (
-        		        select cpf from cl_deputado where id_estado = 53
-        	        );
-                ");
-
-            if (banco.RowsAffected > 0)
-            {
-                logger.LogInformation("{Itens} parlamentares incluidos!", banco.RowsAffected);
-            }
-        }
-
-        private void InsereFornecedorFaltante(AppDb banco)
-        {
-            banco.ExecuteNonQuery(@"
-				    INSERT INTO fornecedor (nome, cnpj_cpf)
-				    select MAX(dt.empresa), dt.cnpj_cpf
-				    from tmp.cl_despesa_temp dt
-				    left join fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
-				    where dt.cnpj_cpf is not null
-				    and f.id is null
-                    -- and LENGTH(dt.cnpj_cpf) <= 14
-				    GROUP BY dt.cnpj_cpf;
-			    ");
-
-            if (banco.RowsAffected > 0)
-            {
-                logger.LogInformation("{Itens} fornecedores incluidos!", banco.RowsAffected);
-            }
-
-        }
-
-        private void InsereDespesaFinal(AppDb banco)
-        {
-            banco.ExecuteNonQuery(@"
-                UPDATE tmp.cl_despesa_temp SET cnpj_cpf = NULL WHERE cnpj_cpf = '';
-                UPDATE tmp.cl_despesa_temp SET observacao = NULL WHERE observacao = 'não consta documento';
-
-				INSERT INTO cl_despesa (
-					id_cl_deputado,
-                    id_cl_despesa_tipo,
-	                id_fornecedor,
-	                data,
-	                ano_mes,
-	                numero_documento,
-	                valor,
-                    observacao,
-                    hash
-				)
-                SELECT 
-	                p.id AS id_cl_deputado,
-                    dt.id AS id_cl_despesa_tipo,
-                    IFNULL(f.id, 82624) AS id_fornecedor,
-                    d.data_emissao,
-                    concat(year(d.data_emissao), LPAD(month(d.data_emissao), 2, '0')) AS ano_mes,
-                    d.documento AS numero_documento,
-                    d.valor AS valor,
-                    d.observacao AS observacao,
-                    d.hash
-                FROM tmp.cl_despesa_temp d
-                inner join cl_deputado p on p.cpf = d.cpf
-                left join cl_despesa_tipo dt on dt.descricao = d.tipo_despesa
-                LEFT join fornecedor f on f.cnpj_cpf = d.cnpj_cpf
-                ORDER BY d.id;
-			", 3600);
-
-
-            if (banco.RowsAffected > 0)
-            {
-                logger.LogInformation("{Itens} despesas incluidas!", banco.RowsAffected);
-            }
-
-        }
-
-        private void LimpaDespesaTemporaria(AppDb banco)
-        {
-            banco.ExecuteNonQuery(@"
-				truncate table tmp.cl_despesa_temp;
-			");
         }
 
     }

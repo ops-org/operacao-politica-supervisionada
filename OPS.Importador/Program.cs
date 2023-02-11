@@ -1,9 +1,14 @@
 ﻿using CsvHelper;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualBasic;
+using MySqlConnector;
+using MySqlConnector.Logging;
 using OPS.Core;
 using Serilog;
 using System;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -39,24 +44,41 @@ namespace OPS.Importador
             var services = new ServiceCollection().AddLogging();
             services.AddSingleton<IConfiguration>(configuration);
             services.AddSingleton<ILogger>(Log.Logger);
+            services.AddTransient<IDbConnection>(_ => new MySqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
+
             services.AddScoped<Senado>();
-            services.AddScoped<Camara>();
+            services.AddScoped<CamaraFederal>();
             services.AddScoped<CamaraDistritoFederal>();
             services.AddScoped<CamaraSantaCatarina>();
+            services.AddScoped<CamaraSaoPaulo>();
+            services.AddScoped<CamaraPernambuco>();
+            services.AddScoped<CamaraMinasGerais>();
+            services.AddScoped<CamaraRioGrandeDoSul>();
+            services.AddScoped<CamaraParana>();
+            services.AddScoped<CamaraGoias>();
+            services.AddScoped<CamaraBahia>();
+            services.AddScoped<CamaraCeara>();
+            services.AddScoped<CamaraMatoGrossoDoSul>();
+            services.AddScoped<Presidencia>();
+
             services.AddScoped<Fornecedor>();
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>().AddSerilog(Log.Logger, true);
+
+            SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+            SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
             CultureInfo ci = new CultureInfo("pt-BR");
             Thread.CurrentThread.CurrentCulture = ci;
             Thread.CurrentThread.CurrentUICulture = ci;
 
             Padrao.ConnectionString = configuration.GetConnectionString("AuditoriaContext");
+            MySqlConnectorLogManager.Provider = new SerilogLoggerProvider();
 
             try
             {
-                new Core.DAO.ParametrosDao().CarregarPadroes();
+                new Core.DAO.ParametrosRepository().CarregarPadroes();
 
                 if (environmentName == "Production")
                 {
@@ -64,19 +86,103 @@ namespace OPS.Importador
                 }
                 else
                 {
-                    Senado objSenado = serviceProvider.GetService<Senado>();
-                    Camara objCamara = serviceProvider.GetService<Camara>();
-                    CamaraDistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<CamaraDistritoFederal>();
-                    CamaraSantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<CamaraSantaCatarina>();
+                    var types = new Type[]
+                    {
+                        //typeof(Senado), // csv
+                        //typeof(CamaraFederal), // csv
+                        //typeof(CamaraDistritoFederal), // xlsx
+                        //typeof(CamaraSantaCatarina), // csv
+                        //typeof(CamaraSaoPaulo), // xml
+                        //typeof(CamaraPernambuco), // xml
+                        ////typeof(CamaraMinasGerais), // xml api
+                        ////// typeof(CamaraRioGrandeDoSul), // nada
+                        //typeof(CamaraParana), // rest api mensal
+                        typeof(CamaraGoias), // rest api mensal
+                        typeof(CamaraBahia), // crawler
+                        typeof(CamaraCeara), // csv mensal
+                        typeof(CamaraMatoGrossoDoSul), // crawler
+                    };
+
+                    foreach (var type in types)
+                    {
+                        var importador = (ImportadorCotaParlamentarBase)serviceProvider.GetService(type);
+                        importador.ImportarCompleto();
+                    }
+
+                    //var importador = serviceProvider.GetService<Presidencia>();
+                    //importador.ImportarArquivoDespesas(0);
+
+                    //objCamaraSantaCatarina.ImportarParlamentares();
+                    //objSenado.ImportarCompleto();
+                    //objCamara.ImportarCompleto();
+                    //objCamara.ImportaPresencasDeputados();
+                    //objCamaraDistritoFederal.ImportarCompleto();
+                    //objCamaraSantaCatarina.ImportarCompleto();
+                    //objCamara.AtualizaParlamentarValores();
+                    //objCamara.ColetaDadosDeputados();
+                    //objCamara.ColetaRemuneracaoSecretarios();
+
+                    //objCamaraDistritoFederal.ImportarParlamentares();
+                    //objCamaraSantaCatarina.ImportarParlamentares();
+                    //objCamaraSaoPaulo.ImportarParlamentares();
+                    //objCamaraPernambuco.ImportarParlamentares();
+                    //objCamaraMinasGerais.ImportarParlamentares();
+                    //objCamaraRioGrandeDoSul.ImportarParlamentares();
+                    //objCamaraGoias.ImportarParlamentares();
+                    //objCamaraBahia.ImportarParlamentares();
+
+                    //var objCamaraParana = serviceProvider.GetService<CamaraParana>();
+                    //objCamaraParana.ImportarArquivoDespesas(2019);
+                    //objCamaraParana.ImportarArquivoDespesas(2020);
+                    //objCamaraParana.ImportarArquivoDespesas(2021);
+                    //objCamaraParana.ImportarArquivoDespesas(2022);
+
+
+                    //for (int ano = 2013; ano <= 2022; ano++)
+                    //{
+                    //    Log.Information("Despesas de {Ano}", ano);
+                    //    objCamaraDistritoFederal.ImportarArquivoDespesas(ano);
+                    //}
+
+                    //for (int ano = 2011; ano <= 2022; ano++)
+                    //{
+                    //    Log.Information("Despesas de {Ano}", ano);
+                    //    objCamaraSantaCatarina.ImportarArquivoDespesas(ano);
+                    //}
+
+                    //for (int ano = 2010; ano <= 2022; ano++)
+                    //{
+                    //    Log.Information("Despesas de {Ano}", ano);
+                    //    objCamaraSaoPaulo.ImportarArquivoDespesas(ano);
+                    //}
+
+                    //for (int ano = 2019; ano <= 2022; ano++)
+                    //{
+                    //    Log.Information("Despesas de {Ano}", ano);
+                    //    objCamaraMatoGrossoDoSul.ImportarArquivoDespesas(ano);
+                    //}
+
+                    //for (int ano = 2020; ano <= 2022; ano++)
+                    //{
+                    //    Log.Information("Despesas de {Ano}", ano);
+                    //    //objCamaraGoias.ImportarArquivoDespesas(ano);
+                    //    objCamaraBahia.ImportarArquivoDespesas(ano);
+                    //}
+
+                    //for (int ano = 2021; ano <= 2022; ano++)
+                    //{
+                    //    Log.Information("Despesas de {Ano}", ano);
+                    //    objCamaraCeara.ImportarArquivoDespesas(ano);
+                    //}
+
+                    //var cand = new Candidatos();
+                    //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
+                    //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
+                    //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
+                    //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
+                    //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
+
                     Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
-
-                    objSenado.ImportarParlamentares();
-                    objSenado.ImportarCompleto();
-                    objCamara.ImportarCompleto();
-                    objCamaraDistritoFederal.ImportarCompleto();
-                    objCamaraSantaCatarina.ImportarCompleto();
-                    objCamara.ImportaPresencasDeputados();
-
                     objFornecedor.ConsultarReceitaWS().Wait();
 
                     Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
@@ -105,20 +211,22 @@ namespace OPS.Importador
         private static async Task ImportacaoDadosCompleto(ServiceProvider serviceProvider, IConfiguration configuration)
         {
             Senado objSenado = serviceProvider.GetService<Senado>();
-            Camara objCamara = serviceProvider.GetService<Camara>();
+            CamaraFederal objCamara = serviceProvider.GetService<CamaraFederal>();
             CamaraDistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<CamaraDistritoFederal>();
             CamaraSantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<CamaraSantaCatarina>();
             Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
 
             try
             {
-                new Core.DAO.ParametrosDao().CarregarPadroes();
+                new Core.DAO.ParametrosRepository().CarregarPadroes();
 
-                objSenado.ImportarCompleto();
-                objCamara.ImportarCompleto();
-                objCamaraDistritoFederal.ImportarCompleto();
-                objCamaraSantaCatarina.ImportarCompleto();
-                objCamara.ImportaPresencasDeputados();
+                //objSenado.ImportarCompleto();
+                //objCamara.ImportarCompleto();
+                //objCamara.ImportaPresencasDeputados();
+
+                //objCamaraDistritoFederal.ImportarCompleto();
+                //objCamaraSantaCatarina.ImportarCompleto();
+                //objCamara.ImportaPresencasDeputados();
 
                 objFornecedor.ConsultarReceitaWS().Wait();
 
@@ -127,17 +235,17 @@ namespace OPS.Importador
                 //    await client.DownloadDataTaskAsync("http://127.0.0.1:5200/tarefa/limparcache");
                 //}
 
-                var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');
-                var lstEmailTo = new MailAddressCollection();
-                foreach (string email in lstEmails)
-                {
-                    lstEmailTo.Add(email);
-                }
+                //var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');
+                //var lstEmailTo = new MailAddressCollection();
+                //foreach (string email in lstEmails)
+                //{
+                //    lstEmailTo.Add(email);
+                //}
 
-                var data = DateTime.Now;
-                var tempPath = configuration["AppSettings:SiteTempFolder"];
-                var log = Utils.ReadAllText($"{tempPath}/log{data:yyyyMMdd}.txt");
-                await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, "OPS :: Resumo da Importação - " + data.ToString("dd/MM/yyyy HH:mm"), log, null, false);
+                //var data = DateTime.Now;
+                //var tempPath = configuration["AppSettings:SiteTempFolder"];
+                //var log = Utils.ReadAllText($"{tempPath}/log{data:yyyyMMdd}.txt");
+                //await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, "OPS :: Resumo da Importação - " + data.ToString("dd/MM/yyyy HH:mm"), log, null, false);
             }
             catch (Exception ex)
             {
@@ -147,7 +255,7 @@ namespace OPS.Importador
             }
         }
 
-        private static void ImportarPartidos()
+        private static async void ImportarPartidos()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var sb = new StringBuilder();
@@ -174,9 +282,9 @@ namespace OPS.Importador
                     {
                         //csv.Configuration.Delimiter = ",";
 
-                        using (WebClient client = new WebClient())
+                        using (var client = new System.Net.Http.HttpClient())
                         {
-                            client.Headers.Add("User-Agent: Other");
+                            client.DefaultRequestHeaders.Add("User-Agent", "Other");
 
                             while (csv.Read())
                             {
@@ -193,7 +301,7 @@ namespace OPS.Importador
 
                                             var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
                                             if (!File.Exists(arquivo))
-                                                client.DownloadFile(link, arquivo);
+                                                await client.DownloadFile(link, arquivo);
                                         }
                                     }
                                     catch (Exception ex)

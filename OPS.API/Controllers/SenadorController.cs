@@ -17,14 +17,14 @@ namespace OPS.API.Controllers
         private IWebHostEnvironment Environment { get; }
         private IConfiguration Configuration { get; }
 
-        SenadorDao dao;
+        SenadorRepository dao;
 
         public SenadorController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;
 
-            dao = new SenadorDao();
+            dao = new SenadorRepository();
         }
 
         [HttpGet]

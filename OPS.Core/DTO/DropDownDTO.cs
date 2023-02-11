@@ -2,7 +2,7 @@
 {
     public class DropDownDTO
     {
-        public string id { get; set; }
+        public uint id { get; set; }
         public string text { get; set; }
     }
 }

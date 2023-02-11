@@ -16,7 +16,7 @@
               method="get"
               v-on:submit.prevent="buscar()"
             >
-              <div class="input-group mb-3" style="margin: 0 auto;">
+              <div class="input-group mb-3" style="margin: 0 auto">
                 <input
                   type="text"
                   class="form-control"
@@ -45,7 +45,10 @@
             <small>(513 deputados)</small>
           </h4>
           <div class="chart-resumo-anual vld-parent" ref="CamaraResumoAnual">
-            <highcharts :options="chartCamaraResumoAnualOptions" ref="chartCamaraResumoAnual"></highcharts>
+            <highcharts
+              :options="chartCamaraResumoAnualOptions"
+              ref="chartCamaraResumoAnual"
+            ></highcharts>
           </div>
         </div>
         <div class="col-sm-6">
@@ -54,7 +57,10 @@
             <small>(81 senadores)</small>
           </h4>
           <div class="chart-resumo-anual vld-parent" ref="SenadoResumoAnual">
-            <highcharts :options="chartSenadoResumoAnualOptions" ref="chartSenadoResumoAnual"></highcharts>
+            <highcharts
+              :options="chartSenadoResumoAnualOptions"
+              ref="chartSenadoResumoAnual"
+            ></highcharts>
           </div>
         </div>
       </div>
@@ -121,36 +127,49 @@
         <h2 class="page-title">O que é a cota parlamentar?</h2>
         <p>
           A
-          <strong>cota parlamentar</strong>, também conhecida como verba indenizatória é um
+          <strong>cota parlamentar</strong>, também conhecida como verba
+          indenizatória é um
           <strong>recurso financeiro público</strong> disponibilizado a todos os
-          <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.
+          <strong>deputados federais e senadores</strong> para o custeio de seus
+          mandatos.
         </p>
         <p>
-          Cada deputado federal tem direito a restituir até
-          <strong>
-            <a
-              href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
-              target="_blank"
-              rel="nofollow"
-              title="Clique para visualizar a lista oficial de valores por estado"
-            >R$ 45.612,53 por mês</a>
-          </strong> com sua
-          <strong>alimentação, passagens aereas, combustivel, consultoria</strong>, entre outros.
+          Cada deputado federal tem a seu dispor valores mensais que vão de
+          <a
+            href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
+            target="_blank"
+            rel="nofollow"
+            title="Clique para visualizar a lista oficial de valores por estado"
+            ><strong>R$ 30,7 mil a R$ 45,6 mil</strong></a
+          >, a depender do estado de origem, para custear despesas com
+          alimentação, viagens, hospedagens, combustível, serviços de
+          consultoria, locação de carros, barcos, aviões e casas, além de muitos
+          outras.
         </p>
         <p>
-          No Senado o valor chega a
-          <strong>
-            <a
-              href="https://www12.senado.leg.br/transparencia/leg/pdf/CotaExercicioAtivParlamSenadores.pdf"
-              target="_blank"
-              rel="nofollow"
-              title="Clique para visualizar a lista official de valores por estado"
-            >R$ 44.276,60 por mês.</a>
-          </strong>
+          No Senado os valores também variam de acordo com o estado que elegeu o
+          parlamentar e partem
+
+          <a
+            href="https://www12.senado.leg.br/transparencia/leg/pdf/CotaExercicioAtivParlamSenadores.pdf"
+            target="_blank"
+            rel="nofollow"
+            title="Clique para visualizar a lista official de valores por estado"
+            ><strong>de R$ 21 mil até R$ 44,2 mil por mês</strong></a
+          >.
         </p>
         <p>
-          Contrariando a lei de licitações, o uso deste dinheiro é feito sem licitação e
-          <strong>basta o parlamentar apresentar a nota fiscal ou recibo</strong>.
+          Para ter este recurso público liberado pela Câmara ou Senado, o
+          parlamentar precisa apenas apresentar a nota fiscal ou recibo da
+          despesa. Não é feita licitação, tomada de preço ou qualquer outro
+          recurso legal que permita a utilização de dinheiro público de forma
+          eficiente, econômica, legal, impessoal e moral. Muitos são as
+          <a
+            href="https://institutoops.org.br/o-que-ja-fizemos/"
+            target="_blank"
+            rel="nofollow"
+            ><strong>irregularidades já descobertas pela OPS</strong></a
+          >.
         </p>
       </div>
     </div>
@@ -158,8 +177,8 @@
     <div class="container form-group">
       <h2 class="page-title">Campeões de gastos</h2>
       <p>
-        Os Parlamentares que mais gastaram dinheiro público
-        da verba indenizatória da atual legislatura
+        Os Parlamentares que mais gastaram dinheiro público da verba
+        indenizatória da atual legislatura
       </p>
       <br />
       <div class="resumo-gastos vld-parent" ref="CampeoesGastos">
@@ -181,18 +200,24 @@
                 <div class="row no-gutters">
                   <div class="col-xs-4">
                     <img
-                      v-lazy="'/img/depfederal/' + gasto.id_cf_deputado + '_120x160.jpg'"
+                      v-lazy="
+                        '/img/depfederal/' +
+                        gasto.id_cf_deputado +
+                        '_120x160.jpg'
+                      "
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
                   </div>
                   <div class="col-xs-8">
                     <div class="card-body">
-                      <h6 class="card-title text-truncate">{{gasto.nome_parlamentar}}</h6>
+                      <h6 class="card-title text-truncate">
+                        {{ gasto.nome_parlamentar }}
+                      </h6>
                       <p class="card-text">
-                        {{gasto.sigla_partido_estado}}
+                        {{ gasto.sigla_partido_estado }}
                         <br />
-                        {{gasto.valor_total}}
+                        {{ gasto.valor_total }}
                       </p>
                     </div>
                   </div>
@@ -220,18 +245,22 @@
                 <div class="row no-gutters">
                   <div class="col-sx-4">
                     <img
-                      v-lazy="'/img/senador/' + gasto.id_sf_senador + '_120x160.jpg'"
+                      v-lazy="
+                        '/img/senador/' + gasto.id_sf_senador + '_120x160.jpg'
+                      "
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
                     />
                   </div>
                   <div class="col-sx-8">
                     <div class="card-body">
-                      <h6 class="card-title text-truncate">{{gasto.nome_parlamentar}}</h6>
+                      <h6 class="card-title text-truncate">
+                        {{ gasto.nome_parlamentar }}
+                      </h6>
                       <p class="card-text">
-                        {{gasto.sigla_partido_estado}}
+                        {{ gasto.sigla_partido_estado }}
                         <br />
-                        {{gasto.valor_total}}
+                        {{ gasto.valor_total }}
                       </p>
                     </div>
                   </div>
@@ -251,30 +280,30 @@
           <a
             href="/deputado-federal"
             class="btn btn-danger btn-lg"
-            style="margin-bottom: 15px;"
-          >Câmara dos Deputados</a>&nbsp;
+            style="margin-bottom: 15px"
+            >Câmara dos Deputados</a
+          >&nbsp;
           <a
             href="/senador"
             class="btn btn-danger btn-lg"
-            style="margin-bottom: 15px;"
-          >Senado Federal</a>
+            style="margin-bottom: 15px"
+            >Senado Federal</a
+          >
         </div>
       </div>
     </div>
 
-    <div class="container">
-      
-    </div>
+    <div class="container"></div>
   </div>
 </template>
 
 <script>
-import { Chart } from 'highcharts-vue';
+import { Chart } from "highcharts-vue";
 
-const axios = require('axios');
+const axios = require("axios");
 
 export default {
-  name: 'Inicio',
+  name: "Inicio",
   components: {
     highcharts: Chart,
   },
@@ -283,10 +312,10 @@ export default {
   },
   data() {
     return {
-      API: '',
+      API: "",
       pageConfig: {
-        url: 'http://ops.net.br',
-        identifier: 'Pagina Inicial',
+        url: "http://ops.net.br",
+        identifier: "Pagina Inicial",
       },
       // camaraLegislatura: 56,
       // senadoLegislatura: 55,
@@ -391,7 +420,7 @@ export default {
       // },
       chartCamaraResumoAnualOptions: {
         chart: {
-          type: 'bar',
+          type: "bar",
           // height: 500,
         },
 
@@ -399,23 +428,25 @@ export default {
           text: null,
         },
 
-        xAxis:
-        {
+        xAxis: {
           categories: [],
         },
 
-        yAxis: [{ // left y axis
-          title: {
-            text: 'Valor (em reais)',
+        yAxis: [
+          {
+            // left y axis
+            title: {
+              text: "Valor (em reais)",
+            },
+            // labels: {
+            //    align: 'left',
+            //    x: 3,
+            //    y: 16,
+            //    format: '{value:,.0f}'
+            // },
+            showFirstLabel: false,
           },
-          // labels: {
-          //    align: 'left',
-          //    x: 3,
-          //    y: 16,
-          //    format: '{value:,.0f}'
-          // },
-          showFirstLabel: false,
-        }],
+        ],
 
         legend: {
           enabled: false,
@@ -424,53 +455,58 @@ export default {
         tooltip: {
           shared: true,
           crosshairs: true,
-          pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>',
+          pointFormat:
+            '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>',
         },
 
-        series: [{
-          pointWidth: 20,
-          name: 'Câmara',
-          data: [],
-          dataLabels: {
-            enabled: true,
-            // rotation: -90,
-            color: '#000',
-            align: 'right',
-            format: '{point.y:,.2f}', // one decimal
-            y: -1, // -1 pixels down from the top
-            style: {
-              fontSize: '13px',
-              fontFamily: 'Verdana, sans-serif',
+        series: [
+          {
+            pointWidth: 20,
+            name: "Câmara",
+            data: [],
+            dataLabels: {
+              enabled: true,
+              // rotation: -90,
+              color: "#000",
+              align: "right",
+              format: "{point.y:,.2f}", // one decimal
+              y: -1, // -1 pixels down from the top
+              style: {
+                fontSize: "13px",
+                fontFamily: "Verdana, sans-serif",
+              },
             },
           },
-        }],
+        ],
       },
       chartSenadoResumoAnualOptions: {
         chart: {
-          type: 'bar',
+          type: "bar",
         },
 
         title: {
           text: null,
         },
 
-        xAxis:
-        {
+        xAxis: {
           categories: [],
         },
 
-        yAxis: [{ // left y axis
-          title: {
-            text: 'Valor (em reais)',
+        yAxis: [
+          {
+            // left y axis
+            title: {
+              text: "Valor (em reais)",
+            },
+            // labels: {
+            //    align: 'left',
+            //    x: 3,
+            //    y: 16,
+            //    format: '{value:,.0f}'
+            // },
+            showFirstLabel: false,
           },
-          // labels: {
-          //    align: 'left',
-          //    x: 3,
-          //    y: 16,
-          //    format: '{value:,.0f}'
-          // },
-          showFirstLabel: false,
-        }],
+        ],
 
         legend: {
           enabled: false,
@@ -479,26 +515,29 @@ export default {
         tooltip: {
           shared: true,
           crosshairs: true,
-          pointFormat: '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>',
+          pointFormat:
+            '<span style=color:{point.color}">\u25CF</span> {series.name}: <b class="legend">{point.y:,.2f}</b><br/>',
         },
 
-        series: [{
-          name: 'Senado',
-          pointWidth: 20,
-          data: [],
-          dataLabels: {
-            enabled: true,
-            // rotation: -90,
-            color: '#000',
-            align: 'right',
-            format: '{point.y:,.2f}', // one decimal
-            y: -1, // -1 pixels down from the top
-            style: {
-              fontSize: '13px',
-              fontFamily: 'Verdana, sans-serif',
+        series: [
+          {
+            name: "Senado",
+            pointWidth: 20,
+            data: [],
+            dataLabels: {
+              enabled: true,
+              // rotation: -90,
+              color: "#000",
+              align: "right",
+              format: "{point.y:,.2f}", // one decimal
+              y: -1, // -1 pixels down from the top
+              style: {
+                fontSize: "13px",
+                fontFamily: "Verdana, sans-serif",
+              },
             },
           },
-        }],
+        ],
       },
     };
   },
@@ -571,8 +610,10 @@ export default {
     axios
       .get(`${process.env.VUE_APP_API}/deputado/camararesumoanual`)
       .then((response) => {
-        this.chartCamaraResumoAnualOptions.series[0].data = response.data.series;
-        this.chartCamaraResumoAnualOptions.xAxis.categories = response.data.categories;
+        this.chartCamaraResumoAnualOptions.series[0].data =
+          response.data.series;
+        this.chartCamaraResumoAnualOptions.xAxis.categories =
+          response.data.categories;
 
         loaderCamaraResumoAnual.hide();
       });
@@ -580,15 +621,17 @@ export default {
     axios
       .get(`${process.env.VUE_APP_API}/senador/senadoresumoanual`)
       .then((response) => {
-        this.chartSenadoResumoAnualOptions.series[0].data = response.data.series;
-        this.chartSenadoResumoAnualOptions.xAxis.categories = response.data.categories;
+        this.chartSenadoResumoAnualOptions.series[0].data =
+          response.data.series;
+        this.chartSenadoResumoAnualOptions.xAxis.categories =
+          response.data.categories;
 
         loaderSenadoResumoAnual.hide();
       });
   },
   methods: {
     buscar() {
-      this.$router.push(`/busca?q=${this.q || ''}`);
+      this.$router.push(`/busca?q=${this.q || ""}`);
     },
   },
   // watch: {
@@ -728,16 +771,17 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .card-img{
-    width: 90px;
-    height: 113px;
-  }
+.card-img {
+  width: 90px;
+  height: 113px;
+}
 
-  .chart-resumo-mensal, .chart-resumo-anual{
-    min-height: 400px;
-  }
+.chart-resumo-mensal,
+.chart-resumo-anual {
+  min-height: 400px;
+}
 
-  .resumo-gastos{
-    min-height: 358px;
-  }
+.resumo-gastos {
+  min-height: 358px;
+}
 </style>

@@ -1,26 +1,43 @@
 <template>
   <div class="container">
-    <h3 class="page-title">[BETA] Folha de Pagamento na Câmara de Deputados Federais</h3>
+    <h3 class="page-title">
+      [BETA] Folha de Pagamento na Câmara de Deputados Federais
+    </h3>
 
     <div class="row mb-2">
       <div class="col-md-6">
-        <p class="mb-1"><strong>Grupo Funcional:</strong> {{ remuneracao.grupo_funcional }}</p>
-      </div>
-      <div class="col-md-2" v-if="remuneracao.cargo">
         <p class="mb-1">
-          <strong>Cargo:</strong> {{ remuneracao.cargo }}
+          <strong>Grupo Funcional:</strong> {{ remuneracao.grupo_funcional }}
+        </p>
+      </div>
+      <div class="col-md-6" v-if="remuneracao.cargo">
+        <p class="mb-1"><strong>Cargo: </strong> {{ remuneracao.cargo }}</p>
+      </div>
+      <div class="col-md-6" v-if="remuneracao.deputado">
+        <p class="mb-1">
+          <strong>Deputado: </strong>
+          <a v-bind:href="'/deputado-federal/' + remuneracao.id_cf_deputado">{{
+            remuneracao.deputado
+          }}</a>
+        </p>
+      </div>
+      <div class="col-md-6" v-if="remuneracao.secretario">
+        <p class="mb-1">
+          <strong>Secretário: </strong>
+          <a
+            v-bind:href="
+              'https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/' +
+              remuneracao.chave
+            "
+            target="_blank"
+            >{{ remuneracao.secretario }}</a
+          >
         </p>
       </div>
       <div class="col-md-4">
         <p class="mb-1">
           <strong>Tipo Folha:</strong> {{ remuneracao.tipo_folha }}
         </p>
-      </div>
-     <div class="col-md-6" v-if="remuneracao.deputado">
-        <p class="mb-1"><strong>Deputado:</strong> <a v-bind:href="'/deputado-federal/' + remuneracao.id_cf_deputado">{{ remuneracao.deputado }}</a></p>
-      </div>
-       <div class="col-md-6" v-if="remuneracao.secretario">
-        <p class="mb-1"><strong>Secretário:</strong> <a v-bind:href="'https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/' + remuneracao.chave" target="_blank">{{ remuneracao.secretario }}</a></p>
       </div>
     </div>
 
@@ -119,16 +136,32 @@
     </div>
 
     <div class="mb-5">
-      <p><strong><a href="Entenda os itens que compõem a remuneração">Entenda os itens que compõem a remuneração</a></strong></p>
-      <p>(*) Este item pode ter resultado negativo em razão de acertos de meses anteriores e descontos por falta e impontualidade.</p>
-      <p>Atenção: os descontos de natureza pessoal (pensão alimentícia, consignações diversas e outros descontos por determinação judicial) não podem ser divulgados. Portanto, o valor recebido pode ser menor que o informado acima.</p>
+      <p>
+        <strong
+          ><a
+            href="https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/esclarecimentos-consulta-remuneracao"
+            target="_blank"
+            >Entenda os itens que compõem a remuneração</a
+          ></strong
+        >
+      </p>
+      <p>
+        (*) Este item pode ter resultado negativo em razão de acertos de meses
+        anteriores e descontos por falta e impontualidade.
+      </p>
+      <p>
+        Atenção: os descontos de natureza pessoal (pensão alimentícia,
+        consignações diversas e outros descontos por determinação judicial) não
+        podem ser divulgados. Portanto, o valor recebido pode ser menor que o
+        informado acima.
+      </p>
     </div>
-    <br>
+    <br />
   </div>
 </template>
 
 <script>
-const axios = require('axios');
+const axios = require("axios");
 
 export default {
   props: {
@@ -143,7 +176,7 @@ export default {
   },
   mounted() {
     const vm = this;
-    document.title = 'OPS :: Remuneração na Câmara';
+    document.title = "OPS :: Remuneração na Câmara";
     const loader = vm.$loading.show();
 
     axios

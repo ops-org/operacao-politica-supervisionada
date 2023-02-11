@@ -2,9 +2,9 @@ name: .NET Core
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, homolog ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, homolog ]
 
 jobs:
   build:

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OPS.Core.DAO
 {
-    public class DeputadoDao
+    public class DeputadoRepository
     {
         public async Task<dynamic> Consultar(int id)
         {
@@ -78,7 +78,7 @@ namespace OPS.Core.DAO
                             telefone = reader["telefone"].ToString(),
                             email = reader["email"].ToString(),
                             profissao = reader["profissao"].ToString(),
-                            nascimento = Utils.FormataData(reader["nascimento"]),
+                            nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
                             falecimento = Utils.FormataData(reader["falecimento"]),
                             sigla_estado_nascimento = reader["sigla_estado_nascimento"].ToString(),
                             nome_municipio_nascimento = reader["nome_municipio_nascimento"].ToString(),
@@ -234,7 +234,7 @@ namespace OPS.Core.DAO
 				 ");
                 banco.AddParameter("@id", id);
 
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                await using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     if (await reader.ReadAsync())
                     {
@@ -459,6 +459,40 @@ namespace OPS.Core.DAO
                 //    return lstRetorno;
                 //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
                 //}
+            }
+        }
+
+        public async Task<dynamic> GastosComPessoalPorAno(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					FROM cf_deputado_verba_gabinete d
+					WHERE d.id_cf_deputado = @id
+					group by d.ano
+					order by d.ano
+				");
+                banco.AddParameter("@id", id);
+
+                var categories = new List<dynamic>();
+                var series = new List<dynamic>();
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        categories.Add(Convert.ToInt32(reader["ano"]));
+                        series.Add(Convert.ToDecimal(reader["valor_total"]));
+                    }
+                }
+
+                return new
+                {
+                    categories,
+                    series
+                };
             }
         }
 

@@ -119,15 +119,6 @@
       </div>
     </form>
 
-    <!-- <div class="row">
-      <div class="col-md-12">
-        <div class="alert alert-warning" v-if="valorTotal">
-          <strong>Custo Total no Período: R$ {{valorTotal}}</strong>
-          <small class="help-block mb-0">&nbsp;Custo Total considerando os filtros aplicados acima</small>
-        </div>
-      </div>
-    </div> -->
-
     <div class="form-group" v-if="fields">
       <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
     </div>
@@ -183,7 +174,7 @@ export default {
       selectedRow: {},
       valorTotal: null,
       filtro: {
-        agrupar: '1',
+        agrupar: '3',
         ano: '2022',
         mes: '',
         grupo_funcional: [],
@@ -264,7 +255,7 @@ export default {
     const vm = this;
     var lstPromises = [];
 
-    vm.filtro.agrupar = vm.qs.ag || '1';
+    vm.filtro.agrupar = vm.qs.ag || '3';
     vm.filtro.ano = vm.qs.an || '2022';
     vm.filtro.mes = vm.qs.ms || '';
     vm.filtro.grupo_funcional = (vm.qs.gf ? vm.qs.gf.split(',') : []);

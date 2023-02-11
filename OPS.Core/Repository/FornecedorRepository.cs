@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OPS.Core.DAO
 {
-    public class FornecedorDao
+    public class FornecedorRepository
     {
 
         public dynamic Consulta(int id)
@@ -40,7 +40,8 @@ namespace OPS.Core.DAO
 							, pji.situacao_especial
 							, pji.data_situacao_especial
 							, pji.endereco_eletronico
-							, pji.telefone
+							, pji.telefone1
+							, pji.telefone2
 							, pji.ente_federativo_responsavel
 							, pji.obtido_em
 							, pji.capital_social
@@ -81,7 +82,8 @@ namespace OPS.Core.DAO
                             situacao_especial = reader["situacao_especial"].ToString(),
                             data_situacao_especial = reader["data_situacao_especial"].ToString(),
                             endereco_eletronico = reader["endereco_eletronico"].ToString(),
-                            telefone = reader["telefone"].ToString(),
+                            telefone = reader["telefone1"].ToString(),
+                            telefone2 = reader["telefone2"].ToString(),
                             ente_federativo_responsavel = reader["ente_federativo_responsavel"].ToString(),
                             obtido_em = Utils.FormataDataHora(reader["obtido_em"]),
                             capital_social = Utils.FormataValor(reader["capital_social"]),
@@ -193,13 +195,19 @@ namespace OPS.Core.DAO
             {
                 var strSql = new StringBuilder();
                 strSql.Append(@"
-SELECT id, tipo, nome_parlamentar, sigla_partido, sigla_estado, valor_total
+SELECT 
+    tmp.id, 
+    tmp.tipo, 
+    tmp.nome_parlamentar, 
+    pr.sigla as sigla_partido, 
+    e.sigla as sigla_estado, 
+    tmp.valor_total
 FROM (
 	SELECT
 		l1.id_cf_deputado AS id
 		, p.nome_parlamentar
-		, pr.sigla as sigla_partido
-		, e.sigla as sigla_estado
+		, p.id_partido
+		, p.id_estado
 		, 'Deputado Federal' as tipo
 		, l1.valor_total
 	FROM (
@@ -213,16 +221,36 @@ FROM (
 		LIMIT 10
 	) l1
 	JOIN cf_deputado p ON p.id = l1.id_cf_deputado
-	LEFT JOIN partido pr on pr.id = p.id_partido
-	LEFT JOIN estado e on e.id = p.id_estado
+	
+
+	UNION ALL
+
+    SELECT
+		l1.id_cl_deputado AS id
+		, p.nome_parlamentar
+		, p.id_partido
+		, p.id_estado
+		, 'Deputado Estadual' as tipo
+		, l1.valor_total
+	FROM (
+		select 
+			SUM(l.valor_liquido) AS valor_total
+			, l.id_cl_deputado
+		from cl_despesa l
+		WHERE l.id_fornecedor = @id
+		GROUP BY l.id_cl_deputado
+		ORDER BY valor_total desc
+		LIMIT 10
+	) l1
+	JOIN cl_deputado p ON p.id = l1.id_cl_deputado
 
 	UNION ALL
 
 	SELECT
 		l1.id_sf_senador AS id
 		, p.nome as nome_parlamentar
-		, pr.sigla as sigla_partido
-		, e.sigla as sigla_estado
+		, p.id_partido
+		, p.id_estado
 		, 'Senador' as tipo
 		, l1.valor_total
 	FROM (
@@ -236,9 +264,9 @@ FROM (
 		LIMIT 10
 	) l1
 	JOIN sf_senador p ON p.id = l1.id_sf_senador
-	LEFT JOIN partido pr on pr.id = p.id_partido
-	LEFT JOIN estado e on e.id = p.id_estado
 ) tmp
+LEFT JOIN partido pr on pr.id = tmp.id_partido
+LEFT JOIN estado e on e.id = tmp.id_estado
 ORDER BY valor_total desc
 LIMIT 10 ");
 
@@ -258,6 +286,13 @@ LIMIT 10 ");
                             // Deputado Federal
                             link_parlamentar = $"/deputado-federal/{id_parlamentar}";
                             link_despesas = $"/deputado-federal?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+
+                        }
+                        else if (tipo == "Deputado Estadual")
+                        {
+                            // Deputado Estadual
+                            link_parlamentar = $"/deputado-estadual/{id_parlamentar}";
+                            link_despesas = $"/deputado-estadual?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
 
                         }
                         else
@@ -297,6 +332,12 @@ FROM (
     WHERE l.id_fornecedor = @id
     group by l.ano
 
+    UNION ALL
+
+    SELECT CAST(l.ano_mes/100 as signed) as ano , SUM(l.valor_liquido) AS valor
+    FROM cl_despesa l
+    WHERE l.id_fornecedor = @id
+    group by ano
 
     UNION ALL
 
@@ -504,7 +545,7 @@ order by ano
 							situacao_especial,
 							data_situacao_especial,
 							endereco_eletronico,
-							telefone,
+							telefone1,
 							ente_federativo_responsavel,
 							capital_social,
 							obtido_em,
@@ -562,7 +603,7 @@ order by ano
 							situacao_especial					= @situacao_especial,
 							data_situacao_especial				= @data_situacao_especial,
 							endereco_eletronico					= @endereco_eletronico,
-							telefone							= @telefone,
+							telefone1							= @telefone,
 							ente_federativo_responsavel			= @ente_federativo_responsavel,
 							capital_social						= @capital_social,
 							obtido_em							= NOW()

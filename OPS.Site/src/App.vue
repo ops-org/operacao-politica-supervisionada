@@ -27,7 +27,6 @@
               class="dropdown-menu dropdown-menu-left"
               aria-labelledby="nav-camara"
             >
-              <div class="dropdown-header">Câmara dos Deputados</div>
               <a class="dropdown-item" href="/deputado-federal/conheca"
                 >Conheça os deputados</a
               >
@@ -58,7 +57,6 @@
               class="dropdown-menu dropdown-menu-left"
               aria-labelledby="nav-senado"
             >
-              <div class="dropdown-header">Senado Federal</div>
               <a class="dropdown-item" href="/senador/conheca"
                 >Conheça os senadores</a
               >
@@ -71,6 +69,26 @@
             </div>
           </div>
 
+          <div class="dropdown p-2" style="display: inline-block">
+            <a
+              class="dropdown-toggle text-dark mr-md-2"
+              id="nav-assempleias-legistativas"
+              href="javascript:;"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+              >Assembleias Legislativas</a
+            >
+            <div
+              class="dropdown-menu dropdown-menu-left"
+              aria-labelledby="nav-assempleias-legistativas"
+            >
+              <a class="dropdown-item" href="/deputado-estadual"
+                >Cota parlamentar (CEAP)</a
+              >
+            </div>
+          </div>
+
           <a
             class="p-2 text-dark"
             href="https://institutoops.org.br"
@@ -78,13 +96,9 @@
             rel="noopener"
             >Instituto OPS</a
           >
-          <a
-            class="p-2 text-dark"
-            href="https://luciobig.com.br"
-            target="_blank"
-            rel="noopener"
-            >Blog</a
-          >
+          
+          
+
           <a id="nav-sobre" class="p-2 text-dark" href="/sobre">Sobre</a>
           <a
             class="p-2 text-dark social"

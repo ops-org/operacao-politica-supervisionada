@@ -5,6 +5,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -12,7 +13,7 @@ namespace OPS.Importador
 {
     public static class Partidos
     {
-        public static void ImportarHistorico(IConfiguration configuration)
+        public static async void ImportarHistorico(IConfiguration configuration)
         {
             var rootPath = configuration["AppSettings:SiteRootFolder"];
 
@@ -41,9 +42,9 @@ namespace OPS.Importador
                     {
                         //csv.Configuration.Delimiter = ",";
 
-                        using (WebClient client = new WebClient())
+                        using (HttpClient client = new())
                         {
-                            client.Headers.Add("User-Agent: Other");
+                            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
 
                             while (csv.Read())
                             {
@@ -60,7 +61,7 @@ namespace OPS.Importador
 
                                             var arquivo = rootPath + @"\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
                                             if (!File.Exists(arquivo))
-                                                client.DownloadFile(link, arquivo);
+                                                await client.DownloadFile(link, arquivo);
                                         }
                                     }
                                     catch (Exception ex)

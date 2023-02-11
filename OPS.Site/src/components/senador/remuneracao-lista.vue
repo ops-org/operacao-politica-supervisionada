@@ -125,15 +125,6 @@
       </div>
     </form>
 
-    <div class="row">
-      <div class="col-md-12">
-        <div class="alert alert-warning" v-if="valorTotal">
-          <strong>Custo Total no Período: R$ {{valorTotal}}</strong>
-          <small class="help-block mb-0">&nbsp;Custo Total considerando os filtros aplicados acima</small>
-        </div>
-      </div>
-    </div>
-
     <div class="form-group" v-if="fields">
       <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
     </div>
@@ -187,7 +178,7 @@ export default {
       selectedRow: {},
       valorTotal: null,
       filtro: {
-        agrupar: '1',
+        agrupar: '7',
         ano: '2022',
         mes: '',
         lotacao: [],
@@ -259,6 +250,7 @@ export default {
         serverSide: true,
         fixedHeader: true,
         saveState: true,
+        order: [],
       },
       fields: {},
     };
@@ -266,7 +258,7 @@ export default {
   mounted() {
     const vm = this;
 
-    vm.filtro.agrupar = vm.qs.ag || '1';
+    vm.filtro.agrupar = vm.qs.ag || '7';
     vm.filtro.ano = vm.qs.an || '2022';
     vm.filtro.mes = vm.qs.ms || '';
     vm.filtro.lotacao = (vm.qs.lt ? vm.qs.lt.split(',') : []);
@@ -335,8 +327,14 @@ export default {
     Pesquisar(pageLoad) {
       const vm = this;
       vm.senador = {};
-      vm.fields = null;
       vm.pageLoad = pageLoad;
+
+      if(vm.ultimoAgrupamento == vm.filtro.agrupar) {
+        vm.$refs.table.reload();
+        return;
+      }
+
+      vm.fields = null;
 
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
@@ -366,6 +364,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -396,6 +395,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -425,6 +425,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -454,6 +455,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -483,6 +485,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -512,6 +515,7 @@ export default {
                 label: 'Custo Total',
                 sortable: true,
                 className: 'text-right',
+                defaultOrder: 'desc',
               },
             };
             break;
@@ -568,6 +572,11 @@ export default {
             break;
 
           default: break;
+        }
+
+        vm.ultimoAgrupamento = vm.filtro.agrupar;
+        if(!pageLoad && vm.options.order.length > 0){
+          vm.options.order = [];
         }
 
         vm.$nextTick(() => {

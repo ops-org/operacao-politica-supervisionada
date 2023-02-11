@@ -16,14 +16,14 @@ namespace OPS.API.Controllers
         private IWebHostEnvironment Environment { get; }
         private IConfiguration Configuration { get; }
 
-        DeputadoDao dao;
+        DeputadoRepository dao;
 
         public DeputadoController(IConfiguration configuration, IWebHostEnvironment env)
         {
             Environment = env;
             Configuration = configuration;
 
-            dao = new DeputadoDao();
+            dao = new DeputadoRepository();
         }
 
         [HttpGet("{id:int}")]
@@ -88,6 +88,12 @@ namespace OPS.API.Controllers
         public async Task<dynamic> GastosPorAno(int id)
         {
             return await dao.GastosPorAno(id);
+        }
+
+        [HttpGet("{id:int}/GastosComPessoalPorAno")]
+        public async Task<dynamic> GastosComPessoalPorAno(int id)
+        {
+            return await dao.GastosComPessoalPorAno(id);
         }
 
         [HttpGet("Documento/{id:int}")]

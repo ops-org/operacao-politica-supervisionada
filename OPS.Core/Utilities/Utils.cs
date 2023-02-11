@@ -14,6 +14,8 @@ namespace OPS.Core
 {
     public static class Utils
     {
+        public const string DefaultUserAgent = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)";
+
         public static string FormataValor(object value, int decimais = 2)
         {
             if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
@@ -56,6 +58,25 @@ namespace OPS.Core
             return "";
         }
 
+        public static string NascimentoFormatado(object value)
+        {
+            if (value != null && !Convert.IsDBNull(value) && !string.IsNullOrEmpty(value.ToString()))
+                try
+                {
+                    var dataNascimento = Convert.ToDateTime(value.ToString());
+
+                    var idade = DateTime.Today.Year - dataNascimento.Year;
+                    if (DateTime.Today.DayOfYear < dataNascimento.DayOfYear)
+                        idade--;
+
+                    return $"{dataNascimento:dd/MM/yyyy} ({idade} anos)";
+                }
+                catch
+                {
+                    // ignored
+                }
+            return "";
+        }
         public static object ParseDateTime(object d)
         {
             if (d != null && Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
@@ -76,6 +97,7 @@ namespace OPS.Core
         {
             if (value.Length == 14) return FormatCNPJ(value);
             if (value.Length == 11) return FormatCPF(value);
+            if (value.Length == 6) return FormatCPFParcial(value);
             return value;
         }
 
@@ -108,15 +130,28 @@ namespace OPS.Core
 
         public static string FormatCPF(string CPF)
         {
+            return FormatCPFParcial(CPF.Substring(4, 6));
+        }
+
+        /// <summary>
+        /// Formatar uma string CPF
+        /// </summary>
+        /// <param name="CPF">string CPF sem formatacao</param>
+        /// <returns>string CPF formatada</returns>
+        /// <example>Recebe '99999999999' Devolve '999.999.999-99'</example>
+
+        public static string FormatCPFParcial(string CPF)
+        {
             try
             {
-                return Convert.ToUInt64(CPF).ToString(@"000\.000\.000\-00");
+                return Convert.ToUInt64(CPF).ToString(@"***\.000\.000\-**");
             }
             catch (Exception)
             {
                 return CPF;
             }
         }
+
         /// <summary>
         /// Retira a Formatacao de uma string CNPJ/CPF
         /// </summary>
@@ -214,16 +249,10 @@ namespace OPS.Core
             restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
             var request = new RestRequest(Method.POST);
-            request.AddHeader("cache-control", "no-cache");
-            request.AddHeader("Connection", "keep-alive");
-            request.AddHeader("Accept-Encoding", "gzip, deflate");
-            request.AddHeader("Host", "api.sendgrid.com");
-            request.AddHeader("Cache-Control", "no-cache");
-            request.AddHeader("Accept", "*/*");
             request.AddHeader("content-type", "application/json");
             request.AddHeader("authorization", "Bearer " + apiKey);
             request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
-            IRestResponse response = restClient.Post(request);
+            IRestResponse response = await restClient.ExecuteAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Accepted)
             {
@@ -242,6 +271,18 @@ namespace OPS.Core
         {
             using var sha1 = SHA1.Create();
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+        }
+
+        public static string EncodeTo64(string toEncode)
+        {
+            byte[] toEncodeAsBytes = Encoding.ASCII.GetBytes(toEncode);
+            return Convert.ToBase64String(toEncodeAsBytes);
+        }
+
+        public static string DecodeFrom64(string encodedData)
+        {
+            byte[] encodedDataAsBytes = Convert.FromBase64String(encodedData);
+            return Encoding.ASCII.GetString(encodedDataAsBytes);
         }
 
         public static string ReadAllText(string file)
@@ -288,8 +329,6 @@ namespace OPS.Core
         {
             return EqualityComparer<T>.Default.Equals(left, right) ? (T?)null : left;
         }
-
-
 
         protected class SendGridMessage
         {

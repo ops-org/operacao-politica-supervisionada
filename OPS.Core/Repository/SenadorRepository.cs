@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OPS.Core.DAO
 {
-    public class SenadorDao
+    public class SenadorRepository
     {
         public async Task<dynamic> Consultar(int id)
         {
@@ -66,7 +66,7 @@ namespace OPS.Core.DAO
                             id_sf_senador = reader["id_sf_senador"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             nome_civil = reader["nome_civil"].ToString(),
-                            nascimento = Utils.FormataData(reader["nascimento"]),
+                            nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
                             sexo = reader["sexo"].ToString(),
                             id_partido = reader["id_partido"],
                             sigla_estado = reader["sigla_estado"].ToString(),
@@ -1248,7 +1248,7 @@ namespace OPS.Core.DAO
                 if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
                 {
                     sqlSelect.AppendLine($@"
-SELECT
+SELECT SQL_CALC_FOUND_ROWS
 	{strSelectFiels},
     COUNT(1) AS quantidade,
     SUM(r.custo_total) AS valor_total
@@ -1265,7 +1265,7 @@ WHERE (1=1)
                 {
 
                     sqlSelect.AppendLine(@"
-SELECT
+SELECT SQL_CALC_FOUND_ROWS
     r.id,
 	v.descricao as vinculo, 
 	ct.descricao as categoria, 
@@ -1294,31 +1294,7 @@ WHERE (1=1)
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(" valor_total desc"));
                 sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
-
-                if (!string.IsNullOrEmpty(sqlGroupBy))
-                {
-                    sqlSelect.AppendLine($@"
-                        SELECT COUNT(1) as total, sum(valor_total) as valor_total 
-                        FROM (
-                            SELECT sum(custo_total) as valor_total
-					        FROM sf_remuneracao r
-                            JOIN sf_lotacao l ON l.id = r.id_lotacao
-                            LEFT JOIN sf_senador s on s.id = l.id_senador
-					        WHERE (1=1)
-                            {sqlWhere}
-                            {sqlGroupBy}
-                        ) tmp");
-                }
-                else
-                {
-                    sqlSelect.AppendLine($@"
-                        SELECT COUNT(1) as total, sum(custo_total) as valor_total
-					    FROM sf_remuneracao r
-                        JOIN sf_lotacao l ON l.id = r.id_lotacao
-                        LEFT JOIN sf_senador s on s.id = l.id_senador
-					    WHERE (1=1)
-                        {sqlWhere}");
-                }
+                sqlSelect.AppendLine("SELECT FOUND_ROWS();");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -1356,16 +1332,10 @@ WHERE (1=1)
                         }
                     }
 
-                    string TotalCount = "0", ValorTotal = "0";
-                    await reader.NextResultAsync();
-                    await reader.ReadAsync();
-                    TotalCount = reader[0].ToString();
-                    ValorTotal = Utils.FormataValor(reader[1]);
-
+                    var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
                         draw = request.Draw,
-                        valorTotal = ValorTotal,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno

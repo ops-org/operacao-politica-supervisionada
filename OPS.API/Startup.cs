@@ -6,9 +6,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
+using MySqlConnector;
+using MySqlConnector.Logging;
 using OPS.Core.DAO;
+using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO.Compression;
 
@@ -27,9 +31,12 @@ namespace OPS.API
         public void ConfigureServices(IServiceCollection services)
         {
             Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
-            new ParametrosDao().CarregarPadroes();
+            new ParametrosRepository().CarregarPadroes();
 
-            //services.AddScoped(_ => new AppDb(Configuration["ConnectionStrings:AuditoriaContext"]));
+            services.AddTransient<IDbConnection>(_ => new MySqlConnection(Configuration["ConnectionStrings:AuditoriaContext"]));
+
+            services.AddScoped<PartidoRepository>();
+            services.AddScoped<EstadoRepository>();
 
             //services.AddCors(options =>
             //{
@@ -119,6 +126,25 @@ namespace OPS.API
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            // This will make the HTTP requests log as rich logs instead of plain text.
+            app.UseSerilogRequestLogging(options =>
+            {
+                // Customize the message template
+                //options.MessageTemplate = "Handled {RequestPath}";
+
+                // Emit debug-level events instead of the defaults
+                //options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
+
+                // Attach additional properties to the request completion event
+                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                {
+                    diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                    diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+                    diagnosticContext.Set("RemoteIpAddress", httpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString());
+                    diagnosticContext.Set("LocalIpAddress", httpContext.Request.HttpContext.Connection.LocalIpAddress.ToString());
+                };
+            });
 
             //app.UseHttpsRedirection();
             //app.UseCacheOutput();

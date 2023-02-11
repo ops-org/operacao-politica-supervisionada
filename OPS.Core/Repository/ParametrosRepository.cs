@@ -3,7 +3,7 @@ using System;
 
 namespace OPS.Core.DAO
 {
-    public class ParametrosDao
+    public class ParametrosRepository
     {
         public void CarregarPadroes()
         {
