@@ -28,7 +28,9 @@ jobs:
     
     - name: Install .NET dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: dotnet restore
+      run: |
+        dotnet restore ./OPS.API/OPS.API.csproj
+        dotnet restore ./OPS.Importador/OPS.Importador.csproj
       
     - name: Setup Node.js
       uses: actions/setup-node@v2
