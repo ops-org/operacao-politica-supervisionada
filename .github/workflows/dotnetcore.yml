@@ -94,5 +94,6 @@ jobs:
         name: ops-importador
         path: ~/ops-importador/
     - name: Deploy dos arquivos na pasta final
-      ${{ github.workspace }}/ops-importador-deploy.sh
-      ${{ github.workspace }}/ops-api-deploy.sh
+      run: |
+        ${{ github.workspace }}/ops-importador-deploy.sh
+        ${{ github.workspace }}/ops-api-deploy.sh
