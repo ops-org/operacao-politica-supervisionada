@@ -68,6 +68,8 @@ jobs:
         name: ops-api
         path: ops-api/**
         if-no-files-found: error
+
+    - uses: actions/upload-artifact@v3
       with:
         name: ops-importador
         path: ops-importador/**
@@ -83,6 +85,7 @@ jobs:
       with:
         name: ops-api
         path: ~/ops-api/
+    - uses: actions/download-artifact@v3
       with:
         name: ops-importador
         path: ~/ops-importador/   
