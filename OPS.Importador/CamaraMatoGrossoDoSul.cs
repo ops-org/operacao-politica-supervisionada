@@ -158,47 +158,47 @@ namespace OPS.Importador
                 (form.Elements["SC_verbaindenizatoria_ano_referencia_input_2"] as IHtmlInputElement).Value = ano.ToString();
                 IDocument resultDocument = await form.SubmitAsync();
 
-                //var despesas = document.QuerySelectorAll("#sc_grid_body");
-                //foreach (var despesa in despesas)
-                //{
-                //    // N° PROCESSO	N° NF	MÊS/ANO	DEPUTADO (A)	CATEGORIA	VALOR (R$)
-                //    var colunas = despesa.QuerySelectorAll("td");
-                //    var linkDetalhes = (colunas[0].Children[0] as IHtmlAnchorElement).Href;
-                //    var processo = colunas[0].QuerySelector("span").TextContent.Trim();
+                var despesas = document.QuerySelectorAll("#sc_grid_body");
+                foreach (var despesa in despesas)
+                {
+                    // N° PROCESSO	N° NF	MÊS/ANO	DEPUTADO (A)	CATEGORIA	VALOR (R$)
+                    var colunas = despesa.QuerySelectorAll("td");
+                    var linkDetalhes = (colunas[0].Children[0] as IHtmlAnchorElement).Href;
+                    var processo = colunas[0].QuerySelector("span").TextContent.Trim();
 
-                //    var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
-                //    {
-                //        Ano = (short)ano,
-                //        Documento = colunas[0].QuerySelector("span").TextContent.Trim() + "/" + colunas[1].TextContent.Trim(),
-                //        DataEmissao = Convert.ToDateTime("01/" + colunas[2].TextContent.Trim(), cultureInfo),
-                //        Nome = colunas[3].TextContent.Trim(),
-                //        TipoDespesa = colunas[4].TextContent.Trim(),
-                //    };
+                    var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
+                    {
+                        Ano = (short)ano,
+                        Documento = colunas[0].QuerySelector("span").TextContent.Trim() + "/" + colunas[1].TextContent.Trim(),
+                        DataEmissao = Convert.ToDateTime("01/" + colunas[2].TextContent.Trim(), cultureInfo),
+                        Nome = colunas[3].TextContent.Trim(),
+                        TipoDespesa = colunas[4].TextContent.Trim(),
+                    };
 
-                //    var documentDetalhes = await context.OpenAsync(linkDetalhes);
-                //    if (documentDetalhes.StatusCode != HttpStatusCode.OK)
-                //    {
-                //        logger.LogError($"{linkDetalhes} {documentDetalhes.StatusCode}");
-                //    };
+                    var documentDetalhes = await context.OpenAsync(linkDetalhes);
+                    if (documentDetalhes.StatusCode != HttpStatusCode.OK)
+                    {
+                        logger.LogError($"{linkDetalhes} {documentDetalhes.StatusCode}");
+                    };
 
-                //    var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
-                //    foreach (var detalhes in despesasDetalhes)
-                //    {
-                //        // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR
-                //        var colunasDetalhes = detalhes.QuerySelectorAll("td");
+                    var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
+                    foreach (var detalhes in despesasDetalhes)
+                    {
+                        // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR
+                        var colunasDetalhes = detalhes.QuerySelectorAll("td");
 
-                //        objCamaraEstadualDespesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
-                //        objCamaraEstadualDespesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
-                //        objCamaraEstadualDespesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
-                //        objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
-                //    }
-
-
-                //    connection.Insert(objCamaraEstadualDespesaTemp);
-                //}
+                        objCamaraEstadualDespesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
+                        objCamaraEstadualDespesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
+                        objCamaraEstadualDespesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
+                        objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
+                    }
 
 
-                //if (document.QuerySelector(".paginate-button-next").ClassList.Contains("disabled")) break;
+                    connection.Insert(objCamaraEstadualDespesaTemp);
+                }
+
+
+                if (document.QuerySelector(".paginate-button-next").ClassList.Contains("disabled")) break;
             }
         }
 

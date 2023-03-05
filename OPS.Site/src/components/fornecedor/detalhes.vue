@@ -349,7 +349,7 @@
             </div>
             <div class="card-body vld-parent" ref="MaioresGastos">
               <div class="table-responsive">
-                <table class="table table-striped table-hover table-sm" style="margin: 0;">
+                <table class="table table-striped table-hover table-sm" style="margin: 0;" aria-label="">
                   <caption class="d-none"></caption>
                   <thead>
                     <tr>

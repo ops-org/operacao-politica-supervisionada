@@ -301,7 +301,7 @@ namespace OPS.Importador
 
                                             var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
                                             if (!File.Exists(arquivo))
-                                                await client.DownloadFile(link, arquivo);
+                                                client.DownloadFile(link, arquivo).Wait();
                                         }
                                     }
                                     catch (Exception ex)

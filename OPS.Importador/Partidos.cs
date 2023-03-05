@@ -1,20 +1,18 @@
-﻿using CsvHelper;
-using Microsoft.Extensions.Configuration;
-using OPS.Core;
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using CsvHelper;
+using Microsoft.Extensions.Configuration;
+using OPS.Core;
 
 namespace OPS.Importador
 {
     public static class Partidos
     {
-        public static async Task ImportarHistorico(IConfiguration configuration)
+        public static void ImportarHistorico(IConfiguration configuration)
         {
             var rootPath = configuration["AppSettings:SiteRootFolder"];
 
@@ -62,7 +60,7 @@ namespace OPS.Importador
 
                                             var arquivo = rootPath + @"\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
                                             if (!File.Exists(arquivo))
-                                                await client.DownloadFile(link, arquivo);
+                                                client.DownloadFile(link, arquivo).Wait();
                                         }
                                     }
                                     catch (Exception ex)
@@ -93,8 +91,6 @@ namespace OPS.Importador
                     }
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         private static DateTime? AjustarData(string d)

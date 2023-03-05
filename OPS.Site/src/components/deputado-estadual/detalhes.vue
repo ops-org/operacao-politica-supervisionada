@@ -74,7 +74,7 @@
                     </div>
                     <div class="card-body maiores-fornecedores vld-parent" ref="MaioresFornecedores">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover table-sm" style="margin: 0;">
+                            <table class="table table-striped table-hover table-sm" style="margin: 0;" aria-label="">
                                 <thead>
                                     <tr>
                                         <th style="width:80%">Fornecedor</th>
@@ -100,7 +100,7 @@
                     </div>
                     <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover table-sm" style="margin: 0;">
+                            <table class="table table-striped table-hover table-sm" style="margin: 0;" aria-label="">
                                 <thead>
                                     <tr>
                                         <th style="width:80%">Fornecedor</th>
