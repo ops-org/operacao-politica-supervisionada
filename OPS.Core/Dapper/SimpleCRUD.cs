@@ -771,10 +771,11 @@ namespace Dapper
                         break;
                     }
                 }
-                sb.AppendFormat(
-                    useIsNull ? "{0} is null" : "{0} = @{1}",
-                    GetColumnName(propertyToUse),
-                    propertyToUse.Name);
+
+                if (useIsNull)
+                    sb.AppendFormat("{0} is null", GetColumnName(propertyToUse));
+                else
+                    sb.AppendFormat("{0} = @{1}", GetColumnName(propertyToUse), propertyToUse.Name);
 
                 if (i < propertyInfos.Count() - 1)
                     sb.AppendFormat(" and ");

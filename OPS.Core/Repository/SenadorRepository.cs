@@ -1120,7 +1120,6 @@ namespace OPS.Core.DAO
         public async Task<dynamic> Remuneracao(DataTablesRequest request)
         {
             if (request == null) throw new BusinessException("Parâmetro request não informado!");
-            Dictionary<int, string> dcFielsSort;
             string strSelectFiels, sqlGroupBy;
 
             AgrupamentoRemuneracaoSenado eAgrupamento = (AgrupamentoRemuneracaoSenado)Convert.ToInt32(request.Filters["ag"].ToString());
@@ -1129,75 +1128,36 @@ namespace OPS.Core.DAO
                 case AgrupamentoRemuneracaoSenado.Lotacao:
                     strSelectFiels = "l.id, l.descricao";
                     sqlGroupBy = "GROUP BY r.id_lotacao";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "quantidade" },
-                        {3, "valor_total" },
-                    };
 
                     break;
                 case AgrupamentoRemuneracaoSenado.Cargo:
                     strSelectFiels = "cr.id, cr.descricao";
                     sqlGroupBy = "GROUP BY r.id_cargo";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "quantidade" },
-                        {3, "valor_total" },
-                    };
 
                     break;
                 case AgrupamentoRemuneracaoSenado.Categoria:
                     strSelectFiels = "ct.id, ct.descricao";
                     sqlGroupBy = "GROUP BY r.id_categoria";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "quantidade" },
-                        {3, "valor_total" },
-                    };
 
                     break;
                 case AgrupamentoRemuneracaoSenado.Vinculo:
                     strSelectFiels = "v.id, v.descricao";
                     sqlGroupBy = "GROUP BY r.id_vinculo";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "quantidade" },
-                        {3, "valor_total" },
-                    };
 
                     break;
                 case AgrupamentoRemuneracaoSenado.Ano:
                     strSelectFiels = "CAST(r.ano_mes/100 AS UNSIGNED) as id, CAST(r.ano_mes/100 AS UNSIGNED) as descricao";
                     sqlGroupBy = "GROUP BY CAST(r.ano_mes/100 AS UNSIGNED)";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "quantidade" },
-                        {3, "valor_total" },
-                    };
 
                     break;
                 case AgrupamentoRemuneracaoSenado.AnoMes:
                     strSelectFiels = "";
                     sqlGroupBy = "";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {0, "vinculo" },
-                        {1, "categoria" },
-                        {2, "cargo" },
-                        {3, "lotacao" },
-                        {4, "tipo_folha" },
-                        {5, "ano_mes" },
-                        {6, "valor_total" },
-                    };
 
                     break;
                 case AgrupamentoRemuneracaoSenado.Senador:
                     strSelectFiels = "s.id, s.nome as descricao";
                     sqlGroupBy = "GROUP BY s.id";
-                    dcFielsSort = new Dictionary<int, string>(){
-                        {1, "descricao" },
-                        {2, "quantidade" },
-                        {3, "valor_total" },
-                    };
 
                     break;
                 default:
@@ -1389,8 +1349,6 @@ LEFT JOIN sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
 LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
 WHERE r.id = @id
 ");
-
-                var lstRetorno = new List<dynamic>();
 
                 banco.AddParameter("@id", id);
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))

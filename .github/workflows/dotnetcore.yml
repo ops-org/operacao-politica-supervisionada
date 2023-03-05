@@ -2,9 +2,9 @@ name: .NET Core
 
 on:
   push:
-    branches: [ master, deputados-estaduais ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, deputados-estaduais ]
+    branches: [ master ]
 
 jobs:
   build:

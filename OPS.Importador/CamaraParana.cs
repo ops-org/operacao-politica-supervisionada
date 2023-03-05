@@ -70,8 +70,6 @@ namespace OPS.Importador
             var options = new JsonSerializerOptions();
             options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
 
-            var deputados = new List<int>();
-
             var address = $"https://consultas.assembleia.pr.leg.br/api/public/ressarcimento/ressarcimentos/{mes}/{ano}";
             var restClient = new RestClient();
             restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
@@ -86,32 +84,30 @@ namespace OPS.Importador
             {
                 var nomePolitico = itemDespesa.Parlamentar.NomePolitico.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "");
 
-                if (!deputados.Contains(itemDespesa.Parlamentar.Codigo))
+                var parlamentar = itemDespesa.Parlamentar;
+                var IdPartido = connection.GetList<Core.Entity.Partido>(new { sigla = parlamentar.Partido.Replace("REPUB", "REPUBLICANOS").Replace("CDN", "CIDADANIA") }).FirstOrDefault()?.Id;
+                if (IdPartido == null)
+                    throw new Exception("Partido Inexistenete");
+
+                var deputado = new DeputadoEstadual();
+                deputado.Matricula = (UInt32)parlamentar.Codigo;
+                //deputado.UrlPerfil = $"http://www.assembleia.pr.leg.br/deputados/perfil/{parlamentar.Codigo}";
+                deputado.NomeParlamentar = nomePolitico;
+                deputado.NomeCivil = parlamentar.Nome;
+                deputado.IdEstado = (ushort)idEstado;
+                deputado.IdPartido = IdPartido.Value;
+                deputado.Sexo = parlamentar.NomePolitico.StartsWith("DEPUTADO") ? "M" : "F";
+                //deputado.UrlFoto = parlamentar.Foto;
+
+                var IdDeputado = connection.GetList<DeputadoEstadual>(new { id_estado = idEstado, matricula = parlamentar.Codigo }).FirstOrDefault()?.Id;
+                if (IdDeputado == null)
+                    connection.Insert(deputado);
+                else
                 {
-                    var parlamentar = itemDespesa.Parlamentar;
-                    var IdPartido = connection.GetList<Core.Entity.Partido>(new { sigla = parlamentar.Partido.Replace("REPUB", "REPUBLICANOS").Replace("CDN", "CIDADANIA") }).FirstOrDefault()?.Id;
-                    if (IdPartido == null)
-                        throw new Exception("Partido Inexistenete");
-
-                    var deputado = new DeputadoEstadual();
-                    deputado.Matricula = (UInt32)parlamentar.Codigo;
-                    //deputado.UrlPerfil = $"http://www.assembleia.pr.leg.br/deputados/perfil/{parlamentar.Codigo}";
-                    deputado.NomeParlamentar = nomePolitico;
-                    deputado.NomeCivil = parlamentar.Nome;
-                    deputado.IdEstado = (ushort)idEstado;
-                    deputado.IdPartido = IdPartido.Value;
-                    deputado.Sexo = parlamentar.NomePolitico.StartsWith("DEPUTADO") ? "M" : "F";
-                    //deputado.UrlFoto = parlamentar.Foto;
-
-                    var IdDeputado = connection.GetList<DeputadoEstadual>(new { id_estado = idEstado, matricula = parlamentar.Codigo }).FirstOrDefault()?.Id;
-                    if (IdDeputado == null)
-                        connection.Insert(deputado);
-                    else
-                    {
-                        deputado.Id = IdDeputado.Value;
-                        connection.Update(deputado);
-                    }
+                    deputado.Id = IdDeputado.Value;
+                    connection.Update(deputado);
                 }
+
 
                 foreach (var despesa in itemDespesa.DespesasAnuais?[0]?.DespesasMensais?[0]?.Despesas?[0]?.ItensDespesa)
                 {

@@ -2192,8 +2192,6 @@ LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
 WHERE r.id = @id
 ");
 
-                var lstRetorno = new List<dynamic>();
-
                 banco.AddParameter("@id", id);
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
                 {
