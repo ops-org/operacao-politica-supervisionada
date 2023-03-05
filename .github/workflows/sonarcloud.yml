@@ -51,7 +51,11 @@ jobs:
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"ops-org_operacao-politica-supervisionada" /o:"ops-org" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet-sonarscanner begin 
+            /k:"ops-org_operacao-politica-supervisionada" 
+            /o:"ops-org" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" 
+            /d:sonar.host.url="https://sonarcloud.io" 
+            /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
           # dotnet restore ./OPS.sln
           # dotnet build ./OPS.sln --configuration Release
           dotnet restore ./OPS.API/OPS.API.csproj
