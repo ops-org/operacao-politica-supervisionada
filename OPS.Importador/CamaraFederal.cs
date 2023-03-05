@@ -2385,6 +2385,7 @@ order BY c.id_cf_funcionario
 
                 while (queue.TryDequeue(out secretario))
                 {
+                    if (secretario is null) continue;
 
                     try
                     {

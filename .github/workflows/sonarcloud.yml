@@ -43,8 +43,8 @@ jobs:
         with:
           dotnet-version: 7.0.x
           
-      - name: Install Report Generator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+      - name: Install Code Coverage
+        run: dotnet tool install --global dotnet-coverage
 
       - name: Build and analyze
         env:
@@ -58,5 +58,6 @@ jobs:
           dotnet build ./OPS.API/OPS.API.csproj --configuration Release
           dotnet restore ./OPS.Importador/OPS.Importador.csproj
           dotnet build ./OPS.Importador/OPS.Importador.csproj --configuration Release
+          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
     

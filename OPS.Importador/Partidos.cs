@@ -8,12 +8,13 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace OPS.Importador
 {
     public static class Partidos
     {
-        public static async void ImportarHistorico(IConfiguration configuration)
+        public static async Task ImportarHistorico(IConfiguration configuration)
         {
             var rootPath = configuration["AppSettings:SiteRootFolder"];
 
@@ -92,6 +93,8 @@ namespace OPS.Importador
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         private static DateTime? AjustarData(string d)

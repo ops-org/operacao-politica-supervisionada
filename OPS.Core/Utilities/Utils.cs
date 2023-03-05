@@ -79,6 +79,7 @@ namespace OPS.Core
         }
         public static object ParseDateTime(object d)
         {
+            if (d is null) return DBNull.Value;
             if (d != null && Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
                 d.ToString().StartsWith("*"))
                 return DBNull.Value;

@@ -255,7 +255,7 @@ namespace OPS.Importador
             }
         }
 
-        private static async void ImportarPartidos()
+        private static async Task ImportarPartidos()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var sb = new StringBuilder();
@@ -332,6 +332,8 @@ namespace OPS.Importador
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         private static DateTime? AjustarData(string d)
