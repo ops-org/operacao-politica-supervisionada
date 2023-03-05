@@ -5,7 +5,12 @@
     <UserSecretsId>4c27019c-4f30-4a9b-959f-8903227e91eb</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+    <CodeAnalysisRuleSet>..\.sonarlint\ops-org_operacao-politica-supervisionadacsharp.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\.sonarlint\ops-org_operacao-politica-supervisionada\CSharp\SonarLint.xml" Link="SonarLint.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
