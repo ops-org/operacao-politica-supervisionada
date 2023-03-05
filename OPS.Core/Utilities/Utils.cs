@@ -247,7 +247,7 @@ namespace OPS.Core
             }
 
             var restClient = new RestClient("https://api.sendgrid.com/v3/mail/send");
-            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true; // Noncompliant: trust all certificates
 
             var request = new RestRequest(Method.POST);
             request.AddHeader("content-type", "application/json");

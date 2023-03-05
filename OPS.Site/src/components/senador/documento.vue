@@ -119,7 +119,7 @@
             class="btn btn-danger"
             v-bind:href="documento.url_documento"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Recibo&nbsp;
             <i class="fa fa-download"></i>
@@ -129,7 +129,7 @@
             class="btn btn-danger"
             v-bind:href="documento.url_documento_nfe"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Recibo (NF-e)&nbsp;
             <i class="fa fa-download"></i>
@@ -138,7 +138,7 @@
             class="btn btn-light"
             v-bind:href="documento.url_detalhes_documento"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Detalhes do recibo&nbsp;
             <i class="fa fa-plus"></i>
@@ -148,7 +148,7 @@
           class="btn btn-light"
           v-bind:href="documento.url_demais_documentos_mes"
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           Demais Recibos do mês&nbsp;
           <i class="fa fa-plus"></i>
@@ -157,7 +157,7 @@
           class="btn btn-light"
           href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk="
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           Visualizar NFe&nbsp;
           <i class="fa fa-plus"></i>

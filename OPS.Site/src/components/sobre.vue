@@ -50,7 +50,7 @@
                 <a
                   href="https://institutoops.org.br/o-que-ja-fizemos/"
                   target="_blank"
-                  rel="nofollow"
+                  rel="nofollow noopener noreferrer"
                   >economia os cofres públicos em valor superior a R$ 6
                   milhões</a
                 >
@@ -67,7 +67,7 @@
                 <a
                   href="https://institutoops.org.br/apoio/"
                   target="_blank"
-                  rel="nofollow"
+                  rel="nofollow noopener noreferrer"
                   >doações voluntárias</a
                 >.
               </p>
@@ -79,14 +79,14 @@
                 <a
                   href="https://institutoops.org.br/denunciar/"
                   target="_blank"
-                  rel="nofollow"
+                  rel="nofollow noopener noreferrer"
                   >canal para o recebimento de denúncias</a
                 >, anônimas ou não.
               </p>
 
               <p class="text-justify style2">
                 A OPS é coordenada por seu fundador,
-                <a href="https://luciobig.com.br" target="_blank" rel="nofollow"
+                <a href="https://luciobig.com.br" target="_blank" rel="nofollow noopener noreferrer"
                   >Lúcio Big</a
                 >.
               </p>
@@ -108,7 +108,7 @@
                 <a
                   href="https://institutoops.org.br/apoio/"
                   target="_blank"
-                  rel="nofollow"
+                  rel="nofollow noopener noreferrer"
                   >Clique aqui e escolha</a
                 >.
               </p>
@@ -124,7 +124,7 @@
                     <a
                       href="http://www2.camara.leg.br/legin/int/atomes/2009/atodamesa-43-21-maio-2009-588364-normaatualizada-cd-mesa.html"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Regras para uso da cota parlamentar (Ato da mesa Nº
                       43)</a
                     >
@@ -133,7 +133,7 @@
                     <a
                       href="http://www2.camara.leg.br/participe/fale-conosco/perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Legislação relacionada</a
                     >
                   </li>
@@ -141,7 +141,7 @@
                     <a
                       href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Limites mensais por parlamentar</a
                     >
                   </li>
@@ -149,7 +149,7 @@
                     <a
                       href="http://www.camara.gov.br/cota-parlamentar"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Explorar a cota parlamentar na câmara</a
                     >
                   </li>
@@ -157,7 +157,7 @@
                     <a
                       href="http://www2.camara.leg.br/deputados/pesquisa"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Conheça os Deputados</a
                     >
                   </li>
@@ -170,7 +170,7 @@
                     <a
                       href="https://www12.senado.leg.br/transparencia/leg/pdf/normas/APS-5-2014-compilado.pdf"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Regras para uso da cota parlamentar</a
                     >
                   </li>
@@ -178,7 +178,7 @@
                     <a
                       href="https://www12.senado.leg.br/transparencia/leg/legislacao-relacionada"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Legislação relacionada</a
                     >
                   </li>
@@ -186,7 +186,7 @@
                     <a
                       href="http://www25.senado.leg.br/web/transparencia/sen"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Explorar a cota parlamentar no senado</a
                     >
                   </li>
@@ -194,7 +194,7 @@
                     <a
                       href="http://www25.senado.leg.br/web/senadores"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Conheça os senadores</a
                     >
                   </li>
@@ -238,7 +238,7 @@
                 <a
                   href="https://institutoops.org.br/o-que-ja-fizemos/"
                   target="_blank"
-                  rel="nofollow"
+                  rel="nofollow noopener noreferrer"
                   >aqui</a
                 >.
               </p>
@@ -255,7 +255,7 @@
                     <a
                       href="https://www.camara.leg.br/transparencia/gastos-parlamentares"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Cota parlamentar</a
                     >
                   </li>
@@ -265,7 +265,7 @@
                     <a
                       href="https://dadosabertos.camara.leg.br/"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Dados Abertos</a
                     >
                   </li>
@@ -275,7 +275,7 @@
                     <a
                       href="https://www.camara.leg.br/deputados/quem-sao"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Conheça os Deputados</a
                     >
                   </li>
@@ -289,7 +289,7 @@
                     <a
                       href="https://www12.senado.leg.br/dados-abertos/conjuntos?portal=Administrativo&grupo=senadores"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Cota parlamentar (CSV)</a
                     >
                   </li>
@@ -299,7 +299,7 @@
                     <a
                       href="https://www25.senado.leg.br/web/senadores/em-exercicio"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Conheça os Senadores</a
                     >
                   </li>
@@ -313,7 +313,7 @@
                     <a
                       href="https://www.al.ba.gov.br/transparencia/prestacao-contas"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Bahia</a
                     >
                   </li>
@@ -321,7 +321,7 @@
                     <a
                       href="https://dadosabertos.cl.df.gov.br/View/verbas.html"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Distrito Federal</a
                     >
                   </li>
@@ -329,7 +329,7 @@
                     <a
                       href="https://transparencia.al.go.leg.br/gestao-parlamentar/verba-indenizatoria"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Goiás</a
                     >
                   </li>
@@ -337,7 +337,7 @@
                     <a
                       href="https://www.almg.gov.br/acompanhe/prestacao_contas/index.html?aba=js_tabVerba"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Minas Gerais</a
                     >
                   </li>
@@ -345,7 +345,7 @@
                     <a
                       href="https://consultas.assembleia.pr.leg.br/#/ressarcimento"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Paraná</a
                     >
                   </li>
@@ -353,7 +353,7 @@
                     <a
                       href="https://transparencia.alesc.sc.gov.br/gabinetes.php"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Santa Catarina</a
                     >
                   </li>
@@ -361,7 +361,7 @@
                     <a
                       href="https://www.al.sp.gov.br/dados-abertos/recurso/21"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >São Paulo</a
                     >
                   </li>
@@ -375,14 +375,14 @@
                     <a
                       href="http://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao.asp"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Receita Federal</a
                     >
                     (via
                     <a
                       href="https://minhareceita.org"
                       target="_blank"
-                      rel="nofollow"
+                      rel="nofollow noopener noreferrer"
                       >Minha Receita</a
                     >)
                   </li>

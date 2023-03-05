@@ -228,7 +228,7 @@
             class="btn btn-sm btn-link float-right"
             title="Solicitação de cópia das notas fiscais à assembleia"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
             >Pedido de Informação via e-SIC</a
           >
         </div>

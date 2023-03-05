@@ -177,6 +177,7 @@
                 <table
                   class="table table-striped table-hover table-sm"
                   style="margin: 0"
+                  aria-label=""
                 >
                   <thead>
                     <tr>
@@ -232,6 +233,7 @@
                 <table
                   class="table table-striped table-hover table-sm"
                   style="margin: 0"
+                  aria-label=""
                 >
                   <thead>
                     <tr>

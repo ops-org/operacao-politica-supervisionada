@@ -138,7 +138,7 @@
           <a
             href="http://www.camara.leg.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
             title="Clique para visualizar a lista oficial de valores por estado"
             ><strong>R$ 30,7 mil a R$ 45,6 mil</strong></a
           >, a depender do estado de origem, para custear despesas com
@@ -153,7 +153,7 @@
           <a
             href="https://www12.senado.leg.br/transparencia/leg/pdf/CotaExercicioAtivParlamSenadores.pdf"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
             title="Clique para visualizar a lista official de valores por estado"
             ><strong>de R$ 21 mil até R$ 44,2 mil por mês</strong></a
           >.
@@ -167,7 +167,7 @@
           <a
             href="https://institutoops.org.br/o-que-ja-fizemos/"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
             ><strong>irregularidades já descobertas pela OPS</strong></a
           >.
         </p>
