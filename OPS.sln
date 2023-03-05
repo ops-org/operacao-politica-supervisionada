@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.Importador", "OPS.Impor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.API", "OPS.API\OPS.API.csproj", "{4D53C319-84B9-41A6-9379-142DDB67A4DF}"
 EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "OPS.Site", "OPS.Site\OPS.Site.esproj", "{7E4446A1-772E-4D73-97F5-27D70FFBFD33}"
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "OPS.Site", "OPS.Site\OPS.Site.esproj", "{7E4446A1-772E-4D73-97F5-27D70FFBFD33}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.Core.Test", "OPS.Core.Test\OPS.Core.Test.csproj", "{D4694FB6-E728-48E0-925D-248EE42D4E9D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +34,10 @@ Global
 		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
