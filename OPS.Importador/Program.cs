@@ -88,15 +88,15 @@ namespace OPS.Importador
                 {
                     var types = new Type[]
                     {
-                        //typeof(Senado), // csv
-                        //typeof(CamaraFederal), // csv
-                        //typeof(CamaraDistritoFederal), // xlsx
-                        //typeof(CamaraSantaCatarina), // csv
-                        //typeof(CamaraSaoPaulo), // xml
-                        //typeof(CamaraPernambuco), // xml
-                        ////typeof(CamaraMinasGerais), // xml api
-                        ////// typeof(CamaraRioGrandeDoSul), // nada
-                        //typeof(CamaraParana), // rest api mensal
+                        typeof(Senado), // csv
+                        typeof(CamaraFederal), // csv
+                        typeof(CamaraDistritoFederal), // xlsx
+                        typeof(CamaraSantaCatarina), // csv
+                        typeof(CamaraSaoPaulo), // xml
+                        typeof(CamaraPernambuco), // xml
+                        //typeof(CamaraMinasGerais), // xml api
+                        //// typeof(CamaraRioGrandeDoSul), // nada
+                        typeof(CamaraParana), // rest api mensal
                         typeof(CamaraGoias), // rest api mensal
                         typeof(CamaraBahia), // crawler
                         typeof(CamaraCeara), // csv mensal

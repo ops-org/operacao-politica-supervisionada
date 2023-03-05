@@ -166,12 +166,23 @@ namespace OPS.API
                     new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
                     {
                         Public = true,
-                        MaxAge = TimeSpan.FromHours(6)
+                        MaxAge = TimeSpan.FromHours(6),
+                        
                     };
 
                 context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
 
                 await next();
+            });
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = context =>
+                {
+                    const int durationInSeconds = 60 * 60 * 24;
+                    context.Context.Response.Headers[HeaderNames.CacheControl] =
+                        "public,max-age=" + durationInSeconds;
+                }
             });
 
             app.UseEndpoints(endpoints =>

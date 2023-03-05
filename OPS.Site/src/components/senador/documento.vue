@@ -264,11 +264,11 @@ export default {
       window.document.title = `OPS :: Deputado Federal - Recibo: ${(response.data.numero_documento || response.data.id_documento)}`;
       const doc = response.data;
 
-      const urlCamara = 'http://www.camara.gov.br/cota-parlamentar/';
+      const urlCamara = 'http://www.camara.leg.br/cota-parlamentar/';
 
       if (doc.url_documento) { // NF-e
         if (doc.url_documento.toLowerCase().indexOf('idedocumentofiscal') !== -1) {
-          doc.url_documento = doc.url_documento.toLowerCase().replace('http://camara.leg.br/', 'https://www.camara.gov.br/').replace('idedocumentofiscal', 'ideDocumentoFiscal');
+          doc.url_documento = doc.url_documento.toLowerCase().replace('idedocumentofiscal', 'ideDocumentoFiscal');
         } else {
           doc.url_documento_nfe = doc.url_documento.toLowerCase();
         }

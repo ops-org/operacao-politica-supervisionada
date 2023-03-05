@@ -275,7 +275,7 @@ export default {
       window.document.title = `OPS :: Deputado Federal - Recibo: ${(response.data.numero_documento || response.data.id_documento)}`;
       const doc = response.data;
 
-      const urlCamara = 'http://www.camara.gov.br/cota-parlamentar/';
+      const urlCamara = 'http://www.camara.leg.br/cota-parlamentar/';
 
       if (doc.link === 2) { // NF-e
         doc.url_documento = `${urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal=${doc.id_documento}`;

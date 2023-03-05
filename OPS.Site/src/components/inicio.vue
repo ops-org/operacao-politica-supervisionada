@@ -136,7 +136,7 @@
         <p>
           Cada deputado federal tem a seu dispor valores mensais que vão de
           <a
-            href="http://www.camara.gov.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
+            href="http://www.camara.leg.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
             target="_blank"
             rel="nofollow"
             title="Clique para visualizar a lista oficial de valores por estado"
