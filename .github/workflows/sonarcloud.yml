@@ -58,6 +58,6 @@ jobs:
           dotnet build ./OPS.API/OPS.API.csproj --configuration Release
           dotnet restore ./OPS.Importador/OPS.Importador.csproj
           dotnet build ./OPS.Importador/OPS.Importador.csproj --configuration Release
-          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          dotnet-coverage collect "dotnet test ./OPS.Core.Test/OPS.Core.Test.csproj" -f xml -o "coverage.xml"
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
     
