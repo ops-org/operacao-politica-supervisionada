@@ -52,7 +52,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin /k:"ops-org_operacao-politica-supervisionada" /o:"ops-org" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet restore ./src/OPS.sln
-          dotnet build ./src/OPS.sln --configuration Release
+          dotnet restore ./OPS.sln
+          dotnet build ./OPS.sln --configuration Release
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
     
