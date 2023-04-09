@@ -36,7 +36,7 @@ namespace OPS.API.Controllers
             var ReplyTo = new MailAddress(form.GetProperty("email").ToString(), form.GetProperty("name").ToString());
 
 #if DEBUG
-            objEmailTo.Add(new MailAddress("vanderleidenir@hotmail.com", "Vanderlei Denir"));
+            objEmailTo.Add(new MailAddress("vanderlei@ops.net.br", "Vanderlei"));
 #else
 			objEmailTo.Add(new MailAddress("luciobig@ops.net.br", "Lúcio Big"));
 #endif

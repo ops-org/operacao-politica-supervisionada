@@ -1115,7 +1115,7 @@ WHERE presencas = 0");
             "txNomeParlamentar","cpf","ideCadastro","nuCarteiraParlamentar","nuLegislatura","sgUF","sgPartido","codLegislatura",
             "numSubCota","txtDescricao","numEspecificacaoSubCota","txtDescricaoEspecificacao","txtFornecedor","txtCNPJCPF",
             "txtNumero","indTipoDocumento","datEmissao","vlrDocumento","vlrGlosa","vlrLiquido","numMes","numAno","numParcela",
-            "txtPassageiro","txtTrecho","numLote","numRessarcimento","vlrRestituicao","nuDeputadoId","ideDocumento","urlDocumento"
+            "txtPassageiro","txtTrecho","numLote","numRessarcimento","datPagamentoRestituicao", "vlrRestituicao","nuDeputadoId","ideDocumento","urlDocumento"
         };
 
         protected override void ProcessarDespesas(string file, int ano)
@@ -1235,14 +1235,14 @@ INSERT INTO ops_tmp.cf_despesa_temp (
     descricaoEspecificacao, fornecedor, cnpjCPF, numero, tipoDocumento, 
     dataEmissao, valorDocumento, valorGlosa, valorLiquido, mes, 
     ano, parcela, passageiro, trecho, lote, 
-    ressarcimento, restituicao, numeroDeputadoID, idDocumento, urlDocumento, hash
+    ressarcimento, restituicao, datPagamentoRestituicao, numeroDeputadoID, idDocumento, urlDocumento, hash
 ) VALUES (
     @txNomeParlamentar, @cpf, @ideCadastro, @nuCarteiraParlamentar, @nuLegislatura, @sgUF, 
     @sgPartido, @codLegislatura, @numSubCota, @txtDescricao, @numEspecificacaoSubCota, 
     @txtDescricaoEspecificacao, @txtFornecedor, @txtCNPJCPF, @txtNumero, @indTipoDocumento, 
     @datEmissao, @vlrDocumento, @vlrGlosa, @vlrLiquido, @numMes, 
     @numAno, @numParcela, @txtPassageiro, @txtTrecho, @numLote, 
-    @numRessarcimento, @vlrRestituicao, @nuDeputadoId, @ideDocumento, @urlDocumento, @hash
+    @numRessarcimento, @vlrRestituicao, @datPagamentoRestituicao, @nuDeputadoId, @ideDocumento, @urlDocumento, @hash
 )");
                         if (linhaInserida++ == 10000)
                         {
@@ -1615,7 +1615,7 @@ SET SQL_BIG_SELECTS=0;
             var Legislaturas = connection.Query<int>("SELECT DISTINCT codigoLegislatura FROM ops_tmp.cf_despesa_temp");
             if (!Legislaturas.Any())
             {
-                Legislaturas = new List<int>() { 55, 56 };
+                Legislaturas = new List<int>() { 55, 56, 57 };
             };
 
             foreach (var legislatura in Legislaturas)
@@ -1701,7 +1701,7 @@ where id=@id_cf_deputado", new
 					SELECT 
 						l.id_cf_deputado,
 						sum(l.valor_liquido) as valor_total
-					FROM  cf_despesa_56 l
+					FROM  cf_despesa_57 l
 					GROUP BY l.id_cf_deputado
 					order by valor_total desc 
 					limit 4

@@ -184,7 +184,7 @@
       <div class="resumo-gastos vld-parent" ref="CampeoesGastos">
         <h4>
           Deputados Federais
-          <small>(Desde fevereiro de 2019)</small>
+          <small>(Desde fevereiro de 2023)</small>
         </h4>
         <div class="row">
           <div
@@ -229,7 +229,7 @@
         <br />
         <h4>
           Senadores
-          <small>(Desde fevereiro de 2019)</small>
+          <small>(Desde fevereiro de 2023)</small>
         </h4>
         <div class="row">
           <div

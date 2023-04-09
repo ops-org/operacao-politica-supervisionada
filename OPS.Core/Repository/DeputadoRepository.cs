@@ -1126,8 +1126,8 @@ namespace OPS.Core.DAO
         private static void AdicionaFiltroPeriodo(DataTablesRequest request, StringBuilder sqlSelect)
         {
             int periodo = Convert.ToInt32(request.Filters["Periodo"].ToString());
-            int legislatura = 56;
-            if (periodo > 50 && periodo < 56)
+            int legislatura = 57;
+            if (periodo > 50)
                 legislatura = periodo;
 
             sqlSelect = sqlSelect.Replace("##LEG##", legislatura.ToString());

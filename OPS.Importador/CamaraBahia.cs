@@ -69,8 +69,16 @@ namespace OPS.Importador
                 var subDocument = taskSub.Result;
                 if (subDocument.StatusCode != HttpStatusCode.OK)
                 {
-                    Console.WriteLine($"{deputado.UrlPerfil} {subDocument.StatusCode}");
-                    continue;
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
+
+                    taskSub = context.OpenAsync(deputado.UrlPerfil);
+                    taskSub.Wait();
+                    subDocument = taskSub.Result;
+                    if (subDocument.StatusCode != HttpStatusCode.OK)
+                    {
+                        Console.WriteLine($"{deputado.UrlPerfil} {subDocument.StatusCode}");
+                        continue;
+                    };
                 };
 
                 var detalhes = subDocument.QuerySelectorAll(".dados-deputado p");

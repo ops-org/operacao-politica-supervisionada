@@ -236,6 +236,7 @@
         despesas: [],
         fornecedores: [],
         anos: [
+            {id: 2023, text: "2023" },
             {id: 2022, text: "2022" },
             {id: 2021, text: "2021" },
             {id: 2020, text: "2020" },

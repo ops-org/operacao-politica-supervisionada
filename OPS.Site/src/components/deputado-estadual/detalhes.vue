@@ -31,7 +31,7 @@
                         </p> -->
                         <p class="mb-0">
                             <strong>Cota Parlamentar (Acumulado): </strong>
-                            <a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=56&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_estadual.valor_total_ceap}}</a>
+                            <a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_estadual.valor_total_ceap}}</a>
                         </p>
                         <p class="mb-0" v-if="deputado_estadual.perfil || deputado_estadual.site">
                             <strong>Visualizar: </strong>
@@ -50,7 +50,7 @@
                 </div>
             </div>
         </div>
-  
+
         <div class="card mb-3" v-if="MaioresFornecedores.length > 0">
             <div class="card-header bg-light">
                 Gastos anuais com a cota parlamentar
@@ -62,14 +62,14 @@
 
         <div class="alert alert-warning" role="alert" v-if="deputado_estadual.sigla_estado=='SC'">
           Algumas notas podem não ter um fornecedor identificado e com isso não serão apresenatadas abaixo!<br>
-          Clique <a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=56&Agrupamento=6'">aqui</a> para ver a lista de notas/recibos do parlamentar na legislatura atual.
+          Clique <a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'">aqui</a> para ver a lista de notas/recibos do parlamentar na legislatura atual.
         </div>
 
         <div class="row form-group" v-if="MaioresFornecedores.length > 0">
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=56&Agrupamento=3'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=3'">Ver lista completa</a>
                         Maiores fornecedores
                     </div>
                     <div class="card-body maiores-fornecedores vld-parent" ref="MaioresFornecedores">
@@ -84,7 +84,7 @@
                                 <tbody>
                                     <tr v-for="row in MaioresFornecedores" :key="row.id_fornecedor">
                                         <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td class="text-right"><a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=56&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=57&Agrupamento=6'">{{row.valor_total}}</a></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -95,7 +95,7 @@
              <div class="col-xs-12 col-sm-6" >
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=56&Agrupamento=6'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'">Ver lista completa</a>
                         Maiores Notas/Recibos
                     </div>
                     <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
@@ -119,7 +119,7 @@
                     </div>
                 </div>
             </div>
-       
+
             <!-- <div class="col-sm-12" v-if="id>100">
               <div class="card mb-3" id="deputados-presenca">
                   <div class="card-header bg-light">

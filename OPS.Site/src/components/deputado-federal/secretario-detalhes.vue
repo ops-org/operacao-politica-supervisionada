@@ -25,8 +25,8 @@
 
     <p style="padding-bottom: 20px;">
         Fonte: <a
-          v-bind:href="'https://www.camara.leg.br/deputados/' + deputado.id_cf_deputado + '/pessoal-gabinete?ano=2022'"
-          target="_blank">Câmara de Deputados - Pessoal de gabinete 2022</a>
+          v-bind:href="'https://www.camara.leg.br/deputados/' + deputado.id_cf_deputado + '/pessoal-gabinete?ano=2023S'"
+          target="_blank">Câmara de Deputados - Pessoal de gabinete 2023</a>
     </p>
   </div>
 </template>

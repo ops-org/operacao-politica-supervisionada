@@ -78,7 +78,7 @@
                   v-bind:href="
                     '/deputado-federal?IdParlamentar=' +
                     id +
-                    '&Periodo=56&Agrupamento=6'
+                    '&Periodo=57&Agrupamento=6'
                   "
                   title="Clique para ver os gastos com cota parlamentar em detalhes"
                   >R$ {{ deputado_federal.valor_total_ceap }}</a
@@ -160,7 +160,7 @@
                 v-bind:href="
                   '/deputado-federal?IdParlamentar=' +
                   id +
-                  '&Periodo=56&Agrupamento=3'
+                  '&Periodo=57&Agrupamento=3'
                 "
                 >Ver lista completa</a
               >
@@ -202,7 +202,7 @@
                             id +
                             '&Fornecedor=' +
                             row.id_fornecedor +
-                            '&Periodo=56&Agrupamento=6'
+                            '&Periodo=7&Agrupamento=6'
                           "
                           >{{ row.valor_total }}</a
                         >
@@ -222,7 +222,7 @@
                 v-bind:href="
                   '/deputado-federal?IdParlamentar=' +
                   id +
-                  '&Periodo=56&Agrupamento=6'
+                  '&Periodo=57&Agrupamento=6'
                 "
                 >Ver lista completa</a
               >

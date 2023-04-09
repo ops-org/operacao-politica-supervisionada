@@ -7,7 +7,8 @@
         <div class="form-group col-md-2">
           <label>Ano</label>
           <select class="form-control input-sm" v-model="filtro.ano">
-            <option value="2022" selected>2022</option>
+            <option value="2023" selected>2023</option>
+            <option value="2022">2022</option>
             <option value="2021">2021</option>
             <option value="2020">2020</option>
             <option value="2019">2019</option>
@@ -179,7 +180,7 @@ export default {
       valorTotal: null,
       filtro: {
         agrupar: '7',
-        ano: '2022',
+        ano: '2023',
         mes: '',
         lotacao: [],
         cargo: [],
@@ -259,7 +260,7 @@ export default {
     const vm = this;
 
     vm.filtro.agrupar = vm.qs.ag || '7';
-    vm.filtro.ano = vm.qs.an || '2022';
+    vm.filtro.ano = vm.qs.an || '2023';
     vm.filtro.mes = vm.qs.ms || '';
     vm.filtro.lotacao = (vm.qs.lt ? vm.qs.lt.split(',') : []);
     vm.filtro.cargo = (vm.qs.cr ? vm.qs.cr.split(',') : []);
@@ -587,7 +588,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        ano: '2022',
+        ano: '2023',
         mes: '',
         lotacao: [],
         cargo: [],

@@ -1195,7 +1195,7 @@ namespace OPS.Importador
 						l.id_sf_senador,
 						sum(l.valor) as valor_total
 					FROM  sf_despesa l
-					where l.ano_mes >= 201902 
+					where l.ano_mes >= 202302 
 					GROUP BY l.id_sf_senador
 					order by valor_total desc 
 					limit 4

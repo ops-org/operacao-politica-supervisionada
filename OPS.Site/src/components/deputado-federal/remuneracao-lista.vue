@@ -8,7 +8,8 @@
           <label>Ano</label>
           <select class="form-control form-control-sm" v-model="filtro.ano">
             <option value=""></option>
-            <option value="2022" selected>2022</option>
+            <option value="2023" selected>2023</option>
+            <option value="2022">2022</option>
             <option value="2021">2021</option>
             <option value="2020">2020</option>
             <option value="2019">2019</option>
@@ -75,7 +76,7 @@
         <div class="form-group col-md-5">
           <label>Deputado(a)</label>
           <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
-            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id"
             :searchable="true" :loading="isLoadingParlamentar" :internal-search="false" @search-change="BuscaParlamentar">
 
             <template slot="selection" slot-scope="{ values, isOpen }">
@@ -88,7 +89,7 @@
         <div class="form-group col-md-5">
           <label>Funcionário(a)</label>
           <multiselect v-model="filtro.funcionario" :options="funcionarios" :multiple="true" placeholder="Selecione"
-            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id"
             :searchable="true" :loading="isLoadingFuncionario" :internal-search="false" @search-change="BuscaFuncionario">
 
             <template slot="selection" slot-scope="{ values, isOpen }">
@@ -175,7 +176,7 @@ export default {
       valorTotal: null,
       filtro: {
         agrupar: '3',
-        ano: '2022',
+        ano: '2023',
         mes: '',
         grupo_funcional: [],
         cargo: [],
@@ -598,7 +599,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        ano: '2022',
+        ano: '2023',
         mes: '',
         grupo_funcional: [],
         cargo: [],

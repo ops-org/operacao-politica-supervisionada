@@ -9,10 +9,11 @@
         <div class="form-group col-md-4">
           <label>Legislatura</label>
           <select class="form-control input-sm" v-model="filtro.periodo">
-            <option value="56">2019 - 2023</option>
-            <option value="55">2015 - 2019</option>
-            <option value="54">2011 - 2015</option>
-            <option value="53">2007 - 2011</option>
+            <option value="57">57ª (fev/2023 à jan/2027)</option>
+            <option value="56">56ª (fev/2019 à jan/2023)</option>
+            <option value="55">55ª (fev/2015 à jan/2019)</option>
+            <option value="54">54ª (fev/2011 à jan/2015)</option>
+            <option value="53">53ª (fev/2007 à jan/2011)</option>
           </select>
         </div>
         <div class="form-group col-md-4">
@@ -433,7 +434,7 @@ export default {
       deputado_federal: {},
       filtro: {
         agrupar: "1",
-        periodo: "56",
+        periodo: "57",
         parlamentar: [],
         despesa: [],
         estado: [],
@@ -570,7 +571,7 @@ export default {
     }
 
     vm.filtro.agrupar = vm.qs.Agrupamento || "1";
-    vm.filtro.periodo = vm.qs.Periodo || "56";
+    vm.filtro.periodo = vm.qs.Periodo || "57";
     vm.filtro.despesa = vm.qs.Despesa ? vm.qs.Despesa.split(",") : [];
     vm.filtro.estado = vm.qs.Estado ? vm.qs.Estado.split(",") : [];
     vm.filtro.partido = vm.qs.Partido ? vm.qs.Partido.split(",") : [];
@@ -607,7 +608,7 @@ export default {
       axios
         .post(`${process.env.VUE_APP_API}/deputadoestadual/pesquisa`, {
           busca: busca,
-          periodo: parseInt(this.filtro.periodo || "56"),
+          periodo: parseInt(this.filtro.periodo || "57"),
         })
         .then((response) => {
           this.parlamentares = response.data;
@@ -961,7 +962,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: "1",
-        periodo: "56",
+        periodo: "57",
         parlamentar: [],
         despesa: [],
         estado: [],

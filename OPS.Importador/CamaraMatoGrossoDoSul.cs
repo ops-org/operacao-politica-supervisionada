@@ -198,7 +198,7 @@ namespace OPS.Importador
                 }
 
 
-                if (document.QuerySelector(".paginate-button-next").ClassList.Contains("disabled")) break;
+                if (document.QuerySelector(".paginate-button-next")?.ClassList.Contains("disabled") ?? true) break;
             }
         }
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCaching;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,6 +94,8 @@ namespace OPS.API
                 options.Providers.Add<BrotliCompressionProvider>();
             });
 
+            // https://github.com/KevinDockx/HttpCacheHeaders
+            services.AddHttpCacheHeaders();
             //services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
         }
@@ -159,21 +162,8 @@ namespace OPS.API
             // Enable compression
             app.UseResponseCompression();
 
-            app.UseResponseCaching();
-            app.Use(async (context, next) =>
-            {
-                context.Response.GetTypedHeaders().CacheControl =
-                    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
-                    {
-                        Public = true,
-                        MaxAge = TimeSpan.FromHours(6),
-                        
-                    };
-
-                context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
-
-                await next();
-            });
+            app.UseHttpCacheHeaders();
+           
 
             app.UseStaticFiles(new StaticFileOptions
             {

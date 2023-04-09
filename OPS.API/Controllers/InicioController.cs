@@ -16,7 +16,6 @@ namespace OPS.API.Controllers
             return InicioRepository.ParlamentarResumoGastos();
         }
 
-        [ResponseCache(VaryByQueryKeys = new[] { "q" })]
         [HttpGet]
         [Route("Busca")]
         public async Task<dynamic> Busca([FromQuery] string value)

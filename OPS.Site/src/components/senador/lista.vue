@@ -12,6 +12,7 @@
             <option value="3">Últimos 4 Meses</option>
             <option value="4">Ano Atual</option>
             <option value="5">Ano Anterior</option> -->
+            <option value="57">57ª (fev/2023 à jan/2027)</option>
             <option value="56">56º (fev/2019 à jan/2023)</option>
             <option value="55">55º (fev/2015 à jan/2019)</option>
             <option value="54">54º (fev/2011 à jan/2015)</option>
@@ -22,7 +23,7 @@
         <div class="form-group col-md-4">
           <label>Senador</label>
           <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
-            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id"
             :searchable="true" :loading="isLoadingParlamentar" :internal-search="false" @search-change="BuscaParlamentar">
 
             <template slot="selection" slot-scope="{ values, isOpen }">
@@ -318,7 +319,7 @@ export default {
       senador: {},
       filtro: {
         agrupar: '1',
-        periodo: '56',
+        periodo: '57',
         parlamentar: [],
         despesa: [],
         estado: [],
@@ -412,7 +413,7 @@ export default {
     }
 
     vm.filtro.agrupar = vm.qs.Agrupamento || '1';
-    vm.filtro.periodo = vm.qs.Periodo || '56';
+    vm.filtro.periodo = vm.qs.Periodo || '57';
     vm.filtro.despesa = (vm.qs.Despesa ? vm.qs.Despesa.split(',') : []);
     vm.filtro.estado = (vm.qs.Estado ? vm.qs.Estado.split(',') : []);
     vm.filtro.partido = (vm.qs.Partido ? vm.qs.Partido.split(',') : []);
@@ -770,7 +771,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        periodo: '56',
+        periodo: '57',
         parlamentar: [],
         despesa: [],
         estado: [],

@@ -90,7 +90,7 @@ namespace OPS.Importador
                     {
                         typeof(Senado), // csv
                         typeof(CamaraFederal), // csv
-                        typeof(CamaraDistritoFederal), // xlsx
+                        //typeof(CamaraDistritoFederal), // xlsx
                         typeof(CamaraSantaCatarina), // csv
                         typeof(CamaraSaoPaulo), // xml
                         typeof(CamaraPernambuco), // xml

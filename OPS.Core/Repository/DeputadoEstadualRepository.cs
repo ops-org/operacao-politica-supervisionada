@@ -1085,6 +1085,10 @@ namespace OPS.Core.DAO
 
             switch (periodo)
             {
+                case 57:
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 202302 AND 202701");
+                    break;
+
                 case 56:
                     sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 201902 AND 202301");
                     break;
