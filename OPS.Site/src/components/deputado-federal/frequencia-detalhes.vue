@@ -47,7 +47,7 @@ export default {
           sortable: true,
           render: (data, type, full) => {
             if (type === 'display') {
-              return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a>`;
+              return `<a href="/#/deputado-federal/${full.id_cf_deputado}">${data}</a>`;
             }
             return data;
           },

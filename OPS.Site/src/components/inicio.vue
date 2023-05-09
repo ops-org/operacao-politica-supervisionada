@@ -278,13 +278,13 @@
         <h2>Escolha uma casa legislativa para explorar</h2>
         <div class="text-xs-center">
           <a
-            href="/deputado-federal"
+            href="/#/deputado-federal"
             class="btn btn-danger btn-lg"
             style="margin-bottom: 15px"
             >Câmara dos Deputados</a
           >&nbsp;
           <a
-            href="/senador"
+            href="/#/senador"
             class="btn btn-danger btn-lg"
             style="margin-bottom: 15px"
             >Senado Federal</a

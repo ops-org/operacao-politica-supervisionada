@@ -550,7 +550,7 @@ export default {
                 label: 'Parlamentar',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/senador/${full.id_sf_senador}">${data}</a>`;
+                    return `<a href="/#/senador/${full.id_sf_senador}">${data}</a>`;
                   }
                   return data;
                 },
@@ -625,7 +625,7 @@ export default {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                    return `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
@@ -725,7 +725,7 @@ export default {
                 label: 'Fornecedor',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                    return `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
@@ -735,7 +735,7 @@ export default {
                 label: 'Parlamentar',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/senador/${full.id_sf_senador}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
+                    return `<a href="/#/senador/${full.id_sf_senador}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
                   }
                   return data;
                 },

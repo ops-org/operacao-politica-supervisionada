@@ -33,7 +33,7 @@ import Erro404 from '@/components/erro/404';
 Vue.use(Router);
 
 const router = new Router({
-  mode: 'history',
+  mode: 'hash',
   routes: [
     {
       path: '/',

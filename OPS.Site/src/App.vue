@@ -27,17 +27,17 @@
               class="dropdown-menu dropdown-menu-left"
               aria-labelledby="nav-camara"
             >
-              <a class="dropdown-item" href="/deputado-federal/conheca"
+              <a class="dropdown-item" href="/#/deputado-federal/conheca"
                 >Conheça os deputados</a
               >
-              <a class="dropdown-item" href="/deputado-federal"
+              <a class="dropdown-item" href="/#/deputado-federal"
                 >Cota parlamentar (CEAP)</a
               >
-              <a class="dropdown-item" href="/deputado-federal/frequencia"
+              <a class="dropdown-item" href="/#/deputado-federal/frequencia"
                 >Frequência</a
               >
-              <!-- <a class="dropdown-item" href="/deputado-federal/secretario">Secretários</a> -->
-              <a class="dropdown-item" href="/deputado-federal/remuneracao"
+              <!-- <a class="dropdown-item" href="/#/deputado-federal/secretario">Secretários</a> -->
+              <a class="dropdown-item" href="/#/deputado-federal/remuneracao"
                 >Remuneração/Subsídio</a
               >
             </div>
@@ -57,13 +57,13 @@
               class="dropdown-menu dropdown-menu-left"
               aria-labelledby="nav-senado"
             >
-              <a class="dropdown-item" href="/senador/conheca"
+              <a class="dropdown-item" href="/#/senador/conheca"
                 >Conheça os senadores</a
               >
-              <a class="dropdown-item" href="/senador"
+              <a class="dropdown-item" href="/#/senador"
                 >Cota Parlamentar (CEAPS)</a
               >
-              <a class="dropdown-item" href="/senado/remuneracao"
+              <a class="dropdown-item" href="/#/senado/remuneracao"
                 >Remuneração/Subsídio</a
               >
             </div>
@@ -83,7 +83,7 @@
               class="dropdown-menu dropdown-menu-left"
               aria-labelledby="nav-assempleias-legistativas"
             >
-              <a class="dropdown-item" href="/deputado-estadual"
+              <a class="dropdown-item" href="/#/deputado-estadual"
                 >Cota parlamentar (CEAP)</a
               >
             </div>
@@ -99,7 +99,7 @@
           
           
 
-          <a id="nav-sobre" class="p-2 text-dark" href="/sobre">Sobre</a>
+          <a id="nav-sobre" class="p-2 text-dark" href="/#/sobre">Sobre</a>
           <a
             class="p-2 text-dark social"
             href="https://t.me/joinchat/JxqhEVALOgCGl3o1Mvrg0Q"
@@ -164,7 +164,7 @@
             OPS - Operação Política Supervisionada
           </div>
           <div class="col-sm-6 text-xs-center text-right">
-            <a href="/sobre">Sobre</a>
+            <a href="/#/sobre">Sobre</a>
             <a
               href="https://feedback.userreport.com/9cf4c59a-d438-48b0-aa5e-e16f549b9c8c/"
               onclick="DeixarUmaIdeia(event, this)"

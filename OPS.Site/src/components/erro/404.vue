@@ -3,7 +3,7 @@
     <h2>404 - Esta página não existe</h2>
     <p>
       Você pode ter digitado incorretamente o endereço ou a página pode ter sido movida. Gostaria de voltar para o
-      <a href="/">início</a>?
+      <a href="/#/">início</a>?
     </p>
     <img src="/img/404.gif" alt="Travolta está desesperadamente perdido" />
   </div>

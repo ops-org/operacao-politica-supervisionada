@@ -47,7 +47,7 @@ export default {
           label: '&nbsp;',
           render: (data, type) => {
             if (type === 'display') {
-              return `<a href="/deputado-federal/${data}/secretario" class="btn btn-primary btn-sm">Ver secretários</a>`;
+              return `<a href="/#/deputado-federal/${data}/secretario" class="btn btn-primary btn-sm">Ver secretários</a>`;
             }
             return data;
           },

@@ -562,7 +562,7 @@ export default {
                 label: 'Custo Total',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/senado/remuneracao/${full.id}">${data}</a>`;
+                    return `<a href="/#/senado/remuneracao/${full.id}">${data}</a>`;
                   }
                   return data;
                 },
