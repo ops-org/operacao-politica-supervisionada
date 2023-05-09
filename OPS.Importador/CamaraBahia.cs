@@ -67,7 +67,7 @@ namespace OPS.Importador
                 var taskSub = context.OpenAsync(deputado.UrlPerfil);
                 taskSub.Wait();
                 var subDocument = taskSub.Result;
-                if (subDocument.StatusCode != HttpStatusCode.OK)
+                if (subDocument.StatusCode != HttpStatusCode.OK || subDocument.ToHtml() != "<html><head></head><body></body></html>")
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(10));
 

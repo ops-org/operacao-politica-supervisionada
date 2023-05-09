@@ -31,7 +31,7 @@ namespace OPS.Core
 
         private static IRestResponse ReTry(RestClient client, IRestRequest request, int totalRetries)
         {
-            Log.Verbose("Tentativa {Tentativa} para a url {Url}", totalRetries, client.BaseUrl);
+            Log.Verbose("Tentativa {Tentativa} para a url {Url}", totalRetries, request.Resource);
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
             return ExecuteWithAutoRetry(client, request, totalRetries - 1);

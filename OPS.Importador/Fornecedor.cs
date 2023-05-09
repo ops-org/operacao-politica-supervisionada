@@ -328,7 +328,7 @@ SELECT MAX(DATA) as data FROM (
             }
 
             if (controle > 0)
-                logger.LogInformation($"{controle} - {mensagem}");
+                logger.LogInformation($"{controle} - {cnpj_cpf} - {mensagem}");
         }
 
         private int LocalizaInsereAtividade(IDbTransaction transaction, List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
