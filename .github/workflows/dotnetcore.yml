@@ -9,16 +9,29 @@ on:
 jobs:
   build:
 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
         
+    - uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    - name: Install .NET dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        dotnet restore ./OPS.API/OPS.API.csproj
+        dotnet restore ./OPS.Importador/OPS.Importador.csproj
+      
     - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
@@ -32,10 +45,7 @@ jobs:
       with:
         path: '**/node_modules'
         key: node-modules-${{ hashFiles('**/package-lock.json') }}
-            
-    - name: Install .NET dependencies
-      run: dotnet restore
-    
+          
     - name: Install Node.js dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: npm ci
@@ -53,4 +63,38 @@ jobs:
     - name: Publish .NET
       run: |
         dotnet publish OPS.API --configuration Release -o ops-api
+        rm -r ops-api/runtimes
         dotnet publish OPS.Importador --configuration Release -o ops-importador
+        rm -r ops-importador/runtimes
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ops-api
+        path: ops-api/**
+        if-no-files-found: error
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ops-importador
+        path: ops-importador/**
+        if-no-files-found: error
+
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, king-host]
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: ops-api
+        path: ~/ops-api/
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: ops-importador
+        path: ~/ops-importador/
+
+    - name: Deploy dos arquivos na pasta final
+      run: |
+        /home/vanderlei/ops-importador-deploy.sh
+        /home/vanderlei/ops-api-deploy.sh

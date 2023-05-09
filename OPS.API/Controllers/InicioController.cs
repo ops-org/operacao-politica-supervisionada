@@ -13,16 +13,16 @@ namespace OPS.API.Controllers
         [Route("ParlamentarResumoGastos")]
         public dynamic ParlamentarResumoGastos()
         {
-            return InicioDao.ParlamentarResumoGastos();
+            return InicioRepository.ParlamentarResumoGastos();
         }
 
         [HttpGet]
         [Route("Busca")]
         public async Task<dynamic> Busca([FromQuery] string value)
         {
-            var oDeputadoDao = new DeputadoDao();
-            var oSenadorDao = new SenadorDao();
-            var oFornecedorDao = new FornecedorDao();
+            var oDeputadoDao = new DeputadoRepository();
+            var oSenadorDao = new SenadorRepository();
+            var oFornecedorDao = new FornecedorRepository();
 
             return new
             {

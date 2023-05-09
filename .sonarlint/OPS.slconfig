@@ -1,0 +1,27 @@
+{
+  "ServerUri": "https://sonarcloud.io/",
+  "Organization": {
+    "Key": "ops-org",
+    "Name": "Operação Política Supervisionada"
+  },
+  "ProjectKey": "ops-org_operacao-politica-supervisionada",
+  "ProjectName": "operacao-politica-supervisionada",
+  "Profiles": {
+    "CSharp": {
+      "ProfileKey": "AYavZcsPnK9-HZYArlgE",
+      "ProfileTimestamp": "2023-02-22T15:28:17Z"
+    },
+    "Secrets": {
+      "ProfileKey": "AYavZcsPnK9-HZYArlgA",
+      "ProfileTimestamp": "2023-01-25T09:40:14Z"
+    },
+    "Js": {
+      "ProfileKey": "AYavZcsPnK9-HZYArlgG",
+      "ProfileTimestamp": "2023-01-25T09:26:55Z"
+    },
+    "Ts": {
+      "ProfileKey": "AYavZcsQnK9-HZYArlgS",
+      "ProfileTimestamp": "2023-01-25T09:47:40Z"
+    }
+  }
+}

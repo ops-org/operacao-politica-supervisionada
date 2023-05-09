@@ -9,18 +9,18 @@ namespace OPS.API.Controllers
     //[CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class EstadoController : Controller
     {
-        EstadoDao dao;
+        EstadoRepository repository;
 
-        public EstadoController()
+        public EstadoController(EstadoRepository repository)
         {
-            dao = new EstadoDao();
+            this.repository = repository;
         }
 
         [HttpGet]
         //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<IActionResult> Consultar()
         {
-            var result = await dao.Consultar();
+            var result = await repository.Consultar();
 
             return Ok(result);
         }

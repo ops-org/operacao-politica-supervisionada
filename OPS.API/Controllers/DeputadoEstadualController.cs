@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.DTO;
+using System.Threading.Tasks;
 
 namespace OPS.API.Controllers
 {
@@ -9,83 +11,62 @@ namespace OPS.API.Controllers
     // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoEstadualController : Controller
     {
-        DeputadoEstadualDao dao;
+        DeputadoEstadualRepository dao;
 
         public DeputadoEstadualController()
         {
-            dao = new DeputadoEstadualDao();
+            dao = new DeputadoEstadualRepository();
         }
 
-        [HttpGet]
-        [Route("{id:int}")]
-        public dynamic Consultar(int id)
+        [HttpGet("{id:int}")]
+        public async Task<dynamic> Consultar(int id)
         {
-            return dao.Consultar(id);
+            return await dao.Consultar(id);
         }
 
-        [HttpGet]
-        [Route("")]
+        [HttpPost("Lista")]
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-        public dynamic Pesquisa()
+        public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
         {
-            return dao.Pesquisa();
+            return await dao.Lista(filtro);
         }
 
-        [HttpGet]
-        [Route("Lancamentos")]
-        public dynamic Lancamentos([FromQuery] FiltroParlamentarDTO filtro)
-        {
-            return dao.Lancamentos(filtro);
-        }
-
-        [HttpGet]
-        [Route("TipoDespesa")]
+        [HttpPost("Pesquisa")]
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-        public dynamic TipoDespesa()
+        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro)
         {
-            return dao.TipoDespesa();
+            return await dao.Pesquisa(filtro);
         }
 
-        [HttpGet]
-        [Route("{id:int}/GastosPorAno")]
-        public dynamic GastosPorAno(int id)
+        [HttpPost("Lancamentos")]
+        public async Task<dynamic> Lancamentos(DataTablesRequest request)
         {
-            return dao.GastosPorAno(id);
+            return await dao.Lancamentos(request);
         }
 
-        //[HttpGet]
-        //[Route("Documento/{id:int}")]
-        //public dynamic Documento(int id)
-        //{
-        //	return dao.Documento(id);
-        //}
-
-        [HttpGet]
-        [Route("{id:int}/MaioresNotas")]
-        public dynamic MaioresNotas(int id)
+        [HttpGet("TipoDespesa")]
+        // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
+        public async Task<dynamic> TipoDespesa()
         {
-            return dao.MaioresNotas(id);
+            return await dao.TipoDespesa();
         }
 
-        [HttpGet]
-        [Route("{id:int}/MaioresFornecedores")]
-        public dynamic MaioresFornecedores(int id)
+        [HttpGet("{id:int}/MaioresNotas")]
+        public async Task<dynamic> MaioresNotas(int id)
         {
-            return dao.MaioresFornecedores(id);
+            return await dao.MaioresNotas(id);
         }
 
-        [HttpGet]
-        [Route("SenadoResumoMensal")]
-        public dynamic SenadoResumoMensal()
+        [HttpGet("{id:int}/MaioresFornecedores")]
+        public async Task<dynamic> MaioresFornecedores(int id)
         {
-            return dao.SenadoResumoMensal();
+            return await dao.MaioresFornecedores(id);
         }
 
-        [HttpGet]
-        [Route("SenadoResumoAnual")]
-        public dynamic SenadoResumoAnual()
+        [HttpGet("{id:int}/GastosPorAno")]
+        public async Task<dynamic> GastosPorAno(int id)
         {
-            return dao.SenadoResumoAnual();
+            return await dao.GastosPorAno(id);
         }
     }
 }

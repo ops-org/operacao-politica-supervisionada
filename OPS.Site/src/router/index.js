@@ -14,6 +14,9 @@ import DeputadoFederalRemuneracaoLista from '@/components/deputado-federal/remun
 import DeputadoFederalRemuneracaoDetalhes from '@/components/deputado-federal/remuneracao-detalhes';
 import DeputadoFederalDocumento from '@/components/deputado-federal/documento';
 
+import DeputadoEstadualLista from '@/components/deputado-estadual/lista';
+import DeputadoEstadualDetalhes from '@/components/deputado-estadual/detalhes';
+
 import SenadorLista from '@/components/senador/lista';
 import SenadorDetalhes from '@/components/senador/detalhes';
 import SenadorConheca from '@/components/senador/conheca';
@@ -21,6 +24,8 @@ import SenadoRemuneracaoLista from '@/components/senador/remuneracao-lista';
 import SenadoRemuneracaoDetalhes from '@/components/senador/remuneracao-detalhes';
 
 import FornecedorDetalhes from '@/components/fornecedor/detalhes';
+
+import PresidenciaLista from '@/components/presidencia/lista';
 
 import Sobre from '@/components/sobre';
 import Erro404 from '@/components/erro/404';
@@ -99,6 +104,18 @@ const router = new Router({
       props: route => ({ id: parseInt(route.params.id, 10) }),
     },
     {
+      path: '/deputado-estadual',
+      name: 'deputado-estadual-lista',
+      component: DeputadoEstadualLista,
+      props: route => ({ qs: route.query }),
+    },
+    {
+      path: '/deputado-estadual/:id',
+      name: 'deputado-estadual-detalhes',
+      component: DeputadoEstadualDetalhes,
+      props: route => ({ id: parseInt(route.params.id, 10) }),
+    },
+    {
       path: '/senador',
       name: 'senador-lista',
       component: SenadorLista,
@@ -133,6 +150,12 @@ const router = new Router({
       name: 'fornecedor-detalhes',
       component: FornecedorDetalhes,
       props: route => ({ id: parseInt(route.params.id, 10) }),
+    },
+    {
+      path: '/presidencia',
+      name: 'presidencia',
+      component: PresidenciaLista,
+      props: route => ({ qs: route.query }),
     },
     {
       path: '/sobre',

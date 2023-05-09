@@ -12,6 +12,7 @@
             <option value="3">Últimos 4 Meses</option>
             <option value="4">Ano Atual</option>
             <option value="5">Ano Anterior</option>-->
+            <option value="57">57ª (fev/2023 à jan/2027)</option>
             <option value="56">56º (fev/2019 à jan/2023)</option>
             <option value="55">55º (fev/2015 à jan/2019)</option>
             <option value="54">54º (fev/2011 à jan/2015)</option>
@@ -20,12 +21,25 @@
         </div>
         <div class="form-group col-md-4">
           <label>Deputado / Liderança</label>
-          <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
-            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
-            :searchable="true" :loading="isLoadingParlamentar" :internal-search="false" @search-change="BuscaParlamentar">
-
+          <multiselect
+            v-model="filtro.parlamentar"
+            :options="parlamentares"
+            :multiple="true"
+            placeholder="Selecione"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            label="text"
+            track-by="id"
+            :searchable="true"
+            :loading="isLoadingParlamentar"
+            :internal-search="false"
+            @search-change="BuscaParlamentar"
+          >
             <template slot="selection" slot-scope="{ values, isOpen }">
-              <span class="multiselect__single" v-if="values.length > 1 && !isOpen">{{ values.length }} item(ns) selecionado(s)</span>
+              <span class="multiselect__single" v-if="values.length > 1 && !isOpen"
+                >{{ values.length }} item(ns) selecionado(s)</span
+              >
             </template>
             <span slot="noResult">Oops! Nenhum resultado encontrado.</span>
             <span slot="noOptions">Digite o nome do parlamentar.</span>
@@ -78,7 +92,7 @@
               <button
                 type="button"
                 class="btn btn-outline-secondary"
-                v-on:click="AbreModalConsultaFornecedor();"
+                v-on:click="AbreModalConsultaFornecedor()"
                 title="Localizar Fornecedor"
               >
                 <span class="fa fa-search"></span>
@@ -86,7 +100,7 @@
               <button
                 type="button"
                 class="btn btn-outline-secondary"
-                v-on:click="LimparFiltroFornecedor();"
+                v-on:click="LimparFiltroFornecedor()"
                 title="Limpar"
               >
                 <span class="fa fa-times"></span>
@@ -200,7 +214,7 @@
           <input
             type="button"
             id="ButtonPesquisar"
-            v-on:click="Pesquisar(false);"
+            v-on:click="Pesquisar(false)"
             value="Pesquisar"
             class="btn btn-danger btn-sm"
           />&nbsp;
@@ -208,7 +222,7 @@
             type="button"
             value="Limpar filtros"
             class="btn btn-light btn-sm"
-            v-on:click="LimparFiltros();"
+            v-on:click="LimparFiltros()"
           />
         </div>
       </div>
@@ -217,14 +231,21 @@
     <div class="row">
       <div class="col-md-12">
         <div class="alert alert-warning" v-if="valorTotal">
-          <strong>Valor Total no Período: R$ {{valorTotal}}</strong>
-          <small class="help-block mb-0">Valor total considerando os filtros aplicados acima</small>
+          <strong>Valor Total no Período: R$ {{ valorTotal }}</strong>
+          <small class="help-block mb-0"
+            >Valor total considerando os filtros aplicados acima</small
+          >
         </div>
       </div>
     </div>
 
     <div class="form-group" v-if="fields">
-      <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
+      <vdtnet-table
+        ref="table"
+        :fields="fields"
+        :opts="options"
+        @edit="AbrirModalDetalhar"
+      ></vdtnet-table>
     </div>
 
     <div class="modal" tabindex="-1" role="dialog" id="modal-detalhar" aria-hidden="true">
@@ -236,73 +257,141 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-            <div class="list-group list-group-flush">
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Deputado / Liderança</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Despesa</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Fornecedor</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Partido</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('5')">Estado</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('6')">Recibo</button>
+          <div class="list-group list-group-flush">
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('1')"
+            >
+              Deputado / Liderança
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('2')"
+            >
+              Despesa
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('3')"
+            >
+              Fornecedor
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('4')"
+            >
+              Partido
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('5')"
+            >
+              Estado
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('6')"
+            >
+              Recibo
+            </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="modal-fornecedor" class="modal fade" tabindex="-1" role="dialog" style="display: none;" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Pesquisar Fornecedor</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body text-justify">
-                    <form class="form-group">
-                        <div class="form-group">
-                            <label for="inputNome">Nome</label>
-                            <input type="text" class="form-control" v-model="fornecedor_busca.nome" placeholder="Informe um nome">
-                        </div>
-                        <div class="form-group">
-                            <label for="inputCpfCnpj">CPF / CNPJ</label>
-                            <input type="text" class="form-control" v-model="fornecedor_busca.cnpj" placeholder="Informe um CPF ou CNPJ">
-                        </div>
+    <div
+      id="modal-fornecedor"
+      class="modal fade"
+      tabindex="-1"
+      role="dialog"
+      style="display: none"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Pesquisar Fornecedor</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body text-justify">
+            <form class="form-group">
+              <div class="form-group">
+                <label for="inputNome">Nome</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="fornecedor_busca.nome"
+                  placeholder="Informe um nome"
+                />
+              </div>
+              <div class="form-group">
+                <label for="inputCpfCnpj">CPF / CNPJ</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="fornecedor_busca.cnpj"
+                  placeholder="Informe um CPF ou CNPJ"
+                />
+              </div>
 
-                        <button type="button" class="btn btn-primary" v-on:click="ConsultaFornecedor();">Pesquisar</button>
-                        <button type="reset" class="btn btn-light" v-on:click="LimparFiltroFornecedor();">Limpar</button>
-                    </form>
+              <button
+                type="button"
+                class="btn btn-primary"
+                v-on:click="ConsultaFornecedor()"
+              >
+                Pesquisar
+              </button>
+              <button
+                type="reset"
+                class="btn btn-light"
+                v-on:click="LimparFiltroFornecedor()"
+              >
+                Limpar
+              </button>
+            </form>
 
-                    <div class="list-group" v-if="fornecedores">
-                        <div class="list-group-item">
-                            Fornecedores
-                        </div>
-                        <a href="javascript:void(0);" class="list-group-item"
-                          v-for="row in fornecedores" :key="row.id_fornecedor"
-                          v-on:click="SelecionarFornecedor(row);">
-                            <small>{{row.cnpj_cpf}} </small><br>
-                            {{row.nome}}
-                        </a>
-                    </div>
-                </div>
+            <div class="list-group" v-if="fornecedores">
+              <div class="list-group-item">Fornecedores</div>
+              <a
+                href="javascript:void(0);"
+                class="list-group-item"
+                v-for="row in fornecedores"
+                :key="row.id_fornecedor"
+                v-on:click="SelecionarFornecedor(row)"
+              >
+                <small>{{ row.cnpj_cpf }} </small><br />
+                {{ row.nome }}
+              </a>
             </div>
+          </div>
         </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import jQuery from "jquery";
 
-import jQuery from 'jquery';
-
-import VSelect from '../vue-bootstrap-select';
-const axios = require('axios');
+import VSelect from "../vue-bootstrap-select";
+const axios = require("axios");
 
 export default {
   components: {
-    VSelect
+    VSelect,
   },
   props: {
     qs: Object,
@@ -318,8 +407,8 @@ export default {
       valorTotal: null,
       deputado_federal: {},
       filtro: {
-        agrupar: '1',
-        periodo: '56',
+        agrupar: "1",
+        periodo: "57",
         parlamentar: [],
         despesa: [],
         estado: [],
@@ -344,27 +433,29 @@ export default {
           newData.filters = {
             Agrupamento: vm.filtro.agrupar,
             Periodo: vm.filtro.periodo,
-            IdParlamentar: window.GetIds(vm.filtro.parlamentar).join(','),
-            Despesa: (vm.filtro.despesa || []).join(','),
-            Estado: (vm.filtro.estado || []).join(','),
-            Partido: (vm.filtro.partido || []).join(','),
+            IdParlamentar: window.GetIds(vm.filtro.parlamentar).join(","),
+            Despesa: (vm.filtro.despesa || []).join(","),
+            Estado: (vm.filtro.estado || []).join(","),
+            Partido: (vm.filtro.partido || []).join(","),
             Fornecedor: vm.filtro.fornecedor.id || null,
           };
 
           jQuery.each(newData.filters, (key, value) => {
-            if (value === '' || value === null) {
+            if (value === "" || value === null) {
               delete newData.filters[key];
             }
           });
 
           if (!vm.pageLoad) {
-            vm.$router.push({ path: 'deputado-federal', query: newData.filters }, () => { /* Necesario para não fazer redirect */ });
+            vm.$router.push({ path: "deputado-federal", query: newData.filters }, () => {
+              /* Necesario para não fazer redirect */
+            });
           }
 
           this.fields = null;
           //this.fnSort([]);
           // vm.options.orders = [];
-          
+
           axios
             .post(`${process.env.VUE_APP_API}/deputado/lancamentos`, newData)
             .then((response) => {
@@ -373,15 +464,17 @@ export default {
 
               loader.hide();
 
-              if(!vm.pageLoad){
-                setTimeout(function(){
-                  jQuery('html, body').animate({
-                    scrollTop: jQuery(".vdtnet-container").offset().top
-                  }, 500);
+              if (!vm.pageLoad) {
+                setTimeout(function () {
+                  jQuery("html, body").animate(
+                    {
+                      scrollTop: jQuery(".vdtnet-container").offset().top,
+                    },
+                    500
+                  );
                 }, 100);
               }
             });
-            
         },
         pageLength: 50,
         ordering: true,
@@ -405,8 +498,10 @@ export default {
     const vm = this;
     var lstPromises = [];
 
-    if(vm.qs.IdParlamentar){
-      var pDeputado = axios.post(`${process.env.VUE_APP_API}/deputado/pesquisa`, { ids: vm.qs.IdParlamentar })
+    if (vm.qs.IdParlamentar) {
+      var pDeputado = axios.post(`${process.env.VUE_APP_API}/deputado/pesquisa`, {
+        ids: vm.qs.IdParlamentar,
+      });
       pDeputado.then((response) => {
         vm.filtro.parlamentar = response.data;
       });
@@ -414,14 +509,16 @@ export default {
       lstPromises.push(pDeputado);
     }
 
-    vm.filtro.agrupar = vm.qs.Agrupamento || '1';
-    vm.filtro.periodo = vm.qs.Periodo || '56';
-    vm.filtro.despesa = (vm.qs.Despesa ? vm.qs.Despesa.split(',') : []);
-    vm.filtro.estado = (vm.qs.Estado ? vm.qs.Estado.split(',') : []);
-    vm.filtro.partido = (vm.qs.Partido ? vm.qs.Partido.split(',') : []);
-    vm.filtro.fornecedor = (vm.qs.Fornecedor ? { id: vm.qs.Fornecedor, nome: vm.qs.Fornecedor } : {});
+    vm.filtro.agrupar = vm.qs.Agrupamento || "1";
+    vm.filtro.periodo = vm.qs.Periodo || "57";
+    vm.filtro.despesa = vm.qs.Despesa ? vm.qs.Despesa.split(",") : [];
+    vm.filtro.estado = vm.qs.Estado ? vm.qs.Estado.split(",") : [];
+    vm.filtro.partido = vm.qs.Partido ? vm.qs.Partido.split(",") : [];
+    vm.filtro.fornecedor = vm.qs.Fornecedor
+      ? { id: vm.qs.Fornecedor, nome: vm.qs.Fornecedor }
+      : {};
 
-    document.title = 'OPS :: Cota Parlamentar na Câmara dos Deputados';
+    document.title = "OPS :: Cota Parlamentar na Câmara dos Deputados";
 
     axios.get(`${process.env.VUE_APP_API}/estado`).then((response) => {
       this.estados = response.data;
@@ -431,15 +528,13 @@ export default {
       this.partidos = response.data;
     });
 
-    axios
-      .get(`${process.env.VUE_APP_API}/deputado/tipodespesa`)
-      .then((response) => {
-        this.despesas = response.data;
-      });
+    axios.get(`${process.env.VUE_APP_API}/deputado/tipodespesa`).then((response) => {
+      this.despesas = response.data;
+    });
 
-    if(lstPromises.length == 0){
-        this.Pesquisar(true);
-    }else{
+    if (lstPromises.length == 0) {
+      this.Pesquisar(true);
+    } else {
       Promise.all(lstPromises).then(() => vm.Pesquisar(true));
     }
   },
@@ -448,7 +543,10 @@ export default {
       this.isLoadingParlamentar = true;
 
       axios
-        .post(`${process.env.VUE_APP_API}/deputado/pesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "56") })
+        .post(`${process.env.VUE_APP_API}/deputado/pesquisa`, {
+          busca: busca,
+          periodo: parseInt(this.filtro.periodo || "57"),
+        })
         .then((response) => {
           this.parlamentares = response.data;
 
@@ -456,7 +554,7 @@ export default {
         });
     },
     AbreModalConsultaFornecedor() {
-      jQuery('#modal-fornecedor').modal();
+      jQuery("#modal-fornecedor").modal();
     },
     ConsultaFornecedor() {
       const loader = this.$loading.show();
@@ -478,7 +576,7 @@ export default {
 
       this.fornecedor_busca = {};
       this.fornecedores = [];
-      jQuery('#modal-fornecedor').modal('hide');
+      jQuery("#modal-fornecedor").modal("hide");
     },
     LimparFiltroFornecedor() {
       this.fornecedores = [];
@@ -487,25 +585,33 @@ export default {
     },
     AbrirModalDetalhar(data) {
       this.selectedRow = data;
-      jQuery('#modal-detalhar').modal();
+      jQuery("#modal-detalhar").modal();
     },
     Detalhar(agrupar) {
       const vm = this;
 
       switch (vm.filtro.agrupar) {
-        case '1': // Deputado
-          window.AddIfDontExists(vm.filtro.parlamentar, this.selectedRow.id_cf_deputado, this.selectedRow.nome_parlamentar);
+        case "1": // Deputado
+          window.AddIfDontExists(
+            vm.filtro.parlamentar,
+            this.selectedRow.id_cf_deputado,
+            this.selectedRow.nome_parlamentar
+          );
           break;
-        case '2': // Despesa
+        case "2": // Despesa
           vm.filtro.despesa = [this.selectedRow.id_cf_despesa_tipo];
           break;
-        case '3': // Fornecedor
-          vm.filtro.fornecedor = { id: this.selectedRow.id_fornecedor, cnpj: this.selectedRow.cnpj_cpf, nome: this.selectedRow.nome_fornecedor };
+        case "3": // Fornecedor
+          vm.filtro.fornecedor = {
+            id: this.selectedRow.id_fornecedor,
+            cnpj: this.selectedRow.cnpj_cpf,
+            nome: this.selectedRow.nome_fornecedor,
+          };
           break;
-        case '4': // Partido
+        case "4": // Partido
           vm.filtro.partido = [this.selectedRow.id_partido];
           break;
-        case '5': // Estado
+        case "5": // Estado
           vm.filtro.estado = [this.selectedRow.id_estado];
           break;
         default:
@@ -513,7 +619,7 @@ export default {
       }
 
       vm.filtro.agrupar = agrupar;
-      jQuery('#modal-detalhar').modal('hide');
+      jQuery("#modal-detalhar").modal("hide");
 
       vm.Pesquisar(false);
     },
@@ -522,7 +628,7 @@ export default {
       vm.deputado_federal = {};
       vm.pageLoad = pageLoad;
 
-      if(vm.ultimoAgrupamento == vm.filtro.agrupar) {
+      if (vm.ultimoAgrupamento == vm.filtro.agrupar) {
         vm.$refs.table.reload();
         return;
       }
@@ -530,13 +636,13 @@ export default {
       vm.fields = null;
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
-          case '1': // Deputado
+          case "1": // Deputado
             vm.fields = {
               id_cf_deputado: {
                 isLocal: true,
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -544,9 +650,9 @@ export default {
                 sortable: false,
               },
               nome_parlamentar: {
-                label: 'Parlamentar',
+                label: "Parlamentar",
                 render: (data, type, full) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a>`;
                   }
                   return data;
@@ -554,34 +660,33 @@ export default {
                 sortable: true,
               },
               sigla_estado: {
-                label: 'UF',
+                label: "UF",
                 sortable: true,
               },
               sigla_partido: {
-                label: 'Partido',
+                label: "Partido",
                 sortable: true,
               },
               total_notas: {
-                label: 'Qtd. Recibos',
+                label: "Qtd. Recibos",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Valor Total',
+                label: "Valor Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-
-          case '2': // Despesa
+          case "2": // Despesa
             vm.fields = {
               id_cf_despesa_tipo: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -589,29 +694,29 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Despesa',
+                label: "Despesa",
                 sortable: true,
               },
               total_notas: {
-                label: 'Qtd. Recibos',
+                label: "Qtd. Recibos",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Valor Total',
+                label: "Valor Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '3': // Fornecedor
+          case "3": // Fornecedor
             vm.fields = {
               id_fornecedor: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -619,9 +724,9 @@ export default {
                 sortable: false,
               },
               nome_fornecedor: {
-                label: 'Fornecedor',
+                label: "Fornecedor",
                 render: (data, type, full) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
@@ -629,25 +734,25 @@ export default {
                 sortable: true,
               },
               total_notas: {
-                label: 'Qtd. Recibos',
+                label: "Qtd. Recibos",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Valor Total',
+                label: "Valor Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '4': // Partido
+          case "4": // Partido
             vm.fields = {
               id_partido: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -655,39 +760,39 @@ export default {
                 sortable: false,
               },
               nome_partido: {
-                label: 'Partido',
+                label: "Partido",
                 sortable: true,
               },
               total_notas: {
-                label: 'Recibos',
+                label: "Recibos",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               total_deputados: {
-                label: 'Deputados',
+                label: "Deputados",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_medio_por_deputado: {
-                label: 'Val. Médio Deputado',
+                label: "Val. Médio Deputado",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Valor Total',
+                label: "Valor Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '5': // Estado
+          case "5": // Estado
             vm.fields = {
               id_estado: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -695,33 +800,33 @@ export default {
                 sortable: false,
               },
               nome_estado: {
-                label: 'Estado',
+                label: "Estado",
                 sortable: true,
               },
               total_notas: {
-                label: 'Qtd. Recibos',
+                label: "Qtd. Recibos",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Valor Total',
+                label: "Valor Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '6': // Recibo
+          case "6": // Recibo
             vm.fields = {
               data_emissao: {
-                label: 'Emissão',
+                label: "Emissão",
                 sortable: true,
               },
               nome_fornecedor: {
-                label: 'Fornecedor',
+                label: "Fornecedor",
                 render: (data, type, full) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
@@ -729,9 +834,9 @@ export default {
                 sortable: false,
               },
               nome_parlamentar: {
-                label: 'Parlamentar',
+                label: "Parlamentar",
                 render: (data, type, full) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
                   }
                   return data;
@@ -739,36 +844,37 @@ export default {
                 sortable: false,
               },
               valor_liquido: {
-                label: 'Valor',
+                label: "Valor",
                 render: (data, type, full) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return `<a href="/deputado-federal/documento/${full.id_cf_despesa}">${data}</a>`;
                   }
                   return data;
                 },
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
             };
             break;
 
-          default: break;
+          default:
+            break;
         }
 
         vm.ultimoAgrupamento = vm.filtro.agrupar;
-        if(!pageLoad && vm.options.order.length > 0){
+        if (!pageLoad && vm.options.order.length > 0) {
           vm.options.order = [];
         }
 
         // vm.$nextTick(() => {
         //   vm.$refs.table.reload();
-        // }); 
+        // });
       });
     },
     LimparFiltros() {
       this.filtro = {
-        agrupar: '1',
-        periodo: '56',
+        agrupar: "1",
+        periodo: "57",
         parlamentar: [],
         despesa: [],
         estado: [],

@@ -1,12 +1,12 @@
-﻿using CsvHelper;
-using Microsoft.Extensions.Configuration;
-using OPS.Core;
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using CsvHelper;
+using Microsoft.Extensions.Configuration;
+using OPS.Core;
 
 namespace OPS.Importador
 {
@@ -41,9 +41,9 @@ namespace OPS.Importador
                     {
                         //csv.Configuration.Delimiter = ",";
 
-                        using (WebClient client = new WebClient())
+                        using (HttpClient client = new())
                         {
-                            client.Headers.Add("User-Agent: Other");
+                            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
 
                             while (csv.Read())
                             {
@@ -60,7 +60,7 @@ namespace OPS.Importador
 
                                             var arquivo = rootPath + @"\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
                                             if (!File.Exists(arquivo))
-                                                client.DownloadFile(link, arquivo);
+                                                client.DownloadFile(link, arquivo).Wait();
                                         }
                                     }
                                     catch (Exception ex)

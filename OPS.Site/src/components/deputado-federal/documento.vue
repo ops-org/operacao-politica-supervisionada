@@ -130,7 +130,7 @@
             class="btn btn-danger"
             v-bind:href="documento.url_documento"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >&nbsp;
             Recibo&nbsp;
             <i class="fa fa-download"></i>
@@ -140,7 +140,7 @@
             class="btn btn-danger"
             v-bind:href="documento.url_documento_nfe"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Recibo (NF-e)&nbsp;
             <i class="fa fa-download"></i>
@@ -149,7 +149,7 @@
             class="btn btn-light"
             v-bind:href="documento.url_detalhes_documento"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Detalhes do recibo&nbsp;
             <i class="fa fa-plus"></i>
@@ -159,7 +159,7 @@
           class="btn btn-light"
           v-bind:href="documento.url_demais_documentos_mes"
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           Demais Recibos do mês&nbsp;
           <i class="fa fa-plus"></i>
@@ -168,7 +168,7 @@
           class="btn btn-light"
           href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk="
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           Visualizar NFe&nbsp;
           <i class="fa fa-plus"></i>
@@ -275,19 +275,19 @@ export default {
       window.document.title = `OPS :: Deputado Federal - Recibo: ${(response.data.numero_documento || response.data.id_documento)}`;
       const doc = response.data;
 
-      const urlCamara = 'http://www.camara.gov.br/cota-parlamentar/';
+      const urlCamara = 'http://www.camara.leg.br/cota-parlamentar/';
 
       if (doc.link === 2) { // NF-e
         doc.url_documento = `${urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal=${doc.id_documento}`;
       } else if (doc.link === 1) {
         doc.url_documento = `${urlCamara}documentos/publ/${doc.id_deputado}/${doc.ano}/${doc.id_documento}.pdf`;
-      } 
+      }
 
       doc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${doc.id_deputado}&dataInicio=${doc.competencia}&dataFim=${doc.competencia}&despesa=${doc.id_cf_despesa_tipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
       doc.url_detalhes_documento = `${urlCamara}documento?nuDeputadoId=${doc.id_deputado}&numMes=${doc.mes}&numAno=${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&cnpjFornecedor=${doc.cnpj_cpf}&idDocumento=${doc.numero_documento}`;
 
       doc.url_beneficiario = `/fornecedor/${doc.id_fornecedor}`;
-      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=56&Agrupamento=6`;
+      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=57&Agrupamento=6`;
 
       this.documento = doc;
     });

@@ -23,7 +23,7 @@ namespace OPS.API.Controllers
         [Route("LimparCache")]
         public void LimparCache()
         {
-            new ParametrosDao().CarregarPadroes();
+            new ParametrosRepository().CarregarPadroes();
         }
 
 

@@ -8,7 +8,8 @@
           <label>Ano</label>
           <select class="form-control form-control-sm" v-model="filtro.ano">
             <option value=""></option>
-            <option value="2022" selected>2022</option>
+            <option value="2023" selected>2023</option>
+            <option value="2022">2022</option>
             <option value="2021">2021</option>
             <option value="2020">2020</option>
             <option value="2019">2019</option>
@@ -75,7 +76,7 @@
         <div class="form-group col-md-5">
           <label>Deputado(a)</label>
           <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
-            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id"
             :searchable="true" :loading="isLoadingParlamentar" :internal-search="false" @search-change="BuscaParlamentar">
 
             <template slot="selection" slot-scope="{ values, isOpen }">
@@ -88,7 +89,7 @@
         <div class="form-group col-md-5">
           <label>Funcionário(a)</label>
           <multiselect v-model="filtro.funcionario" :options="funcionarios" :multiple="true" placeholder="Selecione"
-            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id" 
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id"
             :searchable="true" :loading="isLoadingFuncionario" :internal-search="false" @search-change="BuscaFuncionario">
 
             <template slot="selection" slot-scope="{ values, isOpen }">
@@ -118,15 +119,6 @@
         </div>
       </div>
     </form>
-
-    <!-- <div class="row">
-      <div class="col-md-12">
-        <div class="alert alert-warning" v-if="valorTotal">
-          <strong>Custo Total no Período: R$ {{valorTotal}}</strong>
-          <small class="help-block mb-0">&nbsp;Custo Total considerando os filtros aplicados acima</small>
-        </div>
-      </div>
-    </div> -->
 
     <div class="form-group" v-if="fields">
       <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
@@ -183,8 +175,8 @@ export default {
       selectedRow: {},
       valorTotal: null,
       filtro: {
-        agrupar: '1',
-        ano: '2022',
+        agrupar: '3',
+        ano: '2023',
         mes: '',
         grupo_funcional: [],
         cargo: [],
@@ -264,7 +256,7 @@ export default {
     const vm = this;
     var lstPromises = [];
 
-    vm.filtro.agrupar = vm.qs.ag || '1';
+    vm.filtro.agrupar = vm.qs.ag || '3';
     vm.filtro.ano = vm.qs.an || '2022';
     vm.filtro.mes = vm.qs.ms || '';
     vm.filtro.grupo_funcional = (vm.qs.gf ? vm.qs.gf.split(',') : []);
@@ -607,7 +599,7 @@ export default {
     LimparFiltros() {
       this.filtro = {
         agrupar: '1',
-        ano: '2022',
+        ano: '2023',
         mes: '',
         grupo_funcional: [],
         cargo: [],

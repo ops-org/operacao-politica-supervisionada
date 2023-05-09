@@ -30,6 +30,11 @@
         /// <summary>
         /// Nota Fiscal ou Recibo
         /// </summary>
-        Documento = 6
+        Documento = 6,
+
+        /// <summary>
+        /// Ano da Emissão do Recibo
+        /// </summary>
+        Ano = 7
     }
 }

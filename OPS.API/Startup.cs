@@ -1,14 +1,19 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCaching;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
+using MySqlConnector;
+using MySqlConnector.Logging;
 using OPS.Core.DAO;
+using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO.Compression;
 
@@ -26,10 +31,13 @@ namespace OPS.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
-            new ParametrosDao().CarregarPadroes();
+            Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
+            new ParametrosRepository().CarregarPadroes();
 
-            //services.AddScoped(_ => new AppDb(Configuration["ConnectionStrings:AuditoriaContext"]));
+            services.AddTransient<IDbConnection>(_ => new MySqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
+
+            services.AddScoped<PartidoRepository>();
+            services.AddScoped<EstadoRepository>();
 
             //services.AddCors(options =>
             //{
@@ -86,8 +94,11 @@ namespace OPS.API
                 options.Providers.Add<BrotliCompressionProvider>();
             });
 
+            // https://github.com/KevinDockx/HttpCacheHeaders
+            services.AddHttpCacheHeaders();
             //services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
+            services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -120,6 +131,25 @@ namespace OPS.API
                 app.UseDeveloperExceptionPage();
             }
 
+            //// This will make the HTTP requests log as rich logs instead of plain text.
+            //app.UseSerilogRequestLogging(options =>
+            //{
+            //    // Customize the message template
+            //    //options.MessageTemplate = "Handled {RequestPath}";
+
+            //    // Emit debug-level events instead of the defaults
+            //    //options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
+
+            //    // Attach additional properties to the request completion event
+            //    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            //    {
+            //        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            //        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            //        diagnosticContext.Set("RemoteIpAddress", httpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString());
+            //        diagnosticContext.Set("LocalIpAddress", httpContext.Request.HttpContext.Connection.LocalIpAddress.ToString());
+            //    };
+            //});
+
             //app.UseHttpsRedirection();
             //app.UseCacheOutput();
             app.UseRouting();
@@ -133,19 +163,17 @@ namespace OPS.API
             // Enable compression
             app.UseResponseCompression();
 
-            app.UseResponseCaching();
-            app.Use(async (context, next) =>
+            app.UseHttpCacheHeaders();
+           
+
+            app.UseStaticFiles(new StaticFileOptions
             {
-                context.Response.GetTypedHeaders().CacheControl =
-                    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
-                    {
-                        Public = true,
-                        MaxAge = TimeSpan.FromHours(6)
-                    };
-
-                context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] = new string[] { "Accept-Encoding" };
-
-                await next();
+                OnPrepareResponse = context =>
+                {
+                    const int durationInSeconds = 60 * 60 * 24;
+                    context.Context.Response.Headers[HeaderNames.CacheControl] =
+                        "public,max-age=" + durationInSeconds;
+                }
             });
 
             app.UseEndpoints(endpoints =>

@@ -119,7 +119,7 @@
             class="btn btn-danger"
             v-bind:href="documento.url_documento"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Recibo&nbsp;
             <i class="fa fa-download"></i>
@@ -129,7 +129,7 @@
             class="btn btn-danger"
             v-bind:href="documento.url_documento_nfe"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Recibo (NF-e)&nbsp;
             <i class="fa fa-download"></i>
@@ -138,7 +138,7 @@
             class="btn btn-light"
             v-bind:href="documento.url_detalhes_documento"
             target="_blank"
-            rel="nofollow"
+            rel="nofollow noopener noreferrer"
           >
             Detalhes do recibo&nbsp;
             <i class="fa fa-plus"></i>
@@ -148,7 +148,7 @@
           class="btn btn-light"
           v-bind:href="documento.url_demais_documentos_mes"
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           Demais Recibos do mês&nbsp;
           <i class="fa fa-plus"></i>
@@ -157,7 +157,7 @@
           class="btn btn-light"
           href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk="
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           Visualizar NFe&nbsp;
           <i class="fa fa-plus"></i>
@@ -264,11 +264,11 @@ export default {
       window.document.title = `OPS :: Deputado Federal - Recibo: ${(response.data.numero_documento || response.data.id_documento)}`;
       const doc = response.data;
 
-      const urlCamara = 'http://www.camara.gov.br/cota-parlamentar/';
+      const urlCamara = 'http://www.camara.leg.br/cota-parlamentar/';
 
       if (doc.url_documento) { // NF-e
         if (doc.url_documento.toLowerCase().indexOf('idedocumentofiscal') !== -1) {
-          doc.url_documento = doc.url_documento.toLowerCase().replace('http://camara.leg.br/', 'https://www.camara.gov.br/').replace('idedocumentofiscal', 'ideDocumentoFiscal');
+          doc.url_documento = doc.url_documento.toLowerCase().replace('idedocumentofiscal', 'ideDocumentoFiscal');
         } else {
           doc.url_documento_nfe = doc.url_documento.toLowerCase();
         }
