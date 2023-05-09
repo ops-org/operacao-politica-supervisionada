@@ -1,23 +1,14 @@
-﻿using MySqlConnector;
-using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
 
 namespace OPS.Core
 {
     public abstract class BaseRepository
     {
-        public readonly ILogger _logger;
         public readonly IDbConnection _connection;
 
-        public BaseRepository(ILogger logger, IDbConnection connection)
+        public BaseRepository(IDbConnection connection)
         {
             _connection = connection;
-            _logger = logger;
         }
     }
 }

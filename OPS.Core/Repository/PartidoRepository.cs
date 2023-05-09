@@ -1,15 +1,14 @@
-﻿using Dapper;
-using OPS.Core.DTO;
-using Serilog;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using Dapper;
+using OPS.Core.DTO;
 
 namespace OPS.Core.DAO
 {
     public class PartidoRepository : BaseRepository
     {
-        public PartidoRepository(ILogger logger, IDbConnection connection) : base(logger, connection)
+        public PartidoRepository(IDbConnection connection) : base(connection)
         {
         }
 

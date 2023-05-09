@@ -31,10 +31,10 @@ namespace OPS.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            Core.Padrao.ConnectionString = Configuration["ConnectionStrings:AuditoriaContext"];
+            Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
             new ParametrosRepository().CarregarPadroes();
 
-            services.AddTransient<IDbConnection>(_ => new MySqlConnection(Configuration["ConnectionStrings:AuditoriaContext"]));
+            services.AddTransient<IDbConnection>(_ => new MySqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
 
             services.AddScoped<PartidoRepository>();
             services.AddScoped<EstadoRepository>();
@@ -98,6 +98,7 @@ namespace OPS.API
             services.AddHttpCacheHeaders();
             //services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
+            services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -130,24 +131,24 @@ namespace OPS.API
                 app.UseDeveloperExceptionPage();
             }
 
-            // This will make the HTTP requests log as rich logs instead of plain text.
-            app.UseSerilogRequestLogging(options =>
-            {
-                // Customize the message template
-                //options.MessageTemplate = "Handled {RequestPath}";
+            //// This will make the HTTP requests log as rich logs instead of plain text.
+            //app.UseSerilogRequestLogging(options =>
+            //{
+            //    // Customize the message template
+            //    //options.MessageTemplate = "Handled {RequestPath}";
 
-                // Emit debug-level events instead of the defaults
-                //options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
+            //    // Emit debug-level events instead of the defaults
+            //    //options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
 
-                // Attach additional properties to the request completion event
-                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-                {
-                    diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-                    diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-                    diagnosticContext.Set("RemoteIpAddress", httpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString());
-                    diagnosticContext.Set("LocalIpAddress", httpContext.Request.HttpContext.Connection.LocalIpAddress.ToString());
-                };
-            });
+            //    // Attach additional properties to the request completion event
+            //    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            //    {
+            //        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            //        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            //        diagnosticContext.Set("RemoteIpAddress", httpContext.Request.HttpContext.Connection.RemoteIpAddress.ToString());
+            //        diagnosticContext.Set("LocalIpAddress", httpContext.Request.HttpContext.Connection.LocalIpAddress.ToString());
+            //    };
+            //});
 
             //app.UseHttpsRedirection();
             //app.UseCacheOutput();
