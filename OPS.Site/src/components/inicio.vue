@@ -594,7 +594,7 @@ export default {
     //   });
 
     // axios
-    //   .get(`${process.env.VUE_APP_API}/senador/senadoresumomensal`)
+    //   .get(`${process.env.VUE_APP_API}/#/senador/senadoresumomensal`)
     //   .then((response) => {
     //     this.chartcSenadoResumoMensalOptions.series = response.data;
 
@@ -619,7 +619,7 @@ export default {
       });
 
     axios
-      .get(`${process.env.VUE_APP_API}/senador/senadoresumoanual`)
+      .get(`${process.env.VUE_APP_API}/#/senador/senadoresumoanual`)
       .then((response) => {
         this.chartSenadoResumoAnualOptions.series[0].data =
           response.data.series;

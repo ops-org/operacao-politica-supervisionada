@@ -286,8 +286,8 @@ export default {
       doc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${doc.id_deputado}&dataInicio=${doc.competencia}&dataFim=${doc.competencia}&despesa=${doc.id_cf_despesa_tipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
       doc.url_detalhes_documento = `${urlCamara}documento?nuDeputadoId=${doc.id_deputado}&numMes=${doc.mes}&numAno=${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&cnpjFornecedor=${doc.cnpj_cpf}&idDocumento=${doc.numero_documento}`;
 
-      doc.url_beneficiario = `/fornecedor/${doc.id_fornecedor}`;
-      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=57&Agrupamento=6`;
+      doc.url_beneficiario = `/#/fornecedor/${doc.id_fornecedor}`;
+      doc.url_documentos_Deputado_beneficiario = `/#/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=57&Agrupamento=6`;
 
       this.documento = doc;
     });
