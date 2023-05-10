@@ -30,14 +30,14 @@
                         <p class="mb-0">
                             <strong>Gasto Acumulado com Pessoal: </strong>
                             <a
-                              v-bind:href="'/senado/remuneracao?ag=6&sn=' + senador.id_sf_senador"
+                              v-bind:href="'/#/senado/remuneracao?ag=6&sn=' + senador.id_sf_senador"
                               title="Clique para ver os gastos com pessoal em detalhes"
                               >R$ {{senador.valor_total_remuneracao}}</a>
                         </p>
                         <p class="mb-0">
                             <strong>Gasto Acumulado CEAPS: </strong>
                             <a
-                              v-bind:href="'/senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'"
+                              v-bind:href="'/#/senador?IdParlamentar=' + senador.id_sf_senador + '&Periodo=0&Agrupamento=6'"
                               title="Clique para ver os gastos com cota parlamentar em detalhes"
                               >R$ {{senador.valor_total_ceaps}}</a>
                         </p>
@@ -67,7 +67,7 @@
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=3'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/#/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=3'">Ver lista completa</a>
                         Maiores fornecedores
                     </div>
                     <div class="card-body">
@@ -81,8 +81,8 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresFornecedores"  :key="row.id_fornecedor">
-                                        <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td class="text-right"><a v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Fornecedor='+row.id_fornecedor+'&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td><a v-bind:href="'/#/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/#/senador?IdParlamentar='+senador.id_sf_senador+'&Fornecedor='+row.id_fornecedor+'&Periodo=0&Agrupamento=6'">{{row.valor_total}}</a></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -95,7 +95,7 @@
                     <div class="card-header bg-light">
                         <a
                           class="float-right"
-                          v-bind:href="'/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=6'"
+                          v-bind:href="'/#/senador?IdParlamentar='+senador.id_sf_senador+'&Periodo=0&Agrupamento=6'"
                           >Ver lista completa</a>
 
                         Maiores Notas/Recibos
@@ -111,7 +111,7 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresNotas" :key="row.id_sf_despesa">
-                                        <td><a v-bind:href="'/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td><a v-bind:href="'/#/fornecedor/'+row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
                                         <td class="text-right">{{row.valor}}</td>
                                     </tr>
                                 </tbody>

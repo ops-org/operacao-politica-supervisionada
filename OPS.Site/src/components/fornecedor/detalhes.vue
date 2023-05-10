@@ -342,8 +342,8 @@
             <div class="card-header bg-light">
               <div class="float-right">
                 Ver lista completa por
-                <a v-bind:href="'/deputado-federal?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'">Deputado Federal</a> ou 
-                <a v-bind:href="'/senador?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'">Senador</a>
+                <a v-bind:href="'/#/deputado-federal?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'">Deputado Federal</a> ou 
+                <a v-bind:href="'/#/senador?Fornecedor='+fornecedor.id_fornecedor+'&Periodo=0&Agrupamento=6'">Senador</a>
               </div>
               Parlamentares (Top 10 Acumulado)
             </div>

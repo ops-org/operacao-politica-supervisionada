@@ -46,7 +46,7 @@
 
             <div class="card border-primary mb-3">
                 <div class="card-header text-truncate" v-bind:class="{ 'text-white bg-primary': deputado.ativo }">
-                    <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
+                    <a v-bind:href="'/#/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
                         <small class="float-right">* {{deputado.situacao}}</small>
                         {{deputado.nome_parlamentar}}<br>
                         <small>{{deputado.nome_civil}}</small>
@@ -55,7 +55,7 @@
                 <div class="card-body p-2">
                     <div class="row no-gutters">
                         <div class="col-md-4">
-                            <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
+                            <a v-bind:href="'/#/deputado-federal/' + deputado.id_cf_deputado" title="Clique para visualizar o perfil do deputado(a)">
                                 <img class="media-thumbnail card-img" v-lazy="'//static.ops.net.br/depfederal/' + deputado.id_cf_deputado + '.jpg'" />
                             </a>
                         </div>

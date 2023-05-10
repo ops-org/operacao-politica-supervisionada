@@ -23,15 +23,15 @@
                     <div class="col-sm-6" v-if="id>100">
                         <!-- <p class="mb-0" title="Secretários Parlamentares">
                             <strong>Pessoal do Gabinete: </strong>
-                            <a v-bind:href="'/deputado-estadual/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">{{deputado_estadual.secretarios_ativos}} Secretário(s)</a>
+                            <a v-bind:href="'/#/deputado-estadual/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">{{deputado_estadual.secretarios_ativos}} Secretário(s)</a>
                         </p>
                         <p class="mb-0">
                             <strong>Folha de Pagamento (Acumulado): </strong>
-                            <a v-bind:href="'/deputado-estadual/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">R$ {{deputado_estadual.valor_total_remuneracao}}</a>
+                            <a v-bind:href="'/#/deputado-estadual/remuneracao?ag=5&df=' + id" title="Clique para ver a lista de secretários">R$ {{deputado_estadual.valor_total_remuneracao}}</a>
                         </p> -->
                         <p class="mb-0">
                             <strong>Cota Parlamentar (Acumulado): </strong>
-                            <a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_estadual.valor_total_ceap}}</a>
+                            <a v-bind:href="'/#/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'" title="Clique para ver os gastos com cota parlamentar em detalhes">R$ {{deputado_estadual.valor_total_ceap}}</a>
                         </p>
                         <p class="mb-0" v-if="deputado_estadual.perfil || deputado_estadual.site">
                             <strong>Visualizar: </strong>
@@ -62,14 +62,14 @@
 
         <div class="alert alert-warning" role="alert" v-if="deputado_estadual.sigla_estado=='SC'">
           Algumas notas podem não ter um fornecedor identificado e com isso não serão apresenatadas abaixo!<br>
-          Clique <a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'">aqui</a> para ver a lista de notas/recibos do parlamentar na legislatura atual.
+          Clique <a v-bind:href="'/#/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'">aqui</a> para ver a lista de notas/recibos do parlamentar na legislatura atual.
         </div>
 
         <div class="row form-group" v-if="MaioresFornecedores.length > 0">
             <div class="col-xs-12 col-sm-6">
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=3'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/#/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=3'">Ver lista completa</a>
                         Maiores fornecedores
                     </div>
                     <div class="card-body maiores-fornecedores vld-parent" ref="MaioresFornecedores">
@@ -83,8 +83,8 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresFornecedores" :key="row.id_fornecedor">
-                                        <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <td class="text-right"><a v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=57&Agrupamento=6'">{{row.valor_total}}</a></td>
+                                        <td><a v-bind:href="'/#/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <td class="text-right"><a v-bind:href="'/#/deputado-estadual?IdParlamentar=' + id + '&Fornecedor=' + row.id_fornecedor + '&Periodo=57&Agrupamento=6'">{{row.valor_total}}</a></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -95,7 +95,7 @@
              <div class="col-xs-12 col-sm-6" >
                 <div class="card mb-3">
                     <div class="card-header bg-light">
-                        <a class="float-right" v-bind:href="'/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'">Ver lista completa</a>
+                        <a class="float-right" v-bind:href="'/#/deputado-estadual?IdParlamentar=' + id + '&Periodo=57&Agrupamento=6'">Ver lista completa</a>
                         Maiores Notas/Recibos
                     </div>
                     <div class="card-body maiores-notas vld-parent" ref="MaioresNotas">
@@ -109,8 +109,8 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="row in MaioresNotas" :key="row.id_cf_despesa">
-                                        <td><a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
-                                        <!-- <td class="text-right"><a v-bind:href="'/deputado-estadual/documento/' + row.id_cf_despesa">{{row.valor_liquido}}</a></td> -->
+                                        <td><a v-bind:href="'/#/fornecedor/' + row.id_fornecedor">{{row.nome_fornecedor}}</a></td>
+                                        <!-- <td class="text-right"><a v-bind:href="'/#/deputado-estadual/documento/' + row.id_cf_despesa">{{row.valor_liquido}}</a></td> -->
                                         <td class="text-right">{{row.valor_liquido}}</td>
                                     </tr>
                                 </tbody>

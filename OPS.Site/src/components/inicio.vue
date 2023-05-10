@@ -193,7 +193,7 @@
             :key="gasto.id_cf_deputado"
           >
             <a
-              v-bind:href="'/deputado-federal/' + gasto.id_cf_deputado"
+              v-bind:href="'/#/deputado-federal/' + gasto.id_cf_deputado"
               title="Clique para visualizar o perfil do deputado(a)"
             >
               <div class="card mb-3">
@@ -238,7 +238,7 @@
             :key="gasto.id_sf_senador"
           >
             <a
-              v-bind:href="'/senador/' + gasto.id_sf_senador"
+              v-bind:href="'/#/senador/' + gasto.id_sf_senador"
               title="Clique para visualizar o perfil do senador(a)"
             >
               <div class="card mb-3">

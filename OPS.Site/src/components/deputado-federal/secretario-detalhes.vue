@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h3 class="page-title">Secretários Parlamentares - <a v-bind:href="'/deputado-federal/' + deputado.id_cf_deputado">{{deputado.nome_parlamentar}}</a></h3>
+    <h3 class="page-title">Secretários Parlamentares - <a v-bind:href="'/#/deputado-federal/' + deputado.id_cf_deputado">{{deputado.nome_parlamentar}}</a></h3>
 
     <div class="form-group">
       <p class="mb-0">

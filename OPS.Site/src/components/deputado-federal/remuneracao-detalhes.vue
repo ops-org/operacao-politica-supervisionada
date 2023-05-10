@@ -16,7 +16,7 @@
       <div class="col-md-6" v-if="remuneracao.deputado">
         <p class="mb-1">
           <strong>Deputado: </strong>
-          <a v-bind:href="'/deputado-federal/' + remuneracao.id_cf_deputado">{{
+          <a v-bind:href="'/#/deputado-federal/' + remuneracao.id_cf_deputado">{{
             remuneracao.deputado
           }}</a>
         </p>

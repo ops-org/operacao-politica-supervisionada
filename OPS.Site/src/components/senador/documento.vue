@@ -17,7 +17,7 @@
             <p class="mb-1">
               <strong>Nome Parlamentar:</strong>
               <a
-                v-bind:href="'/deputado-federal/' + documento.id_cf_deputado"
+                v-bind:href="'/#/deputado-federal/' + documento.id_cf_deputado"
                 title="Visualisar perfil do parlamentar"
               >{{documento.nome_parlamentar}}</a>
             </p>
@@ -182,13 +182,13 @@
                     <tr v-for="row in documentos_mesmo_dia" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'/fornecedor/' + row.id_fornecedor"
+                          v-bind:href="'/#/fornecedor/' + row.id_fornecedor"
                         >{{row.nome_fornecedor}}</a>
                       </td>
                       <td>{{row.sigla_estado_fornecedor}}</td>
                       <td>
                         <a
-                          v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa"
+                          v-bind:href="'/#/deputado-federal/documento/' + row.id_cf_despesa"
                         >{{row.valor_liquido}}</a>
                       </td>
                     </tr>
@@ -218,13 +218,13 @@
                     <tr v-for="row in documentos_subcota_mes" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'/fornecedor/' + row.id_fornecedor"
+                          v-bind:href="'/#/fornecedor/' + row.id_fornecedor"
                         >{{row.nome_fornecedor}}</a>
                       </td>
                       <td>{{row.sigla_estado_fornecedor}}</td>
                       <td>
                         <a
-                          v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa"
+                          v-bind:href="'/#/deputado-federal/documento/' + row.id_cf_despesa"
                         >{{row.valor_liquido}}</a>
                       </td>
                     </tr>

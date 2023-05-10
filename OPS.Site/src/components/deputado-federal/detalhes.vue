@@ -59,7 +59,7 @@
               <p class="mb-0" title="Secretários Parlamentares">
                 <strong>Pessoal do Gabinete: </strong>
                 <a
-                  v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id"
+                  v-bind:href="'/#/deputado-federal/remuneracao?ag=5&df=' + id"
                   title="Clique para ver a lista de secretários"
                   >{{ deputado_federal.secretarios_ativos }} Secretário(s)</a
                 >
@@ -67,7 +67,7 @@
               <p class="mb-0">
                 <strong>Verba de Gabinete (Acumulado): </strong>
                 <a
-                  v-bind:href="'/deputado-federal/remuneracao?ag=5&df=' + id"
+                  v-bind:href="'/#/deputado-federal/remuneracao?ag=5&df=' + id"
                   title="Clique para ver a lista de secretários"
                   >R$ {{ deputado_federal.valor_total_remuneracao }}</a
                 >
@@ -76,7 +76,7 @@
                 <strong>Cota Parlamentar (Acumulado): </strong>
                 <a
                   v-bind:href="
-                    '/deputado-federal?IdParlamentar=' +
+                    '/#/deputado-federal?IdParlamentar=' +
                     id +
                     '&Periodo=57&Agrupamento=6'
                   "
@@ -158,7 +158,7 @@
               <a
                 class="float-right"
                 v-bind:href="
-                  '/deputado-federal?IdParlamentar=' +
+                  '/#/deputado-federal?IdParlamentar=' +
                   id +
                   '&Periodo=57&Agrupamento=3'
                 "
@@ -191,14 +191,14 @@
                       :key="row.id_fornecedor"
                     >
                       <td>
-                        <a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{
+                        <a v-bind:href="'/#/fornecedor/' + row.id_fornecedor">{{
                           row.nome_fornecedor
                         }}</a>
                       </td>
                       <td class="text-right">
                         <a
                           v-bind:href="
-                            '/deputado-federal?IdParlamentar=' +
+                            '/#/deputado-federal?IdParlamentar=' +
                             id +
                             '&Fornecedor=' +
                             row.id_fornecedor +
@@ -220,7 +220,7 @@
               <a
                 class="float-right"
                 v-bind:href="
-                  '/deputado-federal?IdParlamentar=' +
+                  '/#/deputado-federal?IdParlamentar=' +
                   id +
                   '&Periodo=57&Agrupamento=6'
                 "
@@ -244,14 +244,14 @@
                   <tbody>
                     <tr v-for="row in MaioresNotas" :key="row.id_cf_despesa">
                       <td>
-                        <a v-bind:href="'/fornecedor/' + row.id_fornecedor">{{
+                        <a v-bind:href="'/#/fornecedor/' + row.id_fornecedor">{{
                           row.nome_fornecedor
                         }}</a>
                       </td>
                       <td class="text-right">
                         <a
                           v-bind:href="
-                            '/deputado-federal/documento/' + row.id_cf_despesa
+                            '/#/deputado-federal/documento/' + row.id_cf_despesa
                           "
                           >{{ row.valor_liquido }}</a
                         >
