@@ -7,7 +7,7 @@
         <div class="col-xs-12 col-md-4 col-lg-2 text-center">
           <img
             class="img-thumbnail img-responsive img-deputado"
-            v-bind:src="'/img/depfederal/' + id + '_120x160.jpg'"
+            v-bind:src="'//static.ops.net.br/depfederal/' + id + '_120x160.jpg'"
             v-bind:alt="deputado_federal.nome_parlamentar"
             width="130"
             height="170"

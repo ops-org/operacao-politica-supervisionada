@@ -1,4 +1,4 @@
-﻿/* Sticky footer styles
+/* Sticky footer styles
 -------------------------------------------------- */
 html {
     position: relative;
@@ -21,7 +21,7 @@ body { /* Margin bottom by footer height */
 
 
 .bg-landing-page {
-    background: url(/img/logo_opaca.jpg) no-repeat top 20px center;
+  background: url(//static.ops.net.br/logo_opaca.jpg) no-repeat top 20px center;
 }
 
 .text-black {

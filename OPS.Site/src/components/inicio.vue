@@ -201,7 +201,7 @@
                   <div class="col-xs-4">
                     <img
                       v-lazy="
-                        '/img/depfederal/' +
+                        '//static.ops.net.br/depfederal/' +
                         gasto.id_cf_deputado +
                         '_120x160.jpg'
                       "
@@ -246,7 +246,7 @@
                   <div class="col-sx-4">
                     <img
                       v-lazy="
-                        '/img/senador/' + gasto.id_sf_senador + '_120x160.jpg'
+                        '//static.ops.net.br/senador/' + gasto.id_sf_senador + '_120x160.jpg'
                       "
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
