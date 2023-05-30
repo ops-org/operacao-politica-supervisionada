@@ -1,12 +1,15 @@
 ﻿using AngleSharp;
 using AngleSharp.Html.Dom;
+using AngleSharp.Io;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
+using OPS.Importador.Utilities;
 using RestSharp;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,6 +18,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -64,22 +68,7 @@ namespace OPS.Importador
                 var partido = parlamentar.QuerySelector(".partido-nome").TextContent.Trim();
 
                 //Thread.Sleep(TimeSpan.FromSeconds(15));
-                var taskSub = context.OpenAsync(deputado.UrlPerfil);
-                taskSub.Wait();
-                var subDocument = taskSub.Result;
-                if (subDocument.StatusCode != HttpStatusCode.OK || subDocument.ToHtml() != "<html><head></head><body></body></html>")
-                {
-                    Thread.Sleep(TimeSpan.FromSeconds(10));
-
-                    taskSub = context.OpenAsync(deputado.UrlPerfil);
-                    taskSub.Wait();
-                    subDocument = taskSub.Result;
-                    if (subDocument.StatusCode != HttpStatusCode.OK)
-                    {
-                        Console.WriteLine($"{deputado.UrlPerfil} {subDocument.StatusCode}");
-                        continue;
-                    };
-                };
+                var subDocument = context.OpenAsyncAutoRetry(deputado.UrlPerfil).GetAwaiter().GetResult();
 
                 var detalhes = subDocument.QuerySelectorAll(".dados-deputado p");
                 deputado.NomeCivil = detalhes[0].QuerySelector("span").TextContent.Trim();
@@ -129,11 +118,16 @@ namespace OPS.Importador
         public override void ImportarArquivoDespesas(int ano)
         {
             logger.LogInformation("Consultando ano {Ano}!", ano);
-            //LimpaDespesaTemporaria();
+            LimpaDespesaTemporaria();
+            Dictionary<string, uint> lstHash = ObterHashes(ano);
 
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var pagina = 0;
-            var config = Configuration.Default.WithDefaultLoader();
+
+            var client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(5);
+            var handler = new DefaultHttpRequester { Timeout = TimeSpan.FromMinutes(5) };
+            var config = Configuration.Default.With(handler).WithDefaultLoader();
             var context = BrowsingContext.New(config);
 
             while (true)
@@ -141,18 +135,7 @@ namespace OPS.Importador
                 logger.LogInformation("Consultando pagina {Pagina}!", pagina);
 
                 var address = $"https://www.al.ba.gov.br/transparencia/prestacao-contas?ano={ano}&page={pagina++}&size=100";
-                var task = context.OpenAsync(address);
-                task.Wait();
-                var document = task.Result;
-                if (document.StatusCode != HttpStatusCode.OK)
-                {
-                    logger.LogError($"{address} {document.StatusCode}");
-
-                    Thread.Sleep(TimeSpan.FromMinutes(1));
-                    pagina--;
-                    continue;
-                };
-
+                var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
                 var despesas = document.QuerySelectorAll(".tabela-cab tbody tr");
                 foreach (var despesa in despesas)
                 {
@@ -170,32 +153,47 @@ namespace OPS.Importador
                         TipoDespesa = colunas[4].TextContent.Trim(),
                     };
 
-                    task = context.OpenAsync(linkDetalhes);
-                    task.Wait();
-                    var documentDetalhes = task.Result;
-                    if (documentDetalhes.StatusCode != HttpStatusCode.OK)
+                    try
                     {
-                        logger.LogError($"{linkDetalhes} {documentDetalhes.StatusCode}");
-                    };
+                        var documentDetalhes = context.OpenAsyncAutoRetry(linkDetalhes).GetAwaiter().GetResult();
+                        var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
+                        foreach (var detalhes in despesasDetalhes)
+                        {
+                            // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR
+                            var colunasDetalhes = detalhes.QuerySelectorAll("td");
 
-                    var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
-                    foreach (var detalhes in despesasDetalhes)
-                    {
-                        // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR
-                        var colunasDetalhes = detalhes.QuerySelectorAll("td");
+                            objCamaraEstadualDespesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
+                            objCamaraEstadualDespesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
+                            objCamaraEstadualDespesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
+                            objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
+                        }
 
-                        objCamaraEstadualDespesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
-                        objCamaraEstadualDespesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
-                        objCamaraEstadualDespesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
-                        objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
+                        if (RegistroExistente(objCamaraEstadualDespesaTemp, lstHash))
+                            continue;
                     }
-
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, ex.Message);
+                        continue;
+                    }
 
                     connection.Insert(objCamaraEstadualDespesaTemp);
                 }
 
 
                 if (document.QuerySelector(".paginate-button-next")?.ClassList.Contains("disabled") ?? true) break;
+            }
+
+            SincronizarHashes(lstHash);
+            InsereTipoDespesaFaltante();
+            InsereDeputadoFaltante();
+            InsereFornecedorFaltante();
+            InsereDespesaFinal();
+            LimpaDespesaTemporaria();
+
+            if (ano == DateTime.Now.Year)
+            {
+                AtualizaValorTotal();
             }
         }
     }

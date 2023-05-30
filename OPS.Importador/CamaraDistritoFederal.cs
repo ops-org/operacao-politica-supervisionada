@@ -78,9 +78,18 @@ namespace OPS.Importador
 
                     var detalhes = subDocument.QuerySelectorAll(".informacoes-pessoais .row .col-md-9 p span");
                     deputado.NomeCivil = detalhes[0].TextContent.Trim();
-                    deputado.Naturalidade = detalhes[1].TextContent.Trim();
-                    deputado.Nascimento = DateOnly.Parse(detalhes[2].TextContent.Trim(), cultureInfo);
-                    deputado.Profissao = detalhes[3].TextContent.Trim();
+                    try
+                    {
+                        deputado.Naturalidade = detalhes[1].TextContent.Trim();
+                        deputado.Nascimento = DateOnly.Parse(detalhes[2].TextContent.Trim(), cultureInfo);
+                        deputado.Profissao = detalhes[3].TextContent.Trim();
+                    }
+                    catch (Exception)
+                    {
+                        deputado.Nascimento = DateOnly.Parse(detalhes[1].TextContent.Trim(), cultureInfo);
+                        deputado.Profissao = detalhes[2].TextContent.Trim();
+                    }
+                    
                     //var gabinete = detalhes[3].TextContent.Trim();
 
                     var rodape = subDocument.QuerySelectorAll(".journal-content-article a b");

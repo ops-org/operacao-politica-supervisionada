@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Policy;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
@@ -28,36 +29,17 @@ namespace OPS.Importador
         public override void ImportarArquivoDespesas(int ano)
         {
             LimpaDespesaTemporaria();
-
-            //var dc = new Dictionary<string, UInt32>();
-            //var sql = $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12";
-            //var lstHash = connection.Query(sql);
-            //foreach (var dReader in lstHash)
-            //{
-            //    var hex = Convert.ToHexString((byte[])dReader["hash"]);
-            //    if (!dc.ContainsKey(hex))
-            //        dc.Add(hex, (UInt32)dReader["id"]);
-            //}
+            Dictionary<string, uint> dc = ObterHashes(ano);
 
             for (int mes = 1; mes <= 12; mes++)
             {
                 if (ano == 2019 && mes == 1) continue;
                 if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) break;
 
-                ProcessarDespesas(ano, mes);
+                ProcessarDespesas(ano, mes, dc);
             }
 
-            //if (!completo && dc.Values.Any())
-            //{
-            //    logger.LogInformation("{Total} despesas removidas!", dc.Values.Count);
-
-            //    foreach (var id in dc.Values)
-            //    {
-            //        connection.Execute("delete from cf_despesa where id=@id", new { id });
-            //    }
-            //}
-
-            //AjustarDados();
+            SincronizarHashes(dc);
             InsereTipoDespesaFaltante();
             InsereDeputadoFaltante();
             InsereFornecedorFaltante();
@@ -65,13 +47,14 @@ namespace OPS.Importador
             LimpaDespesaTemporaria();
         }
 
-        private void ProcessarDespesas(int ano, int mes)
+        private void ProcessarDespesas(int ano, int mes, Dictionary<string, UInt32> lstHash = null)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
 
             var address = $"https://consultas.assembleia.pr.leg.br/api/public/ressarcimento/ressarcimentos/{mes}/{ano}";
             var restClient = new RestClient();
+            restClient.Timeout = (int)TimeSpan.FromMinutes(5).TotalSeconds;
             restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
             var request = new RestRequest(address, Method.GET);
@@ -108,7 +91,6 @@ namespace OPS.Importador
                     connection.Update(deputado);
                 }
 
-
                 foreach (var despesa in itemDespesa.DespesasAnuais?[0]?.DespesasMensais?[0]?.Despesas?[0]?.ItensDespesa)
                 {
                     var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
@@ -141,6 +123,9 @@ namespace OPS.Importador
                         objCamaraEstadualDespesaTemp.Observacao =
                             $"{d.Descricao}; Diárias: {d.NumeroDiarias:N1}; Região: {d.Regiao}";
                     }
+
+                    if (RegistroExistente(objCamaraEstadualDespesaTemp, lstHash))
+                        continue;
 
                     connection.Insert(objCamaraEstadualDespesaTemp);
                 }

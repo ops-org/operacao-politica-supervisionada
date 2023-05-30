@@ -118,30 +118,11 @@ namespace OPS.Importador
             using (var banco = new AppDb())
             {
                 LimpaDespesaTemporaria();
+                Dictionary<string, uint> lstHash = ObterHashes(ano);
 
-                var dc = new Dictionary<string, UInt32>();
-                using (var dReader = banco.ExecuteReader(
-                    $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12"))
-                    while (dReader.Read())
-                    {
-                        var hex = Convert.ToHexString((byte[])dReader["hash"]);
-                        if (!dc.ContainsKey(hex))
-                            dc.Add(hex, (UInt32)dReader["id"]);
-                    }
+                CarregaDados(banco, caminhoArquivo, ano, lstHash);
 
-                CarregaDados(banco, caminhoArquivo, ano, dc);
-
-                if (!completo && dc.Values.Any())
-                {
-                    logger.LogInformation("{Total} despesas removidas!", dc.Values.Count);
-
-                    foreach (var id in dc.Values)
-                    {
-                        banco.AddParameter("id", id);
-                        banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
-                    }
-                }
-
+                SincronizarHashes(lstHash);
                 AjustarDados();
                 InsereTipoDespesaFaltante();
                 InsereDeputadoFaltante();
@@ -151,8 +132,6 @@ namespace OPS.Importador
 
                 if (ano == DateTime.Now.Year)
                 {
-                    //AtualizaCampeoesGastos(banco);
-                    //AtualizaResumoMensal(banco);
                     AtualizaValorTotal();
                 }
             }
@@ -192,32 +171,22 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
                     var fornecedor = fileNode.SelectSingleNode("Fornecedor").InnerText.Trim();
                     var valor = fileNode.SelectSingleNode("Valor").InnerText.Trim();
 
-                    banco.AddParameter("Nome", deputado);
-                    banco.AddParameter("CPF", matricula);
-                    banco.AddParameter("Empresa", fornecedor);
-                    banco.AddParameter("CNPJ_CPF", cnpj);
-                    banco.AddParameter("DataEmissao", new DateTime(ano, Convert.ToInt32(mes), 1));
-                    banco.AddParameter("Valor", !string.IsNullOrEmpty(valor) ? (object)Convert.ToDouble(valor, cultureInfo) : 0);
-                    banco.AddParameter("TipoDespesa", tipoDespesa);
-                    banco.AddParameter("Ano", ano);
-
-                    byte[] hash = banco.ParametersHash();
-                    var key = Convert.ToHexString(hash);
-                    if (lstHash.Remove(key))
+                    var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
                     {
-                        banco.ClearParameters();
+                        Nome = deputado,
+                        Cpf = matricula,
+                        Ano = (short)ano,
+                        TipoDespesa = tipoDespesa,
+                        Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor, cultureInfo) : 0,
+                        DataEmissao = new DateTime(ano, Convert.ToInt32(mes), 1),
+                        CnpjCpf = cnpj,
+                        Empresa = fornecedor
+                    };
+
+                    if (RegistroExistente(objCamaraEstadualDespesaTemp, lstHash))
                         continue;
-                    }
 
-                    banco.AddParameter("hash", hash);
-
-                    banco.ExecuteNonQuery(
-                        @"INSERT INTO ops_tmp.cl_despesa_temp (
-								nome, cpf, empresa, cnpj_cpf, data_emissao, valor, despesa_tipo, ano, hash
-							) VALUES (
-								@Nome, @CPF, @Empresa, @CNPJ_CPF, @DataEmissao, @Valor, @TipoDespesa, @Ano, @hash
-							)");
-
+                    connection.Insert(objCamaraEstadualDespesaTemp);
                 }
             }
         }

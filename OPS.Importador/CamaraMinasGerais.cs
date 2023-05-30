@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -34,7 +35,19 @@ namespace OPS.Importador
                 foreach (var situacao in new[] { "em_exercicio", "que_exerceram_mandato", "que_renunciaram", "que_se_afastaram", "que_perderam_mandato" })
                 {
                     var doc = new XmlDocument();
-                    doc.Load(@$"http://dadosabertos.almg.gov.br/ws/deputados/{situacao}");
+                    try
+                    {
+                        doc.Load(@$"http://dadosabertos.almg.gov.br/ws/deputados/{situacao}");
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (ex.Message == "Response status code does not indicate success: 429 (Too Many Requests).") 
+                            throw;
+
+                        Thread.Sleep(1000);
+                        doc.Load(@$"http://dadosabertos.almg.gov.br/ws/deputados/{situacao}");
+                    }
+
                     XmlNode deputados = doc.DocumentElement;
 
                     var deputadoXml = deputados.SelectNodes("deputado");

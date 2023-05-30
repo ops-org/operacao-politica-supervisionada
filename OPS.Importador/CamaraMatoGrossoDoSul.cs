@@ -131,7 +131,8 @@ namespace OPS.Importador
         public async Task ImportarArquivoDespesasAsync(int ano)
         {
             logger.LogInformation("Consultando ano {Ano}!", ano);
-            //LimpaDespesaTemporaria();
+            LimpaDespesaTemporaria();
+            Dictionary<string, uint> lstHash = ObterHashes(ano);
 
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             var pagina = 0;
@@ -193,12 +194,26 @@ namespace OPS.Importador
                         objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
                     }
 
+                    if (RegistroExistente(objCamaraEstadualDespesaTemp, lstHash))
+                        continue;
 
                     connection.Insert(objCamaraEstadualDespesaTemp);
                 }
 
 
                 if (document.QuerySelector(".paginate-button-next")?.ClassList.Contains("disabled") ?? true) break;
+            }
+
+            SincronizarHashes(lstHash);
+            InsereTipoDespesaFaltante();
+            InsereDeputadoFaltante();
+            InsereFornecedorFaltante();
+            InsereDespesaFinal();
+            LimpaDespesaTemporaria();
+
+            if (ano == DateTime.Now.Year)
+            {
+                AtualizaValorTotal();
             }
         }
 

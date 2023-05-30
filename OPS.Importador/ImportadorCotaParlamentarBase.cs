@@ -10,6 +10,9 @@ using System.Net;
 using System.Threading;
 using Dapper;
 using System.Net.Http;
+using System.Linq;
+using OPS.Core.Entity;
+using System.Text.Json;
 
 namespace OPS.Importador
 {
@@ -50,36 +53,36 @@ namespace OPS.Importador
 
         public virtual void ImportarCompleto()
         {
-            try
-            {
-                logger.LogInformation("Dados do(a) {CasaLegislativa}", casaLegislativa);
-                ImportarParlamentares();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
+            //try
+            //{
+            //    logger.LogInformation("Dados do(a) {CasaLegislativa}", casaLegislativa);
+            //    ImportarParlamentares();
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.LogError(ex, ex.Message);
+            //}
 
-            try
-            {
-                logger.LogInformation("Imagens do(a) {CasaLegislativa}", casaLegislativa);
-                DownloadFotosParlamentares();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
+            //try
+            //{
+            //    logger.LogInformation("Imagens do(a) {CasaLegislativa}", casaLegislativa);
+            //    DownloadFotosParlamentares();
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.LogError(ex, ex.Message);
+            //}
 
-            try
-            {
-                var anoAnterior = DateTime.Now.Year - 1;
-                logger.LogInformation("Despesas do(a) {CasaLegislativa} de {Ano}", casaLegislativa, anoAnterior);
-                ImportarArquivoDespesas(anoAnterior);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
+            //try
+            //{
+            //    var anoAnterior = DateTime.Now.Year - 1;
+            //    logger.LogInformation("Despesas do(a) {CasaLegislativa} de {Ano}", casaLegislativa, anoAnterior);
+            //    ImportarArquivoDespesas(anoAnterior);
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.LogError(ex, ex.Message);
+            //}
 
             try
             {
@@ -347,6 +350,52 @@ ORDER BY d.id;
             connection.Execute(@"
 				truncate table ops_tmp.cl_despesa_temp;
 			");
+        }
+
+        public virtual void SincronizarHashes(Dictionary<string, uint> dc)
+        {
+            if (!completo && dc.Values.Any())
+            {
+                logger.LogInformation("{Total} despesas removidas!", dc.Values.Count);
+
+                foreach (var id in dc.Values)
+                {
+                    connection.Execute("delete from cf_despesa where id=@id", new { id });
+                }
+            }
+        }
+
+        public virtual Dictionary<string, uint> ObterHashes(int ano)
+        {
+            var dc = new Dictionary<string, UInt32>();
+            var sql = $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12";
+            var lstHash = connection.Query(sql);
+            foreach (IDictionary<string, object> dReader in lstHash)
+            {
+                var hex = Convert.ToHexString((byte[])dReader["hash"]);
+                if (!dc.ContainsKey(hex))
+                    dc.Add(hex, (UInt32)dReader["id"]);
+            }
+
+            return dc;
+        }
+
+        /// <summary>
+        /// Registro já existe na base de dados?
+        /// </summary>
+        /// <param name="deputado"></param>
+        /// <param name="lstHash"></param>
+        /// <returns></returns>
+        public virtual bool RegistroExistente(CamaraEstadualDespesaTemp deputado, Dictionary<string, UInt32> lstHash)
+        {
+            var str = JsonSerializer.Serialize(deputado);
+            var hash = Utils.SHA1Hash(str);
+
+            if (lstHash.Remove(Convert.ToHexString(hash)))
+                return true;
+
+            deputado.Hash = hash;
+            return false;
         }
     }
 }

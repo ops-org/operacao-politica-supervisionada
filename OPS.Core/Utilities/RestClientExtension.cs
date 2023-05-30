@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using RestSharp;
 using Serilog;
 
 namespace OPS.Core
 {
     public static class RestClientExtension
-    {
+    {       
         public static IRestResponse ExecuteWithAutoRetry(this RestClient client, IRestRequest request, int totalRetries = 5)
         {
             try
@@ -33,7 +34,7 @@ namespace OPS.Core
         {
             Log.Verbose("Tentativa {Tentativa} para a url {Url}", totalRetries, request.Resource);
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            Thread.Sleep(TimeSpan.FromMinutes(1));
             return ExecuteWithAutoRetry(client, request, totalRetries - 1);
         }
     }

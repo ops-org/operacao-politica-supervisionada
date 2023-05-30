@@ -90,17 +90,17 @@ namespace OPS.Importador
                     {
                         //typeof(Senado), // csv
                         //typeof(CamaraFederal), // csv
-                        ////typeof(CamaraDistritoFederal), // xlsx
                         //typeof(CamaraSantaCatarina), // csv
                         //typeof(CamaraSaoPaulo), // xml
                         //typeof(CamaraPernambuco), // xml
-                        ////typeof(CamaraMinasGerais), // xml api
-                        ////// typeof(CamaraRioGrandeDoSul), // nada
-                        //typeof(CamaraParana), // rest api mensal
-                        ////typeof(CamaraGoias), // rest api mensal -- OFFLINE
-                        typeof(CamaraBahia), // crawler
+                        typeof(CamaraParana), // rest api mensal // TIMEOUT na pagina 3
+                        typeof(CamaraMatoGrossoDoSul), // crawler
+                        typeof(CamaraDistritoFederal), // xlsx  -- OFFLINE
+                        typeof(CamaraMinasGerais), // xml api -- Apenas BR
+                        typeof(CamaraBahia), // crawler // OFFLINE
                         //typeof(CamaraCeara), // csv mensal -- TIMEOUT
-                        //typeof(CamaraMatoGrossoDoSul), // crawler
+                        //typeof(CamaraGoias), // rest api mensal -- OFFLINE
+                        //typeof(CamaraRioGrandeDoSul), // nada
                     };
 
                     foreach (var type in types)

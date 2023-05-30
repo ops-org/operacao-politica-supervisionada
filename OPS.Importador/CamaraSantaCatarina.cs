@@ -25,7 +25,7 @@ namespace OPS.Importador
     /// </summary>
     public class CamaraSantaCatarina : ImportadorCotaParlamentarBase
     {
-        public CamaraSantaCatarina(ILogger<CamaraSantaCatarina> logger, IConfiguration configuration, IDbConnection connection) : 
+        public CamaraSantaCatarina(ILogger<CamaraSantaCatarina> logger, IConfiguration configuration, IDbConnection connection) :
             base("SC", logger, configuration, connection)
         {
         }
@@ -252,96 +252,74 @@ namespace OPS.Importador
             int Vencimento = indice++;
             int Valor = indice++;
 
-            using (var banco = new AppDb())
+            LimpaDespesaTemporaria();
+            Dictionary<string, uint> lstHash = ObterHashes(ano);
+
+            using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
             {
-                //var dc = new Dictionary<string, UInt32>();
-                //using (var dReader = banco.ExecuteReader(
-                //    $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12"))
-                //    while (dReader.Read())
-                //    {
-                //        var hex = Convert.ToHexString((byte[])dReader["hash"]);
-                //        if (!dc.ContainsKey(hex))
-                //            dc.Add(hex, (UInt32)dReader["id"]);
-                //    }
+                short count = 0;
 
-                using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
+                using (var csv = new CsvReader(reader, cultureInfo))
                 {
-                    short count = 0;
 
-                    using (var csv = new CsvReader(reader, cultureInfo))
+                    while (csv.Read())
                     {
+                        count++;
 
-                        while (csv.Read())
+                        if (count == 1)
                         {
-                            count++;
 
-                            if (count == 1)
+                            if (
+                                (csv[Verba] != "Verba") ||
+                                (csv[Descricao] != "Descrição") ||
+                                (csv[Conta] != "Conta") ||
+                                (csv[Favorecido] != "Favorecido") ||
+                                (csv[Trecho] != "Trecho") ||
+                                (csv[Vencimento] != "Vencimento") ||
+                                (csv[Valor] != "Valor")
+                            )
                             {
-
-                                if (
-                                    (csv[Verba] != "Verba") ||
-                                    (csv[Descricao] != "Descrição") ||
-                                    (csv[Conta] != "Conta") ||
-                                    (csv[Favorecido] != "Favorecido") ||
-                                    (csv[Trecho] != "Trecho") ||
-                                    (csv[Vencimento] != "Vencimento") ||
-                                    (csv[Valor] != "Valor")
-                                )
-                                {
-                                    throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
-                                }
-
-                                // Pular linha de titulo
-                                continue;
+                                throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
                             }
 
-                            if (string.IsNullOrEmpty(csv[Verba])) continue; //Linha vazia
-
-
-                            var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
-                            {
-                                Nome = csv[Conta],
-                                Ano = (short)ano,
-                                TipoVerba = csv[Verba],
-                                TipoDespesa = csv[Descricao],
-                                Valor = Convert.ToDecimal(csv[Valor], cultureInfo),
-                                DataEmissao = DateTime.Parse(csv[Vencimento]),
-                                Favorecido = csv[Favorecido],
-                                Observacao = csv[Trecho]
-                            };
-
-                            connection.Insert(objCamaraEstadualDespesaTemp);
-
-                            //byte[] hash = banco.ParametersHash();
-                            //var key = Convert.ToHexString(hash);
-                            //if (dc.Remove(key))
-                            //{
-                            //    banco.ClearParameters();
-                            //    continue;
-                            //}
-
-                            //banco.AddParameter("hash", hash);
+                            // Pular linha de titulo
+                            continue;
                         }
+
+                        if (string.IsNullOrEmpty(csv[Verba])) continue; //Linha vazia
+
+
+                        var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
+                        {
+                            Nome = csv[Conta],
+                            Ano = (short)ano,
+                            TipoVerba = csv[Verba],
+                            TipoDespesa = csv[Descricao],
+                            Valor = Convert.ToDecimal(csv[Valor], cultureInfo),
+                            DataEmissao = DateTime.Parse(csv[Vencimento]),
+                            Favorecido = csv[Favorecido],
+                            Observacao = csv[Trecho]
+                        };
+
+                        if (RegistroExistente(objCamaraEstadualDespesaTemp, lstHash))
+                            continue;
+
+                        connection.Insert(objCamaraEstadualDespesaTemp);
                     }
                 }
+            }
 
-                //if (!completo && dc.Values.Any())
-                //{
-                //    logger.LogInformation("{Total} despesas removidas!", dc.Values.Count);
+            SincronizarHashes(lstHash);
+            SincronizarHashes(lstHash);
+            InsereTipoDespesaFaltante();
+            InsereDeputadoFaltante();
+            InsereFornecedorFaltante();
+            InsereDespesaFinal();
+            LimpaDespesaTemporaria();
 
-                //    foreach (var id in dc.Values)
-                //    {
-                //        banco.AddParameter("id", id);
-                //        banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
-                //    }
-                //}
-
-                //ProcessarDespesasTemp();
-
-                //if (ano == DateTime.Now.Year)
-                //{
-                //    AtualizaParlamentarValores();
-                //}
+            if (ano == DateTime.Now.Year)
+            {
+                AtualizaValorTotal();
             }
         }
 
@@ -399,7 +377,7 @@ where nome not in (
 
         public override void InsereDespesaFinal()
         {
-          var affected=  connection.Execute(@$"
+            var affected = connection.Execute(@$"
 INSERT INTO cl_despesa (
 	id_cl_deputado,
     id_cl_despesa_tipo,

@@ -155,82 +155,68 @@ namespace OPS.Importador
             int Vencimento = indice++;
             int Valor = indice++;
 
-            using (var banco = new AppDb())
+            LimpaDespesaTemporaria();
+            Dictionary<string, uint> lstHash = ObterHashes(ano);
+
+            var linha = 0;
+            var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp();
+            foreach (string line in System.IO.File.ReadLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
             {
-                //var dc = new Dictionary<string, UInt32>();
-                //using (var dReader = banco.ExecuteReader(
-                //    $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12"))
-                //    while (dReader.Read())
-                //    {
-                //        var hex = Convert.ToHexString((byte[])dReader["hash"]);
-                //        if (!dc.ContainsKey(hex))
-                //            dc.Add(hex, (UInt32)dReader["id"]);
-                //    }
-
-                var linha = 0;
-                var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp();
-                foreach (string line in System.IO.File.ReadLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
+                if (line.StartsWith("TOTAL GERAL"))
                 {
-                    if (line.StartsWith("TOTAL GERAL"))
+                    linha = 0;
+                    continue;
+                }
+                linha++;
+
+                if (linha == 1)
+                {
+                    objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
                     {
-                        linha = 0;
-                        continue;
-                    }
-                    linha++;
+                        Nome = line,
+                        Ano = (short)ano
+                    };
 
-                    if (linha == 1)
-                    {
-                        objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
-                        {
-                            Nome = line,
-                            Ano = (short)ano
-                        };
-
-                        continue;
-                    }
-
-                    if (linha == 2)
-                    {
-                        objCamaraEstadualDespesaTemp.DataEmissao = Convert.ToDateTime(line.Replace("Mes/Ano: ", ""), cultureInfo);
-                        continue;
-                    }
-
-                    if (linha == 3)
-                        continue;
-
-                    var colunas = line.Split(';');
-                    if (colunas.Length != 6) // Finaliza com ;
-                        throw new Exception("Linha Invalida" + line);
-
-                    objCamaraEstadualDespesaTemp.Id = 0;
-                    objCamaraEstadualDespesaTemp.TipoDespesa = ObterTipoDespesa(colunas[1].Trim());
-                    objCamaraEstadualDespesaTemp.Documento = colunas[0].Trim();
-                    objCamaraEstadualDespesaTemp.Observacao = colunas[1].Trim();
-                    objCamaraEstadualDespesaTemp.CnpjCpf = colunas[2].Trim();
-                    objCamaraEstadualDespesaTemp.Empresa = colunas[3].Trim();
-                    objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunas[4], cultureInfo);
-
-                    connection.Insert(objCamaraEstadualDespesaTemp);
+                    continue;
                 }
 
+                if (linha == 2)
+                {
+                    objCamaraEstadualDespesaTemp.DataEmissao = Convert.ToDateTime(line.Replace("Mes/Ano: ", ""), cultureInfo);
+                    continue;
+                }
 
-                //if (!completo && dc.Values.Any())
-                //{
-                //    logger.LogInformation("{Total} despesas removidas!", dc.Values.Count);
+                if (linha == 3)
+                    continue;
 
-                //    foreach (var id in dc.Values)
-                //    {
-                //        banco.AddParameter("id", id);
-                //        banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
-                //    }
-                //}
+                var colunas = line.Split(';');
+                if (colunas.Length != 6) // Finaliza com ;
+                    throw new Exception("Linha Invalida" + line);
 
-                //ProcessarDespesasTemp();
+                objCamaraEstadualDespesaTemp.Id = 0;
+                objCamaraEstadualDespesaTemp.TipoDespesa = ObterTipoDespesa(colunas[1].Trim());
+                objCamaraEstadualDespesaTemp.Documento = colunas[0].Trim();
+                objCamaraEstadualDespesaTemp.Observacao = colunas[1].Trim();
+                objCamaraEstadualDespesaTemp.CnpjCpf = colunas[2].Trim();
+                objCamaraEstadualDespesaTemp.Empresa = colunas[3].Trim();
+                objCamaraEstadualDespesaTemp.Valor = Convert.ToDecimal(colunas[4], cultureInfo);
 
-                //if (ano == DateTime.Now.Year)
-                //{
-                //    AtualizaParlamentarValores();
-                //}
+                if (RegistroExistente(objCamaraEstadualDespesaTemp, lstHash))
+                    continue;
+
+                connection.Insert(objCamaraEstadualDespesaTemp);
+            }
+
+            SincronizarHashes(lstHash);
+            InsereTipoDespesaFaltante();
+            InsereDeputadoFaltante();
+            InsereFornecedorFaltante();
+            InsereDespesaFinal();
+            LimpaDespesaTemporaria();
+
+            if (ano == DateTime.Now.Year)
+            {
+                AtualizaValorTotal();
             }
         }
 

@@ -124,8 +124,8 @@ namespace OPS.Importador
                     InserirControle(3, item["cnpj_cpf"].ToString(), "CNPJ Invalido");
                     logger.LogInformation("CNPJ Invalido [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, item["cnpj_cpf"].ToString(), item["nome"]);
 
-                    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
-                    //telegram.SendMessage(telegraMessage);
+                    telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
+                    telegram.SendMessage(telegraMessage);
                     continue;
                 }
 
