@@ -1,5 +1,4 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable func-names */
+/* eslint-disable no-unused-vars */ /* eslint-disable func-names */
 <template>
   <div class="bg-landing-page">
     <div class="intro-header">
@@ -127,11 +126,9 @@
         <h2 class="page-title">O que é a cota parlamentar?</h2>
         <p>
           A
-          <strong>cota parlamentar</strong>, também conhecida como verba
-          indenizatória é um
-          <strong>recurso financeiro público</strong> disponibilizado a todos os
-          <strong>deputados federais e senadores</strong> para o custeio de seus
-          mandatos.
+          <strong>cota parlamentar</strong>, também conhecida como verba indenizatória é
+          um <strong>recurso financeiro público</strong> disponibilizado a todos os
+          <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.
         </p>
         <p>
           Cada deputado federal tem a seu dispor valores mensais que vão de
@@ -141,10 +138,9 @@
             rel="nofollow noopener noreferrer"
             title="Clique para visualizar a lista oficial de valores por estado"
             ><strong>R$ 30,7 mil a R$ 45,6 mil</strong></a
-          >, a depender do estado de origem, para custear despesas com
-          alimentação, viagens, hospedagens, combustível, serviços de
-          consultoria, locação de carros, barcos, aviões e casas, além de muitos
-          outras.
+          >, a depender do estado de origem, para custear despesas com alimentação,
+          viagens, hospedagens, combustível, serviços de consultoria, locação de carros,
+          barcos, aviões e casas, além de muitos outras.
         </p>
         <p>
           No Senado os valores também variam de acordo com o estado que elegeu o
@@ -159,11 +155,11 @@
           >.
         </p>
         <p>
-          Para ter este recurso público liberado pela Câmara ou Senado, o
-          parlamentar precisa apenas apresentar a nota fiscal ou recibo da
-          despesa. Não é feita licitação, tomada de preço ou qualquer outro
-          recurso legal que permita a utilização de dinheiro público de forma
-          eficiente, econômica, legal, impessoal e moral. Muitos são as
+          Para ter este recurso público liberado pela Câmara ou Senado, o parlamentar
+          precisa apenas apresentar a nota fiscal ou recibo da despesa. Não é feita
+          licitação, tomada de preço ou qualquer outro recurso legal que permita a
+          utilização de dinheiro público de forma eficiente, econômica, legal, impessoal e
+          moral. Muitos são as
           <a
             href="https://institutoops.org.br/o-que-ja-fizemos/"
             target="_blank"
@@ -177,8 +173,8 @@
     <div class="container form-group">
       <h2 class="page-title">Campeões de gastos</h2>
       <p>
-        Os Parlamentares que mais gastaram dinheiro público da verba
-        indenizatória da atual legislatura
+        Os Parlamentares que mais gastaram dinheiro público da verba indenizatória da
+        atual legislatura
       </p>
       <br />
       <div class="resumo-gastos vld-parent" ref="CampeoesGastos">
@@ -246,7 +242,9 @@
                   <div class="col-sx-4">
                     <img
                       v-lazy="
-                        '//static.ops.net.br/senador/' + gasto.id_sf_senador + '_120x160.jpg'
+                        '//static.ops.net.br/senador/' +
+                        gasto.id_sf_senador +
+                        '_120x160.jpg'
                       "
                       v-bind:alt="gasto.nome_parlamentar"
                       class="card-img"
@@ -283,10 +281,7 @@
             style="margin-bottom: 15px"
             >Câmara dos Deputados</a
           >&nbsp;
-          <a
-            href="/#/senador"
-            class="btn btn-danger btn-lg"
-            style="margin-bottom: 15px"
+          <a href="/#/senador" class="btn btn-danger btn-lg" style="margin-bottom: 15px"
             >Senado Federal</a
           >
         </div>
@@ -594,7 +589,7 @@ export default {
     //   });
 
     // axios
-    //   .get(`${process.env.VUE_APP_API}/#/senador/senadoresumomensal`)
+    //   .get(`${process.env.VUE_APP_API}/senador/senadoresumomensal`)
     //   .then((response) => {
     //     this.chartcSenadoResumoMensalOptions.series = response.data;
 
@@ -610,24 +605,18 @@ export default {
     axios
       .get(`${process.env.VUE_APP_API}/deputado/camararesumoanual`)
       .then((response) => {
-        this.chartCamaraResumoAnualOptions.series[0].data =
-          response.data.series;
-        this.chartCamaraResumoAnualOptions.xAxis.categories =
-          response.data.categories;
+        this.chartCamaraResumoAnualOptions.series[0].data = response.data.series;
+        this.chartCamaraResumoAnualOptions.xAxis.categories = response.data.categories;
 
         loaderCamaraResumoAnual.hide();
       });
 
-    axios
-      .get(`${process.env.VUE_APP_API}/#/senador/senadoresumoanual`)
-      .then((response) => {
-        this.chartSenadoResumoAnualOptions.series[0].data =
-          response.data.series;
-        this.chartSenadoResumoAnualOptions.xAxis.categories =
-          response.data.categories;
+    axios.get(`${process.env.VUE_APP_API}/senador/senadoresumoanual`).then((response) => {
+      this.chartSenadoResumoAnualOptions.series[0].data = response.data.series;
+      this.chartSenadoResumoAnualOptions.xAxis.categories = response.data.categories;
 
-        loaderSenadoResumoAnual.hide();
-      });
+      loaderSenadoResumoAnual.hide();
+    });
   },
   methods: {
     buscar() {
