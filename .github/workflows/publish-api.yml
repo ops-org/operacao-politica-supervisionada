@@ -1,10 +1,10 @@
-name: Build and deploy .NET Core application to Web App ops-web
+name: Build and deploy .NET Core application to Web App api-ops
 on:
   push:
     branches:
     - master
 env:
-  AZURE_WEBAPP_NAME: ops-web
+  AZURE_WEBAPP_NAME: api-ops
   AZURE_WEBAPP_PACKAGE_PATH: OPS.API/published
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 7.0.x
@@ -13,9 +13,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+    - uses: actions/checkout@v3
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
     - name: Restore
@@ -27,7 +27,7 @@ jobs:
     - name: Publish
       run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
     - name: Publish Artifacts
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v3
       with:
         name: webapp
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
@@ -36,7 +36,7 @@ jobs:
     needs: build
     steps:
     - name: Download artifact from build job
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: webapp
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
@@ -44,5 +44,5 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.ops_web_CC0A }}
+        publish-profile: ${{ secrets.api_ops_7900 }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
