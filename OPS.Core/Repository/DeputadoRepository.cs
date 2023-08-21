@@ -522,7 +522,7 @@ namespace OPS.Core.DAO
 
                 if (request.Periodo > 50)
                 {
-                    strSql.AppendLine($" AND d.id IN(select m.id_cf_deputado from cf_mandato m where m.id_legislatura = {request.Periodo.ToString()})");
+                    strSql.AppendLine($" AND d.id_deputado IN(select m.id_cf_deputado from cf_mandato m where m.id_legislatura = {request.Periodo.ToString()})");
                 }
 
                 if (!string.IsNullOrEmpty(request.Partido))
@@ -635,7 +635,7 @@ namespace OPS.Core.DAO
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
                 {
                     strSql.AppendLine(@"
-                        LEFT JOIN cf_mandato m on m.id_cf_deputado = d.id
+                        LEFT JOIN cf_mandato m on m.id_cf_deputado = d.id_deputado
                         WHERE d.id_deputado IS NOT NULL ");
 
                     if (!string.IsNullOrEmpty(filtro.Busca))
