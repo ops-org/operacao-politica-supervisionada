@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AngleSharp;
-using AngleSharp.Dom;
 using Dapper;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
-using OPS.Importador.ALE.Parlamentar;
 using RestSharp;
 
 namespace OPS.Importador.ALE;

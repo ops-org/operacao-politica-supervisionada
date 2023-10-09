@@ -1,10 +1,4 @@
-﻿using AngleSharp;
-using Dapper;
-using Microsoft.Extensions.Logging;
-using MySqlConnector;
-using OPS.Core;
-using OPS.Core.Entity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -13,6 +7,11 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using AngleSharp;
+using Dapper;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
+using OPS.Core.Entity;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador
@@ -41,7 +40,7 @@ namespace OPS.Importador
                     }
                     catch (HttpRequestException ex)
                     {
-                        if (ex.Message == "Response status code does not indicate success: 429 (Too Many Requests).") 
+                        if (ex.Message == "Response status code does not indicate success: 429 (Too Many Requests).")
                             throw;
 
                         Thread.Sleep(1000);

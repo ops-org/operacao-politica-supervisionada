@@ -1,27 +1,11 @@
-﻿using AngleSharp;
-using AngleSharp.Html.Dom;
-using CsvHelper;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using MySqlConnector;
-using OPS.Core;
-using OPS.Core.Entity;
-using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Windows.Markup;
+using Dapper;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
+using OPS.Core.Entity;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador

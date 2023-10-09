@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AngleSharp;
-using Dapper;
-using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
-using RestSharp;
 
 namespace OPS.Importador.ALE;
 

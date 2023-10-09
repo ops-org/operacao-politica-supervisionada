@@ -2,7 +2,6 @@
 using System.Threading;
 using RestSharp;
 using Serilog;
-using Serilog.Core;
 
 namespace OPS.Core
 {

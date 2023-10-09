@@ -1,15 +1,14 @@
-﻿using Dapper;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
 using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Security.Policy;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AngleSharp;
@@ -114,13 +113,13 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
 
         deputado.IdPartido = BuscarIdPartido(colunas[1].TextContent.Split('(')[0].Trim());
         deputado.UrlPerfil = (colunas[0].QuerySelector("a") as IHtmlAnchorElement).Href;
-        
+
         deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
         deputado.Telefone = string.Join(",", colunas[2].QuerySelectorAll("a").Select(x => x.TextContent.Trim()));
 
         ImportacaoUtils.MapearRedeSocial(deputado, colunas[3].QuerySelectorAll("a"));
 
-       
+
 
         return deputado;
     }

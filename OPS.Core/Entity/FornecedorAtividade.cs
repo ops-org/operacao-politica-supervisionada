@@ -1,5 +1,5 @@
-﻿using Dapper;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using Dapper;
 
 namespace OPS.Core.Entity
 {

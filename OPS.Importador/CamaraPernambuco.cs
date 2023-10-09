@@ -1,10 +1,4 @@
-﻿using AngleSharp;
-using AngleSharp.Html.Dom;
-using Dapper;
-using Microsoft.Extensions.Logging;
-using OPS.Core;
-using OPS.Core.Entity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -12,6 +6,12 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Xml;
+using AngleSharp;
+using AngleSharp.Html.Dom;
+using Dapper;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
+using OPS.Core.Entity;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador

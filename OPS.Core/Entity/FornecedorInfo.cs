@@ -1,7 +1,7 @@
-﻿using Dapper;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Dapper;
 
 namespace OPS.Core.Entity
 {

@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.DTO;
-using System.Threading.Tasks;
 
 namespace OPS.API.Controllers
 {

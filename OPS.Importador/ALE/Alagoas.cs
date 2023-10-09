@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -64,7 +63,7 @@ public class ImportadorParlamentarAlagoas : ImportadorParlamentarCrawler
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         var elementoNome = colunaDetalhes[1].QuerySelector("em,i");
-        if(elementoNome != null)
+        if (elementoNome != null)
             deputado.NomeParlamentar = elementoNome.TextContent.Trim();
         else
             deputado.NomeParlamentar = colunaDetalhes[1].TextContent.Replace("Nome Civil:", "").Trim();

@@ -1,8 +1,8 @@
-﻿using OPS.Core.Entity;
-using RestSharp;
-using System;
+﻿using System;
 using System.Text.Json;
 using System.Threading;
+using OPS.Core.Entity;
+using RestSharp;
 
 namespace OPS.Core
 {

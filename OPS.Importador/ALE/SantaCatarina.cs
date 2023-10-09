@@ -31,7 +31,7 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
 {
     public ImportadorDespesasSantaCatarina(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        
+
         base.config = new ImportadorCotaParlamentarBaseConfig()
         {
             BaseAddress = "https://sapl.al.ac.leg.br/parlamentar/",

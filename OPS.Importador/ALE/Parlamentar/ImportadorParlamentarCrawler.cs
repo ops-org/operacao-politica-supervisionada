@@ -3,10 +3,8 @@ using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
-using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador.ALE.Parlamentar;
 

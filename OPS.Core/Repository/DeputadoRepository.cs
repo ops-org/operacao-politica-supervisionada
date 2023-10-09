@@ -1,10 +1,10 @@
-﻿using MySqlConnector;
-using OPS.Core.DTO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
+using MySqlConnector;
+using OPS.Core.DTO;
 
 namespace OPS.Core.DAO
 {

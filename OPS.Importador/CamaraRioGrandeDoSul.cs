@@ -1,19 +1,13 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using OPS.Core;
-using OPS.Core.Entity;
-using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
+using Dapper;
+using Microsoft.Extensions.Logging;
+using OPS.Core.Entity;
+using RestSharp;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace OPS.Importador
@@ -23,7 +17,7 @@ namespace OPS.Importador
     /// </summary>
     public class CamaraRioGrandeDoSul : ImportadorCotaParlamentarBase
     {
-        public CamaraRioGrandeDoSul(ILogger<CamaraRioGrandeDoSul> logger, IConfiguration configuration, IDbConnection connection) : 
+        public CamaraRioGrandeDoSul(ILogger<CamaraRioGrandeDoSul> logger, IConfiguration configuration, IDbConnection connection) :
             base("RS", logger, configuration, connection)
         {
         }

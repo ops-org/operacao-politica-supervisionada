@@ -7,25 +7,19 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using Dapper;
-using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
-using OPS.Importador.ALE;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
 using RestSharp;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using JsonArray = System.Text.Json.Nodes.JsonArray;
 
 namespace OPS.Importador
 {
@@ -1075,7 +1069,7 @@ namespace OPS.Importador
 
         private void ProcessarDespesasTemp(AppDb banco, int ano)
         {
-            
+
             CorrigeDespesas(banco);
             //InsereSenadorFaltante(banco);
             InsereFornecedorFaltante(banco);

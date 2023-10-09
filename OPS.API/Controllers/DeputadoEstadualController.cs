@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using OPS.Core;
 using OPS.Core.DAO;
 using OPS.Core.DTO;
-using System.Threading.Tasks;
 
 namespace OPS.API.Controllers
 {

@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Data;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using OPS.Core;
-using OPS.Core.Entity;
 using RestSharp;
 
 namespace OPS.Importador.ALE.Parlamentar

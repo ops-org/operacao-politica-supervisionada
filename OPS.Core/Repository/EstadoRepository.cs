@@ -6,7 +6,7 @@ using OPS.Core.DTO;
 
 namespace OPS.Core.DAO
 {
-    public class EstadoRepository: BaseRepository
+    public class EstadoRepository : BaseRepository
     {
         public EstadoRepository(IDbConnection connection) : base(connection)
         {
