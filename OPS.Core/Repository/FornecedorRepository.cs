@@ -284,8 +284,15 @@ LIMIT 10 ");
                         if (tipo == "Deputado Federal")
                         {
                             // Deputado Federal
-                            link_parlamentar = $"/deputado-federal/{id_parlamentar}";
-                            link_despesas = $"/deputado-federal?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+                            link_parlamentar = $"/#/deputado-federal/{id_parlamentar}";
+                            link_despesas = $"/#/deputado-federal?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+
+                        }
+                        else if (tipo == "Deputado Estadual")
+                        {
+                            // Deputado Estadual
+                            link_parlamentar = $"/#/deputado-estadual/{id_parlamentar}";
+                            link_despesas = $"/#/deputado-estadual?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
 
                         }
                         else if (tipo == "Deputado Estadual")
@@ -298,8 +305,8 @@ LIMIT 10 ");
                         else
                         {
                             // Senador
-                            link_parlamentar = $"/senador/{id_parlamentar}";
-                            link_despesas = $"/senador?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+                            link_parlamentar = $"/#/senador/{id_parlamentar}";
+                            link_despesas = $"/#/senador?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
                         }
 
                         lstRetorno.Add(new

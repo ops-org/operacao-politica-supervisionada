@@ -554,7 +554,7 @@
                   render: (data, type, full) => {
                     if (type === "display") {
                       if (full.id_fornecedor)
-                        return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                        return `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
 
                       return "";
                     }
@@ -618,7 +618,7 @@
                     var texto = ``;
                     if (type === "display") {
                       if (full.id_fornecedor) {
-                        texto = `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                        texto = `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
 
                         if (full.favorecido) texto += ` (${full.favorecido})`;
                         if (full.despesa_tipo)
@@ -645,7 +645,7 @@
                   label: "Servidor",
                   render: (data, type, full) => {
                     if (type === "display") {
-                      return `<a href="/presidencia/${full.id_servidor}">${data}</a>`;
+                      return `<a href="/#/presidencia/${full.id_servidor}">${data}</a>`;
                     }
                     return data;
                   },
@@ -655,7 +655,7 @@
                   label: "Valor",
                   // render: (data, type, full) => {
                   //   if (type === 'display') {
-                  //     return `<a href="/presidencia/documento/${full.id_pr_despesa}">${data}</a>`;
+                  //     return `<a href="/#/presidencia/documento/${full.id_pr_despesa}">${data}</a>`;
                   //   }
                   //   return data;
                   // },

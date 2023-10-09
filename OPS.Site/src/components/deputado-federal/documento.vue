@@ -17,7 +17,7 @@
             <p class="mb-1">
               <strong>Nome Parlamentar: </strong>
               <a
-                v-bind:href="'/deputado-federal/' + documento.id_cf_deputado"
+                v-bind:href="'/#/deputado-federal/' + documento.id_cf_deputado"
                 title="Visualisar perfil do parlamentar"
               >{{documento.nome_parlamentar}}</a>
             </p>
@@ -193,13 +193,13 @@
                     <tr v-for="row in documentos_mesmo_dia" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'/fornecedor/' + row.id_fornecedor"
+                          v-bind:href="'/#/fornecedor/' + row.id_fornecedor"
                         >{{row.nome_fornecedor}}</a>
                       </td>
                       <td>{{row.sigla_estado_fornecedor}}</td>
                       <td>
                         <a
-                          v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa"
+                          v-bind:href="'/#/deputado-federal/documento/' + row.id_cf_despesa"
                         >{{row.valor_liquido}}</a>
                       </td>
                     </tr>
@@ -229,13 +229,13 @@
                     <tr v-for="row in documentos_subcota_mes" :key="row.id_fornecedor">
                       <td>
                         <a
-                          v-bind:href="'/fornecedor/' + row.id_fornecedor"
+                          v-bind:href="'/#/fornecedor/' + row.id_fornecedor"
                         >{{row.nome_fornecedor}}</a>
                       </td>
                       <td>{{row.sigla_estado_fornecedor}}</td>
                       <td>
                         <a
-                          v-bind:href="'/deputado-federal/documento/' + row.id_cf_despesa"
+                          v-bind:href="'/#/deputado-federal/documento/' + row.id_cf_despesa"
                         >{{row.valor_liquido}}</a>
                       </td>
                     </tr>
@@ -286,8 +286,8 @@ export default {
       doc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${doc.id_deputado}&dataInicio=${doc.competencia}&dataFim=${doc.competencia}&despesa=${doc.id_cf_despesa_tipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
       doc.url_detalhes_documento = `${urlCamara}documento?nuDeputadoId=${doc.id_deputado}&numMes=${doc.mes}&numAno=${doc.ano}&despesa=${doc.id_cf_despesa_tipo}&cnpjFornecedor=${doc.cnpj_cpf}&idDocumento=${doc.numero_documento}`;
 
-      doc.url_beneficiario = `/fornecedor/${doc.id_fornecedor}`;
-      doc.url_documentos_Deputado_beneficiario = `/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=57&Agrupamento=6`;
+      doc.url_beneficiario = `/#/fornecedor/${doc.id_fornecedor}`;
+      doc.url_documentos_Deputado_beneficiario = `/#/deputado-federal?IdParlamentar=${doc.id_cf_deputado}&Fornecedor=${doc.id_fornecedor}&Periodo=57&Agrupamento=6`;
 
       this.documento = doc;
     });

@@ -719,7 +719,7 @@ export default {
                 label: "Parlamentar",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/deputado-estadual/${full.id_cl_deputado}">${data}</a>`;
+                    return `<a href="/#/deputado-estadual/${full.id_cl_deputado}">${data}</a>`;
                   }
                   return data;
                 },
@@ -794,7 +794,7 @@ export default {
                 render: (data, type, full) => {
                   if (type === "display") {
                     if (full.id_fornecedor)
-                      return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                      return `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
 
                     return "";
                   }
@@ -898,7 +898,7 @@ export default {
                   var texto = ``;
                   if (type === "display") {
                     if (full.id_fornecedor) {
-                      texto = `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                      texto = `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
 
                       if (full.favorecido) texto += ` (${full.favorecido})`;
                       if (full.despesa_tipo)
@@ -925,7 +925,7 @@ export default {
                 label: "Parlamentar",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/deputado-estadual/${full.id_cl_deputado}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
+                    return `<a href="/#/deputado-estadual/${full.id_cl_deputado}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
                   }
                   return data;
                 },
@@ -935,7 +935,7 @@ export default {
                 label: "Valor",
                 // render: (data, type, full) => {
                 //   if (type === 'display') {
-                //     return `<a href="/deputado-estadual/documento/${full.id_cl_despesa}">${data}</a>`;
+                //     return `<a href="/#/deputado-estadual/documento/${full.id_cl_despesa}">${data}</a>`;
                 //   }
                 //   return data;
                 // },

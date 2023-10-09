@@ -440,7 +440,7 @@ export default {
                   sortable: true,
                   render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/deputado-federal/${full.id}">${data}</a>`;
+                    return `<a href="/#/deputado-federal/${full.id}">${data}</a>`;
                   }
                   return data;
                 },
@@ -572,7 +572,7 @@ export default {
                 label: 'Custo Total',
                 render: (data, type, full) => {
                   if (type === 'display') {
-                    return `<a href="/deputado-federal/remuneracao/${full.id}">${data}</a>`;
+                    return `<a href="/#/deputado-federal/remuneracao/${full.id}">${data}</a>`;
                   }
                   return data;
                 },

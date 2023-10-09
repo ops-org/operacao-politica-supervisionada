@@ -653,7 +653,7 @@ export default {
                 label: "Parlamentar",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a>`;
+                    return `<a href="/#/deputado-federal/${full.id_cf_deputado}">${data}</a>`;
                   }
                   return data;
                 },
@@ -727,7 +727,7 @@ export default {
                 label: "Fornecedor",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                    return `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
@@ -827,7 +827,7 @@ export default {
                 label: "Fornecedor",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
+                    return `<a href="/#/fornecedor/${full.id_fornecedor}">${data}</a><br><small>${full.cnpj_cpf}</small>`;
                   }
                   return data;
                 },
@@ -837,7 +837,7 @@ export default {
                 label: "Parlamentar",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/deputado-federal/${full.id_cf_deputado}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
+                    return `<a href="/#/deputado-federal/${full.id_cf_deputado}">${data}</a><br><small>${full.sigla_partido} / ${full.sigla_estado}</small>`;
                   }
                   return data;
                 },
@@ -847,7 +847,7 @@ export default {
                 label: "Valor",
                 render: (data, type, full) => {
                   if (type === "display") {
-                    return `<a href="/deputado-federal/documento/${full.id_cf_despesa}">${data}</a>`;
+                    return `<a href="/#/deputado-federal/documento/${full.id_cf_despesa}">${data}</a>`;
                   }
                   return data;
                 },

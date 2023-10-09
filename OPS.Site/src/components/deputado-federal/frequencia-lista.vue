@@ -52,7 +52,7 @@ export default {
           label: '&nbsp;',
           render: (data, type) => {
             if (type === 'display') {
-              return `<a href="/deputado-federal/frequencia/${data}" class="btn btn-primary btn-sm">Detalhar sessão</a>`;
+              return `<a href="/#/deputado-federal/frequencia/${data}" class="btn btn-primary btn-sm">Detalhar sessão</a>`;
             }
             return data;
           },

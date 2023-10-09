@@ -57,8 +57,8 @@ Highcharts.setOptions({
 // https://github.com/hilongjw/vue-lazyload
 Vue.use(VueLazyload, {
   preLoad: 1.3,
-  error: '/img/sem_foto.jpg',
-  loading: '/img/loading.svg',
+  error: '//static.ops.net.br/sem_foto.jpg',
+  loading: '//static.ops.net.br/loading.svg',
   attempt: 1,
 });
 
