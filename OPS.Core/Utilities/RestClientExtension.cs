@@ -2,16 +2,20 @@
 using System.Threading;
 using RestSharp;
 using Serilog;
+using Serilog.Core;
 
 namespace OPS.Core
 {
     public static class RestClientExtension
     {
-        public static IRestResponse ExecuteWithAutoRetry(this RestClient client, IRestRequest request, int totalRetries = 5)
+        public static RestResponse GetWithAutoRetry(this RestClient client, RestRequest request, int totalRetries = 5)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            Log.Verbose("Chamando URL: {Url}", request.Resource);
+
             try
             {
-                var response = client.Execute(request);
+                var response = client.Get(request);
                 if (!string.IsNullOrEmpty(response.Content))
                     return response;
 
@@ -27,14 +31,19 @@ namespace OPS.Core
 
                 throw;
             }
+            finally
+            {
+                watch.Stop();
+                Log.Verbose("Requisição processada em {ElapsedTotalSeconds} s", watch.Elapsed.TotalSeconds);
+            }
         }
 
-        private static IRestResponse ReTry(RestClient client, IRestRequest request, int totalRetries)
+        private static RestResponse ReTry(RestClient client, RestRequest request, int totalRetries)
         {
             Log.Verbose("Tentativa {Tentativa} para a url {Url}", totalRetries, request.Resource);
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
-            return ExecuteWithAutoRetry(client, request, totalRetries - 1);
+            Thread.Sleep(TimeSpan.FromMinutes(1));
+            return GetWithAutoRetry(client, request, totalRetries - 1);
         }
     }
 }

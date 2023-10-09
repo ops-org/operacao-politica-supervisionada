@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
+using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
+using OPS.Core.Entity;
 
-namespace OPS.Importador
+namespace OPS.Importador.Utilities
 {
     public static class ImportacaoUtils
     {
@@ -27,11 +27,35 @@ namespace OPS.Importador
             Image thumbnail;
             using (var img = Image.FromFile(sourcePath))
             {
-                thumbnail = img.GetThumbnailImage(width, height, () => false, IntPtr.Zero);
+                thumbnail = img.GetThumbnailImage(width, height, () => false, nint.Zero);
             }
 
             thumbnail.Save(sourcePath.Replace(".jpg", "_" + width + "x" + height + ".jpg"), System.Drawing.Imaging.ImageFormat.Jpeg);
         }
+
+        public static void MapearRedeSocial(DeputadoEstadual deputado, IHtmlCollection<IElement> links)
+        {
+            //TODO: Criar colunas no banco
+            foreach (var link in links)
+            {
+                var href = (link as IHtmlAnchorElement).Href;
+                if (string.IsNullOrEmpty(href) || href.EndsWith(".com/")) continue;
+
+                if (href.Contains("instagram.com/"))
+                    deputado.Instagram = href;
+                else if (href.Contains("facebook.com/"))
+                    deputado.Facebook = href;
+                else if (href.Contains("twitter.com/") || href.Contains("x.com/"))
+                    deputado.Twitter = href;
+                else if (href.Contains("youtube.com/"))
+                    deputado.YouTube = href;
+                else if (href.Contains("@"))
+                    deputado.Email = href.Replace("mailto:", "");
+                else
+                    deputado.Site = href;
+            }
+        }
+
 
         //public static List<int> ReadPdfFile(string fileName, String searthText)
         //{

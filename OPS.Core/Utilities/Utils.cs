@@ -247,13 +247,13 @@ namespace OPS.Core
             }
 
             var restClient = new RestClient("https://api.sendgrid.com/v3/mail/send");
-            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true; // Noncompliant: trust all certificates
+            //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true; // Noncompliant: trust all certificates
 
-            var request = new RestRequest(Method.POST);
+            var request = new RestRequest();
             request.AddHeader("content-type", "application/json");
             request.AddHeader("authorization", "Bearer " + apiKey);
             request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
-            IRestResponse response = await restClient.ExecuteAsync(request);
+            RestResponse response = await restClient.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Accepted)
             {
@@ -312,7 +312,7 @@ namespace OPS.Core
 
         public static string NullIfEmpty(this string value)
         {
-            if (!string.IsNullOrEmpty(value.Trim()))
+            if (!string.IsNullOrEmpty(value?.Trim()))
                 return value;
 
             return null;

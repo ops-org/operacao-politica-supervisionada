@@ -1,38 +1,58 @@
-﻿using CsvHelper;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using OPS.Core;
-using OPS.Core.Entity;
-using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using CsvHelper;
+using Dapper;
+using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
+using OPS.Core.Entity;
+using OPS.Core.Enum;
+using OPS.Importador.ALE;
+using OPS.Importador.ALE.Despesa;
+using OPS.Importador.ALE.Parlamentar;
+using OPS.Importador.Utilities;
+using RestSharp;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using JsonArray = System.Text.Json.Nodes.JsonArray;
 
 namespace OPS.Importador
 {
-    /// <summary>
-    /// Senado Federal
-    /// https://www12.senado.leg.br/dados-abertos
-    /// </summary>
-    public class Senado : ImportadorCotaParlamentarBase
+    public class Senado : ImportadorBase
     {
-        public Senado(ILogger<Senado> logger, IConfiguration configuration, IDbConnection connection) :
-            base("SF", logger, configuration, connection)
+        public Senado(IServiceProvider serviceProvider) : base(serviceProvider)
         {
+            importadorParlamentar = new ImportadorParlamentarSenado(serviceProvider);
+            importadorDespesas = new ImportadorDespesasSenado(serviceProvider);
+        }
+    }
+
+    public class ImportadorParlamentarSenado : IImportadorParlamentar
+    {
+        protected readonly ILogger<ImportadorParlamentarSenado> logger;
+        protected readonly IDbConnection connection;
+
+        public ImportadorParlamentarSenado(IServiceProvider serviceProvider)
+        {
+            logger = serviceProvider.GetService<ILogger<ImportadorParlamentarSenado>>();
+            connection = serviceProvider.GetService<IDbConnection>();
         }
 
-        public override void ImportarParlamentares()
+        public Task Importar()
         {
+            logger.LogWarning($"Importar Parlamentares do Senado");
+
             using (var banco = new AppDb())
             {
                 var lstSenadorAtivo = new List<string>();
@@ -49,13 +69,13 @@ namespace OPS.Importador
                 banco.ExecuteNonQuery("UPDATE sf_senador SET ativo = 'N' WHERE ativo = 'S'");
 
                 var restClient = new RestClient();
-                restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+                //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
                 #region Importar senadores ativos
-                var request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/lista/atual", Method.GET);
+                var request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/lista/atual");
                 request.AddHeader("Accept", "application/json");
 
-                IRestResponse resSenadores = restClient.ExecuteWithAutoRetry(request);
+                RestResponse resSenadores = restClient.GetWithAutoRetry(request);
                 JsonDocument jSenadores = JsonDocument.Parse(resSenadores.Content);
                 JsonElement arrIdentificacaoParlamentar = jSenadores.RootElement.GetProperty("ListaParlamentarEmExercicio").GetProperty("Parlamentares").GetProperty("Parlamentar");
                 var senadores = arrIdentificacaoParlamentar.EnumerateArray();
@@ -154,10 +174,10 @@ namespace OPS.Importador
                 var totalSenadores = lstSenador.Count();
                 foreach (var idSenador in lstSenador)
                 {
-                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador, Method.GET);
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador);
                     request.AddHeader("Accept", "application/json");
 
-                    var resSenador = restClient.ExecuteWithAutoRetry(request);
+                    var resSenador = restClient.GetWithAutoRetry(request);
                     JsonDocument jSenador = JsonDocument.Parse(resSenador.Content);
                     Senador senador = JsonSerializer.Deserialize<Senador>(resSenador.Content);
                     var parlamentar = senador.DetalheParlamentar.Parlamentar;
@@ -200,10 +220,10 @@ namespace OPS.Importador
                     banco.AddParameter("naturalidade", dadosBasicos?.Naturalidade);
                     banco.AddParameter("sigla_uf_naturalidade", dadosBasicos?.UfNaturalidade);
 
-                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/profissao?v=1", Method.GET);
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/profissao?v=1");
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resProfissoes = restClient.ExecuteWithAutoRetry(request);
+                    RestResponse resProfissoes = restClient.GetWithAutoRetry(request);
                     JsonDocument jSenadorProfissoes = JsonDocument.Parse(resProfissoes.Content);
                     var jParlamentarProfissoes = jSenadorProfissoes.RootElement.GetProperty("ProfissaoParlamentar").GetProperty("Parlamentar");
 
@@ -269,10 +289,10 @@ namespace OPS.Importador
                         }
                     }
 
-                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/historicoAcademico?v=1", Method.GET);
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/historicoAcademico?v=1");
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resHistoricoAcademico = restClient.ExecuteWithAutoRetry(request);
+                    RestResponse resHistoricoAcademico = restClient.GetWithAutoRetry(request);
                     JsonDocument jSenadorHistoricoAcademico = JsonDocument.Parse(resHistoricoAcademico.Content);
                     var jHistoricoAcademico = jSenadorHistoricoAcademico.RootElement.GetProperty("HistoricoAcademicoParlamentar").GetProperty("Parlamentar");
 
@@ -306,10 +326,10 @@ namespace OPS.Importador
                         }
                     }
 
-                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos?v=5", Method.GET);
+                    request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/mandatos?v=5");
                     request.AddHeader("Accept", "application/json");
 
-                    IRestResponse resSenadorMandato = restClient.ExecuteWithAutoRetry(request);
+                    RestResponse resSenadorMandato = restClient.GetWithAutoRetry(request);
                     var senadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
                     var arrPalamentar = senadorMandato.MandatoParlamentar.Parlamentar;
                     var arrMandatosPalamentar = arrPalamentar.Mandatos.Mandato;
@@ -463,335 +483,394 @@ namespace OPS.Importador
                 #endregion Atualizar senadores ativos e os que estavam ativos antes da importação
             }
 
-            //return string.Empty;
+            return Task.CompletedTask;
         }
 
-        public string AtualizaCadastroParlamentarCompleto()
+    }
+
+    /// <summary>
+    /// Senado Federal
+    /// https://www12.senado.leg.br/dados-abertos
+    /// </summary>
+    public class ImportadorDespesasSenado : IImportadorDespesas
+    {
+        protected readonly ILogger<ImportadorDespesasSenado> logger;
+        protected readonly IDbConnection connection;
+
+        public string rootPath { get; set; }
+        public string tempPath { get; set; }
+
+        private int linhasProcessadasAno { get; set; }
+
+        public ImportadorDespesasSenado(IServiceProvider serviceProvider)
         {
-            using (var banco = new AppDb())
+            logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
+            connection = serviceProvider.GetService<IDbConnection>();
+
+            var configuration = serviceProvider.GetService<IConfiguration>();
+            rootPath = configuration["AppSettings:SiteRootFolder"];
+            tempPath = configuration["AppSettings:SiteTempFolder"];
+        }
+
+        //public string AtualizaCadastroParlamentarCompleto()
+        //{
+        //    using (var banco = new AppDb())
+        //    {
+        //        var lstSenadorNovo = new List<string>();
+        //        var lstSenador = new List<int>();
+
+        //        using (var reader = banco.ExecuteReader("SELECT s.id FROM sf_senador s left join sf_mandato m ON m.id_sf_senador = s.id WHERE m.id IS null"))
+        //            while (reader.Read())
+        //                lstSenador.Add(Convert.ToInt32(reader["id"]));
+
+        //        using (var reader = banco.ExecuteReader("SELECT id FROM sf_senador order by id"))
+        //            while (reader.Read())
+        //                lstSenadorNovo.Add(reader["id"].ToString());
+
+        //        var lstLegislatura = new List<string>();
+        //        using (var reader = banco.ExecuteReader("SELECT id FROM sf_legislatura"))
+        //            while (reader.Read())
+        //                lstLegislatura.Add(reader["id"].ToString());
+
+        //        var lstMotivoAfastamento = new List<string>();
+        //        using (var reader = banco.ExecuteReader("SELECT id FROM sf_motivo_afastamento"))
+        //            while (reader.Read())
+        //                lstMotivoAfastamento.Add(reader["id"].ToString());
+
+        //        var lstProfissao = new Dictionary<string, int>();
+        //        using (var reader = banco.ExecuteReader("SELECT id, descricao FROM profissao"))
+        //            while (reader.Read())
+        //                lstProfissao.Add(reader["descricao"].ToString(), Convert.ToInt32(reader["id"]));
+
+        //        var restClient = new RestClient();
+        //        //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
+        //        var indice = 0;
+        //        var totalSenadores = lstSenador.Count;
+        //        foreach (var idSenador in lstSenador)
+        //        {
+        //            var reqSenador = new RestRequest($"http://legis.senado.gov.br/dadosabertos/senador/{idSenador}");
+        //            reqSenador.AddHeader("Accept", "application/json");
+
+        //            var resSenador = restClient.Get(reqSenador);
+        //            JsonNode jSenador = JsonNode.Parse(resSenador.Content).AsObject();
+        //            JsonNode arrParlamentar = (JsonNode)jSenador["DetalheParlamentar"]["Parlamentar"];
+
+        //            var parlamentarCompleto = arrParlamentar.Deserialize<SenadorParlamentar>();
+        //            logger.LogInformation("{IndiceAtual}/{Total} Consultando Senador {IdSenador}: {NomeParlamentar}", ++indice, totalSenadores, idSenador, parlamentarCompleto.IdentificacaoParlamentar.NomeParlamentar);
+
+        //            var parlamentar = parlamentarCompleto.IdentificacaoParlamentar;
+
+        //            if (string.IsNullOrEmpty(parlamentar.UfParlamentar))
+        //            {
+        //                try
+        //                {
+        //                    var jUltimoMandato = jSenador["DetalheParlamentar"]["Parlamentar"]["UltimoMandato"];
+        //                    if (jUltimoMandato != null)
+        //                    {
+        //                        if (jUltimoMandato is JsonArray)
+        //                            parlamentar.UfParlamentar = jUltimoMandato[0]["UfParlamentar"]?.ToString();
+        //                        else
+        //                            parlamentar.UfParlamentar = jUltimoMandato["UfParlamentar"]?.ToString();
+        //                    }
+        //                }
+        //                catch (Exception)
+        //                { }
+        //            }
+
+        //            if (string.IsNullOrEmpty(parlamentar.NomeParlamentar))
+        //            {
+        //                parlamentar.NomeParlamentar = parlamentar.NomeCompletoParlamentar;
+        //            }
+
+        //            banco.AddParameter("id", parlamentar.CodigoParlamentar);
+        //            banco.AddParameter("codigo", parlamentar.CodigoPublicoNaLegAtual);
+        //            banco.AddParameter("nome", parlamentar.NomeParlamentar);
+        //            banco.AddParameter("nome_completo", parlamentar.NomeCompletoParlamentar);
+        //            banco.AddParameter("sexo", parlamentar.SexoParlamentar[0].ToString());
+        //            banco.AddParameter("sigla_partido", parlamentar.SiglaPartidoParlamentar);
+        //            banco.AddParameter("sigla_uf", parlamentar.UfParlamentar);
+        //            banco.AddParameter("email", parlamentar.EmailParlamentar);
+        //            banco.AddParameter("site", parlamentar.UrlPaginaParticular);
+
+        //            var dadosBasicos = parlamentarCompleto.DadosBasicosParlamentar ?? new DadosBasicosParlamentar();
+        //            banco.AddParameter("nascimento", dadosBasicos.DataNascimento);
+        //            banco.AddParameter("naturalidade", dadosBasicos.Naturalidade);
+        //            banco.AddParameter("sigla_uf_naturalidade", dadosBasicos.UfNaturalidade);
+
+        //            var lstSenadorProfissao = new List<Profissao>();
+        //            if (arrParlamentar["Profissoes"] != null)
+        //            {
+        //                if (arrParlamentar["Profissoes"]["Profissao"] is JsonArray)
+        //                {
+        //                    lstSenadorProfissao = arrParlamentar["Profissoes"]["Profissao"].Deserialize<List<Profissao>>();
+        //                }
+        //                else
+        //                {
+        //                    lstSenadorProfissao.Add(arrParlamentar["Profissoes"]["Profissao"].Deserialize<Profissao>());
+        //                }
+        //            }
+        //            if (lstSenadorProfissao.Any())
+        //            {
+        //                banco.AddParameter("profissao", string.Join(", ", lstSenadorProfissao.Select(obj => obj.NomeProfissao)));
+        //            }
+        //            else
+        //            {
+        //                banco.AddParameter("profissao", DBNull.Value);
+        //            }
+
+        //            banco.ExecuteNonQuery(@"
+        //                UPDATE sf_senador SET
+        //                    codigo = @codigo
+        //                    , nome = @nome
+        //                    , nome_completo = @nome_completo
+        //                    , sexo = @sexo
+        //                    , nascimento = @nascimento
+        //                    , naturalidade = @naturalidade
+        //                    , id_estado_naturalidade = (SELECT id FROM estado where sigla like @sigla_uf_naturalidade)
+        //                    , profissao = @profissao
+        //                    , id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
+        //                    , id_estado = (SELECT id FROM estado where sigla like @sigla_uf)
+        //                    , email = @email
+        //                    , site = @site
+        //                WHERE id = @id
+        //            ");
+
+        //            if (lstSenadorProfissao.Any())
+        //            {
+        //                foreach (var profissao in lstSenadorProfissao)
+        //                {
+        //                    if (!lstProfissao.ContainsKey(profissao.NomeProfissao))
+        //                    {
+        //                        banco.AddParameter("descricao", profissao.NomeProfissao);
+        //                        var idProfissao = banco.ExecuteScalar(@"INSERT INTO profissao (descricao) values (@descricao); SELECT LAST_INSERT_ID();");
+
+        //                        lstProfissao.Add(profissao.NomeProfissao, Convert.ToInt32(idProfissao));
+        //                    }
+
+        //                    banco.AddParameter("id_sf_senador", idSenador);
+        //                    banco.AddParameter("id_profissao", lstProfissao[profissao.NomeProfissao]);
+
+        //                    banco.ExecuteNonQuery(@"INSERT IGNORE INTO sf_senador_profissao (id_sf_senador, id_profissao) values (@id_sf_senador, @id_profissao)");
+        //                }
+
+        //            }
+
+        //            var lstHistoricoAcademico = new List<SenadorCurso>();
+        //            if (arrParlamentar["HistoricoAcademico"] != null)
+        //            {
+        //                if (arrParlamentar["HistoricoAcademico"]["Curso"] is JsonArray)
+        //                {
+        //                    lstHistoricoAcademico = arrParlamentar["HistoricoAcademico"]["Curso"].Deserialize<List<SenadorCurso>>();
+        //                }
+        //                else
+        //                {
+        //                    lstHistoricoAcademico.Add(arrParlamentar["HistoricoAcademico"]["Curso"].Deserialize<SenadorCurso>());
+        //                }
+        //            }
+        //            foreach (var curso in lstHistoricoAcademico)
+        //            {
+        //                banco.AddParameter("id_sf_senador", idSenador);
+        //                banco.AddParameter("nome_curso", curso.NomeCurso);
+        //                banco.AddParameter("grau_instrucao", curso.GrauInstrucao);
+        //                banco.AddParameter("estabelecimento", curso.Estabelecimento);
+        //                banco.AddParameter("local", curso.Local);
+
+        //                banco.ExecuteNonQuery(@"
+        //                    INSERT IGNORE INTO sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
+        //                    values (@id_sf_senador, @nome_curso, @grau_instrucao, @estabelecimento, @local)");
+        //            }
+
+
+        //            var reqSenadorMandato = new RestRequest($"http://legis.senado.gov.br/dadosabertos/senador/{idSenador.ToString()}/mandatos");
+        //            reqSenadorMandato.AddHeader("Accept", "application/json");
+
+        //            RestResponse resSenadorMandato = restClient.Get(reqSenadorMandato);
+        //            SenadorMandato jSenadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
+        //            var arrPalamentar = jSenadorMandato.MandatoParlamentar.Parlamentar;
+        //            var arrMandatosPalamentar = arrPalamentar.Mandatos?.Mandato;
+
+
+        //            if (arrMandatosPalamentar != null)
+        //            {
+
+        //                logger.LogInformation("Consultando {TotalMandatos} mandato(s)", arrMandatosPalamentar.Count());
+        //                foreach (var mandato in arrMandatosPalamentar)
+        //                {
+        //                    try
+        //                    {
+        //                        //Ignorar mandatos muito antigos
+        //                        if (mandato.CodigoMandato == null) continue;
+
+        //                        #region Mandato
+        //                        banco.AddParameter("id", mandato.CodigoMandato);
+        //                        banco.AddParameter("id_sf_senador", idSenador);
+        //                        banco.AddParameter("sigla_uf", mandato.UfParlamentar);
+        //                        banco.AddParameter("participacao", mandato.DescricaoParticipacao[0].ToString());
+        //                        banco.AddParameter("exerceu", mandato.Exercicios != null);
+
+        //                        banco.ExecuteNonQuery(@"
+        //                                INSERT IGNORE INTO sf_mandato (
+        //                                    id, id_sf_senador, id_estado, participacao, exerceu
+        //                                ) VALUES (
+        //                                    @id, @id_sf_senador, (SELECT id FROM estado where sigla like @sigla_uf), @participacao, @exerceu
+        //                                )
+        //                             ");
+
+        //                        if (mandato.DescricaoParticipacao == "Titular")
+        //                        {
+        //                            if (mandato.Suplentes != null && mandato.Suplentes.Suplente.Any(obj => obj.DescricaoParticipacao == "1º Suplente"))
+        //                            {
+        //                                var id = mandato.Suplentes.Suplente.FirstOrDefault(obj => obj.DescricaoParticipacao == "1º Suplente").CodigoParlamentar;
+        //                                if (!lstSenadorNovo.Contains(id))
+        //                                {
+        //                                    lstSenadorNovo.Add(id);
+
+        //                                    banco.AddParameter("id", id);
+        //                                    banco.ExecuteNonQuery(@"INSERT INTO sf_senador (id) VALUES (@id)");
+        //                                }
+        //                            }
+
+        //                            if (mandato.Suplentes != null && mandato.Suplentes.Suplente.Any(obj => obj.DescricaoParticipacao == "2º Suplente"))
+        //                            {
+        //                                var id = mandato.Suplentes.Suplente.FirstOrDefault(obj => obj.DescricaoParticipacao == "2º Suplente").CodigoParlamentar;
+        //                                if (!lstSenadorNovo.Contains(id))
+        //                                {
+        //                                    lstSenadorNovo.Add(id);
+
+        //                                    banco.AddParameter("id", id);
+        //                                    banco.ExecuteNonQuery(@"INSERT INTO sf_senador(id) VALUES (@id)");
+        //                                }
+        //                            }
+        //                        }
+        //                        #endregion Mandato
+
+        //                        if (mandato.DescricaoParticipacao == "Titular")
+        //                        {
+        //                            #region Mandato Legislatura
+
+        //                            var lstLegislaturaMandato = new List<LegislaturaDoMandato>();
+        //                            lstLegislaturaMandato.Add(mandato.PrimeiraLegislaturaDoMandato);
+        //                            lstLegislaturaMandato.Add(mandato.SegundaLegislaturaDoMandato);
+
+        //                            foreach (var legislatura in lstLegislaturaMandato)
+        //                            {
+        //                                if (!lstLegislatura.Contains(legislatura.NumeroLegislatura))
+        //                                {
+        //                                    banco.AddParameter("id", legislatura.NumeroLegislatura);
+        //                                    banco.AddParameter("inicio", legislatura.DataInicio);
+        //                                    banco.AddParameter("final", legislatura.DataFim);
+        //                                    banco.ExecuteNonQuery(@"
+        //                                         INSERT INTO sf_legislatura (
+        //                  id, inicio, final
+        //                 ) VALUES (
+        //                                             @id, @inicio, @final
+        //                                         )
+        //                                     ");
+
+        //                                    lstLegislatura.Add(legislatura.NumeroLegislatura);
+        //                                }
+
+        //                                banco.AddParameter("id_sf_mandato", mandato.CodigoMandato);
+        //                                banco.AddParameter("id_sf_legislatura", legislatura.NumeroLegislatura);
+        //                                banco.ExecuteNonQuery(@"
+        //                                     INSERT IGNORE INTO sf_mandato_legislatura (
+        //              id_sf_mandato, id_sf_legislatura
+        //             ) VALUES (
+        //                                         @id_sf_mandato, @id_sf_legislatura
+        //                                     )
+        //                                 ");
+        //                            }
+        //                            #endregion Mandato Legislatura
+        //                        }
+
+        //                        #region Mandato Exercicio
+        //                        if (mandato.Exercicios != null)
+        //                        {
+        //                            foreach (var exercicio in mandato.Exercicios.Exercicio)
+        //                            {
+        //                                if (exercicio.SiglaCausaAfastamento != null)
+        //                                {
+        //                                    exercicio.SiglaCausaAfastamento = exercicio.SiglaCausaAfastamento.Trim();
+        //                                    if (!lstMotivoAfastamento.Contains(exercicio.SiglaCausaAfastamento))
+        //                                    {
+        //                                        banco.AddParameter("id", exercicio.SiglaCausaAfastamento);
+        //                                        banco.AddParameter("descricao", exercicio.DescricaoCausaAfastamento);
+        //                                        banco.ExecuteNonQuery(@"
+        //                                                 INSERT INTO sf_motivo_afastamento (
+        //                          id, descricao
+        //                         ) VALUES (
+        //                                                     @id, @descricao
+        //                                                 )
+        //                                             ");
+
+        //                                        lstMotivoAfastamento.Add(exercicio.SiglaCausaAfastamento);
+        //                                    }
+        //                                }
+
+        //                                banco.AddParameter("id", exercicio.CodigoExercicio);
+        //                                banco.AddParameter("id_sf_senador", idSenador);
+        //                                banco.AddParameter("id_sf_mandato", mandato.CodigoMandato);
+        //                                banco.AddParameter("id_sf_motivo_afastamento", exercicio.SiglaCausaAfastamento);
+        //                                banco.AddParameter("inicio", exercicio.DataInicio);
+        //                                banco.AddParameter("final", exercicio.DataFim);
+        //                                banco.ExecuteNonQuery(@"
+        //                                         INSERT IGNORE INTO sf_mandato_exercicio (
+        //                  id, id_sf_mandato, id_sf_senador, id_sf_motivo_afastamento, inicio, final
+        //                 ) VALUES (
+        //                                             @id, @id_sf_mandato, @id_sf_senador, @id_sf_motivo_afastamento, @inicio, @final
+        //                                         )
+        //                                     ");
+        //                            }
+        //                        }
+        //                        #endregion Mandato Exercicio
+        //                    }
+        //                    catch (Exception ex)
+        //                    {
+        //                        logger.LogError(ex, ex.Message);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    return string.Empty;
+        //}
+
+        public void Importar(int ano)
+        {
+            logger.LogWarning($"Despesas do(a) Senado de {ano}");
+
+            Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
+
+            foreach (var arquivo in arquivos)
             {
-                var lstSenadorNovo = new List<string>();
-                var lstSenador = new List<int>();
+                var _urlOrigem = arquivo.Key;
+                var caminhoArquivo = arquivo.Value;
 
-                using (var reader = banco.ExecuteReader("SELECT s.id FROM sf_senador s left join sf_mandato m ON m.id_sf_senador = s.id WHERE m.id IS null"))
-                    while (reader.Read())
-                        lstSenador.Add(Convert.ToInt32(reader["id"]));
-
-                using (var reader = banco.ExecuteReader("SELECT id FROM sf_senador order by id"))
-                    while (reader.Read())
-                        lstSenadorNovo.Add(reader["id"].ToString());
-
-                var lstLegislatura = new List<string>();
-                using (var reader = banco.ExecuteReader("SELECT id FROM sf_legislatura"))
-                    while (reader.Read())
-                        lstLegislatura.Add(reader["id"].ToString());
-
-                var lstMotivoAfastamento = new List<string>();
-                using (var reader = banco.ExecuteReader("SELECT id FROM sf_motivo_afastamento"))
-                    while (reader.Read())
-                        lstMotivoAfastamento.Add(reader["id"].ToString());
-
-                var lstProfissao = new Dictionary<string, int>();
-                using (var reader = banco.ExecuteReader("SELECT id, descricao FROM profissao"))
-                    while (reader.Read())
-                        lstProfissao.Add(reader["descricao"].ToString(), Convert.ToInt32(reader["id"]));
-
-                var restClient = new RestClient();
-                restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
-                var indice = 0;
-                var totalSenadores = lstSenador.Count;
-                foreach (var idSenador in lstSenador)
+                if (TentarBaixarArquivo(_urlOrigem, caminhoArquivo))
                 {
-                    var reqSenador = new RestRequest($"http://legis.senado.gov.br/dadosabertos/senador/{idSenador}");
-                    reqSenador.AddHeader("Accept", "application/json");
-
-                    var resSenador = restClient.Get(reqSenador);
-                    JsonNode jSenador = JsonNode.Parse(resSenador.Content).AsObject();
-                    JsonNode arrParlamentar = (JsonNode)jSenador["DetalheParlamentar"]["Parlamentar"];
-
-                    var parlamentarCompleto = arrParlamentar.Deserialize<SenadorParlamentar>();
-                    logger.LogInformation("{IndiceAtual}/{Total} Consultando Senador {IdSenador}: {NomeParlamentar}", ++indice, totalSenadores, idSenador, parlamentarCompleto.IdentificacaoParlamentar.NomeParlamentar);
-
-                    var parlamentar = parlamentarCompleto.IdentificacaoParlamentar;
-
-                    if (string.IsNullOrEmpty(parlamentar.UfParlamentar))
+                    try
                     {
-                        try
-                        {
-                            var jUltimoMandato = jSenador["DetalheParlamentar"]["Parlamentar"]["UltimoMandato"];
-                            if (jUltimoMandato != null)
-                            {
-                                if (jUltimoMandato is JsonArray)
-                                    parlamentar.UfParlamentar = jUltimoMandato[0]["UfParlamentar"]?.ToString();
-                                else
-                                    parlamentar.UfParlamentar = jUltimoMandato["UfParlamentar"]?.ToString();
-                            }
-                        }
-                        catch (Exception)
-                        { }
+                        ImportarDespesas(caminhoArquivo, ano);
                     }
-
-                    if (string.IsNullOrEmpty(parlamentar.NomeParlamentar))
-                    {
-                        parlamentar.NomeParlamentar = parlamentar.NomeCompletoParlamentar;
-                    }
-
-                    banco.AddParameter("id", parlamentar.CodigoParlamentar);
-                    banco.AddParameter("codigo", parlamentar.CodigoPublicoNaLegAtual);
-                    banco.AddParameter("nome", parlamentar.NomeParlamentar);
-                    banco.AddParameter("nome_completo", parlamentar.NomeCompletoParlamentar);
-                    banco.AddParameter("sexo", parlamentar.SexoParlamentar[0].ToString());
-                    banco.AddParameter("sigla_partido", parlamentar.SiglaPartidoParlamentar);
-                    banco.AddParameter("sigla_uf", parlamentar.UfParlamentar);
-                    banco.AddParameter("email", parlamentar.EmailParlamentar);
-                    banco.AddParameter("site", parlamentar.UrlPaginaParticular);
-
-                    var dadosBasicos = parlamentarCompleto.DadosBasicosParlamentar ?? new DadosBasicosParlamentar();
-                    banco.AddParameter("nascimento", dadosBasicos.DataNascimento);
-                    banco.AddParameter("naturalidade", dadosBasicos.Naturalidade);
-                    banco.AddParameter("sigla_uf_naturalidade", dadosBasicos.UfNaturalidade);
-
-                    var lstSenadorProfissao = new List<Profissao>();
-                    if (arrParlamentar["Profissoes"] != null)
-                    {
-                        if (arrParlamentar["Profissoes"]["Profissao"] is JsonArray)
-                        {
-                            lstSenadorProfissao = arrParlamentar["Profissoes"]["Profissao"].Deserialize<List<Profissao>>();
-                        }
-                        else
-                        {
-                            lstSenadorProfissao.Add(arrParlamentar["Profissoes"]["Profissao"].Deserialize<Profissao>());
-                        }
-                    }
-                    if (lstSenadorProfissao.Any())
-                    {
-                        banco.AddParameter("profissao", string.Join(", ", lstSenadorProfissao.Select(obj => obj.NomeProfissao)));
-                    }
-                    else
-                    {
-                        banco.AddParameter("profissao", DBNull.Value);
-                    }
-
-                    banco.ExecuteNonQuery(@"
-                        UPDATE sf_senador SET
-                            codigo = @codigo
-                            , nome = @nome
-                            , nome_completo = @nome_completo
-                            , sexo = @sexo
-                            , nascimento = @nascimento
-                            , naturalidade = @naturalidade
-                            , id_estado_naturalidade = (SELECT id FROM estado where sigla like @sigla_uf_naturalidade)
-                            , profissao = @profissao
-                            , id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
-                            , id_estado = (SELECT id FROM estado where sigla like @sigla_uf)
-                            , email = @email
-                            , site = @site
-                        WHERE id = @id
-                    ");
-
-                    if (lstSenadorProfissao.Any())
-                    {
-                        foreach (var profissao in lstSenadorProfissao)
-                        {
-                            if (!lstProfissao.ContainsKey(profissao.NomeProfissao))
-                            {
-                                banco.AddParameter("descricao", profissao.NomeProfissao);
-                                var idProfissao = banco.ExecuteScalar(@"INSERT INTO profissao (descricao) values (@descricao); SELECT LAST_INSERT_ID();");
-
-                                lstProfissao.Add(profissao.NomeProfissao, Convert.ToInt32(idProfissao));
-                            }
-
-                            banco.AddParameter("id_sf_senador", idSenador);
-                            banco.AddParameter("id_profissao", lstProfissao[profissao.NomeProfissao]);
-
-                            banco.ExecuteNonQuery(@"INSERT IGNORE INTO sf_senador_profissao (id_sf_senador, id_profissao) values (@id_sf_senador, @id_profissao)");
-                        }
-
-                    }
-
-                    var lstHistoricoAcademico = new List<SenadorCurso>();
-                    if (arrParlamentar["HistoricoAcademico"] != null)
-                    {
-                        if (arrParlamentar["HistoricoAcademico"]["Curso"] is JsonArray)
-                        {
-                            lstHistoricoAcademico = arrParlamentar["HistoricoAcademico"]["Curso"].Deserialize<List<SenadorCurso>>();
-                        }
-                        else
-                        {
-                            lstHistoricoAcademico.Add(arrParlamentar["HistoricoAcademico"]["Curso"].Deserialize<SenadorCurso>());
-                        }
-                    }
-                    foreach (var curso in lstHistoricoAcademico)
-                    {
-                        banco.AddParameter("id_sf_senador", idSenador);
-                        banco.AddParameter("nome_curso", curso.NomeCurso);
-                        banco.AddParameter("grau_instrucao", curso.GrauInstrucao);
-                        banco.AddParameter("estabelecimento", curso.Estabelecimento);
-                        banco.AddParameter("local", curso.Local);
-
-                        banco.ExecuteNonQuery(@"
-                            INSERT IGNORE INTO sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
-                            values (@id_sf_senador, @nome_curso, @grau_instrucao, @estabelecimento, @local)");
-                    }
-
-
-                    var reqSenadorMandato = new RestRequest($"http://legis.senado.gov.br/dadosabertos/senador/{idSenador.ToString()}/mandatos");
-                    reqSenadorMandato.AddHeader("Accept", "application/json");
-
-                    IRestResponse resSenadorMandato = restClient.Get(reqSenadorMandato);
-                    SenadorMandato jSenadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
-                    var arrPalamentar = jSenadorMandato.MandatoParlamentar.Parlamentar;
-                    var arrMandatosPalamentar = arrPalamentar.Mandatos?.Mandato;
-
-
-                    if (arrMandatosPalamentar != null)
+                    catch (Exception ex)
                     {
 
-                        logger.LogInformation("Consultando {TotalMandatos} mandato(s)", arrMandatosPalamentar.Count());
-                        foreach (var mandato in arrMandatosPalamentar)
-                        {
-                            try
-                            {
-                                //Ignorar mandatos muito antigos
-                                if (mandato.CodigoMandato == null) continue;
+                        logger.LogError(ex, ex.Message);
 
-                                #region Mandato
-                                banco.AddParameter("id", mandato.CodigoMandato);
-                                banco.AddParameter("id_sf_senador", idSenador);
-                                banco.AddParameter("sigla_uf", mandato.UfParlamentar);
-                                banco.AddParameter("participacao", mandato.DescricaoParticipacao[0].ToString());
-                                banco.AddParameter("exerceu", mandato.Exercicios != null);
+#if !DEBUG
+                        //Excluir o arquivo para tentar importar novamente na proxima execução
+                        if(File.Exists(_caminhoArquivo))
+                            File.Delete(_caminhoArquivo);
+#endif
 
-                                banco.ExecuteNonQuery(@"
-                                        INSERT IGNORE INTO sf_mandato (
-                                            id, id_sf_senador, id_estado, participacao, exerceu
-                                        ) VALUES (
-                                            @id, @id_sf_senador, (SELECT id FROM estado where sigla like @sigla_uf), @participacao, @exerceu
-                                        )
-                                     ");
-
-                                if (mandato.DescricaoParticipacao == "Titular")
-                                {
-                                    if (mandato.Suplentes != null && mandato.Suplentes.Suplente.Any(obj => obj.DescricaoParticipacao == "1º Suplente"))
-                                    {
-                                        var id = mandato.Suplentes.Suplente.FirstOrDefault(obj => obj.DescricaoParticipacao == "1º Suplente").CodigoParlamentar;
-                                        if (!lstSenadorNovo.Contains(id))
-                                        {
-                                            lstSenadorNovo.Add(id);
-
-                                            banco.AddParameter("id", id);
-                                            banco.ExecuteNonQuery(@"INSERT INTO sf_senador (id) VALUES (@id)");
-                                        }
-                                    }
-
-                                    if (mandato.Suplentes != null && mandato.Suplentes.Suplente.Any(obj => obj.DescricaoParticipacao == "2º Suplente"))
-                                    {
-                                        var id = mandato.Suplentes.Suplente.FirstOrDefault(obj => obj.DescricaoParticipacao == "2º Suplente").CodigoParlamentar;
-                                        if (!lstSenadorNovo.Contains(id))
-                                        {
-                                            lstSenadorNovo.Add(id);
-
-                                            banco.AddParameter("id", id);
-                                            banco.ExecuteNonQuery(@"INSERT INTO sf_senador(id) VALUES (@id)");
-                                        }
-                                    }
-                                }
-                                #endregion Mandato
-
-                                if (mandato.DescricaoParticipacao == "Titular")
-                                {
-                                    #region Mandato Legislatura
-
-                                    var lstLegislaturaMandato = new List<LegislaturaDoMandato>();
-                                    lstLegislaturaMandato.Add(mandato.PrimeiraLegislaturaDoMandato);
-                                    lstLegislaturaMandato.Add(mandato.SegundaLegislaturaDoMandato);
-
-                                    foreach (var legislatura in lstLegislaturaMandato)
-                                    {
-                                        if (!lstLegislatura.Contains(legislatura.NumeroLegislatura))
-                                        {
-                                            banco.AddParameter("id", legislatura.NumeroLegislatura);
-                                            banco.AddParameter("inicio", legislatura.DataInicio);
-                                            banco.AddParameter("final", legislatura.DataFim);
-                                            banco.ExecuteNonQuery(@"
-                                                 INSERT INTO sf_legislatura (
-                          id, inicio, final
-                         ) VALUES (
-                                                     @id, @inicio, @final
-                                                 )
-                                             ");
-
-                                            lstLegislatura.Add(legislatura.NumeroLegislatura);
-                                        }
-
-                                        banco.AddParameter("id_sf_mandato", mandato.CodigoMandato);
-                                        banco.AddParameter("id_sf_legislatura", legislatura.NumeroLegislatura);
-                                        banco.ExecuteNonQuery(@"
-                                             INSERT IGNORE INTO sf_mandato_legislatura (
-                      id_sf_mandato, id_sf_legislatura
-                     ) VALUES (
-                                                 @id_sf_mandato, @id_sf_legislatura
-                                             )
-                                         ");
-                                    }
-                                    #endregion Mandato Legislatura
-                                }
-
-                                #region Mandato Exercicio
-                                if (mandato.Exercicios != null)
-                                {
-                                    foreach (var exercicio in mandato.Exercicios.Exercicio)
-                                    {
-                                        if (exercicio.SiglaCausaAfastamento != null)
-                                        {
-                                            exercicio.SiglaCausaAfastamento = exercicio.SiglaCausaAfastamento.Trim();
-                                            if (!lstMotivoAfastamento.Contains(exercicio.SiglaCausaAfastamento))
-                                            {
-                                                banco.AddParameter("id", exercicio.SiglaCausaAfastamento);
-                                                banco.AddParameter("descricao", exercicio.DescricaoCausaAfastamento);
-                                                banco.ExecuteNonQuery(@"
-                                                         INSERT INTO sf_motivo_afastamento (
-                                  id, descricao
-                                 ) VALUES (
-                                                             @id, @descricao
-                                                         )
-                                                     ");
-
-                                                lstMotivoAfastamento.Add(exercicio.SiglaCausaAfastamento);
-                                            }
-                                        }
-
-                                        banco.AddParameter("id", exercicio.CodigoExercicio);
-                                        banco.AddParameter("id_sf_senador", idSenador);
-                                        banco.AddParameter("id_sf_mandato", mandato.CodigoMandato);
-                                        banco.AddParameter("id_sf_motivo_afastamento", exercicio.SiglaCausaAfastamento);
-                                        banco.AddParameter("inicio", exercicio.DataInicio);
-                                        banco.AddParameter("final", exercicio.DataFim);
-                                        banco.ExecuteNonQuery(@"
-                                                 INSERT IGNORE INTO sf_mandato_exercicio (
-                          id, id_sf_mandato, id_sf_senador, id_sf_motivo_afastamento, inicio, final
-                         ) VALUES (
-                                                     @id, @id_sf_mandato, @id_sf_senador, @id_sf_motivo_afastamento, @inicio, @final
-                                                 )
-                                             ");
-                                    }
-                                }
-                                #endregion Mandato Exercicio
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError(ex, ex.Message);
-                            }
-                        }
                     }
                 }
             }
-
-            return string.Empty;
         }
 
-        public override Dictionary<string, string> DefinirOrigemDestino(int ano)
+        public Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
         {
             Dictionary<string, string> arquivos = new();
 
@@ -804,11 +883,56 @@ namespace OPS.Importador
             return arquivos;
         }
 
-        protected override void ProcessarDespesas(string file, int ano)
+        protected bool TentarBaixarArquivo(string urlOrigem, string caminhoArquivo)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                return BaixarArquivo(urlOrigem, caminhoArquivo);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Erro ao baixar arquivo: {Message}", ex.Message);
+
+                // Algumas vezes ocorre do arquivo não estar disponivel, precisamos aguardar alguns instantes e tentar novamente.
+                // Isso pode ser causado por um erro de rede ou atualização do arquivo.
+                Thread.Sleep((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
+
+                return BaixarArquivo(urlOrigem, caminhoArquivo);
+            }
+            finally
+            {
+                watch.Stop();
+                logger.LogTrace("Arquivo baixado em {ElapsedTotalSeconds} s", watch.Elapsed.TotalSeconds);
+            }
+        }
+
+        private bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
+        {
+            logger.LogTrace("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+
+            string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
+            if (!Directory.Exists(diretorio))
+                Directory.CreateDirectory(diretorio);
+
+            if (File.Exists(caminhoArquivo))
+                File.Delete(caminhoArquivo);
+
+            using (HttpClient client = new())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
+                client.Timeout = TimeSpan.FromMinutes(5);
+                client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
+            }
+
+            return true;
+        }
+
+        public void ImportarDespesas(string caminhoArquivo, int ano)
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             string sResumoValores = string.Empty;
-            int lote = 0, linhaInserida = 0;
+            int lote = 0, linhasInserida = 0;
             var dc = new Dictionary<string, UInt64>();
             var gerarHash = ano >= (DateTime.Now.Year - 2);
 
@@ -834,7 +958,7 @@ namespace OPS.Importador
 
                 LimpaDespesaTemporaria(banco);
 
-                using (var reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
+                using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
                 {
                     short count = 0;
 
@@ -910,25 +1034,34 @@ namespace OPS.Importador
 								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @cod_documento, @hash
 							)");
 
-                        if (linhaInserida++ == 10000)
+                        if (linhasInserida++ == 10000)
                         {
+                            linhasProcessadasAno += linhasInserida;
                             logger.LogInformation("Processando lote {Lote}", ++lote);
-                            ProcessarDespesasTemp(banco);
-                            linhaInserida = 0;
+                            ProcessarDespesasTemp(banco, ano);
+                            linhasInserida = 0;
                         }
                     }
                 }
 
-                if (linhaInserida > 0)
+                linhasProcessadasAno += linhasInserida;
+                ValidaImportacao(banco, ano);
+
+                if (linhasInserida > 0)
                 {
                     logger.LogInformation("Processando lote {Lote}", ++lote);
-                    ProcessarDespesasTemp(banco);
+                    ProcessarDespesasTemp(banco, ano);
                 }
 
-                foreach (var id in dc.Values)
+                if (dc.Values.Any())
                 {
-                    banco.AddParameter("id", id);
-                    banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
+                    foreach (var id in dc.Values)
+                    {
+                        banco.AddParameter("id", id);
+                        banco.ExecuteNonQuery("delete from sf_despesa where id=@id");
+                    }
+
+                    logger.LogInformation("Removendo {Total} despesas", dc.Values.Count);
                 }
 
                 if (ano == DateTime.Now.Year)
@@ -940,13 +1073,34 @@ namespace OPS.Importador
             }
         }
 
-        private void ProcessarDespesasTemp(AppDb banco)
+        private void ProcessarDespesasTemp(AppDb banco, int ano)
         {
+            
             CorrigeDespesas(banco);
-            InsereSenadorFaltante(banco);
+            //InsereSenadorFaltante(banco);
             InsereFornecedorFaltante(banco);
             InsereDespesaFinal(banco);
             LimpaDespesaTemporaria(banco);
+        }
+
+        public virtual void ValidaImportacao(AppDb banco, int ano)
+        {
+            logger.LogTrace("Validar importação");
+
+            var totalFinal = connection.ExecuteScalar<int>(@$"
+select count(1) 
+from sf_despesa d 
+where d.ano_mes between {ano}01 and {ano}12");
+
+            if (linhasProcessadasAno != totalFinal)
+                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}",
+                    linhasProcessadasAno, totalFinal);
+
+            var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
+select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+
+            if (despesasSemParlamentar > 0)
+                logger.LogError("Há deputados não identificados!");
         }
 
         private void CorrigeDespesas(AppDb banco)
@@ -962,22 +1116,22 @@ namespace OPS.Importador
 			");
         }
 
-        private string InsereSenadorFaltante(AppDb banco)
-        {
-            //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
-            //if (Convert.ToInt32(total) > 0)
-            //{
-            //	CarregaSenadoresAtuais();
+        //private string InsereSenadorFaltante(AppDb banco)
+        //{
+        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+        //    //if (Convert.ToInt32(total) > 0)
+        //    //{
+        //    //	CarregaSenadoresAtuais();
 
-            object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
-            if (Convert.ToInt32(total) > 0)
-            {
-                throw new Exception("Existem despesas de senadores que não estão cadastrados!");
-            }
-            //}
+        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+        //    //if (Convert.ToInt32(total) > 0)
+        //    //{
+        //    //    throw new Exception("Existem despesas de senadores que não estão cadastrados!");
+        //    //}
+        //    //}
 
-            return string.Empty;
-        }
+        //    return string.Empty;
+        //}
 
         private string InsereFornecedorFaltante(AppDb banco)
         {
@@ -1043,7 +1197,7 @@ namespace OPS.Importador
 
             if (banco.RowsAffected > 0)
             {
-                retorno = +banco.RowsAffected + "+ Despesa nova! ";
+                retorno = banco.RowsAffected + "+ Despesa nova! ";
             }
 
             //         banco.ExecuteNonQuery(@"
@@ -1156,7 +1310,7 @@ namespace OPS.Importador
 			");
         }
 
-        public override void AtualizaParlamentarValores()
+        public void AtualizaParlamentarValores()
         {
             connection.Execute("UPDATE sf_senador SET valor_total_ceaps=0;");
 
@@ -1184,7 +1338,7 @@ namespace OPS.Importador
             }
         }
 
-        public override void AtualizaCampeoesGastos()
+        public void AtualizaCampeoesGastos()
         {
             var strSql =
                 @"truncate table sf_senador_campeao_gasto;
@@ -1207,7 +1361,7 @@ namespace OPS.Importador
             connection.Execute(strSql);
         }
 
-        public override void AtualizaResumoMensal()
+        public void AtualizaResumoMensal()
         {
             var strSql =
                 @"truncate table sf_despesa_resumo_mensal;
@@ -1221,7 +1375,7 @@ namespace OPS.Importador
             connection.Execute(strSql);
         }
 
-        public override async void DownloadFotosParlamentares()
+        public async void DownloadFotosParlamentares()
         {
             var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "public/img/senador/");
 
@@ -1269,7 +1423,7 @@ namespace OPS.Importador
         /// </summary>
         /// <param name="ano"></param>
         /// <param name="mes"></param>
-        public override void ImportarRemuneracao(int ano, int mes)
+        public void ImportarRemuneracao(int ano, int mes)
         {
             var anomes = Convert.ToInt32($"{ano:0000}{mes:00}");
             var urlOrigem = string.Format("http://www.senado.leg.br/transparencia/LAI/secrh/SF_ConsultaRemuneracaoServidoresParlamentares_{0}.csv", anomes);

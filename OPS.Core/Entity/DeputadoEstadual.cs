@@ -54,7 +54,23 @@ namespace OPS.Core.Entity
 		[Column("site")]
 		public string Site { get; set; }
 
-		[Column("perfil")]
+		[NotMapped]
+        [Column("instagram")]
+		public string Instagram { get; set; }
+
+		[NotMapped]
+		[Column("facebook")]
+		public string Facebook { get; set; }
+
+		[NotMapped]
+		[Column("twitter")]
+		public string Twitter { get; set; }
+
+        [NotMapped]
+        [Column("youtube")]
+        public string YouTube { get; set; }
+
+        [Column("perfil")]
 		public string UrlPerfil { get; set; }
 
 		[Column("foto")]
