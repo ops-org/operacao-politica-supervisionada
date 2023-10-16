@@ -97,8 +97,7 @@
                   >&nbsp;-
                   <a
                     v-bind:href="
-                      'http://www.camara.leg.br/Internet/Deputado/dep_Detalhe.asp?id=' +
-                      id
+                      'https://www.camara.leg.br/deputados/' + id
                     "
                     target="_blank"
                     >Página Oficial</a
