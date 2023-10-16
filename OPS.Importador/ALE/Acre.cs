@@ -3,6 +3,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
@@ -58,7 +59,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarCrawler
         var colunas = document.QuerySelectorAll("th");
         var colunaNome = colunas[0].QuerySelector("a");
 
-        var nomeparlamentar = colunaNome.TextContent.Trim();
+        var nomeparlamentar = colunaNome.TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
         deputado.UrlPerfil = (colunaNome as IHtmlAnchorElement).Href;
         deputado.IdPartido = BuscarIdPartido(colunas[1].TextContent.Trim());
@@ -70,7 +71,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarCrawler
     {
         var detalhes = subDocument.QuerySelector(".container");
         deputado.UrlFoto = detalhes.QuerySelector("img.img-thumbnail").Attributes["src"].Value;
-        deputado.NomeCivil = detalhes.QuerySelector("#div_nome").TextContent.Replace("Nome Completo:", "").Trim();
+        deputado.NomeCivil = detalhes.QuerySelector("#div_nome").TextContent.Replace("Nome Completo:", "").Trim().ToTitleCase();
         deputado.Email = detalhes.QuerySelectorAll(".row .col-sm-8>.form-group>p")[3].TextContent.Trim();
         deputado.Telefone = detalhes.QuerySelectorAll(".row .col-sm-8>.form-group>p")[2].TextContent.Trim();
     }

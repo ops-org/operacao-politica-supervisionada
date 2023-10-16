@@ -33,7 +33,7 @@ namespace OPS.Core
             finally
             {
                 watch.Stop();
-                Log.Verbose("Requisição processada em {ElapsedTotalSeconds} s", watch.Elapsed.TotalSeconds);
+                Log.Verbose("Requisição processada em {TimeElapsed:c}", watch.Elapsed);
             }
         }
 

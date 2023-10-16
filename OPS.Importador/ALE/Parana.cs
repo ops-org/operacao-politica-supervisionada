@@ -34,7 +34,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "",
             Estado = Estado.Parana,
-            ChaveImportacao = ChaveDespesaTemp.CpfParcial
+            ChaveImportacao = ChaveDespesaTemp.Matricula
         };
     }
 
@@ -61,14 +61,14 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
 
         foreach (var itemDespesa in objDespesaPR.Despesas)
         {
-            string nomePolitico = ImportarParlamantar(itemDespesa);
+            string nomePolitico = ImportarParlamentar(itemDespesa);
 
             foreach (var despesaMensal in itemDespesa.DespesasAnuais?[0]?.DespesasMensais?[0]?.Despesas)
                 foreach (var despesa in despesaMensal.ItensDespesa)
                 {
                     var despesaTemp = new CamaraEstadualDespesaTemp()
                     {
-                        Nome = nomePolitico,
+                        Nome = nomePolitico.ToTitleCase(),
                         Cpf = itemDespesa.Parlamentar.Codigo.ToString(),
                         Ano = (short)despesa.Exercicio,
                         TipoDespesa = despesa.TipoDespesa.Descricao,
@@ -102,10 +102,10 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         }
     }
 
-    private string ImportarParlamantar(Despesas itemDespesa)
+    private string ImportarParlamentar(Despesas itemDespesa)
     {
         var parlamentar = itemDespesa.Parlamentar;
-        var nomePolitico = parlamentar.NomePolitico.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "");
+        var nomeParlamentar = parlamentar.NomePolitico.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "").ToTitleCase();
 
         var matricula = (uint)parlamentar.Codigo;
         var deputado = GetDeputadoByMatriculaOrNew(matricula);
@@ -115,8 +115,8 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
             throw new Exception("Partido Inexistenete");
 
         //deputado.UrlPerfil = $"http://www.assembleia.pr.leg.br/deputados/perfil/{parlamentar.Codigo}";
-        deputado.NomeParlamentar = nomePolitico;
-        deputado.NomeCivil = parlamentar.Nome;
+        deputado.NomeParlamentar = nomeParlamentar;
+        deputado.NomeCivil = parlamentar.Nome.ToTitleCase();
         deputado.IdPartido = IdPartido.Value;
         deputado.Sexo = parlamentar.NomePolitico.StartsWith("DEPUTADO") ? "M" : "F";
 
@@ -125,7 +125,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         else
             connection.Update(deputado);
 
-        return nomePolitico;
+        return nomeParlamentar;
     }
 
     private class Despesas

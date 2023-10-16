@@ -66,7 +66,8 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasRestApiAnual
                 foreach (XmlNode data in datas)
                 {
                     var dataReferencia = Convert.ToDateTime(data.SelectSingleNode("dataReferencia ").InnerText);
-                    //if (dataReferencia.Year != ano) continue;
+                    if (dataReferencia.Year != ano) continue;
+
                     var docInner = new XmlDocument();
                     try
                     {
@@ -74,7 +75,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasRestApiAnual
                     }
                     catch (HttpRequestException ex)
                     {
-                        if (ex.Message == "Response status code does not indicate success: 429 (Too Many Requests).")
+                        if (ex.Message != "Response status code does not indicate success: 429 (Too Many Requests).")
                             throw;
 
                         Thread.Sleep(1000);
@@ -94,7 +95,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasRestApiAnual
                             Documento = despesa.SelectSingleNode("descDocumento")?.InnerText,
                             DataEmissao = Convert.ToDateTime(despesa.SelectSingleNode("dataEmissao").InnerText),
                             Cpf = matricula,
-                            Nome = item["nome_parlamentar"].ToString(),
+                            Nome = item["nome_parlamentar"].ToString().ToTitleCase(),
                             TipoDespesa = despesa.SelectSingleNode("descTipoDespesa").InnerText,
                             CnpjCpf = despesa.SelectSingleNode("cpfCnpj")?.InnerText,
                             Empresa = despesa.SelectSingleNode("nomeEmitente").InnerText,
@@ -137,7 +138,7 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
             }
             catch (HttpRequestException ex)
             {
-                if (ex.Message == "Response status code does not indicate success: 429 (Too Many Requests).")
+                if (ex.Message != "Response status code does not indicate success: 429 (Too Many Requests).")
                     throw;
 
                 Thread.Sleep(1000);
@@ -151,7 +152,7 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
                 var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
                 deputado.IdPartido = BuscarIdPartido(fileNode.SelectSingleNode("partido").InnerText);
-                deputado.NomeParlamentar = fileNode.SelectSingleNode("nome").InnerText;
+                deputado.NomeParlamentar = fileNode.SelectSingleNode("nome").InnerText.ToTitleCase();
                 deputado.UrlPerfil = $"https://www.almg.gov.br/deputados/conheca_deputados/deputados-info.html?idDep={deputado.Matricula}&leg=20";
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
@@ -160,10 +161,10 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
                 docPerfil.Load(@$"{config.BaseAddress}ws/deputados/{deputado.Matricula}");
                 XmlNode detalhes = docPerfil.DocumentElement;
 
-                deputado.NomeCivil = detalhes.SelectSingleNode("nomeServidor").InnerText;
+                deputado.NomeCivil = detalhes.SelectSingleNode("nomeServidor").InnerText.ToTitleCase();
                 deputado.Naturalidade = detalhes.SelectSingleNode("naturalidadeMunicipio").InnerText;
                 deputado.Nascimento = DateOnly.Parse(detalhes.SelectSingleNode("dataNascimento").InnerText, cultureInfo);
-                deputado.Profissao = detalhes.SelectSingleNode("atividadeProfissional")?.InnerText;
+                deputado.Profissao = detalhes.SelectSingleNode("atividadeProfissional")?.InnerText.ToTitleCase();
                 deputado.Sexo = detalhes.SelectSingleNode("sexo").InnerText;
 
                 InsertOrUpdate(deputado);

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using OfficeOpenXml.Drawing.Chart;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -52,7 +53,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
 
         for (int mes = 1; mes <= 12; mes++)
         {
-            if (DateTime.Today.Year == ano && DateTime.Today.Month > mes) break;
+            if (DateTime.Today.Year == ano && mes > DateTime.Today.Month) break;
 
             var base64 = Utils.EncodeTo64($"{mes:00}|{ano}|");
             var _urlOrigem = $"{config.BaseAddress}includes/verba_de_desempenho_parlamentar_csv.php?codigo={base64}";
@@ -92,7 +93,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
             {
                 despesaTemp = new CamaraEstadualDespesaTemp()
                 {
-                    Nome = line.Replace("DEP", "").Trim(),
+                    Nome = CorrigeNomeParlamentar(line),
                     Ano = (short)ano
                 };
 
@@ -105,8 +106,8 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
                 continue;
             }
 
-            if (linha == 3) // EMPENHO;DESCRIÇÃO;CNPJ;CREDOR;VALOR
-                continue;
+            if (linha == 3) continue; // EMPENHO;DESCRIÇÃO;CNPJ;CREDOR;VALOR
+            if (string.IsNullOrEmpty(despesaTemp.Nome)) continue;
 
             var colunas = line.Split(';');
             if (colunas.Length != 6) // Finaliza com ;
@@ -122,6 +123,38 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
 
             InserirDespesaTemp(despesaTemp);
         }
+    }
+
+    private string CorrigeNomeParlamentar(string nome)
+    {
+        nome = nome.Replace("DEP", "").Replace(".", "").Split("-")[0].Trim();
+
+        nome =  nome.ToUpper() switch
+        {
+            "ACRSIO SENA" => "ACRISIO SENA",
+            "ANTONO GRANJA" => "ANTONIO GRANJA",
+            "DANNIEL OLIVIERA" => "DANNIEL OLIVEIRA",
+            "DAVID DURAN" => "DAVID DURAND",
+            "DVI DE RAIMUNDAO" => "DAVI DE RAIMUNDAO",
+            "GABRIELLAAGUIAR" => "GABRIELLA AGUIAR",
+            "GEROGE LIMA" => "GEORGE LIMA",
+            "GUILHERME BISMARK" => "GUILHERME BISMARCK",
+            "GULHERME BISMARCK" => "GUILHERME BISMARCK",
+            "GUUILHERME SAMPAIO" => "GUILHERME SAMPAIO",
+            "JEOVA MOPTA" => "JEOVA MOTA",
+            "JAO JAIME" => "JOAO JAIME",
+            "JULIO CESAR" => "JULIO CESAR FILHO",
+            "LUCINILDOFROTA" => "LUCINILDO FROTA",
+            "MARTA GONCLAVES" => "MARTA GONCALVES",
+            "ORIEL NUNES FILHO" => "ORIEL FILHO",
+            "OSMKAR BAQUIT" => "OSMAR BAQUIT",
+            "ROMEU ALDIGHERI" => "ROMEU ALDIGUERI",
+            "´SARGENTO REGINAURO" => "SARGENTO REGINAURO",
+            "225/03" => string.Empty, // TODO: Arquivo 2023-07
+            _ => nome
+        };
+
+        return nome.ToTitleCase();
     }
 
     private string ObterTipoDespesa(string tipo)
@@ -169,7 +202,7 @@ public class ImportadorParlamentarCeara : ImportadorParlamentarCrawler
 
     public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
     {
-        var nomeparlamentar = parlamentar.QuerySelector(".deputado_card--nome").TextContent.Trim();
+        var nomeparlamentar = parlamentar.QuerySelector(".deputado_card--nome").TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         deputado.UrlPerfil = (parlamentar.QuerySelector(".deputado_card--nome a") as IHtmlAnchorElement).Href;
@@ -184,8 +217,8 @@ public class ImportadorParlamentarCeara : ImportadorParlamentarCrawler
     {
         var detalhes = subDocument.QuerySelectorAll(".container>.row>.col-md-3>div>div.d-flex");
 
-        deputado.NomeCivil = BuscarTexto(detalhes, "Nome Completo");
-        deputado.Profissao = BuscarTexto(detalhes, "Profissão");
+        deputado.NomeCivil = BuscarTexto(detalhes, "Nome Completo").ToTitleCase();
+        deputado.Profissao = BuscarTexto(detalhes, "Profissão")?.ToTitleCase();
         deputado.Email = BuscarTexto(detalhes, "E-mails");
         deputado.Site = BuscarTexto(detalhes, "Site Pessoal");
         deputado.Telefone = BuscarTexto(detalhes, "Telefones");

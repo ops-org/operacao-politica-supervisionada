@@ -8,6 +8,7 @@ using AngleSharp.Html.Dom;
 using CsvHelper;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
@@ -102,7 +103,7 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
 
                 var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
-                    Nome = csv[Conta].Split("(")[0].Trim(),
+                    Nome = csv[Conta].Split("(")[0].Trim().ToTitleCase(),
                     Ano = (short)ano,
                     TipoVerba = csv[Verba],
                     TipoDespesa = csv[Descricao],
@@ -231,7 +232,7 @@ public class ImportadorParlamentarSantaCatarina : ImportadorParlamentarCrawler
         var itens = document.QuerySelectorAll("td");
         var colunaNome = itens[0].QuerySelector("a");
 
-        var nomeparlamentar = colunaNome.TextContent.Trim();
+        var nomeparlamentar = colunaNome.TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         deputado.UrlPerfil = (colunaNome as IHtmlAnchorElement).Href;

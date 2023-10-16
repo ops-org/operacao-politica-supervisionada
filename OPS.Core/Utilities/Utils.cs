@@ -293,6 +293,18 @@ namespace OPS.Core
                 return textReader.ReadToEnd();
         }
 
+        public static string ToTitleCase(this string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
+        }
+
+        public static String ReduceWhitespace(this string text)
+        {
+            return Regex.Replace(text, @"\s+", " ");
+        }
+
         //public static string GetIPAddress()
         //{
         //    System.Web.HttpContext context = System.Web.HttpContext.Current;

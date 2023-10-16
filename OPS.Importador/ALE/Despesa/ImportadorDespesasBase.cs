@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Policy;
 using System.Text.Json;
 using System.Threading;
 using Dapper;
@@ -29,11 +30,11 @@ namespace OPS.Importador.ALE.Despesa
 
         public string tempPath { get; set; }
 
-        public int idEstado { get; set; }
+        public int idEstado { get { return config.Estado.GetHashCode(); } }
 
         private int linhasProcessadasAno { get; set; }
 
-        private Dictionary<string, uint> lstHash { get; set; }
+        protected Dictionary<string, List<uint>> lstHash { get; private set; }
 
         public ImportadorDespesasBase(IServiceProvider serviceProvider)
         {
@@ -56,9 +57,9 @@ namespace OPS.Importador.ALE.Despesa
             InsereTipoDespesaFaltante();
             InsereDeputadoFaltante();
             InsereFornecedorFaltante();
+            DeletarDespesasInexistentes();
 
             InsereDespesaFinal(ano);
-            DeletarDespesasInexistentes();
 
             ValidaImportacao(ano);
             LimpaDespesaTemporaria();
@@ -102,7 +103,7 @@ namespace OPS.Importador.ALE.Despesa
             finally
             {
                 watch.Stop();
-                logger.LogTrace("Arquivo baixado em {ElapsedTotalSeconds} s", watch.Elapsed.TotalSeconds);
+                logger.LogTrace("Arquivo baixado em {TimeElapsed:c}", watch.Elapsed);
             }
         }
 
@@ -112,25 +113,19 @@ namespace OPS.Importador.ALE.Despesa
 
             string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
             if (!Directory.Exists(diretorio))
-            {
                 Directory.CreateDirectory(diretorio);
-
-                if (File.Exists(caminhoArquivo))
-                {
-                    File.Delete(caminhoArquivo);
-                }
-
-                using (HttpClient client = new())
-                {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                    client.Timeout = TimeSpan.FromMinutes(5);
-                    client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-                }
-
+            else if (File.Exists(caminhoArquivo))
                 return true;
+                //File.Delete(caminhoArquivo);
+
+            using (HttpClient client = new())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
+                client.Timeout = TimeSpan.FromMinutes(5);
+                client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
             }
 
-            return false;
+            return true;
         }
 
         public virtual void AtualizaValorTotal()
@@ -174,20 +169,20 @@ ORDER BY despesa_tipo;
             logger.LogTrace("Inserir parlamentar faltante");
 
             int affected = 0;
-            if (config.ChaveImportacaoDeputado == ChaveDespesaTemp.Nome)
+            if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
             {
                 affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, cpf_parcial, id_estado)
+INSERT INTO cl_deputado (nome_parlamentar, cpf, id_estado)
 select distinct Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
-where nome not in (
-    select nome_parlamentar 
+where cpf not in (
+    select cpf 
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
-    AND nome_parlamentar IS NOT null
-);");
+    AND CPF IS NOT NULL
+);"); 
             }
-            else if (config.ChaveImportacaoDeputado == ChaveDespesaTemp.CpfParcial)
+            else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
             {
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, cpf_parcial, id_estado)
@@ -200,7 +195,7 @@ where cpf not in (
     AND cpf_parcial IS NOT NULL
 );");
             }
-            else if (config.ChaveImportacaoDeputado == ChaveDespesaTemp.Matricula)
+            else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
             {
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
@@ -213,17 +208,17 @@ where cpf not in (
     AND matricula IS NOT NULL
 );");
             }
-            else // CPF
+            else // Nome
             {
                 affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, cpf, id_estado)
+INSERT INTO cl_deputado (nome_parlamentar, cpf_parcial, id_estado)
 select distinct Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
-where cpf not in (
-    select cpf 
+where nome not in (
+    select nome_parlamentar 
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
-    AND CPF IS NOT NULL
+    AND nome_parlamentar IS NOT null
 );");
             }
 
@@ -337,8 +332,9 @@ where p.id_estado = {idEstado}
 and d.ano_mes between {ano}01 and {ano}12");
 
             if (linhasProcessadasAno != totalFinal)
-                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}",
-                    linhasProcessadasAno, totalFinal);
+                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}",  linhasProcessadasAno, totalFinal);
+            else
+                logger.LogInformation("Itens na base de dados: {LinhasDB}", totalFinal);
 
             var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 SELECT COUNT(1)
@@ -362,38 +358,55 @@ WHERE p.id IS null");
 
             if (!config.Completo && lstHash.Values.Any())
             {
-                foreach (var id in lstHash.Values)
+                var itensDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp");
+                if (lstHash.Count() > itensDbCount)
+                    throw new Exception("Tentando remover mais itens que estamos incluindo! Verifique a importação.");
+
+                var deleted = 0;
+                foreach (var dc in lstHash)
                 {
-                    var despesa = connection.Get<CamaraEstadualDespesa>(id);
+                    var dcCount = dc.Value.Count;
+                    if (dcCount > 1)
+                    {
+                        var hash = Convert.FromHexString(dc.Key);
+                        var hashDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp where hash = @hash", new { hash });
+                        if(dcCount == hashDbCount)
+                        {
+                            connection.ExecuteScalar<uint>("DELETE FROM ops_tmp.cl_despesa_temp where hash = @hash", new { hash });
+                            continue;
+                        }
+                    }
+
+                    //var despesa = connection.Get<CamaraEstadualDespesa>(id);
                     //logger.LogTrace("Remover Registro {@CamaraEstadualDespesa}", despesa);
-                    connection.Execute("delete from cf_despesa where id=@id", new { id });
+                    connection.Execute($"delete from cl_despesa where id IN({string.Join(",", dc.Value)})");
+                    deleted += dcCount;
                 }
 
-                logger.LogInformation("{Total} despesas removidas!", lstHash.Values.Count);
+                logger.LogInformation("{TotalDeleted} despesas removidas!", deleted);
             }
         }
 
         public virtual void CarregarHashes(int ano)
         {
-            lstHash = new Dictionary<string, uint>();
+            linhasProcessadasAno = 0;
+
+            lstHash = new Dictionary<string, List<uint>>();
             var sql = $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12";
             var lstHashDB = connection.Query(sql);
 
-            int hashIgnorado = 0;
+            int despesasCount = 0;
             foreach (IDictionary<string, object> dReader in lstHashDB)
             {
+                despesasCount++;
                 var hex = Convert.ToHexString((byte[])dReader["hash"]);
                 if (!lstHash.ContainsKey(hex))
-                    lstHash.Add(hex, (uint)dReader["id"]);
+                    lstHash.Add(hex, new List<uint>() { (uint)dReader["id"] });
                 else
-                    hashIgnorado++;
-
+                    lstHash[hex].Add((uint)dReader["id"]);
             }
 
-            logger.LogTrace("{Total} Hashes Carregados", lstHash.Count);
-
-            if (hashIgnorado > 0)
-                logger.LogWarning("{Total} Hashes Ignorados", hashIgnorado);
+            logger.LogTrace("{Total} Hashes Carregados", despesasCount);
         }
 
         ///// <summary>
@@ -453,8 +466,15 @@ WHERE p.id IS null");
 
             var str = JsonSerializer.Serialize(despesa);
             var hash = Utils.SHA1Hash(str);
-            if (lstHash.Remove(Convert.ToHexString(hash)))
-                return;
+            var key = Convert.ToHexString(hash);
+
+            if (lstHash.ContainsKey(key))
+            {
+                // Para hashs com mais de um registro associado, manter na lista para deletar e inserir novamente.
+                // TODO: Como tratar tabela com hashs duplicadas
+                if (lstHash[key].Count == 1 && lstHash.Remove(key))
+                    return;
+            }
 
             despesa.Hash = hash;
             connection.Insert(despesa);
@@ -469,7 +489,7 @@ WHERE p.id IS null");
 
         public Estado Estado { get; set; }
 
-        public ChaveDespesaTemp ChaveImportacaoDeputado { get; private set; } = ChaveDespesaTemp.Indefinido;
+        //public ChaveDespesaTemp ChaveImportacaoDeputado { get; private set; } = ChaveDespesaTemp.Indefinido;
 
         public ChaveDespesaTemp ChaveImportacao { get; set; } = ChaveDespesaTemp.Indefinido;
     }

@@ -12,7 +12,7 @@ namespace OPS.Core.Entity
         public uint Id { get; set; }
 
         [Column("matricula")]
-        public uint Matricula { get; set; }
+        public uint? Matricula { get; set; }
 
         [Column("id_partido")]
         public ushort IdPartido { get; set; }

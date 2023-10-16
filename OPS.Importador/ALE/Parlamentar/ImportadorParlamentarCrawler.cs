@@ -53,6 +53,8 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
 
             InsertOrUpdate(deputado);
         }
+
+        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
     }
 
     public abstract DeputadoEstadual ColetarDadosLista(IElement document);

@@ -42,7 +42,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://transparencia.al.go.leg.br/",
             Estado = Estado.Goias,
-            ChaveImportacao = ChaveDespesaTemp.CpfParcial
+            ChaveImportacao = ChaveDespesaTemp.Matricula
         };
     }
 
@@ -61,7 +61,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
         {
             var id = item.Deputado.Id;
 
-            address = $"{config.BaseAddress}api/transparencia/verbas_indenizatorias/exibir?ano=ano&deputado_id={id}&mes={mes}";
+            address = $"{config.BaseAddress}api/transparencia/verbas_indenizatorias/exibir?ano={ano}&deputado_id={id}&mes={mes}";
             request.Resource = address;
 
             RestResponse resDespesa = restClient.GetWithAutoRetry(request);
@@ -74,7 +74,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
                     {
                         var despesaTemp = new CamaraEstadualDespesaTemp()
                         {
-                            Nome = despesa.Deputado.Nome,
+                            Nome = despesa.Deputado.Nome.ToTitleCase(),
                             Cpf = id.ToString(),
                             Ano = (short)ano,
                             TipoDespesa = grupo.Descricao,
@@ -108,7 +108,7 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
     {
         var colunas = parlamentar.QuerySelectorAll("td");
 
-        var nomeparlamentar = colunas[0].TextContent.Trim();
+        var nomeparlamentar = colunas[0].TextContent.Trim().ToTitleCase().ReduceWhitespace();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         deputado.IdPartido = BuscarIdPartido(colunas[1].TextContent.Split('(')[0].Trim());
@@ -118,8 +118,6 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
         deputado.Telefone = string.Join(",", colunas[2].QuerySelectorAll("a").Select(x => x.TextContent.Trim()));
 
         ImportacaoUtils.MapearRedeSocial(deputado, colunas[3].QuerySelectorAll("a"));
-
-
 
         return deputado;
     }

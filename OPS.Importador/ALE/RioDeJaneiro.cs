@@ -4,6 +4,8 @@ using System.Net;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AngleSharp;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
@@ -56,6 +58,9 @@ public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
 
     public override Task Importar()
     {
+        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
+        ArgumentNullException.ThrowIfNull(config, nameof(config));
+
         var query = "{\"filter\":{\"text\":null,\"checkboxes\":{\"withMandate\":false,\"withoutMandate\":false,\"withPendency\":false,\"withoutPendency\":false,\"unread\":false,\"joined\":true,\"notJoined\":false,\"filler\":false},\"selects\":{\"filler\":false}},\"pagination\":{\"total\":83,\"per_page\":\"250\",\"current_page\":1,\"last_page\":9,\"from\":1,\"to\":10,\"pages\":[1,2,3,4,5]}}";
         var address = $"{config.BaseAddress}api/v1/congressmen?query=" + WebUtility.UrlEncode(query);
         DeputadosRJ objDeputadosRJ = RestApiGet<DeputadosRJ>(address);
@@ -66,7 +71,7 @@ public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
             DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew(matricula);
 
             //deputado.UrlPerfil = $"https://ww4.al.rs.gov.br/deputados/{parlamentar.IdDeputado}";
-            deputado.NomeParlamentar = parlamentar.User.Name;
+            deputado.NomeParlamentar = parlamentar.User.Name.ToTitleCase();
             deputado.IdPartido = BuscarIdPartido(parlamentar.Party.Code);
             deputado.Email = parlamentar.User.Email;
             //deputado.Telefone = parlamentar.TelefoneDeputado;
@@ -75,6 +80,7 @@ public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
             InsertOrUpdate(deputado);
         }
 
+        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
         return Task.CompletedTask;
     }
 }

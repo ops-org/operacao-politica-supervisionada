@@ -20,49 +20,81 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual void ImportarCompleto()
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            try
+            {
+                watch.Restart();
+
+                //logger.LogWarning("Dados do(a) {CasaLegislativa}", config.SiglaEstado);
+                if (importadorParlamentar != null)
+                    importadorParlamentar.Importar().Wait();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                watch.Stop();
+                logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            }
+
             //try
             //{
-            //    //logger.LogWarning("Dados do(a) {CasaLegislativa}", config.SiglaEstado);
+            //    watch.Restart();
+
             //    if (importadorParlamentar != null)
-            //        importadorParlamentar.Importar();
+            //        importadorParlamentar.DownloadFotos().Wait();
             //}
             //catch (Exception ex)
             //{
             //    logger.LogError(ex, ex.Message);
             //}
+            //finally
+            //{
+            //    watch.Stop();
+            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            //}
 
             //try
             //{
-            //    logger.LogInformation("Imagens do(a) {CasaLegislativa}", config.SiglaEstado);
-            //    DownloadFotosParlamentares();
+            //    watch.Restart();
+
+            //    if (importadorDespesas != null)
+            //        importadorDespesas.Importar(DateTime.Now.Year - 1);
             //}
             //catch (Exception ex)
             //{
             //    logger.LogError(ex, ex.Message);
             //}
-
-            try
-            {
-                if (importadorDespesas != null)
-                    importadorDespesas.Importar(DateTime.Now.Year - 1);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-
-            try
-            {
-                if (importadorDespesas != null)
-                    importadorDespesas.Importar(DateTime.Now.Year);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
+            //finally
+            //{
+            //    watch.Stop();
+            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            //}
 
             //try
             //{
+            //    watch.Restart();
+
+            //    if (importadorDespesas != null)
+            //        importadorDespesas.Importar(DateTime.Now.Year);
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.LogError(ex, ex.Message);
+            //}
+            //finally
+            //{
+            //    watch.Stop();
+            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            //}
+
+            //try
+            //{
+            //    watch.Restart();
+
             //    var anoAtual = DateTime.Now;
             //    logger.LogInformation("Remuneração do(a) {CasaLegislativa}", config.SiglaEstado);
             //    ImportarRemuneracao(anoAtual.Year, anoAtual.Month);
@@ -70,6 +102,11 @@ namespace OPS.Importador.ALE.Despesa
             //catch (Exception ex)
             //{
             //    logger.LogError(ex, ex.Message);
+            //}
+            //finally
+            //{
+            //    watch.Stop();
+            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
             //}
         }
     }

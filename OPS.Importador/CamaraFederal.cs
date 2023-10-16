@@ -42,15 +42,25 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     protected readonly ILogger<ImportadorParlamentarCamaraFederal> logger;
     protected readonly IDbConnection connection;
 
+    public string rootPath { get; set; }
+    public string tempPath { get; set; }
+
+    private const short legislaturaAtual = 57;
+
+
     public ImportadorParlamentarCamaraFederal(IServiceProvider serviceProvider)
     {
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarCamaraFederal>>();
         connection = serviceProvider.GetService<IDbConnection>();
+
+        var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
+        rootPath = configuration["AppSettings:SiteRootFolder"];
+        tempPath = configuration["AppSettings:SiteTempFolder"];
     }
 
     public Task Importar()
     {
-        ImportarDeputados(56);
+        ImportarDeputados(legislaturaAtual-1);
 
         return Task.CompletedTask;
     }
@@ -63,7 +73,6 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         int novos = 0;
         int pagina;
         var restClient = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
-        //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
         List<Dado> deputados;
         List<Link> links;
@@ -72,12 +81,12 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         {
             banco.ExecuteNonQuery(@"UPDATE cf_deputado SET id_cf_gabinete=NULL");
 
-            for (int leg = legislaturaInicial; leg <= 56; leg++)
+            for (int leg = legislaturaInicial; leg <= legislaturaAtual; leg++)
             {
                 pagina = 1;
                 do
                 {
-                    var uri = string.Format("?idLegislatura={0}&pagina={1}&itens=100", leg, pagina++);
+                    var uri = string.Format("?idLegislatura={0}&pagina={1}&itens=1000", leg, pagina++);
                     var request = new RestRequest(uri);
                     request.AddHeader("Accept", "application/json");
 
@@ -190,7 +199,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                 {
                                     id_cf_gabinete = Convert.ToInt32(id);
 
-                                    if (leg == 56)
+                                    if (leg == legislaturaAtual)
                                     {
                                         banco.AddParameter("nome", gabinete.nome);
                                         banco.AddParameter("predio", gabinete.predio);
@@ -209,7 +218,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                 }
                         }
 
-                        if (leg == 56)
+                        if (leg == legislaturaAtual)
                         {
                             situacao = deputadoDetalhes.ultimoStatus.situacao;
                         }
@@ -365,6 +374,66 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
             logger.LogInformation("Novos Deputados: " + novos.ToString());
         }
     }
+
+    /// <summary>
+    /// Baixa as imagens dos deputados novos (imagens que ainda não foram baixadas)
+    /// </summary>
+    /// <param name="dirRaiz"></param>
+    public async Task DownloadFotos()
+    {
+        var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, @"public\img\depfederal\");
+
+        using (var banco = new AppDb())
+        {
+            string sql = "SELECT id FROM cf_deputado where id_deputado is not null order by id -- AND situacao = 'Exercício'";
+            DataTable table = banco.GetTable(sql, 0);
+
+            using (HttpClient client = new())
+            {
+                foreach (DataRow row in table.Rows)
+                {
+                    string id = row["id"].ToString();
+                    string src = sDeputadosImagesPath + id + ".jpg";
+                    if (File.Exists(src))
+                    {
+                        if (!File.Exists(sDeputadosImagesPath + id + "_120x160.jpg"))
+                            ImportacaoUtils.CreateImageThumbnail(src);
+
+                        if (!File.Exists(sDeputadosImagesPath + id + "_240x300.jpg"))
+                            ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
+
+                        continue;
+                    }
+
+                    try
+                    {
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
+                        try
+                        {
+                            await client.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src);
+                        }
+                        catch (Exception)
+                        {
+                            await client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
+                        }
+
+                        ImportacaoUtils.CreateImageThumbnail(src);
+                        ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
+
+
+                        logger.LogTrace("Atualizado imagem do deputado " + id);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!ex.Message.Contains("404"))
+                        {
+                            logger.LogInformation("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.GetBaseException().Message);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 public class ImportadorDespesasCamaraFederal : IImportadorDespesas
@@ -376,6 +445,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public string tempPath { get; set; }
 
     private int linhasProcessadasAno { get; set; }
+
+    private const int legislaturaAtual = 57;
 
     public ImportadorDespesasCamaraFederal(IServiceProvider serviceProvider)
     {
@@ -1099,59 +1170,6 @@ WHERE presencas = 0");
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Baixa as imagens dos deputados novos (imagens que ainda não foram baixadas)
-    /// </summary>
-    /// <param name="dirRaiz"></param>
-    public async void DownloadFotosParlamentares()
-    {
-        var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, "public/img/depfederal/");
-
-        var sb = new StringBuilder();
-        using (var banco = new AppDb())
-        {
-            string sql = "SELECT id FROM cf_deputado where id_deputado is not null AND situacao = 'Exercício'";
-            DataTable table = banco.GetTable(sql, 0);
-
-            foreach (DataRow row in table.Rows)
-            {
-                string id = row["id"].ToString();
-                string src = sDeputadosImagesPath + id + ".jpg";
-                if (File.Exists(src)) continue;
-
-                try
-                {
-                    using (HttpClient client = new())
-                    {
-                        client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                        try
-                        {
-                            await client.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src);
-                        }
-                        catch (Exception)
-                        {
-                            Console.WriteLine("Atualizado imagem do deputado 2 ---------- " + id);
-
-                            await client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
-                        }
-
-                        ImportacaoUtils.CreateImageThumbnail(src);
-                        ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
-                    }
-
-                    Console.WriteLine("Atualizado imagem do deputado " + id);
-                }
-                catch (Exception ex)
-                {
-                    sb.AppendLine("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.ToFullDescriptionString());
-                    Console.WriteLine("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.ToFullDescriptionString());
-                }
-            }
-        }
-
-        //return sb.ToString();
-    }
-
     #endregion Importação Deputados
 
     #region Importação Dados CEAP CSV
@@ -1240,7 +1258,7 @@ WHERE presencas = 0");
         finally
         {
             watch.Stop();
-            logger.LogTrace($"Arquivo baixado em {watch.Elapsed.TotalSeconds} s");
+            logger.LogTrace($"Arquivo baixado em {watch.Elapsed:c}");
         }
     }
 
@@ -1250,25 +1268,19 @@ WHERE presencas = 0");
 
         string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
         if (!Directory.Exists(diretorio))
-        {
             Directory.CreateDirectory(diretorio);
 
-            if (File.Exists(caminhoArquivo))
-            {
-                File.Delete(caminhoArquivo);
-            }
+        if (File.Exists(caminhoArquivo))
+            File.Delete(caminhoArquivo);
 
-            using (HttpClient client = new())
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                client.Timeout = TimeSpan.FromMinutes(5);
-                client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-            }
-
-            return true;
+        using (HttpClient client = new())
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
+            client.Timeout = TimeSpan.FromMinutes(5);
+            client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
         }
 
-        return false;
+        return true;
     }
 
     private readonly string[] ColunasCEAP = {
@@ -1280,15 +1292,27 @@ WHERE presencas = 0");
 
     public void ImportarDespesas(string file, int ano)
     {
+        linhasProcessadasAno = 0;
         var totalColunas = ColunasCEAP.Length;
         int lote = 0, linhaInserida = 0;
         var dc = new Dictionary<string, UInt64>();
 
         using (var banco = new AppDb())
         {
+            int hashIgnorado = 0;
             using (var dReader = banco.ExecuteReader($"select id, hash from cf_despesa where ano={ano} and hash IS NOT NULL"))
                 while (dReader.Read())
-                    dc.Add(Convert.ToHexString((byte[])dReader["hash"]), (UInt64)dReader["id"]);
+                {
+                    var hex = Convert.ToHexString((byte[])dReader["hash"]);
+                    if (!dc.ContainsKey(hex))
+                        dc.Add(hex, (UInt64)dReader["id"]);
+                    else
+                        hashIgnorado++;
+                }
+
+            logger.LogTrace("{Total} Hashes Carregados", dc.Count);
+            if (hashIgnorado > 0)
+                logger.LogWarning("{Total} Hashes Ignorados", hashIgnorado);
 
             var cultureInfo = new CultureInfo("en-US");
 
@@ -1376,6 +1400,7 @@ WHERE presencas = 0");
                         banco.AddParameter(coluna, valor);
                     }
 
+                    linhasProcessadasAno++;
                     byte[] hash = banco.ParametersHash();
                     var key = Convert.ToHexString(hash);
                     if (dc.Remove(key))
@@ -1422,8 +1447,9 @@ INSERT INTO ops_tmp.cf_despesa_temp (
                 banco.AddParameter("id", id);
                 banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
             }
-        }
 
+            ValidaImportacao(ano);
+        }
 
 
         if (ano == DateTime.Now.Year && (lote > 0 || dc.Count > 0))
@@ -1440,8 +1466,6 @@ INSERT INTO ops_tmp.cf_despesa_temp (
 
     private void ProcessarDespesasTemp(int ano)
     {
-        ValidaImportacao(ano);
-
         CorrigeDespesas();
         InsereDeputadoFaltante();
         InserePassageiroFaltante();
@@ -1462,7 +1486,7 @@ INSERT INTO ops_tmp.cf_despesa_temp (
         var totalFinal = connection.ExecuteScalar<int>(@$"
 select count(1) 
 from cf_despesa d 
-where d.ano_mes between {ano}01 and {ano}12");
+where d.ano = {ano}");
 
         if (linhasProcessadasAno != totalFinal)
             logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}",
@@ -1784,9 +1808,11 @@ SET SQL_BIG_SELECTS=0;
 			", 3600);
 
         if (affected > 0)
-        {
             logger.LogInformation("{Itens} despesas incluidos!", affected);
-        }
+
+        var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
+        if (affected != totalTemp)
+            logger.LogInformation($"Há {totalTemp - affected} registros que não foram imporados corretamente!");
     }
 
     private void InsereDespesaLegislatura()
@@ -1794,7 +1820,7 @@ SET SQL_BIG_SELECTS=0;
         var Legislaturas = connection.Query<int>("SELECT DISTINCT codigoLegislatura FROM ops_tmp.cf_despesa_temp");
         if (!Legislaturas.Any())
         {
-            Legislaturas = new List<int>() { 55, 56, 57 };
+            Legislaturas = new List<int>() { legislaturaAtual-2, legislaturaAtual-1, legislaturaAtual };
         };
 
         foreach (var legislatura in Legislaturas)
@@ -2146,7 +2172,7 @@ where id=@id_cf_deputado", new
         //SELECT DISTINCT cd.id as id_cf_deputado
         //FROM cf_deputado cd 
         //JOIN cf_funcionario_contratacao c ON c.id_cf_deputado = cd.id AND c.periodo_ate IS NULL
-        //-- WHERE id_legislatura = 56                                 
+        //-- WHERE id_legislatura = 57
         //-- and cd.id >= 141428
         //and cd.processado = 0
         //order by cd.id
@@ -2156,7 +2182,7 @@ where id=@id_cf_deputado", new
 SELECT DISTINCT cd.id as id_cf_deputado, cd.situacao
 FROM cf_deputado cd 
 JOIN cf_mandato m ON m.id_cf_deputado = cd.id
--- WHERE id_legislatura = 56                                 
+-- WHERE id_legislatura = 57                                
 -- and cd.id >= 141428
 -- and cd.processado = 0
 order by cd.situacao, cd.id

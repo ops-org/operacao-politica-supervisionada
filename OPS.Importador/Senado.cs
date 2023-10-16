@@ -36,11 +36,17 @@ namespace OPS.Importador
     {
         protected readonly ILogger<ImportadorParlamentarSenado> logger;
         protected readonly IDbConnection connection;
+        public string rootPath { get; set; }
+        public string tempPath { get; set; }
 
         public ImportadorParlamentarSenado(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorParlamentarSenado>>();
             connection = serviceProvider.GetService<IDbConnection>();
+
+            var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
+            rootPath = configuration["AppSettings:SiteRootFolder"];
+            tempPath = configuration["AppSettings:SiteTempFolder"];
         }
 
         public Task Importar()
@@ -480,6 +486,54 @@ namespace OPS.Importador
             return Task.CompletedTask;
         }
 
+        public async Task DownloadFotos()
+        {
+            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, @"public\img\senador\");
+
+            using (var banco = new AppDb())
+            {
+                DataTable table = banco.GetTable("SELECT id FROM sf_senador where ativo = 'S'");
+                using (HttpClient client = new())
+                {
+                    foreach (DataRow row in table.Rows)
+                    {
+                        string id = row["id"].ToString();
+                        string url = "https://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
+                        string src = sSenadoressImagesPath + id + ".jpg";
+                        if (File.Exists(src))
+                        {
+                            if (!File.Exists(sSenadoressImagesPath + id + "_120x160.jpg"))
+                                ImportacaoUtils.CreateImageThumbnail(src);
+
+                            if (!File.Exists(sSenadoressImagesPath + id + "_240x300.jpg"))
+                                ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
+
+                            continue;
+                        }
+
+                        try
+                        {
+
+                            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
+                            await client.DownloadFile(url, src);
+
+                            ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
+                            ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
+
+                            logger.LogTrace("Atualizado imagem do senador {IdSenador}", id);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (!ex.Message.Contains("404"))
+                            {
+                                logger.LogInformation("Imagem do senador {IdSenador} inexistente! Motivo: {Motivo}", id, ex.GetBaseException().Message);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     /// <summary>
@@ -897,7 +951,7 @@ namespace OPS.Importador
             finally
             {
                 watch.Stop();
-                logger.LogTrace("Arquivo baixado em {ElapsedTotalSeconds} s", watch.Elapsed.TotalSeconds);
+                //logger.LogTrace("Arquivo baixado em {TimeElapsed:c}", watch.Elapsed);
             }
         }
 
@@ -924,6 +978,7 @@ namespace OPS.Importador
 
         public void ImportarDespesas(string caminhoArquivo, int ano)
         {
+            linhasProcessadasAno = 0;
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             string sResumoValores = string.Empty;
             int lote = 0, linhasInserida = 0;
@@ -946,9 +1001,22 @@ namespace OPS.Importador
             using (var banco = new AppDb())
             {
                 if (gerarHash)
+                {
+                    int hashIgnorado = 0;
                     using (var dReader = banco.ExecuteReader($"select id, hash from sf_despesa where ano={ano} and hash IS NOT NULL"))
                         while (dReader.Read())
-                            dc.Add(Convert.ToHexString((byte[])dReader["hash"]), (UInt64)dReader["id"]);
+                        {
+                            var hex = Convert.ToHexString((byte[])dReader["hash"]);
+                            if (!dc.ContainsKey(hex))
+                                dc.Add(hex, (UInt64)dReader["id"]);
+                            else
+                                hashIgnorado++;
+                        }
+
+                    logger.LogTrace("{Total} Hashes Carregados", dc.Count);
+                    if (hashIgnorado > 0)
+                        logger.LogWarning("{Total} Hashes Ignorados", hashIgnorado);
+                }
 
                 LimpaDespesaTemporaria(banco);
 
@@ -1008,6 +1076,7 @@ namespace OPS.Importador
                         banco.AddParameter("valor_reembolsado", Convert.ToDouble(valores[VALOR_REEMBOLSADO], cultureInfo));
                         banco.AddParameter("cod_documento", Convert.ToUInt64(valores[COD_DOCUMENTO], cultureInfo));
 
+                        linhasProcessadasAno++;
                         byte[] hash = null;
                         if (gerarHash)
                         {
@@ -1030,16 +1099,12 @@ namespace OPS.Importador
 
                         if (linhasInserida++ == 10000)
                         {
-                            linhasProcessadasAno += linhasInserida;
                             logger.LogInformation("Processando lote {Lote}", ++lote);
                             ProcessarDespesasTemp(banco, ano);
                             linhasInserida = 0;
                         }
                     }
                 }
-
-                linhasProcessadasAno += linhasInserida;
-                ValidaImportacao(banco, ano);
 
                 if (linhasInserida > 0)
                 {
@@ -1057,6 +1122,8 @@ namespace OPS.Importador
 
                     logger.LogInformation("Removendo {Total} despesas", dc.Values.Count);
                 }
+
+                ValidaImportacao(banco, ano);
 
                 if (ano == DateTime.Now.Year)
                 {
@@ -1106,7 +1173,11 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
 				UPDATE ops_tmp.sf_despesa_temp 
 				SET tipo_despesa = 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços' 
-				WHERE tipo_despesa LIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';	
+				WHERE tipo_despesa LIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';
+
+                UPDATE ops_tmp.sf_despesa_temp
+                SET tipo_despesa = 'Não especificado'
+                WHERE tipo_despesa = '';
 			");
         }
 
@@ -1140,16 +1211,13 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 			");
 
             if (banco.RowsAffected > 0)
-            {
-                return "<p>" + banco.RowsAffected + "+ Fornecedor</p>";
-            }
+                logger.LogInformation($"{banco.RowsAffected} Fornecedores cadastrados.");
 
             return string.Empty;
         }
 
-        private string InsereDespesaFinal(AppDb banco)
+        private void InsereDespesaFinal(AppDb banco)
         {
-            var retorno = "";
             banco.ExecuteNonQuery(@"
 				ALTER TABLE sf_despesa DISABLE KEYS;
 
@@ -1190,9 +1258,11 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
 
             if (banco.RowsAffected > 0)
-            {
-                retorno = banco.RowsAffected + "+ Despesa nova! ";
-            }
+                logger.LogInformation($"{banco.RowsAffected} despesas cadastradas.");
+
+            var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.sf_despesa_temp");
+            if (banco.RowsAffected != totalTemp)
+                logger.LogInformation($"Há {totalTemp - banco.RowsAffected} registros que não foram imporados corretamente!");
 
             //         banco.ExecuteNonQuery(@"
             //	UPDATE ops_tmp.sf_despesa_temp t 
@@ -1222,7 +1292,6 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
             //{
             //    return "<p>" + retorno.Trim() + "</p>";
             //}
-            return string.Empty;
         }
 
         private void InsereDespesaFinalParcial(AppDb banco)
@@ -1367,49 +1436,6 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 					);";
 
             connection.Execute(strSql);
-        }
-
-        public async void DownloadFotosParlamentares()
-        {
-            var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, "public/img/senador/");
-
-            var db = new StringBuilder();
-
-            using (var banco = new AppDb())
-            {
-                DataTable table = banco.GetTable("SELECT id FROM sf_senador where ativo = 'S'");
-
-                foreach (DataRow row in table.Rows)
-                {
-                    string id = row["id"].ToString();
-                    string url = "https://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
-                    string src = sSenadoressImagesPath + id + ".jpg";
-                    if (File.Exists(src)) continue;
-
-                    try
-                    {
-                        using (HttpClient client = new())
-                        {
-                            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                            await client.DownloadFile(url, src);
-
-                            ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
-                            ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
-
-                            db.AppendLine("Atualizado imagem do senador " + id);
-                            logger.LogInformation("Atualizado imagem do senador {IdSenador}", id);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (!ex.Message.Contains("404"))
-                        {
-                            db.AppendLine("Imagem do senador " + id + " inexistente! Motivo: " + ex.ToFullDescriptionString());
-                            logger.LogInformation("Imagem do senador {IdSenador} inexistente! Motivo: {Motivo}", id, ex.ToFullDescriptionString());
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -1610,9 +1636,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 			", 3600);
 
             if (Convert.ToInt32(total) != banco.RowsAffected)
-            {
                 throw new Exception("Existem relacionamentos não mapeados!");
-            }
 
             LimpaRemuneracaoTemporaria();
         }

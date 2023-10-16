@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AngleSharp;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
@@ -53,6 +55,9 @@ public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
 
     public override Task Importar()
     {
+        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
+        ArgumentNullException.ThrowIfNull(config, nameof(config));
+
         var address = $"{config.BaseAddress}listarDestaqueDeputados";
         DeputadosRS objDeputadosRS = RestApiGet<DeputadosRS>(address);
 
@@ -62,7 +67,7 @@ public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
             var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
             deputado.UrlPerfil = $"https://ww4.al.rs.gov.br/deputados/{parlamentar.IdDeputado}";
-            deputado.NomeParlamentar = parlamentar.NomeDeputado;
+            deputado.NomeParlamentar = parlamentar.NomeDeputado.ToTitleCase();
             deputado.IdPartido = BuscarIdPartido(parlamentar.SiglaPartido);
             deputado.Email = parlamentar.EmailDeputado;
             deputado.Telefone = parlamentar.TelefoneDeputado;
@@ -71,6 +76,7 @@ public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
             InsertOrUpdate(deputado);
         }
 
+        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
         return Task.CompletedTask;
     }
 }

@@ -2,6 +2,7 @@
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
@@ -56,7 +57,7 @@ public class ImportadorParlamentarPernambuco : ImportadorParlamentarCrawler
 
     public override DeputadoEstadual ColetarDadosLista(IElement item)
     {
-        var nomeparlamentar = item.QuerySelector(".parlamentares-nome").TextContent.Trim();
+        var nomeparlamentar = item.QuerySelector(".parlamentares-nome").TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
         deputado.UrlPerfil = (item.QuerySelector("a") as IHtmlAnchorElement).Href;
 
@@ -71,7 +72,7 @@ public class ImportadorParlamentarPernambuco : ImportadorParlamentarCrawler
         deputado.IdPartido = BuscarIdPartido(cabecalho.QuerySelector(".text .subtitle").TextContent.Trim());
 
         var info1 = subDocument.QuerySelectorAll(".parlamentares-view-info dl.first dd");
-        deputado.NomeCivil = info1[0].TextContent.Trim();
+        deputado.NomeCivil = info1[0].TextContent.Trim().ToTitleCase();
         deputado.Naturalidade = info1[1].TextContent.Trim();
         deputado.Email = info1[2].TextContent.Trim();
         deputado.Site = info1[3].TextContent.Trim();
@@ -79,7 +80,7 @@ public class ImportadorParlamentarPernambuco : ImportadorParlamentarCrawler
 
         var info2 = subDocument.QuerySelectorAll(".parlamentares-view-info dl.last dd");
         //var aniversario = info2[0].TextContent.Trim(); // Falta ano
-        deputado.Profissao = info2[1].TextContent.Trim();
+        deputado.Profissao = info2[1].TextContent.Trim().ToTitleCase();
         deputado.Telefone = info2[2].TextContent.Trim();
         //var gabinete = info2[3].TextContent.Trim();
     }

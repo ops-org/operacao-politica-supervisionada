@@ -237,7 +237,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                     {
                         Ano = (short)ano,
                         Cpf = !string.IsNullOrEmpty(csv[CPF_DEPUTADO]) ? Utils.RemoveCaracteresNaoNumericos(csv[CPF_DEPUTADO]) : "",
-                        Nome = csv[NOME_DEPUTADO].Replace("Deputado", "").Replace("Deputada", ""),
+                        Nome = csv[NOME_DEPUTADO].Replace("Deputado", "").Replace("Deputada", "").ToTitleCase(),
                         Empresa = csv[NOME_FORNECEDOR].Trim().Replace("NÃO INFORMADO", "").Replace("DOCUMENTO DANIFICADO", "").Replace("não consta documento", "").Trim(),
                         Documento = csv[DOCUMENTO],
                     };
@@ -362,7 +362,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                     {
                         Ano = (short)ano,
                         Cpf = !string.IsNullOrEmpty(worksheet.Cells[i, CPF_DEPUTADO].Value.ToString()) ? Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CPF_DEPUTADO].Value.ToString()) : "",
-                        Nome = worksheet.Cells[i, NOME_DEPUTADO].Value.ToString().Replace("Deputado", "").Replace("Deputada", "").Trim(),
+                        Nome = worksheet.Cells[i, NOME_DEPUTADO].Value.ToString().Replace("Deputado", "").Replace("Deputada", "").Trim().ToTitleCase(),
                         Empresa = worksheet.Cells[i, NOME_FORNECEDOR].Value.ToString().Trim().Replace("NÃO INFORMADO", "").Replace("DOCUMENTO DANIFICADO", "").Replace("não consta documento", "").Trim(),
                         Documento = worksheet.Cells[i, DOCUMENTO].Value.ToString(),
                     };
@@ -470,7 +470,7 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
 
     public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
     {
-        var nomeparlamentar = parlamentar.QuerySelector(".card-title").TextContent.Trim();
+        var nomeparlamentar = parlamentar.QuerySelector(".card-title").TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
@@ -490,17 +490,17 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
         deputado.UrlFoto = (subDocument.QuerySelector(".informacoes-pessoais img") as IHtmlImageElement)?.Source;
 
         var detalhes = subDocument.QuerySelectorAll(".informacoes-pessoais .row .col-md-9 p span");
-        deputado.NomeCivil = detalhes[0].TextContent.Trim();
+        deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
         try
         {
             deputado.Naturalidade = detalhes[1].TextContent.Trim();
             deputado.Nascimento = DateOnly.Parse(detalhes[2].TextContent.Trim(), cultureInfo);
-            deputado.Profissao = detalhes[3].TextContent.Trim();
+            deputado.Profissao = detalhes[3].TextContent.Trim().ToTitleCase();
         }
         catch (Exception)
         {
             deputado.Nascimento = DateOnly.Parse(detalhes[1].TextContent.Trim(), cultureInfo);
-            deputado.Profissao = detalhes[2].TextContent.Trim();
+            deputado.Profissao = detalhes[2].TextContent.Trim().ToTitleCase();
         }
 
         //var gabinete = detalhes[3].TextContent.Trim();

@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Xml;
 using Dapper;
+using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
@@ -41,7 +43,7 @@ namespace OPS.Importador.ALE
             {
                 BaseAddress = "https://www.al.sp.gov.br/",
                 Estado = Estado.SaoPaulo,
-                ChaveImportacao = ChaveDespesaTemp.CpfParcial
+                ChaveImportacao = ChaveDespesaTemp.Matricula
             };
         }
 
@@ -66,7 +68,7 @@ namespace OPS.Importador.ALE
             foreach (XmlNode fileNode in despesas)
             {
                 var matricula = fileNode.SelectSingleNode("Matricula").InnerText.Trim();
-                var deputado = fileNode.SelectSingleNode("Deputado").InnerText.Trim();
+                var deputado = fileNode.SelectSingleNode("Deputado").InnerText.Trim().ToTitleCase();
                 var tipoDespesa = fileNode.SelectSingleNode("Tipo").InnerText.Trim();
                 //var ano = fileNode.SelectSingleNode("Ano").InnerText.Trim();
                 var mes = fileNode.SelectSingleNode("Mes").InnerText.Trim();
@@ -113,6 +115,9 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
 
         public override Task Importar()
         {
+            logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
+            ArgumentNullException.ThrowIfNull(config, nameof(config));
+
             var doc = new XmlDocument();
             doc.Load($"{config.BaseAddress}repositorioDados/deputados/deputados.xml");
             XmlNodeList deputadoXml = doc.DocumentElement.SelectNodes("Deputado");
@@ -122,7 +127,7 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
                 var matricula = Convert.ToUInt32(fileNode.SelectSingleNode("Matricula").InnerText.Trim());
                 var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
-                deputado.NomeParlamentar = fileNode.SelectSingleNode("NomeParlamentar").InnerText.Trim();
+                deputado.NomeParlamentar = fileNode.SelectSingleNode("NomeParlamentar").InnerText.Trim().ToTitleCase();
                 deputado.IdPartido = BuscarIdPartido(fileNode.SelectSingleNode("Partido").InnerText.Trim());
 
                 deputado.Telefone = fileNode.SelectSingleNode("Telefone")?.InnerText.Trim();
@@ -136,6 +141,7 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
 
             }
 
+            logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
             return Task.CompletedTask;
         }
     }

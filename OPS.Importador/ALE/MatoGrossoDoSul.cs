@@ -114,7 +114,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
                 {
                     case 1: // Nome
                         despesaTemp = new CamaraEstadualDespesaTemp();
-                        despesaTemp.Nome = linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Replace("Dep.", "").Trim();
+                        despesaTemp.Nome = linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Replace("Dep.", "").Trim().ToTitleCase();
                         break;
 
                     case 2: // Ano
@@ -263,7 +263,7 @@ public class ImportadorParlamentarMatoGrossoDoSul : ImportadorParlamentarCrawler
         deputado.UrlFoto = (parlamentar.QuerySelector(".cbp-caption-defaultWrap img") as IHtmlImageElement)?.Source;
         deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
 
-        deputado.NomeParlamentar = parlamentar.QuerySelector(".cbp-l-grid-projects-title").TextContent.Trim();
+        deputado.NomeParlamentar = parlamentar.QuerySelector(".cbp-l-grid-projects-title").TextContent.Trim().ToTitleCase();
         deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".cbp-l-grid-projects-desc").TextContent.Trim());
 
         return deputado;

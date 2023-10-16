@@ -3,6 +3,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
@@ -59,15 +60,10 @@ public class ImportadorParlamentarAlagoas : ImportadorParlamentarCrawler
         var colunaDetalhes = colunas[1].QuerySelectorAll("p");
         var colunaNome = colunaDetalhes[0].QuerySelector("a");
 
-        var nomeparlamentar = colunaNome.TextContent.Trim();
+        var nomeparlamentar = colunaNome.TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
-        var elementoNome = colunaDetalhes[1].QuerySelector("em,i");
-        if (elementoNome != null)
-            deputado.NomeParlamentar = elementoNome.TextContent.Trim();
-        else
-            deputado.NomeParlamentar = colunaDetalhes[1].TextContent.Replace("Nome Civil:", "").Trim();
-
+        deputado.NomeCivil = colunaDetalhes[1].TextContent.Replace("Nome Civil:", "").Trim().ToTitleCase();
         deputado.UrlFoto = (colunaDetalhes[0].QuerySelector("img") as IHtmlImageElement)?.Source;
         deputado.UrlPerfil = (colunaNome as IHtmlAnchorElement).Href;
         deputado.IdPartido = BuscarIdPartido(colunaDetalhes[2].TextContent.Replace("Partido:", "", StringComparison.InvariantCultureIgnoreCase).Trim());

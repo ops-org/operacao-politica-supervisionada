@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Policy;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
@@ -36,7 +39,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "https://www.al.ba.gov.br/transparencia/verbas-idenizatorias",
+            BaseAddress = "https://www.al.ba.gov.br/",
             Estado = Estado.Bahia,
             ChaveImportacao = ChaveDespesaTemp.Indefinido
         };
@@ -45,12 +48,12 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
     public override void ImportarDespesas(IBrowsingContext context, int ano)
     {
         var pagina = 0;
-
+        var despesasReferencia = new List<string>();
         while (true)
         {
             logger.LogInformation("Consultando pagina {Pagina}!", pagina);
             // Pagina começa em 0 - HUE
-            var address = $"{config.BaseAddress}?ano={ano}&categoria=&page={pagina++}&size=1000";
+            var address = $"{config.BaseAddress}transparencia/verbas-idenizatorias?ano={ano}&categoria=&page={pagina++}&size=1000";
             var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
             var despesas = document.QuerySelectorAll(".tabela-cab tbody tr");
             foreach (var despesa in despesas)
@@ -59,16 +62,18 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                 var colunas = despesa.QuerySelectorAll("td");
                 if (!colunas.Any()) continue;
 
-                var linkDetalhes = (colunas[0].Children[0] as IHtmlAnchorElement).Href;
                 var processo = colunas[0].QuerySelector("span").TextContent.Trim();
+                if (despesasReferencia.Contains(processo)) continue;
+                despesasReferencia.Add(processo);
 
+                var linkDetalhes = (colunas[0].Children[0] as IHtmlAnchorElement).Href;
                 var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
                     Ano = (short)ano,
-                    Documento = colunas[0].QuerySelector("span").TextContent.Trim() + "/" + colunas[1].TextContent.Trim(),
+                    //Documento = colunas[0].QuerySelector("span").TextContent.Trim() + "/" + colunas[1].TextContent.Trim(),
                     DataEmissao = Convert.ToDateTime("01/" + colunas[2].TextContent.Trim(), cultureInfo),
-                    Nome = colunas[3].TextContent.Trim(),
-                    TipoDespesa = colunas[4].TextContent.Trim()
+                    Nome = colunas[3].TextContent.Trim().ToTitleCase(),
+                    //TipoDespesa = colunas[4].TextContent.Trim()
                 };
 
                 try
@@ -80,6 +85,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                         // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR ANEXO NF
                         var colunasDetalhes = detalhes.QuerySelectorAll("td");
 
+                        despesaTemp.TipoDespesa = colunasDetalhes[0].TextContent.Trim();
                         despesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
                         despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
                         despesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
@@ -91,6 +97,15 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                 }
                 catch (Exception ex)
                 {
+                    using (var reader = connection.ExecuteReader($"SELECT distinct hash FROM cl_despesa WHERE numero_documento LIKE '{processo}/%'"))
+                    {
+                        while (reader.Read())
+                        {
+                            var key = Convert.ToHexString((byte[])reader["hash"]);
+                            lstHash.Remove(key);
+                        }
+                    }
+
                     Log.Error(ex, ex.Message);
                     continue;
                 }
@@ -122,7 +137,7 @@ public class ImportadorParlamentarBahia : ImportadorParlamentarCrawler
 
     public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
     {
-        var nomeparlamentar = parlamentar.QuerySelector(".deputado-nome span").TextContent.Trim();
+        var nomeparlamentar = parlamentar.QuerySelector(".deputado-nome span").TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         deputado.UrlPerfil = (parlamentar.QuerySelector(".list-item a") as IHtmlAnchorElement).Href;
@@ -136,12 +151,12 @@ public class ImportadorParlamentarBahia : ImportadorParlamentarCrawler
     public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
     {
         var detalhes = subDocument.QuerySelectorAll(".dados-deputado p");
-        deputado.NomeCivil = detalhes[0].QuerySelector("span").TextContent.Trim();
+        deputado.NomeCivil = detalhes[0].QuerySelector("span").TextContent.Trim().ToTitleCase();
 
         var profissaoElemento = detalhes.FirstOrDefault(x => x.QuerySelector("strong").TextContent.StartsWith("PROFISSÃO", StringComparison.InvariantCultureIgnoreCase));
         if (profissaoElemento is not null)
         {
-            deputado.Profissao = profissaoElemento.QuerySelector("span").TextContent.Trim();
+            deputado.Profissao = profissaoElemento.QuerySelector("span").TextContent.Trim().ToTitleCase();
         }
 
         var nascimentoElemento = detalhes.FirstOrDefault(x => x.QuerySelector("strong").TextContent.StartsWith("NASCIMENTO", StringComparison.InvariantCultureIgnoreCase));
