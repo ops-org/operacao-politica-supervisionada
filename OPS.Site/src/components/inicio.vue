@@ -132,15 +132,12 @@
         </p>
         <p>
           Cada deputado federal tem a seu dispor valores mensais que vão de
-          <a
-            href="http://www.camara.leg.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
+                    <a href="http://www.camara.leg.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
             target="_blank"
             rel="nofollow noopener noreferrer"
-            title="Clique para visualizar a lista oficial de valores por estado"
-            ><strong>R$ 30,7 mil a R$ 45,6 mil</strong></a
-          >, a depender do estado de origem, para custear despesas com alimentação,
-          viagens, hospedagens, combustível, serviços de consultoria, locação de carros,
-          barcos, aviões e casas, além de muitos outras.
+                        title="Clique para visualizar a lista oficial de valores por estado"><strong>R$ 36,6 mil a R$ 51,4 mil</strong></a>,
+                    a depender do estado de origem, para custear despesas com alimentação, viagens, hospedagens, combustível,
+                    serviços de consultoria, locação de carros, barcos, aviões e casas, além de muitos outras.
         </p>
         <p>
           No Senado os valores também variam de acordo com o estado que elegeu o
