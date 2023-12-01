@@ -42,6 +42,9 @@ namespace OPS.Core.Entity
         [Column("ano")]
         public short Ano { get; set; }
 
+        [Column("mes")]
+        public short? Mes { get; set; }
+
         [Column("favorecido")]
         public string Favorecido { get; set; }
 

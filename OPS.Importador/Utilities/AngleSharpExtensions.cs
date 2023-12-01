@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AngleSharp.Dom;
-using AngleSharp;
-using static OPS.Importador.CamaraGoias;
 using System.Net;
-using Serilog;
 using System.Threading;
+using System.Threading.Tasks;
+using AngleSharp;
+using AngleSharp.Dom;
+using Serilog;
 
 namespace OPS.Importador.Utilities;
 
@@ -33,12 +29,12 @@ public static class AngleSharpExtensions
 
                 Log.Warning($"Try {retries} on {address} - Status Code {doc.StatusCode}"); //  - {doc.ToHtml()}
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Warning($"Try {retries} on {address} - {ex.Message}");
             }
 
-            
+
             Thread.Sleep(1000);
         } while (retries < totalRetries);
 

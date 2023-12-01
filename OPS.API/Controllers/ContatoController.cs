@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using System.Net.Mail;
+using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
-using System;
-using System.Net.Mail;
-using System.Text.Json;
 
 namespace OPS.API.Controllers
 {

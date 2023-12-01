@@ -1,21 +1,16 @@
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.IO.Compression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.ResponseCaching;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
 using MySqlConnector;
-using MySqlConnector.Logging;
 using OPS.Core.DAO;
-using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Globalization;
-using System.IO.Compression;
 
 namespace OPS.API
 {
@@ -164,7 +159,7 @@ namespace OPS.API
             app.UseResponseCompression();
 
             app.UseHttpCacheHeaders();
-           
+
 
             app.UseStaticFiles(new StaticFileOptions
             {

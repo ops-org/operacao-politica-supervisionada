@@ -1,9 +1,9 @@
-﻿using OPS.Core.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
+using OPS.Core.Models;
 
 namespace OPS.Core.DAO
 {
@@ -293,6 +293,13 @@ LIMIT 10 ");
                             // Deputado Estadual
                             link_parlamentar = $"/#/deputado-estadual/{id_parlamentar}";
                             link_despesas = $"/#/deputado-estadual?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
+
+                        }
+                        else if (tipo == "Deputado Estadual")
+                        {
+                            // Deputado Estadual
+                            link_parlamentar = $"/deputado-estadual/{id_parlamentar}";
+                            link_despesas = $"/deputado-estadual?IdParlamentar={id_parlamentar}&Fornecedor={id}&Periodo=0&Agrupamento=6";
 
                         }
                         else

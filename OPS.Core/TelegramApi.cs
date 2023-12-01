@@ -1,8 +1,8 @@
-﻿using OPS.Core.Entity;
-using RestSharp;
-using System;
+﻿using System;
 using System.Text.Json;
 using System.Threading;
+using OPS.Core.Entity;
+using RestSharp;
 
 namespace OPS.Core
 {
@@ -28,19 +28,19 @@ namespace OPS.Core
             var url = $"{UrlTelegram}/sendMessage";
 
             var jsonContent = JsonSerializer.Serialize(message);
-            var request = new RestRequest(Method.POST);
+            var request = new RestRequest();
 
             request.AddHeader("Content-Type", "application/json");
 
             request.AddJsonBody(jsonContent);
 
-            IRestResponse response;
+            RestResponse response;
             var restClient = new RestClient(url);
-            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
             try
             {
-                response = restClient.Execute(request);
+                response = restClient.Post(request);
                 if (response.StatusCode.GetHashCode() == 429) //TooManyRequests
                 {
                     int retryAfter = 30;

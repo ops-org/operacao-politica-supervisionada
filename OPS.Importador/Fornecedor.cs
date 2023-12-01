@@ -1,20 +1,17 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using MySqlConnector;
-using OPS.Core;
-using OPS.Core.Entity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.Transactions;
+using Dapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MySqlConnector;
+using OPS.Core;
+using OPS.Core.Entity;
 
 namespace OPS.Importador
 {
@@ -86,14 +83,23 @@ namespace OPS.Importador
                     -- and ip_colaborador is null -- not in ('170509', '170510', '170511', '170512')
                     -- and controle is null
                     -- and controle <> 0
-					-- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
-					-- and (controle is null or controle NOT IN (0, 2, 3, 5))
+                    -- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
+                    -- and (controle is null or controle NOT IN (0, 2, 3, 5))
                     -- and fi.situacao_cadastral = 'ATIVA'
                     and (controle is null or controle NOT IN (0, 1, 2, 3))
                     -- AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
                     AND fi.id_fornecedor IS null
                     order by fi.id_fornecedor asc
                     -- LIMIT 1000");
+
+                //dtFornecedores = banco.GetTable(
+                //   $@"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
+                //    from fornecedor f
+                //    left join fornecedor_info fi on f.id = fi.id_fornecedor
+                //    where char_length(f.cnpj_cpf) = 14
+                //    and obtido_em < '{DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")}'
+                //    and fi.situacao_cadastral = 'ATIVA'
+                //    order by fi.id_fornecedor asc");
 
                 if (dtFornecedores.Rows.Count == 0)
                 {
@@ -124,8 +130,8 @@ namespace OPS.Importador
                     InserirControle(3, item["cnpj_cpf"].ToString(), "CNPJ Invalido");
                     logger.LogInformation("CNPJ Invalido [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, item["cnpj_cpf"].ToString(), item["nome"]);
 
-                    telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
-                    telegram.SendMessage(telegraMessage);
+                    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
+                    //telegram.SendMessage(telegraMessage);
                     continue;
                 }
 

@@ -1,15 +1,14 @@
-﻿using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Http.Json;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using RestSharp;
 
 namespace OPS.Core
 {
@@ -248,13 +247,13 @@ namespace OPS.Core
             }
 
             var restClient = new RestClient("https://api.sendgrid.com/v3/mail/send");
-            restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true; // Noncompliant: trust all certificates
+            //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true; // Noncompliant: trust all certificates
 
-            var request = new RestRequest(Method.POST);
+            var request = new RestRequest();
             request.AddHeader("content-type", "application/json");
             request.AddHeader("authorization", "Bearer " + apiKey);
             request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
-            IRestResponse response = await restClient.ExecuteAsync(request);
+            RestResponse response = await restClient.PostAsync(request);
 
             if (response.StatusCode != HttpStatusCode.Accepted)
             {
@@ -294,6 +293,18 @@ namespace OPS.Core
                 return textReader.ReadToEnd();
         }
 
+        public static string ToTitleCase(this string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower()).Replace("De ", "de ").Replace("Da ", "da ").Replace("Do ", "do ");
+        }
+
+        public static String ReduceWhitespace(this string text)
+        {
+            return Regex.Replace(text, @"\s+", " ");
+        }
+
         //public static string GetIPAddress()
         //{
         //    System.Web.HttpContext context = System.Web.HttpContext.Current;
@@ -313,7 +324,7 @@ namespace OPS.Core
 
         public static string NullIfEmpty(this string value)
         {
-            if (!string.IsNullOrEmpty(value.Trim()))
+            if (!string.IsNullOrEmpty(value?.Trim()))
                 return value;
 
             return null;

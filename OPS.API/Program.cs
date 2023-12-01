@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Serilog;
-using System;
 
 namespace OPS.API
 {
@@ -11,7 +9,7 @@ namespace OPS.API
         {
             //try
             //{
-                CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).Build().Run();
             //}
             //catch (Exception ex)
             //{

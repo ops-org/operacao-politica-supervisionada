@@ -1,13 +1,4 @@
-﻿using CsvHelper;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic;
-using MySqlConnector;
-using MySqlConnector.Logging;
-using OPS.Core;
-using Serilog;
-using System;
+﻿using System;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -17,6 +8,17 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using CsvHelper;
+using Dapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MySqlConnector;
+using MySqlConnector.Logging;
+using OPS.Core;
+using OPS.Importador.ALE;
+using OPS.Importador.ALE.Despesa;
+using Serilog;
 
 namespace OPS.Importador
 {
@@ -41,25 +43,43 @@ namespace OPS.Importador
 
             Log.Logger = loggerConfiguration.CreateLogger();
 
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
             services.AddSingleton<IConfiguration>(configuration);
-            services.AddSingleton<ILogger>(Log.Logger);
             services.AddTransient<IDbConnection>(_ => new MySqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
 
             services.AddScoped<Senado>();
             services.AddScoped<CamaraFederal>();
-            services.AddScoped<CamaraDistritoFederal>();
-            services.AddScoped<CamaraSantaCatarina>();
-            services.AddScoped<CamaraSaoPaulo>();
-            services.AddScoped<CamaraPernambuco>();
-            services.AddScoped<CamaraMinasGerais>();
-            services.AddScoped<CamaraRioGrandeDoSul>();
-            services.AddScoped<CamaraParana>();
-            services.AddScoped<CamaraGoias>();
-            services.AddScoped<CamaraBahia>();
-            services.AddScoped<CamaraCeara>();
-            services.AddScoped<CamaraMatoGrossoDoSul>();
-            services.AddScoped<Presidencia>();
+
+            services.AddScoped<Acre>();
+            services.AddScoped<Alagoas>();
+            services.AddScoped<Amapa>();
+            services.AddScoped<Amazonas>();
+            services.AddScoped<Bahia>();
+            services.AddScoped<Ceara>();
+            services.AddScoped<DistritoFederal>();
+            services.AddScoped<EspiritoSanto>();
+            services.AddScoped<Goias>();
+            services.AddScoped<Maranhao>();
+            services.AddScoped<MatoGrosso>();
+            services.AddScoped<MatoGrossoDoSul>();
+            services.AddScoped<MinasGerais>();
+            services.AddScoped<Para>();
+            services.AddScoped<Paraiba>();
+            services.AddScoped<Parana>();
+            services.AddScoped<Pernambuco>();
+            services.AddScoped<Piaui>();
+            services.AddScoped<RioDeJaneiro>();
+            services.AddScoped<RioGrandeDoNorte>();
+            services.AddScoped<RioGrandeDoSul>();
+            services.AddScoped<Rondonia>();
+            services.AddScoped<Roraima>();
+            services.AddScoped<SantaCatarina>();
+            services.AddScoped<SaoPaulo>();
+            services.AddScoped<Sergipe>();
+            services.AddScoped<Tocantins>();
+
+            //services.AddScoped<Presidencia>();
 
             services.AddScoped<Fornecedor>();
 
@@ -88,24 +108,43 @@ namespace OPS.Importador
                 {
                     var types = new Type[]
                     {
-                        //typeof(Senado), // csv
-                        //typeof(CamaraFederal), // csv
-                        //typeof(CamaraSantaCatarina), // csv
-                        //typeof(CamaraSaoPaulo), // xml
-                        //typeof(CamaraPernambuco), // xml
-                        typeof(CamaraParana), // rest api mensal // TIMEOUT na pagina 3
-                        typeof(CamaraMatoGrossoDoSul), // crawler
-                        typeof(CamaraDistritoFederal), // xlsx  -- OFFLINE
-                        typeof(CamaraMinasGerais), // xml api -- Apenas BR
-                        typeof(CamaraBahia), // crawler // OFFLINE
-                        //typeof(CamaraCeara), // csv mensal -- TIMEOUT
-                        //typeof(CamaraGoias), // rest api mensal -- OFFLINE
-                        //typeof(CamaraRioGrandeDoSul), // nada
+                        typeof(Senado), // csv
+                        typeof(CamaraFederal), // csv
+
+                        typeof(Acre),
+                        typeof(Alagoas),
+                        typeof(Amapa),
+                        typeof(Amazonas),
+                        typeof(Bahia), // crawler // TESTAR
+                        typeof(Ceara), // csv mensal -- TESTAR
+                        typeof(DistritoFederal), // xlsx  -- OFFLINE/Incompleto
+                        typeof(EspiritoSanto),
+                        typeof(Goias), // crawler -- TESTAR
+                        typeof(Maranhao),
+                        typeof(MatoGrosso),
+                        typeof(MatoGrossoDoSul), // crawler
+                        typeof(MinasGerais), // xml api -- Apenas BR
+                        typeof(Para),
+                        typeof(Paraiba),
+                        typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
+                        typeof(Pernambuco),
+                        typeof(Piaui),
+                        typeof(RioDeJaneiro),
+                        typeof(RioGrandeDoNorte),
+                        typeof(RioGrandeDoSul),
+                        typeof(Rondonia),
+                        typeof(Roraima),
+                        typeof(SantaCatarina), // csv
+                        typeof(SaoPaulo), // xml
+                        typeof(Sergipe),
+                        typeof(Tocantins),
                     };
 
                     foreach (var type in types)
                     {
-                        var importador = (ImportadorCotaParlamentarBase)serviceProvider.GetService(type);
+                        Log.Warning("Dados do(a) {CasaLegislativa}", type.Name);
+
+                        var importador = (ImportadorBase)serviceProvider.GetService(type);
                         importador.ImportarCompleto();
                     }
 
@@ -212,8 +251,8 @@ namespace OPS.Importador
         {
             Senado objSenado = serviceProvider.GetService<Senado>();
             CamaraFederal objCamara = serviceProvider.GetService<CamaraFederal>();
-            CamaraDistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<CamaraDistritoFederal>();
-            CamaraSantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<CamaraSantaCatarina>();
+            DistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<DistritoFederal>();
+            SantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<SantaCatarina>();
             Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
 
             try
@@ -284,7 +323,7 @@ namespace OPS.Importador
 
                         using (var client = new System.Net.Http.HttpClient())
                         {
-                            client.DefaultRequestHeaders.Add("User-Agent", "Other");
+                            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)"); //Other
 
                             while (csv.Read())
                             {
