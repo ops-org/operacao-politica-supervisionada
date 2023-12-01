@@ -332,18 +332,20 @@ where p.id_estado = {idEstado}
 and d.ano_mes between {ano}01 and {ano}12");
 
             if (linhasProcessadasAno != totalFinal)
-                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}",  linhasProcessadasAno, totalFinal);
+                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}", linhasProcessadasAno, totalFinal);
             else
+            {
                 logger.LogInformation("Itens na base de dados: {LinhasDB}", totalFinal);
 
-            var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
+                var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 SELECT COUNT(1)
 FROM ops_tmp.cl_despesa_temp d
 left join cl_deputado p on (p.nome_parlamentar like d.nome or p.nome_civil like d.nome) and id_estado = {idEstado}
 WHERE p.id IS null");
 
-            if (despesasSemParlamentar > 0)
-                logger.LogError("Há deputados não identificados!");
+                if (despesasSemParlamentar > 0)
+                    logger.LogError("Há deputados não identificados!"); // TODO: Não pode verificar apenas por nome
+            }
         }
 
         public virtual void LimpaDespesaTemporaria()

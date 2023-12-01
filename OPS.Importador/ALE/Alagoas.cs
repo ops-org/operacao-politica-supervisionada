@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -57,7 +58,7 @@ public class ImportadorParlamentarAlagoas : ImportadorParlamentarCrawler
         var colunas = document.QuerySelectorAll("td");
         if (colunas.Length < 3 || !colunas[0].HasChildNodes || string.IsNullOrEmpty(colunas[1].TextContent.Trim())) return null;
 
-        var colunaDetalhes = colunas[1].QuerySelectorAll("p");
+        var colunaDetalhes = colunas[1].QuerySelectorAll("p").Where(x => !string.IsNullOrEmpty(x.TextContent.Trim())).ToList();
         var colunaNome = colunaDetalhes[0].QuerySelector("a");
 
         var nomeparlamentar = colunaNome.TextContent.Trim().ToTitleCase();
@@ -69,7 +70,8 @@ public class ImportadorParlamentarAlagoas : ImportadorParlamentarCrawler
         deputado.IdPartido = BuscarIdPartido(colunaDetalhes[2].TextContent.Replace("Partido:", "", StringComparison.InvariantCultureIgnoreCase).Trim());
         deputado.Email = colunaDetalhes[3].TextContent.Replace("E-mail:", "", StringComparison.InvariantCultureIgnoreCase).Trim();
 
-        ImportacaoUtils.MapearRedeSocial(deputado, colunaDetalhes[4].QuerySelectorAll("a"));
+        if (colunaDetalhes.Count > 4)
+            ImportacaoUtils.MapearRedeSocial(deputado, colunaDetalhes[4].QuerySelectorAll("a"));
 
         return deputado;
     }

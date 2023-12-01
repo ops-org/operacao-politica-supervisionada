@@ -21,6 +21,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
+using OPS.Importador.ALE;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -60,7 +61,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
     public Task Importar()
     {
-        ImportarDeputados(legislaturaAtual-1);
+        ImportarDeputados(legislaturaAtual - 1);
 
         return Task.CompletedTask;
     }
@@ -69,7 +70,6 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     {
         logger.LogWarning($"Importar Parlamentares do Camara Federal");
 
-        TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
         int novos = 0;
         int pagina;
         var restClient = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
@@ -151,7 +151,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
 
                         logger.LogDebug("Sincronizando dados do Deputado: {IdDeputado} - {NomeDeputado} ({SiglaPartido})",
-                            deputado.id, textInfo.ToTitleCase(deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil), deputadoDetalhes.ultimoStatus.siglaPartido);
+                            deputado.id, (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase(), deputadoDetalhes.ultimoStatus.siglaPartido);
 
                         // TODO: salvar para exibir
                         //if (deputadoDetalhes.redeSocial.Any())
@@ -237,8 +237,8 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                             banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
                             banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
                             banco.AddParameter("cpf", deputadoDetalhes.cpf);
-                            banco.AddParameter("nome_civil", textInfo.ToTitleCase(deputadoDetalhes.nomeCivil.ToLower()).Replace("De", "de").Replace("Da", "da"));
-                            banco.AddParameter("nome_parlamentar", textInfo.ToTitleCase((deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToLower()).Replace("De", "de").Replace("Da", "da"));
+                            banco.AddParameter("nome_civil", deputadoDetalhes.nomeCivil.ToTitleCase());
+                            banco.AddParameter("nome_parlamentar", (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase());
                             banco.AddParameter("sexo", deputadoDetalhes.sexo);
                             banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
                             banco.AddParameter("situacao", situacao);
@@ -296,8 +296,8 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                             banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
                             banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
                             banco.AddParameter("cpf", deputadoDetalhes.cpf);
-                            banco.AddParameter("nome_civil", textInfo.ToTitleCase(deputadoDetalhes.nomeCivil));
-                            banco.AddParameter("nome_parlamentar", textInfo.ToTitleCase(deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil));
+                            banco.AddParameter("nome_civil", deputadoDetalhes.nomeCivil.ToTitleCase());
+                            banco.AddParameter("nome_parlamentar", (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase());
                             banco.AddParameter("sexo", deputadoDetalhes.sexo);
                             banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
                             banco.AddParameter("situacao", situacao);
@@ -1820,7 +1820,7 @@ SET SQL_BIG_SELECTS=0;
         var Legislaturas = connection.Query<int>("SELECT DISTINCT codigoLegislatura FROM ops_tmp.cf_despesa_temp");
         if (!Legislaturas.Any())
         {
-            Legislaturas = new List<int>() { legislaturaAtual-2, legislaturaAtual-1, legislaturaAtual };
+            Legislaturas = new List<int>() { legislaturaAtual - 2, legislaturaAtual - 1, legislaturaAtual };
         };
 
         foreach (var legislatura in Legislaturas)

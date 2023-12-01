@@ -297,7 +297,7 @@ namespace OPS.Core
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
+            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower()).Replace("De ", "de ").Replace("Da ", "da ").Replace("Do ", "do ");
         }
 
         public static String ReduceWhitespace(this string text)

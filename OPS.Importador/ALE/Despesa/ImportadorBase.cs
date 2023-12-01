@@ -57,39 +57,39 @@ namespace OPS.Importador.ALE.Despesa
             //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
             //}
 
-            //try
-            //{
-            //    watch.Restart();
+            try
+            {
+                watch.Restart();
 
-            //    if (importadorDespesas != null)
-            //        importadorDespesas.Importar(DateTime.Now.Year - 1);
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.LogError(ex, ex.Message);
-            //}
-            //finally
-            //{
-            //    watch.Stop();
-            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            //}
+                if (importadorDespesas != null)
+                    importadorDespesas.Importar(DateTime.Now.Year - 1);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                watch.Stop();
+                logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            }
 
-            //try
-            //{
-            //    watch.Restart();
+            try
+            {
+                watch.Restart();
 
-            //    if (importadorDespesas != null)
-            //        importadorDespesas.Importar(DateTime.Now.Year);
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.LogError(ex, ex.Message);
-            //}
-            //finally
-            //{
-            //    watch.Stop();
-            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            //}
+                if (importadorDespesas != null)
+                    importadorDespesas.Importar(DateTime.Now.Year);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                watch.Stop();
+                logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            }
 
             //try
             //{
