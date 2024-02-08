@@ -57,29 +57,83 @@
             </div>
         </div>
 
-        <div class="content-section form-group">
-            <div class="container text-justify">
-                <h2 class="page-title">O que é a cota parlamentar?</h2>
-                <p>
-                    A
-                    <strong>cota parlamentar</strong>, também conhecida como verba
-                    indenizatória é um
-                    <strong>recurso financeiro público</strong> disponibilizado a todos os
-                    <strong>deputados federais e senadores</strong> para o custeio de seus
-                    mandatos.
-                </p>
-                <p>
-                    Cada deputado federal tem a seu dispor valores mensais que vão de
+    <!-- <div class="container form-group">
+      <h2 class="page-title">Resumo mensal da cota parlamentar</h2>
+
+      <h4>
+        Câmara Federal
+        <small>(513 deputados)</small>
+      </h4>
+      <div class="chart-resumo-mensal vld-parent" ref="CamaraResumoMensal">
+        <label>Legislatura:</label>
+        <div id="camara-legislatura" class="btn-group">
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="0" v-model.number="camaraLegislatura" /> Todas
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="53" v-model.number="camaraLegislatura" /> 53º (2007-2011)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="54" v-model.number="camaraLegislatura" /> 54º (2011-2015)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="55" v-model.number="camaraLegislatura" /> 55º (2015-2019)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="cl-options" value="56" v-model.number="camaraLegislatura" /> 56º (2019-2023)
+          </label>
+        </div>
+        <highcharts :options="chartCamaraResumoMensalOptions" ref="chartCamaraResumoMensal"></highcharts>
+      </div>
+
+      <h4>
+        Senado Federal
+        <small>(81 senadores)</small>
+      </h4>
+      <div class="chart-resumo-mensal vld-parent" ref="SenadoResumoMensal">
+        <label>Legislatura:</label>
+        <div id="senado-legislatura" class="btn-group">
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="0" v-model.number="senadoLegislatura" /> Todas
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="52" v-model.number="senadoLegislatura" /> 52º (2007-2011)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="53" v-model.number="senadoLegislatura" /> 53º (2011-2015)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="54" v-model.number="senadoLegislatura" /> 54º (2015-2019)
+          </label>
+          <label class="btn btn-light">
+            <input type="radio" name="sl-options" value="55" v-model.number="senadoLegislatura" /> 55º (2019-2023)
+          </label>
+        </div>
+        <highcharts :options="chartcSenadoResumoMensalOptions" ref="chartSenadoResumoMensal"></highcharts>
+      </div>
+    </div> -->
+
+    <div class="content-section form-group">
+      <div class="container text-justify">
+        <h2 class="page-title">O que é a cota parlamentar?</h2>
+        <p>
+          A
+          <strong>cota parlamentar</strong>, também conhecida como verba indenizatória é
+          um <strong>recurso financeiro público</strong> disponibilizado a todos os
+          <strong>deputados federais e senadores</strong> para o custeio de seus mandatos.
+        </p>
+        <p>
+          Cada deputado federal tem a seu dispor valores mensais que vão de
                     <a href="http://www.camara.leg.br/cota-parlamentar/ANEXO_ATO_DA_MESA_43_2009.pdf"
-                        target="_blank"
-                        rel="nofollow noopener noreferrer"
+            target="_blank"
+            rel="nofollow noopener noreferrer"
                         title="Clique para visualizar a lista oficial de valores por estado"><strong>R$ 36,6 mil a R$ 51,4 mil</strong></a>,
                     a depender do estado de origem, para custear despesas com alimentação, viagens, hospedagens, combustível,
                     serviços de consultoria, locação de carros, barcos, aviões e casas, além de muitos outras.
-                </p>
-                <p>
-                    No Senado os valores também variam de acordo com o estado que elegeu o
-                    parlamentar e partem
+        </p>
+        <p>
+          No Senado os valores também variam de acordo com o estado que elegeu o
+          parlamentar e partem
 
                     <a href="https://www12.senado.leg.br/transparencia/leg/pdf/CotaExercicioAtivParlamSenadores.pdf"
                        target="_blank"

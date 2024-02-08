@@ -27,7 +27,7 @@ public class DistritoFederal : ImportadorBase
 {
     public DistritoFederal(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarDistritoFederal(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarDistritoFederal(serviceProvider);
         importadorDespesas = new ImportadorDespesasDistritoFederal(serviceProvider);
     }
 }
