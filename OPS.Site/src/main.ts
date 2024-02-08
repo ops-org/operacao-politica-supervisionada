@@ -99,51 +99,51 @@ new Vue({
   render: h => h(App)
 })
 
-// eslint-disable-next-line no-underscore-dangle
-window._urq = window._urq || [];
+// // eslint-disable-next-line no-underscore-dangle
+// window._urq = window._urq || [];
 
-jQuery(() => {
-  setTimeout(() => {
-    // eslint-disable-next-line no-underscore-dangle
-    window._urq.push(['initSite', '9cf4c59a-d438-48b0-aa5e-e16f549b9c8c']);
+// jQuery(() => {
+//   setTimeout(() => {
+//     // eslint-disable-next-line no-underscore-dangle
+//     window._urq.push(['initSite', '9cf4c59a-d438-48b0-aa5e-e16f549b9c8c']);
 
-    const ur = document.createElement('script');
-    ur.type = 'text/javascript';
-    ur.async = true;
-    ur.src = `${document.location.protocol}//cdn.userreport.com/userreport.js`;
-    const s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(ur, s);
+//     const ur = document.createElement('script');
+//     ur.type = 'text/javascript';
+//     ur.async = true;
+//     ur.src = `${document.location.protocol}//cdn.userreport.com/userreport.js`;
+//     const s = document.getElementsByTagName('script')[0];
+//     s.parentNode.insertBefore(ur, s);
 
-    const interval = setInterval(() => {
-      if (jQuery('#crowd-shortcut').length === 1) {
-        clearInterval(interval);
+//     const interval = setInterval(() => {
+//       if (jQuery('#crowd-shortcut').length === 1) {
+//         clearInterval(interval);
 
-        jQuery('#crowd-shortcut').parent().css('top', '54px');
-      }
-    }, 100);
-  }, 3000); // Não bloquear a carga da tela
-});
+//         jQuery('#crowd-shortcut').parent().css('top', '54px');
+//       }
+//     }, 100);
+//   }, 3000); // Não bloquear a carga da tela
+// });
 
-window.ReportarErro = (e) => {
-  if (jQuery('#crowd-shortcut').length > 0) {
-    e.preventDefault();
+// window.ReportarErro = (e) => {
+//   if (jQuery('#crowd-shortcut').length > 0) {
+//     e.preventDefault();
 
-    // eslint-disable-next-line no-underscore-dangle
-    window._urq.push(['Feedback_Open', 'submit/bug']);
-    return false;
-  }
+//     // eslint-disable-next-line no-underscore-dangle
+//     window._urq.push(['Feedback_Open', 'submit/bug']);
+//     return false;
+//   }
 
-  return true;
-};
+//   return true;
+// };
 
-window.DeixarUmaIdeia = (e) => {
-  if (jQuery('#crowd-shortcut').length > 0) {
-    e.preventDefault();
+// window.DeixarUmaIdeia = (e) => {
+//   if (jQuery('#crowd-shortcut').length > 0) {
+//     e.preventDefault();
 
-    // eslint-disable-next-line no-underscore-dangle
-    window._urq.push(['Feedback_Open', 'ideias/popular']);
-    return false;
-  }
+//     // eslint-disable-next-line no-underscore-dangle
+//     window._urq.push(['Feedback_Open', 'ideias/popular']);
+//     return false;
+//   }
 
-  return true;
-};
+//   return true;
+// };

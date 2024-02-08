@@ -4,13 +4,10 @@
   </select>
 </template>
 
-<script>
+<script type="ts">
 import jQuery from 'jquery';
 
-// const axios = require('axios');
-
 export default {
-  // twoWay: true,
   props: {
     options: {
       type: Array,

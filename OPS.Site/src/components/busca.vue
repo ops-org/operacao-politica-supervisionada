@@ -110,7 +110,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { AxiosResponse } from 'axios';
+import { IBusca } from '../shared/interfaces/IBusca';
+
 const axios = require('axios');
 
 export default {
@@ -127,7 +130,7 @@ export default {
     };
   },
   mounted() {
-    this.API = process.env.VUE_APP_API;
+    this.API = process.env.VUE_APP_API ?? '';
 
     this.buscar();
   },
@@ -138,7 +141,7 @@ export default {
 
         axios
           .get(`${process.env.VUE_APP_API}/inicio/busca?value=${this.q}`)
-          .then((response) => {
+          .then((response: AxiosResponse<IBusca>) => {
             this.deputado_federal = response.data.deputado_federal;
             this.senador = response.data.senador;
             this.fornecedor = response.data.fornecedor;
