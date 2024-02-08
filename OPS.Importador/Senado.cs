@@ -1262,7 +1262,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
             var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.sf_despesa_temp");
             if (banco.RowsAffected != totalTemp)
-                logger.LogInformation($"Há {totalTemp - banco.RowsAffected} registros que não foram imporados corretamente!");
+                logger.LogWarning($"Há {totalTemp - banco.RowsAffected} registros que não foram imporados corretamente!");
 
             //         banco.ExecuteNonQuery(@"
             //	UPDATE ops_tmp.sf_despesa_temp t 

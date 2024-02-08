@@ -38,7 +38,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "https://consulta.transparencia.al.ms.gov.br/ceap/",
+            BaseAddress = "http://consulta.transparencia.al.ms.gov.br/ceap/",
             Estado = Estado.MatoGrossoDoSul,
             ChaveImportacao = ChaveDespesaTemp.Nome
         };
@@ -46,7 +46,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
 
     /// <summary>
     /// Dados a partir de 2011
-    /// https://consulta.transparencia.al.ms.gov.br/ceap/
+    /// http://consulta.transparencia.al.ms.gov.br/ceap/
     /// </summary>
     /// <param name="ano"></param>
     /// <returns></returns>
@@ -55,7 +55,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
         var pagina = 0;
 
-        var address = $"https://consulta.transparencia.al.ms.gov.br/ceap/";
+        var address = $"http://consulta.transparencia.al.ms.gov.br/ceap/";
         var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
 
         Thread.Sleep(TimeSpan.FromSeconds(3));
@@ -84,6 +84,8 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
 
         form = document.QuerySelector<IHtmlFormElement>("form");
         document = form.SubmitAsync().GetAwaiter().GetResult();
+
+        if (document.QuerySelector("#sc_grid_body").TextContent.Trim() == "Registros não encontrados") return;
 
         var ultimaPaginaTemp = document.QuerySelector("#last_bot").NextElementSibling.TextContent; // [101 a 200 de 15495]
         var ultimaPagina = Convert.ToInt32(ultimaPaginaTemp.Split(" ")[4].Split("]")[0]);

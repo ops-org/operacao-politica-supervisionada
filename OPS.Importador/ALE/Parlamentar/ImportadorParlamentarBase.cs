@@ -40,23 +40,16 @@ namespace OPS.Importador.ALE.Parlamentar
 
         public ushort BuscarIdPartido(string partido)
         {
-            // Bahia
-            // partido = partido.Replace("PC do B", "PCdoB").Replace("PATRI", "PATRIOTA").Replace("REPUB", "REPUBLICANOS");
-            // São Paulo
-            // partido = partido.Replace("PC do B", "PCdoB").Replace("PATRI", "PATRIOTA");
-            // Ceara
-            // partido = partido.Replace("PC do B", "PCdoB").Replace("PATRI", "PATRIOTA").Replace("REPUB", "REPUBLICANOS");
-            // Mato Grosso do Sul
             if (partido == "PATRI") partido = "PATRIOTA";
-            if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
+            else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
             else if (partido == "REPUB" || partido == "REP") partido = "REPUBLICANOS";
             else if (partido == "PR") partido = "PL"; // Partido da República
-            else if (partido == "PARTIDO PROGRESSISTA") partido = "PP"; // Progressistas
-            else if (partido == "PARTIDO SOLIDARIEDADE" || partido == "SDD") partido = "SD"; // Solidariedade
-            else partido = partido.Replace("PC do B", "PCdoB").Replace("Podemos", "PODE");
-
-            // Minas Gerais
-            // partido = partido.Replace("PATRI", "PATRIOTA");
+            else if (partido == "Podemos") partido = "PODE";
+            else if (partido == "UNIÃO BRASIL (UNIÃO)") partido = "UNIÃO";
+            else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";
+            else if (partido.Contains("PROGRESSISTA")) partido = "PP"; // Progressistas
+            else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
+            else if (partido.Contains("PARTIDO VERDE")) partido = "PV";
 
             var IdPartido = connection.GetList<Partido>(new { Sigla = partido }).FirstOrDefault()?.Id;
             if (IdPartido == null)

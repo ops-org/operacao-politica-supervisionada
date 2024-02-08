@@ -107,14 +107,14 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
     public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
     {
         var colunas = parlamentar.QuerySelectorAll("td");
+        var urlPerfil = (colunas[0].QuerySelector("a") as IHtmlAnchorElement).Href;
+        var matricula = Convert.ToUInt32(urlPerfil.Split(@"/").Last());
 
-        var nomeparlamentar = colunas[0].TextContent.Trim().ToTitleCase().ReduceWhitespace();
-        var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
+        var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
         deputado.IdPartido = BuscarIdPartido(colunas[1].TextContent.Split('(')[0].Trim());
-        deputado.UrlPerfil = (colunas[0].QuerySelector("a") as IHtmlAnchorElement).Href;
-
-        deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
+        deputado.UrlPerfil = urlPerfil;
+        deputado.NomeParlamentar = colunas[0].TextContent.Trim().ToTitleCase().ReduceWhitespace();
         deputado.Telefone = string.Join(",", colunas[2].QuerySelectorAll("a").Select(x => x.TextContent.Trim()));
 
         ImportacaoUtils.MapearRedeSocial(deputado, colunas[3].QuerySelectorAll("a"));

@@ -18,7 +18,7 @@ public class Alagoas : ImportadorBase
     public Alagoas(IServiceProvider serviceProvider) : base(serviceProvider)
     {
         importadorParlamentar = new ImportadorParlamentarAlagoas(serviceProvider);
-        //importadorDespesas = new ImportadorDespesasAlagoas(serviceProvider);
+        importadorDespesas = new ImportadorDespesasAlagoas(serviceProvider);
     }
 }
 
@@ -28,7 +28,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiMensal
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "http://app.al.ac.leg.br/financa/despesaVI",
+            BaseAddress = "https://www.al.al.leg.br/transparencia/orcamento-e-financas/viap-verba-indenizatoria-de-atividade-parlamentar",
             Estado = Estado.Alagoas,
             ChaveImportacao = ChaveDespesaTemp.Indefinido
         };
@@ -36,7 +36,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiMensal
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
-        logger.LogWarning("API Sem dados detalhados!");
+        logger.LogWarning("Dados em PDF scaneado e de baixa qualidade!");
     }
 }
 
