@@ -1812,7 +1812,7 @@ SET SQL_BIG_SELECTS=0;
 
         var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
         if (affected != totalTemp)
-            logger.LogInformation($"Há {totalTemp - affected} registros que não foram imporados corretamente!");
+            logger.LogWarning($"Há {totalTemp - affected} registros que não foram imporados corretamente!");
     }
 
     private void InsereDespesaLegislatura()

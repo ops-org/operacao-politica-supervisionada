@@ -111,6 +111,8 @@
 </template>
 
 <script>
+import 'axios';
+
 const axios = require('axios');
 
 export default {
@@ -127,7 +129,7 @@ export default {
     };
   },
   mounted() {
-    this.API = process.env.VUE_APP_API;
+    this.API = process.env.VUE_APP_API ?? '';
 
     this.buscar();
   },

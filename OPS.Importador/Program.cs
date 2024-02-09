@@ -8,6 +8,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp;
+using AngleSharp.Io;
 using CsvHelper;
 using Dapper;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +20,9 @@ using MySqlConnector.Logging;
 using OPS.Core;
 using OPS.Importador.ALE;
 using OPS.Importador.ALE.Despesa;
+using OPS.Importador.Utilities;
 using Serilog;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador
 {
@@ -45,7 +49,7 @@ namespace OPS.Importador
 
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
-            services.AddSingleton<IConfiguration>(configuration);
+            services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
             services.AddTransient<IDbConnection>(_ => new MySqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
 
             services.AddScoped<Senado>();
@@ -106,6 +110,29 @@ namespace OPS.Importador
                 }
                 else
                 {
+
+                    //var htmlRequester = new DefaultHttpRequester();
+                    //htmlRequester.Headers["User-Agent"] = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)";
+                    //var handler = new DefaultHttpRequester { Timeout = TimeSpan.FromMinutes(5) };
+
+                    //var configuration1 = AngleSharp.Configuration.Default
+                    //   .With(htmlRequester)
+                    //   .With(handler)
+                    //   .WithDefaultLoader()
+                    //   .WithDefaultCookies()
+                    //   .WithCulture("pt-BR");
+                    //var context = BrowsingContext.New(configuration1);
+
+                    //for (int i = 0; i < 100; i++)
+                    //{
+                    //    var address = $"http://www.al.ap.gov.br/pagina.php?pg=exibir_parlamentar&iddeputado={i}";
+                    //    var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
+                    //    var nome = document.QuerySelector("h3.ls-title-3 strong")?.TextContent;
+
+                    //    Console.WriteLine($"{i}: {nome}");
+                    //}
+
+
                     var types = new Type[]
                     {
                         typeof(Senado), // csv
@@ -113,13 +140,13 @@ namespace OPS.Importador
 
                         typeof(Acre),
                         typeof(Alagoas),
-                        typeof(Amapa),
-                        typeof(Amazonas),
+                        typeof(Amapa), // crawler
+                        typeof(Amazonas), // -- Apenas BR
                         typeof(Bahia), // crawler // TESTAR
-                        typeof(Ceara), // csv mensal -- TESTAR
-                        typeof(DistritoFederal), // xlsx  -- OFFLINE/Incompleto
+                        typeof(Ceara), // csv mensal
+                        typeof(DistritoFederal), // xlsx  -- Apenas BR
                         typeof(EspiritoSanto),
-                        typeof(Goias), // crawler -- TESTAR
+                        typeof(Goias), // crawler
                         typeof(Maranhao),
                         typeof(MatoGrosso),
                         typeof(MatoGrossoDoSul), // crawler
@@ -247,7 +274,7 @@ namespace OPS.Importador
             }
         }
 
-        private static async Task ImportacaoDadosCompleto(ServiceProvider serviceProvider, IConfiguration configuration)
+        private static async Task ImportacaoDadosCompleto(ServiceProvider serviceProvider, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             Senado objSenado = serviceProvider.GetService<Senado>();
             CamaraFederal objCamara = serviceProvider.GetService<CamaraFederal>();
