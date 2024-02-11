@@ -260,7 +260,7 @@
     </div>
 </template>
 
-<script type="ts">
+<script>
     import { Chart } from "highcharts-vue";
 
     const axios = require("axios");
