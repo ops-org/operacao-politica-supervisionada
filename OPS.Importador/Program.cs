@@ -135,36 +135,36 @@ namespace OPS.Importador
 
                     var types = new Type[]
                     {
-                        typeof(Senado), // csv
-                        typeof(CamaraFederal), // csv
+                        //typeof(Senado), // csv
+                        //typeof(CamaraFederal), // csv
 
-                        typeof(Acre),
-                        typeof(Alagoas),
-                        typeof(Amapa), // crawler
+                        //typeof(Acre),
+                        //typeof(Alagoas),
+                        //typeof(Amapa), // crawler
                         typeof(Amazonas), // -- Apenas BR
-                        typeof(Bahia), // crawler // TESTAR
-                        typeof(Ceara), // csv mensal
-                        typeof(DistritoFederal), // xlsx  -- Apenas BR
-                        typeof(EspiritoSanto),
-                        typeof(Goias), // crawler
-                        typeof(Maranhao),
-                        typeof(MatoGrosso),
-                        typeof(MatoGrossoDoSul), // crawler
-                        typeof(MinasGerais), // xml api -- Apenas BR
-                        typeof(Para),
-                        typeof(Paraiba),
-                        typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
-                        typeof(Pernambuco),
-                        typeof(Piaui),
-                        typeof(RioDeJaneiro),
-                        typeof(RioGrandeDoNorte),
-                        typeof(RioGrandeDoSul),
-                        typeof(Rondonia),
-                        typeof(Roraima),
-                        typeof(SantaCatarina), // csv
-                        typeof(SaoPaulo), // xml
-                        typeof(Sergipe),
-                        typeof(Tocantins),
+                        //typeof(Bahia), // crawler // TESTAR
+                        //typeof(Ceara), // csv mensal
+                        //typeof(DistritoFederal), // xlsx  -- Apenas BR
+                        //typeof(EspiritoSanto),
+                        //typeof(Goias), // crawler
+                        //typeof(Maranhao),
+                        //typeof(MatoGrosso),
+                        //typeof(MatoGrossoDoSul), // crawler
+                        //typeof(MinasGerais), // xml api -- Apenas BR
+                        //typeof(Para),
+                        //typeof(Paraiba),
+                        //typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
+                        //typeof(Pernambuco),
+                        //typeof(Piaui),
+                        //typeof(RioDeJaneiro),
+                        //typeof(RioGrandeDoNorte),
+                        //typeof(RioGrandeDoSul),
+                        //typeof(Rondonia),
+                        //typeof(Roraima),
+                        //typeof(SantaCatarina), // csv
+                        //typeof(SaoPaulo), // xml
+                        //typeof(Sergipe),
+                        //typeof(Tocantins),
                     };
 
                     foreach (var type in types)
