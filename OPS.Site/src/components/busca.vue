@@ -111,8 +111,6 @@
 </template>
 
 <script>
-import 'axios';
-
 const axios = require('axios');
 
 export default {

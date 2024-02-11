@@ -909,8 +909,8 @@ namespace OPS.Importador
 
 #if !DEBUG
                         //Excluir o arquivo para tentar importar novamente na proxima execução
-                        if(File.Exists(_caminhoArquivo))
-                            File.Delete(_caminhoArquivo);
+                        if(File.Exists(caminhoArquivo))
+                            File.Delete(caminhoArquivo);
 #endif
 
                     }

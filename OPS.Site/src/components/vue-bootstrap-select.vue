@@ -4,7 +4,7 @@
   </select>
 </template>
 
-<script type="ts">
+<script>
 import jQuery from 'jquery';
 
 export default {

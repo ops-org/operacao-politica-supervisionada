@@ -138,14 +138,14 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                                 if (deputadoDetalhes == null)
                                 {
-                                    logger.LogError("Erro ao consultar deputado: {ErrorMessage}", deputado.id, ex.Message);
+                                    logger.LogError("Erro ao consultar deputado {IdDeputado}: {ErrorMessage}", deputado.id, ex.Message);
                                     continue;
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError("Erro ao consultar deputado: {ErrorMessage}", deputado.id, ex.Message);
+                            logger.LogError("Erro ao consultar deputado {IdDeputado}: {ErrorMessage}", deputado.id, ex.Message);
                             continue;
                         }
 
@@ -1204,8 +1204,8 @@ WHERE presencas = 0");
 
 #if !DEBUG
                         //Excluir o arquivo para tentar importar novamente na proxima execução
-                        if(File.Exists(_caminhoArquivo))
-                            File.Delete(_caminhoArquivo);
+                        if(File.Exists(caminhoArquivo))
+                            File.Delete(caminhoArquivo);
 #endif
 
                 }

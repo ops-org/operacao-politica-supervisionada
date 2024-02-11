@@ -37,8 +37,8 @@ namespace OPS.Importador.ALE.Despesa
 
 #if !DEBUG
                         //Excluir o arquivo para tentar importar novamente na proxima execução
-                        if(File.Exists(_caminhoArquivo))
-                            File.Delete(_caminhoArquivo);
+                        if(System.IO.File.Exists(caminhoArquivo))
+                            System.IO.File.Delete(caminhoArquivo);
 #endif
 
                     }
