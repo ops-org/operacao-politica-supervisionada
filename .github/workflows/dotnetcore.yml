@@ -32,34 +32,11 @@ jobs:
       run: |
         dotnet restore ./OPS.API/OPS.API.csproj
         dotnet restore ./OPS.Importador/OPS.Importador.csproj
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: OPS.Site/package-lock.json
-      
-    - name: Cache Node Modules
-      id: cache-node-modules
-      uses: actions/cache@v2
-      with:
-        path: '**/node_modules'
-        key: node-modules-${{ hashFiles('**/package-lock.json') }}
           
-    - name: Install Node.js dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: npm ci
-      working-directory: OPS.Site
-      
     - name: Build .NET
       run: |
         dotnet build OPS.API --configuration Release --no-restore
         dotnet build OPS.Importador --configuration Release --no-restore
-    
-    - name: Publish Node.js
-      run: npm run build --if-present
-      working-directory: OPS.Site
       
     - name: Publish .NET
       run: |

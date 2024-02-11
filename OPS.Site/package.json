@@ -2,7 +2,7 @@
   "name": "ops.site",
   "version": "1.0.0",
   "description": "OPS :: Operação Política Supervisionada",
-  "author": "Vanderlei Denir <vanderleidenir@hotmail.com>",
+  "author": "Vanderlei Schmitz <vanderleidenir@hotmail.com>",
   "private": false,
   "scripts": {
     "serve": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
