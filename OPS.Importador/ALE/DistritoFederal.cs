@@ -27,20 +27,22 @@ public class DistritoFederal : ImportadorBase
 {
     public DistritoFederal(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarDistritoFederal(serviceProvider);
-        //importadorDespesas = new ImportadorDespesasDistritoFederal(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarDistritoFederal(serviceProvider);
+        importadorDespesas = new ImportadorDespesasDistritoFederal(serviceProvider);
     }
 }
 
 public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
 {
+    private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+
     public ImportadorDespesasDistritoFederal(IServiceProvider serviceProvider) : base(serviceProvider)
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
             BaseAddress = "https://dadosabertos.cl.df.gov.br/",
             Estado = Estado.DistritoFederal,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.Cpf
         };
     }
 
@@ -379,6 +381,8 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
 
                     if (cnpj_cpf == "0030659700311234") cnpj_cpf = "00306597009834";
                     if (cnpj_cpf == "016152224000170") cnpj_cpf = "01615224000170";
+                    if (cnpj_cpf == "01080639185" || cnpj_cpf == "01080639186") cnpj_cpf = "01080639179"; // Fábio Silveira Felix
+
                     despesaTemp.CnpjCpf = cnpj_cpf;
 
                     if (!string.IsNullOrEmpty(worksheet.Cells[i, DATA].Value?.ToString()))
@@ -387,6 +391,8 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                             despesaTemp.DataEmissao = DateTime.FromOADate((double)worksheet.Cells[i, DATA].Value);
                         else if (worksheet.Cells[i, 7].Value is DateTime)
                             despesaTemp.DataEmissao = (DateTime)worksheet.Cells[i, DATA].Value;
+                        else if (worksheet.Cells[i, 7].Value.ToString().Contains(" de ")) // 04 de julho de 2023
+                            despesaTemp.DataEmissao = Convert.ToDateTime( worksheet.Cells[i, DATA].Value, cultureInfo);
                         else
                         {
                             var data = worksheet.Cells[i, DATA].Value.ToString();
@@ -421,7 +427,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                         if (valor.EndsWith("."))
                             valor = valor.Substring(0, valor.Length - 1).Trim();
 
-                        valor = valor.Replace(" ", "").Replace("R$", "");
+                        valor = valor.Replace(" ", "").Replace("R$", "").Replace("R4", "");
                         despesaTemp.Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor) : 0;
                     }
 
@@ -493,9 +499,10 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
         deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
         try
         {
-            deputado.Naturalidade = detalhes[1].TextContent.Trim();
             deputado.Nascimento = DateOnly.Parse(detalhes[2].TextContent.Trim(), cultureInfo);
             deputado.Profissao = detalhes[3].TextContent.Trim().ToTitleCase();
+
+            deputado.Naturalidade = detalhes[1].TextContent.Trim();
         }
         catch (Exception)
         {

@@ -1,7 +1,7 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 # .NET SDK
-FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
 # Copy Projects
@@ -20,7 +20,7 @@ WORKDIR "/src/OPS.API"
 RUN dotnet publish "OPS.API.csproj" -c Release -o /app/publish --no-restore
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 8081
 #EXPOSE 443

@@ -215,7 +215,7 @@ INSERT INTO cl_deputado (nome_parlamentar, cpf_parcial, id_estado)
 select distinct Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where nome not in (
-    select nome_parlamentar 
+    select IFNULL(nome_importacao, nome_parlamentar)
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
     AND nome_parlamentar IS NOT null
@@ -274,7 +274,7 @@ and d.ano_mes BETWEEN {ano}01 and {ano}12
             else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
                 condicaoSql = "p.matricula = d.cpf";
             else // ChaveDespesaTemp.Nome
-                condicaoSql = "(p.nome_parlamentar like d.nome or p.nome_civil like d.nome)";
+                condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
 
             var affected = connection.Execute(@$"
 INSERT IGNORE INTO cl_despesa (
@@ -340,7 +340,7 @@ and d.ano_mes between {ano}01 and {ano}12");
                 var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 SELECT COUNT(1)
 FROM ops_tmp.cl_despesa_temp d
-left join cl_deputado p on (p.nome_parlamentar like d.nome or p.nome_civil like d.nome) and id_estado = {idEstado}
+left join cl_deputado p on ((p.nome_importacao is not null and p.nome_importacao like d.nome) or p.nome_parlamentar like d.nome or p.nome_civil like d.nome) and id_estado = {idEstado}
 WHERE p.id IS null");
 
                 if (despesasSemParlamentar > 0)

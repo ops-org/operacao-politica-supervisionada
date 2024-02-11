@@ -37,6 +37,7 @@ namespace OPS.Importador.ALE.Despesa
                 ImportarDespesas(context, ano, mes);
             }
 
+            
             ProcessarDespesas(ano);
         }
 

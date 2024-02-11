@@ -14,6 +14,9 @@ namespace OPS.Core.Entity
         [Column("matricula")]
         public uint? Matricula { get; set; }
 
+        [Column("gabinete")]
+        public uint? Gabinete { get; set; }
+
         [Column("id_partido")]
         public ushort IdPartido { get; set; }
 

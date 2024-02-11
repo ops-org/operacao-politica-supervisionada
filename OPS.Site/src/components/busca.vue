@@ -127,7 +127,7 @@ export default {
     };
   },
   mounted() {
-    this.API = process.env.VUE_APP_API;
+    this.API = process.env.VUE_APP_API ?? '';
 
     this.buscar();
   },
