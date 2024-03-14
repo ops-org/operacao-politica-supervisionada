@@ -40,7 +40,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
         };
 
         // TODO: Filtrar legislatura atual
-        deputados = connection.GetList<DeputadoEstadual>(new { id_estado = Estado.Amapa.GetHashCode() }).ToList();
+        deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
     }
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
@@ -60,7 +60,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
                 logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
             }
 
-            address = $"{config.BaseAddress}transparencia/index.php?pg=ceap&acao=buscar&ano_verbaB={ano}&mes_verbaB={mes:00}&idgabineteB={gabinete.Value}";
+            address = $"{config.BaseAddress}transparencia/pagina.php?pg=ceap&acao=buscar&ano_verbaB={ano}&mes_verbaB={mes:00}&idgabineteB={gabinete.Value}";
             document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
 
             if (document.QuerySelector(".ls-alert-warning")?.TextContent == "Nenhum: resultado foi encontrado!") continue;

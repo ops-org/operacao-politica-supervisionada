@@ -162,7 +162,7 @@ namespace OPS.Core
 
         public static string RemoveCaracteresNaoNumericos(string str)
         {
-            return Regex.Replace(str, @"[^\d]", "");
+            return Regex.Replace(str ?? "", @"[^\d]", "");
         }
 
         public static string MySqlEscapeNumberToIn(string str)

@@ -6,6 +6,7 @@
         Cpf,
         CpfParcial,
         Matricula,
-        Nome
+        Gabinete,
+        Nome,
     }
 }

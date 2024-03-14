@@ -42,7 +42,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://transparencia.al.go.leg.br/",
             Estado = Estado.Goias,
-            ChaveImportacao = ChaveDespesaTemp.Matricula
+            ChaveImportacao = ChaveDespesaTemp.Nome
         };
     }
 
@@ -74,8 +74,8 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
                     {
                         var despesaTemp = new CamaraEstadualDespesaTemp()
                         {
-                            Nome = despesa.Deputado.Nome.ToTitleCase(),
-                            Cpf = id.ToString(),
+                            Nome = despesa.Deputado.Nome.Trim().ToTitleCase(),
+                            Cpf = id.ToString(), // gabinete
                             Ano = (short)ano,
                             TipoDespesa = grupo.Descricao,
                             Valor = Convert.ToDecimal(lancamento.Fornecedor.ValorIndenizado, cultureInfo),
@@ -112,7 +112,7 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
 
         var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
-        deputado.IdPartido = BuscarIdPartido(colunas[1].TextContent.Split('(')[0].Trim());
+        deputado.IdPartido = BuscarIdPartido(colunas[1].TextContent.Split('(')[1].Split(')')[0].Trim());
         deputado.UrlPerfil = urlPerfil;
         deputado.NomeParlamentar = colunas[0].TextContent.Trim().ToTitleCase().ReduceWhitespace();
         deputado.Telefone = string.Join(",", colunas[2].QuerySelectorAll("a").Select(x => x.TextContent.Trim()));

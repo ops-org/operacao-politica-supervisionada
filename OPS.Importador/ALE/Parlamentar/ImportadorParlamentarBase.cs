@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
 
 namespace OPS.Importador.ALE.Parlamentar
@@ -42,10 +41,10 @@ namespace OPS.Importador.ALE.Parlamentar
         {
             if (partido == "PATRI") partido = "PATRIOTA";
             else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
-            else if (partido == "REPUB" || partido == "REP") partido = "REPUBLICANOS";
+            else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN") partido = "REPUBLICANOS";
             else if (partido == "PR") partido = "PL"; // Partido da República
             else if (partido == "Podemos") partido = "PODE";
-            else if (partido == "UNIÃO BRASIL (UNIÃO)") partido = "UNIÃO";
+            else if (partido == "UNIÃO BRASIL (UNIÃO)" || partido == "UB") partido = "UNIÃO";
             else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";
             else if (partido.Contains("PROGRESSISTA")) partido = "PP"; // Progressistas
             else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
@@ -64,18 +63,22 @@ namespace OPS.Importador.ALE.Parlamentar
 
         protected DeputadoEstadual GetDeputadoByNameOrNew(string nomeParlamentar)
         {
-            return connection
+            var deputado = connection
                 .GetList<DeputadoEstadual>(new
                 {
                     id_estado = config.Estado,
                     nome_parlamentar = nomeParlamentar
                 })
-                .FirstOrDefault()
-                ?? new DeputadoEstadual()
-                {
-                    IdEstado = (ushort)config.Estado,
-                    NomeParlamentar = nomeParlamentar
-                };
+                .FirstOrDefault();
+
+            if (Debugger.IsAttached && deputado == null)
+                Trace.WriteLine($"Deputado {nomeParlamentar} não localizado.");
+
+            return deputado ?? new DeputadoEstadual()
+            {
+                IdEstado = (ushort)config.Estado,
+                NomeParlamentar = nomeParlamentar
+            };
         }
 
         protected DeputadoEstadual GetDeputadoByMatriculaOrNew(uint matricula)

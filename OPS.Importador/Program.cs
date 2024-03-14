@@ -138,31 +138,31 @@ namespace OPS.Importador
                         //typeof(Senado), // csv
                         //typeof(CamaraFederal), // csv
 
-                        //typeof(Acre),
-                        //typeof(Alagoas),
-                        //typeof(Amapa), // crawler
+                        //typeof(Acre), // Portal sem dados detalhados!
+                        //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                        typeof(Amapa), // crawler
                         typeof(Amazonas), // -- Apenas BR
-                        //typeof(Bahia), // crawler // TESTAR
-                        //typeof(Ceara), // csv mensal
-                        //typeof(DistritoFederal), // xlsx  -- Apenas BR
-                        //typeof(EspiritoSanto),
-                        //typeof(Goias), // crawler
-                        //typeof(Maranhao),
+                        typeof(Bahia), // crawler // TESTAR
+                        typeof(Ceara), // csv mensal
+                        typeof(DistritoFederal), // xlsx  -- Apenas BR
+                        //typeof(EspiritoSanto),  // Valores mensais por categoria -- Apenas BR
+                        typeof(Goias), // crawler
+                        //typeof(Maranhao), // Valores mensais por categoria
                         //typeof(MatoGrosso),
-                        //typeof(MatoGrossoDoSul), // crawler
-                        //typeof(MinasGerais), // xml api -- Apenas BR
+                        typeof(MatoGrossoDoSul), // crawler
+                        typeof(MinasGerais), // xml api -- Apenas BR
                         //typeof(Para),
                         //typeof(Paraiba),
-                        //typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
+                        typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
                         //typeof(Pernambuco),
                         //typeof(Piaui),
                         //typeof(RioDeJaneiro),
                         //typeof(RioGrandeDoNorte),
                         //typeof(RioGrandeDoSul),
-                        //typeof(Rondonia),
+                        typeof(Rondonia),
                         //typeof(Roraima),
-                        //typeof(SantaCatarina), // csv
-                        //typeof(SaoPaulo), // xml
+                        typeof(SantaCatarina), // csv
+                        typeof(SaoPaulo), // xml
                         //typeof(Sergipe),
                         //typeof(Tocantins),
                     };

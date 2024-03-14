@@ -172,8 +172,8 @@ ORDER BY despesa_tipo;
             if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
             {
                 affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, cpf, id_estado)
-select distinct Nome, cpf, {idEstado}
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
+select distinct Nome, Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select cpf 
@@ -185,8 +185,8 @@ where cpf not in (
             else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
             {
                 affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, cpf_parcial, id_estado)
-select distinct Nome, cpf, {idEstado}
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
+select distinct Nome, Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select cpf_parcial 
@@ -198,8 +198,8 @@ where cpf not in (
             else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
             {
                 affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
-select distinct Nome, cpf, {idEstado}
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, matricula, id_estado)
+select distinct Nome, Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select matricula 
@@ -208,11 +208,24 @@ where cpf not in (
     AND matricula IS NOT NULL
 );");
             }
+            else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
+            {
+                affected = connection.Execute(@$"
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, gabinete, id_estado)
+select distinct Nome, Nome, cpf, {idEstado}
+from ops_tmp.cl_despesa_temp
+where cpf not in (
+    select gabinete 
+    FROM cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND gabinete IS NOT NULL
+);");
+            }
             else // Nome
             {
                 affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, cpf_parcial, id_estado)
-select distinct Nome, cpf, {idEstado}
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
+select distinct Nome, Nome, cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where nome not in (
     select IFNULL(nome_importacao, nome_parlamentar)
@@ -273,6 +286,8 @@ and d.ano_mes BETWEEN {ano}01 and {ano}12
                 condicaoSql = "p.cpf_parcial = d.cpf";
             else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
                 condicaoSql = "p.matricula = d.cpf";
+            else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
+                condicaoSql = "p.gabinete = d.cpf";
             else // ChaveDespesaTemp.Nome
                 condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
 
@@ -337,10 +352,20 @@ and d.ano_mes between {ano}01 and {ano}12");
             {
                 logger.LogInformation("Itens na base de dados: {LinhasDB}", totalFinal);
 
+                string condicaoSql = "";
+                if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
+                    condicaoSql = "p.cpf = d.cpf";
+                else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
+                    condicaoSql = "p.cpf_parcial = d.cpf";
+                else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
+                    condicaoSql = "p.matricula = d.cpf";
+                else // ChaveDespesaTemp.Nome
+                    condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
+
                 var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 SELECT COUNT(1)
 FROM ops_tmp.cl_despesa_temp d
-left join cl_deputado p on ((p.nome_importacao is not null and p.nome_importacao like d.nome) or p.nome_parlamentar like d.nome or p.nome_civil like d.nome) and id_estado = {idEstado}
+left join cl_deputado p on {condicaoSql} and id_estado = {idEstado}
 WHERE p.id IS null");
 
                 if (despesasSemParlamentar > 0)
