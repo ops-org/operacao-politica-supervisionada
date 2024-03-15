@@ -460,7 +460,7 @@ export default {
         // {"id":15,"text":"Pará (PA)"},
         // {"id":25,"text":"Paraíba (PB)"},
         {"id":41,"text":"Paraná (PR)"},
-        // {"id":26,"text":"Pernambuco (PE)"},
+        {"id":26,"text":"Pernambuco (PE)"},
         // {"id":22,"text":"Piauí (PI)"},
         // {"id":33,"text":"Rio de Janeiro (RJ)"},
         // {"id":24,"text":"Rio Grande do Norte (RN)"},
