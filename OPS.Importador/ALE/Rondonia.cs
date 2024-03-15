@@ -23,7 +23,7 @@ public class Rondonia : ImportadorBase
 {
     public Rondonia(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarRondonia(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarRondonia(serviceProvider);
         importadorDespesas = new ImportadorDespesasRondonia(serviceProvider);
     }
 }

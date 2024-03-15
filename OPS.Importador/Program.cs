@@ -135,8 +135,8 @@ namespace OPS.Importador
 
                     var types = new Type[]
                     {
-                        //typeof(Senado), // csv
-                        //typeof(CamaraFederal), // csv
+                        typeof(Senado), // csv
+                        typeof(CamaraFederal), // csv
 
                         //typeof(Acre), // Portal sem dados detalhados!
                         //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
@@ -154,7 +154,7 @@ namespace OPS.Importador
                         //typeof(Para),
                         //typeof(Paraiba),
                         typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
-                        //typeof(Pernambuco),
+                        typeof(Pernambuco),
                         //typeof(Piaui),
                         //typeof(RioDeJaneiro),
                         //typeof(RioGrandeDoNorte),
