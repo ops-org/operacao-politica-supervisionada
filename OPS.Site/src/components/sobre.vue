@@ -122,19 +122,10 @@
                 <ul>
                   <li>
                     <a
-                      href="http://www2.camara.leg.br/legin/int/atomes/2009/atodamesa-43-21-maio-2009-588364-normaatualizada-cd-mesa.html"
+                      href="https://www2.camara.leg.br/comunicacao/assessoria-de-imprensa/guia-para-jornalistas/cota-parlamentar"
                       target="_blank"
                       rel="nofollow noopener noreferrer"
-                      >Regras para uso da cota parlamentar (Ato da mesa Nº
-                      43)</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="http://www2.camara.leg.br/participe/fale-conosco/perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Legislação relacionada</a
+                      >Regras para uso da cota parlamentar (Ato da mesa Nº 43)</a
                     >
                   </li>
                   <li>
@@ -168,7 +159,7 @@
                 <ul>
                   <li>
                     <a
-                      href="https://www12.senado.leg.br/transparencia/leg/pdf/normas/APS-5-2014-compilado.pdf"
+                      href="https://adm.senado.leg.br/normas/ui/pub/normaConsultada;jsessionid=FF712C2488692EF4C9A4517976A6F3FE.tomcat-1?0&idNorma=14380751"
                       target="_blank"
                       rel="nofollow noopener noreferrer"
                       >Regras para uso da cota parlamentar</a
