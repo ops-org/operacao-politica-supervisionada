@@ -10,34 +10,17 @@ namespace OPS.Importador.Utilities;
 
 public static class AngleSharpExtensions
 {
-    public static async Task<IDocument> OpenAsyncAutoRetry(this IBrowsingContext context, String address, int totalRetries = 3)
+    public static async Task<IDocument> OpenAsyncAutoRetry(this IBrowsingContext context, String address)
     {
-        int retries = 0;
-        do
+        var doc = await BrowsingContextExtensions.OpenAsync(context, address);
+
+        if (doc.StatusCode == HttpStatusCode.OK)
         {
-            retries++;
-            try
-            {
-                var doc = await context.OpenAsync(address);
+            var html = doc.ToHtml();
+            if (!string.IsNullOrEmpty(html) && html != "<html><head></head><body></body></html>")
+                return doc;
+        }
 
-                if (doc.StatusCode == HttpStatusCode.OK)
-                {
-                    var html = doc.ToHtml();
-                    if (!string.IsNullOrEmpty(html) && html != "<html><head></head><body></body></html>")
-                        return doc;
-                }
-
-                Log.Warning($"Try {retries} on {address} - Status Code {doc.StatusCode}"); //  - {doc.ToHtml()}
-            }
-            catch (Exception ex)
-            {
-                Log.Warning($"Try {retries} on {address} - {ex.Message}");
-            }
-
-
-            Thread.Sleep(1000);
-        } while (retries < totalRetries);
-
-        throw new Exception($"Error: {address}");
+        throw new Exception($"{doc.StatusCode.ToString()}: {address}");
     }
 }

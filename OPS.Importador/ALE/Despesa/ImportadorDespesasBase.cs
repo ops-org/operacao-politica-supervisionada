@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Policy;
 using System.Text.Json;
 using System.Threading;
 using Dapper;
@@ -14,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
+using RestSharp;
 
 namespace OPS.Importador.ALE.Despesa
 {
@@ -36,6 +36,8 @@ namespace OPS.Importador.ALE.Despesa
 
         protected Dictionary<string, List<uint>> lstHash { get; private set; }
 
+        public HttpClient httpClient { get; }
+
         public ImportadorDespesasBase(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasBase>>();
@@ -44,6 +46,9 @@ namespace OPS.Importador.ALE.Despesa
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
             tempPath = configuration["AppSettings:SiteTempFolder"];
+
+
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
         }
 
         public virtual void DownloadFotosParlamentares()
@@ -116,14 +121,9 @@ namespace OPS.Importador.ALE.Despesa
                 Directory.CreateDirectory(diretorio);
             else if (File.Exists(caminhoArquivo))
                 return true;
-                //File.Delete(caminhoArquivo);
+            //File.Delete(caminhoArquivo);
 
-            using (HttpClient client = new())
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                client.Timeout = TimeSpan.FromMinutes(5);
-                client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-            }
+            httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
 
             return true;
         }
@@ -180,7 +180,7 @@ where cpf not in (
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
     AND CPF IS NOT NULL
-);"); 
+);");
             }
             else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
             {
@@ -302,6 +302,7 @@ INSERT IGNORE INTO cl_despesa (
 	numero_documento,
 	valor_liquido,
     favorecido,
+    observacao,
     hash
 )
 SELECT 
@@ -313,7 +314,8 @@ SELECT
     concat(IFNULL(d.ano, year(d.data_emissao)), LPAD(IFNULL(d.mes, month(d.data_emissao)), 2, '0')) AS ano_mes,
     d.documento AS numero_documento,
     d.valor AS valor,
-    CASE WHEN f.id IS NULL THEN d.empresa else null END AS observacao,
+    CASE WHEN f.id IS NULL THEN d.empresa else null END AS favorecido,
+    d.observacao,
     d.hash
 FROM ops_tmp.cl_despesa_temp d
 inner join cl_deputado p on id_estado = {idEstado} and {condicaoSql}
@@ -339,12 +341,7 @@ ORDER BY d.id;
         {
             logger.LogTrace("Validar importação");
 
-            var totalFinal = connection.ExecuteScalar<int>(@$"
-select count(1) 
-from cl_despesa d 
-join cl_deputado p on p.id = d.id_cl_deputado 
-where p.id_estado = {idEstado}
-and d.ano_mes between {ano}01 and {ano}12");
+            int totalFinal = ContarRegistrosBaseDeDados(ano);
 
             if (linhasProcessadasAno != totalFinal)
                 logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}", linhasProcessadasAno, totalFinal);
@@ -373,6 +370,16 @@ WHERE p.id IS null");
             }
         }
 
+        public virtual int ContarRegistrosBaseDeDados(int ano)
+        {
+            return connection.ExecuteScalar<int>(@$"
+select count(1) 
+from cl_despesa d 
+join cl_deputado p on p.id = d.id_cl_deputado 
+where p.id_estado = {idEstado}
+and d.ano_mes between {ano}01 and {ano}12");
+        } 
+        
         public virtual void LimpaDespesaTemporaria()
         {
 
@@ -386,8 +393,8 @@ WHERE p.id IS null");
             if (!config.Completo && lstHash.Values.Any())
             {
                 var itensDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp");
-                if (lstHash.Count() > itensDbCount)
-                    throw new Exception("Tentando remover mais itens que estamos incluindo! Verifique a importação.");
+                if (itensDbCount == 0 && lstHash.Count() > itensDbCount)
+                    throw new Exception($"Tentando remover ({lstHash.Count()}) mais itens que estamos incluindo ({itensDbCount})! Verifique a importação.");
 
                 var deleted = 0;
                 foreach (var dc in lstHash)
@@ -397,7 +404,7 @@ WHERE p.id IS null");
                     {
                         var hash = Convert.FromHexString(dc.Key);
                         var hashDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp where hash = @hash", new { hash });
-                        if(dcCount == hashDbCount)
+                        if (dcCount == hashDbCount)
                         {
                             connection.ExecuteScalar<uint>("DELETE FROM ops_tmp.cl_despesa_temp where hash = @hash", new { hash });
                             continue;
@@ -505,6 +512,17 @@ WHERE p.id IS null");
 
             despesa.Hash = hash;
             connection.Insert(despesa);
+        }
+
+        public T RestApiGet<T>(string address)
+        {
+            var restClient = new RestClient(httpClient);
+
+            var request = new RestRequest(address);
+            request.AddHeader("Accept", "application/json");
+
+            RestResponse resParlamentares = restClient.GetWithAutoRetry(request);
+            return JsonSerializer.Deserialize<T>(resParlamentares.Content);
         }
     }
 

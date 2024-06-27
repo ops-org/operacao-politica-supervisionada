@@ -32,7 +32,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "",
+            BaseAddress = "https://consultas.assembleia.pr.leg.br/api/",
             Estado = Estado.Parana,
             ChaveImportacao = ChaveDespesaTemp.Matricula
         };
@@ -43,11 +43,11 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         var options = new JsonSerializerOptions();
         options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
 
-        var address = $"https://consultas.assembleia.pr.leg.br/api/public/ressarcimento/ressarcimentos/{mes}/{ano}";
+        var address = $"{config.BaseAddress}public/ressarcimento/ressarcimentos/{mes}/{ano}";
         var restClientOptions = new RestClientOptions()
         {
             ThrowOnAnyError = true,
-            MaxTimeout = (int)TimeSpan.FromMinutes(5).TotalMicroseconds
+            Timeout = TimeSpan.FromMinutes(5)
         };
 
         var restClient = new RestClient(restClientOptions);
@@ -57,52 +57,64 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         request.AddHeader("Accept", "application/json");
 
         RestResponse resParlamentares = restClient.GetWithAutoRetry(request);
-        DespesaPR objDespesaPR = JsonSerializer.Deserialize<DespesaPR>(resParlamentares.Content, options);
+        ParlamentaresPR objParlamentaresPR = JsonSerializer.Deserialize<ParlamentaresPR>(resParlamentares.Content, options);
 
-        foreach (var itemDespesa in objDespesaPR.Despesas)
+        foreach (var itemParlamentar in objParlamentaresPR.Parlamentares)
         {
-            string nomePolitico = ImportarParlamentar(itemDespesa);
+            string nomePolitico = ImportarParlamentar(itemParlamentar);
 
-            foreach (var despesaMensal in itemDespesa.DespesasAnuais?[0]?.DespesasMensais?[0]?.Despesas)
-                foreach (var despesa in despesaMensal.ItensDespesa)
+            request = new RestRequest(address.Replace("ressarcimentos", "despesas-ressarcimento") + "/" + itemParlamentar.Parlamentar.Codigo);
+            request.AddHeader("Accept", "application/json");
+
+            RestResponse resDespesas = restClient.GetWithAutoRetry(request);
+            DespesasPR objDespesaPR = JsonSerializer.Deserialize<DespesasPR>(resDespesas.Content, options);
+            if (!objDespesaPR.Sucesso) continue;
+
+            foreach (var parlamentarDespesa in objDespesaPR.Despesas)
+            {
+                foreach (var despesa in parlamentarDespesa.DespesasAnuais?[0]?.DespesasMensais?[0]?.Despesas)
                 {
-                    var despesaTemp = new CamaraEstadualDespesaTemp()
+                    foreach (var itensDespesa in despesa.ItensDespesa)
                     {
-                        Nome = nomePolitico.ToTitleCase(),
-                        Cpf = itemDespesa.Parlamentar.Codigo.ToString(),
-                        Ano = (short)despesa.Exercicio,
-                        TipoDespesa = despesa.TipoDespesa.Descricao,
-                        Valor = (decimal)(despesa.Valor - despesa.ValorDevolucao),
-                        DataEmissao = despesa.Data,
-                        CnpjCpf = despesa.Fornecedor?.Documento,
-                        Empresa = despesa.Fornecedor?.Nome,
-                        Documento = $"{despesa.NumeroDocumento} [{despesa.Codigo}/{despesa.Numero}]",
-                        Observacao = despesa.Descricao
-                    };
+                        var despesaTemp = new CamaraEstadualDespesaTemp()
+                        {
+                            Nome = nomePolitico.ToTitleCase(),
+                            Cpf = parlamentarDespesa.Parlamentar.Codigo.ToString(),
+                            Ano = (short)itensDespesa.Exercicio,
+                            TipoDespesa = itensDespesa.TipoDespesa.Descricao,
+                            Valor = (decimal)(itensDespesa.Valor - itensDespesa.ValorDevolucao),
+                            DataEmissao = itensDespesa.Data,
+                            CnpjCpf = itensDespesa.Fornecedor?.Documento,
+                            Empresa = itensDespesa.Fornecedor?.Nome,
+                            Documento = $"{itensDespesa.NumeroDocumento} [{itensDespesa.Codigo}/{itensDespesa.Numero}]",
+                            Observacao = itensDespesa.Descricao
+                        };
 
-                    if (despesa.Transporte != null)
-                    {
-                        var t = despesa.Transporte;
-                        var v = t.Veiculo;
+                        if (itensDespesa.Transporte != null)
+                        {
+                            var t = itensDespesa.Transporte;
+                            var v = t.Veiculo;
 
-                        despesaTemp.Observacao =
-                            $"{t.Descricao}; Veículo: {v.Placa}/{v.Modelo}; Distância: {t.Distancia:N0)}; Periodo: {t.DataSaida:dd/MM/yyyy} à {t.DataChegada:dd/MM/yyyy}";
+                            despesaTemp.Observacao =
+                                $"{t.Descricao}; Veículo: {v.Placa}/{v.Modelo}; Distância: {t.Distancia:N0)}; Periodo: {t.DataSaida:dd/MM/yyyy} à {t.DataChegada:dd/MM/yyyy}";
+                        }
+
+                        if (itensDespesa.Diaria != null)
+                        {
+                            var d = itensDespesa.Diaria;
+
+                            despesaTemp.Observacao =
+                                $"{d.Descricao}; Diárias: {d.NumeroDiarias:N1}; Região: {d.Regiao}";
+                        }
+
+                        InserirDespesaTemp(despesaTemp);
                     }
-
-                    if (despesa.Diaria != null)
-                    {
-                        var d = despesa.Diaria;
-
-                        despesaTemp.Observacao =
-                            $"{d.Descricao}; Diárias: {d.NumeroDiarias:N1}; Região: {d.Regiao}";
-                    }
-
-                    InserirDespesaTemp(despesaTemp);
                 }
+            }
         }
     }
 
-    private string ImportarParlamentar(Despesas itemDespesa)
+    private string ImportarParlamentar(Parlamentares itemDespesa)
     {
         var parlamentar = itemDespesa.Parlamentar;
         var nomeParlamentar = parlamentar.NomePolitico.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "").ToTitleCase();
@@ -128,7 +140,22 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         return nomeParlamentar;
     }
 
-    private class Despesas
+    private class Parlamentares
+    {
+        [JsonPropertyName("parlamentar")]
+        public Parlamentar Parlamentar { get; set; }
+
+        //[JsonPropertyName("despesasAnuais")]
+        //public List<DespesasAnuais> DespesasAnuais { get; set; }
+
+        //[JsonPropertyName("tipoDespesa")]
+        //public TipoDespesa TipoDespesa { get; set; }
+
+        //[JsonPropertyName("itensDespesa")]
+        //public List<ItensDespesa> ItensDespesa { get; set; }
+    }
+
+    private class ParlamentarDespesas
     {
         [JsonPropertyName("parlamentar")]
         public Parlamentar Parlamentar { get; set; }
@@ -136,11 +163,11 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         [JsonPropertyName("despesasAnuais")]
         public List<DespesasAnuais> DespesasAnuais { get; set; }
 
-        [JsonPropertyName("tipoDespesa")]
-        public TipoDespesa TipoDespesa { get; set; }
+        //[JsonPropertyName("tipoDespesa")]
+        //public TipoDespesa TipoDespesa { get; set; }
 
-        [JsonPropertyName("itensDespesa")]
-        public List<ItensDespesa> ItensDespesa { get; set; }
+        //[JsonPropertyName("itensDespesa")]
+        //public List<ItensDespesa> ItensDespesa { get; set; }
     }
 
     private class DespesasAnuais
@@ -171,6 +198,12 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
 
         [JsonPropertyName("total")]
         public double Total { get; set; }
+    }
+
+    private class Despesas
+    {
+        [JsonPropertyName("itensDespesa")]
+        public List<ItensDespesa> ItensDespesa { get; set; }
     }
 
     private class Diaria
@@ -209,7 +242,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         public int Codigo { get; set; }
 
         [JsonPropertyName("exercicio")]
-        public int Exercicio { get; set; }
+        public int? Exercicio { get; set; }
 
         [JsonPropertyName("mes")]
         public int Mes { get; set; }
@@ -272,7 +305,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         public string Foto { get; set; }
     }
 
-    private class DespesaPR
+    private class ParlamentaresPR
     {
         [JsonPropertyName("sucesso")]
         public bool Sucesso { get; set; }
@@ -284,7 +317,22 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         public object Valor { get; set; }
 
         [JsonPropertyName("despesas")]
-        public List<Despesas> Despesas { get; set; }
+        public List<Parlamentares> Parlamentares { get; set; }
+    }
+
+    private class DespesasPR
+    {
+        [JsonPropertyName("sucesso")]
+        public bool Sucesso { get; set; }
+
+        [JsonPropertyName("erro")]
+        public object Erro { get; set; }
+
+        [JsonPropertyName("valor")]
+        public object Valor { get; set; }
+
+        [JsonPropertyName("despesas")]
+        public List<ParlamentarDespesas> Despesas { get; set; }
     }
 
     private class TipoDespesa

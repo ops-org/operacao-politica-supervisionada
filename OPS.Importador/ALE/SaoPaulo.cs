@@ -134,7 +134,11 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
                 deputado.Email = fileNode.SelectSingleNode("Email")?.InnerText?.Trim();
                 //var idDeputado = fileNode.SelectSingleNode("IdDeputado").InnerText.Trim();
                 //var gabinete = fileNode.SelectSingleNode("Sala").InnerText.Trim();
-                deputado.UrlFoto = fileNode.SelectSingleNode("PathFoto").InnerText.Trim();
+                if (fileNode.SelectSingleNode("PathFoto") != null)
+                    deputado.UrlFoto = fileNode.SelectSingleNode("PathFoto").InnerText.Trim();
+                else
+                    deputado.UrlFoto = $"https://legis-backend-api-portal.pub.al.sp.gov.br/api_portal/biografia/obter-foto/{matricula}";
+
                 deputado.UrlPerfil = $"{config.BaseAddress}deputado/?matricula={deputado.Matricula}";
 
                 InsertOrUpdate(deputado);

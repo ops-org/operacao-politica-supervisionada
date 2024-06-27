@@ -20,7 +20,7 @@ public class Amapa : ImportadorBase
 {
     public Amapa(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarAmapa(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarAmapa(serviceProvider);
         importadorDespesas = new ImportadorDespesasAmapa(serviceProvider);
     }
 }
@@ -34,7 +34,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "http://www.al.ap.gov.br/",
+            BaseAddress = "https://www.al.ap.gov.br/",
             Estado = Estado.Amapa,
             ChaveImportacao = ChaveDespesaTemp.Matricula
         };
@@ -76,7 +76,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
                 var linkDetalhes = (primeiraColuna.QuerySelector("a") as IHtmlAnchorElement);
                 var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
-                    Nome = gabinete.Text.ToTitleCase(),
+                    Nome = gabinete.Text.Split("-")[0].Trim().ToTitleCase(),
                     Cpf = deputado?.Matricula?.ToString(),
                     Ano = (short)ano,
                     Mes =  (short)mes,

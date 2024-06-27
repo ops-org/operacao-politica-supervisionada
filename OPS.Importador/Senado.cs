@@ -39,6 +39,8 @@ namespace OPS.Importador
         public string rootPath { get; set; }
         public string tempPath { get; set; }
 
+        public HttpClient httpClient { get; }
+
         public ImportadorParlamentarSenado(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorParlamentarSenado>>();
@@ -47,6 +49,8 @@ namespace OPS.Importador
             var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
             tempPath = configuration["AppSettings:SiteTempFolder"];
+
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
         }
 
         public Task Importar()
@@ -493,41 +497,38 @@ namespace OPS.Importador
             using (var banco = new AppDb())
             {
                 DataTable table = banco.GetTable("SELECT id FROM sf_senador where ativo = 'S'");
-                using (HttpClient client = new())
+
+                foreach (DataRow row in table.Rows)
                 {
-                    foreach (DataRow row in table.Rows)
+                    string id = row["id"].ToString();
+                    string url = "https://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
+                    string src = sSenadoressImagesPath + id + ".jpg";
+                    if (File.Exists(src))
                     {
-                        string id = row["id"].ToString();
-                        string url = "https://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + id + ".jpg";
-                        string src = sSenadoressImagesPath + id + ".jpg";
-                        if (File.Exists(src))
-                        {
-                            if (!File.Exists(sSenadoressImagesPath + id + "_120x160.jpg"))
-                                ImportacaoUtils.CreateImageThumbnail(src);
+                        if (!File.Exists(sSenadoressImagesPath + id + "_120x160.jpg"))
+                            ImportacaoUtils.CreateImageThumbnail(src);
 
-                            if (!File.Exists(sSenadoressImagesPath + id + "_240x300.jpg"))
-                                ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
-
-                            continue;
-                        }
-
-                        try
-                        {
-
-                            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                            await client.DownloadFile(url, src);
-
-                            ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
+                        if (!File.Exists(sSenadoressImagesPath + id + "_240x300.jpg"))
                             ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
 
-                            logger.LogTrace("Atualizado imagem do senador {IdSenador}", id);
-                        }
-                        catch (Exception ex)
+                        continue;
+                    }
+
+                    try
+                    {
+
+                        await httpClient.DownloadFile(url, src);
+
+                        ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
+                        ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
+
+                        logger.LogTrace("Atualizado imagem do senador {IdSenador}", id);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!ex.Message.Contains("404"))
                         {
-                            if (!ex.Message.Contains("404"))
-                            {
-                                logger.LogInformation("Imagem do senador {IdSenador} inexistente! Motivo: {Motivo}", id, ex.GetBaseException().Message);
-                            }
+                            logger.LogInformation("Imagem do senador {IdSenador} inexistente! Motivo: {Motivo}", id, ex.GetBaseException().Message);
                         }
                     }
                 }
@@ -550,6 +551,8 @@ namespace OPS.Importador
 
         private int linhasProcessadasAno { get; set; }
 
+        public HttpClient httpClient { get; }
+
         public ImportadorDespesasSenado(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
@@ -558,6 +561,8 @@ namespace OPS.Importador
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
             tempPath = configuration["AppSettings:SiteTempFolder"];
+
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
         }
 
         //public string AtualizaCadastroParlamentarCompleto()
@@ -966,12 +971,7 @@ namespace OPS.Importador
             if (File.Exists(caminhoArquivo))
                 File.Delete(caminhoArquivo);
 
-            using (HttpClient client = new())
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                client.Timeout = TimeSpan.FromMinutes(5);
-                client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-            }
+            httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
 
             return true;
         }
@@ -1262,7 +1262,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
             var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.sf_despesa_temp");
             if (banco.RowsAffected != totalTemp)
-                logger.LogWarning($"Há {totalTemp - banco.RowsAffected} registros que não foram imporados corretamente!");
+                logger.LogWarning($"Há {totalTemp - banco.RowsAffected} registros que não foram importados corretamente!");
 
             //         banco.ExecuteNonQuery(@"
             //	UPDATE ops_tmp.sf_despesa_temp t 

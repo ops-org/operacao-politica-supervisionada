@@ -143,7 +143,7 @@ public class DeputadoGoias
     public string Nome { get; set; }
 
     [JsonPropertyName("partido")]
-    public PartidoGO Partido { get; set; }
+    public String Partido { get; set; }
 
     [JsonPropertyName("foto")]
     public string Foto { get; set; }
@@ -201,60 +201,6 @@ public class Lancamento
 {
     [JsonPropertyName("fornecedor")]
     public Fornecedor Fornecedor { get; set; }
-}
-
-public class PartidoGO
-{
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
-
-    [JsonPropertyName("nome")]
-    public string Nome { get; set; }
-
-    [JsonPropertyName("numero")]
-    public int Numero { get; set; }
-
-    [JsonPropertyName("sigla")]
-    public string Sigla { get; set; }
-
-    [JsonPropertyName("nome_presidente")]
-    public string NomePresidente { get; set; }
-
-    [JsonPropertyName("endereco")]
-    public string Endereco { get; set; }
-
-    [JsonPropertyName("email")]
-    public string Email { get; set; }
-
-    [JsonPropertyName("ambito")]
-    public string Ambito { get; set; }
-
-    [JsonPropertyName("fone")]
-    public string Fone { get; set; }
-
-    [JsonPropertyName("fone2")]
-    public string Fone2 { get; set; }
-
-    [JsonPropertyName("fax")]
-    public string Fax { get; set; }
-
-    [JsonPropertyName("criado_por")]
-    public int CriadoPor { get; set; }
-
-    [JsonPropertyName("atualizado_por")]
-    public int AtualizadoPor { get; set; }
-
-    [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
-
-    [JsonPropertyName("updated_at")]
-    public DateTime UpdatedAt { get; set; }
-
-    [JsonPropertyName("site")]
-    public string Site { get; set; }
-
-    [JsonPropertyName("ativo")]
-    public bool Ativo { get; set; }
 }
 
 public class DespesasGoias

@@ -61,7 +61,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
         var restClientOptions = new RestClientOptions()
         {
             ThrowOnAnyError = true,
-            MaxTimeout = (int)TimeSpan.FromMinutes(5).TotalMicroseconds
+            Timeout = TimeSpan.FromMinutes(5)
         };
 
         var restClient = new RestClient(restClientOptions);
@@ -80,7 +80,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                     deputado.Gabinete = Convert.ToUInt32(gabinete.Value);
                     connection.Update(deputado);
                 }
-                else
+                else if(gabinete.Value != "54") // STI DA SILVA - DEPUTADO TESTE STI
                 {
                     logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
                 }

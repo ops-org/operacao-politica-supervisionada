@@ -26,7 +26,6 @@ namespace OPS.Importador.ALE.Despesa
             {
                 watch.Restart();
 
-                //logger.LogWarning("Dados do(a) {CasaLegislativa}", config.SiglaEstado);
                 if (importadorParlamentar != null)
                     importadorParlamentar.Importar().Wait();
             }
@@ -37,25 +36,25 @@ namespace OPS.Importador.ALE.Despesa
             finally
             {
                 watch.Stop();
-                logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
             }
 
-            //try
-            //{
-            //    watch.Restart();
+            try
+            {
+                watch.Restart();
 
-            //    if (importadorParlamentar != null)
-            //        importadorParlamentar.DownloadFotos().Wait();
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.LogError(ex, ex.Message);
-            //}
-            //finally
-            //{
-            //    watch.Stop();
-            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            //}
+                if (importadorParlamentar != null)
+                    importadorParlamentar.DownloadFotos().Wait();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                watch.Stop();
+                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            }
 
             try
             {
@@ -71,7 +70,7 @@ namespace OPS.Importador.ALE.Despesa
             finally
             {
                 watch.Stop();
-                logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
             }
 
             try
@@ -88,7 +87,7 @@ namespace OPS.Importador.ALE.Despesa
             finally
             {
                 watch.Stop();
-                logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
             }
 
             //try
@@ -106,7 +105,7 @@ namespace OPS.Importador.ALE.Despesa
             //finally
             //{
             //    watch.Stop();
-            //    logger.LogTrace("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            //    logger.LogDebug("Processamento em {TimeElapsed:c}", watch.Elapsed);
             //}
         }
     }

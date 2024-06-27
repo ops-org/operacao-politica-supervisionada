@@ -3,13 +3,12 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp;
-using AngleSharp.Io;
 using CsvHelper;
 using Dapper;
 using Microsoft.Extensions.Configuration;
@@ -21,8 +20,9 @@ using OPS.Core;
 using OPS.Importador.ALE;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.Utilities;
+using Polly;
+using Polly.Extensions.Http;
 using Serilog;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador
 {
@@ -86,6 +86,47 @@ namespace OPS.Importador
             //services.AddScoped<Presidencia>();
 
             services.AddScoped<Fornecedor>();
+            services.AddScoped<HttpLogger>();
+            //services.AddRedaction();
+
+            services.AddHttpClient<HttpClient>("MyNamedClient", config =>
+                {
+                    //config.BaseAddress = new Uri("https://localhost:5001/api/");
+                    config.Timeout = TimeSpan.FromMinutes(5);
+                    config.DefaultRequestHeaders.Clear();
+                    config.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)");
+                })
+                .ConfigurePrimaryHttpMessageHandler(() =>
+                {
+                    return new HttpClientHandler()
+                    {
+                        AllowAutoRedirect = false,
+                    };
+                })
+                .AddPolicyHandler((services, request) => HttpPolicyExtensions.HandleTransientHttpError().WaitAndRetryAsync(new[]
+                    {
+                        TimeSpan.FromSeconds(1),
+                        TimeSpan.FromSeconds(5),
+                        TimeSpan.FromSeconds(10)
+                    },
+                    onRetry: (outcome, timespan, retryAttempt, context) =>
+                    {
+                        services.GetService<ILogger<HttpClient>>()?
+                            .LogWarning("Delaying for {delay}ms, then making retry {retry}.", timespan.TotalMilliseconds, retryAttempt);
+                    }
+                ));
+                //.AddLogger<HttpLogger>(wrapHandlersPipeline: true)
+                //.AddTraceContentLogging();
+            //.AddExtendedHttpClientLogging(options =>
+            //{
+            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
+            //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
+            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
+
+            //    options.LogBody = true;
+            //    ////options.LogContentHeaders = true;
+            //    //options.LogRequestStart = true;
+            //});
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>().AddSerilog(Log.Logger, true);
@@ -135,36 +176,36 @@ namespace OPS.Importador
 
                     var types = new Type[]
                     {
-                        typeof(Senado), // csv
-                        typeof(CamaraFederal), // csv
+                        //typeof(Senado), // csv
+                        //typeof(CamaraFederal), // csv
 
-                        //typeof(Acre), // Portal sem dados detalhados!
-                        //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                        typeof(Amapa), // crawler
-                        typeof(Amazonas), // -- Apenas BR
-                        typeof(Bahia), // crawler // TESTAR
-                        typeof(Ceara), // csv mensal
-                        typeof(DistritoFederal), // xlsx  -- Apenas BR
+                        ////typeof(Acre), // Portal sem dados detalhados!
+                        ////typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                        typeof(Amapa), // crawler  -- Apenas BR
+                        //typeof(Amazonas), // -- Apenas BR
+                        //typeof(Bahia), // crawler // TESTAR
+                        //typeof(Ceara), // csv mensal
+                        //typeof(DistritoFederal), // xlsx  -- Apenas BR
                         //typeof(EspiritoSanto),  // Valores mensais por categoria -- Apenas BR
-                        typeof(Goias), // crawler
-                        //typeof(Maranhao), // Valores mensais por categoria
-                        //typeof(MatoGrosso),
-                        typeof(MatoGrossoDoSul), // crawler
-                        typeof(MinasGerais), // xml api -- Apenas BR
+                        //typeof(Goias), // crawler
+                        ////typeof(Maranhao), // Valores mensais por categoria
+                        ////typeof(MatoGrosso),
+                        //typeof(MatoGrossoDoSul), // crawler
+                        //typeof(MinasGerais), // xml api -- Apenas BR
                         //typeof(Para),
-                        //typeof(Paraiba),
-                        typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
-                        typeof(Pernambuco),
-                        //typeof(Piaui),
+                        ////typeof(Paraiba),
+                        //typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
+                        //typeof(Pernambuco),
+                        ////typeof(Piaui),
                         //typeof(RioDeJaneiro),
-                        //typeof(RioGrandeDoNorte),
-                        //typeof(RioGrandeDoSul),
-                        typeof(Rondonia),
-                        //typeof(Roraima),
-                        typeof(SantaCatarina), // csv
-                        typeof(SaoPaulo), // xml
-                        //typeof(Sergipe),
-                        //typeof(Tocantins),
+                        ////typeof(RioGrandeDoNorte),
+                        ////typeof(RioGrandeDoSul),
+                        //typeof(Rondonia),
+                        ////typeof(Roraima),
+                        //typeof(SantaCatarina), // csv
+                        //typeof(SaoPaulo), // xml
+                        ////typeof(Sergipe),
+                        ////typeof(Tocantins),
                     };
 
                     foreach (var type in types)

@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Linq;
+using System.Net.Http;
 using AngleSharp;
 using AngleSharp.Io;
+using AngleSharp.Io.Network;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace OPS.Importador.ALE.Despesa
@@ -18,15 +22,12 @@ namespace OPS.Importador.ALE.Despesa
             CarregarHashes(ano);
             LimpaDespesaTemporaria();
 
-            var htmlRequester = new DefaultHttpRequester();
-            htmlRequester.Headers["User-Agent"] = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)";
-            var handler = new DefaultHttpRequester { Timeout = TimeSpan.FromMinutes(5) };
             var configuration = AngleSharp.Configuration.Default
-                .With(htmlRequester)
-                .With(handler)
+                .With(new HttpClientRequester(httpClient))
                 .WithDefaultLoader()
                 .WithDefaultCookies()
                 .WithCulture("pt-BR");
+
             var context = BrowsingContext.New(configuration);
 
             for (int mes = 1; mes <= 12; mes++)

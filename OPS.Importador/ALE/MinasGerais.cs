@@ -163,7 +163,8 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
 
                 deputado.NomeCivil = detalhes.SelectSingleNode("nomeServidor").InnerText.ToTitleCase();
                 deputado.Naturalidade = detalhes.SelectSingleNode("naturalidadeMunicipio").InnerText;
-                deputado.Nascimento = DateOnly.Parse(detalhes.SelectSingleNode("dataNascimento").InnerText, cultureInfo);
+                if (detalhes.SelectSingleNode("dataNascimento") != null)
+                    deputado.Nascimento = DateOnly.Parse(detalhes.SelectSingleNode("dataNascimento").InnerText, cultureInfo);
                 deputado.Profissao = detalhes.SelectSingleNode("atividadeProfissional")?.InnerText.ToTitleCase();
                 deputado.Sexo = detalhes.SelectSingleNode("sexo").InnerText;
 

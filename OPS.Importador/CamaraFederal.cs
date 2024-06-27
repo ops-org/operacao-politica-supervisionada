@@ -48,6 +48,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
     private const short legislaturaAtual = 57;
 
+    public HttpClient httpClient { get; }
 
     public ImportadorParlamentarCamaraFederal(IServiceProvider serviceProvider)
     {
@@ -57,6 +58,8 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
         tempPath = configuration["AppSettings:SiteTempFolder"];
+
+        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
     }
 
     public Task Importar()
@@ -388,47 +391,43 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
             string sql = "SELECT id FROM cf_deputado where id_deputado is not null order by id -- AND situacao = 'Exercício'";
             DataTable table = banco.GetTable(sql, 0);
 
-            using (HttpClient client = new())
+            foreach (DataRow row in table.Rows)
             {
-                foreach (DataRow row in table.Rows)
+                string id = row["id"].ToString();
+                string src = sDeputadosImagesPath + id + ".jpg";
+                if (File.Exists(src))
                 {
-                    string id = row["id"].ToString();
-                    string src = sDeputadosImagesPath + id + ".jpg";
-                    if (File.Exists(src))
-                    {
-                        if (!File.Exists(sDeputadosImagesPath + id + "_120x160.jpg"))
-                            ImportacaoUtils.CreateImageThumbnail(src);
-
-                        if (!File.Exists(sDeputadosImagesPath + id + "_240x300.jpg"))
-                            ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
-
-                        continue;
-                    }
-
-                    try
-                    {
-                        client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                        try
-                        {
-                            await client.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src);
-                        }
-                        catch (Exception)
-                        {
-                            await client.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
-                        }
-
+                    if (!File.Exists(sDeputadosImagesPath + id + "_120x160.jpg"))
                         ImportacaoUtils.CreateImageThumbnail(src);
+
+                    if (!File.Exists(sDeputadosImagesPath + id + "_240x300.jpg"))
                         ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
 
+                    continue;
+                }
 
-                        logger.LogTrace("Atualizado imagem do deputado " + id);
-                    }
-                    catch (Exception ex)
+                try
+                {
+                    try
                     {
-                        if (!ex.Message.Contains("404"))
-                        {
-                            logger.LogInformation("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.GetBaseException().Message);
-                        }
+                        await httpClient.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src);
+                    }
+                    catch (Exception)
+                    {
+                        await httpClient.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
+                    }
+
+                    ImportacaoUtils.CreateImageThumbnail(src);
+                    ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
+
+
+                    logger.LogTrace("Atualizado imagem do deputado " + id);
+                }
+                catch (Exception ex)
+                {
+                    if (!ex.Message.Contains("404"))
+                    {
+                        logger.LogInformation("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.GetBaseException().Message);
                     }
                 }
             }
@@ -448,6 +447,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     private const int legislaturaAtual = 57;
 
+    public HttpClient httpClient { get; }
+
     public ImportadorDespesasCamaraFederal(IServiceProvider serviceProvider)
     {
         logger = serviceProvider.GetService<ILogger<ImportadorDespesasCamaraFederal>>();
@@ -456,6 +457,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
         tempPath = configuration["AppSettings:SiteTempFolder"];
+
+        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
     }
 
     #region Importação Deputados
@@ -1273,12 +1276,7 @@ WHERE presencas = 0");
         if (File.Exists(caminhoArquivo))
             File.Delete(caminhoArquivo);
 
-        using (HttpClient client = new())
-        {
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-            client.Timeout = TimeSpan.FromMinutes(5);
-            client.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-        }
+        httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
 
         return true;
     }
@@ -1812,7 +1810,7 @@ SET SQL_BIG_SELECTS=0;
 
         var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
         if (affected != totalTemp)
-            logger.LogWarning($"Há {totalTemp - affected} registros que não foram imporados corretamente!");
+            logger.LogWarning($"Há {totalTemp - affected} registros que não foram importados corretamente!");
     }
 
     private void InsereDespesaLegislatura()
@@ -2233,7 +2231,7 @@ order by cd.situacao, cd.id
                 Console.WriteLine($"Deputado: {idDeputado}");
 
                 var address = $"https://www.camara.leg.br/deputados/{idDeputado}";
-                var document = await context.OpenAsync(address);
+                var document = await BrowsingContextExtensions.OpenAsync(context, address);
                 if (document.StatusCode != HttpStatusCode.OK)
                 {
                     Console.WriteLine($"{address} {document.StatusCode}");
@@ -2252,7 +2250,7 @@ order by cd.situacao, cd.id
                     Console.WriteLine();
                     Console.WriteLine($"Ano: {ano}");
                     address = $"https://www.camara.leg.br/deputados/{idDeputado}?ano={ano}";
-                    document = await context.OpenAsync(address);
+                    document = await BrowsingContextExtensions.OpenAsync(context, address);
                     if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
                     {
                         Console.WriteLine(document.StatusCode + ":" + document.Url);
@@ -2391,7 +2389,7 @@ order by cd.situacao, cd.id
     private async Task ColetaPessoalGabinete(AppDb db, IBrowsingContext context, int idDeputado, int ano)
     {
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/pessoal-gabinete?ano={ano}";
-        var document = await context.OpenAsync(address);
+        var document = await BrowsingContextExtensions.OpenAsync(context, address);
         if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
         {
             Console.WriteLine(document.StatusCode + ":" + document.Url);
@@ -2462,7 +2460,7 @@ values (@id_cf_funcionario, @id_cf_deputado, (select id from cf_funcionario_grup
     {
         var sqlInsertAuxilioMoradia = "insert ignore into cf_deputado_auxilio_moradia (id_cf_deputado, ano, mes, valor) values (@id_cf_deputado, @ano, @mes, @valor)";
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/auxilio-moradia/?ano={ano}";
-        var document = await context.OpenAsync(address);
+        var document = await BrowsingContextExtensions.OpenAsync(context, address);
         if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
         {
             Console.WriteLine(document.StatusCode + ":" + document.Url);
@@ -2493,7 +2491,7 @@ values (@id_cf_funcionario, @id_cf_deputado, (select id from cf_funcionario_grup
         var sqlInsertAuxilioMoradia =
             "insert ignore into cf_deputado_missao_oficial (id_cf_deputado, periodo, assunto, destino, passagens, diarias, relatorio) values (@id_cf_deputado, @periodo, @assunto, @destino, @passagens, @diarias, @relatorio)";
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/missao-oficial/?ano={ano}";
-        var document = await context.OpenAsync(address);
+        var document = await BrowsingContextExtensions.OpenAsync(context, address);
         if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
         {
             Console.WriteLine(document.StatusCode + ":" + document.Url);
@@ -2607,7 +2605,7 @@ order BY c.id_cf_funcionario
                     var dtUltimaRemuneracaoColetada = !Convert.IsDBNull(objUltimaRemuneracaoColetada) ? Convert.ToDateTime(objUltimaRemuneracaoColetada) : DateTime.MinValue;
 
                     var address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}";
-                    var document = await context.OpenAsync(address);
+                    var document = await BrowsingContextExtensions.OpenAsync(context, address);
                     if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
                     {
                         Console.WriteLine(document.StatusCode + ":" + document.Url);
@@ -2642,7 +2640,7 @@ order BY c.id_cf_funcionario
                             continue;
                         }
 
-                        document = await context.OpenAsync(address + $"?ano={anoSelecionado}&mes={mesSelecionado}");
+                        document = await BrowsingContextExtensions.OpenAsync(context, address + $"?ano={anoSelecionado}&mes={mesSelecionado}");
                         if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
                         {
                             Console.WriteLine(document.StatusCode + ":" + document.Url);
@@ -2667,7 +2665,7 @@ order BY c.id_cf_funcionario
                             if (!ano.IsSelected)
                             {
                                 address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{ano.Value}";
-                                document = await context.OpenAsync(address);
+                                document = await BrowsingContextExtensions.OpenAsync(context, address);
 
                                 if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
                                 {
@@ -2697,7 +2695,7 @@ order BY c.id_cf_funcionario
                                 if (Convert.ToInt32(mes.Value) == mesSelecionado)
                                 {
                                     address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}?ano={ano.Text}&mes={mes.Value}";
-                                    document = await context.OpenAsync(address);
+                                    document = await BrowsingContextExtensions.OpenAsync(context, address);
 
                                     if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
                                     {
@@ -2825,13 +2823,13 @@ values (@chave, @nome, @categoria_funcional, @area_atuacao, @situacao{1})
                 var pagina = 0;
                 while (true)
                 {
-                    var document = await context.OpenAsync(address + (++pagina).ToString());
+                    var document = await BrowsingContextExtensions.OpenAsync(context, address + (++pagina).ToString());
                     if (document.StatusCode != HttpStatusCode.OK)
                     {
                         Console.WriteLine(document.StatusCode);
                         Thread.Sleep(TimeSpan.FromSeconds(30));
 
-                        document = await context.OpenAsync(address + (++pagina).ToString());
+                        document = await BrowsingContextExtensions.OpenAsync(context, address + (++pagina).ToString());
                         if (document.StatusCode != HttpStatusCode.OK)
                         {
                             Console.WriteLine(document.StatusCode);

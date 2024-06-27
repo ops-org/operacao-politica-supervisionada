@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using OPS.Core;
@@ -23,11 +24,15 @@ namespace OPS.Importador
 
         public IConfiguration configuration { get; private set; }
 
-        public Fornecedor(ILogger<Fornecedor> logger, IDbConnection connection, IConfiguration configuration)
+        public HttpClient httpClient { get; }
+
+        public Fornecedor(ILogger<Fornecedor> logger, IDbConnection connection, IConfiguration configuration, IServiceProvider serviceProvider)
         {
             this.logger = logger;
             this.connection = connection;
             this.configuration = configuration;
+
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
         }
 
         //public void AtualizaFornecedorDoador()
@@ -140,31 +145,26 @@ namespace OPS.Importador
 
                 try
                 {
-                    using (HttpClient client = new())
-                    {
-                        client.BaseAddress = new Uri($"https://minhareceita.org/{item["cnpj_cpf"]}");
-                        client.DefaultRequestHeaders.UserAgent.ParseAdd(Utils.DefaultUserAgent);
-                        HttpResponseMessage response = await client.GetAsync(string.Empty);
+                    HttpResponseMessage response = await httpClient.GetAsync($"https://minhareceita.org/{item["cnpj_cpf"]}");
 
-                        if (response.IsSuccessStatusCode)
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseString = await response.Content.ReadAsStringAsync();
+                        fornecedor = JsonSerializer.Deserialize<FornecedorInfo>(responseString);
+                    }
+                    else
+                    {
+                        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                         {
-                            string responseString = await response.Content.ReadAsStringAsync();
-                            fornecedor = JsonSerializer.Deserialize<FornecedorInfo>(responseString);
+                            logger.LogInformation(response.ReasonPhrase);
+                            System.Threading.Thread.Sleep(60000);
                         }
                         else
                         {
-                            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                            {
-                                logger.LogInformation(response.ReasonPhrase);
-                                System.Threading.Thread.Sleep(60000);
-                            }
-                            else
-                            {
-                                InserirControle(1, item["cnpj_cpf"].ToString(), response.ReasonPhrase.ToString());
-                            }
-
-                            continue;
+                            InserirControle(1, item["cnpj_cpf"].ToString(), response.ReasonPhrase.ToString());
                         }
+
+                        continue;
                     }
 
                 }

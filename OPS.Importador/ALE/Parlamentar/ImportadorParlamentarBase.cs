@@ -39,7 +39,7 @@ namespace OPS.Importador.ALE.Parlamentar
 
         public ushort BuscarIdPartido(string partido)
         {
-            if (partido == "PATRI") partido = "PATRIOTA";
+            if (partido == "PATRI" || partido.Equals("PATRIOTAS", StringComparison.InvariantCultureIgnoreCase)) partido = "PATRIOTA";
             else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
             else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN") partido = "REPUBLICANOS";
             else if (partido == "PR") partido = "PL"; // Partido da República

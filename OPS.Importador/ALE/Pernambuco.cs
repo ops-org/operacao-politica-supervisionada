@@ -20,6 +20,8 @@ using static OPS.Importador.ALE.ImportadorDespesasRondonia;
 using System.Text.Json.Serialization;
 using System.Drawing;
 using Microsoft.Extensions.Options;
+using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OPS.Importador.ALE;
 
@@ -32,7 +34,7 @@ public class Pernambuco : ImportadorBase
     public Pernambuco(IServiceProvider serviceProvider) : base(serviceProvider)
     {
         importadorParlamentar = new ImportadorParlamentarPernambuco(serviceProvider);
-        //importadorDespesas = new ImportadorDespesasPernambuco(serviceProvider);
+        importadorDespesas = new ImportadorDespesasPernambuco(serviceProvider);
     }
 }
 
@@ -47,12 +49,11 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
             ChaveImportacao = ChaveDespesaTemp.Nome
         };
 
-        // TODO: Filtrar legislatura atual
-        deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
+        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
     }
 
+    public HttpClient httpClient { get; }
     private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-    private readonly List<DeputadoEstadual> deputados;
 
     public override void ImportarDespesas(IBrowsingContext context, int ano)
     {
@@ -102,18 +103,17 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = 
 ");
     }
 
-    private static List<T> HttpGet<T>(string address)
+    private List<T> HttpGet<T>(string address)
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
 
         var restClientOptions = new RestClientOptions()
         {
-            ThrowOnAnyError = true,
-            MaxTimeout = (int)TimeSpan.FromMinutes(5).TotalMicroseconds
+            ThrowOnAnyError = true
         };
 
-        var restClient = new RestClient(restClientOptions);
+        var restClient = new RestClient(httpClient, restClientOptions);
 
         var request = new RestRequest(address);
         request.AddHeader("Accept", "application/json");
