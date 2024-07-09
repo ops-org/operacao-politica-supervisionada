@@ -90,10 +90,19 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         var ultimaPaginaTemp = document.QuerySelector("#last_bot").NextElementSibling.TextContent; // [101 a 200 de 15495]
         var ultimaPagina = Convert.ToInt32(ultimaPaginaTemp.Split(" ")[4].Split("]")[0]);
 
-        logger.LogInformation("Consultando pagina {Pagina}!", ++pagina);
+        string nomeParlamentar = "";
+        string tipoDespesa = "";
+        short anoDespesa = 0;
+        short mesDespesa = 0;
+        decimal valorTotalControleMensal = 0;
+        decimal valorTotalControleGeral = 0;
+        var despesasDeputado = 0;
 
         while (true)
         {
+            //var paginaAtual = document.QuerySelector(".scGridToolbarNavOpen").TextContent;
+            logger.LogInformation("Consultando pagina {Pagina}!", ++pagina);
+
             var despesas = document.QuerySelector("#sc_grid_body");
             if (despesas.TextContent.Trim() == "Registros não encontrados")
             {
@@ -101,47 +110,66 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
             }
 
             var linhas = document.QuerySelectorAll("#sc_grid_body>table.scGridTabela>tbody");
-            CamaraEstadualDespesaTemp despesaTemp = null;
-            var controle = 0;
 
             foreach (var linha in linhas)
             {
                 if (linha.Id is null || !linha.Id.StartsWith("tbody_search_ceap_")) continue;
-                if (!linha.Id.EndsWith("_top") && controle == 0) continue;
 
-                if (linha.Id.EndsWith("_top") && linha.QuerySelectorAll(".scGridBlockFont td")[0].TextContent == "Nome")
-                    controle = 0;
+                var elementoTitulo = linha.QuerySelectorAll(".scGridBlockFont td");
+                string titulo = null;
+                if (elementoTitulo.Any())
+                    titulo = elementoTitulo[0].TextContent;
 
-                switch (++controle)
+                switch (titulo)
                 {
-                    case 1: // Nome
-                        despesaTemp = new CamaraEstadualDespesaTemp();
-                        despesaTemp.Nome = linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Replace("Dep.", "").Trim().ToTitleCase();
+                    case "Nome":
+                        var nomeTemp = linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Replace("Dep.", "").Trim().ToTitleCase();
+                        if (nomeTemp != nomeParlamentar)
+                        {
+                            nomeParlamentar = nomeTemp;
+                            //logger.LogInformation($"Deputado {nomeParlamentar}");
+                            valorTotalControleGeral = 0;
+                            valorTotalControleMensal = 0;
+                            despesasDeputado = 0;
+                        }
                         break;
 
-                    case 2: // Ano
-                        despesaTemp.Ano = Convert.ToInt16(linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Trim());
+                    case "Ano":
+                        anoDespesa = Convert.ToInt16(linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Trim());
+                        //logger.LogInformation($"Ano {anoDespesa}");
                         break;
 
-                    case 3: // Mes
-                        despesaTemp.Mes = Convert.ToInt16(linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Trim());
+                    case "Mês":
+                        var mesTemp = Convert.ToInt16(linha.QuerySelectorAll(".scGridBlockFont td")[2].TextContent.Trim());
+                        if (mesTemp != mesDespesa)
+                        {
+                            mesDespesa = mesTemp;
+                            //logger.LogInformation($"Mês {mesDespesa}");
+                            valorTotalControleMensal = 0;
+                        }
                         break;
 
-                    case 4: // Despesas
+                    default: // Despesas
 
                         var despesasTipo = linha.QuerySelectorAll(".css_categoriadespesas_descricao_grid_line");
-                        var despesasTabelas = linha.QuerySelectorAll(".scGridTabelaTd");
+                        var despesasTabelas = linha.QuerySelectorAll(".scGridTabela[id^=sc-ui-grid-body]");
 
-                        for (int i = 1; i < despesasTipo.Length; i++)
+                        for (int i = 0; i < despesasTipo.Length; i++)
                         {
-                            despesaTemp.TipoDespesa = despesasTipo[i].TextContent.Trim();
+                            tipoDespesa = despesasTipo[i].TextContent.Trim();
                             var linhaDetelhes = despesasTabelas[i].QuerySelectorAll("tr");
 
-                            for (int j = 1; j < linhaDetelhes.Length; j++)
+                            for (int j = 0; j < linhaDetelhes.Length; j++)
                             {
-                                if (linhaDetelhes[j].ClassName == "scGridTotal") continue;
+                                if (linhaDetelhes[j].ClassList.Contains("scGridTotal") || linhaDetelhes[j].ClassList.Contains("sc-ui-grid-header-row")) continue;
 
                                 var detalhes = linhaDetelhes[j].QuerySelectorAll("td");
+
+                                var despesaTemp = new CamaraEstadualDespesaTemp();
+                                despesaTemp.Nome = nomeParlamentar;
+                                despesaTemp.Ano = anoDespesa;
+                                despesaTemp.Mes = mesDespesa;
+                                despesaTemp.TipoDespesa = tipoDespesa;
                                 despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(detalhes[1].TextContent.Trim());
                                 despesaTemp.Empresa = detalhes[2].TextContent.Trim();
                                 despesaTemp.Documento = detalhes[3].TextContent.Trim();
@@ -150,8 +178,31 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
                                 despesaTemp.Observacao = (detalhes[6].QuerySelector("a") as IHtmlAnchorElement)?.Href?.Replace("http://www.transparencia.al.ms.gov.br/arquivo/", "");
 
                                 InserirDespesaTemp(despesaTemp);
+                                valorTotalControleMensal += despesaTemp.Valor;
+                                valorTotalControleGeral += despesaTemp.Valor;
+                                despesasDeputado++;
                             }
                         }
+
+                        if (linha.QuerySelector(".scGridSubtotal") != null)
+                        {
+                            var valorTotalDeputado = Convert.ToDecimal(linha.QuerySelector(".scGridSubtotal .css_total_S_sub_tot").TextContent.Replace("R$", "").Trim(), cultureInfo);
+
+                            if (linha.QuerySelector(".scGridSubtotal").ParentElement.ChildElementCount > 1)
+                            {
+                                // Validar valor total mensal.
+                                if (valorTotalControleMensal != valorTotalDeputado)
+                                    logger.LogError($"Inconsistencia para o Deputado {nomeParlamentar}, valor total encontrado: {valorTotalControleMensal}, esperado: {valorTotalDeputado}");
+                            }
+                            else
+                            {
+                                // Validar valor total geral. OBS: Existem linhas orfãs que na verdade são somatorias mensais.
+                                if (valorTotalControleGeral != valorTotalDeputado && valorTotalControleMensal != valorTotalDeputado)
+                                    logger.LogError($"Inconsistencia para o Deputado {nomeParlamentar}, valor total encontrado: {valorTotalControleGeral}, esperado: {valorTotalDeputado}");
+                            }
+                        }
+
+                        //logger.LogInformation($"Importando {despesasDeputado} despesas do Deputado {nomeParlamentar}");
 
                         //controle = 0;
                         break;
@@ -177,7 +228,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
             var html = WebUtility.HtmlDecode(parsed.setValue.FirstOrDefault(x => x.field == "sc_grid_body").value);
 
             document = context.OpenAsync(req => req.Content("<div id='sc_grid_body'>" + html + "</div>")).GetAwaiter().GetResult();
-            logger.LogInformation("Consultando pagina {Pagina}!", ++pagina);
+            //logger.LogInformation("Consultando pagina {Pagina}!", ++pagina);
 
             //}
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using Dapper;
 
 namespace OPS.Core.Entity
@@ -6,6 +7,7 @@ namespace OPS.Core.Entity
     [Table("cl_despesa_temp", Schema = "ops_tmp")]
     public class CamaraEstadualDespesaTemp
     {
+        [JsonIgnore]
         [Column("id")]
         public int Id { get; set; }
 
@@ -48,6 +50,7 @@ namespace OPS.Core.Entity
         [Column("favorecido")]
         public string Favorecido { get; set; }
 
+        [JsonIgnore]
         [Column("hash")]
         public byte[] Hash { get; set; }
     }

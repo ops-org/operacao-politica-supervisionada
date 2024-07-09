@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OfficeOpenXml.Drawing.Chart;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -79,7 +78,9 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
         int Valor = indice++;
 
         var linha = 0;
-        var despesaTemp = new CamaraEstadualDespesaTemp();
+        string nomeParlametar = null;
+        short anoDespesa = 0;
+        DateTime dataEmissao = DateTime.MinValue;
         foreach (string line in File.ReadLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
         {
             if (line.StartsWith("TOTAL GERAL"))
@@ -91,29 +92,29 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
 
             if (linha == 1)
             {
-                despesaTemp = new CamaraEstadualDespesaTemp()
-                {
-                    Nome = CorrigeNomeParlamentar(line),
-                    Ano = (short)ano
-                };
+                nomeParlametar = CorrigeNomeParlamentar(line);
+                anoDespesa = (short)ano;
 
                 continue;
             }
 
             if (linha == 2)
             {
-                despesaTemp.DataEmissao = Convert.ToDateTime("01/" + line.Replace("Mes/Ano:", "").Trim(), cultureInfo);
+                dataEmissao = Convert.ToDateTime("01/" + line.Replace("Mes/Ano:", "").Trim(), cultureInfo);
                 continue;
             }
 
             if (linha == 3) continue; // EMPENHO;DESCRIÇÃO;CNPJ;CREDOR;VALOR
-            if (string.IsNullOrEmpty(despesaTemp.Nome)) continue;
+            if (string.IsNullOrEmpty(nomeParlametar)) continue;
 
             var colunas = line.Split(';');
             if (colunas.Length != 6) // Finaliza com ;
                 throw new Exception("Linha Invalida" + line);
 
-            despesaTemp.Id = 0;
+            var despesaTemp = new CamaraEstadualDespesaTemp();
+            despesaTemp.Nome = nomeParlametar;
+            despesaTemp.Ano = anoDespesa;
+            despesaTemp.DataEmissao = dataEmissao;
             despesaTemp.TipoDespesa = ObterTipoDespesa(colunas[1].Trim());
             despesaTemp.Documento = colunas[0].Trim();
             despesaTemp.Observacao = colunas[1].Trim();
@@ -129,7 +130,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
     {
         nome = nome.Replace("DEP", "").Replace(".", "").Split("-")[0].Trim();
 
-        nome =  nome.ToUpper() switch
+        nome = nome.ToUpper() switch
         {
             "ACRSIO SENA" => "ACRISIO SENA",
             "ANTONO GRANJA" => "ANTONIO GRANJA",
@@ -178,12 +179,107 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
             case "SEGURO DE VIDA": return "Seguro de Vida";
             case "SERVIÇOS DE HOSPEDAGEM": return "Serviços de Hospedagem";
             case "SERVIÇOS GRÁFICOS": return "Serviços Gráficos";
-            case "SERVIÇOS POSTAIS": return "Serviços POstais";
+            case "SERVIÇOS POSTAIS": return "Serviços Postais";
             case "TELEFONIA": return "Telefonia";
             case "TV": return "Internet e TV";
         }
 
-        return null;
+        switch (tipo)
+        {
+            case string t when t.Contains("REFEICAO") ||
+                t.Contains("REFEIÇÃO") ||
+                t.Contains("ALIMENTACAO") ||
+                t.Contains("ALIMENTAÇÃO"):
+                return "Alimentação";
+
+            case string t when t.Contains("ABASTECIMENTO DE COMBUSTIVEIS") ||
+                t.Contains("ABASTECIMENTO DE COMBUSTÍVEIS") ||
+                t.Contains("COMBIUSTIVEIS"):
+                return "Combustíveis";
+
+            case string t when t.Contains("CONSULTORIA") ||
+                t.Contains("ASSESSORIA") ||
+                t.Contains("ASSESORIA") ||
+                t.Contains("ACOMPANHAMENTO") ||
+                t.Contains("RECURSOS CONSIGNADOS NO ORCAMENTO"):
+                return "Assessoria e Consultoria";
+
+            case string t when t.Contains("TELEFONIA") ||
+                t.Contains("TELECOMUNICAÇÕES") ||
+                t.Contains("TELECOMUNICACOES") ||
+                t.Contains("INTERNET") ||
+                t.Contains("INTERTNET") ||
+                t.Contains("BANDA LARGA") ||
+                t.Contains("TV") ||
+                t.Contains("MULTIMIDIA") ||
+                t.Contains("MULTIMÍDIA") ||
+                t.Contains("ASSINATURA"):
+                return "Internet e TV";
+
+            case string t when t.Contains("FRETAMENTO DA AERONAVE") ||
+                t.Contains("FRETAMENTO DE HELICOPTERO"):
+                return "Fretamento de Aeronaves";
+
+            case string t when t.Contains("HOSPEDAGEM") ||
+                t.Contains("HOSPEDAGENS"):
+                return "Serviços de Hospedagem";
+
+            case string t when t.Contains("PASSAGENS TERRESTRES") ||
+                t.Contains("VALE TRANSPORTE"):
+                return "Passagens Terrestres";
+
+            case string t when t.Contains("PASSAGENS AEREAS") ||
+                t.Contains("PASSAGENS AÉREAS") ||
+                t.Contains("PASSAGEM AEREA") ||
+                t.Contains("PASSAGEM AÉREA") ||
+                t.Contains("PASSAGEM ÁEREA"):
+                return "Passagens Aéreas";
+
+            case string t when t.Contains("GRAFICOS") ||
+                t.Contains("GRÁFICOS"):
+                return "Serviços Gráficos";
+
+            case string t when t.Contains("ATIVIDADES PARLAMENTARES") ||
+                t.Contains("ATIVIDADE PARLAMENTAR") ||
+                t.Contains("ATIVIDADES ARLAMENTARES") ||
+                t.Contains("VEICULAÇÃO DE MÍDIAS") ||
+                t.Contains("DIVULGACAO") ||
+                t.Contains("DIVULGAÇÃO") ||
+                t.Contains("PUBLICAÇÃO") ||
+                t.Contains("PUBLICACAO") ||
+                t.Contains("COMUNICACAO") ||
+                t.Contains("COMUNICAÇÃO"):
+                return "Divulgação das Atividades Parlamentares";
+
+            case string t when t.Contains("PLANO DE SAUDE") ||
+                t.Contains("PLANO DE SAÚDE") ||
+                t.Contains("PLANO DE SDAUDE"):
+                return "Plano de Saúde";
+
+            case string t when t.Contains("SEGURO DE VIDA") ||
+                t.Contains("SEGURO DEVIDA"):
+                return "Seguro de Vida";
+
+            case string t when t.Contains("SITE") ||
+                t.Contains("SITIO") ||
+                t.Contains("MANUTENÇÃO DO SÍTIO"):
+                return "Hospedagem, Atualização e Manutenção de Sites";
+
+            case string t when t.Contains("PESQUISA") ||
+                t.Contains("OPINIAO PUBLICA") ||
+                t.Contains("OPINIÃO PÚBLICA"):
+                return "Pesquisa de Opinião Pública";
+
+            case string t when t.Contains("POSTAIS"): return "Serviços Postais";
+
+            case string t when t.Contains("VEICULO") ||
+                t.Contains("VEÍCULO") ||
+                t.Contains("LOCACAO") ||
+                t.Contains("LOCAÇÃO"):
+                return "Locação de veículos";
+        }
+
+        return "Indenizações e Restituições";
     }
 }
 

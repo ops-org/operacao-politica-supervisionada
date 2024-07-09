@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using Dapper;
 using Microsoft.Extensions.Configuration;
@@ -38,6 +39,8 @@ namespace OPS.Importador.ALE.Despesa
 
         public HttpClient httpClient { get; }
 
+        public List<CamaraEstadualDespesaTemp> despesasTemp { get; set; }
+
         public ImportadorDespesasBase(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasBase>>();
@@ -49,6 +52,7 @@ namespace OPS.Importador.ALE.Despesa
 
 
             httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+            despesasTemp = new List<CamaraEstadualDespesaTemp>();
         }
 
         public virtual void DownloadFotosParlamentares()
@@ -58,6 +62,7 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual void ProcessarDespesas(int ano)
         {
+            InsereDespesasTemp();
             AjustarDados();
             InsereTipoDespesaFaltante();
             InsereDeputadoFaltante();
@@ -72,6 +77,48 @@ namespace OPS.Importador.ALE.Despesa
             if (ano == DateTime.Now.Year)
             {
                 AtualizaValorTotal();
+            }
+        }
+
+        private void InsereDespesasTemp()
+        {
+            JsonSerializerOptions options = new()
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+            };
+
+            List<IGrouping<string, CamaraEstadualDespesaTemp>> results = despesasTemp.GroupBy(x => Convert.ToHexString(x.Hash)).ToList();
+            linhasProcessadasAno = results.Count();
+
+            foreach (var despesaGroup in results)
+            {
+                //if (despesaGroup.Count() > 1)
+                //{
+                //    Console.WriteLine();
+                //    Console.WriteLine($"{despesaGroup.Count()} Itens Agrupados!");
+                //    foreach (var item in despesaGroup)
+                //    {
+                //        Console.WriteLine(JsonSerializer.Serialize(item, options));
+                //    }
+                //}
+
+                CamaraEstadualDespesaTemp despesa = despesaGroup.FirstOrDefault();
+                despesa.Valor = despesaGroup.Sum(x => x.Valor);
+
+                var str = JsonSerializer.Serialize(despesa, options);
+                var hash = Utils.SHA1Hash(str);
+                var key = Convert.ToHexString(hash);
+
+                if (lstHash.ContainsKey(key))
+                {
+                    // Para hashs com mais de um registro associado, manter na lista para deletar e inserir novamente.
+                    // TODO: Como tratar tabela com hashs duplicadas
+                    if (lstHash[key].Count == 1 && lstHash.Remove(key))
+                        continue;
+                }
+
+                despesa.Hash = hash;
+                connection.Insert(despesa);
             }
         }
 
@@ -291,7 +338,7 @@ and d.ano_mes BETWEEN {ano}01 and {ano}12
             else // ChaveDespesaTemp.Nome
                 condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
 
-            var affected = connection.Execute(@$"
+            var sql = @$"
 INSERT IGNORE INTO cl_despesa (
 	id_cl_deputado,
     id_cl_despesa_tipo,
@@ -321,13 +368,24 @@ FROM ops_tmp.cl_despesa_temp d
 inner join cl_deputado p on id_estado = {idEstado} and {condicaoSql}
 left join cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
 LEFT join fornecedor f on f.cnpj_cpf = d.cnpj_cpf
+##WHERE##
+ORDER BY d.id;
+			";
+
+            if (config.Estado != Estado.Piaui && config.Estado != Estado.RioDeJaneiro)
+            {
+                sql = sql.Replace("##WHERE##", $@"
 WHERE d.hash NOT IN (
     SELECT hash FROM cl_despesa d
     inner join cl_deputado p on p.id = d.id_cl_deputado and id_estado = {idEstado}
     WHERE d.ano_mes between '{ano}01' and '{ano}12'
-)
-ORDER BY d.id;
-			", 3600);
+)");
+            }
+            else
+            {
+                sql = sql.Replace("##WHERE##", "");
+            }
+            var affected = connection.Execute(sql, 3600);
 
 
             if (affected > 0)
@@ -378,12 +436,12 @@ from cl_despesa d
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
 and d.ano_mes between {ano}01 and {ano}12");
-        } 
-        
+        }
+
         public virtual void LimpaDespesaTemporaria()
         {
-
             connection.Execute("truncate table ops_tmp.cl_despesa_temp");
+            despesasTemp = new List<CamaraEstadualDespesaTemp>();
         }
 
         public virtual void DeletarDespesasInexistentes()
@@ -426,8 +484,8 @@ and d.ano_mes between {ano}01 and {ano}12");
             linhasProcessadasAno = 0;
 
             lstHash = new Dictionary<string, List<uint>>();
-            var sql = $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12";
-            var lstHashDB = connection.Query(sql);
+            var sql = SqlCarregarHashes(ano);
+            IEnumerable<dynamic> lstHashDB = connection.Query(sql);
 
             int despesasCount = 0;
             foreach (IDictionary<string, object> dReader in lstHashDB)
@@ -441,6 +499,11 @@ and d.ano_mes between {ano}01 and {ano}12");
             }
 
             logger.LogTrace("{Total} Hashes Carregados", despesasCount);
+        }
+
+        public virtual string SqlCarregarHashes(int ano)
+        {
+            return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12";
         }
 
         ///// <summary>
@@ -494,24 +557,19 @@ and d.ano_mes between {ano}01 and {ano}12");
                 };
         }
 
-        public void InserirDespesaTemp(CamaraEstadualDespesaTemp despesa)
+        public void InserirDespesaTemp(CamaraEstadualDespesaTemp despesaTemp)
         {
-            linhasProcessadasAno++;
-
-            var str = JsonSerializer.Serialize(despesa);
+            // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
+            // Para armazenamento na base de dados a hash é gerado com o valor, para que mudançãs no total provoquem uma atualização.
+            var valorTemp = despesaTemp.Valor;
+            despesaTemp.Valor = default(decimal);
+            var str = JsonSerializer.Serialize(despesaTemp);
             var hash = Utils.SHA1Hash(str);
             var key = Convert.ToHexString(hash);
 
-            if (lstHash.ContainsKey(key))
-            {
-                // Para hashs com mais de um registro associado, manter na lista para deletar e inserir novamente.
-                // TODO: Como tratar tabela com hashs duplicadas
-                if (lstHash[key].Count == 1 && lstHash.Remove(key))
-                    return;
-            }
-
-            despesa.Hash = hash;
-            connection.Insert(despesa);
+            despesaTemp.Hash = hash;
+            despesaTemp.Valor = valorTemp;
+            despesasTemp.Add(despesaTemp);
         }
 
         public T RestApiGet<T>(string address)

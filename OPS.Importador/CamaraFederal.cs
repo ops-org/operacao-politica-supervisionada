@@ -1232,7 +1232,7 @@ WHERE presencas = 0");
     /// <param name="completo"></param>
     public Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
     {
-        var downloadUrl = "http://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
+        var downloadUrl = "https://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
         var fullFileNameZip = tempPath + "/CF/Ano-" + ano + ".csv.zip";
 
         Dictionary<string, string> arquivos = new();
@@ -1434,16 +1434,16 @@ INSERT INTO ops_tmp.cf_despesa_temp (
                 }
             }
 
-            if (linhaInserida > 0)
-            {
-                logger.LogInformation("Processando lote {Lote}", ++lote);
-                ProcessarDespesasTemp(ano);
-            }
-
             foreach (var id in dc.Values)
             {
                 banco.AddParameter("id", id);
                 banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
+            }
+
+            if (linhaInserida > 0)
+            {
+                logger.LogInformation("Processando lote {Lote}", ++lote);
+                ProcessarDespesasTemp(ano);
             }
 
             ValidaImportacao(ano);

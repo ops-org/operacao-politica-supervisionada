@@ -392,7 +392,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                         else if (worksheet.Cells[i, 7].Value is DateTime)
                             despesaTemp.DataEmissao = (DateTime)worksheet.Cells[i, DATA].Value;
                         else if (worksheet.Cells[i, 7].Value.ToString().Contains(" de ")) // 04 de julho de 2023
-                            despesaTemp.DataEmissao = Convert.ToDateTime( worksheet.Cells[i, DATA].Value, cultureInfo);
+                            despesaTemp.DataEmissao = Convert.ToDateTime(worksheet.Cells[i, DATA].Value, cultureInfo);
                         else
                         {
                             var data = worksheet.Cells[i, DATA].Value.ToString();
@@ -434,7 +434,13 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                     despesaTemp.TipoDespesa = worksheet.Cells[i, CLASSIFICACAO].Value.ToString().Trim();
 
                     if (!string.IsNullOrEmpty(worksheet.Cells[i, OBSERVACAO].Value?.ToString()))
-                        despesaTemp.Observacao = cnpj_cpf + " - " + worksheet.Cells[i, OBSERVACAO].Value.ToString();
+                        if (string.IsNullOrEmpty(despesaTemp.TipoDespesa))
+                            despesaTemp.TipoDespesa = worksheet.Cells[i, OBSERVACAO].Value.ToString();
+                        else
+                            despesaTemp.Observacao = cnpj_cpf + " - " + worksheet.Cells[i, OBSERVACAO].Value.ToString();
+
+                    if (string.IsNullOrEmpty(despesaTemp.TipoDespesa))
+                        despesaTemp.TipoDespesa = "Indenizações e Restituições";
 
                     InserirDespesaTemp(despesaTemp);
 

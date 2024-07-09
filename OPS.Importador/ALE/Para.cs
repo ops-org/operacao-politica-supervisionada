@@ -80,8 +80,7 @@ public class ImportadorDespesasPara : ImportadorDespesasRestApiAnual
             despesaTemp.Ano = (short)despesaTemp.DataEmissao.Year;
             despesaTemp.Mes = (short?)despesaTemp.DataEmissao.Month;
 
-            // TODO: Para Verba Indenizatória o gasto pode ter cido do mês anterior, conforme consta na descrição. Mas desconsideramos pois nem todos os itens trazem descrição completa.
-
+            // TODO: Para Verba Indenizatória o gasto pode ter sido do mês anterior, conforme consta na descrição. Mas desconsideramos pois nem todos os itens trazem descrição completa.
             foreach (var item in jsonData.Value)
             {
                 despesaTemp.Id = 0;

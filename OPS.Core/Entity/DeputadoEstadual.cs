@@ -18,7 +18,7 @@ namespace OPS.Core.Entity
         public uint? Gabinete { get; set; }
 
         [Column("id_partido")]
-        public ushort IdPartido { get; set; }
+        public ushort? IdPartido { get; set; }
 
         [Column("id_estado")]
         public ushort IdEstado { get; set; }

@@ -94,7 +94,7 @@ namespace OPS.Importador
                     //config.BaseAddress = new Uri("https://localhost:5001/api/");
                     config.Timeout = TimeSpan.FromMinutes(5);
                     config.DefaultRequestHeaders.Clear();
-                    config.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)");
+                    config.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"); // Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)");
                 })
                 .ConfigurePrimaryHttpMessageHandler(() =>
                 {
@@ -117,6 +117,7 @@ namespace OPS.Importador
                 ));
                 //.AddLogger<HttpLogger>(wrapHandlersPipeline: true)
                 //.AddTraceContentLogging();
+
             //.AddExtendedHttpClientLogging(options =>
             //{
             //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
@@ -173,39 +174,38 @@ namespace OPS.Importador
                     //    Console.WriteLine($"{i}: {nome}");
                     //}
 
-
                     var types = new Type[]
                     {
-                        //typeof(Senado), // csv
-                        //typeof(CamaraFederal), // csv
+                        typeof(Senado), // csv
+                        typeof(CamaraFederal), // csv
 
-                        ////typeof(Acre), // Portal sem dados detalhados!
-                        ////typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                        //typeof(Acre), // Portal sem dados detalhados!
+                        //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
                         typeof(Amapa), // crawler  -- Apenas BR
-                        //typeof(Amazonas), // -- Apenas BR
-                        //typeof(Bahia), // crawler // TESTAR
-                        //typeof(Ceara), // csv mensal
-                        //typeof(DistritoFederal), // xlsx  -- Apenas BR
-                        //typeof(EspiritoSanto),  // Valores mensais por categoria -- Apenas BR
-                        //typeof(Goias), // crawler
-                        ////typeof(Maranhao), // Valores mensais por categoria
-                        ////typeof(MatoGrosso),
-                        //typeof(MatoGrossoDoSul), // crawler
-                        //typeof(MinasGerais), // xml api -- Apenas BR
-                        //typeof(Para),
-                        ////typeof(Paraiba),
-                        //typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
-                        //typeof(Pernambuco),
-                        ////typeof(Piaui),
-                        //typeof(RioDeJaneiro),
-                        ////typeof(RioGrandeDoNorte),
-                        ////typeof(RioGrandeDoSul),
-                        //typeof(Rondonia),
-                        ////typeof(Roraima),
-                        //typeof(SantaCatarina), // csv
-                        //typeof(SaoPaulo), // xml
-                        ////typeof(Sergipe),
-                        ////typeof(Tocantins),
+                        typeof(Amazonas), // -- Apenas BR
+                        typeof(Bahia), // crawler // TESTAR
+                        typeof(Ceara), // csv mensal
+                        typeof(DistritoFederal), // xlsx  -- Apenas BR
+                        typeof(EspiritoSanto),  // Valores mensais por categoria -- Apenas BR
+                        typeof(Goias), // crawler
+                        //--//typeof(Maranhao), // Valores mensais por categoria
+                        //typeof(MatoGrosso),
+                        typeof(MatoGrossoDoSul), // crawler
+                        typeof(MinasGerais), // xml api -- Apenas BR
+                        typeof(Para),
+                        typeof(Paraiba),
+                        typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
+                        typeof(Pernambuco),
+                        typeof(Piaui), // Downaload manual
+                        typeof(RioDeJaneiro),
+                        typeof(RioGrandeDoNorte),
+                        //typeof(RioGrandeDoSul),
+                        typeof(Rondonia),
+                        //typeof(Roraima),
+                        typeof(SantaCatarina), // csv
+                        typeof(SaoPaulo), // xml
+                        //typeof(Sergipe),
+                        //typeof(Tocantins),
                     };
 
                     foreach (var type in types)

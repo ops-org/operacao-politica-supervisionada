@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AngleSharp;
@@ -13,9 +12,6 @@ using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
-using OPS.Importador.Utilities;
-using RestSharp;
-using static OPS.Importador.ALE.ImportadorDespesasPernambuco;
 
 namespace OPS.Importador.ALE;
 
@@ -118,7 +114,12 @@ public class ImportadorDespesasRioDeJaneiro : ImportadorDespesasRestApiAnual
         }
     }
 
-    public virtual int ContarRegistrosBaseDeDados(int ano)
+    public override string SqlCarregarHashes(int ano)
+    {
+        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano + 4}12";
+    }
+
+    public override int ContarRegistrosBaseDeDados(int ano)
     {
         return connection.ExecuteScalar<int>(@$"
 select count(1) 

@@ -929,7 +929,7 @@ namespace OPS.Importador
 
             // https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps
             // Arquivos disponiveis anualmente a partir de 2008
-            var _urlOrigem = $"https://www.senado.gov.br/transparencia/LAI/verba/despesa_ceaps_{ano}.csv";
+            var _urlOrigem = $"https://www.senado.leg.br/transparencia/LAI/verba/despesa_ceaps_{ano}.csv";
             var _caminhoArquivo = $"{tempPath}/SF-{ano}.csv";
 
             arquivos.Add(_urlOrigem, _caminhoArquivo);
@@ -1106,12 +1106,6 @@ namespace OPS.Importador
                     }
                 }
 
-                if (linhasInserida > 0)
-                {
-                    logger.LogInformation("Processando lote {Lote}", ++lote);
-                    ProcessarDespesasTemp(banco, ano);
-                }
-
                 if (dc.Values.Any())
                 {
                     foreach (var id in dc.Values)
@@ -1121,6 +1115,12 @@ namespace OPS.Importador
                     }
 
                     logger.LogInformation("Removendo {Total} despesas", dc.Values.Count);
+                }
+
+                if (linhasInserida > 0)
+                {
+                    logger.LogInformation("Processando lote {Lote}", ++lote);
+                    ProcessarDespesasTemp(banco, ano);
                 }
 
                 ValidaImportacao(banco, ano);

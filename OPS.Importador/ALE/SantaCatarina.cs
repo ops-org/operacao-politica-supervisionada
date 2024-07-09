@@ -53,7 +53,7 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
 
         // https://transparencia.alesc.sc.gov.br/gabinetes_dados_abertos.php
         // Arquivos disponiveis anualmente a partir de 2011
-        var _urlOrigem = $"http://transparencia.alesc.sc.gov.br/gabinetes_csv.php?ano={ano}";
+        var _urlOrigem = $"https://transparencia.alesc.sc.gov.br/gabinetes_csv.php?ano={ano}";
         var _caminhoArquivo = $"{tempPath}/CLSC-{ano}.csv";
 
         arquivos.Add(_urlOrigem, _caminhoArquivo);

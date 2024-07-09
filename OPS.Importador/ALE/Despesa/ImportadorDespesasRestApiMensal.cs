@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.Net.Http;
 using AngleSharp;
-using AngleSharp.Io;
 using AngleSharp.Io.Network;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace OPS.Importador.ALE.Despesa

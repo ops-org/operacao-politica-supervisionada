@@ -43,10 +43,11 @@ namespace OPS.Importador.ALE.Parlamentar
             else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
             else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN") partido = "REPUBLICANOS";
             else if (partido == "PR") partido = "PL"; // Partido da República
-            else if (partido == "Podemos") partido = "PODE";
+            else if (partido == "Podemos" || partido == "POD") partido = "PODE";
             else if (partido == "UNIÃO BRASIL (UNIÃO)" || partido == "UB") partido = "UNIÃO";
+            else if (partido == "CIDA") partido = "CIDADANIA";
             else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";
-            else if (partido.Contains("PROGRESSISTA")) partido = "PP"; // Progressistas
+            else if (partido.Contains("PROGRESSISTA") || partido == "Partido Progressista") partido = "PP"; // Progressistas
             else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
             else if (partido.Contains("PARTIDO VERDE")) partido = "PV";
 
@@ -78,6 +79,26 @@ namespace OPS.Importador.ALE.Parlamentar
             {
                 IdEstado = (ushort)config.Estado,
                 NomeParlamentar = nomeParlamentar
+            };
+        }
+
+        protected DeputadoEstadual GetDeputadoByFullNameOrNew(string nome)
+        {
+            var deputado = connection
+                .GetList<DeputadoEstadual>(new
+                {
+                    id_estado = config.Estado,
+                    nome_civil = nome
+                })
+                .FirstOrDefault();
+
+            if (Debugger.IsAttached && deputado == null)
+                Trace.WriteLine($"Deputado {nome} não localizado.");
+
+            return deputado ?? new DeputadoEstadual()
+            {
+                IdEstado = (ushort)config.Estado,
+                NomeCivil = nome
             };
         }
 
