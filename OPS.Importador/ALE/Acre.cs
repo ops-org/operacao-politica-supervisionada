@@ -28,6 +28,9 @@ public class Acre : ImportadorBase
     }
 }
 
+/// <summary>
+/// http://app.al.ac.leg.br/financa/verba-indenizatoria
+/// </summary>
 public class ImportadorDespesasAcre : ImportadorDespesasRestApiAnual
 {
     public ImportadorDespesasAcre(IServiceProvider serviceProvider) : base(serviceProvider)

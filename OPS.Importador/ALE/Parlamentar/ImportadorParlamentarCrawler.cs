@@ -42,14 +42,17 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
             DeputadoEstadual deputado = ColetarDadosLista(parlamentar);
             if (deputado == null) continue;
 
-            ArgumentException.ThrowIfNullOrEmpty(deputado.UrlPerfil, nameof(deputado.UrlPerfil));
-            var subDocument = await context.OpenAsync(deputado.UrlPerfil);
-            if (document.StatusCode != HttpStatusCode.OK)
+            if (config.ColetaDadosDoPerfil)
             {
-                logger.LogError("Erro ao consultar deputado: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
-                continue;
-            };
-            ColetarDadosPerfil(deputado, subDocument);
+                ArgumentException.ThrowIfNullOrEmpty(deputado.UrlPerfil, nameof(deputado.UrlPerfil));
+                var subDocument = await context.OpenAsync(deputado.UrlPerfil);
+                if (document.StatusCode != HttpStatusCode.OK)
+                {
+                    logger.LogError("Erro ao consultar deputado: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
+                    continue;
+                };
+                ColetarDadosPerfil(deputado, subDocument);
+            }
 
             InsertOrUpdate(deputado);
         }
@@ -61,9 +64,10 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
 
     public abstract void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument);
 
-
     public class ImportadorParlamentarCrawlerConfig : ImportadorParlamentarConfig
     {
         public string SeletorListaParlamentares { get; set; }
+
+        public bool ColetaDadosDoPerfil { get; set; } = true;
     }
 }

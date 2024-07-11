@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp;
+using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
+using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
+using OPS.Importador.Utilities;
 
 namespace OPS.Importador.ALE;
 
@@ -18,26 +24,119 @@ public class RioGrandeDoSul : ImportadorBase
 {
     public RioGrandeDoSul(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarRioGrandeDoSul(serviceProvider);
-        //importadorDespesas = new ImportadorDespesasRioGrandeDoSul(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarRioGrandeDoSul(serviceProvider);
+        importadorDespesas = new ImportadorDespesasRioGrandeDoSul(serviceProvider);
     }
 }
 
-public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiAnual
+public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiMensal
 {
+    private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+
     public ImportadorDespesasRioGrandeDoSul(IServiceProvider serviceProvider) : base(serviceProvider)
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "",
+            BaseAddress = "https://www2.al.rs.gov.br/transparenciaalrs/GabinetesParlamentares/Centrodecustos/tabid/5666/Default.aspx",
             Estado = Estado.RioGrandeDoSul,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.Nome
         };
     }
 
-    public override void ImportarDespesas(IBrowsingContext context, int ano)
+    public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
-        throw new NotImplementedException();
+        var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
+        IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
+
+        var dcForm = new Dictionary<string, string>();
+        try
+        {
+            if (ano.ToString() != document.QuerySelector<IHtmlSelectElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlAno").Value)
+            {
+                dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlAno", ano.ToString());
+                dcForm.Add("__EVENTTARGET", "dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlAno");
+                document = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
+                form = document.QuerySelector<IHtmlFormElement>("form");
+            }
+
+            if (mes.ToString() != document.QuerySelector<IHtmlSelectElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlMes").Value)
+            {
+                dcForm = new Dictionary<string, string>();
+                dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlMes", mes.ToString());
+                dcForm.Add("__EVENTTARGET", "dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlMes");
+                document = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
+                form = document.QuerySelector<IHtmlFormElement>("form");
+            }
+        }
+        catch (Exception)
+        {
+            logger.LogError(document.QuerySelector("#dnn_ctr9625_ctl00_lblMessage").TextContent);
+            return;
+        }
+
+        // Temos de remover o elemento para recria-lo como input e poder ser submetido.
+        document.QuerySelector<IHtmlInputElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_btnPesquisar")?.Remove();
+
+        var deputados = (document.QuerySelector("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlGabinete") as IHtmlSelectElement);
+        foreach (var deputado in deputados.Options)
+        {
+            while (true)
+            {
+                try
+                {
+                    ConsultarDespesasDeputado(deputado, form, ano, mes);
+
+                    break;
+                }
+                catch (Exception)
+                {
+                    Thread.Sleep(TimeSpan.FromMinutes(1));
+                }
+            }
+        }
+    }
+
+    private void ConsultarDespesasDeputado(IHtmlOptionElement deputado, IHtmlFormElement form, int ano, int mes)
+    {
+        if (deputado.Value == "0") return;
+        
+        var dcForm = new Dictionary<string, string>();
+        dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlGabinete", deputado.Value);
+        dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$btnPesquisar", "Pesquisar");
+        var subDocument = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
+
+        var nomeParlamentar = deputado.Text.Replace("Gabinete Dep.", "").Replace("55", "").Trim();
+        var elError = subDocument.QuerySelector("#dnn_ctl01_lblMessage");
+        if (elError != null)
+        {
+            logger.LogError($"Deputado {nomeParlamentar}; {elError.TextContent}");
+            throw new BusinessException($"Deputado {nomeParlamentar}; {elError.TextContent}");
+        }
+
+        var periodoPesquisa = subDocument.QuerySelector("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_lblResponsavelReferencia").TextContent;
+        var valorDespesasMes = subDocument.QuerySelector(".lbldespesa").TextContent.Replace("-R$ ", "");
+        logger.LogInformation($"Deputado {nomeParlamentar}; Periodo: {periodoPesquisa}; Despesas: {valorDespesasMes};");
+
+        var despesas = subDocument.QuerySelectorAll<IHtmlTableRowElement>(".grdvwgastosinterno tr");
+        foreach (var item in despesas)
+        {
+            if (item.Cells[1].TextContent == "Valor") continue;
+
+            var despesaTemp = new CamaraEstadualDespesaTemp()
+            {
+                Nome = nomeParlamentar,
+                Cpf = deputado.Value,
+                Ano = (short)ano,
+                Mes = (short)mes,
+                TipoDespesa = item.Cells[0].TextContent,
+                Valor = Math.Abs(Convert.ToDecimal(item.Cells[1].TextContent.Replace("R$ ", ""), cultureInfo)),
+                DataEmissao = new DateTime(ano, mes, 1)
+            };
+
+            if (despesaTemp.Valor == 0) continue;
+
+            InserirDespesaTemp(despesaTemp);
+        }
     }
 }
 

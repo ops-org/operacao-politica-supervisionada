@@ -52,6 +52,8 @@ namespace OPS.Importador.Utilities
                     deputado.Twitter = href;
                 else if (href.Contains("youtube.com/"))
                     deputado.YouTube = href;
+                else if (href.Contains("tiktok.com/"))
+                    deputado.Tiktok = href;
                 else if (href.Contains("@"))
                     deputado.Email = href.Replace("mailto:", "");
                 else
@@ -59,18 +61,16 @@ namespace OPS.Importador.Utilities
             }
         }
 
-
         public static IEnumerable<string> ReadPdfFile(string fileName)
         {
             if (File.Exists(fileName))
             {
                 PdfReader pdfReader = new PdfReader(fileName);
+                ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
+
                 for (int page = 1; page <= pdfReader.NumberOfPages; page++)
                 {
-                    ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
-
-                    string currentPageText = PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
-                    yield return currentPageText;
+                    yield return PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
                 }
                 pdfReader.Close();
             }

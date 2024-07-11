@@ -102,7 +102,7 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
 
         var paginasPdf = ImportacaoUtils.ReadPdfFile(filename).ToArray();
         decimal valorTotal = 0;
-        if (paginasPdf.Count() > 2) Console.WriteLine("teste");
+        //if (paginasPdf.Count() > 2) Console.WriteLine("teste");
 
         try
         {

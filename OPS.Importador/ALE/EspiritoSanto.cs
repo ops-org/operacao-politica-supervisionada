@@ -126,7 +126,9 @@ public class ImportadorParlamentarEspiritoSanto : ImportadorParlamentarCrawler
 
     public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
     {
-        var dados = subDocument.QuerySelectorAll(".fonte-dados-deputado>div").Select(x => new { Key = x.QuerySelector("label").TextContent.Trim(), Value = x.QuerySelector("span").TextContent.Trim() });
+        var dados = subDocument
+            .QuerySelectorAll(".fonte-dados-deputado>div")
+            .Select(x => new { Key = x.QuerySelector("label").TextContent.Trim(), Value = x.QuerySelector("span").TextContent.Trim() });
 
         deputado.IdPartido = BuscarIdPartido(dados.First(x => x.Key == "Partido:").Value);
 

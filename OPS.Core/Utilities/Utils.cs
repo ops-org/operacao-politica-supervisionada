@@ -165,6 +165,11 @@ namespace OPS.Core
             return Regex.Replace(str ?? "", @"[^\d]", "");
         }
 
+        public static string RemoveCaracteresNumericos(string str)
+        {
+            return Regex.Replace(str ?? "", @"[\d]", "");
+        }
+
         public static string MySqlEscapeNumberToIn(string str)
         {
             return Regex.Replace(str, @"[^\d,]", "");
@@ -303,6 +308,11 @@ namespace OPS.Core
         public static String ReduceWhitespace(this string text)
         {
             return Regex.Replace(text, @"\s+", " ");
+        }
+
+        public static string RemoveSpaces(this string value)
+        {
+            return Regex.Replace(value, @"\s+", " ");
         }
 
         //public static string GetIPAddress()

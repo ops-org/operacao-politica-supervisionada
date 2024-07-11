@@ -42,7 +42,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
 
     /// <summary>
     /// Arquivos disponiveis anualmente a partir de 2021
-    /// https://transparencia.al.ce.gov.br/index.php/despesas/verba-de-desempenho-parlamentar
+    /// https://transparencia.al.ce.gov.br/index.php/despesas/despesas-alece/verba-de-desempenho-parlamentar
     /// </summary>
     /// <param name="ano"></param>
     /// <returns></returns>

@@ -399,10 +399,11 @@ WHERE d.hash NOT IN (
         {
             logger.LogTrace("Validar importação");
 
-            int totalFinal = ContarRegistrosBaseDeDados(ano);
+            int totalFinal = ContarRegistrosBaseDeDadosFinal(ano);
+            int totalTemp = ContarRegistrosBaseDeDadosTemp(ano);
 
             if (linhasProcessadasAno != totalFinal)
-                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}", linhasProcessadasAno, totalFinal);
+                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} Temp: {totalTemp} DB: {LinhasDB}", linhasProcessadasAno, totalFinal);
             else
             {
                 logger.LogInformation("Itens na base de dados: {LinhasDB}", totalFinal);
@@ -428,7 +429,7 @@ WHERE p.id IS null");
             }
         }
 
-        public virtual int ContarRegistrosBaseDeDados(int ano)
+        public virtual int ContarRegistrosBaseDeDadosFinal(int ano)
         {
             return connection.ExecuteScalar<int>(@$"
 select count(1) 
@@ -436,6 +437,12 @@ from cl_despesa d
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
 and d.ano_mes between {ano}01 and {ano}12");
+        }
+
+        public virtual int ContarRegistrosBaseDeDadosTemp(int ano)
+        {
+            return connection.ExecuteScalar<int>(@$"
+select count(1) from ops_tmp.cl_despesa_temp");
         }
 
         public virtual void LimpaDespesaTemporaria()

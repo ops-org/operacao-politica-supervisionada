@@ -94,7 +94,7 @@ namespace OPS.Importador
                     //config.BaseAddress = new Uri("https://localhost:5001/api/");
                     config.Timeout = TimeSpan.FromMinutes(5);
                     config.DefaultRequestHeaders.Clear();
-                    config.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"); // Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)");
+                    config.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)");
                 })
                 .ConfigurePrimaryHttpMessageHandler(() =>
                 {
@@ -199,13 +199,13 @@ namespace OPS.Importador
                         typeof(Piaui), // Downaload manual
                         typeof(RioDeJaneiro),
                         typeof(RioGrandeDoNorte),
-                        //typeof(RioGrandeDoSul),
+                        typeof(RioGrandeDoSul),
                         typeof(Rondonia),
                         //typeof(Roraima),
                         typeof(SantaCatarina), // csv
                         typeof(SaoPaulo), // xml
-                        //typeof(Sergipe),
-                        //typeof(Tocantins),
+                        typeof(Sergipe),
+                        typeof(Tocantins),
                     };
 
                     foreach (var type in types)

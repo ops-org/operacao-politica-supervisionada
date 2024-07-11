@@ -72,6 +72,10 @@ namespace OPS.Core.Entity
         [Column("youtube")]
         public string YouTube { get; set; }
 
+        [NotMapped]
+        [Column("tiktok")]
+        public string Tiktok { get; set; }
+
         [Column("perfil")]
         public string UrlPerfil { get; set; }
 

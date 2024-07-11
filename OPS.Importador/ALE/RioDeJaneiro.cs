@@ -119,7 +119,7 @@ public class ImportadorDespesasRioDeJaneiro : ImportadorDespesasRestApiAnual
         return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano + 4}12";
     }
 
-    public override int ContarRegistrosBaseDeDados(int ano)
+    public override int ContarRegistrosBaseDeDadosFinal(int ano)
     {
         return connection.ExecuteScalar<int>(@$"
 select count(1) 
