@@ -36,7 +36,7 @@ public class ImportadorDespesasAmazonas : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://www.aleam.gov.br/transparencia/controle-de-cota-parlamentar/",
             Estado = Estado.Amazonas,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

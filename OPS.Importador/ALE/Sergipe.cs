@@ -40,7 +40,7 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://al.se.leg.br/portal-da-transparencia/despesas/ressarcimento-dos-deputados/",
             Estado = Estado.Sergipe,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -181,6 +181,11 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
                 logger.LogError("Valor total não validado!");
         }
     }
+
+    public override string SqlCarregarHashes(int ano)
+    {
+        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano-1}12 and {ano}11";
+    }
 }
 
 public class ImportadorParlamentarSergipe : ImportadorParlamentarCrawler
@@ -190,7 +195,7 @@ public class ImportadorParlamentarSergipe : ImportadorParlamentarCrawler
     {
         Configure(new ImportadorParlamentarCrawlerConfig()
         {
-            BaseAddress = "https://aleselegis.al.se.leg.br/spl/parlamentares.aspx",
+            BaseAddress = "https://aleselegis.al.se.leg.br/spl/parlamentares.aspx", //?leg=19
             SeletorListaParlamentares = "#ContentPlaceHolder1_parlamentares_lista .custom-user-profile",
             Estado = Estado.Sergipe,
         });

@@ -39,7 +39,7 @@ public class ImportadorDespesasPara : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://alepa.pa.gov.br/Transparencia/",
             Estado = Estado.Para,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -69,23 +69,26 @@ public class ImportadorDespesasPara : ImportadorDespesasRestApiAnual
         {
             var values = JsonSerializer.Deserialize<int[]>(jsonData.Key);
 
-            var despesaTemp = new CamaraEstadualDespesaTemp()
-            {
-                Nome = storageDto.EncodeMaps.DataItem0[values[1]],
-                TipoDespesa = storageDto.EncodeMaps.DataItem5[values[2]],
-                Observacao = storageDto.EncodeMaps.DataItem2[values[3]],
-                DataEmissao = Convert.ToDateTime(storageDto.EncodeMaps.DataItem1[values[0]])
-            };
-
-            despesaTemp.Ano = (short)despesaTemp.DataEmissao.Year;
-            despesaTemp.Mes = (short?)despesaTemp.DataEmissao.Month;
+            var nome = storageDto.EncodeMaps.DataItem0[values[1]];
+            var tipoDespesa = storageDto.EncodeMaps.DataItem5[values[2]];
+            var observacao = storageDto.EncodeMaps.DataItem2[values[3]];
+            var dataEmissao = Convert.ToDateTime(storageDto.EncodeMaps.DataItem1[values[0]], cultureInfo);
 
             // TODO: Para Verba Indenizatória o gasto pode ter sido do mês anterior, conforme consta na descrição. Mas desconsideramos pois nem todos os itens trazem descrição completa.
             foreach (var item in jsonData.Value)
             {
-                despesaTemp.Id = 0;
-                despesaTemp.Valor = item.Value;
-                if (despesaTemp.Valor == 0) continue;
+                if (item.Value == 0) continue;
+
+                var despesaTemp = new CamaraEstadualDespesaTemp()
+                {
+                    Nome = nome,
+                    TipoDespesa = tipoDespesa,
+                    Observacao = observacao,
+                    DataEmissao = dataEmissao,
+                    Ano = (short)dataEmissao.Year,
+                    Mes = (short?)dataEmissao.Month,
+                    Valor = item.Value
+                };
 
                 InserirDespesaTemp(despesaTemp);
             }

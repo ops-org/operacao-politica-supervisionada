@@ -36,7 +36,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
         {
             BaseAddress = "https://transparencia.al.ce.gov.br/",
             Estado = Estado.Ceara,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

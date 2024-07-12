@@ -6,6 +6,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -55,14 +56,14 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             var subDocument = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
 
             var linkPlanilha = (subDocument.QuerySelector("#content ul.lista-v a") as IHtmlAnchorElement).Href;
-            var caminhoArquivo = $"{tempPath}/CLPB-{ano}-{mes}.ods";
+            var caminhoArquivo = $"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.ods";
             if (TentarBaixarArquivo(linkPlanilha, caminhoArquivo))
             {
                 try
                 {
                     ImportarDespesas(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
 
                     //logger.LogError(ex, ex.Message);
@@ -92,10 +93,25 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
         //impostiamo il nome del foglio/tabella da leggere
         var sheetName = "Plan1";
 
-        var linha = 8;
+        decimal valorTotalDeputado = 0;
+        var linha = 7;
         while (true)
         {
-            if (OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()).StartsWith("Total de Despesas)")) break;
+            linha++;
+            if (linha > 1000) //string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Competencia.GetHashCode())))
+            {
+                logger.LogError($"Valor Não validado: {valorTotalDeputado}; Referencia: {mes}/{ano}; Deputado: {nomeParlamentar}");
+                return;
+            }
+            if (OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()).StartsWith("Total de Despesas"))
+            {
+                var valorTotalArquivo = Convert.ToDecimal(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Valor.GetHashCode()), cultureInfo);
+                if (valorTotalDeputado != valorTotalArquivo)
+                    logger.LogError($"Valor Divergente! Esperado: {valorTotalArquivo}; Encontrado: {valorTotalDeputado}; Referencia: {mes}/{ano}; Deputado: {nomeParlamentar}");
+
+                return;
+            }
+            if (string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Item.GetHashCode()))) continue;
 
             var despesaTemp = new CamaraEstadualDespesaTemp()
             {
@@ -110,17 +126,24 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
                 Documento = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()),
                 Observacao = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Documento.GetHashCode()),
                 Valor = Convert.ToDecimal(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Valor.GetHashCode()), cultureInfo),
-                DataEmissao = Convert.ToDateTime(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Data.GetHashCode()), cultureInfo)
+
             };
 
+            if (!string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Data.GetHashCode())))
+                despesaTemp.DataEmissao = Convert.ToDateTime(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Data.GetHashCode()), cultureInfo);
+            else
+                despesaTemp.DataEmissao = new DateTime(ano, mes, 1);
+
             InserirDespesaTemp(despesaTemp);
-            linha++;
+            valorTotalDeputado += despesaTemp.Valor;
         }
+
+
     }
 
     public override void AjustarDados()
     {
-
+        // Atualizar numero do gabinete no perfil do deputado
         connection.Execute(@"
 UPDATE ops_tmp.cl_despesa_temp dt
 JOIN cl_deputado d ON d.nome_parlamentar = dt.nome AND d.id_estado = 25
@@ -130,34 +153,35 @@ WHERE d.gabinete IS null;
 UPDATE ops_tmp.cl_despesa_temp dt
 JOIN cl_deputado d ON d.nome_civil = dt.nome AND d.id_estado = 25
 SET d.gabinete = dt.cpf
-WHERE d.gabinete IS NULL;
+WHERE d.gabinete IS NULL;");
+
+        // Desanonimizar os CNPJs/CPFs dentro do possivel
+        connection.Execute(@"
+INSERT IGNORE INTO ops_tmp.fornecedor_correcao (cnpj_cpf, nome)
+SELECT distinct cnpj_cpf, empresa 
+FROM ops_tmp.cl_despesa_temp;
+
+UPDATE ops_tmp.fornecedor_correcao d
+JOIN fornecedor_info f ON f.nome = d.nome AND f.cnpj LIKE CONCAT('___', d.cnpj_cpf, '___')
+SET d.cnpj_cpf_correto = f.cnpj
+WHERE LENGTH(d.cnpj_cpf) = 8
+AND f.tipo = 'MATRIZ'
+AND d.cnpj_cpf_correto IS NULL;
 
 UPDATE ops_tmp.cl_despesa_temp d
-JOIN fornecedor f ON f.nome = d.empresa AND f.cnpj_cpf LIKE CONCAT('%', d.cnpj_cpf, '%')
-SET d.cnpj_cpf = f.cnpj_cpf
-WHERE LENGTH(d.cnpj_cpf) = 8;
+JOIN ops_tmp.fornecedor_correcao c ON c.nome = d.empresa AND c.cnpj_cpf = d.cnpj_cpf
+SET d.cnpj_cpf = c.cnpj_cpf_correto
+WHERE c.cnpj_cpf_correto IS NOT null;
 
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '10541486000129' WHERE d.cnpj_cpf =  '41486000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '22608457000116' WHERE d.cnpj_cpf =  '08457000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '30408699000194' WHERE d.cnpj_cpf =  '08699000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '08697211000137' WHERE d.cnpj_cpf =  '97211000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '05854086000133' WHERE d.cnpj_cpf =  '54086000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '11372084001778' WHERE d.cnpj_cpf =  '72084001';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '34368160000100' WHERE d.cnpj_cpf =  '68160000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '01300648000146' WHERE d.cnpj_cpf =  '00648000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '70098470000115' WHERE d.cnpj_cpf =  '98470000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '09352634000188' WHERE d.cnpj_cpf =  '52634000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '03882108000143' WHERE d.cnpj_cpf =  '82108000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '11521613000190' WHERE d.cnpj_cpf =  '21613000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '06916962000252' WHERE d.cnpj_cpf =  '16962000';
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = '***221264**' WHERE d.cnpj_cpf =  '22126';
+UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***') WHERE LENGTH(d.cnpj_cpf) = 5;
+UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***') WHERE LENGTH(d.cnpj_cpf) = 8;
                 ");
 
 
-        var cnpjInvalidos = connection.ExecuteScalar<int>(@"select count(1) from ops_tmp.cl_despesa_temp where LENGTH(cnpj_cpf) < 10");
-        if(cnpjInvalidos > 0)
+        var cnpjInvalidos = connection.ExecuteScalar<int>(@"select count(1) from ops_tmp.cl_despesa_temp where LENGTH(cnpj_cpf) != 11 && LENGTH(cnpj_cpf) != 14");
+        if (cnpjInvalidos > 0)
         {
-            throw new BusinessException("Há CPNJs/CPFs invalidos que devem ser corrigidos manualmente!");
+            throw new BusinessException("Há CPNJs/CPFs invalidos que devem ser corrigidos manualmente! #2");
             // SELECT DISTINCT d.empresa, d.cnpj_cpf FROM ops_tmp.cl_despesa_temp d WHERE LENGTH(d.cnpj_cpf) < 10
         }
     }

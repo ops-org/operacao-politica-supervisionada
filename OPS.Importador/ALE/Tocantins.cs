@@ -39,7 +39,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://www.al.to.leg.br/transparencia/verbaIndenizatoria",
             Estado = Estado.Tocantins,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

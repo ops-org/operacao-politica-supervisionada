@@ -7,6 +7,7 @@
         CpfParcial,
         Matricula,
         Gabinete,
-        Nome,
+        NomeParlamentar,
+        NomeCivil
     }
 }

@@ -56,7 +56,10 @@ public class ImportadorDespesasRioDeJaneiro : ImportadorDespesasRestApiAnual
     {
         // TODO: Criar importação por legislatura
         if (ano != 2023)
-            throw new BusinessException("Importação já realizada");
+        {
+            logger.LogWarning($"Importação já realizada para o ano de {ano}");
+            return;
+        }
 
         int legislatura = 2; // 2023-2027
 

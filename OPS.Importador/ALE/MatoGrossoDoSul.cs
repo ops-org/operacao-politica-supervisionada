@@ -40,7 +40,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "http://consulta.transparencia.al.ms.gov.br/ceap/",
             Estado = Estado.MatoGrossoDoSul,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

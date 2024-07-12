@@ -268,6 +268,19 @@ where cpf not in (
     AND gabinete IS NOT NULL
 );");
             }
+            else if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
+            {
+                affected = connection.Execute(@$"
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
+select distinct Nome, Nome, cpf, {idEstado}
+from ops_tmp.cl_despesa_temp
+where nome not in (
+    select IFNULL(nome_importacao, nome_civil)
+    FROM cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND nome_civil IS NOT null
+);");
+            }
             else // Nome
             {
                 affected = connection.Execute(@$"
@@ -415,6 +428,8 @@ WHERE d.hash NOT IN (
                     condicaoSql = "p.cpf_parcial = d.cpf";
                 else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
                     condicaoSql = "p.matricula = d.cpf";
+                else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
+                    condicaoSql = "p.gabinete = d.cpf";
                 else // ChaveDespesaTemp.Nome
                     condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
 

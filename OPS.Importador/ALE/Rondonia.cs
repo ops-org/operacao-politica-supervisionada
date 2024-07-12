@@ -1,9 +1,14 @@
-﻿using AngleSharp;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -11,12 +16,6 @@ using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
 using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 namespace OPS.Importador.ALE;
 
 public class Rondonia : ImportadorBase
@@ -80,7 +79,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                     deputado.Gabinete = Convert.ToUInt32(gabinete.Value);
                     connection.Update(deputado);
                 }
-                else if(gabinete.Value != "54") // STI DA SILVA - DEPUTADO TESTE STI
+                else if (gabinete.Value != "54") // STI DA SILVA - DEPUTADO TESTE STI
                 {
                     logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
                 }
@@ -95,14 +94,6 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
 
             foreach (var despesaGrupo in grupoDespesasRO)
             {
-                var despesaTemp = new CamaraEstadualDespesaTemp()
-                {
-                    Nome = gabinete.Text.ToTitleCase(),
-                    Cpf = gabinete.Value,
-                    Ano = (short)ano,
-                    Mes = (short)mes,
-                };
-
                 address = $"{config.BaseAddress}getConsultaPublica/detalhes/?lote={despesaGrupo.Id}&verba={despesaGrupo.VerbaId}&categoria_verba=1";
                 request = new RestRequest(address);
                 request.AddHeader("Accept", "application/json");
@@ -111,13 +102,20 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                 var despesasRO = JsonSerializer.Deserialize<List<DespesaRO>>(resDespesas.Content, options);
                 foreach (var despesa in despesasRO)
                 {
-                    despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(despesa.FornecedorCnpjCpf);
-                    despesaTemp.Empresa = despesa.FornecedorRazaoSocial;
-                    despesaTemp.Documento = despesa.NumeroDocumentoFiscal;
-                    despesaTemp.Observacao =  "Data de Pgto: " + despesa.DataPagamento; // despesa.ArquivoDocFiscal
-                    despesaTemp.Valor = Convert.ToDecimal(despesa.ValorPago, cultureInfo);
-                    despesaTemp.DataEmissao = Convert.ToDateTime(despesa.DataDocumentoFiscal);
-                    despesaTemp.TipoDespesa = despesa.NaturezaDespesaNome;
+                    var despesaTemp = new CamaraEstadualDespesaTemp()
+                    {
+                        Nome = gabinete.Text.ToTitleCase(),
+                        Cpf = gabinete.Value,
+                        Ano = (short)ano,
+                        Mes = (short)mes,
+                        CnpjCpf = Utils.RemoveCaracteresNaoNumericos(despesa.FornecedorCnpjCpf),
+                        Empresa = despesa.FornecedorRazaoSocial,
+                        Documento = despesa.NumeroDocumentoFiscal,
+                        Observacao = "Data de Pgto: " + despesa.DataPagamento, // despesa.ArquivoDocFiscal
+                        Valor = Convert.ToDecimal(despesa.ValorPago, cultureInfo),
+                        DataEmissao = Convert.ToDateTime(despesa.DataDocumentoFiscal),
+                        TipoDespesa = despesa.NaturezaDespesaNome
+                    };
 
                     InserirDespesaTemp(despesaTemp);
                 }
@@ -436,6 +434,8 @@ public class ImportadorParlamentarRondonia : ImportadorParlamentarCrawler
         var detalhes = subDocument.QuerySelectorAll(".col-span-4 p.text-gray-600");
         deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
         deputado.IdPartido = BuscarIdPartido(detalhes[1].TextContent.Trim());
-        deputado.Email = detalhes[2].TextContent.Trim();
+
+        if (detalhes.Length > 2)
+            deputado.Email = detalhes[2].TextContent.Trim();
     }
 }

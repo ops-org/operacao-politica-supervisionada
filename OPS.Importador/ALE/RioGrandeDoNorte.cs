@@ -73,9 +73,10 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                 }
                 catch
                 {
-                    logger.LogWarning($"Pesquisa para {mesExtenso} não disponivel!");
+                    logger.LogWarning($"Pesquisa para {gabinete.Text} no mês {mesExtenso} não disponivel!");
+                    continue;
                 }
-                
+
                 dcForm.Add("deputado_id", gabinete.Value);
                 IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.form-default");
                 var subDocument = form.SubmitAsync(dcForm).GetAwaiter().GetResult();
@@ -113,8 +114,12 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
             Console.WriteLine(paginasPdf[1].Split('\n')[0]);
         }
 
+        var totalValidado = true;
+        var paginaInicial = 0;
+        if (paginasPdf.Length > 1 && paginasPdf.Last().StartsWith("GOVERNO DO ESTADO DO RIO GRANDE DO NORTE")) // Nesse caso a pagina 2 já inclui o conteúdo pra 1.
+            paginaInicial = paginasPdf.Length - 1;
 
-        for (int p = 0; p < paginasPdf.Count(); p++)
+        for (int p = paginaInicial; p < paginasPdf.Count(); p++)
         {
             var textoPdf = paginasPdf[p];
             string[] lines = textoPdf.Split('\n');
@@ -126,10 +131,17 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                 {
 
                     var line = lines[l];
-                    linhaCompleta += " " + line.Trim();
+                    if (line.StartsWith("DATA DA DESPESA"))
+                    {
+                        linhaCompleta = "";
+                        continue;
+                    }
+
+                    linhaCompleta += " " + line;
                     if (!line.Contains("R$")) continue;
                     if (line.StartsWith("Total:"))
                     {
+                        totalValidado = true;
                         if (valorTotal != Convert.ToDecimal(line.Split("R$")[1].Trim(), cultureInfo))
                             throw new BusinessException("Verificar Valor Total Divergente!");
 
@@ -147,6 +159,7 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                         linhaCompleta = "18/10/2023 FATURA 08.324.196/0001-81 - NEOENERGIA R$ 78,06";
                     else if (linhaCompleta == "27/11/2023 RECIBO - ASSOCIAÇÃO COMUNITÁRIA DE COMUNICAÇÃO E CULTURA DE SÃO JOSÉ DE MIPIBU/RN R$ 2.700,00")
                         linhaCompleta = "27/11/2023 RECIBO 02.895.731/0001-78 - ASSOCIAÇÃO COMUNITÁRIA DE COMUNICAÇÃO E CULTURA DE SÃO JOSÉ DE MIPIBU/RN R$ 2.700,00";
+                    //31/07/2009 - Telemar, Embratel, oi. R$ 2.570,95
 
                     var despesaTemp = new CamaraEstadualDespesaTemp()
                     {
@@ -164,6 +177,20 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                     Match match = Regex.Matches(linhaCompleta, pattern)[0];
                     despesaTemp.DataEmissao = Convert.ToDateTime(match.Groups[1].Value, cultureInfo);
                     despesaTemp.Documento = match.Groups[2].Value.Trim();
+
+                    if (despesaTemp.Documento.Length > 100 || ano != despesaTemp.DataEmissao.Year || mes != despesaTemp.DataEmissao.Month)
+                    {
+                        if (match.Groups[1].Value == "31/05/2013")
+                            despesaTemp.DataEmissao = new DateTime(ano, mes, 31);
+                        else if (match.Groups[1].Value == "27/02/2028")
+                            despesaTemp.DataEmissao = new DateTime(ano, mes, 27);
+                        else if (match.Groups[1].Value == "11/05/2023")
+                            despesaTemp.DataEmissao = new DateTime(ano, mes, 11);
+                        else
+                        {
+                            var a = 1;
+                        }
+                    }
 
                     despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(match.Groups[3].Value);
                     despesaTemp.Empresa = match.Groups[4].Value;
@@ -190,6 +217,9 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                 }
             }
         }
+
+        if (!totalValidado)
+            logger.LogError("Valor total não validado!");
     }
 }
 

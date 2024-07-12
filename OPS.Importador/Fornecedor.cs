@@ -54,7 +54,7 @@ namespace OPS.Importador
         //    }
         //}
 
-        public async Task ConsultarReceitaWS()
+        public async Task ConsultarDadosCNPJ()
         {
             var telegramApiToken = configuration["AppSettings:TelegramApiToken"];
             var receitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
@@ -94,6 +94,7 @@ namespace OPS.Importador
                     and (controle is null or controle NOT IN (0, 1, 2, 3))
                     -- AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
                     AND fi.id_fornecedor IS null
+                    AND f.cnpj_cpf NOT LIKE '%*%' -- Dados anonimizados
                     order by fi.id_fornecedor asc
                     -- LIMIT 1000");
 

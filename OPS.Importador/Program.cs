@@ -115,8 +115,8 @@ namespace OPS.Importador
                             .LogWarning("Delaying for {delay}ms, then making retry {retry}.", timespan.TotalMilliseconds, retryAttempt);
                     }
                 ));
-                //.AddLogger<HttpLogger>(wrapHandlersPipeline: true)
-                //.AddTraceContentLogging();
+            //.AddLogger<HttpLogger>(wrapHandlersPipeline: true)
+            //.AddTraceContentLogging();
 
             //.AddExtendedHttpClientLogging(options =>
             //{
@@ -179,33 +179,33 @@ namespace OPS.Importador
                         typeof(Senado), // csv
                         typeof(CamaraFederal), // csv
 
-                        //typeof(Acre), // Portal sem dados detalhados!
-                        //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                        typeof(Amapa), // crawler  -- Apenas BR
-                        typeof(Amazonas), // -- Apenas BR
-                        typeof(Bahia), // crawler // TESTAR
+                        typeof(Acre), // Portal sem dados detalhados!
+                        typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                        typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                        typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                        typeof(Bahia), // crawler anual
                         typeof(Ceara), // csv mensal
-                        typeof(DistritoFederal), // xlsx  -- Apenas BR
-                        typeof(EspiritoSanto),  // Valores mensais por categoria -- Apenas BR
-                        typeof(Goias), // crawler
+                        typeof(DistritoFederal), // xlsx  (Apenas BR)
+                        typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                        typeof(Goias), // crawler mensal/deputado
                         //--//typeof(Maranhao), // Valores mensais por categoria
                         //typeof(MatoGrosso),
-                        typeof(MatoGrossoDoSul), // crawler
-                        typeof(MinasGerais), // xml api -- Apenas BR
-                        typeof(Para),
-                        typeof(Paraiba),
-                        typeof(Parana), // rest api mensal // TIMEOUT na pagina 3
-                        typeof(Pernambuco),
-                        typeof(Piaui), // Downaload manual
-                        typeof(RioDeJaneiro),
-                        typeof(RioGrandeDoNorte),
-                        typeof(RioGrandeDoSul),
-                        typeof(Rondonia),
-                        //typeof(Roraima),
-                        typeof(SantaCatarina), // csv
-                        typeof(SaoPaulo), // xml
-                        typeof(Sergipe),
-                        typeof(Tocantins),
+                        typeof(MatoGrossoDoSul), // crawler anual
+                        typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
+                        typeof(Para), // json api anual
+                        typeof(Paraiba), // arquivo ods mensal/deputado
+                        typeof(Parana), // json api mensal/deputado
+                        typeof(Pernambuco), // json api mensal/deputado
+                        typeof(Piaui), // csv por legislatura (download manual)
+                        typeof(RioDeJaneiro), // json api mensal/deputado
+                        typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                        typeof(RioGrandeDoSul), // crawler mensal/deputado
+                        typeof(Rondonia), // crawler mensal/deputado
+                        typeof(Roraima), // crawler & odt mensal/deputado
+                        typeof(SantaCatarina), // csv anual
+                        typeof(SaoPaulo), // xml anual
+                        typeof(Sergipe), // crawler & pdf mensal/deputado
+                        typeof(Tocantins), // crawler & pdf mensal/deputado
                     };
 
                     foreach (var type in types)
@@ -290,7 +290,7 @@ namespace OPS.Importador
                     //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
 
                     Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
-                    objFornecedor.ConsultarReceitaWS().Wait();
+                    objFornecedor.ConsultarDadosCNPJ().Wait();
 
                     Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
                     Console.ReadKey();
@@ -335,7 +335,7 @@ namespace OPS.Importador
                 //objCamaraSantaCatarina.ImportarCompleto();
                 //objCamara.ImportaPresencasDeputados();
 
-                objFornecedor.ConsultarReceitaWS().Wait();
+                objFornecedor.ConsultarDadosCNPJ().Wait();
 
                 //using (WebClient client = new WebClient())
                 //{

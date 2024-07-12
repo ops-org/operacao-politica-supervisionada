@@ -46,13 +46,10 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://www.alepe.pe.gov.br/servicos/transparencia/",
             Estado = Estado.Pernambuco,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
-
-        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
     }
 
-    public HttpClient httpClient { get; }
     private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
     public override void ImportarDespesas(IBrowsingContext context, int ano)
@@ -259,7 +256,9 @@ public class ImportadorParlamentarPernambuco : ImportadorParlamentarCrawler
         deputado.Naturalidade = info1[1].TextContent.Trim();
         deputado.Email = info1[2].TextContent.Trim();
         deputado.Site = info1[3].TextContent.Trim();
-        ImportacaoUtils.MapearRedeSocial(deputado, info1[4].QuerySelectorAll("a"));
+
+        if (info1.Length > 4)
+            ImportacaoUtils.MapearRedeSocial(deputado, info1[4].QuerySelectorAll("a"));
 
         var info2 = subDocument.QuerySelectorAll(".parlamentares-view-info dl.last dd");
         //var aniversario = info2[0].TextContent.Trim(); // Falta ano

@@ -52,7 +52,10 @@ public class ImportadorDespesasPiaui : ImportadorDespesasArquivo
     {
         // TODO: Criar importação por legislatura
         if (ano != 2023)
-            throw new BusinessException("Importação já realizada");
+        {
+            logger.LogWarning($"Importação já realizada para o ano de {ano}");
+            return;
+        }
 
         logger.LogWarning("Despesas do(a) {idEstado}:{CasaLegislativa} de {Ano}", config.Estado.GetHashCode(), config.Estado.ToString(), ano);
 
@@ -84,7 +87,7 @@ public class ImportadorDespesasPiaui : ImportadorDespesasArquivo
 
     public override string SqlCarregarHashes(int ano)
     {
-        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano+4}12";
+        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano + 4}12";
     }
 
     public override int ContarRegistrosBaseDeDadosFinal(int ano)
@@ -94,7 +97,7 @@ select count(1)
 from cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
-and d.ano_mes between {ano}01 and {ano+4}12");
+and d.ano_mes between {ano}01 and {ano + 4}12");
     }
 
     public override void ImportarDespesas(string caminhoArquivo, int ano)

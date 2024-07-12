@@ -41,11 +41,13 @@ namespace OPS.Importador.ALE.Parlamentar
         {
             if (partido == "PATRI" || partido.Equals("PATRIOTAS", StringComparison.InvariantCultureIgnoreCase)) partido = "PATRIOTA";
             else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
-            else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN") partido = "REPUBLICANOS";
+            else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN" || partido == "PRB") partido = "REPUBLICANOS";
             else if (partido == "PR") partido = "PL"; // Partido da República
             else if (partido == "Podemos" || partido == "POD") partido = "PODE";
             else if (partido == "UNIÃO BRASIL (UNIÃO)" || partido == "UB") partido = "UNIÃO";
-            else if (partido == "CIDA") partido = "CIDADANIA";
+            else if (partido == "CIDA" || partido == "PPS") partido = "CIDADANIA";
+            else if (partido == "PSDC") partido = "DC"; // Democracia Cristã
+            else if (partido == "PTR") partido = "PP"; // Progressistas
             else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";
             else if (partido.Contains("PROGRESSISTA") || partido == "Partido Progressista") partido = "PP"; // Progressistas
             else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade

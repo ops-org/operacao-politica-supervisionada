@@ -123,9 +123,16 @@ public class RedOdsReader
                     iColumn = 0;
 
                     att = item.Attributes.GetNamedItem("table:number-rows-repeated");
+                    var repeatedRows = 0;
                     if (!(att is null))
                     {
-                        iRow = iRow + Convert.ToInt32(att.Value) - 1;
+                        repeatedRows = Convert.ToInt32(att.Value) - 1;
+                        iRow = iRow + repeatedRows;
+                    }
+
+                    if (iRow > 8)
+                    {
+                        var a = 1;
                     }
 
                     foreach (XmlNode itemRow in item)
@@ -158,14 +165,17 @@ public class RedOdsReader
                             //TODO : manca supporto per tipi diversi
                             if ((CellValue != "") || (CellValueText != ""))
                             {
-                                currentTable.Cells.Add(new ROdsCell()
+                                for (int i = repeatedRows; i >= 0; i--)
                                 {
-                                    ValueType = CellValueType,
-                                    Value = CellValue,
-                                    ValueText = CellValueText,
-                                    Row = iRow,
-                                    Column = iColumn,
-                                });
+                                    currentTable.Cells.Add(new ROdsCell()
+                                    {
+                                        ValueType = CellValueType,
+                                        Value = CellValue,
+                                        ValueText = CellValueText,
+                                        Row = iRow - i,
+                                        Column = iColumn,
+                                    });
+                                }
                             }
 
                             att = itemRow.Attributes.GetNamedItem("table:number-columns-repeated");
@@ -193,6 +203,8 @@ public class RedOdsReader
                     throw new Exception("File type error. Unsupported Row Group.");
                 }
             }
+
+            currentTable.Cells = currentTable.Cells.OrderBy(x => x.Row).ThenBy(x => x.Column).ToList();
             m_Tables.Add(currentTable);
         }
     }

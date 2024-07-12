@@ -42,7 +42,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://transparencia.al.go.leg.br/",
             Estado = Estado.Goias,
-            ChaveImportacao = ChaveDespesaTemp.Nome
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

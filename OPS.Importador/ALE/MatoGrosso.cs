@@ -12,8 +12,8 @@ public class MatoGrosso : ImportadorBase
 {
     public MatoGrosso(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarMatoGrosso(serviceProvider);
-        //importadorDespesas = new ImportadorDespesasMatoGrosso(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarMatoGrosso(serviceProvider);
+        importadorDespesas = new ImportadorDespesasMatoGrosso(serviceProvider);
     }
 }
 

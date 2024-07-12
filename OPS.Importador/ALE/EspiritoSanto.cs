@@ -75,7 +75,7 @@ public class ImportadorDespesasEspiritoSanto : ImportadorDespesasRestApiMensal
             if (document.QuerySelector(".ls-alert-warning")?.TextContent == "Nenhum: resultado foi encontrado!") continue;
 
             var rows = document.QuerySelectorAll("#tabelaMobile table tr");
-            for (var i = 0; i < rows.Count() - 1; i ++)
+            for (var i = 0; i < rows.Count() - 1; i++)
             {
                 if (rows[i].QuerySelectorAll("td")[0].TextContent.Trim() != "Produto:") continue;
                 if (rows[i + 2].QuerySelectorAll("td")[1].TextContent.Trim() == "-") continue;
@@ -115,7 +115,7 @@ public class ImportadorParlamentarEspiritoSanto : ImportadorParlamentarCrawler
 
     public override DeputadoEstadual ColetarDadosLista(IElement item)
     {
-        var nomeparlamentar = item.QuerySelector(".nomeDeputadoLista").TextContent.Trim().ToTitleCase();
+        var nomeparlamentar = item.QuerySelector(".nomeDeputadoLista").TextContent.Replace("(licenciado)", "").Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
 
         deputado.UrlPerfil = (item.QuerySelector("a.linkLimpo") as IHtmlAnchorElement).Href;
@@ -130,7 +130,8 @@ public class ImportadorParlamentarEspiritoSanto : ImportadorParlamentarCrawler
             .QuerySelectorAll(".fonte-dados-deputado>div")
             .Select(x => new { Key = x.QuerySelector("label").TextContent.Trim(), Value = x.QuerySelector("span").TextContent.Trim() });
 
-        deputado.IdPartido = BuscarIdPartido(dados.First(x => x.Key == "Partido:").Value);
+        if (!string.IsNullOrEmpty(dados.First(x => x.Key == "Partido:").Value))
+            deputado.IdPartido = BuscarIdPartido(dados.First(x => x.Key == "Partido:").Value);
 
         deputado.NomeCivil = dados.FirstOrDefault(x => x.Key == "Nome Civil:")?.Value;
         deputado.Naturalidade = dados.FirstOrDefault(x => x.Key == "Naturalidade:")?.Value;

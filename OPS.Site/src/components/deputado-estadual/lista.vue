@@ -464,13 +464,13 @@ export default {
         {"id":22,"text":"Piauí (PI)"},
         {"id":33,"text":"Rio de Janeiro (RJ)"},
         {"id":24,"text":"Rio Grande do Norte (RN)"},
-        // {"id":43,"text":"Rio Grande do Sul (RS)"},
+        {"id":43,"text":"Rio Grande do Sul (RS)"},
         {"id":11,"text":"Rondônia (RO)"},
-        // {"id":14,"text":"Roraima (RR)"},
+        {"id":14,"text":"Roraima (RR)"},
         { id: 42, text: "Santa Catarina (SC)" },
         { id: 35, text: "São Paulo (SP)" },
-        // {"id":28,"text":"Sergipe (SE)"},
-        // {"id":17,"text":"Tocantins (TO)"}
+        {"id":28,"text":"Sergipe (SE)"},
+        {"id":17,"text":"Tocantins (TO)"}
       ],
       partidos: [],
       parlamentares: [],

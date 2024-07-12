@@ -25,6 +25,7 @@
     <PackageReference Include="AngleSharp.Io" Version="1.0.0" />
     <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
     <PackageReference Include="CsvHelper" Version="32.0.3" />
+    <PackageReference Include="DDDN.OdtToHtml" Version="0.25.1.211" />
     <PackageReference Include="EPPlus" Version="7.1.3" />
     <PackageReference Include="iTextSharp" Version="5.5.13.4" />
     <PackageReference Include="Microsoft.Extensions.Compliance.Redaction" Version="8.6.0" />
