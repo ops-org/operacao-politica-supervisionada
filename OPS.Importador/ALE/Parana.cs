@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AngleSharp;
+using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
 using Dapper;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
+using OPS.Importador.ALE.Parlamentar;
+using OPS.Importador.Utilities;
 using RestSharp;
 
 namespace OPS.Importador.ALE;
@@ -21,13 +26,15 @@ public class Parana : ImportadorBase
 {
     public Parana(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        //importadorParlamentar = new ImportadorParlamentarParana(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarParana(serviceProvider);
         importadorDespesas = new ImportadorDespesasParana(serviceProvider);
     }
 }
 
 public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
 {
+    private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+
     public ImportadorDespesasParana(IServiceProvider serviceProvider) : base(serviceProvider)
     {
         config = new ImportadorCotaParlamentarBaseConfig()
@@ -39,6 +46,71 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
     }
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
+    {
+        ImportarCotaParlamentar(ano, mes);
+
+        // TODO: Para importar as diarias precisamos primeiro importar a posição do parlamentar (ex: 4ª SECRETARIA) e o pessoal do gabinete;
+        // http://transparencia.assembleia.pr.leg.br/pessoal/comissionados
+        // http://transparencia.assembleia.pr.leg.br/pessoal/estaveis
+        //ImportarDiarias(ano, mes);
+    }
+
+    private void ImportarDiarias(int ano, int mes)
+    {
+        var indice = 0;
+        var idxPgto = indice++;
+        var idxDataSaida = indice++;
+        var idxDataRetorno = indice++;
+        var idxProtocolo = indice++;
+        var idxOrcamento = indice++;
+        var idxEmitidoPara = indice++;
+        var idxValor = indice++;
+        var idxQuantidade = indice++;
+        var idxMotivo = indice++;
+        var idxDestino = indice++;
+
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
+
+        var address = $"http://transparencia.assembleia.pr.leg.br/api/diarias?ano={ano}&mes={mes}";
+        var restClientOptions = new RestClientOptions()
+        {
+            ThrowOnAnyError = true,
+            Timeout = TimeSpan.FromMinutes(5)
+        };
+
+        var restClient = new RestClient(restClientOptions);
+        //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
+        var request = new RestRequest(address);
+        request.AddHeader("Accept", "application/json");
+
+        RestResponse resDiarias = restClient.GetWithAutoRetry(request);
+        List<List<string>> diarias = JsonSerializer.Deserialize<List<List<string>>>(resDiarias.Content, options);
+
+        foreach (var diaria in diarias)
+        {
+            if (diaria[idxEmitidoPara].StartsWith("GABINETE MILITAR")) continue;
+            // TODO: Emitido para pode ser um comissionado e ainda não temos essa info.
+
+            var despesaTemp = new CamaraEstadualDespesaTemp()
+            {
+                Nome = diaria[idxEmitidoPara].Split("-")[0].Trim().ToTitleCase(),
+                Ano = (short)ano,
+                Mes = (short)mes,
+                TipoDespesa = "Diárias",
+                Valor = Convert.ToDecimal(diaria[idxValor], cultureInfo),
+                DataEmissao = Convert.ToDateTime(diaria[idxDataSaida], cultureInfo),
+                Documento = diaria[idxPgto],
+                Observacao = $"Trecho: {diaria[idxDestino]}; Protocolo: {diaria[idxProtocolo]} Orçamento: {diaria[idxOrcamento]}"
+            };
+
+
+            InserirDespesaTemp(despesaTemp);
+        }
+    }
+
+    private void ImportarCotaParlamentar(int ano, int mes)
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
@@ -117,7 +189,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
     private string ImportarParlamentar(Parlamentares itemDespesa)
     {
         var parlamentar = itemDespesa.Parlamentar;
-        var nomeParlamentar = parlamentar.NomePolitico.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "").ToTitleCase();
+        var nomeParlamentar = parlamentar.NomePolitico.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "").Trim().ToTitleCase();
 
         var matricula = (uint)parlamentar.Codigo;
         var deputado = GetDeputadoByMatriculaOrNew(matricula);
@@ -128,7 +200,9 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
 
         //deputado.UrlPerfil = $"http://www.assembleia.pr.leg.br/deputados/perfil/{parlamentar.Codigo}";
         deputado.NomeParlamentar = nomeParlamentar;
-        deputado.NomeCivil = parlamentar.Nome.ToTitleCase();
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = parlamentar.Nome.ToTitleCase();
+
         deputado.IdPartido = IdPartido.Value;
         deputado.Sexo = parlamentar.NomePolitico.StartsWith("DEPUTADO") ? "M" : "F";
 
@@ -384,28 +458,59 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
     }
 }
 
-//public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
-//{
+public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
+{
+    private readonly List<DeputadoEstadual> deputados;
 
-//    public ImportadorParlamentarParana(IServiceProvider serviceProvider) : base(serviceProvider)
-//    {
-//        Configure(new ImportadorParlamentarCrawlerConfig()
-//        {
-//            BaseAddress = "",
-//            SeletorListaParlamentares = "",
-//            Estado = Estado.Parana,
-//        });
-//    }
+    public ImportadorParlamentarParana(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+        Configure(new ImportadorParlamentarCrawlerConfig()
+        {
+            // https://www.assembleia.pr.leg.br/deputados/legislatura/19a-legislatura-3a-e-4a-sessoes-legislativas
+            BaseAddress = "https://www.assembleia.pr.leg.br/deputados/conheca",
+            SeletorListaParlamentares = ".pg-deps .dep",
+            Estado = Estado.Parana,
+        });
 
-//    public override DeputadoEstadual ColetarDadosLista(IElement document)
-//    {
-//        throw new NotImplementedException();
-//    }
+        deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
+    }
 
-//    public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
-//    {
-//        throw new NotImplementedException();
-//    }
-//}
+    public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
+    {
+        var nomeParlamentar = parlamentar.QuerySelector(".nome-deps span").TextContent.Trim();
+        var nomeParlamentarLimpo = Utils.RemoveAccents(nomeParlamentar);
+
+        var deputado = deputados.Find(x =>
+            Utils.RemoveAccents(x.NomeImportacao ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
+            Utils.RemoveAccents(x.NomeParlamentar).Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
+            Utils.RemoveAccents(x.NomeCivil ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase)
+        );
+
+        if (deputado == null)
+        {
+            deputado = new DeputadoEstadual()
+            {
+                NomeCivil = nomeParlamentar,
+                IdEstado = (ushort)config.Estado.GetHashCode()
+            };
+        }
+
+        deputado.NomeParlamentar = nomeParlamentar;
+        deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".nome-deps .partido").TextContent.Trim());
+        deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
+        deputado.UrlFoto = (parlamentar.QuerySelector(".foto-deps img") as IHtmlImageElement)?.Source;
+
+        return deputado;
+    }
+
+    public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
+    {
+        deputado.Telefone = subDocument.QuerySelector(".tel span")?.TextContent;
+
+        var redesSociais = subDocument.QuerySelectorAll(".compartilhamento-redes a,.link-site");
+        if (redesSociais.Length > 0)
+            ImportacaoUtils.MapearRedeSocial(deputado, redesSociais);
+    }
+}
 
 

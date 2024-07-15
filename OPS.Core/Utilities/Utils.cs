@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
@@ -313,6 +314,20 @@ namespace OPS.Core
         public static string RemoveSpaces(this string value)
         {
             return Regex.Replace(value, @"\s+", " ");
+        }
+        
+        public static string RemoveAccents(this string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            StringBuilder sbReturn = new StringBuilder();
+            var arrayText = text.Normalize(NormalizationForm.FormD).ToCharArray();
+            foreach (char letter in arrayText)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(letter) != UnicodeCategory.NonSpacingMark)
+                    sbReturn.Append(letter);
+            }
+            return sbReturn.ToString();
         }
 
         //public static string GetIPAddress()

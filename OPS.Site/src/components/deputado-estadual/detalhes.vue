@@ -57,7 +57,7 @@
         </div>
 
         <div class="alert alert-warning" role="alert" v-if="deputado_estadual.sigla_estado=='SC'">
-          Algumas notas podem não ter um fornecedor identificado e com isso não serão apresenatadas abaixo!<br>
+          Algumas notas podem não ter um fornecedor identificado e com isso não serão apresentadas abaixo!<br>
         </div>
 
         <div class="row form-group" v-if="MaioresFornecedores.length > 0">

@@ -54,18 +54,18 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
     public override void ImportarDespesas(IBrowsingContext context, int ano)
     {
-        var rubricas = HttpGet<RubricasPE>($"{config.BaseAddress}/adm/verbaindenizatoria-rubricas.php?ano={ano}");
+        var rubricas = HttpGet<RubricasPE>($"{config.BaseAddress}adm/verbaindenizatoria-rubricas.php?ano={ano}");
 
-        var deputados = HttpGet<DeputadoPE>($"{config.BaseAddress}/dep/deputados.php?leg=-16"); // 2023-2026
+        var deputados = HttpGet<DeputadoPE>($"{config.BaseAddress}dep/deputados.php?leg=-16"); // 2023-2026
         foreach (var deputado in deputados)
         {
-            var meses = HttpGet<DespesaMesesPE>($"{config.BaseAddress}/adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}");
+            var meses = HttpGet<DespesaMesesPE>($"{config.BaseAddress}adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}");
             foreach (var mesComDespesa in meses)
             {
-                var documentos = HttpGet<DespesaDocumentosPE>($"{config.BaseAddress}/adm/verbaindenizatoria.php?dep={deputado.Id}&ano={ano}&mes={mesComDespesa.Mes}");
+                var documentos = HttpGet<DespesaDocumentosPE>($"{config.BaseAddress}adm/verbaindenizatoria.php?dep={deputado.Id}&ano={ano}&mes={mesComDespesa.Mes}");
                 foreach (var documento in documentos)
                 {
-                    var despesas = HttpGet<DespesaPE>($"{config.BaseAddress}/adm/verbaindenizatorianotas.php?docid={documento.Docid}");
+                    var despesas = HttpGet<DespesaPE>($"{config.BaseAddress}adm/verbaindenizatorianotas.php?docid={documento.Docid}");
                     foreach (var despesa in despesas)
                     {
                         var despesaTemp = new CamaraEstadualDespesaTemp()

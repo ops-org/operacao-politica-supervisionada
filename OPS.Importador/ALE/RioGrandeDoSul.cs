@@ -189,7 +189,7 @@ public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
             var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
             deputado.UrlPerfil = $"https://ww4.al.rs.gov.br/deputados/{parlamentar.IdDeputado}";
-            deputado.NomeParlamentar = parlamentar.NomeDeputado.ToTitleCase();
+            deputado.NomeParlamentar = parlamentar.NomeDeputado.Trim().ToTitleCase();
             deputado.IdPartido = BuscarIdPartido(parlamentar.SiglaPartido);
             deputado.Email = parlamentar.EmailDeputado;
             deputado.Telefone = parlamentar.TelefoneDeputado;

@@ -45,7 +45,7 @@ namespace OPS.Importador.ALE.Parlamentar
             else if (partido == "PR") partido = "PL"; // Partido da República
             else if (partido == "Podemos" || partido == "POD") partido = "PODE";
             else if (partido == "UNIÃO BRASIL (UNIÃO)" || partido == "UB") partido = "UNIÃO";
-            else if (partido == "CIDA" || partido == "PPS") partido = "CIDADANIA";
+            else if (partido == "CIDA" || partido == "CDN" || partido == "PPS") partido = "CIDADANIA";
             else if (partido == "PSDC") partido = "DC"; // Democracia Cristã
             else if (partido == "PTR") partido = "PP"; // Progressistas
             else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";

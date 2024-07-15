@@ -35,7 +35,7 @@ public class ImportadorDespesasEspiritoSanto : ImportadorDespesasRestApiMensal
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "https://www.al.es.gov.br",
+            BaseAddress = "https://www.al.es.gov.br/",
             Estado = Estado.EspiritoSanto,
             ChaveImportacao = ChaveDespesaTemp.Gabinete
         };
@@ -46,7 +46,7 @@ public class ImportadorDespesasEspiritoSanto : ImportadorDespesasRestApiMensal
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
-        var address = $"{config.BaseAddress}/Transparencia/CotasParlamentares";
+        var address = $"{config.BaseAddress}Transparencia/CotasParlamentares";
         var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
         var gabinetes = document.QuerySelectorAll("#cboSetor option").ToList();
 

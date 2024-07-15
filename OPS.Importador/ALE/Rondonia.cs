@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -32,7 +32,7 @@ public class Rondonia : ImportadorBase
 /// </summary>
 public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
 {
-    private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("en-US");
+    private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
     private readonly List<DeputadoEstadual> deputados;
 
     public ImportadorDespesasRondonia(IServiceProvider serviceProvider) : base(serviceProvider)
@@ -50,20 +50,63 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
-        var options = new JsonSerializerOptions();
-        options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
+        ImportarCotaParlamentar(context, ano, mes);
+        ImportarDiarias(context, ano, mes);
+    }
 
+    private void ImportarDiarias(IBrowsingContext context, int ano, int mes)
+    {
+        var address = $"https://transparencia.al.ro.leg.br/Deputados/Diarias/?nome=&ano={ano}&mes={mes}";
+        var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
+
+        var indice = 0;
+        var idxCredor = indice++;
+        var idxCargo = indice++;
+        var idxDestino = indice++;
+        var idxFinalidade = indice++;
+        var idxQuantidade = indice++;
+        var idxValor = indice++;
+        var idxMeioTransporte = indice++;
+        var idxAcoes = indice++;
+
+        var diarias = document.QuerySelectorAll("#tabela tbody tr");
+        foreach (var diaria in diarias)
+        {
+            var colunas = diaria.QuerySelectorAll("td");
+            var link = (colunas[idxAcoes].QuerySelector("a") as IHtmlAnchorElement).Href;
+
+            var nomeDeputado = colunas[idxCredor].TextContent;
+            if (nomeDeputado == "Luiz Eduardo Schincaglia")
+                nomeDeputado = "Luis Eduardo Schincaglia";
+
+            var deputado = deputados.Find(x => (x.NomeImportacao ?? Utils.RemoveAccents(x.NomeCivil)).Equals(nomeDeputado, StringComparison.InvariantCultureIgnoreCase));
+            if(deputado == null || deputado.Gabinete == null)
+            {
+                logger.LogError($"Deputado {colunas[idxCredor].TextContent} não existe ou não possui gabinete relacionado!");
+            }
+
+            var despesaTemp = new CamaraEstadualDespesaTemp()
+            {
+                Nome = colunas[idxCredor].TextContent,
+                Cpf = deputado?.Gabinete.ToString(),
+                Ano = (short)ano,
+                Mes = (short)mes,
+                TipoDespesa = "Diárias",
+                DataEmissao = new DateTime(ano, mes, 1),
+                Valor = Convert.ToDecimal(colunas[idxValor].TextContent, cultureInfo),
+                Observacao = $"Diárias: {colunas[idxQuantidade].TextContent}; Trecho: {colunas[idxDestino].TextContent}; Transporte: {colunas[idxMeioTransporte].TextContent}; Link: {link}",
+            };
+
+
+            InserirDespesaTemp(despesaTemp);
+        }
+    }
+
+    private void ImportarCotaParlamentar(IBrowsingContext context, int ano, int mes)
+    {
         var address = $"https://transparencia.al.ro.leg.br/Deputados/VerbaIndenizatoria/";
         var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
-        var gabinetes = document.QuerySelectorAll("#dep_sicavi_beta option").ToList();
-
-        var restClientOptions = new RestClientOptions()
-        {
-            ThrowOnAnyError = true,
-            Timeout = TimeSpan.FromMinutes(5)
-        };
-
-        var restClient = new RestClient(restClientOptions);
+        var gabinetes = document.QuerySelectorAll("#gabinete option").ToList();
 
         foreach (var item in gabinetes)
         {
@@ -85,40 +128,72 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                 }
             }
 
-            address = $"{config.BaseAddress}getConsultaPublica/?mes={mes:00}&ano={ano}&categoria=1&gabinete={gabinete.Value}";
-            var request = new RestRequest(address);
-            request.AddHeader("Accept", "application/json");
-
-            RestResponse resParlamentares = restClient.GetWithAutoRetry(request);
-            var grupoDespesasRO = JsonSerializer.Deserialize<List<GrupoDespesaRO>>(resParlamentares.Content, options);
-
-            foreach (var despesaGrupo in grupoDespesasRO)
+            IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form#form_busca_verba");
+            var dcForm = new Dictionary<string, string>();
+            dcForm.Add("categoria", "1"); // Geral
+            dcForm.Add("ano", ano.ToString());
+            dcForm.Add("mes", mes.ToString());
+            dcForm.Add("gabinete", gabinete.Value);
+            var subDocument = form.SubmitAsync(dcForm).GetAwaiter().GetResult();
+            var mensagem = subDocument.QuerySelector("#tabela .dataTables_empty");
+            if (mensagem != null)
             {
-                address = $"{config.BaseAddress}getConsultaPublica/detalhes/?lote={despesaGrupo.Id}&verba={despesaGrupo.VerbaId}&categoria_verba=1";
-                request = new RestRequest(address);
-                request.AddHeader("Accept", "application/json");
+                logger.LogInformation(mensagem.TextContent);
+            }
 
-                RestResponse resDespesas = restClient.GetWithAutoRetry(request);
-                var despesasRO = JsonSerializer.Deserialize<List<DespesaRO>>(resDespesas.Content, options);
-                foreach (var despesa in despesasRO)
+            var patternPrestador = @"Prestador: (?<prestador>.*) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
+            decimal valorTotalCalculado = 0;
+            decimal valorTotalPagina = 0;
+            var registrosValidos = 0;
+
+            var despesas = subDocument.QuerySelectorAll("#tabela tbody tr");
+            foreach (var despesa in despesas)
+            {
+                var titulo = despesa.QuerySelector("td h4");
+                if (titulo != null)
                 {
-                    var despesaTemp = new CamaraEstadualDespesaTemp()
-                    {
-                        Nome = gabinete.Text.ToTitleCase(),
-                        Cpf = gabinete.Value,
-                        Ano = (short)ano,
-                        Mes = (short)mes,
-                        CnpjCpf = Utils.RemoveCaracteresNaoNumericos(despesa.FornecedorCnpjCpf),
-                        Empresa = despesa.FornecedorRazaoSocial,
-                        Documento = despesa.NumeroDocumentoFiscal,
-                        Observacao = "Data de Pgto: " + despesa.DataPagamento, // despesa.ArquivoDocFiscal
-                        Valor = Convert.ToDecimal(despesa.ValorPago, cultureInfo),
-                        DataEmissao = Convert.ToDateTime(despesa.DataDocumentoFiscal),
-                        TipoDespesa = despesa.NaturezaDespesaNome
-                    };
+                    logger.LogInformation(titulo.TextContent.Trim());
+                    valorTotalPagina += Convert.ToDecimal(titulo.TextContent.Split("R$")[1].Trim(), cultureInfo);
 
-                    InserirDespesaTemp(despesaTemp);
+                    continue;
                 }
+
+                var linha = despesa.QuerySelector("td").TextContent.Trim();
+                if (string.IsNullOrEmpty(linha)) continue;
+
+                var linhaPartes = linha.Replace("|", "").Split("\n");
+
+                var despesaTemp = new CamaraEstadualDespesaTemp()
+                {
+                    Nome = gabinete.Text.ToTitleCase(),
+                    Cpf = gabinete.Value,
+                    Ano = (short)ano,
+                    Mes = (short)mes,
+                    TipoDespesa = linhaPartes[1].Split(":")[1].Trim().ToTitleCase(),
+                    DataEmissao = Convert.ToDateTime(linhaPartes[2].Split(":")[1].Trim(), cultureInfo),
+                    Valor = Convert.ToDecimal(linhaPartes[3].Split("R$")[1].Trim(), cultureInfo),
+                    Observacao = (despesa.QuerySelector("td a") as IHtmlAnchorElement).Href,
+                };
+
+                try
+                {
+                    Match matchPrestador = Regex.Matches(linhaPartes[0], patternPrestador)[0];
+                    despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNumericos(matchPrestador.Groups["cnpj"].Value);
+                    despesaTemp.Empresa = matchPrestador.Groups["prestador"].Value.Trim();
+                }
+                catch (Exception)
+                {
+                    logger.LogError($"Fornecedor invalido: {linhaPartes[0]}");
+                }
+
+                InserirDespesaTemp(despesaTemp);
+                valorTotalCalculado += despesaTemp.Valor;
+                registrosValidos++;
+            }
+
+            if (valorTotalCalculado != valorTotalPagina)
+            {
+                logger.LogError($"Valor Divergente! Esperado: {valorTotalPagina}; Encontrado: {valorTotalCalculado}; Referencia: {mes:00}/{ano} {gabinete.Text}; {registrosValidos} Registros");
             }
         }
     }

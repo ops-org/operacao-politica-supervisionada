@@ -1446,7 +1446,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
         public void ImportarRemuneracao(int ano, int mes)
         {
             var anomes = Convert.ToInt32($"{ano:0000}{mes:00}");
-            var urlOrigem = string.Format("http://www.senado.leg.br/transparencia/LAI/secrh/SF_ConsultaRemuneracaoServidoresParlamentares_{0}.csv", anomes);
+            var urlOrigem = string.Format("https://www.senado.leg.br/transparencia/LAI/secrh/SF_ConsultaRemuneracaoServidoresParlamentares_{0}.csv", anomes);
             var caminhoArquivo = System.IO.Path.Combine(tempPath, "SF-RM-" + anomes + ".csv");
 
             try
@@ -1599,40 +1599,46 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
             var total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_remuneracao_temp");
 
             banco.ExecuteNonQuery(@"
-                INSERT IGNORE INTO sf_funcao  (descricao)
+                INSERT IGNORE INTO sf_funcao (descricao)
                 SELECT DISTINCT simbolo_funcao FROM ops_tmp.sf_remuneracao_temp WHERE simbolo_funcao <> '' ORDER BY simbolo_funcao;
+                ALTER TABLE sf_funcao AUTO_INCREMENT = 0;
 
-                INSERT IGNORE INTO sf_cargo  (descricao)
+                INSERT IGNORE INTO sf_cargo (descricao)
                 SELECT DISTINCT cargo FROM ops_tmp.sf_remuneracao_temp WHERE cargo <> '' ORDER BY cargo;
+                ALTER TABLE sf_cargo AUTO_INCREMENT = 0;
 
-                INSERT IGNORE INTO sf_categoria  (descricao)
+                INSERT IGNORE INTO sf_categoria (descricao)
                 SELECT DISTINCT categoria FROM ops_tmp.sf_remuneracao_temp WHERE categoria <> '' ORDER BY categoria;
+                ALTER TABLE sf_categoria AUTO_INCREMENT = 0;
 
                 INSERT IGNORE INTO sf_vinculo  (descricao)
                 SELECT DISTINCT vinculo FROM ops_tmp.sf_remuneracao_temp WHERE vinculo <> '' ORDER BY vinculo;
+                ALTER TABLE sf_vinculo AUTO_INCREMENT = 0;
 
-                INSERT IGNORE INTO sf_referencia_cargo  (descricao)
+                INSERT IGNORE INTO sf_referencia_cargo (descricao)
                 SELECT DISTINCT referencia_cargo FROM ops_tmp.sf_remuneracao_temp WHERE referencia_cargo IS NOT NULL ORDER BY referencia_cargo;
+                ALTER TABLE sf_referencia_cargo AUTO_INCREMENT = 0;
 
-                INSERT IGNORE INTO sf_lotacao( descricao)
+                INSERT IGNORE INTO sf_lotacao (descricao)
                 SELECT DISTINCT lotacao_exercicio FROM ops_tmp.sf_remuneracao_temp WHERE lotacao_exercicio <> '' ORDER BY lotacao_exercicio;
+                ALTER TABLE sf_lotacao AUTO_INCREMENT = 0;
             ", 3600);
 
             banco.ExecuteNonQuery(@"
                 INSERT INTO sf_remuneracao 
-	                (id_vinculo, id_categoria, id_cargo, id_referencia_cargo, id_simbolo_funcao, id_lotacao, id_tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias, custo_total)
+                    (id_vinculo, id_categoria, id_cargo, id_referencia_cargo, id_simbolo_funcao, id_lotacao, id_tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias, custo_total)
                 SELECT 
-	                v.id AS vinculo, ct.id AS categoria, cr.id AS cargo, rc.id as referencia_cargo, sf.id as simbolo_funcao, le.id as lotacao_exercicio, tf.id as tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias,
-	                -- (remun_basica + vant_pessoais + func_comissionada + grat_natalina + horas_extras + outras_eventuais + abono_permanencia + reversao_teto_const + faltas + diarias + auxilios + vant_indenizatorias) AS custo_total,
-	                (rem_liquida - imposto_renda - previdencia - faltas + diarias + auxilios + vant_indenizatorias) AS custo_total
+                    v.id AS vinculo, ct.id AS categoria, cr.id AS cargo, rc.id as referencia_cargo, sf.id as simbolo_funcao, le.id as lotacao_exercicio, tf.id as tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias,
+                    -- (remun_basica + vant_pessoais + func_comissionada + grat_natalina + horas_extras + outras_eventuais + abono_permanencia + reversao_teto_const + faltas + diarias + auxilios + vant_indenizatorias) AS custo_total,
+                    (rem_liquida - imposto_renda - previdencia - faltas + diarias + auxilios + vant_indenizatorias) AS custo_total
                 FROM ops_tmp.sf_remuneracao_temp tmp
-                JOIN sf_vinculo v ON v.descricao LIKE ops_tmp.vinculo
-                JOIN sf_categoria ct ON ct.descricao LIKE ops_tmp.categoria
-                LEFT JOIN sf_cargo cr ON cr.descricao LIKE ops_tmp.cargo
-                LEFT JOIN sf_referencia_cargo rc ON rc.descricao LIKE ops_tmp.referencia_cargo
-                LEFT JOIN sf_funcao sf ON sf.descricao LIKE ops_tmp.simbolo_funcao
-                JOIN sf_lotacao le ON le.descricao LIKE ops_tmp.lotacao_exercicio
-                JOIN sf_tipo_folha tf ON tf.descricao LIKE ops_tmp.tipo_folha
+                JOIN sf_vinculo v ON v.descricao LIKE tmp.vinculo
+                JOIN sf_categoria ct ON ct.descricao LIKE tmp.categoria
+                LEFT JOIN sf_cargo cr ON cr.descricao LIKE tmp.cargo
+                LEFT JOIN sf_referencia_cargo rc ON rc.descricao LIKE tmp.referencia_cargo
+                LEFT JOIN sf_funcao sf ON sf.descricao LIKE tmp.simbolo_funcao
+                JOIN sf_lotacao le ON le.descricao LIKE tmp.lotacao_exercicio
+                JOIN sf_tipo_folha tf ON tf.descricao LIKE tmp.tipo_folha
 			", 3600);
 
             if (Convert.ToInt32(total) != banco.RowsAffected)

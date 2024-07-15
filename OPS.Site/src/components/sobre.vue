@@ -300,62 +300,33 @@
               <li class="mb-3">
                 <strong>Assembleias Legislativas</strong>
                 <ul>
-                  <li>
-                    <a
-                      href="https://www.al.ba.gov.br/transparencia/prestacao-contas"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Bahia</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="https://dadosabertos.cl.df.gov.br/View/verbas.html"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Distrito Federal</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="https://transparencia.al.go.leg.br/gestao-parlamentar/verba-indenizatoria"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Goiás</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="https://www.almg.gov.br/acompanhe/prestacao_contas/index.html?aba=js_tabVerba"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Minas Gerais</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="https://consultas.assembleia.pr.leg.br/#/ressarcimento"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Paraná</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="https://transparencia.alesc.sc.gov.br/gabinetes.php"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >Santa Catarina</a
-                    >
-                  </li>
-                  <li>
-                    <a
-                      href="https://www.al.sp.gov.br/dados-abertos/recurso/21"
-                      target="_blank"
-                      rel="nofollow noopener noreferrer"
-                      >São Paulo</a
-                    >
-                  </li>
+                  <li><a href="http://app.al.ac.leg.br/financa/verba-indenizatoria" target="_blank" rel="nofollow noopener noreferrer">Acre (AC) * Sem detalhamento por deputado(a)</a></li>
+                  <li><a href="https://www.al.al.leg.br/transparencia/orcamento-e-financas/viap-verba-indenizatoria-de-atividade-parlamentar" target="_blank" rel="nofollow noopener noreferrer">Alagoas (AL) *Sem dados abertos</a></li>
+                  <li><a href="https://www.al.ap.gov.br/transparencia/pagina.php?pg=ceap" target="_blank" rel="nofollow noopener noreferrer">Amapá (AP)</a></li>
+                  <li><a href="https://www.aleam.gov.br/transparencia/controle-de-cota-parlamentar/" target="_blank" rel="nofollow noopener noreferrer">Amazonas (AM)</a></li>
+                  <li><a href="https://www.al.ba.gov.br/transparencia/verbas-idenizatorias" target="_blank" rel="nofollow noopener noreferrer">Bahia (BA)</a></li>
+                  <li><a href="https://transparencia.al.ce.gov.br/index.php/despesas/despesas-alece/verba-de-desempenho-parlamentar" target="_blank" rel="nofollow noopener noreferrer">Ceará (CE)</a></li>
+                  <li><a href="https://www.cl.df.gov.br/web/portal-transparencia/verbas-indenizatorias" target="_blank" rel="nofollow noopener noreferrer">Distrito Federal (DF) - Arquivos JSON</a></li>
+                  <li><a href="https://www.al.es.gov.br/Transparencia/CotasParlamentares" target="_blank" rel="nofollow noopener noreferrer">Espírito Santo (ES)</a></li>
+                  <li><a href="https://transparencia.al.go.leg.br/gestao-parlamentar/verba-indenizatoria" target="_blank" rel="nofollow noopener noreferrer">Goiás (GO)</a></li>
+                  <li><a href="https://sistemas.al.ma.leg.br/transparencia/lista-parlamentar.html" target="_blank" rel="nofollow noopener noreferrer">Maranhão (MA)</a></li>
+                  <li><a href="https://almt.eloweb.net/portaltransparencia/1/empenhos?search=id.exercicio==2024&programatica.projeto=4491" target="_blank" rel="nofollow noopener noreferrer">Mato Grosso (MT) * Sem detalhamento por deputado(a)</a></li>
+                  <li><a href="http://consulta.transparencia.al.ms.gov.br/ceap/" target="_blank" rel="nofollow noopener noreferrer">Mato Grosso do Sul (MS) * Sem dados abertos</a></li>
+                  <li><a href="https://www.almg.gov.br/acompanhe/prestacao_contas/index.html?aba=js_tabVerba" target="_blank" rel="nofollow noopener noreferrer">Minas Gerais (MG)</a></li>
+                  <li><a href="https://alepa.pa.gov.br/Transparencia/Page/VerbaIndenizatoria" target="_blank" rel="nofollow noopener noreferrer">Pará (PA)</a></li>
+                  <li><a href="http://www.al.pb.leg.br/transparencia/deputados/viap-v2?tipo_viap=deputados" target="_blank" rel="nofollow noopener noreferrer">Paraíba (PB)</a></li>
+                  <li><a href="https://consultas.assembleia.pr.leg.br/#/ressarcimento" target="_blank" rel="nofollow noopener noreferrer">Paraná (PR)</a></li>
+                  <li><a href="https://transparencia.alepe.pe.gov.br/financas/verbas-indenizatorias" target="_blank" rel="nofollow noopener noreferrer">Pernambuco (PE)</a></li>
+                  <li><a href="https://transparencia.al.pi.leg.br/grid_transp_publico_gecop/" target="_blank" rel="nofollow noopener noreferrer">Piauí (PI)</a></li>
+                  <li><a href="https://docigp.alerj.rj.gov.br/transparencia#/" target="_blank" rel="nofollow noopener noreferrer">Rio de Janeiro (RJ)</a></li>
+                  <li><a href="https://www.al.rn.leg.br/portal/verbas" target="_blank" rel="nofollow noopener noreferrer">Rio Grande do Norte (RN)</a></li>
+                  <li><a href="https://www2.al.rs.gov.br/transparenciaalrs/GabinetesParlamentares/Centrodecustos/tabid/5666/Default.aspx" target="_blank" rel="nofollow noopener noreferrer">Rio Grande do Sul (RS)</a></li>
+                  <li><a href="https://transparencia.al.ro.leg.br/Deputados/VerbaIndenizatoria/" target="_blank" rel="nofollow noopener noreferrer">Rondônia (RO)</a></li>
+                  <li><a href="https://transparencia.al.rr.leg.br/execucao-orcamentaria-e-financeira/verbas-indenizatorias-de-gabinete/" target="_blank" rel="nofollow noopener noreferrer">Roraima (RR)</a></li>
+                  <li><a href="https://transparencia.alesc.sc.gov.br/gabinetes.php" target="_blank" rel="nofollow noopener noreferrer">Santa Catarina (SC)</a></li>
+                  <li><a href="https://www.al.sp.gov.br/dados-abertos/recurso/21" target="_blank" rel="nofollow noopener noreferrer">São Paulo (SP) - Arquivos XML</a></li>
+                  <li><a href="https://al.se.leg.br/portal-da-transparencia/despesas/ressarcimento-dos-deputados/" target="_blank" rel="nofollow noopener noreferrer">Sergipe (SE)</a></li>
+                  <li><a href="https://www.al.to.leg.br/transparencia/verbaIndenizatoria" target="_blank" rel="nofollow noopener noreferrer">Tocantins (TO)</a></li>
                 </ul>
               </li>
 

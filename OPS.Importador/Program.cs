@@ -23,6 +23,7 @@ using OPS.Importador.Utilities;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador
 {
@@ -82,6 +83,9 @@ namespace OPS.Importador
             services.AddScoped<SaoPaulo>();
             services.AddScoped<Sergipe>();
             services.AddScoped<Tocantins>();
+
+            services.AddScoped<ImportadorDespesasCamaraFederal>();
+            services.AddScoped<ImportadorDespesasSenado>();
 
             //services.AddScoped<Presidencia>();
 
@@ -174,47 +178,77 @@ namespace OPS.Importador
                     //    Console.WriteLine($"{i}: {nome}");
                     //}
 
-                    var types = new Type[]
+                    //var types = new Type[]
+                    //{
+                    //    typeof(Senado), // csv
+                    //    typeof(CamaraFederal), // csv
+
+                    //    typeof(Acre), // Portal sem dados detalhados!
+                    //    typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                    //    typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                    //    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    //    typeof(Bahia), // crawler anual
+                    //    typeof(Ceara), // csv mensal
+                    //    typeof(DistritoFederal), // xlsx  (Apenas BR)
+                    //    typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    //    typeof(Goias), // crawler mensal/deputado
+                    //    //--//typeof(Maranhao), // Valores mensais por categoria
+                    //    //typeof(MatoGrosso),
+                    //    typeof(MatoGrossoDoSul), // crawler anual
+                    //    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
+                    //    typeof(Para), // json api anual
+                    //    typeof(Paraiba), // arquivo ods mensal/deputado
+                    //    typeof(Parana), // json api mensal/deputado
+                    //    typeof(Pernambuco), // json api mensal/deputado
+                    //    typeof(Piaui), // csv por legislatura (download manual)
+                    //    typeof(RioDeJaneiro), // json api mensal/deputado
+                    //    typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    //    typeof(RioGrandeDoSul), // crawler mensal/deputado
+                    //    typeof(Rondonia), // crawler mensal/deputado
+                    //    typeof(Roraima), // crawler & odt mensal/deputado
+                    //    typeof(SantaCatarina), // csv anual
+                    //    typeof(SaoPaulo), // xml anual
+                    //    typeof(Sergipe), // crawler & pdf mensal/deputado
+                    //    typeof(Tocantins), // crawler & pdf mensal/deputado
+                    //};
+
+                    //foreach (var type in types)
+                    //{
+                    //    Log.Warning("Dados do(a) {CasaLegislativa}", type.Name);
+
+                    //    var importador = (ImportadorBase)serviceProvider.GetService(type);
+                    //    importador.ImportarCompleto();
+                    //}
+
+                    //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
+
+                    //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day-1));
+                    //var mesConsulta = new DateTime(2023, 02, 01);
+
+                    //do
+                    //{
+                    //    importador.ConsultaRemuneracao(mesConsulta.Year, mesConsulta.Month);
+
+                    //    mesConsulta = mesConsulta.AddMonths(1);
+                    //} while (mesConsulta < mesAtual);
+
+
+                    //importador.ColetaDadosDeputados();
+                    //importador.ColetaRemuneracaoSecretarios();
+
+
+                    var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
+                    var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
+                    var mesConsulta = new DateTime(2022, 09, 01);
+
+                    do
                     {
-                        typeof(Senado), // csv
-                        typeof(CamaraFederal), // csv
+                        importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
 
-                        typeof(Acre), // Portal sem dados detalhados!
-                        typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                        typeof(Amapa), // crawler mensal/deputado (Apenas BR)
-                        typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
-                        typeof(Bahia), // crawler anual
-                        typeof(Ceara), // csv mensal
-                        typeof(DistritoFederal), // xlsx  (Apenas BR)
-                        typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                        typeof(Goias), // crawler mensal/deputado
-                        //--//typeof(Maranhao), // Valores mensais por categoria
-                        //typeof(MatoGrosso),
-                        typeof(MatoGrossoDoSul), // crawler anual
-                        typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
-                        typeof(Para), // json api anual
-                        typeof(Paraiba), // arquivo ods mensal/deputado
-                        typeof(Parana), // json api mensal/deputado
-                        typeof(Pernambuco), // json api mensal/deputado
-                        typeof(Piaui), // csv por legislatura (download manual)
-                        typeof(RioDeJaneiro), // json api mensal/deputado
-                        typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
-                        typeof(RioGrandeDoSul), // crawler mensal/deputado
-                        typeof(Rondonia), // crawler mensal/deputado
-                        typeof(Roraima), // crawler & odt mensal/deputado
-                        typeof(SantaCatarina), // csv anual
-                        typeof(SaoPaulo), // xml anual
-                        typeof(Sergipe), // crawler & pdf mensal/deputado
-                        typeof(Tocantins), // crawler & pdf mensal/deputado
-                    };
+                        mesConsulta = mesConsulta.AddMonths(1);
+                    } while (mesConsulta < mesAtual);
+                    
 
-                    foreach (var type in types)
-                    {
-                        Log.Warning("Dados do(a) {CasaLegislativa}", type.Name);
-
-                        var importador = (ImportadorBase)serviceProvider.GetService(type);
-                        importador.ImportarCompleto();
-                    }
 
                     //var importador = serviceProvider.GetService<Presidencia>();
                     //importador.ImportarArquivoDespesas(0);
@@ -289,8 +323,8 @@ namespace OPS.Importador
                     //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
                     //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
 
-                    Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
-                    objFornecedor.ConsultarDadosCNPJ().Wait();
+                    //Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
+                    //objFornecedor.ConsultarDadosCNPJ().Wait();
 
                     Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
                     Console.ReadKey();

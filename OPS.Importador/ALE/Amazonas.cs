@@ -21,7 +21,7 @@ public class Amazonas : ImportadorBase
 {
     public Amazonas(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        // importadorParlamentar = new ImportadorParlamentarAmazonas(serviceProvider);
+        importadorParlamentar = new ImportadorParlamentarAmazonas(serviceProvider);
         importadorDespesas = new ImportadorDespesasAmazonas(serviceProvider);
     }
 }

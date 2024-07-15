@@ -32,6 +32,10 @@ namespace OPS.Core.Entity
         [Column("nome_civil")]
         public string NomeCivil { get; set; }
 
+        [ReadOnly(true)]
+        [Column("nome_importacao")]
+        public string NomeImportacao { get; set; }
+
         [Column("nascimento")]
         public DateOnly? Nascimento { get; set; }
 
