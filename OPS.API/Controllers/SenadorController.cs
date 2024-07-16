@@ -71,6 +71,12 @@ namespace OPS.API.Controllers
             return await dao.GastosPorAno(id);
         }
 
+        [HttpGet("{id:int}/GastosComPessoalPorAno")]
+        public async Task<dynamic> GastosComPessoalPorAno(int id)
+        {
+            return await dao.GastosComPessoalPorAno(id);
+        }
+
         //[HttpGet]
         //[Route("Documento/{id:int}")]
         //public async Task<dynamic> Documento(int id)

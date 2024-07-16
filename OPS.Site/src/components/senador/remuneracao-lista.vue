@@ -7,7 +7,8 @@
         <div class="form-group col-md-2">
           <label>Ano</label>
           <select class="form-control input-sm" v-model="filtro.ano">
-            <option value="2023" selected>2023</option>
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
             <option value="2022">2022</option>
             <option value="2021">2021</option>
             <option value="2020">2020</option>
@@ -84,13 +85,16 @@
         </div>
         <div class="form-group col-md-4">
           <label>Senador</label>
-          <v-select
-            :options="parlamentares"
-            v-model="filtro.parlamentar"
-            class="form-control input-sm"
-            multiple
-            data-actions-box="true"
-          />
+          <multiselect v-model="filtro.parlamentar" :options="parlamentares" :multiple="true" placeholder="Selecione"
+            :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="text" track-by="id"
+            :searchable="true" :loading="loading" :internal-search="false" @search-change="BuscaParlamentar">
+
+            <template slot="selection" slot-scope="{ values, isOpen }">
+              <span class="multiselect__single" v-if="values.length > 1 && !isOpen">{{ values.length }} item(ns) selecionado(s)</span>
+            </template>
+            <span slot="noResult">Oops! Nenhum resultado encontrado.</span>
+            <span slot="noOptions">Digite o nome do parlamentar.</span>
+          </multiselect>
         </div>
       </div>
       <div class="row">
@@ -112,7 +116,7 @@
           <input
             type="button"
             id="ButtonPesquisar"
-            v-on:click="Pesquisar(false);"
+            v-on:click="Pesquisar(false)"
             value="Pesquisar"
             class="btn btn-danger btn-sm"
           />
@@ -120,14 +124,19 @@
             type="button"
             value="Limpar filtros"
             class="btn btn-light btn-sm"
-            v-on:click="LimparFiltros();"
+            v-on:click="LimparFiltros()"
           />
         </div>
       </div>
     </form>
 
     <div class="form-group" v-if="fields">
-      <vdtnet-table ref="table" :fields="fields" :opts="options" @edit="AbrirModalDetalhar"></vdtnet-table>
+      <vdtnet-table
+        ref="table"
+        :fields="fields"
+        :opts="options"
+        @edit="AbrirModalDetalhar"
+      ></vdtnet-table>
     </div>
 
     <div class="modal" tabindex="-1" role="dialog" id="modal-detalhar" aria-hidden="true">
@@ -139,29 +148,72 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-            <div class="list-group list-group-flush">
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('1')">Lotação</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('2')">Cargo</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('3')">Categoria</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('4')">Vinculo</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('7')">Senador(a)</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('5')">Ano</button>
-              <button type="button" class="list-group-item list-group-item-action" v-on:click="Detalhar('6')">Detalhes</button>
+          <div class="list-group list-group-flush">
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('1')"
+            >
+              Lotação
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('2')"
+            >
+              Cargo
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('3')"
+            >
+              Categoria
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('4')"
+            >
+              Vinculo
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('7')"
+            >
+              Senador(a)
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('5')"
+            >
+              Ano
+            </button>
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              v-on:click="Detalhar('6')"
+            >
+              Detalhes
+            </button>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <script>
-import jQuery from 'jquery';
-import VSelect from '../vue-bootstrap-select';
-const axios = require('axios');
+import jQuery from "jquery";
+import VSelect from "../vue-bootstrap-select";
+const axios = require("axios");
 
 export default {
   components: {
@@ -173,15 +225,16 @@ export default {
   data() {
     const vm = this;
 
+
     return {
       loading: false,
       pageLoad: true,
       selectedRow: {},
       valorTotal: null,
       filtro: {
-        agrupar: '7',
-        ano: '2023',
-        mes: '',
+        agrupar: "7",
+        ano: "2023",
+        mes: "",
         lotacao: [],
         cargo: [],
         categori: [],
@@ -210,21 +263,23 @@ export default {
             ag: vm.filtro.agrupar,
             an: vm.filtro.ano,
             ms: vm.filtro.mes,
-            lt: (vm.filtro.lotacao || []).join(','),
-            cr: (vm.filtro.cargo || []).join(','),
-            ct: (vm.filtro.categoria || []).join(','),
-            vn: (vm.filtro.vinculo || []).join(','),
-            sn: (vm.filtro.parlamentar || []).join(','),
+            lt: (vm.filtro.lotacao || []).join(","),
+            cr: (vm.filtro.cargo || []).join(","),
+            ct: (vm.filtro.categoria || []).join(","),
+            vn: (vm.filtro.vinculo || []).join(","),
+            sn: window.GetIds(vm.filtro.parlamentar).join(','),
           };
 
           jQuery.each(newData.filters, (key, value) => {
-            if (value === '' || value === null) {
+            if (value === "" || value === null) {
               delete newData.filters[key];
             }
           });
 
           if (!vm.pageLoad) {
-            vm.$router.push({ path: 'remuneracao', query: newData.filters }, () => { /* Necesario para não fazer redirect */ });
+            vm.$router.push({ path: "remuneracao", query: newData.filters }, () => {
+              /* Necesario para não fazer redirect */
+            });
           }
           this.fields = null;
 
@@ -259,16 +314,25 @@ export default {
   mounted() {
     const vm = this;
 
-    vm.filtro.agrupar = vm.qs.ag || '7';
-    vm.filtro.ano = vm.qs.an || '2023';
-    vm.filtro.mes = vm.qs.ms || '';
-    vm.filtro.lotacao = (vm.qs.lt ? vm.qs.lt.split(',') : []);
-    vm.filtro.cargo = (vm.qs.cr ? vm.qs.cr.split(',') : []);
-    vm.filtro.categoria = (vm.qs.ct ? vm.qs.ct.split(',') : []);
-    vm.filtro.vinculo = (vm.qs.vn ? vm.qs.vn.split(',') : []);
-    vm.filtro.parlamentar = (vm.qs.sn ? vm.qs.sn.split(',') : []);
+    vm.filtro.agrupar = vm.qs.ag || "7";
+    vm.filtro.ano = vm.qs.an || "2024";
+    vm.filtro.mes = vm.qs.ms || "";
+    vm.filtro.lotacao = vm.qs.lt ? vm.qs.lt.split(",") : [];
+    vm.filtro.cargo = vm.qs.cr ? vm.qs.cr.split(",") : [];
+    vm.filtro.categoria = vm.qs.ct ? vm.qs.ct.split(",") : [];
+    vm.filtro.vinculo = vm.qs.vn ? vm.qs.vn.split(",") : [];
 
-    document.title = 'OPS :: Remuneração no Senado';
+    var lstPromises = [];
+    if(vm.qs.sn){
+      var pDeputado = axios.post(`${process.env.VUE_APP_API}/senador/pesquisa`, { ids: vm.qs.sn })
+      pDeputado.then((response) => {
+        vm.filtro.parlamentar = response.data;
+      });
+
+      lstPromises.push(pDeputado);
+    }
+
+    document.title = "OPS :: Remuneração no Senado";
 
     axios.get(`${process.env.VUE_APP_API}/senador/lotacao`).then((response) => {
       this.lotacoes = response.data;
@@ -286,34 +350,49 @@ export default {
       this.vinculos = response.data;
     });
 
-    axios.get(`${process.env.VUE_APP_API}/senador`).then((response) => {
-      this.parlamentares = response.data;
-    });
+    // axios.get(`${process.env.VUE_APP_API}/senador`).then((response) => {
+    //   this.parlamentares = response.data;
+    // });
 
-    this.Pesquisar(true);
+    if(lstPromises.length == 0){
+        this.Pesquisar(true);
+    }else{
+      Promise.all(lstPromises).then(() => vm.Pesquisar(true));
+    }
   },
   methods: {
+    BuscaParlamentar(busca) {
+      this.loading = true;
+
+      axios
+        .post(`${process.env.VUE_APP_API}/senador/pesquisa`, { busca: busca, periodo: parseInt(this.filtro.periodo || "0") })
+        .then((response) => {
+          this.parlamentares = response.data;
+
+          this.loading = false;
+        });
+    },
     AbrirModalDetalhar(data) {
       this.selectedRow = data;
-      jQuery('#modal-detalhar').modal();
+      jQuery("#modal-detalhar").modal();
     },
     Detalhar(agrupar) {
       const vm = this;
 
       switch (vm.filtro.agrupar) {
-        case '1': // Lotação
+        case "1": // Lotação
           vm.filtro.lotacao = [this.selectedRow.id];
           break;
-        case '2': // Cargo
+        case "2": // Cargo
           vm.filtro.cargo = [this.selectedRow.id];
           break;
-        case '3': // Categoria
+        case "3": // Categoria
           vm.filtro.categoria = [this.selectedRow.id];
           break;
-        case '4': // Vinculo
+        case "4": // Vinculo
           vm.filtro.vinculo = [this.selectedRow.id];
           break;
-        case '6': // Senador
+        case "6": // Senador
           vm.filtro.parlamentar = [this.selectedRow.id];
           break;
         default:
@@ -321,7 +400,7 @@ export default {
       }
 
       vm.filtro.agrupar = agrupar;
-      jQuery('#modal-detalhar').modal('hide');
+      jQuery("#modal-detalhar").modal("hide");
 
       vm.Pesquisar(false);
     },
@@ -330,7 +409,7 @@ export default {
       vm.senador = {};
       vm.pageLoad = pageLoad;
 
-      if(vm.ultimoAgrupamento == vm.filtro.agrupar) {
+      if (vm.ultimoAgrupamento == vm.filtro.agrupar) {
         vm.$refs.table.reload();
         return;
       }
@@ -339,13 +418,13 @@ export default {
 
       vm.$nextTick(() => {
         switch (vm.filtro.agrupar) {
-          case '1': // Lotação
+          case "1": // Lotação
             vm.fields = {
               id: {
                 isLocal: true,
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -353,30 +432,29 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Lotação',
+                label: "Lotação",
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: "Qtd.",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-
-          case '2': // Cargo
+          case "2": // Cargo
             vm.fields = {
               id: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -384,29 +462,29 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Cargo',
+                label: "Cargo",
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: "Qtd.",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '3': // Categoria
+          case "3": // Categoria
             vm.fields = {
               id: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -414,29 +492,29 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Categoria',
+                label: "Categoria",
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: "Qtd.",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '4': // Vinculo
+          case "4": // Vinculo
             vm.fields = {
               id: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -444,29 +522,29 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Vinculo',
+                label: "Vinculo",
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: "Qtd.",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '5': // Ano
+          case "5": // Ano
             vm.fields = {
               id: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -474,29 +552,29 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Ano',
+                label: "Ano",
                 sortable: true,
               },
               quantidade: {
-                label: 'Qtd.',
+                label: "Qtd.",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '7': // Senador
+          case "7": // Senador
             vm.fields = {
               id: {
-                label: '&nbsp;',
+                label: "&nbsp;",
                 render: (data, type) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return '<a href="javascript:void(0);" data-action="edit" class="btn btn-primary btn-sm">Detalhar</a>';
                   }
                   return data;
@@ -504,79 +582,90 @@ export default {
                 sortable: false,
               },
               descricao: {
-                label: 'Senador',
+                label: "Senador",
                 sortable: true,
+                render: (data, type, full) => {
+                  if (type === "display") {
+                    return `<a href="/#/senador/${full.id}">${data}</a>`;
+                  }
+                  return data;
+                },
               },
               quantidade: {
-                label: 'Qtd.',
+                label: "Qtd.",
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 sortable: true,
-                className: 'text-right',
-                defaultOrder: 'desc',
+                className: "text-right",
+                defaultOrder: "desc",
               },
             };
             break;
 
-          case '6': // Mês
+          case "6": // Mês
             vm.fields = {
               vinculo: {
-                label: 'Vinculo',
+                label: "Vinculo",
                 sortable: true,
               },
               categoria: {
-                label: 'Categoria',
+                label: "Categoria",
                 render: (data, type, full) => {
-                  if (type === 'display') {
-                    return data + (full.simbolo_funcao ? ` (${full.simbolo_funcao})` : '');
+                  if (type === "display") {
+                    return (
+                      data + (full.simbolo_funcao ? ` (${full.simbolo_funcao})` : "")
+                    );
                   }
                   return data;
                 },
                 sortable: true,
               },
               cargo: {
-                label: 'Cargo',
+                label: "Cargo",
                 render: (data, type, full) => {
-                  if (type === 'display') {
-                    return data + (full.referencia_cargo ? ` (${full.referencia_cargo})` : '');
+                  if (type === "display") {
+                    return (
+                      data + (full.referencia_cargo ? ` (${full.referencia_cargo})` : "")
+                    );
                   }
                   return data;
                 },
               },
               lotacao: {
-                label: 'Lotação',
+                label: "Lotação",
                 sortable: true,
               },
               tipo_folha: {
-                label: 'Tipo Folha',
+                label: "Tipo Folha",
                 sortable: true,
               },
               ano_mes: {
-                label: 'Ano/Mês',
+                label: "Ano/Mês",
                 sortable: true,
               },
               valor_total: {
-                label: 'Custo Total',
+                label: "Custo Total",
                 render: (data, type, full) => {
-                  if (type === 'display') {
+                  if (type === "display") {
                     return `<a href="/#/senado/remuneracao/${full.id}">${data}</a>`;
                   }
                   return data;
                 },
                 sortable: true,
-                className: 'text-right',
+                className: "text-right",
               },
             };
             break;
 
-          default: break;
+          default:
+            break;
         }
 
         vm.ultimoAgrupamento = vm.filtro.agrupar;
-        if(!pageLoad && vm.options.order.length > 0){
+        if (!pageLoad && vm.options.order.length > 0) {
           vm.options.order = [];
         }
 
@@ -587,9 +676,9 @@ export default {
     },
     LimparFiltros() {
       this.filtro = {
-        agrupar: '1',
-        ano: '2023',
-        mes: '',
+        agrupar: "1",
+        ano: "2023",
+        mes: "",
         lotacao: [],
         cargo: [],
         categori: [],

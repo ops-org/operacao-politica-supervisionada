@@ -1510,7 +1510,6 @@ AND co.periodo_ate IS null
             }
         }
 
-
         public async Task<dynamic> FuncionariosPorDeputado(int id, DataTablesRequest request)
         {
             var dcFielsSort = new Dictionary<int, string>(){

@@ -336,6 +336,40 @@ namespace OPS.Core.DAO
             }
         }
 
+        public async Task<dynamic> GastosComPessoalPorAno(int id)
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					FROM cf_senador_verba_gabinete d
+					WHERE d.id_sf_senador = @id
+					group by d.ano
+					order by d.ano
+				");
+                banco.AddParameter("@id", id);
+
+                var categories = new List<dynamic>();
+                var series = new List<dynamic>();
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        categories.Add(Convert.ToInt32(reader["ano"]));
+                        series.Add(Convert.ToDecimal(reader["valor_total"]));
+                    }
+                }
+
+                return new
+                {
+                    categories,
+                    series
+                };
+            }
+        }
+
         public async Task<dynamic> Busca(string value)
         {
             using (AppDb banco = new AppDb())
