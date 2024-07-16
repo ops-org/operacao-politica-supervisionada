@@ -7,6 +7,7 @@
         <div class="form-group col-md-2">
           <label>Ano</label>
           <select class="form-control input-sm" v-model="filtro.ano">
+            <option value=""></option>
             <option value="2024" selected>2024</option>
             <option value="2023">2023</option>
             <option value="2022">2022</option>
