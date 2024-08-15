@@ -80,7 +80,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         dcForm.Add("nmgp_save_name_bot", "");
         dcForm.Add("NM_filters_del_bot", "");
         dcForm.Add("form_condicao", "3");
-        document = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
+        document = form.SubmitAsyncAutoRetry(dcForm, true).GetAwaiter().GetResult();
 
         form = document.QuerySelector<IHtmlFormElement>("form");
         document = form.SubmitAsync().GetAwaiter().GetResult();
@@ -101,12 +101,12 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         while (true)
         {
             //var paginaAtual = document.QuerySelector(".scGridToolbarNavOpen").TextContent;
-            logger.LogInformation("Consultando pagina {Pagina}!", ++pagina);
+            logger.LogTrace("Consultando pagina {Pagina}!", ++pagina);
 
             var despesas = document.QuerySelector("#sc_grid_body");
             if (despesas.TextContent.Trim() == "Registros não encontrados")
             {
-                logger.LogWarning($"{despesas.TextContent}");
+                logger.LogWarning("Registros indisponiveis! Detalhes: {Mensagem}", despesas.TextContent);
             }
 
             var linhas = document.QuerySelectorAll("#sc_grid_body>table.scGridTabela>tbody");
@@ -192,17 +192,17 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
                             {
                                 // Validar valor total mensal.
                                 if (valorTotalControleMensal != valorTotalDeputado)
-                                    logger.LogError($"Inconsistencia para o Deputado {nomeParlamentar}, valor total encontrado: {valorTotalControleMensal}, esperado: {valorTotalDeputado}");
+                                    logger.LogError("Valor Divergente Mensal! Parlamentar {Parlamentar}! Valor Encontrado: {Encontrado}; esperado: {Esperado}", nomeParlamentar, valorTotalControleMensal, valorTotalDeputado);
                             }
                             else
                             {
                                 // Validar valor total geral. OBS: Existem linhas orfãs que na verdade são somatorias mensais.
                                 if (valorTotalControleGeral != valorTotalDeputado && valorTotalControleMensal != valorTotalDeputado)
-                                    logger.LogError($"Inconsistencia para o Deputado {nomeParlamentar}, valor total encontrado: {valorTotalControleGeral}, esperado: {valorTotalDeputado}");
+                                    logger.LogError("Valor Divergente Geral! Parlamentar {Parlamentar}! Valor Encontrado: {Encontrado}; esperado: {Esperado}", nomeParlamentar, valorTotalControleGeral, valorTotalDeputado);
                             }
                         }
 
-                        //logger.LogInformation($"Importando {despesasDeputado} despesas do Deputado {nomeParlamentar}");
+                        //logger.LogInformation($"Importando {despesasDeputado} despesas do Parlamentar {nomeParlamentar}");
 
                         //controle = 0;
                         break;
@@ -221,14 +221,14 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
             dcFormPaginacao.Add("nmgp_opcao", "ajax_navigate");
             dcFormPaginacao.Add("opc", "rec");
             dcFormPaginacao.Add("parm", offset.ToString());
-            document = form.SubmitAsync(dcFormPaginacao, true).GetAwaiter().GetResult();
+            document = form.SubmitAsyncAutoRetry(dcFormPaginacao, true).GetAwaiter().GetResult();
             var htmlZoado = document.Body.InnerHtml.Replace("</script></a></td></tr></tbody></table>", "");
             var json = "{\"setValue\":[{\"field\": \"sc_grid_body" + htmlZoado.Split("sc_grid_body")[1];
             Rootobject parsed = JsonSerializer.Deserialize<Rootobject>(json);
             var html = WebUtility.HtmlDecode(parsed.setValue.FirstOrDefault(x => x.field == "sc_grid_body").value);
 
             document = context.OpenAsync(req => req.Content("<div id='sc_grid_body'>" + html + "</div>")).GetAwaiter().GetResult();
-            //logger.LogInformation("Consultando pagina {Pagina}!", ++pagina);
+            //logger.LogTrace("Consultando pagina {Pagina}!", ++pagina);
 
             //}
         }
@@ -318,6 +318,9 @@ public class ImportadorParlamentarMatoGrossoDoSul : ImportadorParlamentarCrawler
 
         deputado.NomeParlamentar = parlamentar.QuerySelector(".cbp-l-grid-projects-title").TextContent.Trim().ToTitleCase();
         deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".cbp-l-grid-projects-desc").TextContent.Trim());
+
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = deputado.NomeParlamentar;
 
         return deputado;
     }

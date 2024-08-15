@@ -12,28 +12,29 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual void Importar(int ano)
         {
-            logger.LogWarning("Despesas do(a) {idEstado}:{CasaLegislativa} de {Ano}", config.Estado.GetHashCode(), config.Estado.ToString(), ano);
-
-            CarregarHashes(ano);
-            LimpaDespesaTemporaria();
-
-            Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
-
-            foreach (var arquivo in arquivos)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
-                var _urlOrigem = arquivo.Key;
-                var caminhoArquivo = arquivo.Value;
+                CarregarHashes(ano);
 
-                if (TentarBaixarArquivo(_urlOrigem, caminhoArquivo))
+                Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
+
+                foreach (var arquivo in arquivos)
                 {
-                    try
-                    {
-                        ImportarDespesas(caminhoArquivo, ano);
-                    }
-                    catch (Exception ex)
-                    {
+                    var _urlOrigem = arquivo.Key;
+                    var caminhoArquivo = arquivo.Value;
 
-                        logger.LogError(ex, ex.Message);
+                    using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = _urlOrigem, ["Arquivo"] = System.IO.Path.GetFileName(caminhoArquivo) }))
+                    {
+                        if (TentarBaixarArquivo(_urlOrigem, caminhoArquivo))
+                        {
+                            try
+                            {
+                                ImportarDespesas(caminhoArquivo, ano);
+                            }
+                            catch (Exception ex)
+                            {
+
+                                logger.LogError(ex, ex.Message);
 
 #if !DEBUG
                         //Excluir o arquivo para tentar importar novamente na proxima execução
@@ -41,11 +42,13 @@ namespace OPS.Importador.ALE.Despesa
                             System.IO.File.Delete(caminhoArquivo);
 #endif
 
+                            }
+                        }
                     }
                 }
-            }
 
-            ProcessarDespesas(ano);
+                ProcessarDespesas(ano);
+            }
         }
 
         public abstract void ImportarDespesas(string caminhoArquivo, int ano);

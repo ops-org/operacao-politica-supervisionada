@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AngleSharp;
 using AngleSharp.Io.Network;
 using Microsoft.Extensions.Logging;
@@ -13,29 +14,28 @@ namespace OPS.Importador.ALE.Despesa
 
         public void Importar(int ano)
         {
-            logger.LogWarning("Despesas do(a) {idEstado}:{CasaLegislativa} de {Ano}", config.Estado.GetHashCode(), config.Estado.ToString(), ano);
-
-            CarregarHashes(ano);
-            LimpaDespesaTemporaria();
-
-            var configuration = AngleSharp.Configuration.Default
-                .With(new HttpClientRequester(httpClient))
-                .WithDefaultLoader()
-                .WithDefaultCookies()
-                .WithCulture("pt-BR");
-
-            var context = BrowsingContext.New(configuration);
-
-            for (int mes = 1; mes <= 12; mes++)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
-                //if (ano == 2019 && mes == 1) continue;
-                if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) break;
+                CarregarHashes(ano);
 
-                ImportarDespesas(context, ano, mes);
+                var configuration = AngleSharp.Configuration.Default
+                    .With(new HttpClientRequester(httpClient))
+                    .WithDefaultLoader()
+                    .WithDefaultCookies()
+                    .WithCulture("pt-BR");
+
+                var context = BrowsingContext.New(configuration);
+
+                for (int mes = 1; mes <= 12; mes++)
+                {
+                    //if (ano == 2019 && mes == 1) continue;
+                    if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) break;
+
+                    ImportarDespesas(context, ano, mes);
+                }
+
+                ProcessarDespesas(ano);
             }
-
-            
-            ProcessarDespesas(ano);
         }
 
         public abstract void ImportarDespesas(IBrowsingContext context, int ano, int mes);

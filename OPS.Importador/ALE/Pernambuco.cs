@@ -57,15 +57,33 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
         var rubricas = HttpGet<RubricasPE>($"{config.BaseAddress}adm/verbaindenizatoria-rubricas.php?ano={ano}");
 
         var deputados = HttpGet<DeputadoPE>($"{config.BaseAddress}dep/deputados.php?leg=-16"); // 2023-2026
+        if (!deputados.Any())
+        {
+            logger.LogWarning("Nenhum parlamentar foi encontrado.");
+            return;
+        }
+
         foreach (var deputado in deputados)
         {
             var meses = HttpGet<DespesaMesesPE>($"{config.BaseAddress}adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}");
             foreach (var mesComDespesa in meses)
             {
                 var documentos = HttpGet<DespesaDocumentosPE>($"{config.BaseAddress}adm/verbaindenizatoria.php?dep={deputado.Id}&ano={ano}&mes={mesComDespesa.Mes}");
+                if (!documentos.Any())
+                {
+                    logger.LogWarning("Não da documentos para o parlamentar {Parlamentar} em {Mes}/{Ano}", deputado.Nome, mesComDespesa.Mes, ano);
+                    continue;
+                }
+
                 foreach (var documento in documentos)
                 {
                     var despesas = HttpGet<DespesaPE>($"{config.BaseAddress}adm/verbaindenizatorianotas.php?docid={documento.Docid}");
+                    if (!despesas.Any())
+                    {
+                        logger.LogWarning("Não da despesas para o parlamentar {Parlamentar} em {Mes}/{Ano}", deputado.Nome, mesComDespesa.Mes, ano);
+                        continue;
+                    }
+
                     foreach (var despesa in despesas)
                     {
                         var despesaTemp = new CamaraEstadualDespesaTemp()
@@ -116,7 +134,11 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = 
         request.AddHeader("Accept", "application/json");
 
         var response = restClient.GetWithAutoRetry(request);
-        return JsonSerializer.Deserialize<List<T>>(response.Content, options);
+        var lista = JsonSerializer.Deserialize<List<T>>(response.Content, options);
+
+        logger.LogDebug("{Itens} itens retornaram da API.", lista.Count());
+
+        return lista;
     }
 
     public class DeputadoPE
@@ -252,10 +274,12 @@ public class ImportadorParlamentarPernambuco : ImportadorParlamentarCrawler
         deputado.IdPartido = BuscarIdPartido(cabecalho.QuerySelector(".text .subtitle").TextContent.Trim());
 
         var info1 = subDocument.QuerySelectorAll(".parlamentares-view-info dl.first dd");
-        deputado.NomeCivil = info1[0].TextContent.Trim().ToTitleCase();
         deputado.Naturalidade = info1[1].TextContent.Trim();
         deputado.Email = info1[2].TextContent.Trim();
         deputado.Site = info1[3].TextContent.Trim();
+
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = info1[0].TextContent.Trim().ToTitleCase();
 
         if (info1.Length > 4)
             ImportacaoUtils.MapearRedeSocial(deputado, info1[4].QuerySelectorAll("a"));

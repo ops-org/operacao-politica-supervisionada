@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -15,6 +16,7 @@ using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
+using OPS.Importador.Utilities;
 
 namespace OPS.Importador.ALE;
 
@@ -50,54 +52,45 @@ public class ImportadorDespesasPiaui : ImportadorDespesasArquivo
 
     public override void Importar(int ano)
     {
-        // TODO: Criar importação por legislatura
-        if (ano != 2023)
+        using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
         {
-            logger.LogWarning($"Importação já realizada para o ano de {ano}");
-            return;
-        }
-
-        logger.LogWarning("Despesas do(a) {idEstado}:{CasaLegislativa} de {Ano}", config.Estado.GetHashCode(), config.Estado.ToString(), ano);
-
-        CarregarHashes(ano);
-        LimpaDespesaTemporaria();
-
-        var caminhoArquivo = $"{tempPath}/grid_transp_publico_gecop.csv";
-        using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("UTF-8")))
-        {
-            using (var csv = new CsvReader(reader, CultureInfo.CreateSpecificCulture("pt-BR")))
+            // TODO: Criar importação por legislatura
+            if (ano != 2023)
             {
-                while (csv.Read())
-                {
-                    var despesaTemp = new CamaraEstadualDespesaTemp();
-                    despesaTemp.DataEmissao = Convert.ToDateTime("01/" + csv[ColunasDespesas.Competencia.GetHashCode()], cultureInfo);
-                    despesaTemp.Ano = (short)despesaTemp.DataEmissao.Year;
-                    despesaTemp.Mes = (short)despesaTemp.DataEmissao.Month;
-                    despesaTemp.Nome = csv[ColunasDespesas.Parlamentar.GetHashCode()].Trim().ToTitleCase();
-                    despesaTemp.TipoDespesa = csv[ColunasDespesas.Subcota.GetHashCode()].Trim();
-                    despesaTemp.Valor = Convert.ToDecimal(csv[ColunasDespesas.Valor.GetHashCode()], cultureInfo);
+                logger.LogWarning("Importação já realizada para o ano de {Ano}", ano);
+                throw new BusinessException($"Importação já realizada para o ano de {ano}");
+            }
 
-                    InserirDespesaTemp(despesaTemp);
+            CarregarHashes(ano);
+
+            var caminhoArquivo = $"{tempPath}/grid_transp_publico_gecop.csv";
+            using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("UTF-8")))
+            {
+                using (var csv = new CsvReader(reader, CultureInfo.CreateSpecificCulture("pt-BR")))
+                {
+                    while (csv.Read())
+                    {
+                        var despesaTemp = new CamaraEstadualDespesaTemp();
+                        despesaTemp.DataEmissao = Convert.ToDateTime("01/" + csv[ColunasDespesas.Competencia.GetHashCode()], cultureInfo);
+                        despesaTemp.Ano = (short)despesaTemp.DataEmissao.Year;
+                        despesaTemp.Mes = (short)despesaTemp.DataEmissao.Month;
+                        despesaTemp.Nome = csv[ColunasDespesas.Parlamentar.GetHashCode()].Trim().ToTitleCase();
+                        despesaTemp.TipoDespesa = csv[ColunasDespesas.Subcota.GetHashCode()].Trim();
+                        despesaTemp.Valor = Convert.ToDecimal(csv[ColunasDespesas.Valor.GetHashCode()], cultureInfo);
+
+                        InserirDespesaTemp(despesaTemp);
+                    }
                 }
             }
+
+            ProcessarDespesas(ano);
         }
-
-        ProcessarDespesas(ano);
     }
 
-    public override string SqlCarregarHashes(int ano)
+    public override void DefinirCompetencias(int ano)
     {
-        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano + 4}12";
-    }
-
-    public override int ContarRegistrosBaseDeDadosFinal(int ano)
-    {
-        return connection.ExecuteScalar<int>(@$"
-select count(1) 
-from cl_despesa d 
-join cl_deputado p on p.id = d.id_cl_deputado 
-where p.id_estado = {idEstado}
-and d.ano_mes between {ano}01 and {ano + 4}12");
+        competenciaInicial = $"{ano}01";
+        competenciaFinal = $"{ano + 4}12";
     }
 
     public override void ImportarDespesas(string caminhoArquivo, int ano)
@@ -201,13 +194,12 @@ public class ImportadorParlamentarPiaui : ImportadorParlamentarCrawler
 
     public override async Task Importar()
     {
-        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
         var angleSharpConfig = Configuration.Default.WithDefaultLoader();
         var context = BrowsingContext.New(angleSharpConfig);
 
-        var document = await context.OpenAsync(config.BaseAddress);
+        var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
         if (document.StatusCode != HttpStatusCode.OK)
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -227,10 +219,10 @@ public class ImportadorParlamentarPiaui : ImportadorParlamentarCrawler
             deputado.UrlFoto = (parlamentar.QuerySelector("img") as IHtmlImageElement)?.Source;
 
             ArgumentException.ThrowIfNullOrEmpty(deputado.UrlPerfil, nameof(deputado.UrlPerfil));
-            var subDocument = await context.OpenAsync(deputado.UrlPerfil);
+            var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
             if (document.StatusCode != HttpStatusCode.OK)
             {
-                logger.LogError("Erro ao consultar deputado: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
+                logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
                 continue;
             };
             deputado.NomeParlamentar = subDocument.QuerySelector("h1#parent-fieldname-title").TextContent.Split("-")[0].Trim().ToTitleCase();
@@ -250,7 +242,7 @@ public class ImportadorParlamentarPiaui : ImportadorParlamentarCrawler
             InsertOrUpdate(deputado);
         }
 
-        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
     }
 
     public override DeputadoEstadual ColetarDadosLista(IElement document)

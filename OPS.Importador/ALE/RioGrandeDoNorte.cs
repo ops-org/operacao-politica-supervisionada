@@ -46,6 +46,7 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
+        var today = DateTime.Today;
         var address = $"{config.BaseAddress}";
         var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
         var gabinetes = document.QuerySelectorAll("select[name=deputado_id] option").ToList();
@@ -69,17 +70,30 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                 var dcForm = new Dictionary<string, string>();
                 try
                 {
-                    dcForm.Add("mes_id", (meses.First(x => (x as IHtmlOptionElement).Text == mesExtenso) as IHtmlOptionElement).Value);
+                    var mesSelecionado = meses.FirstOrDefault(x => (x as IHtmlOptionElement).Text == mesExtenso);
+                    if (mesSelecionado == null)
+                    {
+                        // Não gerar alerta para o mês atual e anterior
+                        if (!(ano == today.Year && mes >= (today.Month - 1)))
+                            logger.LogWarning("Pesquisa para {Parlamentar} no mês {Mes:00}/{Ano} não disponivel!", gabinete.Text, mes, ano);
+
+                        continue;
+                    }
+
+                    dcForm.Add("mes_id", (mesSelecionado as IHtmlOptionElement).Value);
                 }
                 catch
                 {
-                    logger.LogWarning($"Pesquisa para {gabinete.Text} no mês {mesExtenso} não disponivel!");
+                    // Não gerar alerta para o mês atual e anterior
+                    if (!(ano == today.Year && mes >= (today.Month - 1)))
+                        logger.LogWarning("Pesquisa para {Parlamentar} no mês {Mes:00}/{Ano} não disponivel!", gabinete.Text, mes, ano);
+
                     continue;
                 }
 
                 dcForm.Add("deputado_id", gabinete.Value);
                 IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.form-default");
-                var subDocument = form.SubmitAsync(dcForm).GetAwaiter().GetResult();
+                var subDocument = form.SubmitAsyncAutoRetry(dcForm).GetAwaiter().GetResult();
 
                 if (subDocument.QuerySelector(".m9 p")?.TextContent == "Não foram encontradas verbas para os filtros informados") continue;
 
@@ -105,14 +119,11 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
         decimal valorTotal = 0;
         //if (paginasPdf.Count() > 2) Console.WriteLine("teste");
 
-        try
-        {
-            Console.WriteLine(paginasPdf[0].Split('\n')[4]);
-        }
-        catch (Exception)
-        {
-            Console.WriteLine(paginasPdf[1].Split('\n')[0]);
-        }
+        //var pageLines = paginasPdf[0].Split('\n');
+        //if (pageLines.Length >= 4)
+        //    Console.WriteLine(pageLines[4]);
+        //else
+        //    Console.WriteLine(paginasPdf[1].Split('\n')[0]);
 
         var totalValidado = true;
         var paginaInicial = 0;
@@ -242,7 +253,6 @@ public class ImportadorParlamentarRioGrandeDoNorte : ImportadorParlamentarCrawle
     ///// <returns></returns>
     //public override async Task Importar()
     //{
-    //    logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
     //    ArgumentNullException.ThrowIfNull(config, nameof(config));
 
     //    var angleSharpConfig = Configuration.Default.WithDefaultLoader();
@@ -263,7 +273,7 @@ public class ImportadorParlamentarRioGrandeDoNorte : ImportadorParlamentarCrawle
 
     //    foreach (var urlPerfil in parlamentares)
     //    {
-    //        var document = await context.OpenAsync(urlPerfil);
+    //        var document = await context.OpenAsyncAutoRetry(urlPerfil);
     //        if (document.StatusCode != HttpStatusCode.OK)
     //        {
     //            Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -293,14 +303,16 @@ public class ImportadorParlamentarRioGrandeDoNorte : ImportadorParlamentarCrawle
     //        InsertOrUpdate(deputado);
     //    }
 
-    //    logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+    //    logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
     //}
 
     public override DeputadoEstadual ColetarDadosLista(IElement item)
     {
         var nomeparlamentar = item.QuerySelector(".name-deputies").TextContent.Trim().ToTitleCase();
         var deputado = GetDeputadoByNameOrNew(nomeparlamentar);
-        deputado.NomeCivil = nomeparlamentar;
+
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = deputado.NomeParlamentar;
 
         deputado.UrlPerfil = (item as IHtmlAnchorElement).Href;
         if (deputado.Matricula == null)

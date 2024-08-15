@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OPS.Core;
 using OPS.Importador.ALE.Parlamentar;
 
 namespace OPS.Importador.ALE.Despesa
@@ -22,74 +24,84 @@ namespace OPS.Importador.ALE.Despesa
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            try
+            if (importadorParlamentar != null)
             {
-                watch.Restart();
+                using (logger.BeginScope("Perfil do Parlamentar"))
+                    try
+                    {
+                        watch.Restart();
 
-                if (importadorParlamentar != null)
-                    importadorParlamentar.Importar().Wait();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                watch.Stop();
-                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            }
 
-            try
-            {
-                watch.Restart();
+                        importadorParlamentar.Importar().Wait();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                    finally
+                    {
+                        watch.Stop();
+                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                    }
 
-                if (importadorParlamentar != null)
-                    importadorParlamentar.DownloadFotos().Wait();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                watch.Stop();
-                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            }
+                using (logger.BeginScope("Foto de Perfil"))
+                    try
+                    {
+                        watch.Restart();
 
-            try
-            {
-                watch.Restart();
-
-                if (importadorDespesas != null)
-                    importadorDespesas.Importar(DateTime.Now.Year - 1);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                watch.Stop();
-                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                        importadorParlamentar.DownloadFotos().Wait();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                    finally
+                    {
+                        watch.Stop();
+                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                    }
             }
 
-            try
+            if (importadorDespesas != null)
             {
-                watch.Restart();
+                using (logger.BeginScope("Despesas {Ano}", DateTime.Now.Year - 1))
+                    try
+                    {
+                        watch.Restart();
 
-                if (importadorDespesas != null)
-                    importadorDespesas.Importar(DateTime.Now.Year);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                watch.Stop();
-                logger.LogWarning("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                        importadorDespesas.Importar(DateTime.Now.Year - 1);
+                    }
+                    catch (BusinessException) { }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                    finally
+                    {
+                        watch.Stop();
+                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                    }
+
+                using (logger.BeginScope("Despesas {Ano}", DateTime.Now.Year))
+                    try
+                    {
+                        watch.Restart();
+
+                        importadorDespesas.Importar(DateTime.Now.Year);
+                    }
+                    catch (BusinessException) { }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                    finally
+                    {
+                        watch.Stop();
+                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                    }
             }
 
+            // using (logger.BeginScope("Remuneração"))
             //try
             //{
             //    watch.Restart();

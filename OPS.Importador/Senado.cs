@@ -55,8 +55,6 @@ namespace OPS.Importador
 
         public Task Importar()
         {
-            logger.LogWarning($"Importar Parlamentares do Senado");
-
             using (var banco = new AppDb())
             {
                 var lstSenadorAtivo = new List<string>();
@@ -892,7 +890,7 @@ namespace OPS.Importador
 
         public void Importar(int ano)
         {
-            logger.LogWarning($"Despesas do(a) Senado de {ano}");
+            logger.LogDebug("Despesas do(a) Senado de {Ano}", ano);
 
             Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
 
@@ -1015,7 +1013,7 @@ namespace OPS.Importador
 
                     logger.LogTrace("{Total} Hashes Carregados", dc.Count);
                     if (hashIgnorado > 0)
-                        logger.LogWarning("{Total} Hashes Ignorados", hashIgnorado);
+                        logger.LogWarning("{Total} Hashes Duplicados", hashIgnorado);
                 }
 
                 LimpaDespesaTemporaria(banco);
@@ -1211,7 +1209,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 			");
 
             if (banco.RowsAffected > 0)
-                logger.LogInformation($"{banco.RowsAffected} Fornecedores cadastrados.");
+                logger.LogInformation("{Qtd} Fornecedores cadastrados.", banco.RowsAffected);
 
             return string.Empty;
         }
@@ -1258,11 +1256,11 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
 
             if (banco.RowsAffected > 0)
-                logger.LogInformation($"{banco.RowsAffected} despesas cadastradas.");
+                logger.LogInformation("{Qtd} despesas cadastradas.", banco.RowsAffected);
 
             var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.sf_despesa_temp");
             if (banco.RowsAffected != totalTemp)
-                logger.LogWarning($"Há {totalTemp - banco.RowsAffected} registros que não foram importados corretamente!");
+                logger.LogWarning("Há {Qtd} registros que não foram importados corretamente!", totalTemp - banco.RowsAffected);
 
             //         banco.ExecuteNonQuery(@"
             //	UPDATE ops_tmp.sf_despesa_temp t 

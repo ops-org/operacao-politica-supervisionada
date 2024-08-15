@@ -80,9 +80,9 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                 nomeDeputado = "Luis Eduardo Schincaglia";
 
             var deputado = deputados.Find(x => (x.NomeImportacao ?? Utils.RemoveAccents(x.NomeCivil)).Equals(nomeDeputado, StringComparison.InvariantCultureIgnoreCase));
-            if(deputado == null || deputado.Gabinete == null)
+            if (deputado == null || deputado.Gabinete == null)
             {
-                logger.LogError($"Deputado {colunas[idxCredor].TextContent} não existe ou não possui gabinete relacionado!");
+                logger.LogError("Parlamentar {Parlamentar} não existe ou não possui gabinete relacionado!", colunas[idxCredor].TextContent);
             }
 
             var despesaTemp = new CamaraEstadualDespesaTemp()
@@ -113,87 +113,114 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
             var gabinete = item as IHtmlOptionElement;
             if (string.IsNullOrEmpty(gabinete.Value)) continue;
 
-            var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
-            if (deputado == null)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text }))
             {
-                deputado = deputados.Find(x => gabinete.Text.Split('-')[0].Trim().Equals(x.NomeCivil, StringComparison.InvariantCultureIgnoreCase));
-                if (deputado != null)
+                var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
+                if (deputado == null)
                 {
-                    deputado.Gabinete = Convert.ToUInt32(gabinete.Value);
-                    connection.Update(deputado);
-                }
-                else if (gabinete.Value != "54") // STI DA SILVA - DEPUTADO TESTE STI
-                {
-                    logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
-                }
-            }
-
-            IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form#form_busca_verba");
-            var dcForm = new Dictionary<string, string>();
-            dcForm.Add("categoria", "1"); // Geral
-            dcForm.Add("ano", ano.ToString());
-            dcForm.Add("mes", mes.ToString());
-            dcForm.Add("gabinete", gabinete.Value);
-            var subDocument = form.SubmitAsync(dcForm).GetAwaiter().GetResult();
-            var mensagem = subDocument.QuerySelector("#tabela .dataTables_empty");
-            if (mensagem != null)
-            {
-                logger.LogInformation(mensagem.TextContent);
-            }
-
-            var patternPrestador = @"Prestador: (?<prestador>.*) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
-            decimal valorTotalCalculado = 0;
-            decimal valorTotalPagina = 0;
-            var registrosValidos = 0;
-
-            var despesas = subDocument.QuerySelectorAll("#tabela tbody tr");
-            foreach (var despesa in despesas)
-            {
-                var titulo = despesa.QuerySelector("td h4");
-                if (titulo != null)
-                {
-                    logger.LogInformation(titulo.TextContent.Trim());
-                    valorTotalPagina += Convert.ToDecimal(titulo.TextContent.Split("R$")[1].Trim(), cultureInfo);
-
-                    continue;
+                    deputado = deputados.Find(x => gabinete.Text.Split('-')[0].Trim().Equals(x.NomeCivil, StringComparison.InvariantCultureIgnoreCase));
+                    if (deputado != null)
+                    {
+                        deputado.Gabinete = Convert.ToUInt32(gabinete.Value);
+                        connection.Update(deputado);
+                    }
+                    else if (gabinete.Value != "54") // STI DA SILVA - DEPUTADO TESTE STI
+                    {
+                        logger.LogError("Parlamentar {Gabinete}: {Parlamentar} não existe ou não possui gabinete relacionado!", gabinete.Value, gabinete.Text);
+                    }
                 }
 
-                var linha = despesa.QuerySelector("td").TextContent.Trim();
-                if (string.IsNullOrEmpty(linha)) continue;
-
-                var linhaPartes = linha.Replace("|", "").Split("\n");
-
-                var despesaTemp = new CamaraEstadualDespesaTemp()
+                IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form#form_busca_verba");
+                var dcForm = new Dictionary<string, string>();
+                dcForm.Add("ano", ano.ToString());
+                dcForm.Add("mes", mes.ToString());
+                dcForm.Add("gabinete", gabinete.Value);
+                var subDocument = form.SubmitAsyncAutoRetry(dcForm).GetAwaiter().GetResult();
+                var mensagem = subDocument.QuerySelector("#tabela .dataTables_empty");
+                if (mensagem != null)
                 {
-                    Nome = gabinete.Text.ToTitleCase(),
-                    Cpf = gabinete.Value,
-                    Ano = (short)ano,
-                    Mes = (short)mes,
-                    TipoDespesa = linhaPartes[1].Split(":")[1].Trim().ToTitleCase(),
-                    DataEmissao = Convert.ToDateTime(linhaPartes[2].Split(":")[1].Trim(), cultureInfo),
-                    Valor = Convert.ToDecimal(linhaPartes[3].Split("R$")[1].Trim(), cultureInfo),
-                    Observacao = (despesa.QuerySelector("td a") as IHtmlAnchorElement).Href,
-                };
-
-                try
-                {
-                    Match matchPrestador = Regex.Matches(linhaPartes[0], patternPrestador)[0];
-                    despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNumericos(matchPrestador.Groups["cnpj"].Value);
-                    despesaTemp.Empresa = matchPrestador.Groups["prestador"].Value.Trim();
-                }
-                catch (Exception)
-                {
-                    logger.LogError($"Fornecedor invalido: {linhaPartes[0]}");
+                    logger.LogWarning("Parlamentar {Gabinete}: {Parlamentar} sem gastos no mês! Detalhes: {Mensagem}", gabinete.Value, gabinete.Text, mensagem.TextContent);
                 }
 
-                InserirDespesaTemp(despesaTemp);
-                valorTotalCalculado += despesaTemp.Valor;
-                registrosValidos++;
-            }
+                var patternPrestador = @"Prestador: (?<prestador>.*) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
+                decimal valorTotalCalculado = 0;
+                decimal valorTotalPagina = 0;
+                var registrosValidos = 0;
 
-            if (valorTotalCalculado != valorTotalPagina)
-            {
-                logger.LogError($"Valor Divergente! Esperado: {valorTotalPagina}; Encontrado: {valorTotalCalculado}; Referencia: {mes:00}/{ano} {gabinete.Text}; {registrosValidos} Registros");
+                var despesas = subDocument.QuerySelectorAll("#tabela tbody tr");
+                foreach (var despesa in despesas)
+                {
+                    var titulo = despesa.QuerySelector("td h4");
+                    if (titulo != null)
+                    {
+                        //logger.LogInformation(titulo.TextContent.Trim());
+                        valorTotalPagina += Convert.ToDecimal(titulo.TextContent.Split("R$")[1].Trim(), cultureInfo);
+
+                        continue;
+                    }
+
+                    var linha = despesa.QuerySelector("td").TextContent.Trim();
+                    if (string.IsNullOrEmpty(linha)) continue;
+
+                    var linhaPartes = linha.Trim().Replace("|", "").Split("\n");
+
+                    var despesaTemp = new CamaraEstadualDespesaTemp()
+                    {
+                        Nome = gabinete.Text.ToTitleCase(),
+                        Cpf = gabinete.Value,
+                        Ano = (short)ano,
+                        Mes = (short)mes,
+                    };
+
+                    if (linhaPartes.Length > 2) // Verbas Gerais
+                    {
+                        despesaTemp.TipoDespesa = linhaPartes[1].Split(":")[1].Trim().ToTitleCase();
+                        despesaTemp.DataEmissao = Convert.ToDateTime(linhaPartes[2].Split(":")[1].Trim(), cultureInfo);
+                        despesaTemp.Valor = Convert.ToDecimal(linhaPartes[3].Split("R$")[1].Trim(), cultureInfo);
+
+                        if (despesa.QuerySelector("td a") != null)
+                            despesaTemp.Observacao = (despesa.QuerySelector("td a") as IHtmlAnchorElement).Href;
+
+                        var maches = Regex.Matches(linhaPartes[0], patternPrestador);
+                        if (maches.Any())
+                        {
+                            Match matchPrestador = maches[0];
+                            despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNumericos(matchPrestador.Groups["cnpj"].Value);
+                            despesaTemp.Empresa = matchPrestador.Groups["prestador"].Value.Trim();
+                        }
+                        else if (linhaPartes[0].Contains("COPIADORA RORIZ LTDA 22. 882.427/0001-01"))
+                        {
+                            despesaTemp.CnpjCpf = "22882427000101"; // 22.882.427/0001-01
+                            despesaTemp.Empresa = "COPIADORA RORIZ LTDA";
+                        }
+                        else if (linhaPartes[0].Contains("A.S. DE ALMEIDA ALINHAMENTOS 03770600/0001-27"))
+                        {
+                            despesaTemp.CnpjCpf = "03770600000127";  // 03.770.600/0001-27
+                            despesaTemp.Empresa = "A.S. DE ALMEIDA ALINHAMENTOS";
+                        }
+                        else
+                        {
+                            logger.LogError("Fornecedor invalido: {Fornecedor}", linhaPartes[0]);
+                        }
+                    }
+                    else // Verbas de Saúde
+                    {
+                        despesaTemp.TipoDespesa = "Verbas de Saúde";
+                        despesaTemp.DataEmissao = Convert.ToDateTime(linhaPartes[0].Split(":")[1].Trim(), cultureInfo);
+                        despesaTemp.Valor = Convert.ToDecimal(linhaPartes[1].Split("R$")[1].Trim(), cultureInfo);
+                    }
+
+                    InserirDespesaTemp(despesaTemp);
+                    valorTotalCalculado += despesaTemp.Valor;
+                    registrosValidos++;
+                }
+
+                if (valorTotalCalculado != valorTotalPagina)
+                {
+                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
+                            valorTotalPagina, valorTotalCalculado, valorTotalPagina - valorTotalCalculado);
+
+                }
             }
         }
     }

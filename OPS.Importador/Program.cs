@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -23,7 +24,6 @@ using OPS.Importador.Utilities;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador
 {
@@ -32,6 +32,11 @@ namespace OPS.Importador
         public static void Main(string[] args)
         {
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+            Serilog.Debugging.SelfLog.Enable(Console.Error);
+
+            CultureInfo ci = new CultureInfo("pt-BR");
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
 
             var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (string.IsNullOrEmpty(environmentName)) environmentName = "Development";
@@ -43,8 +48,12 @@ namespace OPS.Importador
             var configuration = builder.Build();
 
             var loggerConfiguration = new LoggerConfiguration()
-              .ReadFrom.Configuration(configuration)
-              .Enrich.FromLogContext();
+                .ReadFrom.Configuration(configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name)
+                .Enrich.WithProperty("MachineName", Environment.MachineName)
+                .Enrich.WithProperty("Identifier", Guid.NewGuid().ToString())
+                .Enrich.With<InvocationContextEnricher>();
 
             Log.Logger = loggerConfiguration.CreateLogger();
 
@@ -96,7 +105,7 @@ namespace OPS.Importador
             services.AddHttpClient<HttpClient>("MyNamedClient", config =>
                 {
                     //config.BaseAddress = new Uri("https://localhost:5001/api/");
-                    config.Timeout = TimeSpan.FromMinutes(5);
+                    config.Timeout = TimeSpan.FromSeconds(300);
                     config.DefaultRequestHeaders.Clear();
                     config.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)");
                 })
@@ -111,7 +120,9 @@ namespace OPS.Importador
                     {
                         TimeSpan.FromSeconds(1),
                         TimeSpan.FromSeconds(5),
-                        TimeSpan.FromSeconds(10)
+                        TimeSpan.FromSeconds(10),
+                        TimeSpan.FromSeconds(30),
+                        TimeSpan.FromSeconds(60),
                     },
                     onRetry: (outcome, timespan, retryAttempt, context) =>
                     {
@@ -139,9 +150,6 @@ namespace OPS.Importador
             SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
             SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
-            CultureInfo ci = new CultureInfo("pt-BR");
-            Thread.CurrentThread.CurrentCulture = ci;
-            Thread.CurrentThread.CurrentUICulture = ci;
 
             Padrao.ConnectionString = configuration.GetConnectionString("AuditoriaContext");
             MySqlConnectorLogManager.Provider = new SerilogLoggerProvider();
@@ -150,185 +158,145 @@ namespace OPS.Importador
             {
                 new Core.DAO.ParametrosRepository().CarregarPadroes();
 
-                if (environmentName == "Production")
+                var logger = serviceProvider.GetService<ILogger<Program>>();
+                DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger, configuration).GetSqlResiliencePolicies());
+
+                logger.LogInformation("Iniciando Importação");
+
+                var types = new Type[]
                 {
-                    ImportacaoDadosCompleto(serviceProvider, configuration).Wait();
-                }
-                else
+                        typeof(Senado), // csv
+                        typeof(CamaraFederal), // csv
+                        //typeof(Acre), // Portal sem dados detalhados!
+                        //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                        typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                        typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                        typeof(Bahia), // crawler anual
+                        typeof(Ceara), // csv mensal
+                        typeof(DistritoFederal), // xlsx  (Apenas BR)
+                        typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                        typeof(Goias), // crawler mensal/deputado
+                        typeof(Maranhao), // Valores mensais por categoria
+                        //typeof(MatoGrosso),
+                        typeof(MatoGrossoDoSul), // crawler anual
+                        typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
+                        typeof(Para), // json api anual
+                        typeof(Paraiba), // arquivo ods mensal/deputado
+                        typeof(Parana), // json api mensal/deputado
+                        typeof(Pernambuco), // json api mensal/deputado
+                        typeof(Piaui), // csv por legislatura (download manual)
+                        typeof(RioDeJaneiro), // json api mensal/deputado
+                        typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                        typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                        typeof(Rondonia), // crawler mensal/deputado
+                        typeof(Roraima), // crawler & odt mensal/deputado
+                        typeof(SantaCatarina), // csv anual
+                        typeof(SaoPaulo), // xml anual
+                        typeof(Sergipe), // crawler & pdf mensal/deputado
+                        typeof(Tocantins), // crawler & pdf mensal/deputado
+                };
+                // ImportarCompleto(serviceProvider, types);
+
+                var tasks = new List<Task>();
+                foreach (var type in types)
                 {
-
-                    //var htmlRequester = new DefaultHttpRequester();
-                    //htmlRequester.Headers["User-Agent"] = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)";
-                    //var handler = new DefaultHttpRequester { Timeout = TimeSpan.FromMinutes(5) };
-
-                    //var configuration1 = AngleSharp.Configuration.Default
-                    //   .With(htmlRequester)
-                    //   .With(handler)
-                    //   .WithDefaultLoader()
-                    //   .WithDefaultCookies()
-                    //   .WithCulture("pt-BR");
-                    //var context = BrowsingContext.New(configuration1);
-
-                    //for (int i = 0; i < 100; i++)
-                    //{
-                    //    var address = $"http://www.al.ap.gov.br/pagina.php?pg=exibir_parlamentar&iddeputado={i}";
-                    //    var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
-                    //    var nome = document.QuerySelector("h3.ls-title-3 strong")?.TextContent;
-
-                    //    Console.WriteLine($"{i}: {nome}");
-                    //}
-
-                    //var types = new Type[]
-                    //{
-                    //    typeof(Senado), // csv
-                    //    typeof(CamaraFederal), // csv
-
-                    //    typeof(Acre), // Portal sem dados detalhados!
-                    //    typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    //    typeof(Amapa), // crawler mensal/deputado (Apenas BR)
-                    //    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
-                    //    typeof(Bahia), // crawler anual
-                    //    typeof(Ceara), // csv mensal
-                    //    typeof(DistritoFederal), // xlsx  (Apenas BR)
-                    //    typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                    //    typeof(Goias), // crawler mensal/deputado
-                    //    //--//typeof(Maranhao), // Valores mensais por categoria
-                    //    //typeof(MatoGrosso),
-                    //    typeof(MatoGrossoDoSul), // crawler anual
-                    //    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
-                    //    typeof(Para), // json api anual
-                    //    typeof(Paraiba), // arquivo ods mensal/deputado
-                    //    typeof(Parana), // json api mensal/deputado
-                    //    typeof(Pernambuco), // json api mensal/deputado
-                    //    typeof(Piaui), // csv por legislatura (download manual)
-                    //    typeof(RioDeJaneiro), // json api mensal/deputado
-                    //    typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
-                    //    typeof(RioGrandeDoSul), // crawler mensal/deputado
-                    //    typeof(Rondonia), // crawler mensal/deputado
-                    //    typeof(Roraima), // crawler & odt mensal/deputado
-                    //    typeof(SantaCatarina), // csv anual
-                    //    typeof(SaoPaulo), // xml anual
-                    //    typeof(Sergipe), // crawler & pdf mensal/deputado
-                    //    typeof(Tocantins), // crawler & pdf mensal/deputado
-                    //};
-
-                    //foreach (var type in types)
-                    //{
-                    //    Log.Warning("Dados do(a) {CasaLegislativa}", type.Name);
-
-                    //    var importador = (ImportadorBase)serviceProvider.GetService(type);
-                    //    importador.ImportarCompleto();
-                    //}
-
-                    //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
-
-                    //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day-1));
-                    //var mesConsulta = new DateTime(2023, 02, 01);
-
-                    //do
-                    //{
-                    //    importador.ConsultaRemuneracao(mesConsulta.Year, mesConsulta.Month);
-
-                    //    mesConsulta = mesConsulta.AddMonths(1);
-                    //} while (mesConsulta < mesAtual);
-
-
-                    //importador.ColetaDadosDeputados();
-                    //importador.ColetaRemuneracaoSecretarios();
-
-
-                    var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
-                    var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-                    var mesConsulta = new DateTime(2022, 09, 01);
-
-                    do
+                    tasks.Add(Task.Factory.StartNew(() =>
                     {
-                        importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
 
-                        mesConsulta = mesConsulta.AddMonths(1);
-                    } while (mesConsulta < mesAtual);
-                    
+                        using (logger.BeginScope(new Dictionary<string, object> { ["Estado"] = type.Name, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
+                        {
+                            var watch = System.Diagnostics.Stopwatch.StartNew();
 
+                            var importador = (ImportadorBase)serviceProvider.GetService(type);
+                            importador.ImportarCompleto();
 
-                    //var importador = serviceProvider.GetService<Presidencia>();
-                    //importador.ImportarArquivoDespesas(0);
-
-                    //objCamaraSantaCatarina.ImportarParlamentares();
-                    //objSenado.ImportarCompleto();
-                    //objCamara.ImportarCompleto();
-                    //objCamara.ImportaPresencasDeputados();
-                    //objCamaraDistritoFederal.ImportarCompleto();
-                    //objCamaraSantaCatarina.ImportarCompleto();
-                    //objCamara.AtualizaParlamentarValores();
-                    //objCamara.ColetaDadosDeputados();
-                    //objCamara.ColetaRemuneracaoSecretarios();
-
-                    //objCamaraDistritoFederal.ImportarParlamentares();
-                    //objCamaraSantaCatarina.ImportarParlamentares();
-                    //objCamaraSaoPaulo.ImportarParlamentares();
-                    //objCamaraPernambuco.ImportarParlamentares();
-                    //objCamaraMinasGerais.ImportarParlamentares();
-                    //objCamaraRioGrandeDoSul.ImportarParlamentares();
-                    //objCamaraGoias.ImportarParlamentares();
-                    //objCamaraBahia.ImportarParlamentares();
-
-                    //var objCamaraParana = serviceProvider.GetService<CamaraParana>();
-                    //objCamaraParana.ImportarArquivoDespesas(2019);
-                    //objCamaraParana.ImportarArquivoDespesas(2020);
-                    //objCamaraParana.ImportarArquivoDespesas(2021);
-                    //objCamaraParana.ImportarArquivoDespesas(2022);
-
-
-                    //for (int ano = 2013; ano <= 2022; ano++)
-                    //{
-                    //    Log.Information("Despesas de {Ano}", ano);
-                    //    objCamaraDistritoFederal.ImportarArquivoDespesas(ano);
-                    //}
-
-                    //for (int ano = 2011; ano <= 2022; ano++)
-                    //{
-                    //    Log.Information("Despesas de {Ano}", ano);
-                    //    objCamaraSantaCatarina.ImportarArquivoDespesas(ano);
-                    //}
-
-                    //for (int ano = 2010; ano <= 2022; ano++)
-                    //{
-                    //    Log.Information("Despesas de {Ano}", ano);
-                    //    objCamaraSaoPaulo.ImportarArquivoDespesas(ano);
-                    //}
-
-                    //for (int ano = 2019; ano <= 2022; ano++)
-                    //{
-                    //    Log.Information("Despesas de {Ano}", ano);
-                    //    objCamaraMatoGrossoDoSul.ImportarArquivoDespesas(ano);
-                    //}
-
-                    //for (int ano = 2020; ano <= 2022; ano++)
-                    //{
-                    //    Log.Information("Despesas de {Ano}", ano);
-                    //    //objCamaraGoias.ImportarArquivoDespesas(ano);
-                    //    objCamaraBahia.ImportarArquivoDespesas(ano);
-                    //}
-
-                    //for (int ano = 2021; ano <= 2022; ano++)
-                    //{
-                    //    Log.Information("Despesas de {Ano}", ano);
-                    //    objCamaraCeara.ImportarArquivoDespesas(ano);
-                    //}
-
-                    //var cand = new Candidatos();
-                    //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
-                    //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
-                    //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
-                    //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
-                    //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
-
-                    //Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
-                    //objFornecedor.ConsultarDadosCNPJ().Wait();
-
-                    Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
-                    Console.ReadKey();
+                            watch.Stop();
+                            logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}", type.Name, watch.Elapsed);
+                        }
+                    }));
                 }
+                Task.WaitAll(tasks.ToArray());
+
+                //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
+
+                //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day-1));
+                //var mesConsulta = new DateTime(2023, 02, 01);
+
+                //do
+                //{
+                //    importador.ConsultaRemuneracao(mesConsulta.Year, mesConsulta.Month);
+
+                //    mesConsulta = mesConsulta.AddMonths(1);
+                //} while (mesConsulta < mesAtual);
+
+
+                //importador.ColetaDadosDeputados();
+                //importador.ColetaRemuneracaoSecretarios();
+
+
+                //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
+                //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
+                //var mesConsulta = new DateTime(2022, 09, 01);
+
+                //do
+                //{
+                //    importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
+
+                //    mesConsulta = mesConsulta.AddMonths(1);
+                //} while (mesConsulta < mesAtual);
+
+
+
+                //var importador = serviceProvider.GetService<Presidencia>();
+                //importador.ImportarArquivoDespesas(0);
+
+
+                //for (int ano = 2013; ano <= 2022; ano++)
+                //{
+                //    Log.Information("Despesas de {Ano}", ano);
+                //    objCamaraDistritoFederal.ImportarArquivoDespesas(ano);
+                //}
+
+                //for (int ano = 2011; ano <= 2022; ano++)
+                //{
+                //    Log.Information("Despesas de {Ano}", ano);
+                //    objCamaraSantaCatarina.ImportarArquivoDespesas(ano);
+                //}
+
+                //for (int ano = 2010; ano <= 2022; ano++)
+                //{
+                //    Log.Information("Despesas de {Ano}", ano);
+                //    objCamaraSaoPaulo.ImportarArquivoDespesas(ano);
+                //}
+
+                //for (int ano = 2019; ano <= 2022; ano++)
+                //{
+                //    Log.Information("Despesas de {Ano}", ano);
+                //    objCamaraMatoGrossoDoSul.ImportarArquivoDespesas(ano);
+                //}
+
+                //for (int ano = 2020; ano <= 2022; ano++)
+                //{
+                //    Log.Information("Despesas de {Ano}", ano);
+                //    //objCamaraGoias.ImportarArquivoDespesas(ano);
+                //    objCamaraBahia.ImportarArquivoDespesas(ano);
+                //}
+
+                //for (int ano = 2021; ano <= 2022; ano++)
+                //{
+                //    Log.Information("Despesas de {Ano}", ano);
+                //    objCamaraCeara.ImportarArquivoDespesas(ano);
+                //}
+
+                //var cand = new Candidatos();
+                //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
+                //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
+                //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
+                //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
+                //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
+
+                Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
+                objFornecedor.ConsultarDadosCNPJ().Wait();
             }
             catch (Exception ex)
             {
@@ -347,52 +315,19 @@ namespace OPS.Importador
             {
                 Log.CloseAndFlush();
             }
+
+            Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
+            Console.ReadKey();
         }
 
-        private static async Task ImportacaoDadosCompleto(ServiceProvider serviceProvider, Microsoft.Extensions.Configuration.IConfiguration configuration)
+        private static void ImportarCompleto(ServiceProvider serviceProvider, Type[] types)
         {
-            Senado objSenado = serviceProvider.GetService<Senado>();
-            CamaraFederal objCamara = serviceProvider.GetService<CamaraFederal>();
-            DistritoFederal objCamaraDistritoFederal = serviceProvider.GetService<DistritoFederal>();
-            SantaCatarina objCamaraSantaCatarina = serviceProvider.GetService<SantaCatarina>();
-            Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
-
-            try
+            foreach (var type in types)
             {
-                new Core.DAO.ParametrosRepository().CarregarPadroes();
+                Log.Warning("Dados do(a) {CasaLegislativa}", type.Name);
 
-                //objSenado.ImportarCompleto();
-                //objCamara.ImportarCompleto();
-                //objCamara.ImportaPresencasDeputados();
-
-                //objCamaraDistritoFederal.ImportarCompleto();
-                //objCamaraSantaCatarina.ImportarCompleto();
-                //objCamara.ImportaPresencasDeputados();
-
-                objFornecedor.ConsultarDadosCNPJ().Wait();
-
-                //using (WebClient client = new WebClient())
-                //{
-                //    await client.DownloadDataTaskAsync("http://127.0.0.1:5200/tarefa/limparcache");
-                //}
-
-                //var lstEmails = Padrao.EmailEnvioResumoImportacao.Split(';');
-                //var lstEmailTo = new MailAddressCollection();
-                //foreach (string email in lstEmails)
-                //{
-                //    lstEmailTo.Add(email);
-                //}
-
-                //var data = DateTime.Now;
-                //var tempPath = configuration["AppSettings:SiteTempFolder"];
-                //var log = Utils.ReadAllText($"{tempPath}/log{data:yyyyMMdd}.txt");
-                //await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], lstEmailTo, "OPS :: Resumo da Importação - " + data.ToString("dd/MM/yyyy HH:mm"), log, null, false);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-
-                await Utils.SendMailAsync(configuration["AppSettings:SendGridAPIKey"], new MailAddress(Padrao.EmailEnvioErros), "OPS :: Informe de erro na Importação", ex.GetBaseException().Message, null, false);
+                var importador = (ImportadorBase)serviceProvider.GetService(type);
+                importador.ImportarCompleto();
             }
         }
 

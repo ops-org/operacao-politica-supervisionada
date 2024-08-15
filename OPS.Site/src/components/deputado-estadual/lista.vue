@@ -444,8 +444,8 @@ export default {
       fornecedor_busca: {},
 
       estados: [
-        // {"id": 12,"text": "Acre (AC)"},
-        // {"id": 27,"text": "Alagoas (AL)"},
+        // { id: 12, text: "Acre (AC)" },
+        // { id: 27, text: "Alagoas (AL)" },
         { id: 16, text: "Amapá (AP)" },
         { id: 13, text: "Amazonas (AM)" },
         { id: 29, text: "Bahia (BA)" },
@@ -453,8 +453,8 @@ export default {
         { id: 53, text: "Distrito Federal (DF)" },
         { id: 32, text: "Espírito Santo (ES)" },
         { id: 52, text: "Goiás (GO)" },
-        // {"id": 21,"text": "Maranhão (MA)"},
-        // {"id": 51,"text": "Mato Grosso (MT)"},
+        { id: 21, text: "Maranhão (MA)" },
+        //{ id: 51, text: "Mato Grosso (MT)" },
         { id: 50, text: "Mato Grosso do Sul (MS)" },
         { id: 31, text: "Minas Gerais (MG)" },
         { id: 15, text: "Pará (PA)" },

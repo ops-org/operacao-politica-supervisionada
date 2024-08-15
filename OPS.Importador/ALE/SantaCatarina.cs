@@ -36,7 +36,8 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
         base.config = new ImportadorCotaParlamentarBaseConfig()
         {
             BaseAddress = "https://sapl.al.ac.leg.br/parlamentar/",
-            Estado = Estado.SantaCatarina
+            Estado = Estado.SantaCatarina,
+            ChaveImportacao = Core.Enum.ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -156,43 +157,7 @@ where nome not in (
 
     public override void InsereDespesaFinal(int ano)
     {
-        var affected = connection.Execute(@$"
-INSERT IGNORE INTO cl_despesa (
-	id_cl_deputado,
-    id_cl_despesa_tipo,
-    id_cl_despesa_especificacao,
-	id_fornecedor,
-	data_emissao,
-	ano_mes,
-	numero_documento,
-	valor_liquido,
-    favorecido,
-    observacao,
-    hash
-)
-SELECT 
-	p.id AS id_cl_deputado,
-    dts.id_cl_despesa_tipo,
-    dts.id,
-    f.id AS id_fornecedor,
-    d.data_emissao,
-    concat(year(d.data_emissao), LPAD(month(d.data_emissao), 2, '0')) AS ano_mes,
-    d.documento AS numero_documento,
-    d.valor AS valor,
-    d.favorecido,
-    d.observacao AS observacao,
-    d.hash
-FROM ops_tmp.cl_despesa_temp d
-INNER JOIN cl_deputado p on (p.nome_parlamentar like d.nome or p.nome_civil like d.nome) and id_estado = {idEstado}
-LEFT JOIN cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
-LEFT JOIN fornecedor f on f.cnpj_cpf = d.cnpj_cpf
-WHERE d.hash NOT IN (
-    SELECT hash FROM cl_despesa d
-    INNER JOIN cl_deputado p on p.id = d.id_cl_deputado and id_estado = {idEstado}
-    WHERE d.ano_mes between '{ano}01' and '{ano}12'
-)
-ORDER BY d.id;
-			", 3600);
+        base.InsereDespesaFinal(ano);
 
         connection.Execute(@"
 UPDATE cl_despesa SET id_fornecedor = 89481, favorecido = null WHERE id_fornecedor IS NULL AND favorecido LIKE 'Brasil Telecom%';
@@ -207,11 +172,6 @@ UPDATE cl_despesa SET id_fornecedor = 1163 WHERE id_fornecedor IS NULL and id_cl
 UPDATE cl_despesa SET id_fornecedor = 42634 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao = 6; -- Correspondência / Telegrama
 UPDATE cl_despesa SET id_fornecedor = 47839 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao = 63; -- Locação de Veículo (Contrato)
 ");
-
-        if (affected > 0)
-        {
-            logger.LogInformation("{Itens} despesas incluidas!", affected);
-        }
     }
 }
 

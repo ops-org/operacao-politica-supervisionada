@@ -57,8 +57,8 @@ public class ImportadorDespesasRioDeJaneiro : ImportadorDespesasRestApiAnual
         // TODO: Criar importação por legislatura
         if (ano != 2023)
         {
-            logger.LogWarning($"Importação já realizada para o ano de {ano}");
-            return;
+            logger.LogWarning("Importação já realizada para o ano de {Ano}", ano);
+            throw new BusinessException($"Importação já realizada para o ano de {ano}");
         }
 
         int legislatura = 2; // 2023-2027
@@ -117,21 +117,11 @@ public class ImportadorDespesasRioDeJaneiro : ImportadorDespesasRestApiAnual
         }
     }
 
-    public override string SqlCarregarHashes(int ano)
+    public override void DefinirCompetencias(int ano)
     {
-        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano + 4}12";
+        competenciaInicial = $"{ano}01";
+        competenciaFinal = $"{ano + 4}12";
     }
-
-    public override int ContarRegistrosBaseDeDadosFinal(int ano)
-    {
-        return connection.ExecuteScalar<int>(@$"
-select count(1) 
-from cl_despesa d 
-join cl_deputado p on p.id = d.id_cl_deputado 
-where p.id_estado = {idEstado}
-and d.ano_mes between {ano}01 and {ano + 4}12");
-    }
-
 }
 
 public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
@@ -148,7 +138,6 @@ public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
 
     public override Task Importar()
     {
-        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
         var query = "{\"filter\":{\"text\":null,\"checkboxes\":{\"withMandate\":false,\"withoutMandate\":false,\"withPendency\":false,\"withoutPendency\":false,\"unread\":false,\"joined\":true,\"notJoined\":false,\"filler\":false},\"selects\":{\"filler\":false}},\"pagination\":{\"total\":83,\"per_page\":\"250\",\"current_page\":1,\"last_page\":9,\"from\":1,\"to\":10,\"pages\":[1,2,3,4,5]}}";
@@ -171,7 +160,7 @@ public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
             InsertOrUpdate(deputado);
         }
 
-        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
         return Task.CompletedTask;
     }
 }

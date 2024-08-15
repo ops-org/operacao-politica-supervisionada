@@ -139,11 +139,11 @@
             </div>
             <div
               class="card-body chart-deputado-gastos-por-mes vld-parent"
-              ref="DeputadoGastosComPesssoalPorAno"
+              ref="DeputadoGastosComPessoalPorAno"
             >
               <highcharts
                 :options="chartDeputadoGastosComPessoalPorAnoOptions"
-                ref="chartDeputadoGastosComPesssoalPorAno"
+                ref="chartDeputadoGastosComPessoalPorAno"
               ></highcharts>
             </div>
           </div>

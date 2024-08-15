@@ -11,6 +11,7 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -29,15 +30,36 @@ namespace OPS.Importador.ALE.Despesa
 
         public string rootPath { get; set; }
 
-        public string tempPath { get; set; }
+        private string _tempPath { get; set; }
+        public string tempPath
+        {
+            get
+            {
+                var dir = Path.Combine(_tempPath, config.Estado.ToString());
+
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                return dir;
+            }
+        }
+
+        public string competenciaInicial { get; set; }
+
+        public string competenciaFinal { get; set; }
 
         public int idEstado { get { return config.Estado.GetHashCode(); } }
 
-        private int linhasProcessadasAno { get; set; }
+        private int itensProcessadosAno { get; set; }
 
-        protected Dictionary<string, List<uint>> lstHash { get; private set; }
+        private decimal valorTotalProcessadoAno { get; set; }
 
-        public HttpClient httpClient { get; }
+        protected Dictionary<string, uint> lstHash { get; private set; }
+
+        private HttpClient _httpClient;
+        public HttpClient httpClient { get { return _httpClient ??= httpClientFactory.CreateClient("MyNamedClient"); } }
+
+        private IHttpClientFactory httpClientFactory { get; }
 
         public List<CamaraEstadualDespesaTemp> despesasTemp { get; set; }
 
@@ -48,10 +70,10 @@ namespace OPS.Importador.ALE.Despesa
 
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
-            tempPath = configuration["AppSettings:SiteTempFolder"];
+            _tempPath = configuration["AppSettings:SiteTempFolder"];
 
 
-            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+            httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
             despesasTemp = new List<CamaraEstadualDespesaTemp>();
         }
 
@@ -60,27 +82,47 @@ namespace OPS.Importador.ALE.Despesa
             logger.LogWarning("Sem Importação de Imagens");
         }
 
+
+        private static object _monitorObj = new object();
         public virtual void ProcessarDespesas(int ano)
         {
-            InsereDespesasTemp();
-            AjustarDados();
-            InsereTipoDespesaFaltante();
-            InsereDeputadoFaltante();
-            InsereFornecedorFaltante();
-            DeletarDespesasInexistentes();
-
-            InsereDespesaFinal(ano);
-
-            ValidaImportacao(ano);
-            LimpaDespesaTemporaria();
-
-            if (ano == DateTime.Now.Year)
+            Monitor.Enter(_monitorObj);
+            try
             {
-                AtualizaValorTotal();
+                logger.LogInformation("Iniciando processamento na base de dados!");
+                LimpaDespesaTemporaria();
+
+                InsereDespesasTemp(ano);
+                AjustarDados();
+                InsereTipoDespesaFaltante();
+                InsereDeputadoFaltante();
+                InsereFornecedorFaltante();
+                DeletarDespesasInexistentes(ano);
+
+                InsereDespesaFinal(ano);
+                ValidaImportacao(ano);
+                
+                if (ano == DateTime.Now.Year)
+                {
+                    try
+                    {
+                        AtualizaValorTotal();
+                    }
+                    catch (MySqlException ex) when (ex.ErrorCode == MySqlErrorCode.LockDeadlock)
+                    {
+                        AtualizaValorTotal();
+                    }
+                }
+
+                logger.LogInformation("Finalizando processamento na base de dados!");
+            }
+            finally
+            {
+                Monitor.Exit(_monitorObj);
             }
         }
 
-        private void InsereDespesasTemp()
+        private void InsereDespesasTemp(int ano)
         {
             JsonSerializerOptions options = new()
             {
@@ -88,8 +130,12 @@ namespace OPS.Importador.ALE.Despesa
             };
 
             List<IGrouping<string, CamaraEstadualDespesaTemp>> results = despesasTemp.GroupBy(x => Convert.ToHexString(x.Hash)).ToList();
-            linhasProcessadasAno = results.Count();
+            itensProcessadosAno = results.Count();
+            valorTotalProcessadoAno = results.Sum(x => x.Sum(x => x.Valor));
 
+            logger.LogInformation("Processando {Itens} despesas agrupadas em {Unicos} unicas com valor total de {ValorTotal} para {Estado} em {Ano}.", despesasTemp.Count(), itensProcessadosAno, valorTotalProcessadoAno, config.Estado.ToString(), ano);
+
+            var despesaInserida = 0;
             foreach (var despesaGroup in results)
             {
                 //if (despesaGroup.Count() > 1)
@@ -109,17 +155,17 @@ namespace OPS.Importador.ALE.Despesa
                 var hash = Utils.SHA1Hash(str);
                 var key = Convert.ToHexString(hash);
 
-                if (lstHash.ContainsKey(key))
-                {
-                    // Para hashs com mais de um registro associado, manter na lista para deletar e inserir novamente.
-                    // TODO: Como tratar tabela com hashs duplicadas
-                    if (lstHash[key].Count == 1 && lstHash.Remove(key))
-                        continue;
-                }
+                if (lstHash.Remove(key)) continue;
 
                 despesa.Hash = hash;
                 connection.Insert(despesa);
+                despesaInserida++;
             }
+
+            if (despesaInserida > 0)
+                logger.LogInformation("{Itens} despesas inseridas na tabela temporaria para {Estado} em {Ano}.", despesaInserida, config.Estado.ToString(), ano);
+
+            despesasTemp = new List<CamaraEstadualDespesaTemp>();
         }
 
         public virtual void ImportarRemuneracao(int ano, int mes)
@@ -330,7 +376,7 @@ DELETE d
 from cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
-and d.ano_mes BETWEEN {ano}01 and {ano}12
+and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
 			");
 
         }
@@ -381,45 +427,30 @@ FROM ops_tmp.cl_despesa_temp d
 inner join cl_deputado p on id_estado = {idEstado} and {condicaoSql}
 left join cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
 LEFT join fornecedor f on f.cnpj_cpf = d.cnpj_cpf
-##WHERE##
 ORDER BY d.id;
 			";
 
-            if (config.Estado != Estado.Piaui && config.Estado != Estado.RioDeJaneiro)
-            {
-                sql = sql.Replace("##WHERE##", $@"
-WHERE d.hash NOT IN (
-    SELECT hash FROM cl_despesa d
-    inner join cl_deputado p on p.id = d.id_cl_deputado and id_estado = {idEstado}
-    WHERE d.ano_mes between '{ano}01' and '{ano}12'
-)");
-            }
-            else
-            {
-                sql = sql.Replace("##WHERE##", "");
-            }
             var affected = connection.Execute(sql, 3600);
 
-
-            if (affected > 0)
-            {
+            var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cl_despesa_temp");
+            if (affected != totalTemp)
+                logger.LogWarning("{Itens} despesas incluidas. Há {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
+            else if (affected > 0)
                 logger.LogInformation("{Itens} despesas incluidas!", affected);
-            }
-
         }
 
         public virtual void ValidaImportacao(int ano)
         {
             logger.LogTrace("Validar importação");
 
-            int totalFinal = ContarRegistrosBaseDeDadosFinal(ano);
-            int totalTemp = ContarRegistrosBaseDeDadosTemp(ano);
+            var agregador = RegistrosBaseDeDadosFinalAgregados(ano);
+            int itensTotalFinal = agregador.Item1;
+            decimal somaTotalFinal = agregador.Item2;
 
-            if (linhasProcessadasAno != totalFinal)
-                logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} Temp: {totalTemp} DB: {LinhasDB}", linhasProcessadasAno, totalFinal);
-            else
+            if (itensProcessadosAno != itensTotalFinal || somaTotalFinal != valorTotalProcessadoAno)
             {
-                logger.LogInformation("Itens na base de dados: {LinhasDB}", totalFinal);
+                logger.LogError("Totais divergentes! Arquivo: [Itens: {LinhasArquivo}; Valor: {ValorTotalArquivo}] DB: [Itens: {LinhasDB}; Valor: {ValorTotalFinal}]",
+                    itensProcessadosAno, valorTotalProcessadoAno, itensTotalFinal, somaTotalFinal);
 
                 string condicaoSql = "";
                 if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
@@ -440,92 +471,105 @@ left join cl_deputado p on {condicaoSql} and id_estado = {idEstado}
 WHERE p.id IS null");
 
                 if (despesasSemParlamentar > 0)
-                    logger.LogError("Há deputados não identificados!"); // TODO: Não pode verificar apenas por nome
+                    logger.LogError("Há deputados não identificados!");
+            }
+            else
+            {
+                logger.LogInformation("Itens na base de dados: {LinhasDB}; Valor total: R$ {ValorTotalFinal}", itensTotalFinal, somaTotalFinal);
+
             }
         }
 
-        public virtual int ContarRegistrosBaseDeDadosFinal(int ano)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ano"></param>
+        /// <returns>Numero de itens e Soma dos valores</returns>
+        public virtual (int, decimal) RegistrosBaseDeDadosFinalAgregados(int ano)
         {
-            return connection.ExecuteScalar<int>(@$"
-select count(1) 
+            var sql = @$"
+select 
+    count(1) as itens, 
+    IFNULL(sum(valor_liquido) as valor_total 
 from cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
-and d.ano_mes between {ano}01 and {ano}12");
-        }
+and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
-        public virtual int ContarRegistrosBaseDeDadosTemp(int ano)
-        {
-            return connection.ExecuteScalar<int>(@$"
-select count(1) from ops_tmp.cl_despesa_temp");
+            using (IDataReader reader = connection.ExecuteReader(sql))
+            {
+                if (reader.Read())
+                {
+                    return (
+                        Convert.ToInt32(reader["itens"].ToString()),
+                        Convert.ToDecimal(reader["valor_total"].ToString())
+                    );
+                }
+            }
+
+            return default;
         }
 
         public virtual void LimpaDespesaTemporaria()
         {
             connection.Execute("truncate table ops_tmp.cl_despesa_temp");
-            despesasTemp = new List<CamaraEstadualDespesaTemp>();
         }
 
-        public virtual void DeletarDespesasInexistentes()
+        public virtual void DeletarDespesasInexistentes(int ano)
         {
             logger.LogTrace("Sincroniza Hashes");
+
+            var agregador = RegistrosBaseDeDadosFinalAgregados(ano);
+            int itensTotalFinal = agregador.Item1;
+            decimal somaTotalFinal = agregador.Item2;
+
+            logger.LogInformation("Já existem {Itens} despesas com valor total de {ValorTotal} para {Estado} em {Ano} previamente importados.", itensTotalFinal, somaTotalFinal, config.Estado.ToString(), ano);
 
             if (!config.Completo && lstHash.Values.Any())
             {
                 var itensDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp");
                 if (itensDbCount == 0 && lstHash.Count() > itensDbCount)
-                    throw new Exception($"Tentando remover ({lstHash.Count()}) mais itens que estamos incluindo ({itensDbCount})! Verifique a importação.");
-
-                var deleted = 0;
-                foreach (var dc in lstHash)
                 {
-                    var dcCount = dc.Value.Count;
-                    if (dcCount > 1)
-                    {
-                        var hash = Convert.FromHexString(dc.Key);
-                        var hashDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp where hash = @hash", new { hash });
-                        if (dcCount == hashDbCount)
-                        {
-                            connection.ExecuteScalar<uint>("DELETE FROM ops_tmp.cl_despesa_temp where hash = @hash", new { hash });
-                            continue;
-                        }
-                    }
-
-                    //var despesa = connection.Get<CamaraEstadualDespesa>(id);
-                    //logger.LogTrace("Remover Registro {@CamaraEstadualDespesa}", despesa);
-                    connection.Execute($"delete from cl_despesa where id IN({string.Join(",", dc.Value)})");
-                    deleted += dcCount;
+                    logger.LogError("Tentando remover ({ItensArquivo}) mais itens que estamos incluindo ({ItensDB})! Verifique a importação.", lstHash.Count(), itensDbCount);
+                    throw new BusinessException($"Tentando remover ({lstHash.Count()}) mais itens que estamos incluindo ({itensDbCount})! Verifique a importação.");
                 }
 
-                logger.LogInformation("{TotalDeleted} despesas removidas!", deleted);
+                foreach (var dc in lstHash)
+                {
+                    connection.Execute($"delete from cl_despesa where id IN({dc.Value})");
+                }
+
+                logger.LogInformation("{TotalDeleted} despesas removidas!", lstHash.Count());
             }
         }
 
         public virtual void CarregarHashes(int ano)
         {
-            linhasProcessadasAno = 0;
+            DefinirCompetencias(ano);
 
-            lstHash = new Dictionary<string, List<uint>>();
-            var sql = SqlCarregarHashes(ano);
+            valorTotalProcessadoAno = 0;
+            itensProcessadosAno = 0;
+
+            lstHash = new Dictionary<string, uint>();
+            var sql = $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             IEnumerable<dynamic> lstHashDB = connection.Query(sql);
 
-            int despesasCount = 0;
             foreach (IDictionary<string, object> dReader in lstHashDB)
             {
-                despesasCount++;
                 var hex = Convert.ToHexString((byte[])dReader["hash"]);
                 if (!lstHash.ContainsKey(hex))
-                    lstHash.Add(hex, new List<uint>() { (uint)dReader["id"] });
+                    lstHash.Add(hex, (uint)dReader["id"]);
                 else
-                    lstHash[hex].Add((uint)dReader["id"]);
+                    logger.LogError("Hash {HASH} esta duplicada na base de dados.", hex);
             }
 
-            logger.LogTrace("{Total} Hashes Carregados", despesasCount);
+            logger.LogInformation("{Total} Hashes Carregados", lstHash.Count());
         }
 
-        public virtual string SqlCarregarHashes(int ano)
+        public virtual void DefinirCompetencias(int ano)
         {
-            return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano}01 and {ano}12";
+            competenciaInicial = $"{ano}01";
+            competenciaFinal = $"{ano}12";
         }
 
         ///// <summary>
@@ -582,7 +626,7 @@ select count(1) from ops_tmp.cl_despesa_temp");
         public void InserirDespesaTemp(CamaraEstadualDespesaTemp despesaTemp)
         {
             // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
-            // Para armazenamento na base de dados a hash é gerado com o valor, para que mudançãs no total provoquem uma atualização.
+            // Para armazenamento na base de dados a hash é gerado com o valor, para que mudanças no total provoquem uma atualização.
             var valorTemp = despesaTemp.Valor;
             despesaTemp.Valor = default(decimal);
             var str = JsonSerializer.Serialize(despesaTemp);

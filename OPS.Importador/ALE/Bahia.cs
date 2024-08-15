@@ -51,7 +51,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
         var despesasReferencia = new List<string>();
         while (true)
         {
-            logger.LogInformation("Consultando pagina {Pagina}!", pagina);
+            logger.LogTrace("Consultando pagina {Pagina}!", pagina);
             // Pagina começa em 0 - HUE
             var address = $"{config.BaseAddress}transparencia/verbas-idenizatorias?ano={ano}&categoria=&page={pagina++}&size=1000";
             var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
@@ -97,6 +97,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                 }
                 catch (Exception ex)
                 {
+                    // TODO? Revisar
                     using (var reader = connection.ExecuteReader($"SELECT distinct hash FROM cl_despesa WHERE numero_documento LIKE '{processo}/%'"))
                     {
                         while (reader.Read())
@@ -176,6 +177,6 @@ public class ImportadorParlamentarBahia : ImportadorParlamentarCrawler
         if (telefoneElemento != null)
             deputado.Telefone = string.Join(" ", telefoneElemento.ParentElement.QuerySelectorAll("span").Select(x => x.TextContent.Trim()));
 
-        deputado.Email = contatos.QuerySelector("p a span").TextContent?.Trim();
+        deputado.Email = contatos.QuerySelector("p a span").TextContent?.Trim().NullIfEmpty();
     }
 }

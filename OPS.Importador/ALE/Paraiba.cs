@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
@@ -51,22 +52,27 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
         {
             if (gabinete.Value == "0") continue;
 
+            
+
             var dcForm = new Dictionary<string, string>();
             dcForm.Add("deputado", gabinete.Value);
-            var subDocument = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
+            var subDocument = form.SubmitAsyncAutoRetry(dcForm, true).GetAwaiter().GetResult();
 
             var linkPlanilha = (subDocument.QuerySelector("#content ul.lista-v a") as IHtmlAnchorElement).Href;
             var caminhoArquivo = $"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.ods";
-            if (TentarBaixarArquivo(linkPlanilha, caminhoArquivo))
-            {
-                try
-                {
-                    ImportarDespesas(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
-                }
-                catch (Exception)
-                {
 
-                    //logger.LogError(ex, ex.Message);
+            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilha, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
+            {
+                if (TentarBaixarArquivo(linkPlanilha, caminhoArquivo))
+                {
+                    try
+                    {
+                        ImportarDespesas(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
+                    }
+                    catch (Exception)
+                    {
+
+                        //logger.LogError(ex, ex.Message);
 
 #if !DEBUG
                         //Excluir o arquivo para tentar importar novamente na proxima execução
@@ -74,9 +80,9 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
                             System.IO.File.Delete(caminhoArquivo);
 #endif
 
+                    }
                 }
             }
-
         }
     }
 
@@ -100,14 +106,15 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             linha++;
             if (linha > 1000) //string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Competencia.GetHashCode())))
             {
-                logger.LogError($"Valor Não validado: {valorTotalDeputado}; Referencia: {mes}/{ano}; Deputado: {nomeParlamentar}");
+                logger.LogError("Valor Não validado: {ValorTotal}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}", valorTotalDeputado, mes, ano, nomeParlamentar);
                 return;
             }
             if (OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()).StartsWith("Total de Despesas"))
             {
                 var valorTotalArquivo = Convert.ToDecimal(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Valor.GetHashCode()), cultureInfo);
                 if (valorTotalDeputado != valorTotalArquivo)
-                    logger.LogError($"Valor Divergente! Esperado: {valorTotalArquivo}; Encontrado: {valorTotalDeputado}; Referencia: {mes}/{ano}; Deputado: {nomeParlamentar}");
+                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
+                        valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
 
                 return;
             }
@@ -143,7 +150,7 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
 
     public override void AjustarDados()
     {
-        // Atualizar numero do gabinete no perfil do deputado
+        // Atualizar numero do gabinete no perfil do parlamentar
         connection.Execute(@"
 UPDATE ops_tmp.cl_despesa_temp dt
 JOIN cl_deputado d ON d.nome_parlamentar = dt.nome AND d.id_estado = 25

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -78,7 +79,8 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
         int Valor = indice++;
 
         var linha = 0;
-        string nomeParlametar = null;
+        string nomeParlamentar = null;
+        decimal valorTotalDeputado = 0;
         short anoDespesa = 0;
         DateTime dataEmissao = DateTime.MinValue;
         foreach (string line in File.ReadLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
@@ -86,15 +88,21 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
             if (line.StartsWith("TOTAL GERAL"))
             {
                 linha = 0;
+
+                var valorTotalArquivo = Convert.ToDecimal(Convert.ToDecimal(line.Split(';')[4], cultureInfo), cultureInfo);
+                if (valorTotalDeputado != valorTotalArquivo)
+                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
+                           valorTotalDeputado, valorTotalArquivo, valorTotalDeputado - valorTotalArquivo);
+
                 continue;
             }
             linha++;
 
             if (linha == 1)
             {
-                nomeParlametar = CorrigeNomeParlamentar(line);
+                nomeParlamentar = CorrigeNomeParlamentar(line);
                 anoDespesa = (short)ano;
-
+                valorTotalDeputado = 0;
                 continue;
             }
 
@@ -105,14 +113,17 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
             }
 
             if (linha == 3) continue; // EMPENHO;DESCRIÇÃO;CNPJ;CREDOR;VALOR
-            if (string.IsNullOrEmpty(nomeParlametar)) continue;
+            if (string.IsNullOrEmpty(nomeParlamentar)) continue;
 
             var colunas = line.Split(';');
             if (colunas.Length != 6) // Finaliza com ;
-                throw new Exception("Linha Invalida" + line);
+            {
+                logger.LogError("Linha Invalida: {Linha}", line);
+                continue;
+            }
 
             var despesaTemp = new CamaraEstadualDespesaTemp();
-            despesaTemp.Nome = nomeParlametar;
+            despesaTemp.Nome = nomeParlamentar;
             despesaTemp.Ano = anoDespesa;
             despesaTemp.DataEmissao = dataEmissao;
             despesaTemp.TipoDespesa = ObterTipoDespesa(colunas[1].Trim());
@@ -123,6 +134,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
             despesaTemp.Valor = Convert.ToDecimal(colunas[4], cultureInfo);
 
             InserirDespesaTemp(despesaTemp);
+            valorTotalDeputado += despesaTemp.Valor;
         }
     }
 
@@ -313,7 +325,9 @@ public class ImportadorParlamentarCeara : ImportadorParlamentarCrawler
     {
         var detalhes = subDocument.QuerySelectorAll(".container>.row>.col-md-3>div>div.d-flex");
 
-        deputado.NomeCivil = BuscarTexto(detalhes, "Nome Completo").ToTitleCase();
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = BuscarTexto(detalhes, "Nome Completo").ToTitleCase();
+
         deputado.Profissao = BuscarTexto(detalhes, "Profissão")?.ToTitleCase();
         deputado.Email = BuscarTexto(detalhes, "E-mails");
         deputado.Site = BuscarTexto(detalhes, "Site Pessoal");

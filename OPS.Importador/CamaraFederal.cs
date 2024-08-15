@@ -8,6 +8,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +24,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
-using OPS.Importador.ALE;
+using OPS.Core.Entity;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -71,8 +74,6 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
     public void ImportarDeputados(int legislaturaInicial)
     {
-        logger.LogWarning($"Importar Parlamentares do Camara Federal");
-
         int novos = 0;
         int pagina;
         var restClient = new RestClient("https://dadosabertos.camara.leg.br/api/v2/deputados/");
@@ -127,13 +128,13 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                                 if (deputadoDetalhes == null)
                                 {
-                                    logger.LogError("Erro ao consultar deputado: {@Response}", response);
+                                    logger.LogError("Erro ao consultar parlamentar: {@Response}", response);
                                     continue;
                                 }
                             }
                             catch (Exception ex)
                             {
-                                logger.LogInformation("Erro ao consultar deputado: {Id} {ErrorMessage}. Nova tentativa em 30s.", deputado.id, ex.Message);
+                                logger.LogInformation("Erro ao consultar parlamentar: {Id} {ErrorMessage}. Nova tentativa em 30s.", deputado.id, ex.Message);
                                 Thread.Sleep(TimeSpan.FromSeconds(30));
 
                                 var x = restClient.Execute<DeputadoDetalhes>(request);
@@ -141,19 +142,19 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                                 if (deputadoDetalhes == null)
                                 {
-                                    logger.LogError("Erro ao consultar deputado {IdDeputado}: {ErrorMessage}", deputado.id, ex.Message);
+                                    logger.LogError("Erro ao consultar parlamentar {IdDeputado}: {ErrorMessage}", deputado.id, ex.Message);
                                     continue;
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError("Erro ao consultar deputado {IdDeputado}: {ErrorMessage}", deputado.id, ex.Message);
+                            logger.LogError("Erro ao consultar parlamentar {IdDeputado}: {ErrorMessage}", deputado.id, ex.Message);
                             continue;
                         }
 
 
-                        logger.LogDebug("Sincronizando dados do Deputado: {IdDeputado} - {NomeDeputado} ({SiglaPartido})",
+                        logger.LogDebug("Sincronizando dados do parlamentar: {IdDeputado} - {NomeDeputado} ({SiglaPartido})",
                             deputado.id, (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase(), deputadoDetalhes.ultimoStatus.siglaPartido);
 
                         // TODO: salvar para exibir
@@ -388,7 +389,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
         using (var banco = new AppDb())
         {
-            string sql = "SELECT id FROM cf_deputado where id_deputado is not null order by id -- AND situacao = 'Exercício'";
+            string sql = "SELECT id, nome_parlamentar FROM cf_deputado where id > 100 order by id -- AND situacao = 'Exercício'";
             DataTable table = banco.GetTable(sql, 0);
 
             foreach (DataRow row in table.Rows)
@@ -421,13 +422,13 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                     ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
 
 
-                    logger.LogTrace("Atualizado imagem do deputado " + id);
+                    logger.LogTrace("Atualizado imagem do parlamentar {Parlamentar}.", row["nome_parlamentar"].ToString());
                 }
                 catch (Exception ex)
                 {
                     if (!ex.Message.Contains("404"))
                     {
-                        logger.LogInformation("Imagem do deputado " + id + " inexistente! Detalhes:" + ex.GetBaseException().Message);
+                        logger.LogInformation(ex.GetBaseException(), "Imagem do parlamentar {Parlamentar} inexistente.", row["nome_parlamentar"].ToString());
                     }
                 }
             }
@@ -443,7 +444,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public string rootPath { get; set; }
     public string tempPath { get; set; }
 
-    private int linhasProcessadasAno { get; set; }
+    private int itensProcessadosAno { get; set; }
+    private decimal valorTotalProcessadoAno { get; set; }
 
     private const int legislaturaAtual = 57;
 
@@ -1179,7 +1181,7 @@ WHERE presencas = 0");
 
     public void Importar(int ano)
     {
-        logger.LogWarning($"Despesas do(a) Camara Federal de {ano}");
+        logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
 
         Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
 
@@ -1250,7 +1252,7 @@ WHERE presencas = 0");
         }
         catch (Exception ex)
         {
-            logger.LogWarning($"Erro ao baixar arquivo: {ex.Message}");
+            logger.LogWarning(ex, "Erro ao baixar arquivo: {UrlArquivo}", urlOrigem);
 
             // Algumas vezes ocorre do arquivo não estar disponivel, precisamos aguardar alguns instantes e tentar novamente.
             // Isso pode ser causado por um erro de rede ou atualização do arquivo.
@@ -1290,159 +1292,151 @@ WHERE presencas = 0");
 
     public void ImportarDespesas(string file, int ano)
     {
-        linhasProcessadasAno = 0;
+        LimpaDespesaTemporaria();
+
+        itensProcessadosAno = 0;
+        valorTotalProcessadoAno = 0;
         var totalColunas = ColunasCEAP.Length;
-        int lote = 0, linhaInserida = 0;
-        var dc = new Dictionary<string, UInt64>();
+        var lstHash = new Dictionary<string, UInt64>();
 
         using (var banco = new AppDb())
         {
-            int hashIgnorado = 0;
-            using (var dReader = banco.ExecuteReader($"select id, hash from cf_despesa where ano={ano} and hash IS NOT NULL"))
-                while (dReader.Read())
-                {
-                    var hex = Convert.ToHexString((byte[])dReader["hash"]);
-                    if (!dc.ContainsKey(hex))
-                        dc.Add(hex, (UInt64)dReader["id"]);
-                    else
-                        hashIgnorado++;
-                }
+            var sql = $"select id, hash from cf_despesa where ano={ano} and hash IS NOT NULL";
+            IEnumerable<dynamic> lstHashDB = connection.Query(sql);
 
-            logger.LogTrace("{Total} Hashes Carregados", dc.Count);
-            if (hashIgnorado > 0)
-                logger.LogWarning("{Total} Hashes Ignorados", hashIgnorado);
+            foreach (IDictionary<string, object> dReader in lstHashDB)
+            {
+                var hex = Convert.ToHexString((byte[])dReader["hash"]);
+                if (!lstHash.ContainsKey(hex))
+                    lstHash.Add(hex, (UInt64)dReader["id"]);
+                else
+                    logger.LogError("Hash {HASH} esta duplicada na base de dados.", hex);
+            }
 
+            logger.LogInformation("{Total} Hashes Carregados", lstHash.Count());
+
+            var despesasTemp = new List<DeputadoFederalDespesaTemp>();
             var cultureInfo = new CultureInfo("en-US");
 
+            var config = new CsvHelper.Configuration.CsvConfiguration(cultureInfo);
+            config.BadDataFound = null;
+            config.Delimiter = ";";
+            //config.MissingFieldFound = null;
+            ////config.TrimOptions = TrimOptions.Trim;
+            //config.HeaderValidated = ConfigurationFunctions.HeaderValidated;
+
             using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
-            using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
+            using (var csv = new CsvReader(reader, config))
             {
-                int linha = 0;
+                if (csv.Read())
+                {
+                    for (int i = 0; i < totalColunas - 1; i++)
+                    {
+                        if (csv[i] != ColunasCEAP[i])
+                        {
+                            throw new Exception("Mudança de integração detectada para o Câmara Federal");
+                        }
+                    }
+                }
+
                 while (csv.Read())
                 {
-                    if (++linha == 1)
+                    var idxColuna = 0;
+                    var despesaTemp = new DeputadoFederalDespesaTemp();
+                    despesaTemp.Nome = csv.GetField(idxColuna++);
+                    despesaTemp.Cpf = Utils.RemoveCaracteresNaoNumericos(csv.GetField(idxColuna++)).NullIfEmpty();
+                    despesaTemp.IdDeputado = csv.GetField<long?>(idxColuna++);
+                    despesaTemp.CarteiraParlamentar = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.Legislatura = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.SiglaUF = csv.GetField(idxColuna++).Replace("NA", string.Empty).NullIfEmpty();
+                    despesaTemp.SiglaPartido = csv.GetField(idxColuna++).NullIfEmpty();
+                    despesaTemp.CodigoLegislatura = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.NumeroSubCota = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.Descricao = csv.GetField(idxColuna++);
+                    despesaTemp.NumeroEspecificacaoSubCota = csv.GetField<int?>(idxColuna++)?.NullIf(0);
+                    despesaTemp.DescricaoEspecificacao = csv.GetField(idxColuna++).NullIfEmpty();
+                    despesaTemp.Fornecedor = csv.GetField(idxColuna++);
+                    despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(csv.GetField(idxColuna++));
+                    despesaTemp.Numero = csv.GetField(idxColuna++);
+                    despesaTemp.TipoDocumento = csv.GetField<int?>(idxColuna++) ?? 0;
+                    despesaTemp.DataEmissao = csv.GetField<DateOnly?>(idxColuna++); ;
+                    despesaTemp.ValorDocumento = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
+                    despesaTemp.ValorGlosa = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
+                    despesaTemp.ValorLiquido = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
+                    despesaTemp.Mes = csv.GetField<short>(idxColuna++);
+                    despesaTemp.Ano = csv.GetField<short>(idxColuna++);
+                    despesaTemp.Parcela = csv.GetField<int?>(idxColuna++)?.NullIf(0);
+                    despesaTemp.Passageiro = csv.GetField(idxColuna++).NullIfEmpty();
+                    despesaTemp.Trecho = csv.GetField(idxColuna++).NullIfEmpty();
+                    despesaTemp.Lote = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.NumeroRessarcimento = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.DataPagamentoRestituicao = csv.GetField<DateOnly?>(idxColuna++);
+                    despesaTemp.ValorRestituicao = csv.GetField<decimal?>(idxColuna++);
+                    despesaTemp.NumeroDeputadoID = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.IdDocumento = csv.GetField(idxColuna++);
+                    despesaTemp.UrlDocumento = csv.GetField(idxColuna++);
+
+                    if (despesaTemp.UrlDocumento.Contains("/documentos/publ"))
+                        despesaTemp.UrlDocumento = "1"; // Ex: https://www.camara.leg.br/cota-parlamentar/documentos/publ/3453/2022/7342370.pdf
+                    else if (despesaTemp.UrlDocumento.Contains("/nota-fiscal-eletronica"))
+                        despesaTemp.UrlDocumento = "2"; // Ex: https://www.camara.leg.br/cota-parlamentar/nota-fiscal-eletronica?ideDocumentoFiscal=7321395
+                    else
                     {
-                        for (int i = 0; i < totalColunas - 1; i++)
+                        if (!string.IsNullOrEmpty(despesaTemp.UrlDocumento))
+                            logger.LogError("Documento '{Valor}' não reconhecido!", despesaTemp.UrlDocumento);
+
+                        despesaTemp.UrlDocumento = "0";
+                    }
+
+                        if (!string.IsNullOrEmpty(despesaTemp.Passageiro))
+                    {
+                        despesaTemp.Passageiro = despesaTemp.Passageiro.ToString().Split(";")[0];
+                        string[] partes = despesaTemp.Passageiro.ToString().Split(new[] { '/', ';' });
+                        if (partes.Length > 1)
                         {
-                            if (csv[i] != ColunasCEAP[i])
+                            var antes = despesaTemp.Passageiro;
+                            despesaTemp.Passageiro = "";
+                            for (int y = partes.Length - 1; y >= 0; y--)
                             {
-                                throw new Exception("Mudança de integração detectada para o Câmara Federal");
+                                despesaTemp.Passageiro += " " + partes[y];
                             }
                         }
-
-                        // Pular linha de titulo
-                        continue;
                     }
 
-                    for (int i = 0; i < totalColunas; i++)
-                    {
-                        string coluna = ColunasCEAP[i];
-                        dynamic valor = csv[i];
+                    if (despesaTemp.DataEmissao == null)
+                        despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes, 1);
 
-                        if (!string.IsNullOrEmpty(valor))
+                    // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
+                    // Para armazenamento na base de dados a hash é gerado com o valor, para que mudanças no total provoquem uma atualização.
+                    var options = new JsonSerializerOptions
+                    {
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                        TypeInfoResolver = new DefaultJsonTypeInfoResolver
                         {
-                            if (coluna == "dataEmissao")
-                            {
-                                valor = Convert.ToDateTime(valor).ToString("yyyy-MM-dd");
-                            }
-                            else if (coluna.StartsWith("vlr") || coluna.StartsWith("num"))
-                            {
-                                valor = Convert.ToDecimal(valor, cultureInfo);
-                            }
-                            else if (coluna.Contains("cpf", StringComparison.InvariantCultureIgnoreCase))
-                                valor = new System.Text.RegularExpressions.Regex(@"[^\d]").Replace(valor.Trim(), "");
-                            else if (coluna == "urlDocumento")
-                            {
-                                if (valor.Contains("/documentos/publ"))
-                                    valor = "1"; // Ex: https://www.camara.leg.br/cota-parlamentar/documentos/publ/3453/2022/7342370.pdf
-                                else if (valor.Contains("/nota-fiscal-eletronica"))
-                                    valor = "2"; // Ex: https://www.camara.leg.br/cota-parlamentar/nota-fiscal-eletronica?ideDocumentoFiscal=7321395
-                                else
-                                {
-                                    logger.LogError($"Documento '{valor}' não reconhecido!");
-                                    valor = "3";
-                                }
-
-                            }
-                            else if (coluna == "passageiro")
-                            {
-                                if (valor.ToString().Contains(";"))
-                                {
-                                    logger.LogInformation($"{valor} > {valor.ToString().Split(";")[0]}");
-                                }
-
-                                valor = valor.ToString().Split(";")[0];
-                                string[] partes = valor.ToString().Split(new[] { '/', ';' });
-                                if (partes.Length > 1)
-                                {
-                                    var antes = valor;
-                                    valor = "";
-                                    for (int y = partes.Length - 1; y >= 0; y--)
-                                    {
-                                        valor += " " + partes[y];
-                                    }
-
-                                    logger.LogInformation($"{antes} > {valor}");
-                                }
-                            }
-                            else
-                            {
-                                valor = valor.ToString().Trim();
-                            }
+                            Modifiers = { IgnoreNegativeValues }
                         }
-                        else
-                        {
-                            valor = null;
-                        }
+                    };
 
-                        banco.AddParameter(coluna, valor);
-                    }
+                    var str = JsonSerializer.Serialize(despesaTemp, options);
+                    despesaTemp.Hash = Utils.SHA1Hash(str);
 
-                    linhasProcessadasAno++;
-                    byte[] hash = banco.ParametersHash();
-                    var key = Convert.ToHexString(hash);
-                    if (dc.Remove(key))
-                    {
-                        banco.ClearParameters();
-                        continue;
-                    }
-
-                    banco.AddParameter("hash", hash);
-
-                    banco.ExecuteNonQuery(@"
-INSERT INTO ops_tmp.cf_despesa_temp (
-    nomeParlamentar, cpf, idDeputado, numeroCarteiraParlamentar, legislatura, siglaUF, 
-    siglaPartido, codigoLegislatura, numeroSubCota, descricao, numeroEspecificacaoSubCota, 
-    descricaoEspecificacao, fornecedor, cnpjCPF, numero, tipoDocumento, 
-    dataEmissao, valorDocumento, valorGlosa, valorLiquido, mes, 
-    ano, parcela, passageiro, trecho, lote, 
-    ressarcimento, restituicao, datPagamentoRestituicao, numeroDeputadoID, idDocumento, urlDocumento, hash
-) VALUES (
-    @txNomeParlamentar, @cpf, @ideCadastro, @nuCarteiraParlamentar, @nuLegislatura, @sgUF, 
-    @sgPartido, @codLegislatura, @numSubCota, @txtDescricao, @numEspecificacaoSubCota, 
-    @txtDescricaoEspecificacao, @txtFornecedor, @txtCNPJCPF, @txtNumero, @indTipoDocumento, 
-    @datEmissao, @vlrDocumento, @vlrGlosa, @vlrLiquido, @numMes, 
-    @numAno, @numParcela, @txtPassageiro, @txtTrecho, @numLote, 
-    @numRessarcimento, @vlrRestituicao, @datPagamentoRestituicao, @nuDeputadoId, @ideDocumento, @urlDocumento, @hash
-)");
-                    if (linhaInserida++ == 10000)
-                    {
-                        logger.LogInformation("Processando lote {Lote}", ++lote);
-                        ProcessarDespesasTemp(ano);
-                        linhaInserida = 0;
-                    }
+                    despesasTemp.Add(despesaTemp);
+                    itensProcessadosAno++;
+                    valorTotalProcessadoAno += despesaTemp.ValorLiquido;
                 }
             }
 
-            foreach (var id in dc.Values)
+            if (itensProcessadosAno > 0)
+                InsereDespesasTemp(despesasTemp, lstHash);
+
+            foreach (var id in lstHash.Values)
             {
                 banco.AddParameter("id", id);
                 banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
             }
 
-            if (linhaInserida > 0)
+            if (itensProcessadosAno > 0)
             {
-                logger.LogInformation("Processando lote {Lote}", ++lote);
                 ProcessarDespesasTemp(ano);
             }
 
@@ -1450,7 +1444,7 @@ INSERT INTO ops_tmp.cf_despesa_temp (
         }
 
 
-        if (ano == DateTime.Now.Year && (lote > 0 || dc.Count > 0))
+        if (ano == DateTime.Now.Year && lstHash.Count > 0)
         {
             InsereDespesaLegislatura();
 
@@ -1459,6 +1453,54 @@ INSERT INTO ops_tmp.cf_despesa_temp (
             AtualizaResumoMensal();
 
             connection.Execute(@"UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();");
+        }
+    }
+
+    private void InsereDespesasTemp( List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, UInt64> lstHash)
+    {
+        JsonSerializerOptions options = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        };
+
+        List<IGrouping<string, DeputadoFederalDespesaTemp>> results = despesasTemp.GroupBy(x => Convert.ToHexString(x.Hash)).ToList();
+        itensProcessadosAno = results.Count();
+        valorTotalProcessadoAno = results.Sum(x => x.Sum(x => x.ValorLiquido));
+
+        logger.LogInformation("Processando {Itens} despesas agrupadas em {Unicos} unicas com valor total de {ValorTotal}.", despesasTemp.Count(), itensProcessadosAno, valorTotalProcessadoAno);
+
+        var despesaInserida = 0;
+        foreach (var despesaGroup in results)
+        {
+            DeputadoFederalDespesaTemp despesa = despesaGroup.FirstOrDefault();
+            despesa.ValorDocumento = despesaGroup.Sum(x => x.ValorDocumento);
+            despesa.ValorGlosa = despesaGroup.Sum(x => x.ValorGlosa);
+            despesa.ValorLiquido = despesaGroup.Sum(x => x.ValorLiquido);
+            despesa.ValorRestituicao = despesaGroup.Sum(x => x.ValorRestituicao);
+
+            var str = JsonSerializer.Serialize(despesa, options);
+            var hash = Utils.SHA1Hash(str);
+            var key = Convert.ToHexString(hash);
+
+            if (lstHash.Remove(key)) continue;
+
+            despesa.Hash = hash;
+            connection.Insert(despesa);
+            despesaInserida++;
+        }
+
+        if (despesaInserida > 0)
+            logger.LogInformation("{Itens} despesas inseridas na tabela temporaria.", despesaInserida);
+    }
+
+    static void IgnoreNegativeValues(JsonTypeInfo typeInfo)
+    {
+        foreach (JsonPropertyInfo propertyInfo in typeInfo.Properties)
+        {
+            if (propertyInfo.PropertyType == typeof(decimal))
+            {
+                propertyInfo.ShouldSerialize = static (obj, value) => false;
+            }
         }
     }
 
@@ -1481,14 +1523,27 @@ INSERT INTO ops_tmp.cf_despesa_temp (
     {
         logger.LogTrace("Validar importação");
 
-        var totalFinal = connection.ExecuteScalar<int>(@$"
-select count(1) 
+        var sql = @$"
+select 
+    count(1) as itens, 
+    IFNULL(sum(valor_liquido), 0) as valor_total 
 from cf_despesa d 
-where d.ano = {ano}");
+where d.ano = {ano}";
 
-        if (linhasProcessadasAno != totalFinal)
-            logger.LogError("Totais divergentes! Arquivo: {LinhasArquivo} DB: {LinhasDB}",
-                linhasProcessadasAno, totalFinal);
+        int itensTotalFinal = default;
+        decimal somaTotalFinal = default;
+        using (IDataReader reader = connection.ExecuteReader(sql))
+        {
+            if (reader.Read())
+            {
+                itensTotalFinal = Convert.ToInt32(reader["itens"].ToString());
+                somaTotalFinal = Convert.ToDecimal(reader["valor_total"].ToString());
+            }
+        }
+
+        if (itensProcessadosAno != itensTotalFinal)
+            logger.LogError("Totais divergentes! Arquivo: [Itens: {LinhasArquivo}; Valor: {ValorTotalArquivo}] DB: [Itens: {LinhasDB}; Valor: {ValorTotalFinal}]",
+                itensProcessadosAno, valorTotalProcessadoAno, itensTotalFinal, somaTotalFinal);
 
         var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 select count(1) from ops_tmp.cf_despesa_temp where idDeputado not in (select id from cf_deputado);");
@@ -1805,12 +1860,11 @@ ALTER TABLE cf_despesa ENABLE KEYS;
 SET SQL_BIG_SELECTS=0;
 			", 3600);
 
-        if (affected > 0)
-            logger.LogInformation("{Itens} despesas incluidos!", affected);
-
         var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
         if (affected != totalTemp)
-            logger.LogWarning($"Há {totalTemp - affected} registros que não foram importados corretamente!");
+            logger.LogWarning("{Itens} despesas incluidas. Há {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
+        else if (affected > 0)
+            logger.LogInformation("{Itens} despesas incluidas!", affected);
     }
 
     private void InsereDespesaLegislatura()
@@ -1956,7 +2010,7 @@ where id=@id_cf_deputado", new
         else
             urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-de-{0}-csv", ano, meses[mes - 1]);
 
-        var caminhoArquivo = System.IO.Path.Combine(tempPath, $"CF-RM{ano}{mes:00}.csv");
+        var caminhoArquivo = System.IO.Path.Combine(tempPath, $"CF/RM{ano}{mes:00}.csv");
 
         try
         {
@@ -2229,7 +2283,6 @@ order by cd.situacao, cd.id
             while (queue.TryDequeue(out deputado))
             {
                 var idDeputado = Convert.ToInt32(deputado["id_cf_deputado"]);
-                Console.WriteLine($"Deputado: {idDeputado}");
 
                 var address = $"https://www.camara.leg.br/deputados/{idDeputado}";
                 var document = await context.OpenAsyncAutoRetry(address);
@@ -2368,7 +2421,7 @@ order by cd.situacao, cd.id
                                     }
                                     break;
                                 default:
-                                    throw new NotImplementedException($"Vefificar beneficios do deputado {idDeputado} para o ano {ano}.");
+                                    throw new NotImplementedException($"Vefificar beneficios do parlamentar {idDeputado} para o ano {ano}.");
                             }
 
                             // Console.WriteLine($"{titulo}: {valor}");
@@ -2943,7 +2996,7 @@ values (@chave, @nome, @categoria_funcional, @area_atuacao, @situacao{1})
 
                     if (linhas.Count() < 20)
                     {
-                        logger.LogInformation($"Parando na pagina {pagina}!");
+                        logger.LogDebug("Parando na pagina {Pagina}!", pagina);
                         break;
                     }
                 }

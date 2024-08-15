@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using AngleSharp;
+using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enum;
@@ -127,6 +128,7 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
 
     public override Task Importar()
     {
+        ArgumentNullException.ThrowIfNull(config, nameof(config));
         var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
         foreach (var situacao in new[] { "em_exercicio", "que_exerceram_mandato", "que_renunciaram", "que_se_afastaram", "que_perderam_mandato" })
@@ -172,6 +174,7 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
             }
         }
 
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", registrosInseridos, registrosAtualizados);
         return Task.CompletedTask;
     }
 }

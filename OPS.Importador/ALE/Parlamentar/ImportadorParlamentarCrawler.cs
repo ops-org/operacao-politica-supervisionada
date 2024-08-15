@@ -5,6 +5,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
+using OPS.Importador.Utilities;
 
 namespace OPS.Importador.ALE.Parlamentar;
 
@@ -24,13 +25,12 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
 
     public override async Task Importar()
     {
-        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
         var angleSharpConfig = Configuration.Default.WithDefaultLoader();
         var context = BrowsingContext.New(angleSharpConfig);
 
-        var document = await context.OpenAsync(config.BaseAddress);
+        var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
         if (document.StatusCode != HttpStatusCode.OK)
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -45,10 +45,10 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
             if (config.ColetaDadosDoPerfil)
             {
                 ArgumentException.ThrowIfNullOrEmpty(deputado.UrlPerfil, nameof(deputado.UrlPerfil));
-                var subDocument = await context.OpenAsync(deputado.UrlPerfil);
+                var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
                 if (document.StatusCode != HttpStatusCode.OK)
                 {
-                    logger.LogError("Erro ao consultar deputado: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
+                    logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
                     continue;
                 };
                 ColetarDadosPerfil(deputado, subDocument);
@@ -57,7 +57,7 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
             InsertOrUpdate(deputado);
         }
 
-        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
     }
 
     public abstract DeputadoEstadual ColetarDadosLista(IElement document);

@@ -14,8 +14,6 @@ using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using static OPS.Importador.ALE.ImportadorDespesasPernambuco;
 
 namespace OPS.Importador.ALE;
 
@@ -41,52 +39,38 @@ public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://www2.al.rs.gov.br/transparenciaalrs/GabinetesParlamentares/Centrodecustos/tabid/5666/Default.aspx",
             Estado = Estado.RioGrandeDoSul,
-            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
+            ChaveImportacao = ChaveDespesaTemp.Gabinete
         };
     }
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
         var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
+        var mensagem = document.QuerySelector(".style_titulo");
+        if(mensagem != null)
+        {
+            logger.LogError(mensagem.TextContent.Trim());
+            throw new BusinessException(mensagem.TextContent.Trim());
+        }
+
         IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
 
         var dcForm = new Dictionary<string, string>();
-        var tentativa = 0;
-        while (true)
+        if (ano.ToString() != document.QuerySelector<IHtmlSelectElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlAno").Value)
         {
-            try
-            {
-                tentativa++;
-                if (ano.ToString() != document.QuerySelector<IHtmlSelectElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlAno").Value)
-                {
-                    dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlAno", ano.ToString());
-                    dcForm.Add("__EVENTTARGET", "dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlAno");
-                    document = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
-                    form = document.QuerySelector<IHtmlFormElement>("form");
-                }
+            dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlAno", ano.ToString());
+            dcForm.Add("__EVENTTARGET", "dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlAno");
+            document = SubmitWithAutoRetryAsync(form, dcForm, ano, mes, string.Empty);
+            form = document.QuerySelector<IHtmlFormElement>("form");
+        }
 
-                if (mes.ToString() != document.QuerySelector<IHtmlSelectElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlMes").Value)
-                {
-                    dcForm = new Dictionary<string, string>();
-                    dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlMes", mes.ToString());
-                    dcForm.Add("__EVENTTARGET", "dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlMes");
-                    document = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
-                    form = document.QuerySelector<IHtmlFormElement>("form");
-                }
-
-                break;
-            }
-            catch (Exception ex)
-            {
-                if (tentativa >= 10)
-                {
-                    logger.LogError(ex.Message);
-                    return;
-                }
-
-                logger.LogError(document.QuerySelector("#dnn_ctr9625_ctl00_lblMessage").TextContent);
-                Thread.Sleep(TimeSpan.FromMinutes(2));
-            }
+        if (mes.ToString() != document.QuerySelector<IHtmlSelectElement>("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlMes").Value)
+        {
+            dcForm = new Dictionary<string, string>();
+            dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlMes", mes.ToString());
+            dcForm.Add("__EVENTTARGET", "dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlMes");
+            document = SubmitWithAutoRetryAsync(form, dcForm, ano, mes, string.Empty);
+            form = document.QuerySelector<IHtmlFormElement>("form");
         }
 
         // Temos de remover o elemento para recria-lo como input e poder ser submetido.
@@ -95,28 +79,7 @@ public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiMensal
         var deputados = (document.QuerySelector("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_ddlGabinete") as IHtmlSelectElement);
         foreach (var deputado in deputados.Options)
         {
-            tentativa = 0;
-            while (true)
-            {
-                try
-                {
-                    tentativa++;
-                    ConsultarDespesasDeputado(deputado, form, ano, mes);
-
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    if (tentativa >= 10)
-                    {
-                        logger.LogError(ex.Message);
-                        throw;
-                    }
-
-                    logger.LogWarning(ex.Message);
-                    Thread.Sleep(TimeSpan.FromMinutes(2));
-                }
-            }
+            ConsultarDespesasDeputado(deputado, form, ano, mes);
         }
     }
 
@@ -124,21 +87,16 @@ public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiMensal
     {
         if (deputado.Value == "0") return;
 
+        var nomeParlamentar = deputado.Text.Replace("Gabinete Dep.", "").Replace("55", "").Trim();
+
         var dcForm = new Dictionary<string, string>();
         dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$ddlGabinete", deputado.Value);
         dcForm.Add("dnn$ctr9625$ViewalrsTranspRelatorioGastos$btnPesquisar", "Pesquisar");
-        var subDocument = form.SubmitAsync(dcForm, true).GetAwaiter().GetResult();
-
-        var nomeParlamentar = deputado.Text.Replace("Gabinete Dep.", "").Replace("55", "").Trim();
-        var elError = subDocument.QuerySelector("#dnn_ctl01_lblMessage,#dnn_ctr9625_ctl00_lblMessage");
-        if (elError != null)
-        {
-            throw new BusinessException($"Deputado {nomeParlamentar}; {elError.TextContent}");
-        }
+        IDocument subDocument = SubmitWithAutoRetryAsync(form, dcForm, ano, mes, nomeParlamentar);
 
         var periodoPesquisa = subDocument.QuerySelector("#dnn_ctr9625_ViewalrsTranspRelatorioGastos_lblResponsavelReferencia").TextContent;
         var valorDespesasMes = subDocument.QuerySelector(".lbldespesa").TextContent.Replace("-R$ ", "");
-        logger.LogInformation($"Deputado {nomeParlamentar}; Periodo: {periodoPesquisa}; Despesas: {valorDespesasMes};");
+        //logger.LogInformation($"Deputado {nomeParlamentar}; Periodo: {periodoPesquisa}; Despesas: {valorDespesasMes};");
 
         var despesas = subDocument.QuerySelectorAll<IHtmlTableRowElement>(".grdvwgastosinterno tr");
         foreach (var item in despesas)
@@ -161,6 +119,37 @@ public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiMensal
             InserirDespesaTemp(despesaTemp);
         }
     }
+
+    private IDocument SubmitWithAutoRetryAsync(IHtmlFormElement form, Dictionary<string, string> dcForm, int ano, int mes, string nomeParlamentar)
+    {
+        var document = form.SubmitAsyncAutoRetry(dcForm, true).GetAwaiter().GetResult();
+
+        for (int i = 0; i < 10; i++)
+        {
+            var elError = document.QuerySelector("#dnn_ctl01_lblMessage,#dnn_ctr9625_ctl00_lblMessage");
+            if (elError != null)
+            {
+                if (elError.TextContent.Contains("Timeout expired", StringComparison.CurrentCultureIgnoreCase) || elError.TextContent.Contains("currently unavailable", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    if (string.IsNullOrEmpty(nomeParlamentar))
+                        logger.LogWarning("Erro ao consulta: {mes:00}/{ano}; Nova tentativa em 2min.", mes, ano);
+                    else
+                        logger.LogWarning("Erro ao consulta Parlamentar {nomeParlamentar}; Referencia: {mes:00}/{ano}; Nova tentativa em 2min.", nomeParlamentar, mes, ano);
+
+                    Thread.Sleep(TimeSpan.FromMinutes(2));
+
+                    document = form.SubmitAsyncAutoRetry(dcForm, true).GetAwaiter().GetResult();
+                    continue;
+                }
+
+                throw new BusinessException($"Erro ao consulta Parlamentar {nomeParlamentar}; Referencia: {mes:00}/{ano}; {elError.TextContent}");
+            }
+
+            break;
+        }
+
+        return document;
+    }
 }
 
 public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
@@ -177,7 +166,6 @@ public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
 
     public override Task Importar()
     {
-        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
         var address = $"{config.BaseAddress}listarDestaqueDeputados";
@@ -195,10 +183,13 @@ public class ImportadorParlamentarRioGrandeDoSul : ImportadorParlamentarRestApi
             deputado.Telefone = parlamentar.TelefoneDeputado;
             deputado.UrlFoto = parlamentar.FotoGrandeDeputado;
 
+            if (string.IsNullOrEmpty(deputado.NomeCivil))
+                deputado.NomeCivil = deputado.NomeParlamentar;
+
             InsertOrUpdate(deputado);
         }
 
-        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
         return Task.CompletedTask;
     }
 }

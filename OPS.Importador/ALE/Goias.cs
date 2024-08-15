@@ -117,6 +117,9 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
         deputado.NomeParlamentar = colunas[0].TextContent.Trim().ToTitleCase().ReduceWhitespace();
         deputado.Telefone = string.Join(",", colunas[2].QuerySelectorAll("a").Select(x => x.TextContent.Trim()));
 
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = deputado.NomeParlamentar;
+
         ImportacaoUtils.MapearRedeSocial(deputado, colunas[3].QuerySelectorAll("a"));
 
         return deputado;

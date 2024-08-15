@@ -418,18 +418,17 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                     if (myRegex.IsMatch(valor))
                         valor = myRegex.Replace(valor, @",$1");
 
-                    try
-                    {
-                        despesaTemp.Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor) : 0;
-                    }
-                    catch (Exception)
-                    {
-                        if (valor.EndsWith("."))
-                            valor = valor.Substring(0, valor.Length - 1).Trim();
 
-                        valor = valor.Replace(" ", "").Replace("R$", "").Replace("R4", "");
-                        despesaTemp.Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor) : 0;
-                    }
+                    if (valor.EndsWith("."))
+                        valor = valor.Substring(0, valor.Length - 1).Trim();
+
+                    if (valor.Contains("R"))
+                        valor = valor.Replace("R$", "").Replace("R4", "").Trim();
+
+                    if (valor.Contains(", "))
+                        valor = valor.Replace(", ", ",");
+
+                    despesaTemp.Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor) : 0;
 
                     despesaTemp.TipoDespesa = worksheet.Cells[i, CLASSIFICACAO].Value.ToString().Trim();
 
@@ -507,15 +506,17 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
         deputado.UrlFoto = (subDocument.QuerySelector(".informacoes-pessoais img") as IHtmlImageElement)?.Source;
 
         var detalhes = subDocument.QuerySelectorAll(".informacoes-pessoais .row .col-md-9 p span");
-        deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
-        try
-        {
-            deputado.Nascimento = DateOnly.Parse(detalhes[2].TextContent.Trim(), cultureInfo);
-            deputado.Profissao = detalhes[3].TextContent.Trim().ToTitleCase();
+        
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
 
+        if (DateOnly.TryParse(detalhes[2].TextContent.Trim(), cultureInfo, out DateOnly nascimento))
+        {
+            deputado.Nascimento = nascimento;
+            deputado.Profissao = detalhes[3].TextContent.Trim().ToTitleCase();
             deputado.Naturalidade = detalhes[1].TextContent.Trim();
         }
-        catch (Exception)
+        else
         {
             deputado.Nascimento = DateOnly.Parse(detalhes[1].TextContent.Trim(), cultureInfo);
             deputado.Profissao = detalhes[2].TextContent.Trim().ToTitleCase();
@@ -541,7 +542,7 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
     //            {
     //                //var address = $"https://www.cl.df.gov.br/web/guest/deputados-2019-2022";
     //                var address = $"https://www.cl.df.gov.br/web/guest/legislaturas-anteriores/-/asset_publisher/2jS3/content/-2015-2018-s-c3-a9tima-legislatura?_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_assetEntryId=10794633&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_redirect=https%3A%2F%2Fwww.cl.df.gov.br%2Fweb%2Fguest%2Flegislaturas-anteriores%3Fp_p_id%3Dcom_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3%26p_p_lifecycle%3D0%26p_p_state%3Dnormal%26p_p_mode%3Dview%26_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_cur%3D0%26p_r_p_resetCur%3Dfalse%26_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_2jS3_assetEntryId%3D10794633";
-    //                var document = await context.OpenAsync(address);
+    //                var document = await context.OpenAsyncAutoRetry(address);
     //                if (document.StatusCode != HttpStatusCode.OK)
     //                {
     //                    Console.WriteLine($"{address} {document.StatusCode}");
@@ -559,7 +560,7 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
     //                        partido = partido.Split(new[] { '(', ')' })[1];
 
     //                    //Thread.Sleep(TimeSpan.FromSeconds(15));
-    //                    //var subDocument = await context.OpenAsync(urlPerfil);
+    //                    //var subDocument = await context.OpenAsyncAutoRetry(urlPerfil);
     //                    //if (document.StatusCode != HttpStatusCode.OK)
     //                    //{
     //                    //    Console.WriteLine($"{urlPerfil} {subDocument.StatusCode}");

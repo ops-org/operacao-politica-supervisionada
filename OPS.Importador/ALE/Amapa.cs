@@ -57,7 +57,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
             var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
             if (deputado == null)
             {
-                logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
+                logger.LogError("Parlamentar {Gabinete}: {Parlamentar} não existe ou não possui gabinete relacionado!", gabinete.Value, gabinete.Text);
             }
 
             address = $"{config.BaseAddress}transparencia/pagina.php?pg=ceap&acao=buscar&ano_verbaB={ano}&mes_verbaB={mes:00}&idgabineteB={gabinete.Value}";
@@ -129,7 +129,7 @@ public class ImportadorParlamentarAmapa : ImportadorParlamentarCrawler
     //    var angleSharpConfig = Configuration.Default.WithDefaultLoader();
     //    var context = BrowsingContext.New(angleSharpConfig);
 
-    //    var document = await context.OpenAsync(config.BaseAddress);
+    //    var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
     //    if (document.StatusCode != HttpStatusCode.OK)
     //    {
     //        Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -145,10 +145,10 @@ public class ImportadorParlamentarAmapa : ImportadorParlamentarCrawler
     //            UrlPerfil = $"http://www.al.ap.gov.br/pagina.php?pg=exibir_parlamentar&iddeputado={matricula}"
     //        };
 
-    //        var subDocument = await context.OpenAsync(deputado.UrlPerfil);
+    //        var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
     //        if (document.StatusCode != HttpStatusCode.OK)
     //        {
-    //            logger.LogError("Erro ao consultar deputado: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
+    //            logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
     //            continue;
     //        };
 

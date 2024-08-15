@@ -66,7 +66,7 @@ public class ImportadorDespesasEspiritoSanto : ImportadorDespesasRestApiMensal
                     connection.Update(deputado);
                 }
                 else
-                    logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
+                    logger.LogError("Parlamentar {Gabinete}: {Parlamentar} não existe ou não possui gabinete relacionado!", gabinete.Value, gabinete.Text);
             }
 
             address = $"{config.BaseAddress}/Transparencia/Api/CotasParlamentaresNovoTable/{mes}/{mes}/{ano}/{gabinete.Value}/false";

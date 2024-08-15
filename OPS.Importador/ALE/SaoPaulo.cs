@@ -115,7 +115,6 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
 
         public override Task Importar()
         {
-            logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
             ArgumentNullException.ThrowIfNull(config, nameof(config));
 
             var doc = new XmlDocument();
@@ -141,11 +140,14 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = '
 
                 deputado.UrlPerfil = $"{config.BaseAddress}deputado/?matricula={deputado.Matricula}";
 
+                if (string.IsNullOrEmpty(deputado.NomeCivil))
+                    deputado.NomeCivil = deputado.NomeParlamentar;
+
                 InsertOrUpdate(deputado);
 
             }
 
-            logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+            logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
             return Task.CompletedTask;
         }
     }

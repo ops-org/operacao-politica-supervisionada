@@ -43,7 +43,7 @@ public class ImportadorDespesasAmazonas : ImportadorDespesasRestApiMensal
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
         // Pagina usa caixas de seleção escondidas, trocadas a cada legislatura.
-        var chaveDeputados = ano == 2023 && mes == 1 ? "dadosatual" : "dados"; 
+        var chaveDeputados = ano == 2023 && mes == 1 ? "dadosatual" : "dados";
 
         var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
         var deputados = (document.QuerySelector($"#{chaveDeputados}") as IHtmlSelectElement);
@@ -52,57 +52,60 @@ public class ImportadorDespesasAmazonas : ImportadorDespesasRestApiMensal
 
         foreach (var deputado in deputados.Options)
         {
-            var dcForm = new Dictionary<string, string>();
-            dcForm.Add("ano", ano.ToString());
-            dcForm.Add("mes", mes.ToString("00"));
-            dcForm.Add("dados", deputado.Value);
-            dcForm.Add("dadosatual", deputado.Value);
-            var subDocument = form.SubmitAsync(dcForm).GetAwaiter().GetResult();
-
-            logger.LogInformation($"Consultando Deputado {deputado.Value}: {deputado.Text} para {mes:00}/{ano}");
-            if (subDocument.QuerySelector(".no-events") != null || subDocument.QuerySelector(".no-events")?.TextContent == "Não há resultados para a sua pesquisa.") continue;
-
-            var despesas = subDocument.QuerySelectorAll(".table-dados .modal");
-            foreach (var item in despesas)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = deputado.Text }))
             {
-                var dc = new Dictionary<string, string>();
-                var registros = item.QuerySelectorAll(".box-body");
-                foreach (var registro in registros)
+                var dcForm = new Dictionary<string, string>();
+                dcForm.Add("ano", ano.ToString());
+                dcForm.Add("mes", mes.ToString("00"));
+                dcForm.Add("dados", deputado.Value);
+                dcForm.Add("dadosatual", deputado.Value);
+                var subDocument = form.SubmitAsyncAutoRetry(dcForm).GetAwaiter().GetResult();
+
+                if (subDocument.QuerySelector(".no-events") != null || subDocument.QuerySelector(".no-events")?.TextContent == "Não há resultados para a sua pesquisa.") continue;
+
+                var despesas = subDocument.QuerySelectorAll(".table-dados .modal");
+
+                foreach (var item in despesas)
                 {
-                    if (string.IsNullOrEmpty(registro.TextContent.Trim())) continue;
+                    var dc = new Dictionary<string, string>();
+                    var registros = item.QuerySelectorAll(".box-body");
+                    foreach (var registro in registros)
+                    {
+                        if (string.IsNullOrEmpty(registro.TextContent.Trim())) continue;
 
-                    var key = registro.QuerySelector(".ceap-sub-titulo").TextContent.Trim();
-                    var value = registro.QuerySelector(".ceap-titulo,.ceap-titulo-email").TextContent.Trim();
+                        var key = registro.QuerySelector(".ceap-sub-titulo").TextContent.Trim();
+                        var value = registro.QuerySelector(".ceap-titulo,.ceap-titulo-email").TextContent.Trim();
 
-                    dc.Add(key, value);
+                        dc.Add(key, value);
+                    }
+
+                    // TODO: Verificar que bruxaria acontece para trazer dados misturados. Não ocorre no navegador.
+                    if (deputado.Text != "Abdala Fraxe" && dc["DEPUTADO"].ToTitleCase() == "Abdala Habib Fraxe Junior") continue;
+                    //logger.LogInformation($"Consultando Parlamentar {deputado.Value}: {deputado.Text} - {dc["DEPUTADO"].ToTitleCase()}");
+
+                    var despesaTemp = new CamaraEstadualDespesaTemp()
+                    {
+                        Nome = deputado.Text, // Nome Parlamentar
+                        Cpf = deputado.Value,
+                        Ano = (short)ano,
+                        Mes = (short)mes,
+                        Favorecido = dc["DEPUTADO"].ToTitleCase(), // Nome Civil
+                        TipoDespesa = dc["DESCRIÇÃO DA VERBA"].ToTitleCase(),
+                        CnpjCpf = Utils.RemoveCaracteresNaoNumericos(dc["CNPJ"]),
+                        Empresa = dc["NOME EMPRESARIAL"].ToTitleCase(),
+                        Documento = dc["IDENTIFICAÇÃO DO DOCUMENTO"],
+                        Valor = Convert.ToDecimal(dc["VALOR LÍQUIDO"].Replace("R$ ", ""), cultureInfo),
+                        DataEmissao = Convert.ToDateTime(dc["EMISSÃO"], cultureInfo)
+                    };
+
+                    var valorGlosa = dc["VALOR DA GLOSA"];
+                    if (valorGlosa != "R$ 0,00")
+                    {
+                        despesaTemp.Observacao = $"Valor Bruto: {dc["VALOR BRUTO"]}; Valor da Glosa: {valorGlosa};";
+                    }
+
+                    InserirDespesaTemp(despesaTemp);
                 }
-
-                // TODO: Verificar que bruxaria acontece para trazer dados misturados. Não ocorre no navegador.
-                if (deputado.Text != "Abdala Fraxe" && dc["DEPUTADO"].ToTitleCase() == "Abdala Habib Fraxe Junior") continue;
-                logger.LogInformation($"Consultando Deputado {deputado.Value}: {deputado.Text} - {dc["DEPUTADO"].ToTitleCase()}");
-
-                var despesaTemp = new CamaraEstadualDespesaTemp()
-                {
-                    Nome = deputado.Text, // Nome Parlamentar
-                    Cpf = deputado.Value,
-                    Ano = (short)ano,
-                    Mes =  (short)mes,
-                    Favorecido= dc["DEPUTADO"].ToTitleCase(), // Nome Civil
-                    TipoDespesa = dc["DESCRIÇÃO DA VERBA"].ToTitleCase(),
-                    CnpjCpf = Utils.RemoveCaracteresNaoNumericos(dc["CNPJ"]),
-                    Empresa = dc["NOME EMPRESARIAL"].ToTitleCase(),
-                    Documento = dc["IDENTIFICAÇÃO DO DOCUMENTO"],
-                    Valor = Convert.ToDecimal(dc["VALOR LÍQUIDO"].Replace("R$ ", ""), cultureInfo),
-                    DataEmissao = Convert.ToDateTime(dc["EMISSÃO"], cultureInfo)
-                };
-
-                var valorGlosa = dc["VALOR DA GLOSA"];
-                if (valorGlosa != "R$ 0,00")
-                {
-                    despesaTemp.Observacao = $"Valor Bruto: {dc["VALOR BRUTO"]}; Valor da Glosa: {valorGlosa};";
-                }
-
-                InserirDespesaTemp(despesaTemp);
             }
         }
     }

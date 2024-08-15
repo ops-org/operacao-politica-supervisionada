@@ -122,13 +122,12 @@ public class ImportadorParlamentarPara : ImportadorParlamentarCrawler
 
     public override async Task Importar()
     {
-        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
         var angleSharpConfig = Configuration.Default.WithDefaultLoader();
         var context = BrowsingContext.New(angleSharpConfig);
 
-        var document = await BrowsingContextExtensions.OpenAsync(context, config.BaseAddress);
+        var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
         if (document.StatusCode != HttpStatusCode.OK)
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -148,10 +147,10 @@ public class ImportadorParlamentarPara : ImportadorParlamentarCrawler
             if (deputado == null) continue;
 
             deputado.UrlPerfil = $"https://alepa.pa.gov.br/Institucional/Deputado/{matricula}";
-            var subDocument = await BrowsingContextExtensions.OpenAsync(context, deputado.UrlPerfil);
+            var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
             if (document.StatusCode != HttpStatusCode.OK)
             {
-                logger.LogError("Erro ao consultar deputado: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
+                logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
                 continue;
             };
             ColetarDadosPerfil(deputado, subDocument);
@@ -159,7 +158,7 @@ public class ImportadorParlamentarPara : ImportadorParlamentarCrawler
             InsertOrUpdate(deputado);
         }
 
-        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
     }
 
     public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)

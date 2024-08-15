@@ -311,11 +311,6 @@ namespace OPS.Core
             return Regex.Replace(text, @"\s+", " ");
         }
 
-        public static string RemoveSpaces(this string value)
-        {
-            return Regex.Replace(value, @"\s+", " ");
-        }
-        
         public static string RemoveAccents(this string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
@@ -328,6 +323,13 @@ namespace OPS.Core
                     sbReturn.Append(letter);
             }
             return sbReturn.ToString();
+        }
+
+        public static string ForceWindows1252ToUtf8Encoding(this string text)
+        {
+            const int WindowsCodepage1252 = 1252;
+            byte[] bytes = Encoding.GetEncoding(WindowsCodepage1252).GetBytes(text);
+            return Encoding.Latin1.GetString(bytes);
         }
 
         //public static string GetIPAddress()

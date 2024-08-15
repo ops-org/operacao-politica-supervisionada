@@ -17,6 +17,7 @@ using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
 using UglyToad.PdfPig;
+using static OPS.Importador.ALE.ImportadorDespesasPernambuco;
 
 namespace OPS.Importador.ALE;
 
@@ -54,28 +55,43 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
         {
             if (gabinete.Value == "") continue;
 
-            var dcForm = new Dictionary<string, string>();
-            dcForm.Add("transparencia.ano", ano.ToString());
-            dcForm.Add("transparencia.mes", mes.ToString());
-            dcForm.Add("transparencia.parlamentar", gabinete.Value);
-            var subDocument = form.SubmitAsync(dcForm).GetAwaiter().GetResult();
-
-            logger.LogInformation($"Consultando Deputado {gabinete.Value}: {gabinete.Text} para {mes:00}/{ano}");
-
-            var linksPdf = subDocument.QuerySelectorAll(".table-responsive-stack a");
-            if (linksPdf.Count() > 1) throw new NotImplementedException();
-            if (linksPdf.Count() == 0)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Mes"] = mes }))
             {
-                var elError = subDocument.QuerySelector(".alert strong");
-                if (elError != null)
+                var dcForm = new Dictionary<string, string>();
+                dcForm.Add("transparencia.ano", ano.ToString());
+                dcForm.Add("transparencia.mes", mes.ToString());
+                dcForm.Add("transparencia.parlamentar", gabinete.Value);
+                var subDocument = form.SubmitAsyncAutoRetry(dcForm).GetAwaiter().GetResult();
+
+                //logger.LogInformation($"Consultando Parlamentar {gabinete.Value}: {gabinete.Text} para {mes:00}/{ano}");
+
+                var linksPdf = subDocument.QuerySelectorAll(".table-responsive-stack a");
+                if (linksPdf.Count() > 1) throw new NotImplementedException();
+                if (linksPdf.Count() == 0)
                 {
-                    logger.LogWarning(elError.TextContent);
-                    continue;
+                    var elError = subDocument.QuerySelector(".alert strong");
+                    if (elError != null)
+                    {
+                        if (elError.TextContent == "Nenhum resultado encontrado!")
+                        {
+                            // Legislatura anterior
+                            if (!(ano == 2023 && mes == 1))
+                                logger.LogInformation("Despesas do parlamentar {Parlamentar} indisponiveis para {Mes:00}/{Ano}. Detalhes: {Detalhes}", gabinete.Text, mes, ano, elError.TextContent);
+                        }
+                        else
+                            logger.LogWarning("Erro ao consultar despesas do parlamentar {Parlamentar} para {Mes:00}/{Ano}. Detalhes: {Detalhes}", gabinete.Text, mes, ano, elError.TextContent);
+
+                        continue;
+                    }
+                }
+
+                var urlPdf = (linksPdf[0] as IHtmlAnchorElement).Href;
+
+                using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = urlPdf, ["Arquivo"] = $"CLTO-{ano}-{mes}-{gabinete.Value}.pdf" }))
+                {
+                    ImportarDespesasArquivo(ano, mes, gabinete, urlPdf);
                 }
             }
-
-            var urlPdf = (linksPdf[0] as IHtmlAnchorElement).Href;
-            ImportarDespesasArquivo(ano, mes, gabinete, urlPdf);
         }
     }
 
@@ -94,7 +110,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
             //IExtractionAlgorithm ea = new BasicExtractionAlgorithm();
             IExtractionAlgorithm ea = new SpreadsheetExtractionAlgorithm();
 
-            decimal valorTotalContabilizado = 0;
+            decimal valorTotalDeputado = 0;
             string nomeParlamentar = "";
             var totalValidado = false;
             var despesasIncluidas = 0;
@@ -133,17 +149,18 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
 
                         continue;
                     }
-                    
+
                     if (row[idxTipo].GetText().Equals("Total das despesas", StringComparison.OrdinalIgnoreCase) || row[idxTipo].GetText().Equals("Gasto no mês", StringComparison.OrdinalIgnoreCase))
                     {
                         totalValidado = true;
                         var valorTotalArquivo = Convert.ToDecimal(row[idxNumero].GetText(), cultureInfo);
-                        if (valorTotalContabilizado != valorTotalArquivo)
-                            logger.LogError($"Valor Divergente! Esperado: {valorTotalArquivo}; Encontrado: {valorTotalContabilizado}; Arquivo: {urlPdf}");
+                        if (valorTotalDeputado != valorTotalArquivo)
+                            logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
+                                valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
 
                         break;
                     }
-                    
+
                     if (row[idxTipo].GetText().Contains("telefone", StringComparison.OrdinalIgnoreCase) && row[idxNumero].GetText() != "-" && row[idxNumero].GetText() != "")
                     {
                         var despesaTemp1 = new CamaraEstadualDespesaTemp()
@@ -181,8 +198,8 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                             Valor = Convert.ToDecimal("200,00", cultureInfo)
                         };
 
-                        logger.LogWarning($"Inserindo Item {row[idxItem].GetText()} com valor: {despesaTemp1.Valor}!");
-                        valorTotalContabilizado += despesaTemp1.Valor;
+                        //logger.LogWarning("Inserindo Item {Item} com valor: {Valor}!", row[idxItem].GetText(), despesaTemp1.Valor);
+                        valorTotalDeputado += despesaTemp1.Valor;
                         despesasIncluidas++;
 
                         InserirDespesaTemp(despesaTemp1);
@@ -210,12 +227,12 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     if (row[idxEmitente].GetText().StartsWith("Saldo de notas", StringComparison.OrdinalIgnoreCase))
                     {
                         var valorTemp = row[idxValor].GetText();
-                        if(string.IsNullOrEmpty(valorTemp))
+                        if (string.IsNullOrEmpty(valorTemp))
                             valorTemp = row[idxSaldo].GetText(); // Há um caso onde o valor está na coluna de Saldo.
 
                         var valorMesAnterior = Convert.ToDecimal(valorTemp, cultureInfo);
-                        valorTotalContabilizado += valorMesAnterior;
-                        logger.LogInformation($"Ignorando item 'Saldo de notas do mês anterior': {valorMesAnterior}!");
+                        valorTotalDeputado += valorMesAnterior;
+                        logger.LogInformation("Ignorando item 'Saldo de notas do mês anterior': {ValorMesAnterior}!", valorMesAnterior);
                         continue;
                     }
 
@@ -266,9 +283,9 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                                 if (row[idxSaldo - 1].GetText() != "-")
                                     Convert.ToDecimal(row[idxSaldo - 1].GetText().Replace("(", "").Replace(")", ""), cultureInfo);
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
-                                logger.LogError($"Verificar mapeamento invalido!");
+                                logger.LogError(ex, "Verificar mapeamento invalido!");
                             }
                         }
                         else
@@ -295,14 +312,14 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                             if (row[idxSaldo].GetText() != "-")
                                 Convert.ToDecimal(row[idxSaldo].GetText().Replace("(", "").Replace(")", ""), cultureInfo);
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            logger.LogError($"Verificar mapeamento invalido!");
+                            logger.LogError(ex, "Verificar mapeamento invalido!");
                         }
                     }
 
                     //logger.LogWarning($"Inserindo Item {row[idxItem].GetText()} com valor: {despesaTemp.Valor}!");
-                    valorTotalContabilizado += despesaTemp.Valor;
+                    valorTotalDeputado += despesaTemp.Valor;
                     despesasIncluidas++;
 
                     InserirDespesaTemp(despesaTemp);
@@ -310,7 +327,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
             }
 
             if (!totalValidado)
-                logger.LogError("Valor total não validado!");
+                logger.LogError("Valor total {ValorTotal} não validado!", valorTotalDeputado);
         }
 
         //var pagina     = Importacao    s.ReadPdfFileByLocationStrategy(filename).ToArray();
@@ -427,7 +444,10 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
             case "10/019/2023": data = "10/09/2023"; break;
             case "24/012024": data = "24/01/2024"; break;
             case "05/047/2024": data = "05/04/2024"; break;
-
+            case "25/006/2024": data = "25/06/2024"; break;
+            case "2706/2024": data = "27/06/2024"; break;
+            case "23/072024": data = "23/07/2024"; break;
+            case "23/072025": data = "23/07/2024"; break;
         }
 
         try
@@ -436,7 +456,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
         }
         catch (Exception)
         {
-            logger.LogError($"Data invalida: {data}");
+            logger.LogError("Data invalida: {Data}", data);
             return new DateTime(ano, mes, 1);
         }
 

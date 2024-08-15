@@ -200,8 +200,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
 
         //deputado.UrlPerfil = $"http://www.assembleia.pr.leg.br/deputados/perfil/{parlamentar.Codigo}";
         deputado.NomeParlamentar = nomeParlamentar;
-        if (string.IsNullOrEmpty(deputado.NomeCivil))
-            deputado.NomeCivil = parlamentar.Nome.ToTitleCase();
+        deputado.NomeCivil = parlamentar.Nome.ToTitleCase();
 
         deputado.IdPartido = IdPartido.Value;
         deputado.Sexo = parlamentar.NomePolitico.StartsWith("DEPUTADO") ? "M" : "F";
@@ -477,7 +476,7 @@ public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
 
     public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
     {
-        var nomeParlamentar = parlamentar.QuerySelector(".nome-deps span").TextContent.Trim();
+        var nomeParlamentar = parlamentar.QuerySelector(".nome-deps span").TextContent.Trim().ReduceWhitespace();
         var nomeParlamentarLimpo = Utils.RemoveAccents(nomeParlamentar);
 
         var deputado = deputados.Find(x =>
@@ -490,12 +489,14 @@ public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
         {
             deputado = new DeputadoEstadual()
             {
-                NomeCivil = nomeParlamentar,
+                NomeParlamentar = nomeParlamentar,
                 IdEstado = (ushort)config.Estado.GetHashCode()
             };
         }
 
-        deputado.NomeParlamentar = nomeParlamentar;
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = deputado.NomeParlamentar;
+
         deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".nome-deps .partido").TextContent.Trim());
         deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
         deputado.UrlFoto = (parlamentar.QuerySelector(".foto-deps img") as IHtmlImageElement)?.Source;

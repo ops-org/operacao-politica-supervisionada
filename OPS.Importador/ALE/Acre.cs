@@ -13,6 +13,7 @@ using OPS.Core.Entity;
 using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
+using OPS.Importador.Utilities;
 
 namespace OPS.Importador.ALE;
 
@@ -64,7 +65,6 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
 
     public override Task Importar()
     {
-        logger.LogWarning("Parlamentares do(a) {idEstado}:{CasaLegislativa}", config.Estado.GetHashCode(), config.Estado.ToString());
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
         var legislatura = 17; // 2023-2027
@@ -86,7 +86,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
             InsertOrUpdate(deputado);
         }
 
-        logger.LogWarning("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
         return Task.CompletedTask;
     }
 
@@ -95,7 +95,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
         var angleSharpConfig = Configuration.Default.WithDefaultLoader();
         var context = BrowsingContext.New(angleSharpConfig);
 
-        var document = await context.OpenAsync(deputado.UrlPerfil);
+        var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
         if (document.StatusCode != HttpStatusCode.OK)
     {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -113,7 +113,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
         }
         else
         {
-            logger.LogWarning($"Verificar possivel mudança no perfil do deputado: {deputado.UrlPerfil}");
+            logger.LogWarning("Verificar possivel mudança no perfil do parlamentar: {UrlPerfil}", deputado.UrlPerfil);
         }
     }
     }

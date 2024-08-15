@@ -46,6 +46,7 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
 
     public override void ImportarDespesas(IBrowsingContext context, int ano)
     {
+        var today = DateTime.Today;
         var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
 
         var anoSelecionado = document
@@ -58,21 +59,26 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
         {
             var mesExtenso = item.TextContent;
             var competencia = new DateTime(ano, ResolveMes(mesExtenso), 1).AddMonths(-1);
+            if (competencia.AddMonths(1) > today) continue;
 
-            logger.LogInformation($"Consultando despesas de {competencia.Month:00}/{competencia.Year}");
-
-            var urlPdf = anoSelecionado.QuerySelector("#" + item.Attributes["aria-controls"].Value + " .wpdm-download-link")?.Attributes["data-downloadurl"]?.Value;
-            if (string.IsNullOrEmpty(urlPdf))
+            using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month }))
             {
-                var aviso = anoSelecionado.QuerySelector("#" + item.Attributes["aria-controls"].Value + " div[id^=content_wpdm_package_]").TextContent.Trim();
-                logger.LogWarning(aviso);
-                continue;
+                var urlPdf = anoSelecionado.QuerySelector("#" + item.Attributes["aria-controls"].Value + " .wpdm-download-link")?.Attributes["data-downloadurl"]?.Value;
+                if (string.IsNullOrEmpty(urlPdf))
+                {
+                    var aviso = anoSelecionado.QuerySelector("#" + item.Attributes["aria-controls"].Value + " div[id^=content_wpdm_package_]").TextContent.Trim();
+                    logger.LogWarning("Despesas indisponiveis para {Mes:00}/{Ano}. Detalhes: {Detalhes}", competencia.Month, competencia.Year, aviso);
+                    continue;
+                }
+
+                // Coletar dados apenas a partir de 2023
+                if (competencia.Year == 2022) continue;
+
+                using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month, ["Url"] = urlPdf, ["Arquivo"] = $"CLSE-{ano}-{competencia.Month}.pdf" }))
+                {
+                    ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf);
+                }
             }
-
-            // Coletar dados apenas a partir de 2023
-            if (competencia.Year == 2022) continue;
-
-            ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf);
         }
     }
 
@@ -124,15 +130,16 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
                     foreach (var row in table.Rows)
                     {
                         var numColunas = row.Count;
-                        var indice = 0;
-                        var itemDescicaoTemp = row[indice++].GetText();
-                        var valorTemp = row[indice++].GetText();
+                        var itemDescicaoTemp = row[0].GetText();
+                        var valorTemp = row[numColunas == 2 ? 1 : 2].GetText(); // Pode haver 3 colunas, quando isso ocorre o valor estão na última.
 
                         if (itemDescicaoTemp.StartsWith("Deputado:"))
                         {
                             nomeParlamentar = itemDescicaoTemp.Split(":")[1].Trim();
                             competencia = Convert.ToDateTime(valorTemp.Split(":")[1].Trim(), cultureInfo);
                             valorTotalDeputado = 0;
+
+                            if (competencia.Year == 2022) break;
 
                             if (!totalValidado)
                                 logger.LogError("Valor total não validado!");
@@ -147,12 +154,16 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
                             totalValidado = true;
                             var valorTotalArquivo = Convert.ToDecimal(valorTemp.Split(":")[1].Replace("R$", "").Trim(), cultureInfo);
                             if (valorTotalDeputado != valorTotalArquivo)
-                                logger.LogError($"Valor Divergente! Esperado: {valorTotalArquivo}; Encontrado: {valorTotalDeputado}; Arquivo: {urlPdf}");
+                                logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
+                                    valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
 
                             continue;
                         }
 
-                        if (string.IsNullOrEmpty(valorTemp) || valorTemp.StartsWith("Valor") || valorTemp.StartsWith("Página")) continue;
+                        if (string.IsNullOrEmpty(itemDescicaoTemp) ||
+                            string.IsNullOrEmpty(valorTemp) ||
+                            valorTemp.StartsWith("Valor") ||
+                            valorTemp.StartsWith("Página")) continue;
 
                         CamaraEstadualDespesaTemp despesaTemp = new CamaraEstadualDespesaTemp()
                         {
@@ -182,9 +193,10 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
         }
     }
 
-    public override string SqlCarregarHashes(int ano)
+    public override void DefinirCompetencias(int ano)
     {
-        return $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {ano-1}12 and {ano}11";
+        competenciaInicial = $"{ano - 1}12";
+        competenciaFinal = $"{ano}11";
     }
 }
 
@@ -222,7 +234,9 @@ public class ImportadorParlamentarSergipe : ImportadorParlamentarCrawler
             .Select(x => new { Key = x.QuerySelector(".kt-widget__label").TextContent.Trim(), Value = x.QuerySelector(".kt-widget__data").TextContent.Trim() })
             .ToList();
 
-        deputado.NomeCivil = perfil.FirstOrDefault(x => x.Key == "Nome civil:")?.Value;
+        if (string.IsNullOrEmpty(deputado.NomeCivil))
+            deputado.NomeCivil = perfil.FirstOrDefault(x => x.Key == "Nome civil:")?.Value;
+
         deputado.Telefone = perfil.FirstOrDefault(x => x.Key == "Telefone(s):")?.Value;
         //deputado.Celular = perfil.FirstOrDefault(x => x.Key == "Celular:")?.Value;
         deputado.Email = perfil.FirstOrDefault(x => x.Key == "E-mail:")?.Value;
