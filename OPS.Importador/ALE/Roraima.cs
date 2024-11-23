@@ -62,6 +62,8 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
             var titulo = item.QuerySelector(".package-title a").TextContent.Replace("Dep.", "").Trim();
             if (titulo == "Renato de Souza Silva Junho - 2024")
                 titulo = "Renato de Souza Silva - Junho 2024";
+            else if (titulo == "Renato de Souza Silva Julho - 2024")
+                titulo = "Renato de Souza Silva - Julho 2024";
 
             var tituloPartes = titulo.Split(new[] { '-', '–' });
             var nomeParlamentar = tituloPartes[0].Trim();
@@ -77,8 +79,7 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
     private void ImportarDespesasArquivo(int ano, int mes, string nomeParlamentar, string urlPdf)
     {
         var filename = $"{tempPath}/CLRR-{ano}-{mes}-{nomeParlamentar}.odt";
-        if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+        BaixarArquivo(urlPdf, filename);
 
         // structure will contain all the data returned form the ODT to HTML conversion
         OdtConvertedData convertedData = null;

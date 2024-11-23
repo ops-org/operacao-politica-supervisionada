@@ -5,11 +5,11 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Mail;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Io;
 using CsvHelper;
 using Dapper;
 using Microsoft.Extensions.Configuration;
@@ -102,7 +102,7 @@ namespace OPS.Importador
             services.AddScoped<HttpLogger>();
             //services.AddRedaction();
 
-            services.AddHttpClient<HttpClient>("MyNamedClient", config =>
+            services.AddHttpClient<HttpClient>("ResilientClient", config =>
                 {
                     //config.BaseAddress = new Uri("https://localhost:5001/api/");
                     config.Timeout = TimeSpan.FromSeconds(300);
@@ -116,7 +116,9 @@ namespace OPS.Importador
                         AllowAutoRedirect = false,
                     };
                 })
-                .AddPolicyHandler((services, request) => HttpPolicyExtensions.HandleTransientHttpError().WaitAndRetryAsync(new[]
+                .AddPolicyHandler((services, request) => HttpPolicyExtensions.HandleTransientHttpError()
+                    //.OrResult(response => response.Content.ReadAsStringAsync().GetAwaiter().GetResult().Contains("Timeout"))
+                    .WaitAndRetryAsync(new[]
                     {
                         TimeSpan.FromSeconds(1),
                         TimeSpan.FromSeconds(5),
@@ -124,10 +126,10 @@ namespace OPS.Importador
                         TimeSpan.FromSeconds(30),
                         TimeSpan.FromSeconds(60),
                     },
-                    onRetry: (outcome, timespan, retryAttempt, context) =>
+                    onRetry: (message, timespan, attempt, context) =>
                     {
                         services.GetService<ILogger<HttpClient>>()?
-                            .LogWarning("Delaying for {delay}ms, then making retry {retry}.", timespan.TotalMilliseconds, retryAttempt);
+                            .LogWarning("Delaying for {delay} seconds, then making retry {retry}. Url: {Url}", timespan.TotalSeconds, attempt, message?.Result?.RequestMessage?.RequestUri);
                     }
                 ));
             //.AddLogger<HttpLogger>(wrapHandlersPipeline: true)
@@ -165,35 +167,35 @@ namespace OPS.Importador
 
                 var types = new Type[]
                 {
-                        typeof(Senado), // csv
-                        typeof(CamaraFederal), // csv
-                        //typeof(Acre), // Portal sem dados detalhados!
-                        //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                        typeof(Amapa), // crawler mensal/deputado (Apenas BR)
-                        typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
-                        typeof(Bahia), // crawler anual
-                        typeof(Ceara), // csv mensal
-                        typeof(DistritoFederal), // xlsx  (Apenas BR)
-                        typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                        typeof(Goias), // crawler mensal/deputado
-                        typeof(Maranhao), // Valores mensais por categoria
-                        //typeof(MatoGrosso),
-                        typeof(MatoGrossoDoSul), // crawler anual
-                        typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
-                        typeof(Para), // json api anual
-                        typeof(Paraiba), // arquivo ods mensal/deputado
-                        typeof(Parana), // json api mensal/deputado
-                        typeof(Pernambuco), // json api mensal/deputado
-                        typeof(Piaui), // csv por legislatura (download manual)
-                        typeof(RioDeJaneiro), // json api mensal/deputado
-                        typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
-                        typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
-                        typeof(Rondonia), // crawler mensal/deputado
-                        typeof(Roraima), // crawler & odt mensal/deputado
-                        typeof(SantaCatarina), // csv anual
-                        typeof(SaoPaulo), // xml anual
-                        typeof(Sergipe), // crawler & pdf mensal/deputado
-                        typeof(Tocantins), // crawler & pdf mensal/deputado
+                    typeof(Senado), // csv
+                    typeof(CamaraFederal), // csv
+                    //typeof(Acre), // Portal sem dados detalhados por parlamentar!
+                    typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                    typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    typeof(Bahia), // crawler anual
+                    typeof(Ceara), // csv mensal
+                    typeof(DistritoFederal), // xlsx  (Apenas BR)
+                    typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    typeof(Goias), // crawler mensal/deputado
+                    typeof(Maranhao), // Valores mensais por categoria
+                    //typeof(MatoGrosso),
+                    typeof(MatoGrossoDoSul), // crawler anual
+                    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
+                    typeof(Para), // json api anual
+                    typeof(Paraiba), // arquivo ods mensal/deputado
+                    typeof(Parana), // json api mensal/deputado
+                    typeof(Pernambuco), // json api mensal/deputado
+                    typeof(Piaui), // csv por legislatura (download manual)
+                    typeof(RioDeJaneiro), // json api mensal/deputado
+                    typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                    typeof(Rondonia), // crawler mensal/deputado
+                    typeof(Roraima), // crawler & odt mensal/deputado
+                    typeof(SantaCatarina), // csv anual
+                    typeof(SaoPaulo), // xml anual
+                    typeof(Sergipe), // crawler & pdf mensal/deputado
+                    typeof(Tocantins), // crawler & pdf mensal/deputado
                 };
                 // ImportarCompleto(serviceProvider, types);
 
@@ -217,9 +219,9 @@ namespace OPS.Importador
                 }
                 Task.WaitAll(tasks.ToArray());
 
-                //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
+                var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
 
-                //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day-1));
+                //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
                 //var mesConsulta = new DateTime(2023, 02, 01);
 
                 //do
@@ -228,7 +230,6 @@ namespace OPS.Importador
 
                 //    mesConsulta = mesConsulta.AddMonths(1);
                 //} while (mesConsulta < mesAtual);
-
 
                 //importador.ColetaDadosDeputados();
                 //importador.ColetaRemuneracaoSecretarios();
@@ -245,48 +246,6 @@ namespace OPS.Importador
                 //    mesConsulta = mesConsulta.AddMonths(1);
                 //} while (mesConsulta < mesAtual);
 
-
-
-                //var importador = serviceProvider.GetService<Presidencia>();
-                //importador.ImportarArquivoDespesas(0);
-
-
-                //for (int ano = 2013; ano <= 2022; ano++)
-                //{
-                //    Log.Information("Despesas de {Ano}", ano);
-                //    objCamaraDistritoFederal.ImportarArquivoDespesas(ano);
-                //}
-
-                //for (int ano = 2011; ano <= 2022; ano++)
-                //{
-                //    Log.Information("Despesas de {Ano}", ano);
-                //    objCamaraSantaCatarina.ImportarArquivoDespesas(ano);
-                //}
-
-                //for (int ano = 2010; ano <= 2022; ano++)
-                //{
-                //    Log.Information("Despesas de {Ano}", ano);
-                //    objCamaraSaoPaulo.ImportarArquivoDespesas(ano);
-                //}
-
-                //for (int ano = 2019; ano <= 2022; ano++)
-                //{
-                //    Log.Information("Despesas de {Ano}", ano);
-                //    objCamaraMatoGrossoDoSul.ImportarArquivoDespesas(ano);
-                //}
-
-                //for (int ano = 2020; ano <= 2022; ano++)
-                //{
-                //    Log.Information("Despesas de {Ano}", ano);
-                //    //objCamaraGoias.ImportarArquivoDespesas(ano);
-                //    objCamaraBahia.ImportarArquivoDespesas(ano);
-                //}
-
-                //for (int ano = 2021; ano <= 2022; ano++)
-                //{
-                //    Log.Information("Despesas de {Ano}", ano);
-                //    objCamaraCeara.ImportarArquivoDespesas(ano);
-                //}
 
                 //var cand = new Candidatos();
                 //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
@@ -318,17 +277,6 @@ namespace OPS.Importador
 
             Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
             Console.ReadKey();
-        }
-
-        private static void ImportarCompleto(ServiceProvider serviceProvider, Type[] types)
-        {
-            foreach (var type in types)
-            {
-                Log.Warning("Dados do(a) {CasaLegislativa}", type.Name);
-
-                var importador = (ImportadorBase)serviceProvider.GetService(type);
-                importador.ImportarCompleto();
-            }
         }
 
         private static void ImportarPartidos()

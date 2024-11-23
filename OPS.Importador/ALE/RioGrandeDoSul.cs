@@ -39,7 +39,7 @@ public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://www2.al.rs.gov.br/transparenciaalrs/GabinetesParlamentares/Centrodecustos/tabid/5666/Default.aspx",
             Estado = Estado.RioGrandeDoSul,
-            ChaveImportacao = ChaveDespesaTemp.Gabinete
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar // O Gabinete muda a cada legislatura
         };
     }
 

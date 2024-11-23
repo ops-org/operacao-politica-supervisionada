@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
@@ -15,110 +17,134 @@ namespace OPS.Importador.ALE.Despesa
 
         protected IImportadorDespesas importadorDespesas { get; set; }
 
+        private bool importacaoIncremental { get; init; }
+
         public ImportadorBase(IServiceProvider serviceProvider)
         {
-            logger = serviceProvider.GetService<ILogger<ImportadorBase>>();
+            logger = serviceProvider.GetRequiredService<ILogger<ImportadorBase>>();
+
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
         }
 
         public virtual void ImportarCompleto()
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-
             if (importadorParlamentar != null)
             {
-                using (logger.BeginScope("Perfil do Parlamentar"))
-                    try
-                    {
-                        watch.Restart();
-
-
-                        importadorParlamentar.Importar().Wait();
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                    finally
-                    {
-                        watch.Stop();
-                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
-                    }
-
-                using (logger.BeginScope("Foto de Perfil"))
-                    try
-                    {
-                        watch.Restart();
-
-                        importadorParlamentar.DownloadFotos().Wait();
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                    finally
-                    {
-                        watch.Stop();
-                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
-                    }
+                ImportarPerfilParlamentar();
+                ImportarImagemParlamentar();
             }
 
             if (importadorDespesas != null)
             {
-                using (logger.BeginScope("Despesas {Ano}", DateTime.Now.Year - 1))
-                    try
-                    {
-                        watch.Restart();
-
-                        importadorDespesas.Importar(DateTime.Now.Year - 1);
-                    }
-                    catch (BusinessException) { }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                    finally
-                    {
-                        watch.Stop();
-                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
-                    }
-
-                using (logger.BeginScope("Despesas {Ano}", DateTime.Now.Year))
-                    try
-                    {
-                        watch.Restart();
-
-                        importadorDespesas.Importar(DateTime.Now.Year);
-                    }
-                    catch (BusinessException) { }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                    finally
-                    {
-                        watch.Stop();
-                        logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
-                    }
+                ImportarDespesasAnoAnterior();
+                ImportarDespesasAnoAtual();
             }
 
-            // using (logger.BeginScope("Remuneração"))
-            //try
-            //{
-            //    watch.Restart();
+            ImportarRemuneracao();
+        }
 
-            //    var anoAtual = DateTime.Now;
-            //    logger.LogInformation("Remuneração do(a) {CasaLegislativa}", config.SiglaEstado);
-            //    ImportarRemuneracao(anoAtual.Year, anoAtual.Month);
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.LogError(ex, ex.Message);
-            //}
-            //finally
-            //{
-            //    watch.Stop();
-            //    logger.LogDebug("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            //}
+        private void ImportarRemuneracao()
+        {
+            //var watch = System.Diagnostics.Stopwatch.StartNew();
+            //using (logger.BeginScope("Remuneração"))
+            //    try
+            //    {
+            //        watch.Restart();
+
+            //        var anoAtual = DateTime.Now;
+            //        logger.LogInformation("Remuneração do(a) {CasaLegislativa}", config.SiglaEstado);
+            //        ImportarRemuneracao(anoAtual.Year, anoAtual.Month);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        logger.LogError(ex, ex.Message);
+            //    }
+            //    finally
+            //    {
+            //        watch.Stop();
+            //        logger.LogDebug("Processamento em {TimeElapsed:c}", watch.Elapsed);
+            //    }
+        }
+
+        private void ImportarDespesasAnoAtual()
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            using (logger.BeginScope("Despesas {Ano}", DateTime.Now.Year))
+                try
+                {
+                    importadorDespesas.Importar(DateTime.Now.Year);
+                }
+                catch (BusinessException) { }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                finally
+                {
+                    watch.Stop();
+                    logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                }
+        }
+
+        private void ImportarDespesasAnoAnterior()
+        {
+            //if (importacaoIncremental) return;
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            using (logger.BeginScope("Despesas {Ano}", DateTime.Now.Year - 1))
+                try
+                {
+                    importadorDespesas.Importar(DateTime.Now.Year - 1);
+                }
+                catch (BusinessException) { }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                finally
+                {
+                    watch.Stop();
+                    logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                }
+        }
+
+        private void ImportarImagemParlamentar()
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            using (logger.BeginScope("Foto de Perfil"))
+                try
+                {
+                    importadorParlamentar.DownloadFotos().Wait();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                finally
+                {
+                    watch.Stop();
+                    logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                }
+        }
+
+        private void ImportarPerfilParlamentar()
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            using (logger.BeginScope("Perfil do Parlamentar"))
+                try
+                {
+                    importadorParlamentar.Importar().Wait();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                finally
+                {
+                    watch.Stop();
+                    logger.LogInformation("Processamento em {TimeElapsed:c}", watch.Elapsed);
+                }
         }
     }
 }

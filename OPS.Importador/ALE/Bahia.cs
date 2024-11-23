@@ -41,7 +41,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://www.al.ba.gov.br/",
             Estado = Estado.Bahia,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

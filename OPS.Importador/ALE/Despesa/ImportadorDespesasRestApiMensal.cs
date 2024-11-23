@@ -31,7 +31,10 @@ namespace OPS.Importador.ALE.Despesa
                     //if (ano == 2019 && mes == 1) continue;
                     if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) break;
 
-                    ImportarDespesas(context, ano, mes);
+                    using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes }))
+                    {
+                        ImportarDespesas(context, ano, mes);
+                    }
                 }
 
                 ProcessarDespesas(ano);

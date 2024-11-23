@@ -36,8 +36,8 @@ namespace OPS.Importador
     {
         protected readonly ILogger<ImportadorParlamentarSenado> logger;
         protected readonly IDbConnection connection;
-        public string rootPath { get; set; }
-        public string tempPath { get; set; }
+        public string rootPath { get; init; }
+        public string tempPath { get; init; }
 
         public HttpClient httpClient { get; }
 
@@ -50,7 +50,7 @@ namespace OPS.Importador
             rootPath = configuration["AppSettings:SiteRootFolder"];
             tempPath = configuration["AppSettings:SiteTempFolder"];
 
-            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
         }
 
         public Task Importar()
@@ -207,87 +207,90 @@ namespace OPS.Importador
                         identificacaoParlamentar.NomeParlamentar = identificacaoParlamentar.NomeCompletoParlamentar;
                     }
 
-                    banco.AddParameter("id", identificacaoParlamentar.CodigoParlamentar);
-                    banco.AddParameter("codigo", identificacaoParlamentar.CodigoPublicoNaLegAtual);
-                    banco.AddParameter("nome", identificacaoParlamentar.NomeParlamentar);
-                    banco.AddParameter("nome_completo", identificacaoParlamentar.NomeCompletoParlamentar);
-                    banco.AddParameter("sexo", identificacaoParlamentar.SexoParlamentar[0].ToString());
-                    banco.AddParameter("sigla_partido", identificacaoParlamentar.SiglaPartidoParlamentar);
-                    banco.AddParameter("sigla_uf", identificacaoParlamentar.UfParlamentar);
-                    banco.AddParameter("email", identificacaoParlamentar.EmailParlamentar);
-                    banco.AddParameter("site", identificacaoParlamentar.UrlPaginaParticular);
-
-                    var dadosBasicos = senador.DetalheParlamentar.Parlamentar.DadosBasicosParlamentar;
-                    banco.AddParameter("nascimento", dadosBasicos?.DataNascimento);
-                    banco.AddParameter("naturalidade", dadosBasicos?.Naturalidade);
-                    banco.AddParameter("sigla_uf_naturalidade", dadosBasicos?.UfNaturalidade);
-
                     request = new RestRequest("http://legis.senado.gov.br/dadosabertos/senador/" + idSenador.ToString() + "/profissao?v=1");
                     request.AddHeader("Accept", "application/json");
 
                     RestResponse resProfissoes = restClient.GetWithAutoRetry(request);
-                    JsonDocument jSenadorProfissoes = JsonDocument.Parse(resProfissoes.Content);
-                    var jParlamentarProfissoes = jSenadorProfissoes.RootElement.GetProperty("ProfissaoParlamentar").GetProperty("Parlamentar");
-
-                    var lstSenadorProfissao = new List<Profissao>();
-                    JsonElement jProfissoes;
-                    if (jParlamentarProfissoes.TryGetProperty("Profissoes", out jProfissoes))
+                    if (!resProfissoes.Content.Contains("HistoricoAcademicoParlamentar"))
                     {
-                        if (jProfissoes.GetProperty("Profissao").ValueKind == JsonValueKind.Array)
+                        banco.AddParameter("id", identificacaoParlamentar.CodigoParlamentar);
+                        banco.AddParameter("codigo", identificacaoParlamentar.CodigoPublicoNaLegAtual);
+                        banco.AddParameter("nome", identificacaoParlamentar.NomeParlamentar);
+                        banco.AddParameter("nome_completo", identificacaoParlamentar.NomeCompletoParlamentar);
+                        banco.AddParameter("sexo", identificacaoParlamentar.SexoParlamentar[0].ToString());
+                        banco.AddParameter("sigla_partido", identificacaoParlamentar.SiglaPartidoParlamentar);
+                        banco.AddParameter("sigla_uf", identificacaoParlamentar.UfParlamentar);
+                        banco.AddParameter("email", identificacaoParlamentar.EmailParlamentar);
+                        banco.AddParameter("site", identificacaoParlamentar.UrlPaginaParticular);
+
+                        var dadosBasicos = senador.DetalheParlamentar.Parlamentar.DadosBasicosParlamentar;
+                        banco.AddParameter("nascimento", dadosBasicos?.DataNascimento);
+                        banco.AddParameter("naturalidade", dadosBasicos?.Naturalidade);
+                        banco.AddParameter("sigla_uf_naturalidade", dadosBasicos?.UfNaturalidade);
+
+                        JsonDocument jSenadorProfissoes = JsonDocument.Parse(resProfissoes.Content);
+                        var jParlamentarProfissoes = jSenadorProfissoes.RootElement.GetProperty("ProfissaoParlamentar").GetProperty("Parlamentar");
+
+                        var lstSenadorProfissao = new List<Profissao>();
+                        JsonElement jProfissoes;
+                        if (jParlamentarProfissoes.TryGetProperty("Profissoes", out jProfissoes))
                         {
-                            lstSenadorProfissao = JsonSerializer.Deserialize<List<Profissao>>(jProfissoes.GetProperty("Profissao"));
+                            if (jProfissoes.GetProperty("Profissao").ValueKind == JsonValueKind.Array)
+                            {
+                                lstSenadorProfissao = JsonSerializer.Deserialize<List<Profissao>>(jProfissoes.GetProperty("Profissao"));
+                            }
+                            else
+                            {
+                                lstSenadorProfissao.Add(JsonSerializer.Deserialize<Profissao>(jProfissoes.GetProperty("Profissao")));
+                            }
+                        }
+
+                        if (lstSenadorProfissao.Any())
+                        {
+                            banco.AddParameter("profissao", string.Join(", ", lstSenadorProfissao.Select(obj => obj.NomeProfissao)));
                         }
                         else
                         {
-                            lstSenadorProfissao.Add(JsonSerializer.Deserialize<Profissao>(jProfissoes.GetProperty("Profissao")));
+                            banco.AddParameter("profissao", DBNull.Value);
                         }
-                    }
 
-                    if (lstSenadorProfissao.Any())
-                    {
-                        banco.AddParameter("profissao", string.Join(", ", lstSenadorProfissao.Select(obj => obj.NomeProfissao)));
-                    }
-                    else
-                    {
-                        banco.AddParameter("profissao", DBNull.Value);
-                    }
+                        banco.AddParameter("ativo", lstSenadorAtivo.Contains(identificacaoParlamentar.CodigoParlamentar) ? "S" : "N");
 
-                    banco.AddParameter("ativo", lstSenadorAtivo.Contains(identificacaoParlamentar.CodigoParlamentar) ? "S" : "N");
+                        banco.ExecuteNonQuery(@"
+                            UPDATE sf_senador SET
+                                codigo = @codigo
+                                , nome = @nome
+                                , nome_completo = @nome_completo
+                                , sexo = @sexo
+                                , nascimento = @nascimento
+                                , naturalidade = @naturalidade
+                                , id_estado_naturalidade = (SELECT id FROM estado where sigla like @sigla_uf_naturalidade)
+                                , profissao = @profissao
+                                , id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
+                                , id_estado = (SELECT id FROM estado where sigla like @sigla_uf)
+                                , email = @email
+                                , site = @site
+                                , ativo = @ativo
+                            WHERE id = @id
+                        ");
 
-                    banco.ExecuteNonQuery(@"
-                        UPDATE sf_senador SET
-                            codigo = @codigo
-                            , nome = @nome
-                            , nome_completo = @nome_completo
-                            , sexo = @sexo
-                            , nascimento = @nascimento
-                            , naturalidade = @naturalidade
-                            , id_estado_naturalidade = (SELECT id FROM estado where sigla like @sigla_uf_naturalidade)
-                            , profissao = @profissao
-                            , id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
-                            , id_estado = (SELECT id FROM estado where sigla like @sigla_uf)
-                            , email = @email
-                            , site = @site
-                            , ativo = @ativo
-                        WHERE id = @id
-                    ");
-
-                    if (lstSenadorProfissao.Any())
-                    {
-                        foreach (var profissao in lstSenadorProfissao)
+                        if (lstSenadorProfissao.Any())
                         {
-                            if (!lstProfissao.ContainsKey(profissao.NomeProfissao))
+                            foreach (var profissao in lstSenadorProfissao)
                             {
-                                banco.AddParameter("descricao", profissao.NomeProfissao);
-                                var idProfissao = banco.ExecuteScalar(@"INSERT INTO profissao (descricao) values (@descricao); SELECT LAST_INSERT_ID();");
+                                if (!lstProfissao.ContainsKey(profissao.NomeProfissao))
+                                {
+                                    banco.AddParameter("descricao", profissao.NomeProfissao);
+                                    var idProfissao = banco.ExecuteScalar(@"INSERT INTO profissao (descricao) values (@descricao); SELECT LAST_INSERT_ID();");
 
-                                lstProfissao.Add(profissao.NomeProfissao, Convert.ToInt32(idProfissao));
+                                    lstProfissao.Add(profissao.NomeProfissao, Convert.ToInt32(idProfissao));
+                                }
+
+                                banco.AddParameter("id_sf_senador", idSenador);
+                                banco.AddParameter("id_profissao", lstProfissao[profissao.NomeProfissao]);
+
+                                banco.ExecuteNonQuery(@"INSERT IGNORE INTO sf_senador_profissao (id_sf_senador, id_profissao) values (@id_sf_senador, @id_profissao)");
                             }
-
-                            banco.AddParameter("id_sf_senador", idSenador);
-                            banco.AddParameter("id_profissao", lstProfissao[profissao.NomeProfissao]);
-
-                            banco.ExecuteNonQuery(@"INSERT IGNORE INTO sf_senador_profissao (id_sf_senador, id_profissao) values (@id_sf_senador, @id_profissao)");
                         }
                     }
 
@@ -544,10 +547,12 @@ namespace OPS.Importador
         protected readonly ILogger<ImportadorDespesasSenado> logger;
         protected readonly IDbConnection connection;
 
-        public string rootPath { get; set; }
-        public string tempPath { get; set; }
+        public string rootPath { get; init; }
+        public string tempPath { get; init; }
 
         private int linhasProcessadasAno { get; set; }
+
+        public bool importacaoIncremental { get; init; }
 
         public HttpClient httpClient { get; }
 
@@ -559,8 +564,9 @@ namespace OPS.Importador
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
             tempPath = configuration["AppSettings:SiteTempFolder"];
+            importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
 
-            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
         }
 
         //public string AtualizaCadastroParlamentarCompleto()
@@ -899,24 +905,23 @@ namespace OPS.Importador
                 var _urlOrigem = arquivo.Key;
                 var caminhoArquivo = arquivo.Value;
 
-                if (TentarBaixarArquivo(_urlOrigem, caminhoArquivo))
-                {
-                    try
-                    {
-                        ImportarDespesas(caminhoArquivo, ano);
-                    }
-                    catch (Exception ex)
-                    {
+                BaixarArquivo(_urlOrigem, caminhoArquivo);
 
-                        logger.LogError(ex, ex.Message);
+                try
+                {
+                    ImportarDespesas(caminhoArquivo, ano);
+                }
+                catch (Exception ex)
+                {
+
+                    logger.LogError(ex, ex.Message);
 
 #if !DEBUG
-                        //Excluir o arquivo para tentar importar novamente na proxima execução
-                        if(File.Exists(caminhoArquivo))
-                            File.Delete(caminhoArquivo);
+                    //Excluir o arquivo para tentar importar novamente na proxima execução
+                    if(File.Exists(caminhoArquivo))
+                        File.Delete(caminhoArquivo);
 #endif
 
-                    }
                 }
             }
         }
@@ -934,33 +939,10 @@ namespace OPS.Importador
             return arquivos;
         }
 
-        protected bool TentarBaixarArquivo(string urlOrigem, string caminhoArquivo)
+        protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            try
-            {
-                return BaixarArquivo(urlOrigem, caminhoArquivo);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Erro ao baixar arquivo: {Message}", ex.Message);
-
-                // Algumas vezes ocorre do arquivo não estar disponivel, precisamos aguardar alguns instantes e tentar novamente.
-                // Isso pode ser causado por um erro de rede ou atualização do arquivo.
-                Thread.Sleep((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
-
-                return BaixarArquivo(urlOrigem, caminhoArquivo);
-            }
-            finally
-            {
-                watch.Stop();
-                //logger.LogTrace("Arquivo baixado em {TimeElapsed:c}", watch.Elapsed);
-            }
-        }
-
-        private bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
-        {
-            logger.LogTrace("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+            if (importacaoIncremental && File.Exists(caminhoArquivo)) return false;
+            logger.LogTrace($"Baixando arquivo '{caminhoArquivo}' a partir de '{urlOrigem}'");
 
             string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
             if (!Directory.Exists(diretorio))
@@ -970,7 +952,6 @@ namespace OPS.Importador
                 File.Delete(caminhoArquivo);
 
             httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-
             return true;
         }
 
@@ -1449,10 +1430,14 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
             try
             {
-                var possuiNovosItens = TentarBaixarArquivo(urlOrigem, caminhoArquivo);
+                var arquivoJaProcessado = BaixarArquivo(urlOrigem, caminhoArquivo);
+                if (importacaoIncremental && arquivoJaProcessado)
+                {
+                    logger.LogInformation("Importação ignorada para arquivo previamente importado!");
+                    return;
+                }
 
-                if (possuiNovosItens)
-                    CarregaRemuneracaoCsv(caminhoArquivo, anomes);
+                CarregaRemuneracaoCsv(caminhoArquivo, anomes);
             }
             catch (Exception ex)
             {

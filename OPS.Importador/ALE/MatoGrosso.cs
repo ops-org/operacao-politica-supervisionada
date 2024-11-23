@@ -25,7 +25,7 @@ public class ImportadorDespesasMatoGrosso : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "",
             Estado = Estado.MatoGrosso,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

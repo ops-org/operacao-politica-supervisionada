@@ -478,11 +478,13 @@ public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
     {
         var nomeParlamentar = parlamentar.QuerySelector(".nome-deps span").TextContent.Trim().ReduceWhitespace();
         var nomeParlamentarLimpo = Utils.RemoveAccents(nomeParlamentar);
+        var urlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
 
         var deputado = deputados.Find(x =>
             Utils.RemoveAccents(x.NomeImportacao ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
             Utils.RemoveAccents(x.NomeParlamentar).Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
-            Utils.RemoveAccents(x.NomeCivil ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase)
+            Utils.RemoveAccents(x.NomeCivil ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
+            x.UrlPerfil == urlPerfil
         );
 
         if (deputado == null)
@@ -498,7 +500,7 @@ public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
             deputado.NomeCivil = deputado.NomeParlamentar;
 
         deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".nome-deps .partido").TextContent.Trim());
-        deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
+        deputado.UrlPerfil = urlPerfil;
         deputado.UrlFoto = (parlamentar.QuerySelector(".foto-deps img") as IHtmlImageElement)?.Source;
 
         return deputado;

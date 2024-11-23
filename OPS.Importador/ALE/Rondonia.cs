@@ -79,26 +79,29 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
             if (nomeDeputado == "Luiz Eduardo Schincaglia")
                 nomeDeputado = "Luis Eduardo Schincaglia";
 
-            var deputado = deputados.Find(x => (x.NomeImportacao ?? Utils.RemoveAccents(x.NomeCivil)).Equals(nomeDeputado, StringComparison.InvariantCultureIgnoreCase));
-            if (deputado == null || deputado.Gabinete == null)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Tipo"] = "VerbaIndenizatoria", ["Parlamentar"] = nomeDeputado }))
             {
-                logger.LogError("Parlamentar {Parlamentar} não existe ou não possui gabinete relacionado!", colunas[idxCredor].TextContent);
+                var deputado = deputados.Find(x => (x.NomeImportacao ?? Utils.RemoveAccents(x.NomeCivil)).Equals(nomeDeputado, StringComparison.InvariantCultureIgnoreCase));
+                if (deputado == null || deputado.Gabinete == null)
+                {
+                    logger.LogError("Parlamentar {Parlamentar} não existe ou não possui gabinete relacionado!", colunas[idxCredor].TextContent);
+                }
+
+                var despesaTemp = new CamaraEstadualDespesaTemp()
+                {
+                    Nome = colunas[idxCredor].TextContent,
+                    Cpf = deputado?.Gabinete.ToString(),
+                    Ano = (short)ano,
+                    Mes = (short)mes,
+                    TipoDespesa = "Diárias",
+                    DataEmissao = new DateTime(ano, mes, 1),
+                    Valor = Convert.ToDecimal(colunas[idxValor].TextContent, cultureInfo),
+                    Observacao = $"Diárias: {colunas[idxQuantidade].TextContent}; Trecho: {colunas[idxDestino].TextContent}; Transporte: {colunas[idxMeioTransporte].TextContent}; Link: {link}",
+                };
+
+
+                InserirDespesaTemp(despesaTemp);
             }
-
-            var despesaTemp = new CamaraEstadualDespesaTemp()
-            {
-                Nome = colunas[idxCredor].TextContent,
-                Cpf = deputado?.Gabinete.ToString(),
-                Ano = (short)ano,
-                Mes = (short)mes,
-                TipoDespesa = "Diárias",
-                DataEmissao = new DateTime(ano, mes, 1),
-                Valor = Convert.ToDecimal(colunas[idxValor].TextContent, cultureInfo),
-                Observacao = $"Diárias: {colunas[idxQuantidade].TextContent}; Trecho: {colunas[idxDestino].TextContent}; Transporte: {colunas[idxMeioTransporte].TextContent}; Link: {link}",
-            };
-
-
-            InserirDespesaTemp(despesaTemp);
         }
     }
 
@@ -113,7 +116,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
             var gabinete = item as IHtmlOptionElement;
             if (string.IsNullOrEmpty(gabinete.Value)) continue;
 
-            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text }))
+            using (logger.BeginScope(new Dictionary<string, object> { ["Tipo"] = "VerbaIndenizatoria", ["Parlamentar"] = gabinete.Text }))
             {
                 var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
                 if (deputado == null)

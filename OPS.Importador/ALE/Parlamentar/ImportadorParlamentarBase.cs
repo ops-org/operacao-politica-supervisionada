@@ -75,10 +75,19 @@ namespace OPS.Importador.ALE.Parlamentar
                 })
                 .FirstOrDefault();
 
-            if (Debugger.IsAttached && deputado == null)
-                Trace.WriteLine($"Deputado {nomeParlamentar} não localizado.");
+            if (deputado == null)
+                deputado = connection
+                .GetList<DeputadoEstadual>(new
+                {
+                    id_estado = config.Estado,
+                    nome_importacao = nomeParlamentar
+                })
+                .FirstOrDefault();
 
-            return deputado ?? new DeputadoEstadual()
+            if (deputado != null)
+                return deputado;
+
+            return new DeputadoEstadual()
             {
                 IdEstado = (ushort)config.Estado,
                 NomeParlamentar = nomeParlamentar
@@ -95,10 +104,10 @@ namespace OPS.Importador.ALE.Parlamentar
                 })
                 .FirstOrDefault();
 
-            if (Debugger.IsAttached && deputado == null)
-                Trace.WriteLine($"Deputado {nome} não localizado.");
+            if (deputado != null)
+                return deputado;
 
-            return deputado ?? new DeputadoEstadual()
+            return new DeputadoEstadual()
             {
                 IdEstado = (ushort)config.Estado,
                 NomeCivil = nome
@@ -107,18 +116,22 @@ namespace OPS.Importador.ALE.Parlamentar
 
         protected DeputadoEstadual GetDeputadoByMatriculaOrNew(uint matricula)
         {
-            return connection
+            var deputado = connection
                 .GetList<DeputadoEstadual>(new
                 {
                     id_estado = config.Estado,
                     matricula
                 })
-                .FirstOrDefault()
-                ?? new DeputadoEstadual()
-                {
-                    IdEstado = (ushort)config.Estado,
-                    Matricula = matricula
-                };
+                .FirstOrDefault();
+
+            if (deputado != null)
+                return deputado;
+
+            return new DeputadoEstadual()
+            {
+                IdEstado = (ushort)config.Estado,
+                Matricula = matricula
+            };
         }
 
         public void InsertOrUpdate(DeputadoEstadual deputado)

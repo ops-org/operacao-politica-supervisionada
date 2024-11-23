@@ -50,6 +50,8 @@ namespace OPS.Importador.ALE.Despesa
 
         public int idEstado { get { return config.Estado.GetHashCode(); } }
 
+        public bool importacaoIncremental { get; set; }
+
         private int itensProcessadosAno { get; set; }
 
         private decimal valorTotalProcessadoAno { get; set; }
@@ -57,7 +59,7 @@ namespace OPS.Importador.ALE.Despesa
         protected Dictionary<string, uint> lstHash { get; private set; }
 
         private HttpClient _httpClient;
-        public HttpClient httpClient { get { return _httpClient ??= httpClientFactory.CreateClient("MyNamedClient"); } }
+        public HttpClient httpClient { get { return _httpClient ??= httpClientFactory.CreateClient("ResilientClient"); } }
 
         private IHttpClientFactory httpClientFactory { get; }
 
@@ -71,6 +73,7 @@ namespace OPS.Importador.ALE.Despesa
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
             _tempPath = configuration["AppSettings:SiteTempFolder"];
+            importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
 
 
             httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
@@ -101,7 +104,7 @@ namespace OPS.Importador.ALE.Despesa
 
                 InsereDespesaFinal(ano);
                 ValidaImportacao(ano);
-                
+
                 if (ano == DateTime.Now.Year)
                 {
                     try
@@ -181,43 +184,18 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano) { return null; }
 
-        protected bool TentarBaixarArquivo(string urlOrigem, string caminhoArquivo)
+        protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            try
-            {
-                return BaixarArquivo(urlOrigem, caminhoArquivo);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Erro ao baixar arquivo: {Message}", ex.Message);
-
-                // Algumas vezes ocorre do arquivo não estar disponivel, precisamos aguardar alguns instantes e tentar novamente.
-                // Isso pode ser causado por um erro de rede ou atualização do arquivo.
-                Thread.Sleep((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
-
-                return BaixarArquivo(urlOrigem, caminhoArquivo);
-            }
-            finally
-            {
-                watch.Stop();
-                logger.LogTrace("Arquivo baixado em {TimeElapsed:c}", watch.Elapsed);
-            }
-        }
-
-        private bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
-        {
-            logger.LogTrace("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+            if (importacaoIncremental && File.Exists(caminhoArquivo)) return false;
+            logger.LogTrace($"Baixando arquivo '{caminhoArquivo}' a partir de '{urlOrigem}'");
 
             string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
             if (!Directory.Exists(diretorio))
                 Directory.CreateDirectory(diretorio);
             else if (File.Exists(caminhoArquivo))
-                return true;
-            //File.Delete(caminhoArquivo);
+                File.Delete(caminhoArquivo);
 
             httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
-
             return true;
         }
 
@@ -327,7 +305,7 @@ where nome not in (
     AND nome_civil IS NOT null
 );");
             }
-            else // Nome
+            else if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar)
             {
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
@@ -339,6 +317,23 @@ where nome not in (
     WHERE id_estado = {idEstado} 
     AND nome_parlamentar IS NOT null
 );");
+            }
+            else
+            {
+                var deputadosNaoLocalizados = connection.ExecuteScalar<string>(@$"
+SELECT GROUP_CONCAT(DISTINCT nome)
+FROM ops_tmp.cl_despesa_temp
+WHERE nome NOT IN (
+    SELECT IFNULL(nome_importacao, nome_parlamentar)
+    FROM cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND nome_parlamentar IS NOT null
+);");
+
+                if(!string.IsNullOrEmpty(deputadosNaoLocalizados))
+                {
+                    throw new Exception($"Deputados não cadastrados: {deputadosNaoLocalizados}");
+                }
             }
 
             if (affected > 0)
@@ -490,7 +485,7 @@ WHERE p.id IS null");
             var sql = @$"
 select 
     count(1) as itens, 
-    IFNULL(sum(valor_liquido) as valor_total 
+    IFNULL(sum(valor_liquido), 0) as valor_total 
 from cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}

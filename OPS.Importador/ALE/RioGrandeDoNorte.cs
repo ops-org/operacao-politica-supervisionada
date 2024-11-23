@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
@@ -37,7 +38,7 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
         {
             BaseAddress = "https://www.al.rn.leg.br/portal/verbas",
             Estado = Estado.RioGrandeDoNorte,
-            ChaveImportacao = ChaveDespesaTemp.Gabinete
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
 
         // TODO: Filtrar legislatura atual
@@ -60,7 +61,10 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
             var filename = $"{tempPath}/CLRN-{ano}-{mes}-{gabinete.Value}.pdf";
             if (!File.Exists(filename))
             {
-                //var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
+                //var deputado = deputados.Find(x => 
+                //    gabinete.Text.Equals( x.NomeImportacao, StringComparison.InvariantCultureIgnoreCase) ||
+                //    gabinete.Text.Equals(x.NomeParlamentar, StringComparison.InvariantCultureIgnoreCase)
+                //);
                 //if (deputado == null)
                 //{
                 //    logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");

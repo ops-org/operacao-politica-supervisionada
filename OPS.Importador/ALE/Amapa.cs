@@ -74,14 +74,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
                 if (primeiraColuna.TextContent == "TOTAL") continue;
 
                 var linkDetalhes = (primeiraColuna.QuerySelector("a") as IHtmlAnchorElement);
-                var despesaTemp = new CamaraEstadualDespesaTemp()
-                {
-                    Nome = gabinete.Text.Split("-")[0].Trim().ToTitleCase(),
-                    Cpf = deputado?.Matricula?.ToString(),
-                    Ano = (short)ano,
-                    Mes =  (short)mes,
-                    TipoDespesa = linkDetalhes.Text.Split(" - ")[1].Trim(),
-                };
+                
 
                 var subDocument = context.OpenAsyncAutoRetry(linkDetalhes.Href).GetAwaiter().GetResult();
                 var linhasDespesasDetalhes = subDocument.QuerySelectorAll(".ls-table tbody tr");
@@ -89,6 +82,15 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
                 {
                     var colunas = detalhes.QuerySelectorAll("td");
                     if (colunas[0].TextContent == "TOTAL") continue;
+
+                    var despesaTemp = new CamaraEstadualDespesaTemp()
+                    {
+                        Nome = gabinete.Text.Split("-")[0].Trim().ToTitleCase(),
+                        Cpf = deputado?.Matricula?.ToString(),
+                        Ano = (short)ano,
+                        Mes = (short)mes,
+                        TipoDespesa = linkDetalhes.Text.Split(" - ")[1].Trim(),
+                    };
 
                     var empresaParts = colunas[0].TextContent.Split(" - ");
                     despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(empresaParts[0].Trim());

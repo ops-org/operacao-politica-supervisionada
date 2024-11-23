@@ -65,7 +65,7 @@ namespace OPS.Importador.Utilities
         {
             if (File.Exists(fileName))
             {
-                PdfReader pdfReader = new PdfReader(fileName);
+                using PdfReader pdfReader = new PdfReader(fileName);
                 ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
 
                 for (int page = 1; page <= pdfReader.NumberOfPages; page++)

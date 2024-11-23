@@ -40,7 +40,7 @@ public class ImportadorDespesasAcre : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://app.al.ac.leg.br/financa/despesaVI", // TODO: Gastos totais mensais apenas
             Estado = Estado.Acre,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -72,7 +72,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
         List<DeputadoAcre> objDeputadosAcre = RestApiGet<List<DeputadoAcre>>(address);
 
         foreach (var parlamentar in objDeputadosAcre)
-    {
+        {
             var matricula = (uint)parlamentar.Id;
             DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew(matricula);
 
@@ -97,7 +97,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
 
         var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
         if (document.StatusCode != HttpStatusCode.OK)
-    {
+        {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
         };
 
@@ -116,7 +116,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
             logger.LogWarning("Verificar possivel mudança no perfil do parlamentar: {UrlPerfil}", deputado.UrlPerfil);
         }
     }
-    }
+}
 
 public class DeputadoAcre
 {

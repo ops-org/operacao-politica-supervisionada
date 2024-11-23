@@ -32,7 +32,7 @@ namespace OPS.Importador
             this.connection = connection;
             this.configuration = configuration;
 
-            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+            httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
         }
 
         //public void AtualizaFornecedorDoador()

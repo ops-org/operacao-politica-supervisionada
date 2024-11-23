@@ -98,8 +98,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
     private void ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf)
     {
         var filename = $"{tempPath}/CLTO-{ano}-{mes}-{gabinete.Value}.pdf";
-        if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+        BaixarArquivo(urlPdf, filename);
 
         using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
         {

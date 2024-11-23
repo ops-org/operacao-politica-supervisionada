@@ -102,8 +102,7 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
     private void ImportarDespesasArquivo(int ano, int mes, string urlPdf)
     {
         var filename = $"{tempPath}/CLSE-{ano}-{mes}.pdf";
-        if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+        BaixarArquivo(urlPdf, filename);
 
         using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
         {

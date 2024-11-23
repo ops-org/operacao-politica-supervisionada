@@ -62,7 +62,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         rootPath = configuration["AppSettings:SiteRootFolder"];
         tempPath = configuration["AppSettings:SiteTempFolder"];
 
-        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
     }
 
     public Task Importar()
@@ -444,6 +444,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public string rootPath { get; set; }
     public string tempPath { get; set; }
 
+    private bool importacaoIncremental { get; init; }
     private int itensProcessadosAno { get; set; }
     private decimal valorTotalProcessadoAno { get; set; }
 
@@ -459,8 +460,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
         tempPath = configuration["AppSettings:SiteTempFolder"];
+        importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
 
-        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("MyNamedClient");
+        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
     }
 
     #region Importação Deputados
@@ -1181,6 +1183,7 @@ WHERE presencas = 0");
 
     public void Importar(int ano)
     {
+        var anoAtual = DateTime.Today.Year;
         logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
 
         Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
@@ -1190,30 +1193,34 @@ WHERE presencas = 0");
             var _urlOrigem = arquivo.Key;
             var caminhoArquivo = arquivo.Value;
 
-            if (TentarBaixarArquivo(_urlOrigem, caminhoArquivo))
+            bool arquivoJaProcessado = BaixarArquivo(_urlOrigem, caminhoArquivo);
+            if (anoAtual != ano && importacaoIncremental && arquivoJaProcessado)
             {
-                try
-                {
-                    if (caminhoArquivo.EndsWith(".zip"))
-                    {
-                        DescompactarArquivo(caminhoArquivo);
-                        caminhoArquivo = caminhoArquivo.Replace(".zip", "");
-                    }
+                logger.LogInformation("Importação ignorada para arquivo previamente importado!");
+                return;
+            }
 
-                    ImportarDespesas(caminhoArquivo, ano);
+            try
+            {
+                if (caminhoArquivo.EndsWith(".zip"))
+                {
+                    DescompactarArquivo(caminhoArquivo);
+                    caminhoArquivo = caminhoArquivo.Replace(".zip", "");
                 }
-                catch (Exception ex)
-                {
 
-                    logger.LogError(ex, ex.Message);
+                ImportarDespesas(caminhoArquivo, ano);
+            }
+            catch (Exception ex)
+            {
+
+                logger.LogError(ex, ex.Message);
 
 #if !DEBUG
-                        //Excluir o arquivo para tentar importar novamente na proxima execução
-                        if(File.Exists(caminhoArquivo))
-                            File.Delete(caminhoArquivo);
+                //Excluir o arquivo para tentar importar novamente na proxima execução
+                if(File.Exists(caminhoArquivo))
+                    File.Delete(caminhoArquivo);
 #endif
 
-                }
             }
         }
     }
@@ -1243,32 +1250,9 @@ WHERE presencas = 0");
         return arquivos;
     }
 
-    protected bool TentarBaixarArquivo(string urlOrigem, string caminhoArquivo)
-    {
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-        try
-        {
-            return BaixarArquivo(urlOrigem, caminhoArquivo);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Erro ao baixar arquivo: {UrlArquivo}", urlOrigem);
-
-            // Algumas vezes ocorre do arquivo não estar disponivel, precisamos aguardar alguns instantes e tentar novamente.
-            // Isso pode ser causado por um erro de rede ou atualização do arquivo.
-            Thread.Sleep((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
-
-            return BaixarArquivo(urlOrigem, caminhoArquivo);
-        }
-        finally
-        {
-            watch.Stop();
-            logger.LogTrace($"Arquivo baixado em {watch.Elapsed:c}");
-        }
-    }
-
     private bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
     {
+        if (importacaoIncremental && File.Exists(caminhoArquivo)) return false;
         logger.LogTrace($"Baixando arquivo '{caminhoArquivo}' a partir de '{urlOrigem}'");
 
         string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
@@ -1388,7 +1372,7 @@ WHERE presencas = 0");
                         despesaTemp.UrlDocumento = "0";
                     }
 
-                        if (!string.IsNullOrEmpty(despesaTemp.Passageiro))
+                    if (!string.IsNullOrEmpty(despesaTemp.Passageiro))
                     {
                         despesaTemp.Passageiro = despesaTemp.Passageiro.ToString().Split(";")[0];
                         string[] partes = despesaTemp.Passageiro.ToString().Split(new[] { '/', ';' });
@@ -1456,7 +1440,7 @@ WHERE presencas = 0");
         }
     }
 
-    private void InsereDespesasTemp( List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, UInt64> lstHash)
+    private void InsereDespesasTemp(List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, UInt64> lstHash)
     {
         JsonSerializerOptions options = new()
         {
@@ -2014,11 +1998,8 @@ where id=@id_cf_deputado", new
 
         try
         {
-            if (!File.Exists(caminhoArquivo)) // TODO: Remover IF
-            {
-                var possuiNovosItens = TentarBaixarArquivo(urlOrigem, caminhoArquivo);
-                if (!possuiNovosItens) return;
-            }
+            bool arquivoJaProcessado = BaixarArquivo(urlOrigem, caminhoArquivo);
+            if (arquivoJaProcessado) return;
 
             CarregaRemuneracaoCsv(caminhoArquivo, Convert.ToInt32(ano.ToString() + mes.ToString("00")));
         }
@@ -2235,8 +2216,7 @@ where id=@id_cf_deputado", new
 SELECT DISTINCT cd.id as id_cf_deputado, cd.situacao
 FROM cf_deputado cd 
 JOIN cf_mandato m ON m.id_cf_deputado = cd.id
--- WHERE id_legislatura = 57                                
--- and cd.id >= 141428
+WHERE id_legislatura = 57                                
 -- and cd.processado = 0
 order by cd.situacao, cd.id
 ";
@@ -2288,7 +2268,7 @@ order by cd.situacao, cd.id
                 var document = await context.OpenAsyncAutoRetry(address);
                 if (document.StatusCode != HttpStatusCode.OK)
                 {
-                    Console.WriteLine($"{address} {document.StatusCode}");
+                    logger.LogError($"{address} {document.StatusCode}");
                 };
 
                 bool possuiPassaporteDiplimatico = false;
@@ -2299,15 +2279,13 @@ order by cd.situacao, cd.id
 
                 foreach (var ano in anosmandatos)
                 {
-                    if (ano < 2023) continue;
+                    if (ano < 2024) continue;
 
-                    Console.WriteLine();
-                    Console.WriteLine($"Ano: {ano}");
                     address = $"https://www.camara.leg.br/deputados/{idDeputado}?ano={ano}";
                     document = await context.OpenAsyncAutoRetry(address);
                     if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
                     {
-                        Console.WriteLine(document.StatusCode + ":" + document.Url);
+                        logger.LogError("{StatusCode}: {Url}", document.StatusCode, document.Url);
                         continue;
                     }
 
@@ -2317,7 +2295,6 @@ order by cd.situacao, cd.id
                         logger.LogError("Nenhuma informação de beneficio: {address}", address);
                         continue;
                     }
-
 
                     var verbaGabineteMensal = document.QuerySelectorAll("#gastomensalverbagabinete tbody tr");
                     foreach (var item in verbaGabineteMensal)
@@ -2428,7 +2405,7 @@ order by cd.situacao, cd.id
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine(ex.Message);
+                            logger.LogError(ex, ex.Message);
                         }
                     }
                 }
@@ -2448,7 +2425,7 @@ order by cd.situacao, cd.id
         var document = await context.OpenAsyncAutoRetry(address);
         if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
         {
-            Console.WriteLine(document.StatusCode + ":" + document.Url);
+            logger.LogError("{StatusCode}: {Url}", document.StatusCode, document.Url);
             return;
         };
 
