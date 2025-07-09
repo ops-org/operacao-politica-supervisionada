@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using Serilog.Events;
 
 namespace OPS.Importador.ALE;
 
@@ -48,7 +45,7 @@ public class ImportadorDespesasAmazonas : ImportadorDespesasRestApiMensal
         var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
         var deputados = (document.QuerySelector($"#{chaveDeputados}") as IHtmlSelectElement);
 
-        IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form#pesq");
+        IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
 
         foreach (var deputado in deputados.Options)
         {
@@ -142,7 +139,12 @@ public class ImportadorParlamentarAmazonas : ImportadorParlamentarCrawler
         deputado.NomeCivil = subDocument.QuerySelector("#nome-dep").TextContent.Trim();
         deputado.Naturalidade = subDocument.QuerySelector("#nat-dep").TextContent.Trim();
         if (subDocument.QuerySelector("#ani-dep") != null)
-            deputado.Nascimento = DateOnly.Parse(subDocument.QuerySelector("#ani-dep").TextContent.Trim(), cultureInfo);
+        {
+            var aniversario = subDocument.QuerySelector("#ani-dep").TextContent.Trim();
+            if (aniversario.Length == 8)
+                deputado.Nascimento = DateOnly.Parse(aniversario, cultureInfo);
+        }
+
         deputado.Email = subDocument.QuerySelector("#email-dep").TextContent.Trim();
         deputado.Telefone = subDocument.QuerySelector("#tel-dep").TextContent.Trim().Replace("NA", "").NullIfEmpty();
         deputado.Sexo = deputado.Email.StartsWith("deputada.") ? "F" : "M";

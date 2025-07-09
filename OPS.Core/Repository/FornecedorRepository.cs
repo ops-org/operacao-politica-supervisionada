@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
-using OPS.Core.Models;
+using OPS.Core.Model;
+using OPS.Core.Utilities;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public class FornecedorRepository
     {

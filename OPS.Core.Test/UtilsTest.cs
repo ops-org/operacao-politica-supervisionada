@@ -1,3 +1,5 @@
+using OPS.Core.Utilities;
+
 namespace OPS.Core.Test
 {
     public class UtilsTest

@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 
@@ -54,6 +55,8 @@ namespace OPS.Importador.ALE
 
             urlOrigem = $"{config.BaseAddress}repositorioDados/deputados/despesas_gabinetes_{ano}.xml";
             caminhoArquivo = $"{tempPath}/CLSP-{ano}.xml";
+
+            //if (DateTime.Now.AddMonths(-1).Year >= ano && File.Exists(caminhoArquivo)) File.Delete(caminhoArquivo);
 
             arquivos.Add(urlOrigem, caminhoArquivo);
             return arquivos;

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using CsvHelper;
 using Microsoft.Extensions.Configuration;
 using OPS.Core;
+using OPS.Core.Utilities;
 
 namespace OPS.Importador
 {

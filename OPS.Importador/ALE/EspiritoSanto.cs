@@ -7,13 +7,13 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using static OPS.Importador.ALE.ImportadorDespesasPernambuco;
 
 namespace OPS.Importador.ALE;
 

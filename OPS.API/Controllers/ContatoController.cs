@@ -4,7 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OPS.Core;
+using OPS.Core.Utilities;
 
 namespace OPS.API.Controllers
 {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Dapper;
 using OPS.Core.DTO;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public class EstadoRepository : BaseRepository
     {

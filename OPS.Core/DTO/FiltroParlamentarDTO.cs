@@ -1,4 +1,6 @@
-﻿namespace OPS.Core.DTO
+﻿using OPS.Core.Enumerator;
+
+namespace OPS.Core.DTO
 {
     public class FiltroParlamentarDTO
     {

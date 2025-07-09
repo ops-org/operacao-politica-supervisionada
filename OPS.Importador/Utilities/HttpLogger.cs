@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
-using Polly;
-using Serilog;
-using Serilog.Core;
 
 namespace OPS.Importador.Utilities
 {
@@ -32,33 +27,36 @@ namespace OPS.Importador.Utilities
             if (request.Content != null)
             {
                 content = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-             
+
                 foreach (var (key, value) in request.Content.Headers)
                     headers.AppendLine($"{key} = {string.Join(",", value)}");
             }
 
-            _logger.LogInformation("""
-                        Request {Method} {URI} 
-                        Headers
-                        {Headers}Content 
-                        {Content}
-                        """,
-                request.Method,
-                request.RequestUri,
-                headers.ToString(),
-                content);
+            //if (!_logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+            //    _logger.LogDebug("""
+            //            Request {Method} {URI} 
+            //            Headers
+            //            {Headers}Content 
+            //            {Content}
+            //            """,
+            //    request.Method,
+            //    request.RequestUri,
+            //    headers.ToString(),
+            //    content);
+            //else
+                _logger.LogDebug("Request {Method} {URI}", request.Method, request.RequestUri);
 
             return null;
         }
 
-        public void LogRequestStop(
-            object? context, HttpRequestMessage request, HttpResponseMessage response, TimeSpan elapsed)
+        public void LogRequestStop(object? context, HttpRequestMessage request, HttpResponseMessage response, TimeSpan elapsed)
         {
-            _logger.LogInformation(
-                "Received '{0} {1}' after {2}ms",
-                response.StatusCode.GetHashCode(),
-                response.ReasonPhrase,
-                elapsed.TotalMilliseconds.ToString("F1"));
+            var logLevel = LogLevel.Debug;
+            if (elapsed.TotalMilliseconds > 10_000) logLevel = LogLevel.Warning;
+            else if (elapsed.TotalMilliseconds > 5_000) logLevel = LogLevel.Information;
+
+            _logger.Log(logLevel, "Received {StatusCode} {ReasonPhrase} after {TotalMilliseconds} ms from {Method} {URI}",
+                response.StatusCode.GetHashCode(), response.ReasonPhrase, elapsed.TotalMilliseconds.ToString("F1"), request.Method, request.RequestUri);
 
             //if (response.Content != null)
             //    _logger.LogInformation("""
@@ -88,7 +86,7 @@ namespace OPS.Importador.Utilities
         {
             _logger.LogError(
                 exception,
-                "Request towards '{0}/{1}' failed after {2}ms",
+                "Request towards '{RequestUri}/{PathAndQuery}' failed after {TotalMilliseconds} ms",
                 request.RequestUri?.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped),
                 request.RequestUri!.PathAndQuery,
                 elapsed.TotalMilliseconds.ToString("F1"));

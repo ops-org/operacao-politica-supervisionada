@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using AngleSharp;
-using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
 using CsvHelper;
-using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -46,7 +46,7 @@ public class ImportadorDespesasPiaui : ImportadorDespesasArquivo
         {
             BaseAddress = "https://transparencia.al.pi.leg.br/",
             Estado = Estado.Piaui,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -64,6 +64,13 @@ public class ImportadorDespesasPiaui : ImportadorDespesasArquivo
             CarregarHashes(ano);
 
             var caminhoArquivo = $"{tempPath}/grid_transp_publico_gecop.csv";
+
+            var fileInfo = new FileInfo(caminhoArquivo);
+            if (fileInfo.CreationTime > DateTime.Now.AddMonths(-1))
+            {
+                logger.LogError("Arquivo de importação criado em {FileCreationTime} pode estar desatualizado!", fileInfo.CreationTime);
+            }
+
             using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("UTF-8")))
             {
                 using (var csv = new CsvReader(reader, CultureInfo.CreateSpecificCulture("pt-BR")))
@@ -179,112 +186,93 @@ public class ImportadorDespesasPiaui : ImportadorDespesasArquivo
 
 }
 
-public class ImportadorParlamentarPiaui : ImportadorParlamentarCrawler
+public class ImportadorParlamentarPiaui : ImportadorParlamentarRestApi
 {
 
     public ImportadorParlamentarPiaui(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        Configure(new ImportadorParlamentarCrawlerConfig()
+        Configure(new ImportadorParlamentarConfig()
         {
-            BaseAddress = "https://www.al.pi.leg.br/",
-            SeletorListaParlamentares = "#bloco-fotos-parlamentar>div",
+            BaseAddress = "https://sapl.al.pi.leg.br/",
             Estado = Estado.Piaui,
         });
     }
 
-    public override async Task Importar()
+    public override Task Importar()
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
-        var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-        var context = BrowsingContext.New(angleSharpConfig);
+        var legislatura = 20; // 2023-2027
+        var address = $"{config.BaseAddress}api/parlamentares/legislatura/{legislatura}/parlamentares/?get_all=true";
+        List<Congressman> parlamentares = RestApiGet<List<Congressman>>(address);
 
-        var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
-        if (document.StatusCode != HttpStatusCode.OK)
-        {
-            Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
-        };
-
-        var parlamentares = document.QuerySelectorAll(config.SeletorListaParlamentares);
         foreach (var parlamentar in parlamentares)
         {
-            if (parlamentar.InnerHtml == "<br>") continue;
+            var matricula = (uint)parlamentar.Id;
+            parlamentar.NomeParlamentar = parlamentar.NomeParlamentar.Split(new[] { '/', '-', '(' })[0].Trim();
+            DeputadoEstadual deputado = GetDeputadoByNameOrNew(parlamentar.NomeParlamentar);
 
-            var deputado = new DeputadoEstadual()
-            {
-                IdEstado = (ushort)config.Estado.GetHashCode()
-            };
+            deputado.UrlPerfil = $"{config.BaseAddress}parlamentar/{parlamentar.Id}";
+            deputado.NomeParlamentar = parlamentar.NomeParlamentar.ToTitleCase();
+            deputado.IdPartido = BuscarIdPartido(parlamentar.Partido);
+            deputado.UrlFoto = parlamentar.Fotografia;
 
-            deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
-            deputado.UrlFoto = (parlamentar.QuerySelector("img") as IHtmlImageElement)?.Source;
-
-            ArgumentException.ThrowIfNullOrEmpty(deputado.UrlPerfil, nameof(deputado.UrlPerfil));
-            var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
-            if (document.StatusCode != HttpStatusCode.OK)
-            {
-                logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
-                continue;
-            };
-            deputado.NomeParlamentar = subDocument.QuerySelector("h1#parent-fieldname-title").TextContent.Split("-")[0].Trim().ToTitleCase();
-
-            var deputadoJaExistente = GetDeputadoByNameOrNew(deputado.NomeParlamentar);
-            if (deputadoJaExistente.Id != 0)
-            {
-                deputadoJaExistente.NomeParlamentar = deputado.NomeParlamentar;
-                deputadoJaExistente.UrlPerfil = deputado.UrlPerfil;
-                deputadoJaExistente.UrlFoto = deputado.UrlFoto;
-                deputado = deputadoJaExistente;
-            }
-
-            if (string.IsNullOrEmpty(deputado.NomeCivil))
-                deputado.NomeCivil = deputado.NomeParlamentar;
+            ObterDetalhesDoPerfil(deputado).GetAwaiter().GetResult();
 
             InsertOrUpdate(deputado);
         }
 
         logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        return Task.CompletedTask;
     }
 
-    public override DeputadoEstadual ColetarDadosLista(IElement document)
+    private async Task ObterDetalhesDoPerfil(DeputadoEstadual deputado)
     {
-        throw new NotImplementedException();
+        var context = httpClient.CreateAngleSharpContext();
+
+        var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
+        if (document.StatusCode != HttpStatusCode.OK)
+        {
+            Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
+        };
+
+        var perfil = document.QuerySelector("#content");
+
+        deputado.NomeCivil = perfil.QuerySelector("#div_nome").TextContent.Split(":")[1].Trim().ToTitleCase();
+
+        var elementos = perfil.QuerySelectorAll(".form-group>p").Select(x => x.TextContent);
+        if (elementos.Any())
+        {
+            deputado.Email = elementos.Where(x => x.StartsWith("E-mail")).FirstOrDefault()?.Split(':')[1].Trim().NullIfEmpty();
+            deputado.Telefone = elementos.Where(x => x.StartsWith("Telefone")).FirstOrDefault()?.Split(':')[1].Trim().NullIfEmpty();
+        }
+        else
+        {
+            logger.LogWarning("Verificar possivel mudança no perfil do parlamentar: {UrlPerfil}", deputado.UrlPerfil);
+        }
     }
 
-    public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
+    private class Congressman
     {
-        throw new NotImplementedException();
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("nome_parlamentar")]
+        public string NomeParlamentar { get; set; }
+
+        [JsonPropertyName("fotografia_cropped")]
+        public string FotografiaCropped { get; set; }
+
+        [JsonPropertyName("fotografia")]
+        public string Fotografia { get; set; }
+
+        [JsonPropertyName("ativo")]
+        public bool Ativo { get; set; }
+
+        [JsonPropertyName("partido")]
+        public string Partido { get; set; }
+
+        [JsonPropertyName("titular")]
+        public string Titular { get; set; }
     }
-
-
-    //public override DeputadoEstadual ColetarDadosLista(IElement item)
-    //{
-    //    if (item.InnerHtml == "<br>") return null;
-
-    //    var deputado = new DeputadoEstadual()
-    //    {
-    //        IdEstado = (ushort)config.Estado.GetHashCode()
-    //    };
-
-    //    deputado.UrlPerfil = (item.QuerySelector("a") as IHtmlAnchorElement).Href;
-    //    deputado.UrlFoto = (item.QuerySelector("img") as IHtmlImageElement)?.Source;
-
-    //    return deputado;
-    //}
-
-    //public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
-    //{
-    //    deputado.NomeParlamentar = subDocument.QuerySelector("h1#parent-fieldname-title").TextContent.Split("-")[0].Trim().ToTitleCase();
-
-    //    var deputadoJaExistente = GetDeputadoByNameOrNew(deputado.NomeParlamentar);
-    //    if (deputadoJaExistente.Id != 0)
-    //    {
-    //        deputadoJaExistente.NomeParlamentar = deputado.NomeParlamentar;
-    //        deputadoJaExistente.UrlPerfil = deputado.UrlPerfil;
-    //        deputadoJaExistente.UrlFoto = deputado.UrlFoto;
-    //        deputado = deputadoJaExistente;
-    //    }
-
-    //    if (string.IsNullOrEmpty(deputado.NomeCivil))
-    //        deputado.NomeCivil = deputado.NomeParlamentar;
-    //}
 }

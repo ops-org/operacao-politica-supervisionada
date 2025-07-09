@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
 using MySqlConnector;
-using OPS.Core.DAO;
+using OPS.Core.Repository;
 
 namespace OPS.API
 {

@@ -2,19 +2,18 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Policy;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using Serilog;
 
 namespace OPS.Importador.ALE;
 
@@ -41,7 +40,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://www.al.ba.gov.br/",
             Estado = Estado.Bahia,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -51,7 +50,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
         var despesasReferencia = new List<string>();
         while (true)
         {
-            logger.LogTrace("Consultando pagina {Pagina}!", pagina);
+            logger.LogDebug("Consultando Ano {Ano} e pagina {Pagina}!", ano, pagina);
             // Pagina começa em 0 - HUE
             var address = $"{config.BaseAddress}transparencia/verbas-idenizatorias?ano={ano}&categoria=&page={pagina++}&size=1000";
             var document = context.OpenAsyncAutoRetry(address).GetAwaiter().GetResult();
@@ -76,39 +75,42 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                     //TipoDespesa = colunas[4].TextContent.Trim()
                 };
 
-                try
+                using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano, ["Mes"] = despesaTemp.DataEmissao.Month, ["Parlamentar"] = despesaTemp.Nome }))
                 {
-                    var documentDetalhes = context.OpenAsyncAutoRetry(linkDetalhes).GetAwaiter().GetResult();
-                    var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
-                    foreach (var detalhes in despesasDetalhes)
+                    try
                     {
-                        // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR ANEXO NF
-                        var colunasDetalhes = detalhes.QuerySelectorAll("td");
-
-                        despesaTemp.TipoDespesa = colunasDetalhes[0].TextContent.Trim();
-                        despesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
-                        despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
-                        despesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
-                        despesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
-
-                        if (colunasDetalhes[5].HasChildNodes)
-                            despesaTemp.Observacao = (colunasDetalhes[5].Children[0] as IHtmlAnchorElement).Href;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // TODO? Revisar
-                    using (var reader = connection.ExecuteReader($"SELECT distinct hash FROM cl_despesa WHERE numero_documento LIKE '{processo}/%'"))
-                    {
-                        while (reader.Read())
+                        var documentDetalhes = context.OpenAsyncAutoRetry(linkDetalhes).GetAwaiter().GetResult();
+                        var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
+                        foreach (var detalhes in despesasDetalhes)
                         {
-                            var key = Convert.ToHexString((byte[])reader["hash"]);
-                            lstHash.Remove(key);
+                            // CATEGORIA	Nº NOTA/RECIBO	CPF/CNPJ	NOME DO FORNECEDOR	VALOR ANEXO NF
+                            var colunasDetalhes = detalhes.QuerySelectorAll("td");
+
+                            despesaTemp.TipoDespesa = colunasDetalhes[0].TextContent.Trim();
+                            despesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
+                            despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
+                            despesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
+                            despesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
+
+                            if (colunasDetalhes[5].HasChildNodes)
+                                despesaTemp.Observacao = (colunasDetalhes[5].Children[0] as IHtmlAnchorElement).Href;
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        // TODO? Revisar
+                        using (var reader = connection.ExecuteReader($"SELECT distinct hash FROM cl_despesa WHERE numero_documento LIKE '{processo}/%'"))
+                        {
+                            while (reader.Read())
+                            {
+                                var key = Convert.ToHexString((byte[])reader["hash"]);
+                                lstHash.Remove(key);
+                            }
+                        }
 
-                    Log.Error(ex, ex.Message);
-                    continue;
+                        logger.LogCritical(ex, ex.Message);
+                        continue;
+                    }
                 }
 
                 InserirDespesaTemp(despesaTemp);

@@ -10,13 +10,13 @@ using AngleSharp;
 using AngleSharp.Dom;
 using DDDN.OdtToHtml;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using static OPS.Importador.ALE.ImportadorDespesasPernambuco;
 
 namespace OPS.Importador.ALE;
 
@@ -49,10 +49,15 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
 
         var idElementoAno = document
             .QuerySelectorAll(".ui-tabs-nav li a")
-            .First(x => x.TextContent == ano.ToString())
-            .Attributes["href"].Value;
+            .FirstOrDefault(x => x.TextContent == ano.ToString());
 
-        var meses = document.QuerySelector(idElementoAno).QuerySelectorAll(".link-template-default .card-body");
+        if(idElementoAno is null)
+        {
+            logger.LogWarning("Dados para o ano {Ano} ainda não disponiveis!", ano);
+            return;
+        }
+
+        var meses = document.QuerySelector(idElementoAno.Attributes["href"].Value).QuerySelectorAll(".link-template-default .card-body");
         foreach (var item in meses)
         {
             var tipoAquivo = item.QuerySelector("img.wpdm_icon").Attributes["src"].Value;
@@ -62,6 +67,8 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
             var titulo = item.QuerySelector(".package-title a").TextContent.Replace("Dep.", "").Trim();
             if (titulo == "Renato de Souza Silva Junho - 2024")
                 titulo = "Renato de Souza Silva - Junho 2024";
+            else if (titulo == "Renato de Souza Silva Julho - 2024")
+                titulo = "Renato de Souza Silva - Julho 2024";
 
             var tituloPartes = titulo.Split(new[] { '-', '–' });
             var nomeParlamentar = tituloPartes[0].Trim();
@@ -74,11 +81,10 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
         }
     }
 
-    private void ImportarDespesasArquivo(int ano, int mes, string nomeParlamentar, string urlPdf)
+    private void ImportarDespesasArquivo(int ano, int mes, string nomeCivilParlamentar, string urlPdf)
     {
-        var filename = $"{tempPath}/CLRR-{ano}-{mes}-{nomeParlamentar}.odt";
-        if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+        var filename = $"{tempPath}/CLRR-{ano}-{mes}-{nomeCivilParlamentar}.odt";
+        BaixarArquivo(urlPdf, filename);
 
         // structure will contain all the data returned form the ODT to HTML conversion
         OdtConvertedData convertedData = null;
@@ -91,19 +97,19 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erro ao procesar arquivo de {Mes:00}/{Ano} do Parlamentar {Parlamentar}. Url: {UrlPdf}", mes, ano, nomeParlamentar, urlPdf);
+            logger.LogError(ex, "Erro ao procesar arquivo de {Mes:00}/{Ano} do Parlamentar {Parlamentar}. Url: {UrlPdf}", mes, ano, nomeCivilParlamentar, urlPdf);
 
             File.Delete(filename);
             return;
         }
 
-        var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-        var context = BrowsingContext.New(angleSharpConfig);
+        var context = httpClientResilient.CreateAngleSharpContext();
         var document = context.OpenAsync(req => req.Content(convertedData.Html.ForceWindows1252ToUtf8Encoding())).GetAwaiter().GetResult();
 
         var linhas = document.QuerySelectorAll("table tr");
 
         decimal valorTotalDeputado = 0;
+        int despesasIncluidas = 0;
         bool totalValidado = false;
 
         foreach (var row in linhas)
@@ -116,10 +122,10 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
             if (coluna1.StartsWith("Parlamentar:"))
             {
                 var colunaParlametar = coluna1.Split(":")[1].Replace("\u00A0", " ").Trim();
-                if (!Utils.RemoveAccents(nomeParlamentar).Equals(Utils.RemoveAccents(colunaParlametar), StringComparison.InvariantCultureIgnoreCase))
+                if (!Utils.RemoveAccents(nomeCivilParlamentar).Equals(Utils.RemoveAccents(colunaParlametar), StringComparison.InvariantCultureIgnoreCase))
                 {
-                    logger.LogWarning("Parlamentar divergente! Esperado: '{ParlamentarEsperado}'; Recebido: '{ParlamentarRecebido}'", nomeParlamentar, colunaParlametar.ToTitleCase());
-                    nomeParlamentar = colunaParlametar.ToTitleCase();
+                    logger.LogWarning("Parlamentar divergente! Esperado: '{ParlamentarEsperado}'; Recebido: '{ParlamentarRecebido}'", nomeCivilParlamentar, colunaParlametar.ToTitleCase());
+                    nomeCivilParlamentar = colunaParlametar.ToTitleCase();
                 }
 
                 if (!string.IsNullOrEmpty(colunas[1].TextContent)) // CLRR-2023-1-Meton Melo Maciel.odt
@@ -140,9 +146,7 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
                     valorTemp = colunas[2].TextContent; // CLRR-2023-1-Meton Melo Maciel.odt
 
                 var valorTotalArquivo = Convert.ToDecimal(valorTemp.Replace("R$", "").Trim(), cultureInfo);
-                if (valorTotalDeputado != valorTotalArquivo)
-                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
-                        valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
+                ValidaValorTotal(valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
 
                 break;
             }
@@ -184,7 +188,8 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
 
             CamaraEstadualDespesaTemp despesaTemp = new CamaraEstadualDespesaTemp()
             {
-                Nome = nomeParlamentar,
+                Nome = nomeCivilParlamentar,
+                NomeCivil = nomeCivilParlamentar,
                 Ano = (short)ano,
                 Mes = (short)mes,
                 DataEmissao = new DateTime(ano, mes, 1),
@@ -193,15 +198,16 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
             };
 
             //logger.LogWarning($"Inserindo Item {tipoDespesa} com valor: {despesaTemp.Valor}!");
-            valorTotalDeputado += despesaTemp.Valor;
-
+          
             InserirDespesaTemp(despesaTemp);
+            valorTotalDeputado += despesaTemp.Valor;
+            despesasIncluidas++;
         }
 
         if (!totalValidado)
         {
             logger.LogError("Valor Não Validado: {ValorTotalDeputado}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}; Arquivo: {UrlArquivo}",
-                            valorTotalDeputado, mes, ano, nomeParlamentar, urlPdf);
+                            valorTotalDeputado, mes, ano, nomeCivilParlamentar, urlPdf);
 
             //foreach (var linha in linhas)
             //{
@@ -251,8 +257,7 @@ public class ImportadorParlamentarRoraima : ImportadorParlamentarRestApi
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
-        var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-        var context = BrowsingContext.New(angleSharpConfig);
+        var context = httpClient.CreateAngleSharpContext();
 
         // 9 - 9ª(2023 - 2026)
         // 1 - 8ª(2019 - 2022)

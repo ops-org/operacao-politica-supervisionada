@@ -9,9 +9,10 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -41,10 +42,9 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://sicavi.al.ro.leg.br/",
             Estado = Estado.Rondonia,
-            ChaveImportacao = ChaveDespesaTemp.Gabinete
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
 
-        // TODO: Filtrar legislatura atual
         deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
     }
 
@@ -79,26 +79,22 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
             if (nomeDeputado == "Luiz Eduardo Schincaglia")
                 nomeDeputado = "Luis Eduardo Schincaglia";
 
-            var deputado = deputados.Find(x => (x.NomeImportacao ?? Utils.RemoveAccents(x.NomeCivil)).Equals(nomeDeputado, StringComparison.InvariantCultureIgnoreCase));
-            if (deputado == null || deputado.Gabinete == null)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Tipo"] = "VerbaIndenizatoria", ["Parlamentar"] = nomeDeputado }))
             {
-                logger.LogError("Parlamentar {Parlamentar} não existe ou não possui gabinete relacionado!", colunas[idxCredor].TextContent);
+                var despesaTemp = new CamaraEstadualDespesaTemp()
+                {
+                    Nome = colunas[idxCredor].TextContent,
+                    Ano = (short)ano,
+                    Mes = (short)mes,
+                    TipoDespesa = "Diárias",
+                    DataEmissao = new DateTime(ano, mes, 1),
+                    Valor = Convert.ToDecimal(colunas[idxValor].TextContent, cultureInfo),
+                    Observacao = $"Diárias: {colunas[idxQuantidade].TextContent}; Trecho: {colunas[idxDestino].TextContent}; Transporte: {colunas[idxMeioTransporte].TextContent}; Link: {link}",
+                };
+
+
+                InserirDespesaTemp(despesaTemp);
             }
-
-            var despesaTemp = new CamaraEstadualDespesaTemp()
-            {
-                Nome = colunas[idxCredor].TextContent,
-                Cpf = deputado?.Gabinete.ToString(),
-                Ano = (short)ano,
-                Mes = (short)mes,
-                TipoDespesa = "Diárias",
-                DataEmissao = new DateTime(ano, mes, 1),
-                Valor = Convert.ToDecimal(colunas[idxValor].TextContent, cultureInfo),
-                Observacao = $"Diárias: {colunas[idxQuantidade].TextContent}; Trecho: {colunas[idxDestino].TextContent}; Transporte: {colunas[idxMeioTransporte].TextContent}; Link: {link}",
-            };
-
-
-            InserirDespesaTemp(despesaTemp);
         }
     }
 
@@ -113,7 +109,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
             var gabinete = item as IHtmlOptionElement;
             if (string.IsNullOrEmpty(gabinete.Value)) continue;
 
-            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text }))
+            using (logger.BeginScope(new Dictionary<string, object> { ["Tipo"] = "VerbaIndenizatoria", ["Parlamentar"] = gabinete.Text }))
             {
                 var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
                 if (deputado == null)
@@ -126,7 +122,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                     }
                     else if (gabinete.Value != "54") // STI DA SILVA - DEPUTADO TESTE STI
                     {
-                        logger.LogError("Parlamentar {Gabinete}: {Parlamentar} não existe ou não possui gabinete relacionado!", gabinete.Value, gabinete.Text);
+                        logger.LogError("Parlamentar {Gabinete}: {Parlamentar} não existe", gabinete.Value, gabinete.Text);
                     }
                 }
 
@@ -142,10 +138,11 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                     logger.LogWarning("Parlamentar {Gabinete}: {Parlamentar} sem gastos no mês! Detalhes: {Mensagem}", gabinete.Value, gabinete.Text, mensagem.TextContent);
                 }
 
-                var patternPrestador = @"Prestador: (?<prestador>.*) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
+                // Há CPF com mascara cagada: Prestador: NOME ***.863.572*-** ENDERECO
+                var patternPrestador = @"Prestador: (?<prestador>.*) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})|(\*{3}\.\d{3}\.\d{3}\*-\*{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
                 decimal valorTotalCalculado = 0;
                 decimal valorTotalPagina = 0;
-                var registrosValidos = 0;
+                var despesasIncluidas = 0;
 
                 var despesas = subDocument.QuerySelectorAll("#tabela tbody tr");
                 foreach (var despesa in despesas)
@@ -166,8 +163,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
 
                     var despesaTemp = new CamaraEstadualDespesaTemp()
                     {
-                        Nome = gabinete.Text.ToTitleCase(),
-                        Cpf = gabinete.Value,
+                        Nome = gabinete.Text.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "").ToTitleCase(),
                         Ano = (short)ano,
                         Mes = (short)mes,
                     };
@@ -185,7 +181,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                         if (maches.Any())
                         {
                             Match matchPrestador = maches[0];
-                            despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNumericos(matchPrestador.Groups["cnpj"].Value);
+                            despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(matchPrestador.Groups["cnpj"].Value);
                             despesaTemp.Empresa = matchPrestador.Groups["prestador"].Value.Trim();
                         }
                         else if (linhaPartes[0].Contains("COPIADORA RORIZ LTDA 22. 882.427/0001-01"))
@@ -212,22 +208,25 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
 
                     InserirDespesaTemp(despesaTemp);
                     valorTotalCalculado += despesaTemp.Valor;
-                    registrosValidos++;
+                    despesasIncluidas++;
                 }
 
-                if (valorTotalCalculado != valorTotalPagina)
-                {
-                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
-                            valorTotalPagina, valorTotalCalculado, valorTotalPagina - valorTotalCalculado);
-
-                }
+                ValidaValorTotal(valorTotalPagina, valorTotalCalculado, despesasIncluidas);
             }
         }
     }
 
     public override void AjustarDados()
     {
-        connection.Execute(@"
+        connection.Execute($@"
+UPDATE ops_tmp.cl_despesa_temp temp
+JOIN cl_deputado d ON d.nome_civil = temp.nome_civil OR d.nome_importacao = temp.nome_civil
+SET temp.nome = d.nome_parlamentar
+WHERE despesa_tipo = 'Diárias'
+and d.id_estado = {idEstado}
+");
+
+    connection.Execute(@"
 UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '84641331000281' WHERE cnpj_cpf = '8464133101000281';
 
 UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '37829987000161' WHERE cnpj_cpf = '04942645';

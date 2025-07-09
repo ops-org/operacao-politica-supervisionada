@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OPS.Core.Models
+namespace OPS.Core.Model
 {
     public class Fornecedor
     {

@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace OPS.Core
+namespace OPS.Core.Utilities
 {
     public static class HttpClientUtils
     {

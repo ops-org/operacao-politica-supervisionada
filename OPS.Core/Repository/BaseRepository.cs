@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace OPS.Core
+namespace OPS.Core.Repository
 {
     public abstract class BaseRepository
     {

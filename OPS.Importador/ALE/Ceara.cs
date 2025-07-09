@@ -8,9 +8,10 @@ using System.Text;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 
@@ -49,17 +50,24 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
     /// <returns></returns>
     public override Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
     {
+        var currentDate = DateTime.Today;
         Dictionary<string, string> arquivos = new();
 
         for (int mes = 1; mes <= 12; mes++)
         {
-            if (DateTime.Today.Year == ano && mes > DateTime.Today.Month) break;
+            if (currentDate.Year == ano && mes > currentDate.Month) break;
 
             var base64 = Utils.EncodeTo64($"{mes:00}|{ano}|");
-            var _urlOrigem = $"{config.BaseAddress}includes/verba_de_desempenho_parlamentar_csv.php?codigo={base64}";
-            var _caminhoArquivo = $"{tempPath}/CLCE-{ano}-{mes}.csv";
+            var urlOrigem = $"{config.BaseAddress}includes/verba_de_desempenho_parlamentar_csv.php?codigo={base64}";
+            var caminhoArquivo = $"{tempPath}/CLCE-{ano}-{mes}.csv";
 
-            arquivos.Add(_urlOrigem, _caminhoArquivo);
+            //if (DateTime.Now.AddMonths(-2).Date >= new DateTime(ano, mes, 1) && File.Exists(caminhoArquivo))
+            //{
+            //    if ((new FileInfo(caminhoArquivo)).CreationTime <= currentDate.AddDays(-7))
+            //        File.Delete(caminhoArquivo);
+            //}
+
+            arquivos.Add(urlOrigem, caminhoArquivo);
         }
 
         return arquivos;
@@ -81,6 +89,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
         var linha = 0;
         string nomeParlamentar = null;
         decimal valorTotalDeputado = 0;
+        var despesasIncluidas = 0;
         short anoDespesa = 0;
         DateTime dataEmissao = DateTime.MinValue;
         foreach (string line in File.ReadLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
@@ -90,9 +99,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
                 linha = 0;
 
                 var valorTotalArquivo = Convert.ToDecimal(Convert.ToDecimal(line.Split(';')[4], cultureInfo), cultureInfo);
-                if (valorTotalDeputado != valorTotalArquivo)
-                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
-                           valorTotalDeputado, valorTotalArquivo, valorTotalDeputado - valorTotalArquivo);
+                ValidaValorTotal(valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
 
                 continue;
             }
@@ -118,7 +125,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
             var colunas = line.Split(';');
             if (colunas.Length != 6) // Finaliza com ;
             {
-                logger.LogError("Linha Invalida: {Linha}", line);
+                logger.LogError("Linha {Linha} invalida em {Arquivo}", line, caminhoArquivo);
                 continue;
             }
 
@@ -135,34 +142,22 @@ public class ImportadorDespesasCeara : ImportadorDespesasArquivo
 
             InserirDespesaTemp(despesaTemp);
             valorTotalDeputado += despesaTemp.Valor;
+            despesasIncluidas++;
         }
     }
 
     private string CorrigeNomeParlamentar(string nome)
     {
-        nome = nome.Replace("DEP", "").Replace(".", "").Split("-")[0].Trim();
+        nome = nome.Replace("DEP", "")
+            .Replace(".", "")
+            .Replace("Por Solicitacao do Utado", "")
+            .Replace("Por Solicitacao da Utada", "")
+            .Split("-")[0]
+            .Trim();
 
         nome = nome.ToUpper() switch
         {
-            "ACRSIO SENA" => "ACRISIO SENA",
-            "ANTONO GRANJA" => "ANTONIO GRANJA",
-            "DANNIEL OLIVIERA" => "DANNIEL OLIVEIRA",
-            "DAVID DURAN" => "DAVID DURAND",
-            "DVI DE RAIMUNDAO" => "DAVI DE RAIMUNDAO",
-            "GABRIELLAAGUIAR" => "GABRIELLA AGUIAR",
-            "GEROGE LIMA" => "GEORGE LIMA",
-            "GUILHERME BISMARK" => "GUILHERME BISMARCK",
-            "GULHERME BISMARCK" => "GUILHERME BISMARCK",
-            "GUUILHERME SAMPAIO" => "GUILHERME SAMPAIO",
-            "JEOVA MOPTA" => "JEOVA MOTA",
-            "JAO JAIME" => "JOAO JAIME",
-            "JULIO CESAR" => "JULIO CESAR FILHO",
-            "LUCINILDOFROTA" => "LUCINILDO FROTA",
-            "MARTA GONCLAVES" => "MARTA GONCALVES",
-            "ORIEL NUNES FILHO" => "ORIEL FILHO",
-            "OSMKAR BAQUIT" => "OSMAR BAQUIT",
-            "ROMEU ALDIGHERI" => "ROMEU ALDIGUERI",
-            "´SARGENTO REGINAURO" => "SARGENTO REGINAURO",
+            "PLANO DE SAUDE" => string.Empty, 
             "225/03" => string.Empty, // TODO: Arquivo 2023-07
             _ => nome
         };

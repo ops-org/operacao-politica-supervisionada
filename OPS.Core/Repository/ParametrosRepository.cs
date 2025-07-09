@@ -1,7 +1,7 @@
 ﻿using System;
 using Serilog;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public class ParametrosRepository
     {

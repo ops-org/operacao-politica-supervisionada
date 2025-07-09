@@ -10,9 +10,10 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -101,7 +102,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         while (true)
         {
             //var paginaAtual = document.QuerySelector(".scGridToolbarNavOpen").TextContent;
-            logger.LogTrace("Consultando pagina {Pagina}!", ++pagina);
+            logger.LogDebug("Consultando pagina {Pagina}!", ++pagina);
 
             var despesas = document.QuerySelector("#sc_grid_body");
             if (despesas.TextContent.Trim() == "Registros não encontrados")
@@ -228,30 +229,30 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
             var html = WebUtility.HtmlDecode(parsed.setValue.FirstOrDefault(x => x.field == "sc_grid_body").value);
 
             document = context.OpenAsync(req => req.Content("<div id='sc_grid_body'>" + html + "</div>")).GetAwaiter().GetResult();
-            //logger.LogTrace("Consultando pagina {Pagina}!", ++pagina);
+            //logger.LogDebug("Consultando pagina {Pagina}!", ++pagina);
 
             //}
         }
     }
 
-    public override void InsereDeputadoFaltante()
-    {
-        int affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
-select distinct Nome, cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
-where nome not in (
-    select nome_parlamentar 
-    FROM cl_deputado 
-    WHERE id_estado = {idEstado}
-);
-                ");
+//    public override void InsereDeputadoFaltante()
+//    {
+//        int affected = connection.Execute(@$"
+//INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
+//select distinct Nome, cpf, {idEstado}
+//from ops_tmp.cl_despesa_temp
+//where nome not in (
+//    select nome_parlamentar 
+//    FROM cl_deputado 
+//    WHERE id_estado = {idEstado}
+//);
+//                ");
 
-        if (affected > 0)
-        {
-            logger.LogInformation("{Itens} parlamentares incluidos!", affected);
-        }
-    }
+//        if (affected > 0)
+//        {
+//            logger.LogInformation("{Itens} parlamentares incluidos!", affected);
+//        }
+//    }
 
     public override void InsereDespesaFinal(int ano)
     {

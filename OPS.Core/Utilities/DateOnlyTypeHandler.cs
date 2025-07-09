@@ -2,7 +2,7 @@
 using System.Data;
 using Dapper;
 
-namespace OPS.Core
+namespace OPS.Core.Utilities
 {
     public class DateOnlyTypeHandler : SqlMapper.TypeHandler<DateOnly>
     {

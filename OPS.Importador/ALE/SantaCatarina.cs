@@ -8,8 +8,10 @@ using AngleSharp.Html.Dom;
 using CsvHelper;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 
@@ -37,7 +39,7 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
         {
             BaseAddress = "https://sapl.al.ac.leg.br/parlamentar/",
             Estado = Estado.SantaCatarina,
-            ChaveImportacao = Core.Enum.ChaveDespesaTemp.NomeParlamentar
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -54,10 +56,12 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
 
         // https://transparencia.alesc.sc.gov.br/gabinetes_dados_abertos.php
         // Arquivos disponiveis anualmente a partir de 2011
-        var _urlOrigem = $"https://transparencia.alesc.sc.gov.br/gabinetes_csv.php?ano={ano}";
-        var _caminhoArquivo = $"{tempPath}/CLSC-{ano}.csv";
+        var urlOrigem = $"https://transparencia.alesc.sc.gov.br/gabinetes_csv.php?ano={ano}";
+        var caminhoArquivo = $"{tempPath}/CLSC-{ano}.csv";
 
-        arquivos.Add(_urlOrigem, _caminhoArquivo);
+        //if (DateTime.Now.AddMonths(-1).Year >= ano && File.Exists(caminhoArquivo)) File.Delete(caminhoArquivo);
+
+        arquivos.Add(urlOrigem, caminhoArquivo);
         return arquivos;
     }
 
@@ -118,7 +122,7 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
             }
 
             // Ignorar linha de titulo
-            logger.LogTrace("{Linhas} linhas processadas!", --linhasProcessadasAno);
+            logger.LogDebug("{Linhas} linhas processadas!", --linhasProcessadasAno);
         }
     }
 
@@ -136,24 +140,24 @@ public class ImportadorDespesasSantaCatarina : ImportadorDespesasArquivo
         // Faz nada.
     }
 
-    public override void InsereDeputadoFaltante()
-    {
-        var affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
-select distinct Nome, cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
-where nome not in (
-    select nome_parlamentar from cl_deputado where id_estado =  {idEstado} 
-    UNION all
-    select nome_civil from cl_deputado where id_estado =  {idEstado} 
-);
-                ");
+//    public override void InsereDeputadoFaltante()
+//    {
+//        var affected = connection.Execute(@$"
+//INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
+//select distinct Nome, cpf, {idEstado}
+//from ops_tmp.cl_despesa_temp
+//where nome not in (
+//    select nome_parlamentar from cl_deputado where id_estado =  {idEstado} 
+//    UNION all
+//    select nome_civil from cl_deputado where id_estado =  {idEstado} 
+//);
+//                ");
 
-        if (affected > 0)
-        {
-            logger.LogInformation("{Itens} parlamentares incluidos!", affected);
-        }
-    }
+//        if (affected > 0)
+//        {
+//            logger.LogInformation("{Itens} parlamentares incluidos!", affected);
+//        }
+//    }
 
     public override void InsereDespesaFinal(int ano)
     {

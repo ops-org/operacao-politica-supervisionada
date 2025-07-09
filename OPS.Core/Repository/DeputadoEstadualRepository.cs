@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using MySqlConnector;
 using OPS.Core.DTO;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public class DeputadoEstadualRepository
     {
@@ -244,8 +246,8 @@ namespace OPS.Core.DAO
                             valor_restituicao = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(8)),
                             nome_passageiro = await reader.GetValueOrDefaultAsync<string>(9),
                             trecho_viagem = await reader.GetValueOrDefaultAsync<string>(10),
-                            ano = ano,
-                            mes = mes,
+                            ano,
+                            mes,
                             competencia = $"{mes:00}/{ano:0000}",
                             id_cl_despesa_tipo = await reader.GetValueOrDefaultAsync<dynamic>(13),
                             descricao_despesa = await reader.GetValueOrDefaultAsync<string>(14),
@@ -1127,7 +1129,7 @@ namespace OPS.Core.DAO
         {
             if (request.Filters.ContainsKey("Fornecedor") && !string.IsNullOrEmpty(request.Filters["Fornecedor"].ToString()))
             {
-                var Fornecedor = String.Join("", System.Text.RegularExpressions.Regex.Split(request.Filters["Fornecedor"].ToString(), @"[^\d]"));
+                var Fornecedor = string.Join("", System.Text.RegularExpressions.Regex.Split(request.Filters["Fornecedor"].ToString(), @"[^\d]"));
 
                 if (!string.IsNullOrEmpty(Fornecedor))
                 {

@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -17,7 +17,6 @@ using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
 using UglyToad.PdfPig;
-using static OPS.Importador.ALE.ImportadorDespesasPernambuco;
 
 namespace OPS.Importador.ALE;
 
@@ -40,16 +39,29 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
         {
             BaseAddress = "https://www.al.to.leg.br/transparencia/verbaIndenizatoria",
             Estado = Estado.Tocantins,
-            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
+            ChaveImportacao = ChaveDespesaTemp.NomeCivil
         };
     }
 
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
         var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
+        var dcForm = new Dictionary<string, string>();
+        dcForm.Add("transparencia.tipoTransparencia.codigo", "14");
+        dcForm.Add("transparencia.ano", ano.ToString());
+        dcForm.Add("transparencia.mes", mes.ToString());
+        dcForm.Add("transparencia.parlamentar", "");
+        IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.py-4");
+        document = form.SubmitAsyncAutoRetry(dcForm).GetAwaiter().GetResult();
+
+        form = document.QuerySelector<IHtmlFormElement>("form.py-4");
         var gabinetes = (document.QuerySelector($"#transparencia_parlamentar") as IHtmlSelectElement);
 
-        IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.py-4");
+        if (gabinetes.Options[2].Text == "Não existem registros para o ano selecionado")
+        {
+            logger.LogError("Não existem registros para o ano {Ano}.", mes);
+            return;
+        }
 
         foreach (var gabinete in gabinetes.Options)
         {
@@ -57,7 +69,8 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
 
             using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Mes"] = mes }))
             {
-                var dcForm = new Dictionary<string, string>();
+                dcForm = new Dictionary<string, string>();
+                dcForm.Add("transparencia.tipoTransparencia.codigo", "14");
                 dcForm.Add("transparencia.ano", ano.ToString());
                 dcForm.Add("transparencia.mes", mes.ToString());
                 dcForm.Add("transparencia.parlamentar", gabinete.Value);
@@ -66,7 +79,11 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                 //logger.LogInformation($"Consultando Parlamentar {gabinete.Value}: {gabinete.Text} para {mes:00}/{ano}");
 
                 var linksPdf = subDocument.QuerySelectorAll(".table-responsive-stack a");
-                if (linksPdf.Count() > 1) throw new NotImplementedException();
+                if (linksPdf.Count() > 1) {
+                    logger.LogWarning("Dados não disponiveis para o parlamentar {Parlamentar} para {Mes:00}/{Ano}.", gabinete.Text, mes, ano);
+                    continue;
+                }
+
                 if (linksPdf.Count() == 0)
                 {
                     var elError = subDocument.QuerySelector(".alert strong");
@@ -98,27 +115,25 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
     private void ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf)
     {
         var filename = $"{tempPath}/CLTO-{ano}-{mes}-{gabinete.Value}.pdf";
-        if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+        BaixarArquivo(urlPdf, filename);
 
         using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
         {
-            ObjectExtractor oe = new ObjectExtractor(document);
-
             // detect canditate table zones
             SimpleNurminenDetectionAlgorithm detector = new SimpleNurminenDetectionAlgorithm();
             //IExtractionAlgorithm ea = new BasicExtractionAlgorithm();
             IExtractionAlgorithm ea = new SpreadsheetExtractionAlgorithm();
 
             decimal valorTotalDeputado = 0;
-            string nomeParlamentar = "";
+            decimal valorMesAnterior = 0;
+            string nomeCicilParlamentar = "";
             var totalValidado = false;
             var despesasIncluidas = 0;
             for (var p = 1; p <= document.NumberOfPages; p++)
             {
-                PageArea page = oe.Extract(p);
+                PageArea page = ObjectExtractor.Extract(document, p);
                 var regions = detector.Detect(page);
-                List<Table> tables = ea.Extract(page.GetArea(regions[0].BoundingBox)); // take first candidate area
+                IReadOnlyList<Table> tables = ea.Extract(page.GetArea(regions[0].BoundingBox)); // take first candidate area
 
                 //List<Table> tables = ea.Extract(page);
                 foreach (var row in tables[0].Rows)
@@ -138,35 +153,53 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     {
                         idxTipo = 1;
                         idxNumero = 2;
+                    }else if (numColunas == 2)
+                    {
+                        idxTipo = 0;
+                        idxNumero = 1;
                     }
 
                     if (row[idxItem].GetText().StartsWith("DEPUTAD"))
                     {
                         if (!string.IsNullOrEmpty(row[idxTipo].GetText()))
-                            nomeParlamentar = row[idxTipo].GetText().ToTitleCase();
+                            nomeCicilParlamentar = row[idxTipo].GetText().ToTitleCase().Trim();
                         else
-                            nomeParlamentar = row[idxItem].GetText().Split(":")[1].Split("Processo")[0].ToTitleCase();
+                            nomeCicilParlamentar = row[idxItem].GetText().Split(":")[1].Split("Processo")[0].ToTitleCase().Trim();
 
                         continue;
                     }
 
-                    if (row[idxTipo].GetText().Equals("Total das despesas", StringComparison.OrdinalIgnoreCase) || row[idxTipo].GetText().Equals("Gasto no mês", StringComparison.OrdinalIgnoreCase))
+                    var isRowTotalCol1 = row[idxItem].GetText().Equals("Total das despesas", StringComparison.OrdinalIgnoreCase) || row[idxItem].GetText().Equals("Gasto no mês", StringComparison.OrdinalIgnoreCase);
+                    var isRowTotalCol2 = row[idxTipo].GetText().Equals("Total das despesas", StringComparison.OrdinalIgnoreCase) || row[idxTipo].GetText().Equals("Gasto no mês", StringComparison.OrdinalIgnoreCase);
+
+                    if (isRowTotalCol1 || isRowTotalCol2)
                     {
                         totalValidado = true;
-                        var valorTotalArquivo = Convert.ToDecimal(row[idxNumero].GetText(), cultureInfo);
-                        if (valorTotalDeputado != valorTotalArquivo)
-                            logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
-                                valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
+                        var valorTotalArquivo = Convert.ToDecimal(row[idxNumero - (isRowTotalCol2 ? 0 : 1)].GetText(), cultureInfo);
+                        ValidaValorTotal(valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
 
                         break;
                     }
 
+                    // Resumo
+                    //if(valorMesAnterior == 0 && row[1].GetText().StartsWith("Saldo do mês anterior", StringComparison.OrdinalIgnoreCase))
+                    //{
+                    //    var valorTemp = row[2].GetText().Replace("-", "").Trim();
+                    //    if (!string.IsNullOrEmpty(valorTemp))
+                    //    {
+                    //        valorMesAnterior = Convert.ToDecimal(valorTemp, cultureInfo);
+                    //        valorTotalDeputado += valorMesAnterior;
+                    //    }
+                    //    continue;
+                    //}
+
+                    var nomeParlamentar = gabinete.Text.Trim().ToTitleCase();
                     if (row[idxTipo].GetText().Contains("telefone", StringComparison.OrdinalIgnoreCase) && row[idxNumero].GetText() != "-" && row[idxNumero].GetText() != "")
                     {
                         var despesaTemp1 = new CamaraEstadualDespesaTemp()
                         {
-                            Nome = gabinete.Text.Trim().ToTitleCase(),
-                            Cpf = nomeParlamentar,
+                            Nome = nomeParlamentar,
+                            NomeCivil = nomeCicilParlamentar,
                             Ano = (short)ano,
                             Mes = (short)mes,
                             TipoDespesa = "Indenizações e Restituições",
@@ -180,31 +213,33 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     }
 
                     // Pagina 2 apenas com Resumo/Totalizadores
-                    if (numColunas == 3) continue;
+                    if (numColunas == 3 || numColunas == 2) continue;
 
+                    #region Despesas fora do padrão
                     if (row[0].GetText() == "33" && row[2].GetText() == "6.476,19")
                     {
                         var despesaTemp1 = new CamaraEstadualDespesaTemp()
                         {
-                            Nome = gabinete.Text.Trim().ToTitleCase(),
-                            Cpf = nomeParlamentar,
+                            Nome = nomeParlamentar,
+                            NomeCivil = nomeCicilParlamentar,
                             Ano = (short)ano,
                             Mes = (short)mes,
                             TipoDespesa = "Indenizações e Restituições",
                             Documento = "NDC-e/261305",
                             DataEmissao = new DateTime(2023, 3, 8),
                             Empresa = "Auto Posto de Combustíveis Lago Sul Ltda",
-                            CnpjCpf = Core.Utils.RemoveCaracteresNaoNumericos("32.169.795/0001-52"),
+                            CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("32.169.795/0001-52"),
                             Valor = Convert.ToDecimal("200,00", cultureInfo)
                         };
 
-                        //logger.LogWarning("Inserindo Item {Item} com valor: {Valor}!", row[idxItem].GetText(), despesaTemp1.Valor);
+                        //logger.LogInformation("Inserindo Item {Item} com valor: {Valor}!", row[idxItem].GetText(), despesaTemp1.Valor);
                         valorTotalDeputado += despesaTemp1.Valor;
                         despesasIncluidas++;
 
                         InserirDespesaTemp(despesaTemp1);
                         continue;
                     }
+                    #endregion Despesas fora do padrão
 
                     if (!int.TryParse(row[idxItem].GetText(), out _))
                     {
@@ -224,63 +259,76 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                             continue;
                     }
 
+                    // Primeiro item (Opcional)
                     if (row[idxEmitente].GetText().StartsWith("Saldo de notas", StringComparison.OrdinalIgnoreCase))
                     {
                         var valorTemp = row[idxValor].GetText();
                         if (string.IsNullOrEmpty(valorTemp))
                             valorTemp = row[idxSaldo].GetText(); // Há um caso onde o valor está na coluna de Saldo.
 
-                        var valorMesAnterior = Convert.ToDecimal(valorTemp, cultureInfo);
-                        valorTotalDeputado += valorMesAnterior;
-                        logger.LogInformation("Ignorando item 'Saldo de notas do mês anterior': {ValorMesAnterior}!", valorMesAnterior);
+                        valorMesAnterior = Convert.ToDecimal(valorTemp, cultureInfo);
+                        if (valorMesAnterior > 40_000) valorMesAnterior = 0; // Se o valor é alto, é o saldo, que deve ser desconsiderado.
+
+                        if (valorMesAnterior > 0)
+                        {
+                            valorTotalDeputado += valorMesAnterior;
+                            logger.LogInformation("Ignorando item 'Saldo de notas do mês anterior': {ValorMesAnterior}!", valorMesAnterior);
+                        }
                         continue;
                     }
 
                     CamaraEstadualDespesaTemp despesaTemp = null;
                     if (string.IsNullOrEmpty(row[idxSaldo].GetText()))
                     {
-                        if (!string.IsNullOrEmpty(row[idxValor].GetText()) || row[idxCnpj].GetText().Contains("13.716.765/0001-74344,12"))
+                        var cnpj = row[idxCnpj].GetText();
+                        if (!string.IsNullOrEmpty(row[idxValor].GetText()) || cnpj.Contains("13.716.765/0001-74344,12") || row[idxCnpj - 1].GetText().Contains("00.306.597/0088-58380,00"))
                         {
                             // Caso onde não há nome do fornecedor, os indices recuam
                             // Mapear o nome da empresa para uma coluna vazia (saldo)
                             despesaTemp = new CamaraEstadualDespesaTemp()
                             {
-                                Nome = gabinete.Text.Trim().ToTitleCase(),
-                                Cpf = nomeParlamentar.Trim(),
+                                Nome = nomeParlamentar,
+                                NomeCivil = nomeCicilParlamentar,
                                 Ano = (short)ano,
                                 Mes = (short)mes,
                                 TipoDespesa = "Indenizações e Restituições",
-                                Documento = Core.Utils.RemoveCaracteresNumericos(row[idxTipo].GetText().Trim()) + "/" + row[idxNumero].GetText().Trim(),
+                                Documento = Core.Utilities.Utils.RemoveCaracteresNumericos(row[idxTipo].GetText().Trim()) + "/" + row[idxNumero].GetText().Trim(),
                                 DataEmissao = AjustaData(row[idxData].GetText(), ano, mes),
                                 Empresa = row[idxSaldo].GetText(),
 
                             };
 
-                            if (row[idxCnpj].GetText() == "16.846.429/0001-34100,00")
+                            if (cnpj == "16.846.429/0001-34100,00")
                             {
-                                despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNaoNumericos("16.846.429/0001-341");
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("16.846.429/0001-341");
                                 despesaTemp.Valor = 100;
                             }
-                            else if (row[idxCnpj].GetText() == "02.862.352/0002-62100,00")
+                            else if (cnpj == "02.862.352/0002-62100,00")
                             {
-                                despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNaoNumericos("02.862.352/0002-621");
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("02.862.352/0002-621");
                                 despesaTemp.Valor = 100;
                             }
-                            else if (row[idxCnpj].GetText().Contains("13.716.765/0001-74344,12"))
+                            else if (row[idxCnpj - 1].GetText().Contains("00.306.597/0088-58380,00"))
+                            {
+                                despesaTemp.Empresa = "Cascol Combustíveis para Veículos Ltda";
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("000.306.597/0088-58");
+                                despesaTemp.Valor = 380;
+                            }
+                            else if (cnpj.Contains("13.716.765/0001-74344,12"))
                             {
                                 despesaTemp.Empresa = "Petroshop Comércio de Combustíveis Ltda";
-                                despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNaoNumericos("13.716.765/0001-74");
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("13.716.765/0001-74");
                                 despesaTemp.Valor = 344.12M;
                             }
                             else
                             {
-                                despesaTemp.CnpjCpf = Core.Utils.RemoveCaracteresNaoNumericos(row[idxCnpj - 1].GetText());
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos(row[idxCnpj - 1].GetText());
                                 despesaTemp.Valor = Convert.ToDecimal(row[idxValor - 1].GetText(), cultureInfo);
                             }
 
                             try
                             {
-                                if (row[idxSaldo - 1].GetText() != "-")
+                                if (!string.IsNullOrEmpty(row[idxSaldo - 1].GetText().Replace("-", "")))
                                     Convert.ToDecimal(row[idxSaldo - 1].GetText().Replace("(", "").Replace(")", ""), cultureInfo);
                             }
                             catch (Exception ex)
@@ -295,15 +343,15 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     {
                         despesaTemp = new CamaraEstadualDespesaTemp()
                         {
-                            Nome = gabinete.Text.Trim().ToTitleCase(),
-                            Cpf = nomeParlamentar,
+                            Nome = nomeParlamentar,
+                            NomeCivil = nomeCicilParlamentar,
                             Ano = (short)ano,
                             Mes = (short)mes,
                             TipoDespesa = "Indenizações e Restituições",
-                            Documento = Core.Utils.RemoveCaracteresNumericos(row[idxTipo].GetText().Trim()) + "/" + row[idxNumero].GetText().Trim(),
+                            Documento = Core.Utilities.Utils.RemoveCaracteresNumericos(row[idxTipo].GetText().Trim()) + "/" + row[idxNumero].GetText().Trim(),
                             DataEmissao = AjustaData(row[idxData].GetText(), ano, mes),
                             Empresa = row[idxEmitente].GetText(),
-                            CnpjCpf = Core.Utils.RemoveCaracteresNaoNumericos(row[idxCnpj].GetText()),
+                            CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos(row[idxCnpj].GetText()),
                             Valor = Convert.ToDecimal(row[idxValor].GetText(), cultureInfo),
                         };
 
@@ -318,7 +366,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                         }
                     }
 
-                    //logger.LogWarning($"Inserindo Item {row[idxItem].GetText()} com valor: {despesaTemp.Valor}!");
+                    //logger.LogInformation($"Inserindo Item {row[idxItem].GetText()} com valor: {despesaTemp.Valor}!");
                     valorTotalDeputado += despesaTemp.Valor;
                     despesasIncluidas++;
 
@@ -448,6 +496,8 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
             case "2706/2024": data = "27/06/2024"; break;
             case "23/072024": data = "23/07/2024"; break;
             case "23/072025": data = "23/07/2024"; break;
+            case "25/102024": data = "25/10/2024"; break;
+            case "1404/2025": data = "14/04/2025"; break;
         }
 
         try

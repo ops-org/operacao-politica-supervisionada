@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
-using AngleSharp;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
@@ -27,8 +26,7 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
-        var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-        var context = BrowsingContext.New(angleSharpConfig);
+        var context = httpClient.CreateAngleSharpContext();
 
         var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
         if (document.StatusCode != HttpStatusCode.OK)

@@ -5,11 +5,12 @@ using System.Net;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AngleSharp;
-using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 
@@ -149,10 +150,14 @@ public class ImportadorParlamentarRioDeJaneiro : ImportadorParlamentarRestApi
             var matricula = (uint)parlamentar.Id;
             DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew(matricula);
 
-            deputado.UrlPerfil = $"https://www.alerj.rj.gov.br/Deputados/PerfilDeputado/{parlamentar.RemoteId}?Legislatura=20";
+            if (parlamentar.RemoteId != null)
+                deputado.UrlPerfil = $"https://www.alerj.rj.gov.br/Deputados/PerfilDeputado/{parlamentar.RemoteId}?Legislatura=20";
+
+            if (parlamentar.Party != null)
+                deputado.IdPartido = BuscarIdPartido(parlamentar.Party.Code);
+
             deputado.NomeParlamentar = parlamentar.Nickname.ToTitleCase();
             deputado.NomeCivil = parlamentar.Name.ToTitleCase();
-            deputado.IdPartido = BuscarIdPartido(parlamentar.Party.Code);
             deputado.Email = parlamentar.User.Email;
             //deputado.Telefone = parlamentar.TelefoneDeputado;
             deputado.UrlFoto = parlamentar.PhotoUrl;
@@ -175,7 +180,7 @@ public class CongressmanDetails
     /// https://www.alerj.rj.gov.br/Deputados/PerfilDeputado/{RemoteId}?Legislatura=20
     /// </summary>
     [JsonPropertyName("remote_id")]
-    public int RemoteId { get; set; }
+    public int? RemoteId { get; set; }
 
     [JsonPropertyName("name")]
     public string Name { get; set; }

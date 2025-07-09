@@ -46,7 +46,7 @@ namespace OPS.Core
                 var currentException = exception;	// Temp variable to hold InnerException object during the loop
 
                 // Recursively call Expand Stack Trace to change the order or the exceptions.
-                sb.AppendLine(this.ExpandStackTrace(currentException.InnerException, ref intExceptionCount));
+                sb.AppendLine(ExpandStackTrace(currentException.InnerException, ref intExceptionCount));
 
                 // Increment exception count.
                 intExceptionCount++;

@@ -2,7 +2,8 @@
 using AngleSharp;
 using AngleSharp.Dom;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 
@@ -25,7 +26,7 @@ public class ImportadorDespesasMatoGrosso : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "",
             Estado = Estado.MatoGrosso,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 

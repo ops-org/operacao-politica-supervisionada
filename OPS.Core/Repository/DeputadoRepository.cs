@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using MySqlConnector;
 using OPS.Core.DTO;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public class DeputadoRepository
     {
@@ -262,8 +264,8 @@ namespace OPS.Core.DAO
                             valor_restituicao = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(8)),
                             nome_passageiro = await reader.GetValueOrDefaultAsync<string>(9),
                             trecho_viagem = await reader.GetValueOrDefaultAsync<string>(10),
-                            ano = ano,
-                            mes = mes,
+                            ano,
+                            mes,
                             competencia = $"{mes:00}/{ano:0000}",
                             id_cf_despesa_tipo = await reader.GetValueOrDefaultAsync<dynamic>(13),
                             descricao_despesa = await reader.GetValueOrDefaultAsync<string>(14),
@@ -1219,7 +1221,7 @@ namespace OPS.Core.DAO
         {
             if (request.Filters.ContainsKey("Fornecedor") && !string.IsNullOrEmpty(request.Filters["Fornecedor"].ToString()))
             {
-                var Fornecedor = String.Join("", System.Text.RegularExpressions.Regex.Split(request.Filters["Fornecedor"].ToString(), @"[^\d]"));
+                var Fornecedor = string.Join("", System.Text.RegularExpressions.Regex.Split(request.Filters["Fornecedor"].ToString(), @"[^\d]"));
 
                 if (!string.IsNullOrEmpty(Fornecedor))
                 {
@@ -1815,13 +1817,13 @@ AND co.periodo_ate IS null
                             inicio = Utils.FormataDataHora(reader["inicio"]),
                             tipo = sTipo,
                             numero = reader["numero"].ToString(),
-                            presenca = presenca,
+                            presenca,
                             presenca_percentual = presenca > 0 ? Utils.FormataValor((decimal)presenca * 100 / total) : "",
-                            ausencia = ausencia,
+                            ausencia,
                             ausencia_percentual = ausencia > 0 ? Utils.FormataValor((decimal)ausencia * 100 / total) : "",
-                            ausencia_justificada = ausencia_justificada,
+                            ausencia_justificada,
                             ausencia_justificada_percentual = ausencia_justificada > 0 ? Utils.FormataValor((decimal)ausencia_justificada * 100 / total) : "",
-                            total = total
+                            total
                         });
                     }
 

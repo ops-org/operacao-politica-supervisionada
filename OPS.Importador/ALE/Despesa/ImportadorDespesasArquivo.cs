@@ -12,6 +12,7 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual void Importar(int ano)
         {
+            var anoAtual = DateTime.Today.Year;
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
                 CarregarHashes(ano);
@@ -25,16 +26,21 @@ namespace OPS.Importador.ALE.Despesa
 
                     using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = _urlOrigem, ["Arquivo"] = System.IO.Path.GetFileName(caminhoArquivo) }))
                     {
-                        if (TentarBaixarArquivo(_urlOrigem, caminhoArquivo))
+                        var novoArquivoBaixado = BaixarArquivo(_urlOrigem, caminhoArquivo);
+                        if(anoAtual != ano && importacaoIncremental && !novoArquivoBaixado && arquivos.Count == 1 && config.Estado != Estado.Piaui) 
                         {
-                            try
-                            {
-                                ImportarDespesas(caminhoArquivo, ano);
-                            }
-                            catch (Exception ex)
-                            {
+                            logger.LogInformation("Importação ignorada para arquivo previamente importado!");
+                            return;
+                        }
 
-                                logger.LogError(ex, ex.Message);
+                        try
+                        {
+                            ImportarDespesas(caminhoArquivo, ano);
+                        }
+                        catch (Exception ex)
+                        {
+
+                            logger.LogError(ex, ex.Message);
 
 #if !DEBUG
                         //Excluir o arquivo para tentar importar novamente na proxima execução
@@ -42,7 +48,6 @@ namespace OPS.Importador.ALE.Despesa
                             System.IO.File.Delete(caminhoArquivo);
 #endif
 
-                            }
                         }
                     }
                 }

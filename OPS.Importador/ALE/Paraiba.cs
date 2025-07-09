@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -10,7 +13,9 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -52,8 +57,6 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
         {
             if (gabinete.Value == "0") continue;
 
-            
-
             var dcForm = new Dictionary<string, string>();
             dcForm.Add("deputado", gabinete.Value);
             var subDocument = form.SubmitAsyncAutoRetry(dcForm, true).GetAwaiter().GetResult();
@@ -63,24 +66,23 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
 
             using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilha, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
             {
-                if (TentarBaixarArquivo(linkPlanilha, caminhoArquivo))
-                {
-                    try
-                    {
-                        ImportarDespesas(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
-                    }
-                    catch (Exception)
-                    {
+                BaixarArquivo(linkPlanilha, caminhoArquivo);
 
-                        //logger.LogError(ex, ex.Message);
+                try
+                {
+                    ImportarDespesas(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
+                }
+                catch (Exception ex)
+                {
+
+                    logger.LogError(ex, ex.Message);
 
 #if !DEBUG
-                        //Excluir o arquivo para tentar importar novamente na proxima execução
-                        if(System.IO.File.Exists(caminhoArquivo))
-                            System.IO.File.Delete(caminhoArquivo);
+                    //Excluir o arquivo para tentar importar novamente na proxima execução
+                    if(System.IO.File.Exists(caminhoArquivo))
+                        System.IO.File.Delete(caminhoArquivo);
 #endif
 
-                    }
                 }
             }
         }
@@ -100,6 +102,7 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
         var sheetName = "Plan1";
 
         decimal valorTotalDeputado = 0;
+        int despesasIncluidas = 0;
         var linha = 7;
         while (true)
         {
@@ -112,9 +115,7 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             if (OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()).StartsWith("Total de Despesas"))
             {
                 var valorTotalArquivo = Convert.ToDecimal(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Valor.GetHashCode()), cultureInfo);
-                if (valorTotalDeputado != valorTotalArquivo)
-                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
-                        valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
+                ValidaValorTotal(valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
 
                 return;
             }
@@ -143,6 +144,7 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
 
             InserirDespesaTemp(despesaTemp);
             valorTotalDeputado += despesaTemp.Valor;
+            despesasIncluidas++;
         }
 
 
@@ -210,45 +212,95 @@ UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***
 }
 
 
-public class ImportadorParlamentarParaiba : ImportadorParlamentarCrawler
+public class ImportadorParlamentarParaiba : ImportadorParlamentarRestApi
 {
     private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
     public ImportadorParlamentarParaiba(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        Configure(new ImportadorParlamentarCrawlerConfig()
+        Configure(new ImportadorParlamentarConfig()
         {
-            BaseAddress = "http://sapl.al.pb.leg.br/sapl/consultas/parlamentar/parlamentar_index_html?hdn_num_legislatura=19",
-            SeletorListaParlamentares = ".tileItem",
+            BaseAddress = "https://sapl3.al.pb.leg.br/",
             Estado = Estado.Paraiba,
         });
     }
 
-    public override DeputadoEstadual ColetarDadosLista(IElement item)
+    public override Task Importar()
     {
-        var nomeCivil = item.QuerySelector(".tileHeadline a").TextContent.Trim().ToTitleCase();
-        var deputado = GetDeputadoByFullNameOrNew(nomeCivil);
+        ArgumentNullException.ThrowIfNull(config, nameof(config));
 
-        deputado.UrlPerfil = (item.QuerySelector(".tileHeadline a") as IHtmlAnchorElement).Href;
-        deputado.IdPartido = BuscarIdPartido(item.QuerySelector(".parlamentar-partido .texto").TextContent.Trim());
+        var legislatura = 20; // 2023-2027
+        var address = $"{config.BaseAddress}api/parlamentares/legislatura/{legislatura}/parlamentares/?get_all=true";
+        List<Congressman> parlamentares = RestApiGet<List<Congressman>>(address);
 
-        return deputado;
+        foreach (var parlamentar in parlamentares)
+        {
+            var matricula = (uint)parlamentar.Id;
+            DeputadoEstadual deputado = GetDeputadoByNameOrNew(parlamentar.NomeParlamentar);
+
+            deputado.UrlPerfil = $"https://sapl3.al.pb.leg.br/parlamentar/{parlamentar.Id}";
+            deputado.NomeParlamentar = parlamentar.NomeParlamentar.ToTitleCase();
+            deputado.IdPartido = BuscarIdPartido(parlamentar.Partido);
+            deputado.UrlFoto = parlamentar.Fotografia;
+
+            ObterDetalhesDoPerfil(deputado).GetAwaiter().GetResult();
+
+            InsertOrUpdate(deputado);
+        }
+
+        logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
+        return Task.CompletedTask;
     }
 
-    public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
+    private async Task ObterDetalhesDoPerfil(DeputadoEstadual deputado)
     {
-        deputado.NomeParlamentar = subDocument.QuerySelector("h1.firstHeading").TextContent.Trim().ToTitleCase();
-        deputado.UrlFoto = (subDocument.QuerySelector("img.parlamentar") as IHtmlImageElement)?.Source;
+        var context = httpClient.CreateAngleSharpContext();
 
-        var perfil = subDocument.QuerySelectorAll("#texto-parlamentar b")
-            .Select(x => new { Key = x.TextContent.Replace(":", "").Trim(), Value = x.NextSibling.TextContent.Trim() });
+        var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
+        if (document.StatusCode != HttpStatusCode.OK)
+        {
+            Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
+        };
 
-        if (!string.IsNullOrEmpty(perfil.First(x => x.Key == "Data Nascimento")?.Value))
-            deputado.Nascimento = DateOnly.Parse(perfil.First(x => x.Key == "Data Nascimento").Value, cultureInfo);
+        var perfil = document.QuerySelector("#content");
 
-        deputado.Email = perfil.FirstOrDefault(x => x.Key == "E-mail")?.Value.NullIfEmpty();
-        deputado.Telefone = perfil.FirstOrDefault(x => x.Key == "Telefone")?.Value.NullIfEmpty();
+        deputado.NomeCivil = perfil.QuerySelector("#div_nome").TextContent.Split(":")[1].Trim().ToTitleCase();
 
-        // ImportacaoUtils.MapearRedeSocial(deputado, subDocument.QuerySelectorAll(".deputado ul a")); // Todos são as redes sociaos da AL
+        var elementos = perfil.QuerySelectorAll(".form-group>p").Select(x => x.TextContent);
+        if (elementos.Any())
+        {
+            deputado.Email = elementos.Where(x => x.StartsWith("E-mail")).FirstOrDefault()?.Split(':')[1].Trim().NullIfEmpty();
+            deputado.Telefone = elementos.Where(x => x.StartsWith("Telefone")).FirstOrDefault()?.Split(':')[1].Trim().NullIfEmpty();
+        }
+        else
+        {
+            logger.LogWarning("Verificar possivel mudança no perfil do parlamentar: {UrlPerfil}", deputado.UrlPerfil);
+        }
+    }
+
+    private class Congressman
+    {
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("nome_parlamentar")]
+        public string NomeParlamentar { get; set; }
+
+        [JsonPropertyName("fotografia_cropped")]
+        public string FotografiaCropped { get; set; }
+
+        [JsonPropertyName("fotografia")]
+        public string Fotografia { get; set; }
+
+        [JsonPropertyName("ativo")]
+        public bool Ativo { get; set; }
+
+        [JsonPropertyName("partido")]
+        public string Partido { get; set; }
+
+        [JsonPropertyName("titular")]
+        public string Titular { get; set; }
     }
 }
+
+

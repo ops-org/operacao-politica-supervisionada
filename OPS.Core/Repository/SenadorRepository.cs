@@ -5,8 +5,10 @@ using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using OPS.Core.DTO;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public class SenadorRepository
     {
@@ -998,7 +1000,7 @@ namespace OPS.Core.DAO
         {
             if (request.Filters.ContainsKey("Fornecedor") && !string.IsNullOrEmpty(request.Filters["Fornecedor"].ToString()))
             {
-                var Fornecedor = String.Join("", System.Text.RegularExpressions.Regex.Split(request.Filters["Fornecedor"].ToString(), @"[^\d]"));
+                var Fornecedor = string.Join("", System.Text.RegularExpressions.Regex.Split(request.Filters["Fornecedor"].ToString(), @"[^\d]"));
 
                 if (!string.IsNullOrEmpty(Fornecedor))
                 {

@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,9 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.Utilities;
 using RestSharp;
 
 namespace OPS.Importador.ALE.Despesa
@@ -50,14 +53,26 @@ namespace OPS.Importador.ALE.Despesa
 
         public int idEstado { get { return config.Estado.GetHashCode(); } }
 
+        public bool importacaoIncremental { get; set; }
+
         private int itensProcessadosAno { get; set; }
 
         private decimal valorTotalProcessadoAno { get; set; }
 
         protected Dictionary<string, uint> lstHash { get; private set; }
 
-        private HttpClient _httpClient;
-        public HttpClient httpClient { get { return _httpClient ??= httpClientFactory.CreateClient("MyNamedClient"); } }
+        private HttpClient _httpClientResilient;
+        /// <summary>
+        /// Client with Retry and NO AllowAutoRedirect
+        /// </summary>
+        public HttpClient httpClientResilient { get { return _httpClientResilient ??= httpClientFactory.CreateClient("ResilientClient"); } }
+
+        private HttpClient _httpClientDefault;
+
+        /// <summary>
+        /// Client with AllowAutoRedirect
+        /// </summary>
+        public HttpClient httpClientDefault { get { return _httpClientDefault ??= httpClientFactory.CreateClient("DefaultClient"); } }
 
         private IHttpClientFactory httpClientFactory { get; }
 
@@ -71,6 +86,7 @@ namespace OPS.Importador.ALE.Despesa
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
             _tempPath = configuration["AppSettings:SiteTempFolder"];
+            importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
 
 
             httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
@@ -93,6 +109,7 @@ namespace OPS.Importador.ALE.Despesa
                 LimpaDespesaTemporaria();
 
                 InsereDespesasTemp(ano);
+                AjustarDadosGlobais();
                 AjustarDados();
                 InsereTipoDespesaFaltante();
                 InsereDeputadoFaltante();
@@ -101,7 +118,7 @@ namespace OPS.Importador.ALE.Despesa
 
                 InsereDespesaFinal(ano);
                 ValidaImportacao(ano);
-                
+
                 if (ano == DateTime.Now.Year)
                 {
                     try
@@ -133,7 +150,7 @@ namespace OPS.Importador.ALE.Despesa
             itensProcessadosAno = results.Count();
             valorTotalProcessadoAno = results.Sum(x => x.Sum(x => x.Valor));
 
-            logger.LogInformation("Processando {Itens} despesas agrupadas em {Unicos} unicas com valor total de {ValorTotal} para {Estado} em {Ano}.", despesasTemp.Count(), itensProcessadosAno, valorTotalProcessadoAno, config.Estado.ToString(), ano);
+            logger.LogInformation("Processando {Itens} despesas agrupadas em {Unicos} unicas com valor total de {ValorTotal:#,###.00} para {Estado} em {Ano}.", despesasTemp.Count(), itensProcessadosAno, valorTotalProcessadoAno, config.Estado.ToString(), ano);
 
             var despesaInserida = 0;
             foreach (var despesaGroup in results)
@@ -181,49 +198,88 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano) { return null; }
 
-        protected bool TentarBaixarArquivo(string urlOrigem, string caminhoArquivo)
+        protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            try
-            {
-                return BaixarArquivo(urlOrigem, caminhoArquivo);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning("Erro ao baixar arquivo: {Message}", ex.Message);
+            var caminhoArquivoDb = caminhoArquivo.Replace(_tempPath, "");
 
-                // Algumas vezes ocorre do arquivo não estar disponivel, precisamos aguardar alguns instantes e tentar novamente.
-                // Isso pode ser causado por um erro de rede ou atualização do arquivo.
-                Thread.Sleep((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
-
-                return BaixarArquivo(urlOrigem, caminhoArquivo);
-            }
-            finally
+            if (importacaoIncremental && File.Exists(caminhoArquivo))
             {
-                watch.Stop();
-                logger.LogTrace("Arquivo baixado em {TimeElapsed:c}", watch.Elapsed);
+                var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+                if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
+                {
+                    logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+                    return false;
+                }
             }
-        }
 
-        private bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
-        {
-            logger.LogTrace("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+            logger.LogDebug("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
 
             string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
             if (!Directory.Exists(diretorio))
                 Directory.CreateDirectory(diretorio);
-            else if (File.Exists(caminhoArquivo))
-                return true;
-            //File.Delete(caminhoArquivo);
 
-            httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
+            var fileExt = Path.GetExtension(caminhoArquivo);
+            var caminhoArquivoTmp = caminhoArquivo.Replace(fileExt, $"_tmp{fileExt}");
+            if (File.Exists(caminhoArquivoTmp))
+                File.Delete(caminhoArquivoTmp);
 
+            if (config.Estado != Estado.DistritoFederal)
+                httpClientResilient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
+            else
+                httpClientDefault.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
+
+            string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
+            var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
+            {
+                arquivoChecksum.Verificacao = DateTime.UtcNow;
+                connection.Update(arquivoChecksum);
+
+                logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
+
+                if (File.Exists(caminhoArquivoTmp))
+                    File.Delete(caminhoArquivoTmp);
+
+                return false;
+            }
+
+            if (arquivoChecksum == null)
+            {
+                logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
+
+                connection.Insert(new ArquivoChecksum()
+                {
+                    Nome = caminhoArquivoDb,
+                    Checksum = checksum,
+                    TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                    Criacao = DateTime.UtcNow,
+                    Atualizacao = DateTime.UtcNow,
+                    Verificacao = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                if (arquivoChecksum.Checksum != checksum)
+                {
+                    logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
+
+                    arquivoChecksum.Checksum = checksum;
+                    arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+
+                }
+
+                arquivoChecksum.Atualizacao = DateTime.UtcNow;
+                arquivoChecksum.Verificacao = DateTime.UtcNow;
+                connection.Update(arquivoChecksum);
+            }
+
+            File.Move(caminhoArquivoTmp, caminhoArquivo, true);
             return true;
         }
 
         public virtual void AtualizaValorTotal()
         {
-            logger.LogTrace("Atualizando valores totais");
+            logger.LogDebug("Atualizando valores totais");
 
             connection.Execute(@$"
 UPDATE cl_deputado dp 
@@ -233,12 +289,37 @@ SET valor_total_ceap = IFNULL((
 WHERE id_estado = {idEstado};");
         }
 
+        private void AjustarDadosGlobais()
+        {
+            // Substituir nome importação pelo utilizado na importação. Dessa forma podemos ter 2 nomes validos e padronizamos a importação de validação.
+            if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
+            {
+                connection.Execute($@"
+UPDATE ops_tmp.cl_despesa_temp temp
+JOIN cl_deputado d ON d.nome_importacao = temp.nome_civil
+SET temp.nome_civil = d.nome_civil
+WHERE d.id_estado = {idEstado}
+AND temp.nome_civil is not null
+");
+            }
+            else if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar)
+            {
+                connection.Execute($@"
+UPDATE ops_tmp.cl_despesa_temp temp
+JOIN cl_deputado d ON d.nome_importacao = temp.nome
+SET temp.nome = d.nome_parlamentar
+WHERE d.id_estado = {idEstado}
+AND d.nome_parlamentar IS NOT null
+");
+            }
+        }
+
         public virtual void AjustarDados()
         { }
 
         public virtual void InsereTipoDespesaFaltante()
         {
-            logger.LogTrace("Inserir despesa faltante");
+            logger.LogDebug("Inserir despesa faltante");
 
             var affected = connection.Execute(@"
 INSERT INTO cl_despesa_especificacao (descricao)
@@ -259,27 +340,30 @@ ORDER BY despesa_tipo;
 
         public virtual void InsereDeputadoFaltante()
         {
-            logger.LogTrace("Inserir parlamentar faltante");
+            logger.LogDebug("Inserir parlamentar faltante");
 
+            var chaveImportacao = "nome_parlamentar";
             int affected = 0;
             if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
             {
+                chaveImportacao = "cpf";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct Nome, Nome, cpf, {idEstado}
+select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select cpf 
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
-    AND CPF IS NOT NULL
+    AND cpf IS NOT NULL
 );");
             }
             else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
             {
+                chaveImportacao = "cpf_parcial";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
-select distinct Nome, Nome, cpf, {idEstado}
+select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select cpf_parcial 
@@ -290,9 +374,10 @@ where cpf not in (
             }
             else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
             {
+                chaveImportacao = "matricula";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, matricula, id_estado)
-select distinct Nome, Nome, cpf, {idEstado}
+select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select matricula 
@@ -303,9 +388,10 @@ where cpf not in (
             }
             else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
             {
+                chaveImportacao = "gabinete";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, gabinete, id_estado)
-select distinct Nome, Nome, cpf, {idEstado}
+select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select gabinete 
@@ -314,42 +400,95 @@ where cpf not in (
     AND gabinete IS NOT NULL
 );");
             }
-            else if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
+            else if (config.ChaveImportacao != ChaveDespesaTemp.IdDeputado)
             {
-                affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
-select distinct Nome, Nome, cpf, {idEstado}
+                connection.Execute(@$"
+UPDATE ops_tmp.cl_despesa_temp t
+JOIN ops_tmp.cl_deputado_de_para d ON IFNULL(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
+SET t.id_cl_deputado = d.id");
+
+                if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
+                {
+                    chaveImportacao = "nome_civil";
+                    affected = connection.Execute(@$"
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
+select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
-where nome not in (
-    select IFNULL(nome_importacao, nome_civil)
+where id_cl_deputado is null
+and nome_civil not in (
+    select nome_civil
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
     AND nome_civil IS NOT null
 );");
-            }
-            else // Nome
-            {
-                affected = connection.Execute(@$"
-INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
-select distinct Nome, Nome, cpf, {idEstado}
+                }
+                else if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar)
+                {
+                    chaveImportacao = "nome_parlamentar";
+                    affected = connection.Execute(@$"
+INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
+select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
-where nome not in (
-    select IFNULL(nome_importacao, nome_parlamentar)
+where id_cl_deputado is null
+and nome not in (
+    select nome_parlamentar
     FROM cl_deputado 
     WHERE id_estado = {idEstado} 
     AND nome_parlamentar IS NOT null
 );");
+                }
+
+                if (affected > 0)
+                {
+                    connection.Execute(@$"
+INSERT IGNORE INTO ops_tmp.cl_deputado_de_para (id, nome, id_estado)
+SELECT id, {chaveImportacao}, id_estado FROM ops.cl_deputado
+WHERE {chaveImportacao} IS NOT NULL");
+
+                    connection.Execute(@$"
+UPDATE ops_tmp.cl_despesa_temp t
+JOIN ops_tmp.cl_deputado_de_para d ON IFNULL(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
+SET t.id_cl_deputado = d.id");
+                }
             }
 
             if (affected > 0)
             {
-                logger.LogInformation("{Itens} parlamentares incluidos!", affected);
+                logger.LogWarning("{Itens} parlamentares incluidos!", affected);
+            }
+
+            string sqlDeputadosNaoLocalizados;
+            if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar || config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
+            {
+                sqlDeputadosNaoLocalizados = @$"
+SELECT GROUP_CONCAT(DISTINCT nome)
+FROM ops_tmp.cl_despesa_temp
+WHERE id_cl_deputado is null;";
+            }
+            else
+            {
+                sqlDeputadosNaoLocalizados = @$"
+SELECT GROUP_CONCAT(DISTINCT nome)
+FROM ops_tmp.cl_despesa_temp
+WHERE cpf NOT IN (
+    SELECT {chaveImportacao}
+    FROM cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND {chaveImportacao} IS NOT null
+);";
+            }
+
+            var deputadosNaoLocalizados = connection.ExecuteScalar<string>(sqlDeputadosNaoLocalizados);
+
+            if (!string.IsNullOrEmpty(deputadosNaoLocalizados))
+            {
+                throw new Exception($"Deputados não cadastrados: {deputadosNaoLocalizados}");
             }
         }
 
         public virtual void InsereFornecedorFaltante()
         {
-            logger.LogTrace("Inserir fornecedor faltante");
+            logger.LogDebug("Inserir fornecedor faltante");
 
             var affected = connection.Execute(@"
 INSERT INTO fornecedor (nome, cnpj_cpf)
@@ -383,7 +522,10 @@ and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
 
         public virtual void InsereDespesaFinal(int ano)
         {
-            logger.LogTrace("Inserir despesa final");
+            var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cl_despesa_temp");
+            if (totalTemp == 0) return;
+
+            logger.LogDebug("Inserir despesa final");
 
             string condicaoSql = "";
             if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
@@ -394,8 +536,10 @@ and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
                 condicaoSql = "p.matricula = d.cpf";
             else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
                 condicaoSql = "p.gabinete = d.cpf";
-            else // ChaveDespesaTemp.Nome
-                condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
+            else
+            {
+                condicaoSql = "p.id like d.id_cl_deputado";
+            }
 
             var sql = @$"
 INSERT IGNORE INTO cl_despesa (
@@ -432,7 +576,6 @@ ORDER BY d.id;
 
             var affected = connection.Execute(sql, 3600);
 
-            var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cl_despesa_temp");
             if (affected != totalTemp)
                 logger.LogWarning("{Itens} despesas incluidas. Há {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
             else if (affected > 0)
@@ -441,7 +584,7 @@ ORDER BY d.id;
 
         public virtual void ValidaImportacao(int ano)
         {
-            logger.LogTrace("Validar importação");
+            logger.LogDebug("Validar importação");
 
             var agregador = RegistrosBaseDeDadosFinalAgregados(ano);
             int itensTotalFinal = agregador.Item1;
@@ -449,34 +592,36 @@ ORDER BY d.id;
 
             if (itensProcessadosAno != itensTotalFinal || somaTotalFinal != valorTotalProcessadoAno)
             {
-                logger.LogError("Totais divergentes! Arquivo: [Itens: {LinhasArquivo}; Valor: {ValorTotalArquivo}] DB: [Itens: {LinhasDB}; Valor: {ValorTotalFinal}]",
+                logger.LogError("Totais divergentes! Arquivo: [Itens: {LinhasArquivo}; Valor: {ValorTotalArquivo}] DB: [Itens: {LinhasDB}; Valor: R$ {ValorTotalFinal:#,###.00}]",
                     itensProcessadosAno, valorTotalProcessadoAno, itensTotalFinal, somaTotalFinal);
-
-                string condicaoSql = "";
-                if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
-                    condicaoSql = "p.cpf = d.cpf";
-                else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
-                    condicaoSql = "p.cpf_parcial = d.cpf";
-                else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
-                    condicaoSql = "p.matricula = d.cpf";
-                else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
-                    condicaoSql = "p.gabinete = d.cpf";
-                else // ChaveDespesaTemp.Nome
-                    condicaoSql = "(IFNULL(p.nome_importacao, p.nome_parlamentar) like d.nome or p.nome_civil like d.nome)";
 
                 var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 SELECT COUNT(1)
 FROM ops_tmp.cl_despesa_temp d
-left join cl_deputado p on {condicaoSql} and id_estado = {idEstado}
-WHERE p.id IS null");
+WHERE d.id_cl_deputado IS NULL");
 
                 if (despesasSemParlamentar > 0)
                     logger.LogError("Há deputados não identificados!");
             }
             else
             {
-                logger.LogInformation("Itens na base de dados: {LinhasDB}; Valor total: R$ {ValorTotalFinal}", itensTotalFinal, somaTotalFinal);
+                logger.LogInformation("Itens na base de dados: {LinhasDB}; Valor total: R$ {ValorTotalFinal:#,###.00}", itensTotalFinal, somaTotalFinal);
 
+            }
+
+            if (ano == DateTime.UtcNow.Year)
+            {
+                var ultimaDataEmissao = connection.ExecuteScalar<DateTime>($@"
+SELECT MAX(d.data_emissao) AS ultima_emissao
+FROM cl_despesa d
+inner join cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}");
+
+                if (ultimaDataEmissao > DateTime.Today)
+                    logger.LogWarning("Ultima data de emissão é uma data futura: {DataEmissao:dd/MM/yyyy}", ultimaDataEmissao);
+                else if (ultimaDataEmissao < DateTime.Today.AddMonths(-1))
+                    logger.LogWarning("Ultima data de emissão é anterior a um mês: {DataEmissao:dd/MM/yyyy}", ultimaDataEmissao);
+                else
+                    logger.LogInformation("Ultima data de emissão '{DataEmissao:dd/MM/yyyy}' foi a {EmissaoDias} dias", ultimaDataEmissao, Math.Abs((ultimaDataEmissao - DateTime.Today).TotalDays));
             }
         }
 
@@ -490,7 +635,7 @@ WHERE p.id IS null");
             var sql = @$"
 select 
     count(1) as itens, 
-    IFNULL(sum(valor_liquido) as valor_total 
+    IFNULL(sum(valor_liquido), 0) as valor_total 
 from cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
@@ -517,13 +662,13 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         public virtual void DeletarDespesasInexistentes(int ano)
         {
-            logger.LogTrace("Sincroniza Hashes");
+            logger.LogDebug("Sincroniza Hashes");
 
             var agregador = RegistrosBaseDeDadosFinalAgregados(ano);
             int itensTotalFinal = agregador.Item1;
             decimal somaTotalFinal = agregador.Item2;
 
-            logger.LogInformation("Já existem {Itens} despesas com valor total de {ValorTotal} para {Estado} em {Ano} previamente importados.", itensTotalFinal, somaTotalFinal, config.Estado.ToString(), ano);
+            logger.LogInformation("Já existem {Itens} despesas com valor total de {ValorTotal:#,###.00} para {Estado} em {Ano} previamente importados.", itensTotalFinal, somaTotalFinal, config.Estado.ToString(), ano);
 
             if (!config.Completo && lstHash.Values.Any())
             {
@@ -587,7 +732,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         //        return true;
 
         //    despesa.Hash = hash;
-        //    //logger.LogTrace("Novo Registro {@CamaraEstadualDespesa}", despesa);
+        //    //logger.LogDebug("Novo Registro {@CamaraEstadualDespesa}", despesa);
         //    return false;
         //}
 
@@ -625,28 +770,154 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         public void InserirDespesaTemp(CamaraEstadualDespesaTemp despesaTemp)
         {
+            JsonSerializerOptions options = new()
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            };
+
+            var dateToCompare = DateTime.Today;
+            if (despesaTemp.Mes.HasValue) dateToCompare = (new DateTime(despesaTemp.Ano, despesaTemp.Mes.Value, 1)).AddMonths(1).AddDays(-1);
+
+            if (despesaTemp.DataEmissao.Year != despesaTemp.Ano && despesaTemp.DataEmissao.AddMonths(3).Year != despesaTemp.Ano)
+            {
+                // Validar ano com 3 meses de tolerancia.
+                //logger.LogWarning("Despesa com ano incorreto: {@Despesa}", despesaTemp);
+
+                var dt = despesaTemp.DataEmissao;
+                despesaTemp.DataEmissao = new DateTime(despesaTemp.Ano, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
+            }
+            else if (despesaTemp.DataEmissao > dateToCompare)
+            {
+                // Validar despesa com data futura.
+                //logger.LogWarning("Despesa com data incorreta/futura: {@Despesa}", despesaTemp);
+
+                var dt = despesaTemp.DataEmissao;
+                // Tentamos trocar apenas o ano.
+                despesaTemp.DataEmissao = new DateTime(despesaTemp.Ano, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
+
+                // Caso a data permaneça invalida, alteramos também o mês, se possivel.
+                if (despesaTemp.DataEmissao > dateToCompare && despesaTemp.Mes.HasValue)
+                {
+                    var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
+                    despesaTemp.DataEmissao = new DateTime(despesaTemp.Ano, despesaTemp.Mes.Value, Math.Min(dt.Day, monthLastDay), dt.Hour, dt.Minute, dt.Second);
+                }
+            }
+
             // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
             // Para armazenamento na base de dados a hash é gerado com o valor, para que mudanças no total provoquem uma atualização.
             var valorTemp = despesaTemp.Valor;
             despesaTemp.Valor = default(decimal);
-            var str = JsonSerializer.Serialize(despesaTemp);
+            var str = JsonSerializer.Serialize(despesaTemp, options);
             var hash = Utils.SHA1Hash(str);
             var key = Convert.ToHexString(hash);
 
             despesaTemp.Hash = hash;
             despesaTemp.Valor = valorTemp;
             despesasTemp.Add(despesaTemp);
+
+            //Console.WriteLine(str);
+            //Console.WriteLine("");
         }
 
         public T RestApiGet<T>(string address)
         {
-            var restClient = new RestClient(httpClient);
+            using RestClient client = CreateHttpClient();
 
             var request = new RestRequest(address);
             request.AddHeader("Accept", "application/json");
 
-            RestResponse resParlamentares = restClient.GetWithAutoRetry(request);
-            return JsonSerializer.Deserialize<T>(resParlamentares.Content);
+            return client.Get<T>(request);
+        }
+
+        public T RestApiGetWithCustomDateConverter<T>(string address)
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
+
+            var request = new RestRequest(address);
+            request.AddHeader("Accept", "application/json");
+
+            if (config.Estado == Estado.Parana)
+            {
+                request.AddHeader("recaptchaprivatetoken", "a5fbdde6daed041e187f0162c0f116faa22fcb93324099827c20b7cd61e06251b10db5956624fb548e5d69bfc13ac4c32fd5dd90e10393846faeb9c2a5e0ad02");
+                request.AddHeader("recaptchapublictoken", TokenHelper.GerarTokenAngular("03AFcWeA6hm4oJfOh3MRN76AQtvHCIcOz9bq93ermGjGho_-g9s7XuV6sAbcFsiSGsg7vPfxwmTOTjdnBh6h-eRD9t6XLu4rX_BYiX2zm2aBNAkp4hjxP0uYxfbv622WrvvNEJxRvfEs7Oz2u2e4UQwwhUGE1AHy8JcxOE-Hqi_dYpD0efkh-dT9c5LKRazS-BOePcToEadiWYTndFcGxSYNrgtdRKjzj1JzkFvOD9HXJPeIoJDwMkVzIFxTqL-voQN69Y_CNKUus2MpstmovojIpvtkoqBvJ1A7R0Ic39ztePFkUsnDlbNYfJSqyclcP66PbKxrPzC4U9MH5O9fnyYbp6_wUg5E1RpzOdK6oV7JVLMxxFb-kY74hdelYyXU5qzyYiMyhUlHeqk8W_OgUmVXMzD7M0cZAQPDmgqupI-v6m5KQpG7zZnIY24cY_JCP5Vd0RqlSQ34I5wb8Wqmb67XAfFb0c3JTu_nZoYt8uYJTOBchbhGEOEQvC5IsBDRKe-QaZv27Ht3NeOq-4bSChQUuwWWEraH7QSYal7wHpHXj9nyboXsEzrfMGHvmWlmFZnMKXugNpYxruXPmet4bvb6VWlEMN4f5Z8x0OzsNtYvFKaiYJXvtZ8HvhROrtaEsLUCce7EkBvH_2n1C8YdPuVzDADRFObvVR4bRrb21haRNLN8Pai8N6xr6_CXdldzrP9bNiEqq0xr8BBogU0erx0z_ksHe9xOJTXvu-H2zSI94kiihbnMVsRF3BCGW_2OAzBfl6ba6AeCLiZN_vJSc3VZqtJviIC73sc-vNGBZo9JaSjORWMDpHFtoOhTjM2eM9uNQXBUJ5Jk7EhpoAtOVVSrMth9nS8Z6Vzb2G09XOo133xczomcdq9ZfbXX95VtVe84W0oxs6Oe_D0X0SybA-lvjcCH7pCmCrI-C8TKxDZLLHuPp0Kv55BRKBOLkSgSALJHc3hy_unEF1-dhac_SRC1ekBXRo1AloOg"));
+            }
+
+            using RestClient client = CreateHttpClient();
+            var response = client.Get(request);
+            return JsonSerializer.Deserialize<T>(response.Content, options);
+
+        }
+
+        public T RestApiGetWithSqlTimestampConverter<T>(string address)
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new SqlTimestampConverter());
+
+            var request = new RestRequest(address);
+            request.AddHeader("Accept", "application/json");
+
+            using RestClient client = CreateHttpClient();
+            var response = client.Get(request);
+            return JsonSerializer.Deserialize<T>(response.Content, options);
+
+        }
+
+        public async Task<T> RestApiGetAsync<T>(string address)
+        {
+            using RestClient client = CreateHttpClient();
+
+            var request = new RestRequest(address);
+            request.AddHeader("Accept", "application/json");
+
+            return await client.GetAsync<T>(request);
+        }
+
+        public async Task<T> RestApiPostAsync<T>(string address, Dictionary<string, string> parameters)
+        {
+            using RestClient client = CreateHttpClient();
+
+            var request = new RestRequest(address + ToQueryString(parameters));
+            request.AddHeader("Accept", "application/json");
+
+            foreach (var p in parameters)
+                request.AddParameter(p.Key, p.Value);
+
+            return await client.PostAsync<T>(request);
+        }
+
+        public RestClient CreateHttpClient()
+        {
+            var options = new RestClientOptions()
+            {
+                ThrowOnAnyError = true
+            };
+            return new RestClient(httpClientResilient, options);
+        }
+
+        private string ToQueryString(Dictionary<string, string> parameters)
+        {
+            if (!parameters.Any()) return string.Empty;
+
+            return "?" + string.Join("&", parameters.Select(kvp =>
+                $"{kvp.Key}={kvp.Value}"));
+            //$"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
+        }
+
+        public virtual void ValidaValorTotal(decimal valorTotalArquivo, decimal valorTotalCalculado, int despesasIncluidas)
+        {
+            var diferenca = Math.Abs(valorTotalArquivo - valorTotalCalculado);
+
+            if (diferenca > 100)
+            {
+                logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}; Despesas Incluidas: {DespesasIncluidas}",
+                    valorTotalCalculado, valorTotalArquivo, diferenca, despesasIncluidas);
+            }
+            else if (diferenca > 0)
+            {
+                logger.LogWarning("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}; Despesas Incluidas: {DespesasIncluidas}",
+                    valorTotalCalculado, valorTotalArquivo, diferenca, despesasIncluidas);
+            }
         }
     }
 

@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using RestSharp;
 
 namespace OPS.Importador.ALE;
 
@@ -49,23 +48,14 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
     public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
     {
         var address = $"{config.BaseAddress}api/transparencia/verbas_indenizatorias?ano={ano}&mes={mes}&por_pagina=100";
-        var restClient = new RestClient();
-
-        var request = new RestRequest(address);
-        request.AddHeader("Accept", "application/json");
-
-        RestResponse resParlamentares = restClient.GetWithAutoRetry(request);
-        List<DespesasGoias> lstDeputadosRS = JsonSerializer.Deserialize<List<DespesasGoias>>(resParlamentares.Content);
+        List<DespesasGoias> lstDeputadosRS = RestApiGet<List<DespesasGoias>>(address);
 
         foreach (DespesasGoias item in lstDeputadosRS)
         {
             var id = item.Deputado.Id;
 
             address = $"{config.BaseAddress}api/transparencia/verbas_indenizatorias/exibir?ano={ano}&deputado_id={id}&mes={mes}";
-            request.Resource = address;
-
-            RestResponse resDespesa = restClient.GetWithAutoRetry(request);
-            DespesasGoias despesa = JsonSerializer.Deserialize<DespesasGoias>(resDespesa.Content);
+            DespesasGoias despesa = RestApiGet<DespesasGoias>(address);
             if (despesa.Grupos is null) continue;
 
             foreach (var grupo in despesa.Grupos)

@@ -11,9 +11,10 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -77,7 +78,7 @@ public class ImportadorDespesasPara : ImportadorDespesasRestApiAnual
             // TODO: Para Verba Indenizatória o gasto pode ter sido do mês anterior, conforme consta na descrição. Mas desconsideramos pois nem todos os itens trazem descrição completa.
             foreach (var item in jsonData.Value)
             {
-                if (item.Value == 0) continue;
+                if (!item.Value.HasValue || item.Value == 0) continue;
 
                 var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
@@ -87,7 +88,7 @@ public class ImportadorDespesasPara : ImportadorDespesasRestApiAnual
                     DataEmissao = dataEmissao,
                     Ano = (short)dataEmissao.Year,
                     Mes = (short?)dataEmissao.Month,
-                    Valor = item.Value
+                    Valor = item.Value.Value
                 };
 
                 InserirDespesaTemp(despesaTemp);
@@ -124,8 +125,7 @@ public class ImportadorParlamentarPara : ImportadorParlamentarCrawler
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
-        var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-        var context = BrowsingContext.New(angleSharpConfig);
+        var context = httpClient.CreateAngleSharpContext();
 
         var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
         if (document.StatusCode != HttpStatusCode.OK)
@@ -586,7 +586,7 @@ public class Slice
     //public ValueIds ValueIds { get; set; }
 
     [JsonPropertyName("Data")]
-    public Dictionary<string, Dictionary<string, decimal>> Data { get; set; }
+    public Dictionary<string, Dictionary<string, decimal?>> Data { get; set; }
 }
 
 //public class ValueIds

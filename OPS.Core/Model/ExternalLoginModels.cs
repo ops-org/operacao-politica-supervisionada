@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OPS.Core.Models
+namespace OPS.Core.Model
 {
     public class ExternalLoginViewModel
     {

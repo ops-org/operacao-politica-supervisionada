@@ -6,9 +6,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -16,8 +14,9 @@ using Tabula.Detectors;
 using Tabula.Extractors;
 using Tabula;
 using UglyToad.PdfPig;
-using System.IO;
-using OfficeOpenXml.Drawing.Chart;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 
 namespace OPS.Importador.ALE;
 
@@ -49,10 +48,17 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
         var today = DateTime.Today;
         var document = context.OpenAsyncAutoRetry(config.BaseAddress).GetAwaiter().GetResult();
 
-        var anoSelecionado = document
+        var elementoAno = document
             .QuerySelectorAll(".elementor-widget-wrap .elementor-widget-heading")
-            .First(x => x.QuerySelector(".elementor-heading-title").TextContent == ano.ToString())
-            .NextElementSibling;
+            .FirstOrDefault(x => x.QuerySelector(".elementor-heading-title").TextContent == ano.ToString());
+
+        if(elementoAno is null)
+        {
+            logger.LogWarning("Dados do ano {Ano} ainda não disponivel", ano);
+            return;
+        }
+
+        var anoSelecionado = elementoAno.NextElementSibling;
 
         var meses = anoSelecionado.QuerySelectorAll(".elementor-tabs-wrapper .elementor-tab-title");
         foreach (var item in meses)
@@ -102,13 +108,10 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
     private void ImportarDespesasArquivo(int ano, int mes, string urlPdf)
     {
         var filename = $"{tempPath}/CLSE-{ano}-{mes}.pdf";
-        if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+        BaixarArquivo(urlPdf, filename);
 
         using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
         {
-            ObjectExtractor oe = new ObjectExtractor(document);
-
             // detect canditate table zones
             SimpleNurminenDetectionAlgorithm detector = new SimpleNurminenDetectionAlgorithm();
             IExtractionAlgorithm ea = new BasicExtractionAlgorithm();
@@ -121,9 +124,9 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
             var despesasIncluidas = 0;
             for (var p = 1; p <= document.NumberOfPages; p++)
             {
-                PageArea page = oe.Extract(p);
+                PageArea page = ObjectExtractor.Extract(document, p);
                 var regions = detector.Detect(page);
-                List<Table> tables = ea.Extract(page); // .GetArea(regions[0].BoundingBox) // take first candidate area
+                IReadOnlyList<Table> tables = ea.Extract(page); // .GetArea(regions[0].BoundingBox) // take first candidate area
 
                 foreach (var table in tables)
                 {
@@ -153,9 +156,7 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
                         {
                             totalValidado = true;
                             var valorTotalArquivo = Convert.ToDecimal(valorTemp.Split(":")[1].Replace("R$", "").Trim(), cultureInfo);
-                            if (valorTotalDeputado != valorTotalArquivo)
-                                logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}",
-                                    valorTotalArquivo, valorTotalDeputado, valorTotalArquivo - valorTotalDeputado);
+                            ValidaValorTotal(valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
 
                             continue;
                         }
@@ -177,7 +178,7 @@ public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
                         if (itemDescicaoTemp.Contains("-"))
                             despesaTemp.TipoDespesa = itemDescicaoTemp.Split("-")[1].Trim();
                         else
-                            despesaTemp.TipoDespesa = Core.Utils.RemoveCaracteresNumericos(itemDescicaoTemp).Trim();
+                            despesaTemp.TipoDespesa = Core.Utilities.Utils.RemoveCaracteresNumericos(itemDescicaoTemp).Trim();
 
                         //logger.LogWarning($"Inserindo Item {itemDescicaoTemp.Split("Art")[0]} com valor: {despesaTemp.Valor}!");
                         valorTotalDeputado += despesaTemp.Valor;

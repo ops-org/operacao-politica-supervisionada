@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
 
 namespace OPS.Core.Repository
 {

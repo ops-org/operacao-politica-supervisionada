@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OPS.Core
+namespace OPS.Core.Utilities
 {
     using System.Text.Json;
     using System.Text.Json.Serialization;

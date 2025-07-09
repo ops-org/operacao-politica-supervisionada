@@ -1,18 +1,19 @@
-﻿using AngleSharp;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 
 namespace OPS.Importador.ALE;
 
@@ -74,14 +75,7 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
                 if (primeiraColuna.TextContent == "TOTAL") continue;
 
                 var linkDetalhes = (primeiraColuna.QuerySelector("a") as IHtmlAnchorElement);
-                var despesaTemp = new CamaraEstadualDespesaTemp()
-                {
-                    Nome = gabinete.Text.Split("-")[0].Trim().ToTitleCase(),
-                    Cpf = deputado?.Matricula?.ToString(),
-                    Ano = (short)ano,
-                    Mes =  (short)mes,
-                    TipoDespesa = linkDetalhes.Text.Split(" - ")[1].Trim(),
-                };
+                
 
                 var subDocument = context.OpenAsyncAutoRetry(linkDetalhes.Href).GetAwaiter().GetResult();
                 var linhasDespesasDetalhes = subDocument.QuerySelectorAll(".ls-table tbody tr");
@@ -89,6 +83,15 @@ public class ImportadorDespesasAmapa : ImportadorDespesasRestApiMensal
                 {
                     var colunas = detalhes.QuerySelectorAll("td");
                     if (colunas[0].TextContent == "TOTAL") continue;
+
+                    var despesaTemp = new CamaraEstadualDespesaTemp()
+                    {
+                        Nome = gabinete.Text.Split("-")[0].Trim().ToTitleCase(),
+                        Cpf = deputado?.Matricula?.ToString(),
+                        Ano = (short)ano,
+                        Mes = (short)mes,
+                        TipoDespesa = linkDetalhes.Text.Split(" - ")[1].Trim(),
+                    };
 
                     var empresaParts = colunas[0].TextContent.Split(" - ");
                     despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(empresaParts[0].Trim());
@@ -126,8 +129,7 @@ public class ImportadorParlamentarAmapa : ImportadorParlamentarCrawler
     ///// <returns></returns>
     //public override async Task Importar()
     //{
-    //    var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-    //    var context = BrowsingContext.New(angleSharpConfig);
+    //    var context = httpClient.CreateAngleSharpContext();
 
     //    var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
     //    if (document.StatusCode != HttpStatusCode.OK)

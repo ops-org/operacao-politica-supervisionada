@@ -10,7 +10,9 @@ using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -37,7 +39,7 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
         {
             BaseAddress = "https://www.al.rn.leg.br/portal/verbas",
             Estado = Estado.RioGrandeDoNorte,
-            ChaveImportacao = ChaveDespesaTemp.Gabinete
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
 
         // TODO: Filtrar legislatura atual
@@ -60,7 +62,10 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
             var filename = $"{tempPath}/CLRN-{ano}-{mes}-{gabinete.Value}.pdf";
             if (!File.Exists(filename))
             {
-                //var deputado = deputados.Find(x => gabinete.Value.Contains(x.Gabinete.ToString()));
+                //var deputado = deputados.Find(x => 
+                //    gabinete.Text.Equals( x.NomeImportacao, StringComparison.InvariantCultureIgnoreCase) ||
+                //    gabinete.Text.Equals(x.NomeParlamentar, StringComparison.InvariantCultureIgnoreCase)
+                //);
                 //if (deputado == null)
                 //{
                 //    logger.LogError($"Deputado {gabinete.Value}: {gabinete.Text} não existe ou não possui gabinete relacionado!");
@@ -113,7 +118,7 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
     {
         var filename = $"{tempPath}/CLRN-{ano}-{mes}-{gabinete.Value}.pdf";
         if (!File.Exists(filename))
-            httpClient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
+            httpClientResilient.DownloadFile(urlPdf, filename).GetAwaiter().GetResult();
 
         var paginasPdf = ImportacaoUtils.ReadPdfFile(filename).ToArray();
         decimal valorTotal = 0;
@@ -199,7 +204,6 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                             despesaTemp.DataEmissao = new DateTime(ano, mes, 11);
                         else
                         {
-                            var a = 1;
                         }
                     }
 
@@ -255,8 +259,7 @@ public class ImportadorParlamentarRioGrandeDoNorte : ImportadorParlamentarCrawle
     //{
     //    ArgumentNullException.ThrowIfNull(config, nameof(config));
 
-    //    var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-    //    var context = BrowsingContext.New(angleSharpConfig);
+    //    var context = httpClient.CreateAngleSharpContext();
 
     //    var parlamentares = new[]
     //    {

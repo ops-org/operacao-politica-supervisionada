@@ -5,12 +5,11 @@ using System.Net;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AngleSharp;
-using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -40,7 +39,7 @@ public class ImportadorDespesasAcre : ImportadorDespesasRestApiAnual
         {
             BaseAddress = "https://app.al.ac.leg.br/financa/despesaVI", // TODO: Gastos totais mensais apenas
             Estado = Estado.Acre,
-            ChaveImportacao = ChaveDespesaTemp.Indefinido
+            ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
@@ -72,7 +71,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
         List<DeputadoAcre> objDeputadosAcre = RestApiGet<List<DeputadoAcre>>(address);
 
         foreach (var parlamentar in objDeputadosAcre)
-    {
+        {
             var matricula = (uint)parlamentar.Id;
             DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew(matricula);
 
@@ -92,12 +91,11 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
 
     private async Task ObterDetalhesDoPerfil(DeputadoEstadual deputado)
     {
-        var angleSharpConfig = Configuration.Default.WithDefaultLoader();
-        var context = BrowsingContext.New(angleSharpConfig);
+        var context = httpClient.CreateAngleSharpContext();
 
         var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
         if (document.StatusCode != HttpStatusCode.OK)
-    {
+        {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
         };
 
@@ -116,7 +114,7 @@ public class ImportadorParlamentarAcre : ImportadorParlamentarRestApi
             logger.LogWarning("Verificar possivel mudança no perfil do parlamentar: {UrlPerfil}", deputado.UrlPerfil);
         }
     }
-    }
+}
 
 public class DeputadoAcre
 {

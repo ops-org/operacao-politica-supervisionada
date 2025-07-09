@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -11,7 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RestSharp;
 
-namespace OPS.Core
+namespace OPS.Core.Utilities
 {
     public static class Utils
     {
@@ -81,7 +84,7 @@ namespace OPS.Core
         public static object ParseDateTime(object d)
         {
             if (d is null) return DBNull.Value;
-            if (d != null && Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || (d.ToString() == "0000-00-00 00:00:00") ||
+            if (d != null && Convert.IsDBNull(d) || string.IsNullOrEmpty(d.ToString()) || d.ToString() == "0000-00-00 00:00:00" ||
                 d.ToString().StartsWith("*"))
                 return DBNull.Value;
 
@@ -269,7 +272,7 @@ namespace OPS.Core
             }
         }
 
-        public static string SingleSpacedTrim(String s)
+        public static string SingleSpacedTrim(string s)
         {
             return new Regex(@"\s{2,}").Replace(s, " ");
         }
@@ -303,10 +306,10 @@ namespace OPS.Core
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower()).Replace("De ", "de ").Replace("Da ", "da ").Replace("Do ", "do ");
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower()).Replace("De ", "de ").Replace("Da ", "da ").Replace("Do ", "do ");
         }
 
-        public static String ReduceWhitespace(this string text)
+        public static string ReduceWhitespace(this string text)
         {
             return Regex.Replace(text, @"\s+", " ");
         }
@@ -315,14 +318,10 @@ namespace OPS.Core
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            StringBuilder sbReturn = new StringBuilder();
-            var arrayText = text.Normalize(NormalizationForm.FormD).ToCharArray();
-            foreach (char letter in arrayText)
-            {
-                if (CharUnicodeInfo.GetUnicodeCategory(letter) != UnicodeCategory.NonSpacingMark)
-                    sbReturn.Append(letter);
-            }
-            return sbReturn.ToString();
+            return string.Concat(
+              text.Normalize(NormalizationForm.FormD)
+                .Where(ch => CharUnicodeInfo.GetUnicodeCategory(ch) != UnicodeCategory.NonSpacingMark)
+            ).Normalize(NormalizationForm.FormC);
         }
 
         public static string ForceWindows1252ToUtf8Encoding(this string text)
@@ -362,12 +361,28 @@ namespace OPS.Core
             if (!string.IsNullOrEmpty(value?.ToString().Trim()))
                 return value;
 
-            return (T)null;
+            return null;
         }
 
         public static T? NullIf<T>(this T left, T right) where T : struct
         {
-            return EqualityComparer<T>.Default.Equals(left, right) ? (T?)null : left;
+            return EqualityComparer<T>.Default.Equals(left, right) ? null : left;
+        }
+
+        public static string DisplayName(this Enum enumValue)
+        {
+            try
+            {
+                return enumValue.GetType()
+                        .GetMember(enumValue.ToString())
+                        .First()
+                        .GetCustomAttribute<DisplayAttribute>()
+                        .GetName();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         protected class SendGridMessage

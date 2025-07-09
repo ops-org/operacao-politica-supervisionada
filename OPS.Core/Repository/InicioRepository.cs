@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using OPS.Core.Utilities;
 
-namespace OPS.Core.DAO
+namespace OPS.Core.Repository
 {
     public static class InicioRepository
     {

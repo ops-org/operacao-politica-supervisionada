@@ -2,26 +2,20 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.Json;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
 using RestSharp;
 using Dapper;
-using AngleSharp.Io;
-using static OPS.Importador.ALE.ImportadorDespesasRondonia;
 using System.Text.Json.Serialization;
-using System.Drawing;
-using Microsoft.Extensions.Options;
-using System.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
+using OPS.Core.Utilities;
+using OPS.Core.Enumerator;
+using OPS.Importador.ALE.Comum;
 
 namespace OPS.Importador.ALE;
 
@@ -54,9 +48,29 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
     public override void ImportarDespesas(IBrowsingContext context, int ano)
     {
-        var rubricas = HttpGet<RubricasPE>($"{config.BaseAddress}adm/verbaindenizatoria-rubricas.php?ano={ano}");
+        List<RubricasPE> rubricas;
+        //try
+        //{
+        //    rubricas = RestApiGetWithCustomDateConverter<List<RubricasPE>>($"{config.BaseAddress}adm/verbaindenizatoria-rubricas.php?ano={ano}");
+        //}
+        //catch (Exception)
+        //{
+            rubricas = new List<RubricasPE>
+            {
+                new RubricasPE(){ NumeroCategoria = "1", NomeCategoria = "IMÓVEIS"},
+                new RubricasPE(){ NumeroCategoria = "2", NomeCategoria = "Locação de veículos"},
+                new RubricasPE(){ NumeroCategoria = "3", NomeCategoria = "Assessoria Jurídica"},
+                new RubricasPE(){ NumeroCategoria = "4", NomeCategoria = "CONSULTORIAS E TRABALHOS TÉCNICOS"},
+                new RubricasPE(){ NumeroCategoria = "5", NomeCategoria = "Divulgação da atividade parlamentar"},
+                new RubricasPE(){ NumeroCategoria = "6", NomeCategoria = "SERVIÇOS DE TELECOMUNICAÇÕES EM GERAL"},
+                new RubricasPE(){ NumeroCategoria = "7", NomeCategoria = "SERVIÇOS E PRODUTOS POSTAIS"},
+                new RubricasPE(){ NumeroCategoria = "9", NomeCategoria = "FORNECIMENTO DE ALIMENTAÇÃO DO PARLAMENTAR"},
+                new RubricasPE(){ NumeroCategoria = "10", NomeCategoria = "SERVIÇOS DE SEGURANÇA"},
+            };
+        //}
 
-        var deputados = HttpGet<DeputadoPE>($"{config.BaseAddress}dep/deputados.php?leg=-16"); // 2023-2026
+
+        var deputados = RestApiGetWithCustomDateConverter<List<DeputadoPE>>($"{config.BaseAddress}dep/deputados.php?leg=-16"); // 2023-2026
         if (!deputados.Any())
         {
             logger.LogWarning("Nenhum parlamentar foi encontrado.");
@@ -65,10 +79,10 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
         foreach (var deputado in deputados)
         {
-            var meses = HttpGet<DespesaMesesPE>($"{config.BaseAddress}adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}");
+            var meses = RestApiGetWithCustomDateConverter<List<DespesaMesesPE>>($"{config.BaseAddress}adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}");
             foreach (var mesComDespesa in meses)
             {
-                var documentos = HttpGet<DespesaDocumentosPE>($"{config.BaseAddress}adm/verbaindenizatoria.php?dep={deputado.Id}&ano={ano}&mes={mesComDespesa.Mes}");
+                var documentos = RestApiGetWithCustomDateConverter<List<DespesaDocumentosPE>>($"{config.BaseAddress}adm/verbaindenizatoria.php?dep={deputado.Id}&ano={ano}&mes={mesComDespesa.Mes}");
                 if (!documentos.Any())
                 {
                     logger.LogWarning("Não da documentos para o parlamentar {Parlamentar} em {Mes}/{Ano}", deputado.Nome, mesComDespesa.Mes, ano);
@@ -77,7 +91,7 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
                 foreach (var documento in documentos)
                 {
-                    var despesas = HttpGet<DespesaPE>($"{config.BaseAddress}adm/verbaindenizatorianotas.php?docid={documento.Docid}");
+                    var despesas = RestApiGetWithCustomDateConverter<List<DespesaPE>>($"{config.BaseAddress}adm/verbaindenizatorianotas.php?docid={documento.Docid}");
                     if (!despesas.Any())
                     {
                         logger.LogWarning("Não da despesas para o parlamentar {Parlamentar} em {Mes}/{Ano}", deputado.Nome, mesComDespesa.Mes, ano);
@@ -116,29 +130,6 @@ UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = 
 UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = '18376563000366';
 
 ");
-    }
-
-    private List<T> HttpGet<T>(string address)
-    {
-        var options = new JsonSerializerOptions();
-        options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
-
-        var restClientOptions = new RestClientOptions()
-        {
-            ThrowOnAnyError = true
-        };
-
-        var restClient = new RestClient(httpClient, restClientOptions);
-
-        var request = new RestRequest(address);
-        request.AddHeader("Accept", "application/json");
-
-        var response = restClient.GetWithAutoRetry(request);
-        var lista = JsonSerializer.Deserialize<List<T>>(response.Content, options);
-
-        logger.LogDebug("{Itens} itens retornaram da API.", lista.Count());
-
-        return lista;
     }
 
     public class DeputadoPE

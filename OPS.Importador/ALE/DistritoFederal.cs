@@ -9,9 +9,10 @@ using AngleSharp.Html.Dom;
 using CsvHelper;
 using Dapper;
 using OfficeOpenXml;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 
@@ -40,7 +41,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "https://dadosabertos.cl.df.gov.br/",
+            BaseAddress = "https://dados.cl.df.gov.br/dataset/662b8e54-727c-4e97-873c-d8c168ecc465/resource/",
             Estado = Estado.DistritoFederal,
             ChaveImportacao = ChaveDespesaTemp.Cpf
         };
@@ -48,7 +49,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
 
     /// <summary>
     /// Dados a partir de 2013
-    /// https://dadosabertos.cl.df.gov.br/View/verbas.html
+    /// https://dados.cl.df.gov.br/dataset/verbas-indenizatorias
     /// </summary>
     /// <param name="ano"></param>
     /// <returns></returns>
@@ -57,44 +58,61 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
         Dictionary<string, string> arquivos = new();
         string urlOrigem, caminhoArquivo;
 
-        if (ano >= 2020)
-        {
-            urlOrigem = $"{config.BaseAddress}View/opendata/verbas/{ano}_verba_indenizatoria.xlsx";
-            caminhoArquivo = $"{tempPath}/CLDF-{ano}.xlsx";
+        //if (ano >= 2020)
+        //{
+        //    urlOrigem = $"{config.BaseAddress}View/dataset/verbas/{ano}_verba_indenizatoria.xlsx";
+        //    caminhoArquivo = $"{tempPath}/CLDF-{ano}.xlsx";
 
-            arquivos.Add(urlOrigem, caminhoArquivo);
-        }
-        else if (ano == 2019)
-        {
-            CultureInfo usEnglish = new CultureInfo("pt-BR");
+        //    //if (DateTime.Now.AddMonths(-1).Year >= ano && File.Exists(caminhoArquivo)) File.Delete(caminhoArquivo);
 
-            for (int mes = 1; mes <= 12; mes++)
-            {
-                string nomeMes = usEnglish.DateTimeFormat.MonthNames[mes - 1];
+        //    arquivos.Add(urlOrigem, caminhoArquivo);
+        //}
+        //else if (ano == 2019)
+        //{
+        //    CultureInfo usEnglish = new CultureInfo("pt-BR");
 
-                // Janeiro e Fevereiro usa apenas o prefixo do mês
-                if (ano == 2019 && mes <= 2)
-                    nomeMes = nomeMes.Substring(0, 3);
+        //    for (int mes = 1; mes <= 12; mes++)
+        //    {
+        //        string nomeMes = usEnglish.DateTimeFormat.MonthNames[mes - 1];
 
-                urlOrigem = $"{config.BaseAddress}View/opendata/verbas/{ano}_{nomeMes.ToUpper()}_verba%20indenizatoria.xlsx";
-                caminhoArquivo = $"{tempPath}/CLDF-{ano}-{mes}.xlsx";
+        //        // Janeiro e Fevereiro usa apenas o prefixo do mês
+        //        if (ano == 2019 && mes <= 2)
+        //            nomeMes = nomeMes.Substring(0, 3);
 
-                arquivos.Add(urlOrigem, caminhoArquivo);
-            }
-        }
-        else
-        {
-            if (ano == 2018)
-                urlOrigem = $"{config.BaseAddress}View/opendata/verbas/{ano}%20completa%20verba_indenizatoria.csv";
-            else // if (ano <= 2017)
-                urlOrigem = $"{config.BaseAddress}View/opendata/verbas/verba_indenizatoria_{ano}.csv";
+        //        urlOrigem = $"{config.BaseAddress}View/openDATA_COMPROVANTE/verbas/{ano}_{nomeMes.ToUpper()}_verba%20indenizatoria.xlsx";
+        //        caminhoArquivo = $"{tempPath}/CLDF-{ano}-{mes}.xlsx";
 
-            caminhoArquivo = $"{tempPath}/CLDF-{ano}.csv";
-            arquivos.Add(urlOrigem, caminhoArquivo);
-        }
+        //        arquivos.Add(urlOrigem, caminhoArquivo);
+        //    }
+        //}
+        //else
+        //{
+        //    if (ano == 2018)
+        //        urlOrigem = $"{config.BaseAddress}View/openDATA_COMPROVANTE/verbas/{ano}%20completa%20verba_indenizatoria.csv";
+        //    else // if (ano <= 2017)
+        //        urlOrigem = $"{config.BaseAddress}View/openDATA_COMPROVANTE/verbas/verba_indenizatoria_{ano}.csv";
+
+        //    caminhoArquivo = $"{tempPath}/CLDF-{ano}.csv";
+        //    arquivos.Add(urlOrigem, caminhoArquivo);
+        //}
+
+        caminhoArquivo = $"{tempPath}/CLDF-{ano}.xlsx";
+        urlOrigem = CaminhoArquivoDoAno(ano);
+        arquivos.Add(urlOrigem, caminhoArquivo);
 
         return arquivos;
     }
+
+    public string CaminhoArquivoDoAno(int ano) => ano switch
+    {
+        2020 => $"{config.BaseAddress}d0b37a90-b7c9-49f2-850e-878667acc55f/download/verbas-indenizatorias-2020.xlsx",
+        2021 => $"{config.BaseAddress}2b26fe1c-45fc-4b27-b305-7398537aa02a/download/verbas-indenizatorias-2021.xlsx",
+        2022 => $"{config.BaseAddress}21512477-a7ed-475a-9f89-ec906c8bc734/download/verbas-indenizatorias-2022.xlsx",
+        2023 => $"{config.BaseAddress}3f2ab2d5-86e6-4e55-ae05-6f9e37543a0e/download/verbas-indenizatorias-2023.xlsx",
+        2024 => $"{config.BaseAddress}2f6282c3-bdca-4e8e-8a3e-13b853c90c3c/download/2024_verba_indenizatoria.xlsx",
+        2025 => $"{config.BaseAddress}33500b75-af60-4dc4-a78d-2504c2966674/download/2025_verba_indenizatoria.xlsx",
+        _ => throw new ArgumentException(message: "ano invalido!", paramName: nameof(ano)),
+    };
 
     public override void ImportarDespesas(string caminhoArquivo, int ano)
     {
@@ -295,16 +313,16 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
         string sResumoValores = string.Empty;
 
         int indice = 1;
-        int NOME_DEPUTADO = indice++;
-        int CPF_DEPUTADO = indice++;
-        int NOME_FORNECEDOR = indice++;
-        int CNPJ_CPF_FORNECEDOR = indice++;
-        int CPF_FORNECEDOR = indice++;
-        int DOCUMENTO = indice++;
-        int DATA = indice++;
-        int VALOR = indice++;
+        int NOME_PARLAMENTAR = indice++;
+        int CPF_PARLAMENTAR = indice++;
+        int NOME_PRESTADOR = indice++;
+        int CNPJ_PRESTADOR = indice++;
+        int CPF_PRESTADOR = indice++;
+        int NR_COMPROVANTE = indice++;
+        int DATA_COMPROVANTE = indice++;
+        int VALOR_DESPESA = indice++;
         int CLASSIFICACAO = indice++;
-        int OBSERVACAO = indice++;
+        int OBSERVACOES = indice++;
 
         int count = 0;
 
@@ -318,65 +336,83 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                     if (i == 1)
                     {
 
-                        if (ano == 2019)
+                        //if (ano == 2019)
+                        //{
+                        //    if (
+                        //        worksheet.Cells[i, NOME_PARLAMENTAR].Value.ToString() != "Nome do(a) Deputado(a)" ||
+                        //        worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString() != "CPF do(a) Deputado(a)" ||
+                        //        worksheet.Cells[i, NOME_PRESTADOR].Value.ToString() != "Nome do Estabelecimento" ||
+                        //        worksheet.Cells[i, CNPJ_PRESTADOR].Value.ToString() != "CNPJ" ||
+                        //        worksheet.Cells[i, CPF_PRESTADOR].Value.ToString() != "CPF" ||
+                        //        worksheet.Cells[i, NR_COMPROVANTE].Value.ToString() != "N°  do Recibo ou Nota Fiscal" ||
+                        //        worksheet.Cells[i, DATA_COMPROVANTE].Value.ToString() != "DATA_COMPROVANTE do Recibo/NF" ||
+                        //        worksheet.Cells[i, VALOR_DESPESA].Value.ToString() != "Valor" ||
+                        //        worksheet.Cells[i, CLASSIFICACAO].Value.ToString() != "Classificação"
+                        //    )
+                        //    {
+                        //        throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
+                        //    }
+                        //}
+                        //else if (ano >= 2020)
+                        //{
+                        //    // Ignorando a validação de 2 colunas pq esta com erro de envoding no arquivo original.
+                        //    if (
+                        //        worksheet.Cells[i, NOME_PARLAMENTAR].Value.ToString() != "Nome do Deputado" ||
+                        //        worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString() != "CPF do Deputado" ||
+                        //        worksheet.Cells[i, NOME_PRESTADOR].Value.ToString() != "Nome do Estabelecimento" ||
+                        //        worksheet.Cells[i, CNPJ_PRESTADOR].Value.ToString() != "CNPJ" ||
+                        //        worksheet.Cells[i, CPF_PRESTADOR].Value.ToString() != "CPF" ||
+                        //        // (worksheet.Cells[i, NR_COMPROVANTE].Value.ToString() != "Número do Recibo/NF") ||
+                        //        worksheet.Cells[i, DATA_COMPROVANTE].Value.ToString() != "DATA_COMPROVANTE do Recibo/NF" ||
+                        //        worksheet.Cells[i, VALOR_DESPESA].Value.ToString() != "Valor (R$)"
+                        //    // || (worksheet.Cells[i, CLASSIFICACAO].Value.ToString() != "Classificação")
+                        //    )
+                        //    {
+                        //        throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
+                        //    }
+                        //}
+
+
+                        // Ignorando a validação de 2 colunas pq esta com erro de envoding no arquivo original.
+                        if (
+                            worksheet.Cells[i, NOME_PARLAMENTAR].Value.ToString() != "NOME_PARLAMENTAR" ||
+                            worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString() != "CPF_PARLAMENTAR" ||
+                            worksheet.Cells[i, NOME_PRESTADOR].Value.ToString() != "NOME_PRESTADOR" ||
+                            worksheet.Cells[i, CNPJ_PRESTADOR].Value.ToString() != "CNPJ_PRESTADOR" ||
+                            worksheet.Cells[i, CPF_PRESTADOR].Value.ToString() != "CPF_PRESTADOR" ||
+                            worksheet.Cells[i, NR_COMPROVANTE].Value.ToString() != "NR_COMPROVANTE" ||
+                            worksheet.Cells[i, DATA_COMPROVANTE].Value.ToString() != "DATA_COMPROVANTE" ||
+                            worksheet.Cells[i, VALOR_DESPESA].Value.ToString() != "VALOR_DESPESA" ||
+                            worksheet.Cells[i, CLASSIFICACAO].Value.ToString() != "CLASSIFICACAO" ||
+                            worksheet.Cells[i, OBSERVACOES].Value.ToString() != "OBSERVACOES"
+                        )
                         {
-                            if (
-                                worksheet.Cells[i, NOME_DEPUTADO].Value.ToString() != "Nome do(a) Deputado(a)" ||
-                                worksheet.Cells[i, CPF_DEPUTADO].Value.ToString() != "CPF do(a) Deputado(a)" ||
-                                worksheet.Cells[i, NOME_FORNECEDOR].Value.ToString() != "Nome do Estabelecimento" ||
-                                worksheet.Cells[i, CNPJ_CPF_FORNECEDOR].Value.ToString() != "CNPJ" ||
-                                worksheet.Cells[i, CPF_FORNECEDOR].Value.ToString() != "CPF" ||
-                                worksheet.Cells[i, DOCUMENTO].Value.ToString() != "N°  do Recibo ou Nota Fiscal" ||
-                                worksheet.Cells[i, DATA].Value.ToString() != "Data do Recibo/NF" ||
-                                worksheet.Cells[i, VALOR].Value.ToString() != "Valor" ||
-                                worksheet.Cells[i, CLASSIFICACAO].Value.ToString() != "Classificação"
-                            )
-                            {
-                                throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
-                            }
-                        }
-                        else if (ano >= 2020)
-                        {
-                            // Ignorando a validação de 2 colunas pq esta com erro de envoding no arquivo original.
-                            if (
-                                worksheet.Cells[i, NOME_DEPUTADO].Value.ToString() != "Nome do Deputado" ||
-                                worksheet.Cells[i, CPF_DEPUTADO].Value.ToString() != "CPF do Deputado" ||
-                                worksheet.Cells[i, NOME_FORNECEDOR].Value.ToString() != "Nome do Estabelecimento" ||
-                                worksheet.Cells[i, CNPJ_CPF_FORNECEDOR].Value.ToString() != "CNPJ" ||
-                                worksheet.Cells[i, CPF_FORNECEDOR].Value.ToString() != "CPF" ||
-                                // (worksheet.Cells[i, DOCUMENTO].Value.ToString() != "Número do Recibo/NF") ||
-                                worksheet.Cells[i, DATA].Value.ToString() != "Data do Recibo/NF" ||
-                                worksheet.Cells[i, VALOR].Value.ToString() != "Valor (R$)"
-                            // || (worksheet.Cells[i, CLASSIFICACAO].Value.ToString() != "Classificação")
-                            )
-                            {
-                                throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
-                            }
+                            throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Distrito Federal");
                         }
 
                         // Pular linha de titulo
                         continue;
                     }
 
-                    if (string.IsNullOrEmpty((string)worksheet.Cells[i, NOME_DEPUTADO].Value)) continue; //Linha vazia
+                    if (string.IsNullOrEmpty((string)worksheet.Cells[i, NOME_PARLAMENTAR].Value)) continue; //Linha vazia
 
                     var despesaTemp = new CamaraEstadualDespesaTemp()
                     {
                         Ano = (short)ano,
-                        Cpf = !string.IsNullOrEmpty(worksheet.Cells[i, CPF_DEPUTADO].Value.ToString()) ? Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CPF_DEPUTADO].Value.ToString()) : "",
-                        Nome = worksheet.Cells[i, NOME_DEPUTADO].Value.ToString().Replace("Deputado", "").Replace("Deputada", "").Trim().ToTitleCase(),
-                        Empresa = worksheet.Cells[i, NOME_FORNECEDOR].Value.ToString().Trim().Replace("NÃO INFORMADO", "").Replace("DOCUMENTO DANIFICADO", "").Replace("não consta documento", "").Trim(),
-                        Documento = worksheet.Cells[i, DOCUMENTO].Value.ToString(),
+                        Cpf = !string.IsNullOrEmpty(worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString()) ? Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString()) : "",
+                        Nome = worksheet.Cells[i, NOME_PARLAMENTAR].Value.ToString().Replace("Deputado", "").Replace("Deputada", "").Trim().ToTitleCase(),
+                        Empresa = worksheet.Cells[i, NOME_PRESTADOR].Value.ToString().Trim().Replace("NÃO INFORMADO", "").Replace("NR_COMPROVANTE DANIFICADO", "").Replace("não consta NR_COMPROVANTE", "").Trim(),
+                        Documento = worksheet.Cells[i, NR_COMPROVANTE].Value.ToString(),
                     };
 
                     string cnpj_cpf = "";
-                    if (!string.IsNullOrEmpty((string)worksheet.Cells[i, CNPJ_CPF_FORNECEDOR].Value))
+                    if (!string.IsNullOrEmpty((string)worksheet.Cells[i, CNPJ_PRESTADOR].Value))
                     {
-                        cnpj_cpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CNPJ_CPF_FORNECEDOR].Value.ToString());
+                        cnpj_cpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CNPJ_PRESTADOR].Value.ToString());
                     }
-                    else if (!string.IsNullOrEmpty((string)worksheet.Cells[i, CPF_FORNECEDOR].Value))
+                    else if (!string.IsNullOrEmpty((string)worksheet.Cells[i, CPF_PRESTADOR].Value))
                     {
-                        cnpj_cpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CPF_FORNECEDOR].Value.ToString());
+                        cnpj_cpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CPF_PRESTADOR].Value.ToString());
                     }
 
                     if (cnpj_cpf == "0030659700311234") cnpj_cpf = "00306597009834";
@@ -385,17 +421,17 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
 
                     despesaTemp.CnpjCpf = cnpj_cpf;
 
-                    if (!string.IsNullOrEmpty(worksheet.Cells[i, DATA].Value?.ToString()))
+                    if (!string.IsNullOrEmpty(worksheet.Cells[i, DATA_COMPROVANTE].Value?.ToString()))
                     {
                         if (worksheet.Cells[i, 7].Value is double)
-                            despesaTemp.DataEmissao = DateTime.FromOADate((double)worksheet.Cells[i, DATA].Value);
+                            despesaTemp.DataEmissao = DateTime.FromOADate((double)worksheet.Cells[i, DATA_COMPROVANTE].Value);
                         else if (worksheet.Cells[i, 7].Value is DateTime)
-                            despesaTemp.DataEmissao = (DateTime)worksheet.Cells[i, DATA].Value;
+                            despesaTemp.DataEmissao = (DateTime)worksheet.Cells[i, DATA_COMPROVANTE].Value;
                         else if (worksheet.Cells[i, 7].Value.ToString().Contains(" de ")) // 04 de julho de 2023
-                            despesaTemp.DataEmissao = Convert.ToDateTime(worksheet.Cells[i, DATA].Value, cultureInfo);
+                            despesaTemp.DataEmissao = Convert.ToDateTime(worksheet.Cells[i, DATA_COMPROVANTE].Value, cultureInfo);
                         else
                         {
-                            var data = worksheet.Cells[i, DATA].Value.ToString();
+                            var data = worksheet.Cells[i, DATA_COMPROVANTE].Value.ToString();
                             if (data.Split("/").Length != 3)
                             {
                                 data = data.Replace("/", "");
@@ -412,7 +448,7 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
                         despesaTemp.DataEmissao = new DateTime(ano, 1, 1);
                     }
 
-                    string valor = worksheet.Cells[i, VALOR].Value.ToString();
+                    string valor = worksheet.Cells[i, VALOR_DESPESA].Value.ToString();
                     // Valor 1.500.00 é na verdade 1.500,00
                     Regex myRegex = new Regex(@"\.(\d\d$)", RegexOptions.Singleline);
                     if (myRegex.IsMatch(valor))
@@ -432,11 +468,11 @@ public class ImportadorDespesasDistritoFederal : ImportadorDespesasArquivo
 
                     despesaTemp.TipoDespesa = worksheet.Cells[i, CLASSIFICACAO].Value.ToString().Trim();
 
-                    if (!string.IsNullOrEmpty(worksheet.Cells[i, OBSERVACAO].Value?.ToString()))
+                    if (!string.IsNullOrEmpty(worksheet.Cells[i, OBSERVACOES].Value?.ToString()))
                         if (string.IsNullOrEmpty(despesaTemp.TipoDespesa))
-                            despesaTemp.TipoDespesa = worksheet.Cells[i, OBSERVACAO].Value.ToString();
+                            despesaTemp.TipoDespesa = worksheet.Cells[i, OBSERVACOES].Value.ToString();
                         else
-                            despesaTemp.Observacao = cnpj_cpf + " - " + worksheet.Cells[i, OBSERVACAO].Value.ToString();
+                            despesaTemp.Observacao = cnpj_cpf + " - " + worksheet.Cells[i, OBSERVACOES].Value.ToString();
 
                     if (string.IsNullOrEmpty(despesaTemp.TipoDespesa))
                         despesaTemp.TipoDespesa = "Indenizações e Restituições";
@@ -506,7 +542,7 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
         deputado.UrlFoto = (subDocument.QuerySelector(".informacoes-pessoais img") as IHtmlImageElement)?.Source;
 
         var detalhes = subDocument.QuerySelectorAll(".informacoes-pessoais .row .col-md-9 p span");
-        
+
         if (string.IsNullOrEmpty(deputado.NomeCivil))
             deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
 
@@ -535,8 +571,7 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
     //        public override async void ImportarParlamentares()
     //        {
     //            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-    //            var config = Configuration.Default.WithDefaultLoader();
-    //            var context = BrowsingContext.New(config);
+    //            var context = httpClient.CreateAngleSharpContext();
 
     //            using (var db = new AppDb())
     //            {

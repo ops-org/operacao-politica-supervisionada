@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
+using OPS.Core.Utilities;
+using RestSharp;
 
 namespace OPS.Importador.ALE.Parlamentar
 {
@@ -20,10 +23,17 @@ namespace OPS.Importador.ALE.Parlamentar
         public int registrosInseridos { get; private set; } = 0;
         public int registrosAtualizados { get; private set; } = 0;
 
+        private HttpClient _httpClient;
+        public HttpClient httpClient { get { return _httpClient ??= httpClientFactory.CreateClient("ResilientClient"); } }
+
+        private IHttpClientFactory httpClientFactory { get; }
+
         public ImportadorParlamentarBase(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorParlamentarBase>>();
             connection = serviceProvider.GetService<IDbConnection>();
+
+            httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
         }
 
         public void Configure(ImportadorParlamentarConfig config)
@@ -53,6 +63,7 @@ namespace OPS.Importador.ALE.Parlamentar
             else if (partido.Contains("PROGRESSISTA") || partido == "Partido Progressista") partido = "PP"; // Progressistas
             else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
             else if (partido.Contains("PARTIDO VERDE")) partido = "PV";
+            else if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido)) partido = "S.PART.";
 
             var IdPartido = connection.GetList<Partido>(new { Sigla = partido }).FirstOrDefault()?.Id;
             if (IdPartido == null)
@@ -67,72 +78,139 @@ namespace OPS.Importador.ALE.Parlamentar
 
         protected DeputadoEstadual GetDeputadoByNameOrNew(string nomeParlamentar)
         {
-            var deputado = connection
-                .GetList<DeputadoEstadual>(new
+            var id = connection
+                .GetList<DeputadoEstadualDepara>(new
                 {
                     id_estado = config.Estado,
-                    nome_parlamentar = nomeParlamentar
+                    nome = nomeParlamentar
                 })
+                .Select(d => d.Id)
                 .FirstOrDefault();
 
-            if (Debugger.IsAttached && deputado == null)
-                Trace.WriteLine($"Deputado {nomeParlamentar} não localizado.");
-
-            return deputado ?? new DeputadoEstadual()
+            if (id == 0)
             {
-                IdEstado = (ushort)config.Estado,
-                NomeParlamentar = nomeParlamentar
-            };
-        }
-
-        protected DeputadoEstadual GetDeputadoByFullNameOrNew(string nome)
-        {
-            var deputado = connection
-                .GetList<DeputadoEstadual>(new
+                return new DeputadoEstadual()
                 {
-                    id_estado = config.Estado,
-                    nome_civil = nome
-                })
-                .FirstOrDefault();
+                    IdEstado = (ushort)config.Estado,
+                    NomeParlamentar = nomeParlamentar
+                };
+            }
 
-            if (Debugger.IsAttached && deputado == null)
-                Trace.WriteLine($"Deputado {nome} não localizado.");
+            //var deputado = connection
+            //    .GetList<DeputadoEstadual>(new
+            //    {
+            //        id_estado = config.Estado,
+            //        nome_parlamentar = nomeParlamentar
+            //    })
+            //    .FirstOrDefault();
 
-            return deputado ?? new DeputadoEstadual()
-            {
-                IdEstado = (ushort)config.Estado,
-                NomeCivil = nome
-            };
+            //if (deputado == null)
+            //    deputado = connection
+            //    .GetList<DeputadoEstadual>(new
+            //    {
+            //        id_estado = config.Estado,
+            //        nome_importacao = nomeParlamentar
+            //    })
+            //    .FirstOrDefault();
+
+            return connection.Get<DeputadoEstadual>(id);
         }
+
+        //protected DeputadoEstadual GetDeputadoByFullNameOrNew(string nome)
+        //{
+        //    var deputado = connection
+        //        .GetList<DeputadoEstadual>(new
+        //        {
+        //            id_estado = config.Estado,
+        //            nome_civil = nome
+        //        })
+        //        .FirstOrDefault();
+
+        //    if (deputado != null)
+        //        return deputado;
+
+        //    return new DeputadoEstadual()
+        //    {
+        //        IdEstado = (ushort)config.Estado,
+        //        NomeCivil = nome
+        //    };
+        //}
 
         protected DeputadoEstadual GetDeputadoByMatriculaOrNew(uint matricula)
         {
-            return connection
+            var deputado = connection
                 .GetList<DeputadoEstadual>(new
                 {
                     id_estado = config.Estado,
                     matricula
                 })
-                .FirstOrDefault()
-                ?? new DeputadoEstadual()
-                {
-                    IdEstado = (ushort)config.Estado,
-                    Matricula = matricula
-                };
+                .FirstOrDefault();
+
+            if (deputado != null)
+                return deputado;
+
+            return new DeputadoEstadual()
+            {
+                IdEstado = (ushort)config.Estado,
+                Matricula = matricula
+            };
         }
 
         public void InsertOrUpdate(DeputadoEstadual deputado)
         {
-            if (deputado.Id == 0)
+            using (logger.BeginScope(new Dictionary<string, object> { ["Deputado"] = JsonSerializer.Serialize(deputado) }))
             {
-                connection.Insert(deputado);
-                registrosInseridos++;
+                if (deputado.Id == 0)
+                {
+                    connection.Insert(deputado);
+                    registrosInseridos++;
+
+                    connection.Insert(new DeputadoEstadualDepara()
+                    {
+                        Id = deputado.Id,
+                        Nome = deputado.NomeParlamentar,
+                        IdEstado = deputado.IdEstado,
+                    });
+                }
+                else
+                {
+                    connection.Update(deputado);
+                    registrosAtualizados++;
+                }
             }
-            else
+        }
+
+        public RestClient CreateHttpClient()
+        {
+            var options = new RestClientOptions()
             {
-                connection.Update(deputado);
-                registrosAtualizados++;
-            }
+                ThrowOnAnyError = true
+            };
+            return new RestClient(httpClient, options);
+        }
+
+        public T RestApiGet<T>(string address)
+        {
+            var restClient = CreateHttpClient();
+
+            var request = new RestRequest(address);
+            request.AddHeader("Accept", "application/json");
+
+            return restClient.Get<T>(request);
+        }
+
+        public T RestApiGetWithSqlTimestampConverter<T>(string address)
+        {
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new SqlTimestampConverter());
+
+            var request = new RestRequest(address);
+            request.AddHeader("Accept", "application/json");
+
+            using RestClient client = CreateHttpClient();
+            var response = client.Get(request);
+            return JsonSerializer.Deserialize<T>(response.Content, options);
+
         }
     }
 

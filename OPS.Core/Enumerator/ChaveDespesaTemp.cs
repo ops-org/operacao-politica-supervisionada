@@ -1,4 +1,4 @@
-﻿namespace OPS.Core.Enum
+﻿namespace OPS.Core.Enumerator
 {
     public enum ChaveDespesaTemp
     {
@@ -8,6 +8,7 @@
         Matricula,
         Gabinete,
         NomeParlamentar,
-        NomeCivil
+        NomeCivil,
+        IdDeputado
     }
 }

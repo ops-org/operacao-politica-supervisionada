@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OPS.Core.DAO;
+using OPS.Core.Repository;
 
 namespace OPS.API.Controllers
 {
@@ -25,7 +25,5 @@ namespace OPS.API.Controllers
         {
             new ParametrosRepository().CarregarPadroes();
         }
-
-
     }
 }

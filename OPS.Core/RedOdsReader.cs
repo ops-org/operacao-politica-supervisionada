@@ -35,7 +35,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace OPS.Core;
@@ -132,7 +131,6 @@ public class RedOdsReader
 
                     if (iRow > 8)
                     {
-                        var a = 1;
                     }
 
                     foreach (XmlNode itemRow in item)

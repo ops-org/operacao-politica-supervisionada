@@ -8,9 +8,10 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
-using OPS.Core;
 using OPS.Core.Entity;
-using OPS.Core.Enum;
+using OPS.Core.Enumerator;
+using OPS.Core.Utilities;
+using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
@@ -73,19 +74,12 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
 
         var address = $"http://transparencia.assembleia.pr.leg.br/api/diarias?ano={ano}&mes={mes}";
-        var restClientOptions = new RestClientOptions()
-        {
-            ThrowOnAnyError = true,
-            Timeout = TimeSpan.FromMinutes(5)
-        };
-
-        var restClient = new RestClient(restClientOptions);
-        //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+        var restClient = CreateHttpClient();
 
         var request = new RestRequest(address);
         request.AddHeader("Accept", "application/json");
 
-        RestResponse resDiarias = restClient.GetWithAutoRetry(request);
+        RestResponse resDiarias = restClient.Get(request);
         List<List<string>> diarias = JsonSerializer.Deserialize<List<List<string>>>(resDiarias.Content, options);
 
         foreach (var diaria in diarias)
@@ -112,34 +106,16 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
 
     private void ImportarCotaParlamentar(int ano, int mes)
     {
-        var options = new JsonSerializerOptions();
-        options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
-
         var address = $"{config.BaseAddress}public/ressarcimento/ressarcimentos/{mes}/{ano}";
-        var restClientOptions = new RestClientOptions()
-        {
-            ThrowOnAnyError = true,
-            Timeout = TimeSpan.FromMinutes(5)
-        };
 
-        var restClient = new RestClient(restClientOptions);
-        //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
-        var request = new RestRequest(address);
-        request.AddHeader("Accept", "application/json");
-
-        RestResponse resParlamentares = restClient.GetWithAutoRetry(request);
-        ParlamentaresPR objParlamentaresPR = JsonSerializer.Deserialize<ParlamentaresPR>(resParlamentares.Content, options);
+        ParlamentaresPR objParlamentaresPR = RestApiGetWithCustomDateConverter<ParlamentaresPR>(address);
 
         foreach (var itemParlamentar in objParlamentaresPR.Parlamentares)
         {
             string nomePolitico = ImportarParlamentar(itemParlamentar);
 
-            request = new RestRequest(address.Replace("ressarcimentos", "despesas-ressarcimento") + "/" + itemParlamentar.Parlamentar.Codigo);
-            request.AddHeader("Accept", "application/json");
-
-            RestResponse resDespesas = restClient.GetWithAutoRetry(request);
-            DespesasPR objDespesaPR = JsonSerializer.Deserialize<DespesasPR>(resDespesas.Content, options);
+            var newAddress = address.Replace("ressarcimentos", "despesas-ressarcimento") + "/" + itemParlamentar.Parlamentar.Codigo;
+            DespesasPR objDespesaPR = RestApiGetWithCustomDateConverter<DespesasPR>(newAddress);
             if (!objDespesaPR.Sucesso) continue;
 
             foreach (var parlamentarDespesa in objDespesaPR.Despesas)
@@ -195,14 +171,14 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
         var IdPartido = connection.GetList<Partido>(new { sigla = parlamentar.Partido.Replace("REPUB", "REPUBLICANOS").Replace("CDN", "CIDADANIA") }).FirstOrDefault()?.Id;
-        if (IdPartido == null)
-            throw new Exception("Partido Inexistenete");
+        if (IdPartido == null && deputado.IdPartido == null)
+            throw new Exception($"Partido '{parlamentar.Partido}' Inexistenete");
 
         //deputado.UrlPerfil = $"http://www.assembleia.pr.leg.br/deputados/perfil/{parlamentar.Codigo}";
         deputado.NomeParlamentar = nomeParlamentar;
         deputado.NomeCivil = parlamentar.Nome.ToTitleCase();
 
-        deputado.IdPartido = IdPartido.Value;
+        deputado.IdPartido ??= IdPartido;
         deputado.Sexo = parlamentar.NomePolitico.StartsWith("DEPUTADO") ? "M" : "F";
 
         if (deputado.Id == 0)
@@ -478,11 +454,13 @@ public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
     {
         var nomeParlamentar = parlamentar.QuerySelector(".nome-deps span").TextContent.Trim().ReduceWhitespace();
         var nomeParlamentarLimpo = Utils.RemoveAccents(nomeParlamentar);
+        var urlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
 
         var deputado = deputados.Find(x =>
             Utils.RemoveAccents(x.NomeImportacao ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
             Utils.RemoveAccents(x.NomeParlamentar).Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
-            Utils.RemoveAccents(x.NomeCivil ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase)
+            Utils.RemoveAccents(x.NomeCivil ?? "").Equals(nomeParlamentarLimpo, StringComparison.InvariantCultureIgnoreCase) ||
+            x.UrlPerfil == urlPerfil
         );
 
         if (deputado == null)
@@ -498,7 +476,7 @@ public class ImportadorParlamentarParana : ImportadorParlamentarCrawler
             deputado.NomeCivil = deputado.NomeParlamentar;
 
         deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".nome-deps .partido").TextContent.Trim());
-        deputado.UrlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
+        deputado.UrlPerfil = urlPerfil;
         deputado.UrlFoto = (parlamentar.QuerySelector(".foto-deps img") as IHtmlImageElement)?.Source;
 
         return deputado;

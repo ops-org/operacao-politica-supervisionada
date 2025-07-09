@@ -1,4 +1,4 @@
-﻿namespace OPS.Core
+﻿namespace OPS.Core.Enumerator
 {
     public enum EnumAgrupamentoAuditoria
     {
