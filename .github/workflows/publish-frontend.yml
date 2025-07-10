@@ -62,6 +62,9 @@ jobs:
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        with:
+          name: ops-site
+          path: ./_site
 
   # Deployment job
   deploy:
