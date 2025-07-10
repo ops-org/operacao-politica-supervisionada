@@ -9,7 +9,7 @@
             title="OPS - Operação Política Supervisionada"
             style="padding: 5px; margin-left: 0"
           >
-            <img src="//static.ops.net.br/logo_ops.png" width="64" height="40" alt="OPS" />
+            <img src="//static.ops.org.br/logo_ops.png" width="64" height="40" alt="OPS" />
           </router-link>
         </h5>
         <nav class="my-2 my-md-0 mr-md-3 text-center">

@@ -175,7 +175,7 @@
                                 <div class="row no-gutters">
                                     <div class="col-xs-4">
                                         <img v-lazy="
-                        '//static.ops.net.br/depfederal/' +
+                        '//static.ops.org.br/depfederal/' +
                         gasto.id_cf_deputado +
                         '_120x160.jpg'
                       "
@@ -214,7 +214,7 @@
                                 <div class="row no-gutters">
                                     <div class="col-sx-4">
                                         <img v-lazy="
-                        '//static.ops.net.br/senador/' +
+                        '//static.ops.org.br/senador/' +
                         gasto.id_sf_senador +
                         '_120x160.jpg'
                       "
@@ -280,7 +280,7 @@
         return {
           API: "",
           pageConfig: {
-            url: "http://ops.net.br",
+            url: "http://ops.org.br",
             identifier: "Pagina Inicial",
           },
           CampeoesGastos: [],

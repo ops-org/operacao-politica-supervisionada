@@ -9,7 +9,7 @@
             <img
               class="img-thumbnail img-responsive img-senador"
               v-bind:src="
-                '//static.ops.net.br/senador/' +
+                '//static.ops.org.br/senador/' +
                 senador.id_sf_senador +
                 '_240x300.jpg'
               "

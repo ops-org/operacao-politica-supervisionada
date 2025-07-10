@@ -343,7 +343,7 @@ namespace OPS.Importador
 
                         using (var client = new System.Net.Http.HttpClient())
                         {
-                            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)"); //Other
+                            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)"); //Other
 
                             while (csv.Read())
                             {

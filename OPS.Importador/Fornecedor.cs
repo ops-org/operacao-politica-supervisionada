@@ -136,7 +136,7 @@ namespace OPS.Importador
                     InserirControle(3, item["cnpj_cpf"].ToString(), "CNPJ Invalido");
                     logger.LogInformation("CNPJ Invalido [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, item["cnpj_cpf"].ToString(), item["nome"]);
 
-                    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
+                    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.org.br/fornecedor/{item["id"]}'>{item["cnpj_cpf"]} - {item["nome"]}</a>; Motivo: CNPJ Invalido";
                     //telegram.SendMessage(telegraMessage);
                     continue;
                 }
@@ -275,7 +275,7 @@ SELECT MAX(DATA) as data FROM (
                             {
                                 logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, fornecedor.Cnpj, fornecedor.NomeFantasia);
 
-                                telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{fornecedor.Cnpj} - {fornecedor.NomeFantasia}</a>";
+                                telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.org.br/fornecedor/{item["id"]}'>{fornecedor.Cnpj} - {fornecedor.NomeFantasia}</a>";
                                 telegram.SendMessage(telegraMessage);
                             }
                         }
@@ -296,7 +296,7 @@ SELECT MAX(DATA) as data FROM (
                 //    InserirControle(2, item["cnpj_cpf"].ToString(), receita.message);
                 //    _logger.LogInformation("Empresa {Status} [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", receita.message, atual, total, receita.cnpj, receita.nome);
 
-                //    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.net.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>; Motivo: {receita.message}";
+                //    //telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.org.br/fornecedor/{item["id"]}'>{receita.cnpj} - {receita.nome}</a>; Motivo: {receita.message}";
                 //    //telegram.SendMessage(telegraMessage);
                 //}
             }

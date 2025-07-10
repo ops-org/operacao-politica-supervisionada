@@ -57,6 +57,7 @@ namespace OPS.API
 #else
                     builder
                         .WithOrigins("http://www.ops.net.br", "https://www.ops.net.br", "http://ops.net.br", "https://ops.net.br")
+                        .WithOrigins("http://www.ops.org.br", "https://www.ops.org.br", "http://ops.org.br", "https://ops.org.br")
                         // Support https://*.domain.com
                         //.SetIsOriginAllowedToAllowWildcardSubdomains()
 

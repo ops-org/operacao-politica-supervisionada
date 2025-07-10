@@ -18,7 +18,7 @@ namespace OPS.Core.Utilities
 {
     public static class Utils
     {
-        public const string DefaultUserAgent = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.net.br)";
+        public const string DefaultUserAgent = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)";
 
         public static string FormataValor(object value, int decimais = 2)
         {
