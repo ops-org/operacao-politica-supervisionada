@@ -246,12 +246,12 @@
             <div class="container text-center pt-4 pb-3">
                 <h2>Escolha uma casa legislativa para explorar</h2>
                 <div class="text-xs-center">
+                    <a href="/#/senador"
+                       class="btn btn-danger btn-lg"
+                       style="margin-bottom: 15px">Senado Federal</a>&nbsp;
                     <a href="/#/deputado-federal"
                        class="btn btn-danger btn-lg"
                        style="margin-bottom: 15px">Câmara dos Deputados</a>&nbsp;
-                    <a href="/#/senador"
-                       class="btn btn-danger btn-lg"
-                       style="margin-bottom: 15px">Senado Federal</a>
                     <a href="/#/deputado-estadual"
                        class="btn btn-danger btn-lg"
                        style="margin-bottom: 15px">Assembleias Legislativas</a>
