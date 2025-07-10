@@ -252,6 +252,9 @@
                     <a href="/#/senador"
                        class="btn btn-danger btn-lg"
                        style="margin-bottom: 15px">Senado Federal</a>
+                    <a href="/#/deputado-estadual"
+                       class="btn btn-danger btn-lg"
+                       style="margin-bottom: 15px">Assembleias Legislativas</a>
                 </div>
             </div>
         </div>
