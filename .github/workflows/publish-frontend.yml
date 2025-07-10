@@ -61,10 +61,7 @@ jobs:
           destination: ./_site
           
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ops-site
-          path: ./_site
+        uses: upload-pages-artifact@v4
 
   # Deployment job
   deploy:
