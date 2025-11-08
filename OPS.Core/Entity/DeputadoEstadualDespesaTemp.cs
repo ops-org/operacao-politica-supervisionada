@@ -59,5 +59,9 @@ namespace OPS.Core.Entity
         [JsonIgnore]
         [Column("hash")]
         public byte[] Hash { get; set; }
+
+        [JsonIgnore]
+        [NotMapped]
+        public int? Lote { get; set; }
     }
 }

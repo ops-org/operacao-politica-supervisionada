@@ -198,6 +198,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     {
                         var despesaTemp1 = new CamaraEstadualDespesaTemp()
                         {
+                            Lote = lote,
                             Nome = nomeParlamentar,
                             NomeCivil = nomeCicilParlamentar,
                             Ano = (short)ano,
@@ -220,6 +221,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     {
                         var despesaTemp1 = new CamaraEstadualDespesaTemp()
                         {
+                            Lote = lote,
                             Nome = nomeParlamentar,
                             NomeCivil = nomeCicilParlamentar,
                             Ano = (short)ano,
@@ -287,6 +289,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                             // Mapear o nome da empresa para uma coluna vazia (saldo)
                             despesaTemp = new CamaraEstadualDespesaTemp()
                             {
+                                Lote = lote,
                                 Nome = nomeParlamentar,
                                 NomeCivil = nomeCicilParlamentar,
                                 Ano = (short)ano,
@@ -320,6 +323,12 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                                 despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("13.716.765/0001-74");
                                 despesaTemp.Valor = 344.12M;
                             }
+                            else if (cnpj.Contains("49.725.713/0001-012.500,00"))
+                            {
+                                despesaTemp.Empresa = "49.725.713 Maria Bianca Gomes da Silva";
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("49.725.713/0001-01");
+                                despesaTemp.Valor = 2500;
+                            }
                             else
                             {
                                 despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos(row[idxCnpj - 1].GetText());
@@ -343,6 +352,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     {
                         despesaTemp = new CamaraEstadualDespesaTemp()
                         {
+                            Lote = lote,
                             Nome = nomeParlamentar,
                             NomeCivil = nomeCicilParlamentar,
                             Ano = (short)ano,
@@ -498,6 +508,10 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
             case "23/072025": data = "23/07/2024"; break;
             case "25/102024": data = "25/10/2024"; break;
             case "1404/2025": data = "14/04/2025"; break;
+            case "02/06/20255": data = "02/06/2025"; break;
+            case "0107/2025": data = "01/07/2025"; break;
+            case "21/047/2025": data = "21/07/2025"; break;
+            case "15/0//2025": data = "15/08/2025"; break;
         }
 
         try

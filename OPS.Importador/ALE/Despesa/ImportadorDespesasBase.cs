@@ -59,6 +59,11 @@ namespace OPS.Importador.ALE.Despesa
 
         private decimal valorTotalProcessadoAno { get; set; }
 
+        /// <summary>
+        /// Controle de lote para agrupar os registros por fonte (arquivo/endpoint)
+        /// </summary>
+        protected int lote { get; set; }
+
         protected Dictionary<string, uint> lstHash { get; private set; }
 
         private HttpClient _httpClientResilient;
@@ -577,7 +582,7 @@ ORDER BY d.id;
             var affected = connection.Execute(sql, 3600);
 
             if (affected != totalTemp)
-                logger.LogWarning("{Itens} despesas incluidas. Há {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
+                logger.LogError("{Itens} despesas incluidas. Há {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
             else if (affected > 0)
                 logger.LogInformation("{Itens} despesas incluidas!", affected);
         }
@@ -592,7 +597,7 @@ ORDER BY d.id;
 
             if (itensProcessadosAno != itensTotalFinal || somaTotalFinal != valorTotalProcessadoAno)
             {
-                logger.LogError("Totais divergentes! Arquivo: [Itens: {LinhasArquivo}; Valor: {ValorTotalArquivo}] DB: [Itens: {LinhasDB}; Valor: R$ {ValorTotalFinal:#,###.00}]",
+                logger.LogError("Totais divergentes! Arquivo: [Itens: {LinhasArquivo}; Valor: {ValorTotalArquivo:#,###.00}] DB: [Itens: {LinhasDB}; Valor: R$ {ValorTotalFinal:#,###.00}]",
                     itensProcessadosAno, valorTotalProcessadoAno, itensTotalFinal, somaTotalFinal);
 
                 var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
@@ -824,6 +829,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             using RestClient client = CreateHttpClient();
 
             var request = new RestRequest(address);
+            request.Timeout = TimeSpan.FromMinutes(5);
             request.AddHeader("Accept", "application/json");
 
             return client.Get<T>(request);
@@ -837,11 +843,11 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             var request = new RestRequest(address);
             request.AddHeader("Accept", "application/json");
 
-            if (config.Estado == Estado.Parana)
-            {
-                request.AddHeader("recaptchaprivatetoken", "a5fbdde6daed041e187f0162c0f116faa22fcb93324099827c20b7cd61e06251b10db5956624fb548e5d69bfc13ac4c32fd5dd90e10393846faeb9c2a5e0ad02");
-                request.AddHeader("recaptchapublictoken", TokenHelper.GerarTokenAngular("03AFcWeA6hm4oJfOh3MRN76AQtvHCIcOz9bq93ermGjGho_-g9s7XuV6sAbcFsiSGsg7vPfxwmTOTjdnBh6h-eRD9t6XLu4rX_BYiX2zm2aBNAkp4hjxP0uYxfbv622WrvvNEJxRvfEs7Oz2u2e4UQwwhUGE1AHy8JcxOE-Hqi_dYpD0efkh-dT9c5LKRazS-BOePcToEadiWYTndFcGxSYNrgtdRKjzj1JzkFvOD9HXJPeIoJDwMkVzIFxTqL-voQN69Y_CNKUus2MpstmovojIpvtkoqBvJ1A7R0Ic39ztePFkUsnDlbNYfJSqyclcP66PbKxrPzC4U9MH5O9fnyYbp6_wUg5E1RpzOdK6oV7JVLMxxFb-kY74hdelYyXU5qzyYiMyhUlHeqk8W_OgUmVXMzD7M0cZAQPDmgqupI-v6m5KQpG7zZnIY24cY_JCP5Vd0RqlSQ34I5wb8Wqmb67XAfFb0c3JTu_nZoYt8uYJTOBchbhGEOEQvC5IsBDRKe-QaZv27Ht3NeOq-4bSChQUuwWWEraH7QSYal7wHpHXj9nyboXsEzrfMGHvmWlmFZnMKXugNpYxruXPmet4bvb6VWlEMN4f5Z8x0OzsNtYvFKaiYJXvtZ8HvhROrtaEsLUCce7EkBvH_2n1C8YdPuVzDADRFObvVR4bRrb21haRNLN8Pai8N6xr6_CXdldzrP9bNiEqq0xr8BBogU0erx0z_ksHe9xOJTXvu-H2zSI94kiihbnMVsRF3BCGW_2OAzBfl6ba6AeCLiZN_vJSc3VZqtJviIC73sc-vNGBZo9JaSjORWMDpHFtoOhTjM2eM9uNQXBUJ5Jk7EhpoAtOVVSrMth9nS8Z6Vzb2G09XOo133xczomcdq9ZfbXX95VtVe84W0oxs6Oe_D0X0SybA-lvjcCH7pCmCrI-C8TKxDZLLHuPp0Kv55BRKBOLkSgSALJHc3hy_unEF1-dhac_SRC1ekBXRo1AloOg"));
-            }
+            //if (config.Estado == Estado.Parana)
+            //{
+            //    request.AddHeader("recaptchaprivatetoken", "a5fbdde6daed041e187f0162c0f116faa22fcb93324099827c20b7cd61e06251b10db5956624fb548e5d69bfc13ac4c32fd5dd90e10393846faeb9c2a5e0ad02");
+            //    request.AddHeader("recaptchapublictoken", TokenHelper.GerarTokenAngular("03AFcWeA6hm4oJfOh3MRN76AQtvHCIcOz9bq93ermGjGho_-g9s7XuV6sAbcFsiSGsg7vPfxwmTOTjdnBh6h-eRD9t6XLu4rX_BYiX2zm2aBNAkp4hjxP0uYxfbv622WrvvNEJxRvfEs7Oz2u2e4UQwwhUGE1AHy8JcxOE-Hqi_dYpD0efkh-dT9c5LKRazS-BOePcToEadiWYTndFcGxSYNrgtdRKjzj1JzkFvOD9HXJPeIoJDwMkVzIFxTqL-voQN69Y_CNKUus2MpstmovojIpvtkoqBvJ1A7R0Ic39ztePFkUsnDlbNYfJSqyclcP66PbKxrPzC4U9MH5O9fnyYbp6_wUg5E1RpzOdK6oV7JVLMxxFb-kY74hdelYyXU5qzyYiMyhUlHeqk8W_OgUmVXMzD7M0cZAQPDmgqupI-v6m5KQpG7zZnIY24cY_JCP5Vd0RqlSQ34I5wb8Wqmb67XAfFb0c3JTu_nZoYt8uYJTOBchbhGEOEQvC5IsBDRKe-QaZv27Ht3NeOq-4bSChQUuwWWEraH7QSYal7wHpHXj9nyboXsEzrfMGHvmWlmFZnMKXugNpYxruXPmet4bvb6VWlEMN4f5Z8x0OzsNtYvFKaiYJXvtZ8HvhROrtaEsLUCce7EkBvH_2n1C8YdPuVzDADRFObvVR4bRrb21haRNLN8Pai8N6xr6_CXdldzrP9bNiEqq0xr8BBogU0erx0z_ksHe9xOJTXvu-H2zSI94kiihbnMVsRF3BCGW_2OAzBfl6ba6AeCLiZN_vJSc3VZqtJviIC73sc-vNGBZo9JaSjORWMDpHFtoOhTjM2eM9uNQXBUJ5Jk7EhpoAtOVVSrMth9nS8Z6Vzb2G09XOo133xczomcdq9ZfbXX95VtVe84W0oxs6Oe_D0X0SybA-lvjcCH7pCmCrI-C8TKxDZLLHuPp0Kv55BRKBOLkSgSALJHc3hy_unEF1-dhac_SRC1ekBXRo1AloOg"));
+            //}
 
             using RestClient client = CreateHttpClient();
             var response = client.Get(request);
@@ -910,14 +916,22 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
             if (diferenca > 100)
             {
-                logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}; Despesas Incluidas: {DespesasIncluidas}",
+                var valores = despesasTemp.Where(x=> x.Lote == lote).Select(x=> x.Valor.ToString("F2"));
+                var valoresStr = string.Join(", ", valores);
+
+                using (logger.BeginScope(new Dictionary<string, object> { ["Valores"] = valoresStr }))
+                {
+                    logger.LogError("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalCalculado}; Diferenca: {Diferenca}; Despesas Incluidas: {DespesasIncluidas}",
                     valorTotalCalculado, valorTotalArquivo, diferenca, despesasIncluidas);
+                }
             }
             else if (diferenca > 0)
             {
-                logger.LogWarning("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalDeputado}; Diferenca: {Diferenca}; Despesas Incluidas: {DespesasIncluidas}",
+                logger.LogWarning("Valor Divergente! Esperado: {ValorTotalArquivo}; Encontrado: {ValorTotalCalculado}; Diferenca: {Diferenca}; Despesas Incluidas: {DespesasIncluidas}",
                     valorTotalCalculado, valorTotalArquivo, diferenca, despesasIncluidas);
             }
+
+            lote++;
         }
     }
 

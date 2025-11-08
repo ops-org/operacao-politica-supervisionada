@@ -61,11 +61,12 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                 var colunas = despesa.QuerySelectorAll("td");
                 if (!colunas.Any()) continue;
 
-                var processo = colunas[0].QuerySelector("span").TextContent.Trim();
+                var elProcesso = colunas[0].QuerySelector("span") ?? colunas[0];
+                var processo = elProcesso.TextContent.Trim();
                 if (despesasReferencia.Contains(processo)) continue;
                 despesasReferencia.Add(processo);
 
-                var linkDetalhes = (colunas[0].Children[0] as IHtmlAnchorElement).Href;
+                string linkDetalhes = ((colunas[0].QuerySelector("a") ?? colunas[6].QuerySelector("a")) as IHtmlAnchorElement).Href;
                 var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
                     Ano = (short)ano,

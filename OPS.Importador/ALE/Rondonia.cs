@@ -163,6 +163,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
 
                     var despesaTemp = new CamaraEstadualDespesaTemp()
                     {
+                        Lote = lote,
                         Nome = gabinete.Text.Replace("DEPUTADO ", "").Replace("DEPUTADA ", "").ToTitleCase(),
                         Ano = (short)ano,
                         Mes = (short)mes,
@@ -532,7 +533,7 @@ public class ImportadorParlamentarRondonia : ImportadorParlamentarCrawler
 
     public override void ColetarDadosPerfil(DeputadoEstadual deputado, IDocument subDocument)
     {
-        var detalhes = subDocument.QuerySelectorAll(".col-span-4 p.text-gray-600");
+        var detalhes = subDocument.QuerySelectorAll(".col-span-4 p");
         deputado.NomeCivil = detalhes[0].TextContent.Trim().ToTitleCase();
         deputado.IdPartido = BuscarIdPartido(detalhes[1].TextContent.Trim());
 

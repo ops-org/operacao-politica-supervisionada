@@ -203,6 +203,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
                     !linhaTemp.StartsWith("VIR R") &&
                     !linhaTemp.StartsWith("VLR. R") &&
                     !linhaTemp.StartsWith("VIR. R") &&
+                    !linhaTemp.StartsWith("VUR. R") &&
                     !linhaTemp.StartsWith("VALOR")) continue;
 
                 totalValidado = false;
@@ -240,6 +241,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
                         {
                             CamaraEstadualDespesaTemp despesaTemp = new CamaraEstadualDespesaTemp()
                             {
+                                Lote = lote,
                                 Nome = nomeParlamentar,
                                 Ano = (short)competencia.Year,
                                 Mes = (short)competencia.Month,
@@ -306,7 +308,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
         {
             if (pdfReader.NumberOfPages != countValoresTotais)
             {
-                logger.LogWarning("Foi encontrado apenas {NumeroDeValoresTotais} em {NumeroPaginasPdf} páginas com valor total de {ValorTotal}", countValoresTotais, pdfReader.NumberOfPages, valorArquivoCalculado);
+                logger.LogWarning("Foram encontrados apenas {NumeroDeValoresTotais} em {NumeroPaginasPdf} páginas com valor total de {ValorTotal}", countValoresTotais, pdfReader.NumberOfPages, valorArquivoCalculado);
             }
         }
 
@@ -452,6 +454,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
                 case string x when x.Contains("locomocao do parlamentar", StringComparison.InvariantCultureIgnoreCase)
                     || x.StartsWith("Hospedagem", StringComparison.InvariantCultureIgnoreCase)
                     || x.Contains("passagens", StringComparison.InvariantCultureIgnoreCase)
+                    || x.Contains("passagem", StringComparison.InvariantCultureIgnoreCase)
                     || x.Contains("fretamento de aeronaves", StringComparison.InvariantCultureIgnoreCase)
                     || x.Contains("locacao do parlamentar e dos servidores lotados", StringComparison.InvariantCultureIgnoreCase) // Erro de OCR
                     || x.StartsWith("servicos de taxi, uber ou similares, pedagio ou estacionamento", StringComparison.InvariantCultureIgnoreCase):

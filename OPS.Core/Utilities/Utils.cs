@@ -326,6 +326,17 @@ namespace OPS.Core.Utilities
 
         public static string ForceWindows1252ToUtf8Encoding(this string text)
         {
+            //const int WindowsCodepage1252 = 1252;
+            //byte[] bytes = Encoding.GetEncoding(WindowsCodepage1252).GetBytes(text);
+            //return Encoding.Latin1.GetString(bytes);
+            byte[] bytes = Encoding.Default.GetBytes(text);
+            var utf8Text = Encoding.UTF8.GetString(bytes);
+
+            return utf8Text; // utf8Text.Replace(0x61, 'ã').Replace("á", "á").Replace("ç", "ç").Replace("ú", "ú");
+        }
+
+        public static string ForceWindows1252ToLatin1Encoding(this string text)
+        {
             const int WindowsCodepage1252 = 1252;
             byte[] bytes = Encoding.GetEncoding(WindowsCodepage1252).GetBytes(text);
             return Encoding.Latin1.GetString(bytes);

@@ -42,12 +42,12 @@ namespace OPS.Importador.ALE.Comum
                 }
                 else
                 {
-                    //if (!(importadorDespesas is ImportadorDespesasBahia || importadorDespesas is ImportadorDespesasCeara))
-                    //{
-                    //    ImportarDespesas(DateTime.Now.Year - 2);
-                    //    ImportarDespesasAnoAnterior();
-                    //}
-                    
+                    if (!(importadorDespesas is ImportadorDespesasBahia || importadorDespesas is ImportadorDespesasCeara))
+                    {
+                        ImportarDespesas(DateTime.Now.Year - 2);
+                        ImportarDespesasAnoAnterior();
+                    }
+
                     ImportarDespesasAnoAtual();
                 }
             }

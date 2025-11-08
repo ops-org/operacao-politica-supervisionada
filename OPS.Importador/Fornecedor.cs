@@ -416,7 +416,7 @@ SELECT MAX(DATA) as data FROM (
             }
         }
 
-        public bool validarCNPJ(string cnpj)
+        public static bool validarCNPJ(string cnpj)
         {
 
             int[] mt1 = new int[12] { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };

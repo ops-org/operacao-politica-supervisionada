@@ -904,10 +904,15 @@ namespace OPS.Importador
 
             foreach (var arquivo in arquivos)
             {
-                var _urlOrigem = arquivo.Key;
+                var urlOrigem = arquivo.Key;
                 var caminhoArquivo = arquivo.Value;
 
-                BaixarArquivo(_urlOrigem, caminhoArquivo);
+                var novoArquivoBaixado = BaixarArquivo(urlOrigem, caminhoArquivo);
+                if (importacaoIncremental && !novoArquivoBaixado)
+                {
+                    logger.LogInformation("Importação ignorada para arquivo previamente importado!");
+                    return;
+                }
 
                 try
                 {
@@ -943,17 +948,80 @@ namespace OPS.Importador
 
         protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
         {
-            if (importacaoIncremental && File.Exists(caminhoArquivo)) return false;
-            logger.LogDebug($"Baixando arquivo '{caminhoArquivo}' a partir de '{urlOrigem}'");
+            var caminhoArquivoDb = caminhoArquivo.Replace(tempPath, "");
+
+            if (importacaoIncremental && File.Exists(caminhoArquivo))
+            {
+                var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+                if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
+                {
+                    logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+                    return false;
+                }
+            }
+
+            logger.LogDebug("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
 
             string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
             if (!Directory.Exists(diretorio))
                 Directory.CreateDirectory(diretorio);
 
-            if (File.Exists(caminhoArquivo))
-                File.Delete(caminhoArquivo);
+            var fileExt = Path.GetExtension(caminhoArquivo);
+            var caminhoArquivoTmp = caminhoArquivo.Replace(fileExt, $"_tmp{fileExt}");
+            if (File.Exists(caminhoArquivoTmp))
+                File.Delete(caminhoArquivoTmp);
 
-            httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
+            //if (config.Estado != Estado.DistritoFederal)
+            //    httpClientResilient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
+            //else
+            httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
+
+            string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
+            var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
+            {
+                arquivoChecksum.Verificacao = DateTime.UtcNow;
+                connection.Update(arquivoChecksum);
+
+                logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
+
+                if (File.Exists(caminhoArquivoTmp))
+                    File.Delete(caminhoArquivoTmp);
+
+                return false;
+            }
+
+            if (arquivoChecksum == null)
+            {
+                logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
+
+                connection.Insert(new ArquivoChecksum()
+                {
+                    Nome = caminhoArquivoDb,
+                    Checksum = checksum,
+                    TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                    Criacao = DateTime.UtcNow,
+                    Atualizacao = DateTime.UtcNow,
+                    Verificacao = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                if (arquivoChecksum.Checksum != checksum)
+                {
+                    logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
+
+                    arquivoChecksum.Checksum = checksum;
+                    arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+
+                }
+
+                arquivoChecksum.Atualizacao = DateTime.UtcNow;
+                arquivoChecksum.Verificacao = DateTime.UtcNow;
+                connection.Update(arquivoChecksum);
+            }
+
+            File.Move(caminhoArquivoTmp, caminhoArquivo, true);
             return true;
         }
 
@@ -1432,8 +1500,8 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
             try
             {
-                var arquivoJaProcessado = BaixarArquivo(urlOrigem, caminhoArquivo);
-                if (importacaoIncremental && arquivoJaProcessado)
+                var novoArquivoBaixado = BaixarArquivo(urlOrigem, caminhoArquivo);
+                if (importacaoIncremental && !novoArquivoBaixado)
                 {
                     logger.LogInformation("Importação ignorada para arquivo previamente importado!");
                     return;

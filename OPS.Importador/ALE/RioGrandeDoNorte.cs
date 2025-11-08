@@ -175,7 +175,8 @@ public class ImportadorDespesasRioGrandeDoNorte : ImportadorDespesasRestApiMensa
                         linhaCompleta = "18/10/2023 FATURA 08.324.196/0001-81 - NEOENERGIA R$ 78,06";
                     else if (linhaCompleta == "27/11/2023 RECIBO - ASSOCIAÇÃO COMUNITÁRIA DE COMUNICAÇÃO E CULTURA DE SÃO JOSÉ DE MIPIBU/RN R$ 2.700,00")
                         linhaCompleta = "27/11/2023 RECIBO 02.895.731/0001-78 - ASSOCIAÇÃO COMUNITÁRIA DE COMUNICAÇÃO E CULTURA DE SÃO JOSÉ DE MIPIBU/RN R$ 2.700,00";
-                    //31/07/2009 - Telemar, Embratel, oi. R$ 2.570,95
+                    else if (linhaCompleta == "27/08/2025 005607 - POSTOS PINHEIRO BORGES MONTE CASTELO R$ 200,00")
+                        linhaCompleta = "27/08/2025 005607 53.930.207/0003-93 - POSTOS PINHEIRO BORGES MONTE CASTELO R$ 200,00";
 
                     var despesaTemp = new CamaraEstadualDespesaTemp()
                     {

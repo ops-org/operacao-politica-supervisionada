@@ -61,9 +61,10 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
         foreach (var item in meses)
         {
             var tipoAquivo = item.QuerySelector("img.wpdm_icon").Attributes["src"].Value;
-            if (!tipoAquivo.EndsWith("doc.svg")) continue;
+            if (!tipoAquivo.EndsWith("doc.svg") && !tipoAquivo.EndsWith("docx.svg")) continue;
 
             var urlPdf = item.QuerySelector("a.wpdm-download-link").Attributes["data-downloadurl"].Value;
+            if (urlPdf.Contains("-2/") && !tipoAquivo.EndsWith("docx.svg")) continue;
             var titulo = item.QuerySelector(".package-title a").TextContent.Replace("Dep.", "").Trim();
             if (titulo == "Renato de Souza Silva Junho - 2024")
                 titulo = "Renato de Souza Silva - Junho 2024";
@@ -72,6 +73,7 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
 
             var tituloPartes = titulo.Split(new[] { '-', '–' });
             var nomeParlamentar = tituloPartes[0].Trim();
+
             var mes = ResolveMes(tituloPartes[1].Trim());
 
             using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes, ["Parlamentar"] = nomeParlamentar, ["Arquivo"] = $"CLRR-{ano}-{mes}-{nomeParlamentar}.odt" }))
@@ -126,6 +128,7 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
                 {
                     logger.LogWarning("Parlamentar divergente! Esperado: '{ParlamentarEsperado}'; Recebido: '{ParlamentarRecebido}'", nomeCivilParlamentar, colunaParlametar.ToTitleCase());
                     nomeCivilParlamentar = colunaParlametar.ToTitleCase();
+                    
                 }
 
                 if (!string.IsNullOrEmpty(colunas[1].TextContent)) // CLRR-2023-1-Meton Melo Maciel.odt
@@ -186,10 +189,11 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
                     break;
             }
 
+            var nomeCivilParlamentarEncoded = nomeCivilParlamentar.ForceWindows1252ToLatin1Encoding();
             CamaraEstadualDespesaTemp despesaTemp = new CamaraEstadualDespesaTemp()
             {
-                Nome = nomeCivilParlamentar,
-                NomeCivil = nomeCivilParlamentar,
+                Nome = nomeCivilParlamentarEncoded,
+                NomeCivil = nomeCivilParlamentarEncoded,
                 Ano = (short)ano,
                 Mes = (short)mes,
                 DataEmissao = new DateTime(ano, mes, 1),
@@ -206,7 +210,7 @@ public class ImportadorDespesasRoraima : ImportadorDespesasRestApiAnual
 
         if (!totalValidado)
         {
-            logger.LogError("Valor Não Validado: {ValorTotalDeputado}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}; Arquivo: {UrlArquivo}",
+            logger.LogError("Valor Não Validado: {ValorTotalCalculado}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}; Arquivo: {UrlArquivo}",
                             valorTotalDeputado, mes, ano, nomeCivilParlamentar, urlPdf);
 
             //foreach (var linha in linhas)

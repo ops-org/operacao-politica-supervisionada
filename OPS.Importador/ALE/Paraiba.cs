@@ -137,7 +137,8 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
 
             };
 
-            if (!string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Data.GetHashCode())))
+            var dataEmissao = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Data.GetHashCode());
+            if (!string.IsNullOrEmpty(dataEmissao) && dataEmissao != "#######")
                 despesaTemp.DataEmissao = Convert.ToDateTime(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Data.GetHashCode()), cultureInfo);
             else
                 despesaTemp.DataEmissao = new DateTime(ano, mes, 1);

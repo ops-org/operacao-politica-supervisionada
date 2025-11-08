@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -27,11 +28,13 @@ using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
+using OPS.Importador.ALE;
 using OPS.Importador.ALE.Comum;
 using OPS.Importador.ALE.Despesa;
 using OPS.Importador.ALE.Parlamentar;
 using OPS.Importador.Utilities;
 using RestSharp;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace OPS.Importador;
 
@@ -1205,8 +1208,8 @@ WHERE presencas = 0");
             var _urlOrigem = arquivo.Key;
             var caminhoArquivo = arquivo.Value;
 
-            bool arquivoJaProcessado = BaixarArquivo(_urlOrigem, caminhoArquivo);
-            if (anoAtual != ano && importacaoIncremental && arquivoJaProcessado)
+            bool novoArquivoBaixado = BaixarArquivo(_urlOrigem, caminhoArquivo);
+            if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado)
             {
                 logger.LogInformation("Importação ignorada para arquivo previamente importado!");
                 return;
@@ -1262,20 +1265,82 @@ WHERE presencas = 0");
         return arquivos;
     }
 
-    private bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
+    protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
     {
-        if (importacaoIncremental && File.Exists(caminhoArquivo)) return false;
-        logger.LogDebug($"Baixando arquivo '{caminhoArquivo}' a partir de '{urlOrigem}'");
+        var caminhoArquivoDb = caminhoArquivo.Replace(tempPath, "");
+
+        if (importacaoIncremental && File.Exists(caminhoArquivo))
+        {
+            var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
+            {
+                logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
+                return false;
+            }
+        }
+
+        logger.LogDebug("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
 
         string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
         if (!Directory.Exists(diretorio))
             Directory.CreateDirectory(diretorio);
 
-        if (File.Exists(caminhoArquivo))
-            File.Delete(caminhoArquivo);
+        var fileExt = Path.GetExtension(caminhoArquivo);
+        var caminhoArquivoTmp = caminhoArquivo.Replace(fileExt, $"_tmp{fileExt}");
+        if (File.Exists(caminhoArquivoTmp))
+            File.Delete(caminhoArquivoTmp);
 
-        httpClient.DownloadFile(urlOrigem, caminhoArquivo).Wait();
+        //if (config.Estado != Estado.DistritoFederal)
+        //    httpClientResilient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
+        //else
+        httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
 
+        string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
+        var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+        if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
+        {
+            arquivoChecksum.Verificacao = DateTime.UtcNow;
+            connection.Update(arquivoChecksum);
+
+            logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
+
+            if (File.Exists(caminhoArquivoTmp))
+                File.Delete(caminhoArquivoTmp);
+
+            return false;
+        }
+
+        if (arquivoChecksum == null)
+        {
+            logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
+
+            connection.Insert(new ArquivoChecksum()
+            {
+                Nome = caminhoArquivoDb,
+                Checksum = checksum,
+                TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                Criacao = DateTime.UtcNow,
+                Atualizacao = DateTime.UtcNow,
+                Verificacao = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            if (arquivoChecksum.Checksum != checksum)
+            {
+                logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
+
+                arquivoChecksum.Checksum = checksum;
+                arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+
+            }
+
+            arquivoChecksum.Atualizacao = DateTime.UtcNow;
+            arquivoChecksum.Verificacao = DateTime.UtcNow;
+            connection.Update(arquivoChecksum);
+        }
+
+        File.Move(caminhoArquivoTmp, caminhoArquivo, true);
         return true;
     }
 
@@ -1402,6 +1467,112 @@ WHERE presencas = 0");
                     if (despesaTemp.DataEmissao == null)
                         despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes, 1);
 
+                    if (despesaTemp.CnpjCpf == "00000000000010")
+                    {
+                        if (despesaTemp.Fornecedor.Contains("ALOFT", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("ALOF", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "ALOFT MONTEVIDEO HOTEL";
+                        else if (despesaTemp.Fornecedor.Contains("ARCOS DOURADOS URUGUAY", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "ARCOS DOURADOS URUGUAY S.A.";
+                        else if (despesaTemp.Fornecedor.Contains("Canva", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "Canva Pty. Ltd.";
+                        else if (despesaTemp.Fornecedor.Contains("Cap Cut", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("CapCut", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "CapCut - Bytedance Pte. Ltd.";
+                        else if (despesaTemp.Fornecedor.Contains("Dropbox", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "Dropbox International Unlimited Company";
+                        else if (despesaTemp.Fornecedor.Contains("ELFOGON", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "EL FOGON";
+                        else if (despesaTemp.Fornecedor.Contains("Flickr", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "Flickr, Inc.";
+                        else if (despesaTemp.Fornecedor.Contains("HOTELES CONTEPORANEOS", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "HOTELES CONTEPORANEOS S.A.";
+                        else if (despesaTemp.Fornecedor.Contains("LAS LIEBRES", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "LAS LIEBRES RESTAURANTE";
+                        else if (despesaTemp.Fornecedor.Contains("La Cabrera", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "La Cabrera Shopping del Sol";
+                        else if (despesaTemp.Fornecedor.Contains("NOTION LABS", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "NOTION LABS, INC";
+                        else if (despesaTemp.Fornecedor.Contains("Onen AI", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor == "Open I" || despesaTemp.Fornecedor == "OpenAI")
+                            despesaTemp.Fornecedor = "OpenAI, LLC";
+                        else if (despesaTemp.Fornecedor.Contains("Streamyard", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "Streamyard, Inc.";
+                        else if (despesaTemp.Fornecedor.Contains("Ese Lugar", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "Restaurant Ese Lugar de Gastronomia Casera S.A";
+                        else if (despesaTemp.Fornecedor.Contains("MONDAY", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.Fornecedor = "#MONDAY.COM";
+
+                        if (despesaTemp.Fornecedor.Contains("A&T Turismo", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "36187060000102"; // A&T Turismo Ltda.
+                        else if (despesaTemp.Fornecedor.Contains("Gol linhas a", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "07575651000159";
+                        else if (despesaTemp.Fornecedor.Contains("Latam", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "33937681000178";
+                        else if (despesaTemp.Fornecedor.Contains("Orleans viagens e Turismo", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "21331404000138";
+                        else if (despesaTemp.Fornecedor.Contains("TAM linhas a", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor == "TAM")
+                            despesaTemp.CnpjCpf = "02012862000160";
+                        else if (despesaTemp.Fornecedor.Contains("TAP AIR PORTUGAL", StringComparison.InvariantCultureIgnoreCase) ||
+                            despesaTemp.Fornecedor.Contains("TAP PORTUGAL", StringComparison.InvariantCultureIgnoreCase) ||
+                            despesaTemp.Fornecedor.Contains("Transportes Aéreos Portugueses", StringComparison.InvariantCultureIgnoreCase) ||
+                            despesaTemp.Fornecedor == "TAP")
+
+                            despesaTemp.CnpjCpf = "33136896000190";
+                        else if (despesaTemp.Fornecedor.Contains("Booking", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "10625931000139";
+                        else if (despesaTemp.Fornecedor.Contains("Ally Viagens Tour LTDA", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "52410850000161";
+                        else if (despesaTemp.Fornecedor.Contains("Google", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "06947284000104";
+                        else if (despesaTemp.Fornecedor.Contains("Zoom", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "14913293000102";
+                        else if (despesaTemp.Fornecedor.Contains("Uber", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "17895646000187";
+                        else if (despesaTemp.Fornecedor.Contains("Adobe", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("Adfobe", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "02999520000185";
+                        else if (despesaTemp.Fornecedor.Contains("Twitter", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor == "X Premium")
+                            despesaTemp.CnpjCpf = "16954565000148";
+                        else if (despesaTemp.Fornecedor.Contains("AUTO POSTO CINCO ESTRELAS LTDA", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "03667416000156";
+                        else if (despesaTemp.Fornecedor.Contains("EMIRATES", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "07892051000114";
+                        else if (despesaTemp.Fornecedor.Contains("MIX TRAVEL", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "07394234000100";
+                        else if (despesaTemp.Fornecedor.Contains("AUTO POSTO SAMAMBAIA LTDA", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "50313275000153";
+                        else if (despesaTemp.Fornecedor.Contains("CASCOL", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "00306597000105";
+                        else if (despesaTemp.Fornecedor.Contains("BARAO TURISMOS EIRELI - ME", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "21448278000104";
+                        else if (despesaTemp.Fornecedor.Contains("QATAR AIRWAYS", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "08734301000150";
+                        else if (despesaTemp.Fornecedor.Contains("AMERICAN AIR LINES", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("AMERICAN AIRLINES", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "36212637000199";
+                        else if (despesaTemp.Fornecedor.Contains("AUTO POSTO ITAMOGI", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "01342267000120";
+                        else if (despesaTemp.Fornecedor.Contains("AR VIAGENS E TURISMO", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "17046688000143";
+                        else if (despesaTemp.Fornecedor.Contains("AEROLINEAS ARGENTINAS", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "33605239000144";
+                        else if (despesaTemp.Fornecedor.Contains("HOTEL VIALE CATARATAS", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "07960611000120";
+                        else if (despesaTemp.Fornecedor.Contains("AZUL Linhas", StringComparison.InvariantCultureIgnoreCase))
+                            despesaTemp.CnpjCpf = "09296295000160";
+
+                        else
+                        {
+                            logger.LogWarning("Empresa '{NomeEmpresa}' sem CPNJ.", despesaTemp.Fornecedor);
+                            despesaTemp.CnpjCpf = null;
+                        }
+                    }
+                    else if (despesaTemp.CnpjCpf.StartsWith("000000000"))
+                    {
+                        if (despesaTemp.CnpjCpf != "00000000000001" && despesaTemp.CnpjCpf != "00000000000002" /*Linha Direta*/ && despesaTemp.CnpjCpf != "00000000000006")
+                            logger.LogWarning("Validar CPNJ '{CnpjCpf} - {NomeEmpresa}'.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
+                    }
+                    else if (despesaTemp.CnpjCpf.Length == 14 && !Fornecedor.validarCNPJ(despesaTemp.CnpjCpf))
+                    {
+                        logger.LogWarning("CPNJ '{CnpjCpf} - {NomeEmpresa}' Invalido.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
+                    }
+
                     // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
                     // Para armazenamento na base de dados a hash é gerado com o valor, para que mudanças no total provoquem uma atualização.
                     var options = new JsonSerializerOptions
@@ -1440,7 +1611,10 @@ WHERE presencas = 0");
         }
 
 
-        if (ano == DateTime.Now.Year && lstHash.Count > 0)
+        logger.LogWarning("Importados {Items} registros com valor de {ValorTotal}", itensProcessadosAno, valorTotalProcessadoAno);
+
+
+        if (ano == DateTime.Now.Year && (itensProcessadosAno > 0 || lstHash.Count > 0))
         {
             InsereDespesaLegislatura();
 
@@ -1847,7 +2021,7 @@ LEFT JOIN cf_deputado d on d.id_deputado = dt.numeroDeputadoID
 LEFT JOIN pessoa p on p.nome = dt.passageiro
 LEFT JOIN trecho_viagem tv on tv.descricao = dt.trecho
 LEFT join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
-	or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome = dt.fornecedor)
+	or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome like dt.fornecedor)
 left join cf_mandato m on m.id_cf_deputado = d.id
 	and m.id_legislatura = dt.codigoLegislatura 
 	and m.id_carteira_parlamantar = numeroCarteiraParlamentar;
@@ -1869,7 +2043,8 @@ SET SQL_BIG_SELECTS=0;
         if (!Legislaturas.Any())
         {
             Legislaturas = new List<int>() { legislaturaAtual - 2, legislaturaAtual - 1, legislaturaAtual };
-        };
+        }
+        ;
 
         foreach (var legislatura in Legislaturas)
         {
@@ -2010,8 +2185,8 @@ where id=@id_cf_deputado", new
 
         try
         {
-            bool arquivoJaProcessado = BaixarArquivo(urlOrigem, caminhoArquivo);
-            if (arquivoJaProcessado) return;
+            bool novoArquivoBaixado = BaixarArquivo(urlOrigem, caminhoArquivo);
+            if (!novoArquivoBaixado) return;
 
             CarregaRemuneracaoCsv(caminhoArquivo, Convert.ToInt32(ano.ToString() + mes.ToString("00")));
         }
@@ -2469,7 +2644,8 @@ WHERE cd.processado = 0
         {
             logger.LogError("{StatusCode}: {Url}", document.StatusCode, document.Url);
             return;
-        };
+        }
+        ;
 
         var deputado = document.QuerySelector(".titulo-internal").TextContent;
         var anoColeta = document.QuerySelector(".subtitulo-internal").TextContent;
@@ -3105,8 +3281,10 @@ values (@chave, @nome, @categoria_funcional, @area_atuacao, @situacao{1})
                         {
                             Console.WriteLine(document.StatusCode);
                             break;
-                        };
-                    };
+                        }
+                        ;
+                    }
+                    ;
 
                     var linhas = document.QuerySelectorAll(".l-busca__secao--resultados table.tabela-responsiva tbody tr");
                     foreach (var linha in linhas)

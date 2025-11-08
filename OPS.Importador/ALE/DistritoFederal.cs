@@ -560,9 +560,9 @@ public class ImportadorParlamentarDistritoFederal : ImportadorParlamentarCrawler
 
         //var gabinete = detalhes[3].TextContent.Trim();
 
-        var rodape = subDocument.QuerySelectorAll(".journal-content-article a b");
+        var rodape = subDocument.QuerySelectorAll(".journal-content-article .shortcut a b");
         if (rodape.Length == 0)
-            rodape = subDocument.QuerySelectorAll(".journal-content-article a h5");
+            rodape = subDocument.QuerySelectorAll(".journal-content-article .shortcut a h5");
 
         deputado.Telefone = rodape[0].TextContent.Trim();
         deputado.Email = rodape[1].TextContent.Trim();
