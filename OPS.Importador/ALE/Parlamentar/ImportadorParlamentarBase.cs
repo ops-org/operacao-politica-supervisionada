@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using RestSharp;
+using Serilog;
 
 namespace OPS.Importador.ALE.Parlamentar
 {
@@ -63,6 +64,7 @@ namespace OPS.Importador.ALE.Parlamentar
             else if (partido.Contains("PROGRESSISTA") || partido == "Partido Progressista") partido = "PP"; // Progressistas
             else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
             else if (partido.Contains("PARTIDO VERDE")) partido = "PV";
+            else if (partido.Contains("PMN")) partido = "MOBILIZA";
             else if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido)) partido = "S.PART.";
 
             var IdPartido = connection.GetList<Partido>(new { Sigla = partido }).FirstOrDefault()?.Id;
@@ -70,7 +72,11 @@ namespace OPS.Importador.ALE.Parlamentar
             {
                 IdPartido = connection.GetList<Partido>(new { Nome = partido }).FirstOrDefault()?.Id;
                 if (IdPartido == null)
-                    throw new Exception($"Partido '{partido}' Inexistenete");
+                {
+                    Log.Error("Partido '{Partido}' Inexistenete", partido);
+                    //throw new Exception($"Partido '{partido}' Inexistenete");
+                    return 0; //  S.PART.
+                }
             }
 
             return IdPartido.Value;
@@ -162,7 +168,7 @@ namespace OPS.Importador.ALE.Parlamentar
             {
                 if (deputado.Id == 0)
                 {
-                    connection.Insert(deputado);
+                    deputado.Id = (uint)connection.Insert(deputado);
                     registrosInseridos++;
 
                     connection.Insert(new DeputadoEstadualDepara()
@@ -211,6 +217,28 @@ namespace OPS.Importador.ALE.Parlamentar
             var response = client.Get(request);
             return JsonSerializer.Deserialize<T>(response.Content, options);
 
+        }
+
+        public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
+        {
+            var importacao = connection.GetList<Importacao>(new { nome = config.Estado.ToString() }).FirstOrDefault();
+            if (importacao == null)
+            {
+                importacao = new Importacao()
+                {
+                    Nome = config.Estado.ToString()
+                };
+                importacao.Id = (ushort)connection.Insert(importacao);
+            }
+
+            if (pInicio != null)
+            {
+                importacao.ParlamentarInicio = pInicio.Value;
+                importacao.ParlamentarFim = null;
+            }
+            if (pFim != null) importacao.ParlamentarFim = pFim.Value;
+
+            connection.Update(importacao);
         }
     }
 

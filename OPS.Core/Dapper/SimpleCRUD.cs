@@ -16,6 +16,8 @@ namespace Dapper
     /// </summary>
     public static partial class SimpleCRUD
     {
+        private static System.Threading.Lock _lock = new();
+
         static SimpleCRUD()
         {
             SetDialect(/*_dialect*/);
@@ -215,7 +217,8 @@ namespace Dapper
             if (Debugger.IsAttached)
                 Trace.WriteLine(String.Format("GetList<{0}>: {1}", currenttype, sb));
 
-            return connection.Query<T>(sb.ToString(), whereConditions, transaction, true, commandTimeout);
+            lock (_lock)
+                return connection.Query<T>(sb.ToString(), whereConditions, transaction, true, commandTimeout);
         }
 
         /// <summary>
@@ -475,7 +478,9 @@ namespace Dapper
                 if (Debugger.IsAttached)
                     Trace.WriteLine(String.Format("Update: {0}", sb));
             });
-            return connection.Execute(masterSb.ToString(), entityToUpdate, transaction, commandTimeout);
+
+            lock (_lock)
+                return connection.Execute(masterSb.ToString(), entityToUpdate, transaction, commandTimeout);
         }
 
         /// <summary>

@@ -24,16 +24,19 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build OPS.API/OPS.API.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: |
+          dotnet publish OPS.API/OPS.API.csproj -c Release -o ops-api
+          rm -r ops-api/runtimes
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: ops-api
+          path: ops-api/**
+          if-no-files-found: error
 
   deploy:
     runs-on: ubuntu-latest

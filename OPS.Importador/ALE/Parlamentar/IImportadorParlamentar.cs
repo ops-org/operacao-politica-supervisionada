@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace OPS.Importador.ALE.Parlamentar
 {
@@ -7,5 +8,7 @@ namespace OPS.Importador.ALE.Parlamentar
         public Task Importar();
 
         public Task DownloadFotos();
+
+        public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null);
     }
 }

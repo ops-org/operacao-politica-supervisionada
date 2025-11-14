@@ -283,7 +283,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
                     if (string.IsNullOrEmpty(row[idxSaldo].GetText()))
                     {
                         var cnpj = row[idxCnpj].GetText();
-                        if (!string.IsNullOrEmpty(row[idxValor].GetText()) || cnpj.Contains("13.716.765/0001-74344,12") || row[idxCnpj - 1].GetText().Contains("00.306.597/0088-58380,00"))
+                        if (!string.IsNullOrEmpty(row[idxValor].GetText()) || cnpj.Length > 18)
                         {
                             // Caso onde não há nome do fornecedor, os indices recuam
                             // Mapear o nome da empresa para uma coluna vazia (saldo)
@@ -301,33 +301,19 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
 
                             };
 
-                            if (cnpj == "16.846.429/0001-34100,00")
+                            if(cnpj.Length > 18)
                             {
-                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("16.846.429/0001-341");
-                                despesaTemp.Valor = 100;
-                            }
-                            else if (cnpj == "02.862.352/0002-62100,00")
-                            {
-                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("02.862.352/0002-621");
-                                despesaTemp.Valor = 100;
-                            }
-                            else if (row[idxCnpj - 1].GetText().Contains("00.306.597/0088-58380,00"))
-                            {
-                                despesaTemp.Empresa = "Cascol Combustíveis para Veículos Ltda";
-                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("000.306.597/0088-58");
-                                despesaTemp.Valor = 380;
-                            }
-                            else if (cnpj.Contains("13.716.765/0001-74344,12"))
-                            {
-                                despesaTemp.Empresa = "Petroshop Comércio de Combustíveis Ltda";
-                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("13.716.765/0001-74");
-                                despesaTemp.Valor = 344.12M;
-                            }
-                            else if (cnpj.Contains("49.725.713/0001-012.500,00"))
-                            {
-                                despesaTemp.Empresa = "49.725.713 Maria Bianca Gomes da Silva";
-                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("49.725.713/0001-01");
-                                despesaTemp.Valor = 2500;
+                                var cpfCnpj = cnpj.Substring(0, 18);
+                                var valor = cnpj.Substring(18);
+                                if (!cpfCnpj.Contains("/")) // é CPF?
+                                {
+                                    cpfCnpj = cnpj.Substring(0, 14);
+                                    valor = cnpj.Substring(14);
+                                }
+
+                                despesaTemp.Empresa = row[idxEmitente].GetText();
+                                despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos(cpfCnpj);
+                                despesaTemp.Valor = Convert.ToDecimal(valor, cultureInfo);
                             }
                             else
                             {
@@ -512,6 +498,7 @@ public class ImportadorDespesasTocantins : ImportadorDespesasRestApiMensal
             case "0107/2025": data = "01/07/2025"; break;
             case "21/047/2025": data = "21/07/2025"; break;
             case "15/0//2025": data = "15/08/2025"; break;
+            case "404/10/2025": data = "04/10/2025"; break;
         }
 
         try

@@ -538,6 +538,28 @@ namespace OPS.Importador
             }
         }
 
+        public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
+        {
+            var importacao = connection.GetList<Importacao>(new { nome = "Senado" }).FirstOrDefault();
+            if (importacao == null)
+            {
+                importacao = new Importacao()
+                {
+                    Nome = "Senado"
+                };
+                importacao.Id = (ushort)connection.Insert(importacao);
+            }
+
+            if (pInicio != null)
+            {
+                importacao.ParlamentarInicio = pInicio.Value;
+                importacao.ParlamentarFim = null;
+            }
+            if (pFim != null) importacao.ParlamentarFim = pFim.Value;
+
+            connection.Update(importacao);
+        }
+
     }
 
     /// <summary>
@@ -1705,6 +1727,28 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
             connection.Execute(@"
 				truncate table ops_tmp.sf_remuneracao_temp;
 			");
+        }
+
+        public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
+        {
+            var importacao = connection.GetList<Importacao>(new { nome = "Senado" }).FirstOrDefault();
+            if (importacao == null)
+            {
+                importacao = new Importacao()
+                {
+                    Nome = "Senado"
+                };
+                importacao.Id = (ushort)connection.Insert(importacao);
+            }
+
+            if (dInicio != null)
+            {
+                importacao.DespesasInicio = dInicio.Value;
+                importacao.DespesasFim = null;
+            }
+            if (dFim != null) importacao.DespesasFim = dFim.Value;
+
+            connection.Update(importacao);
         }
     }
 }

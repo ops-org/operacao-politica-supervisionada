@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AngleSharp;
 using OPS.Importador.Utilities;
 
@@ -16,19 +18,24 @@ namespace OPS.Importador.ALE.Despesa
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
                 CarregarHashes(ano);
-
                 var context = httpClientResilient.CreateAngleSharpContext();
 
-                for (int mes = 1; mes <= 12; mes++)
+                ParallelOptions parallelOptions = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = 3
+                };
+
+                var meses = Enumerable.Range(1, 12);
+                Parallel.ForEach(meses, parallelOptions, mes =>
                 {
                     //if (ano == 2019 && mes == 1) continue;
-                    if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) break;
+                    if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) return;
 
                     using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes }))
                     {
                         ImportarDespesas(context, ano, mes);
                     }
-                }
+                });
 
                 ProcessarDespesas(ano);
             }

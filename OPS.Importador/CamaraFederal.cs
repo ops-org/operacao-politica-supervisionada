@@ -449,6 +449,28 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
             }
         }
     }
+
+    public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
+    {
+        var importacao = connection.GetList<Importacao>(new { nome = "Camara Federal" }).FirstOrDefault();
+        if (importacao == null)
+        {
+            importacao = new Importacao()
+            {
+                Nome = "Camara Federal"
+            };
+            importacao.Id = (ushort)connection.Insert(importacao);
+        }
+
+        if (pInicio != null)
+        {
+            importacao.ParlamentarInicio = pInicio.Value;
+            importacao.ParlamentarFim = null;
+        }
+        if (pFim != null) importacao.ParlamentarFim = pFim.Value;
+
+        connection.Update(importacao);
+    }
 }
 
 public class ImportadorDespesasCamaraFederal : IImportadorDespesas
@@ -3399,6 +3421,28 @@ WHERE ct.id IS NULL");
     }
 
     #endregion Importação Remuneração
+
+    public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
+    {
+        var importacao = connection.GetList<Importacao>(new { nome = "Camara Federal" }).FirstOrDefault();
+        if (importacao == null)
+        {
+            importacao = new Importacao()
+            {
+                Nome = "Camara Federal"
+            };
+            importacao.Id = (ushort)connection.Insert(importacao);
+        }
+
+        if (dInicio != null)
+        {
+            importacao.DespesasInicio = dInicio.Value;
+            importacao.DespesasFim = null;
+        }
+        if (dFim != null) importacao.DespesasFim = dFim.Value;
+
+        connection.Update(importacao);
+    }
 }
 
 

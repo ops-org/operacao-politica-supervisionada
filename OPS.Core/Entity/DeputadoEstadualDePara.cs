@@ -6,7 +6,7 @@ namespace OPS.Core.Entity
     [Table("cl_deputado_de_para", Schema = "ops_tmp")]
     public class DeputadoEstadualDepara
     {
-        [Key]
+        [Key, Required]
         [Column("id")]
         public uint Id { get; set; }
 

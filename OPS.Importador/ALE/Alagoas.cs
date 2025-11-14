@@ -99,7 +99,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
         //ImportarEmpenhosParaComparacao(context, ano);
     }
 
-    async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf, string nomeParlamentar, DateTime competencia)
+    public async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf, string nomeParlamentar, DateTime competencia)
     {
         var fileName = $"{tempPath}/CLAL-{ano}-{mes}-{nomeParlamentar}.pdf";
         BaixarArquivo(urlPdf, fileName);
@@ -388,7 +388,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
                 //          Contratação de empresa especializada para produção, exibição, disseminação conteúdo em mídia online e off-line para divulgação da atividade parlamentar vedadas o uso em campanha ou propaganda eleitoral.
 
                 // 10 (9)
-                case string x when x.Contains("alimentacao d", StringComparison.InvariantCultureIgnoreCase) 
+                case string x when x.Contains("alimentacao d", StringComparison.InvariantCultureIgnoreCase)
                     || x.Contains("mantimentos", StringComparison.InvariantCultureIgnoreCase):
                     return "Alimentação do parlamentar e dos servidores lotados no seu gabinete, mesmo na Capital do Estado, quando a necessidade do apoio à atividade parlamentar ou o próprio exercício desta atividade parlamentar assim exigir";
 
@@ -499,6 +499,7 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
         "outubro" => 10,
         "novembro" => 11,
         "dezembro" => 12,
+        "dudu ronalsa" => 9, // Invalid name: https://www.al.al.leg.br/transparencia/orcamento-e-financas/viap-verba-indenizatoria-de-atividade-parlamentar/2025/dudu-ronalsa
         _ => throw new ArgumentOutOfRangeException(nameof(mes), $"Mês invalido: {mes}"),
     };
 

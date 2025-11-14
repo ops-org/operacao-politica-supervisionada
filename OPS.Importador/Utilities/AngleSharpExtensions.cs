@@ -41,7 +41,10 @@ public static class AngleSharpExtensions
             if (doc.StatusCode == HttpStatusCode.OK)
             {
                 var html = doc.DocumentElement.OuterHtml;
-                if (!doc.Url.Contains("error") && !string.IsNullOrEmpty(html) && html != "<html><head></head><body></body></html>") // Validate empty response and page error redirect
+                if (!doc.Url.Contains("error") &&
+                    !string.IsNullOrEmpty(html) &&
+                    html != "<html><head></head><body></body></html>" &&
+                    !html.StartsWith("<html><head></head><body>")) // Validate empty response and page error redirect
                     return doc;
             }
 

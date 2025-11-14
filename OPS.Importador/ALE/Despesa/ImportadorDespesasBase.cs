@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
+using ICSharpCode.SharpZipLib.Checksum;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,8 @@ namespace OPS.Importador.ALE.Despesa
     public abstract class ImportadorDespesasBase
     {
         public ImportadorCotaParlamentarBaseConfig config { get; set; }
+
+        public ArquivoChecksum arquivoChecksum { get; set; }
 
         public ILogger<ImportadorDespesasBase> logger { get; set; }
 
@@ -206,6 +209,7 @@ namespace OPS.Importador.ALE.Despesa
         protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
         {
             var caminhoArquivoDb = caminhoArquivo.Replace(_tempPath, "");
+            arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
 
             if (importacaoIncremental && File.Exists(caminhoArquivo))
             {
@@ -234,7 +238,6 @@ namespace OPS.Importador.ALE.Despesa
                 httpClientDefault.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
 
             string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-            var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
             if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
             {
                 arquivoChecksum.Verificacao = DateTime.UtcNow;
@@ -252,7 +255,7 @@ namespace OPS.Importador.ALE.Despesa
             {
                 logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
 
-                connection.Insert(new ArquivoChecksum()
+                arquivoChecksum = new ArquivoChecksum()
                 {
                     Nome = caminhoArquivoDb,
                     Checksum = checksum,
@@ -260,7 +263,8 @@ namespace OPS.Importador.ALE.Despesa
                     Criacao = DateTime.UtcNow,
                     Atualizacao = DateTime.UtcNow,
                     Verificacao = DateTime.UtcNow
-                });
+                };
+                arquivoChecksum.Id = (uint)connection.Insert(arquivoChecksum);
             }
             else
             {
@@ -270,7 +274,7 @@ namespace OPS.Importador.ALE.Despesa
 
                     arquivoChecksum.Checksum = checksum;
                     arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
-
+                    arquivoChecksum.Revisado = false;
                 }
 
                 arquivoChecksum.Atualizacao = DateTime.UtcNow;
@@ -914,9 +918,16 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         {
             var diferenca = Math.Abs(valorTotalArquivo - valorTotalCalculado);
 
+            if (arquivoChecksum != null)
+            {
+                arquivoChecksum.ValorTotal = valorTotalArquivo;
+                arquivoChecksum.Divergencia = valorTotalArquivo - valorTotalCalculado;
+                connection.Update(arquivoChecksum);
+            }
+
             if (diferenca > 100)
             {
-                var valores = despesasTemp.Where(x=> x.Lote == lote).Select(x=> x.Valor.ToString("F2"));
+                var valores = despesasTemp.Where(x => x.Lote == lote).Select(x => x.Valor.ToString("F2")).ToList();
                 var valoresStr = string.Join(", ", valores);
 
                 using (logger.BeginScope(new Dictionary<string, object> { ["Valores"] = valoresStr }))
@@ -932,6 +943,28 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             }
 
             lote++;
+        }
+
+        public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
+        {
+            var importacao = connection.GetList<Importacao>(new { nome = config.Estado.ToString() }).FirstOrDefault();
+            if (importacao == null)
+            {
+                importacao = new Importacao()
+                {
+                    Nome = config.Estado.ToString()
+                };
+                importacao.Id = (ushort)connection.Insert(importacao);
+            }
+
+            if (dInicio != null)
+            {
+                importacao.DespesasInicio = dInicio.Value;
+                importacao.DespesasFim = null;
+            }
+            if (dFim != null) importacao.DespesasFim = dFim.Value;
+
+            connection.Update(importacao);
         }
     }
 

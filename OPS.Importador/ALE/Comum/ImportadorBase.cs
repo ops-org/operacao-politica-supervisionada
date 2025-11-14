@@ -28,28 +28,40 @@ namespace OPS.Importador.ALE.Comum
 
         public virtual void ImportarCompleto()
         {
-            if (importadorParlamentar != null)
-            {
-                ImportarPerfilParlamentar();
-                ImportarImagemParlamentar();
-            }
+            //if (importadorParlamentar != null)
+            //{
+            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
+            //    ImportarPerfilParlamentar();
+            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
+
+            //    ImportarImagemParlamentar();
+            //}
 
             if (importadorDespesas != null)
             {
-                if (importadorDespesas is ImportadorDespesasRioDeJaneiro || importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasMinasGerais)
+                importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
+                if (importadorDespesas is ImportadorDespesasMinasGerais
+                    || importadorDespesas is ImportadorDespesasPiaui 
+                    || importadorDespesas is ImportadorDespesasRioDeJaneiro)
                 {
+                    // Dados por mandato
                     ImportarDespesas(2023); // TODO: Primeiro ano do mandato
                 }
                 else
                 {
-                    if (!(importadorDespesas is ImportadorDespesasBahia || importadorDespesas is ImportadorDespesasCeara))
+                    //if (!(importadorDespesas is ImportadorDespesasAmazonas
+                    //    || importadorDespesas is ImportadorDespesasBahia 
+                    //    || importadorDespesas is ImportadorDespesasCeara 
+                    //    || importadorDespesas is ImportadorDespesasMaranhao
+                    //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
                     {
                         ImportarDespesas(DateTime.Now.Year - 2);
                         ImportarDespesasAnoAnterior();
                     }
 
-                    ImportarDespesasAnoAtual();
+                    //ImportarDespesasAnoAtual();
                 }
+                importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
             }
 
             ImportarRemuneracao();

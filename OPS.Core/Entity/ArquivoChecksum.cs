@@ -27,5 +27,17 @@ namespace OPS.Core.Entity
 
         [Column("verificacao")]
         public DateTime Verificacao { get; set; }
+
+        [Column("valor_total")]
+        public decimal ValorTotal { get; set; }
+
+        [Column("divergencia")]
+        public decimal Divergencia { get; set; }
+
+        /// <summary>
+        /// Arquivo revisado manualmente?
+        /// </summary>
+        [Column("revisado")]
+        public bool Revisado { get; set; } = false;
     }
 }

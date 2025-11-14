@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using MySqlConnector.Logging;
+using OfficeOpenXml;
 using OPS.Core;
 using OPS.Core.Repository;
 using OPS.Core.Utilities;
@@ -30,8 +31,13 @@ namespace OPS.Importador
 {
     internal class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
+            ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
+
+            SqlMapper.AddTypeHandler(typeof(DateTime), new MySqlConnectorDateTimeHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTime?), new MySqlConnectorDateTimeHandler());
+
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             Serilog.Debugging.SelfLog.Enable(Console.Error);
 
@@ -214,37 +220,42 @@ SELECT id, nome_civil, id_estado FROM ops.cl_deputado
 WHERE nome_civil IS NOT NULL;");
                 }
 
+
+                //var url = "https://www.al.al.leg.br/transparencia/orcamento-e-financas/viap-verba-indenizatoria-de-atividade-parlamentar/2025/francisco-tenorio/agosto/at_download/file";
+                //var alagoas = new ImportadorDespesasAlagoas(serviceProvider);
+                //await alagoas.ImportarDespesasArquivo(2025, 8, url, "Francisco Tenorio", new DateTime(2025, 8, 1));
+
                 var types = new Type[]
                 {
-                    //typeof(Senado), // csv
-                    //typeof(CamaraFederal), // csv
-                    //typeof(Acre), // Portal sem dados detalhados por parlamentar!
+                    typeof(Senado), // csv
+                    typeof(CamaraFederal), // csv
+                    typeof(Acre), // Portal sem dados detalhados por parlamentar!
                     typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    ////typeof(Amapa), // crawler mensal/deputado (Apenas BR) <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
-                    //typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
-                    ////typeof(Bahia), // crawler anual <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
-                    //typeof(Ceara), // csv mensal
-                    //typeof(DistritoFederal), // xlsx  (Apenas BR)
-                    //typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                    //typeof(Goias), // crawler mensal/deputado
-                    //typeof(Maranhao), // Valores mensais por categoria
-                    ////typeof(MatoGrosso),
-                    //typeof(MatoGrossoDoSul), // crawler anual
-                    //typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
-                    //typeof(Para), // json api anual
-                    //typeof(Paraiba), // arquivo ods mensal/deputado
-                    ////typeof(Parana), // json api mensal/deputado <-------- capcha
-                    //typeof(Pernambuco), // json api mensal/deputado
-                    //typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual)
-                    //typeof(RioDeJaneiro), // json api mensal/deputado
-                    //typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
-                    //typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
-                    //typeof(Rondonia), // crawler mensal/deputado
-                    //typeof(Roraima), // crawler & odt mensal/deputado
-                    //typeof(SantaCatarina), // csv anual
-                    //typeof(SaoPaulo), // xml anual
-                    //typeof(Sergipe), // crawler & pdf mensal/deputado
-                    //typeof(Tocantins), // crawler & pdf mensal/deputado
+                    //typeof(Amapa), // crawler mensal/deputado (Apenas BR) <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
+                    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Bahia), // crawler anual <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
+                    typeof(Ceara), // csv mensal
+                    typeof(DistritoFederal), // xlsx  (Apenas BR)
+                    typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    typeof(Goias), // crawler mensal/deputado
+                    typeof(Maranhao), // Valores mensais por categoria
+                    typeof(MatoGrosso),
+                    typeof(MatoGrossoDoSul), // crawler anual
+                    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
+                    typeof(Para), // json api anual
+                    typeof(Paraiba), // arquivo ods mensal/deputado
+                    //typeof(Parana), // json api mensal/deputado <-------- capcha
+                    typeof(Pernambuco), // json api mensal/deputado
+                    typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual)
+                    typeof(RioDeJaneiro), // json api mensal/deputado
+                    typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                    typeof(Rondonia), // crawler mensal/deputado
+                    typeof(Roraima), // crawler & odt mensal/deputado
+                    typeof(SantaCatarina), // csv anual
+                    typeof(SaoPaulo), // xml anual
+                    typeof(Sergipe), // crawler & pdf mensal/deputado
+                    typeof(Tocantins), // crawler & pdf mensal/deputado
                 };
 
                 var tasks = new List<Task>();
