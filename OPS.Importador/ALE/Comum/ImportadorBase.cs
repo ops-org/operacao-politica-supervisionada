@@ -50,16 +50,16 @@ namespace OPS.Importador.ALE.Comum
                 else
                 {
                     //if (!(importadorDespesas is ImportadorDespesasAmazonas
-                    //    || importadorDespesas is ImportadorDespesasBahia 
-                    //    || importadorDespesas is ImportadorDespesasCeara 
+                    //    || importadorDespesas is ImportadorDespesasBahia
+                    //    || importadorDespesas is ImportadorDespesasCeara
                     //    || importadorDespesas is ImportadorDespesasMaranhao
                     //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
-                    {
-                        ImportarDespesas(DateTime.Now.Year - 2);
-                        ImportarDespesasAnoAnterior();
-                    }
+                    //{
+                    //    ImportarDespesas(DateTime.Now.Year - 2);
+                    //    ImportarDespesasAnoAnterior();
+                    //}
 
-                    //ImportarDespesasAnoAtual();
+                    ImportarDespesasAnoAtual();
                 }
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
             }

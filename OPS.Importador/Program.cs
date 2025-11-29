@@ -229,19 +229,19 @@ WHERE nome_civil IS NOT NULL;");
                 {
                     typeof(Senado), // csv
                     typeof(CamaraFederal), // csv
-                    typeof(Acre), // Portal sem dados detalhados por parlamentar!
+                    //typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> SEM DADOS
                     typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
                     //typeof(Amapa), // crawler mensal/deputado (Apenas BR) <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
-                    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Amazonas), // crawler mensal/deputado (Apenas BR) <<<<<< ------------------------------------------------------------------ >>>>>>> FORA (fim de semana?)
                     //typeof(Bahia), // crawler anual <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
                     typeof(Ceara), // csv mensal
                     typeof(DistritoFederal), // xlsx  (Apenas BR)
                     typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
                     typeof(Goias), // crawler mensal/deputado
                     typeof(Maranhao), // Valores mensais por categoria
-                    typeof(MatoGrosso),
+                    typeof(MatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> APENAS TOTAL MENSAL
                     typeof(MatoGrossoDoSul), // crawler anual
-                    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR)
+                    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR) 
                     typeof(Para), // json api anual
                     typeof(Paraiba), // arquivo ods mensal/deputado
                     //typeof(Parana), // json api mensal/deputado <-------- capcha

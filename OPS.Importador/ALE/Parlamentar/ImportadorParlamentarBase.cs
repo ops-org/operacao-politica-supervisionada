@@ -171,7 +171,7 @@ namespace OPS.Importador.ALE.Parlamentar
                     deputado.Id = (uint)connection.Insert(deputado);
                     registrosInseridos++;
 
-                    connection.Insert(new DeputadoEstadualDepara()
+                    connection.Insert<uint?, DeputadoEstadualDepara>(new DeputadoEstadualDepara()
                     {
                         Id = deputado.Id,
                         Nome = deputado.NomeParlamentar,
