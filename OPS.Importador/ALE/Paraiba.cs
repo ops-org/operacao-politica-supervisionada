@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Web;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -64,9 +65,16 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             var linkPlanilha = (subDocument.QuerySelector("#content ul.lista-v a") as IHtmlAnchorElement).Href;
             var caminhoArquivo = $"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.ods";
 
+            // Parse the URL and get the query string
+            Uri uri = new Uri(linkPlanilha);
+            var queryParams = HttpUtility.ParseQueryString(uri.Query);
+
+            // Get the 'src' parameter (which is URL encoded)
+            string linkPlanilhaLimpa = queryParams["src"];
+
             using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilha, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
             {
-                BaixarArquivo(linkPlanilha, caminhoArquivo);
+                BaixarArquivo(linkPlanilhaLimpa, caminhoArquivo);
 
                 try
                 {

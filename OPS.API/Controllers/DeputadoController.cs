@@ -211,5 +211,12 @@ namespace OPS.API.Controllers
         {
             return await dao.Remuneracao(id);
         }
+
+        [HttpGet]
+        [Route("{id:int}/CustoAnual")]
+        public async Task<dynamic> CustoAnual(int id)
+        {
+            return await dao.CustoAnual(id);
+        }
     }
 }

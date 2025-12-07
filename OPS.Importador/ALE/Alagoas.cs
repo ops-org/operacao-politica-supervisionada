@@ -408,11 +408,10 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
                 // Materiais para ornamentação de escritório para gabinete.
 
                 // 7
-                case string x when x.Contains("atividade parlamentar", StringComparison.InvariantCultureIgnoreCase)
+                case string x when x.Contains("atividade parlamentar", StringComparison.InvariantCultureIgnoreCase) || x.Contains("atividade parlementar", StringComparison.InvariantCultureIgnoreCase)
                     || (x.Contains("publicacao", StringComparison.InvariantCultureIgnoreCase) && x.Contains("periodicos", StringComparison.InvariantCultureIgnoreCase))
                     || x.Contains("disciplinadas pela legislacao eleitoral", StringComparison.InvariantCultureIgnoreCase):
                     return "Divulgação da atividade parlamentar em todas as modalidades de mídia, observando-se as restrições disciplinadas pela legislação eleitoral";
-                //          Serviço especializado em publicação, periódicos
 
                 // [6]
                 case string x when x.Contains("servicos juridicos", StringComparison.InvariantCultureIgnoreCase)
@@ -478,6 +477,9 @@ public class ImportadorDespesasAlagoas : ImportadorDespesasRestApiAnual
                     return "Locação de imóveis, máquinas, equipamentos e utensílios utilizados exclusivamente em escritório de apoio ao exercício da atividade parlamentar, inclusive taxas condominiais, Imposto Predial e Territorial Urbano - IPTU, Taxas de Corpo de Bombeiros, consumo de água e energia elétrica e outras despesas de manutenção e conservação dos referidos bens móveis ou imóveis";
                     //          Locação de imóveis, ou mesmo contratação de espaço compartilhado de trabalho, na modalidade coworking, incluindo os serviços indispensáveis ao funcionamento da unidade, locação de máquinas, equipamentos e utensilios utilizados exclusivamente em escritório de apoio ao exercício da atividade parlamentar, inclusive taxas condominiais, Imposto Predial e Territorial Urbano - IPTU, Taxas de Corpo de Bombeiros, seguro contra incêndio, consumo de água, despesa com esgoto e energia elétrica e outras despesas de manutenção e conservação dos referidos bens móveis ou imóveis
                     //          Manutenção gabinete (serviço de pintura- material e mão de obra)
+
+                case string x when x.Contains("outras despesas", StringComparison.InvariantCultureIgnoreCase):
+                    return "Indenizações e Restituições";
             }
         }
 

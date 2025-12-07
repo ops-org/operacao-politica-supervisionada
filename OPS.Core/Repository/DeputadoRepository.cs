@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MySqlConnector;
@@ -38,6 +39,7 @@ namespace OPS.Core.Repository
 						, g.telefone
 						, d.email
 						, d.profissao
+						, d.escolaridade
 						, d.nascimento
 						, d.falecimento
                         , en.sigla as sigla_estado_nascimento
@@ -45,7 +47,10 @@ namespace OPS.Core.Repository
 						, d.valor_total_ceap
 						, d.secretarios_ativos
 						, d.valor_mensal_secretarios
-						, d.valor_total_remuneracao
+						, d.valor_total_remuneracao						
+                        , d.valor_total_salario
+						, d.valor_total_auxilio_moradia
+                        , d.valor_total_ceap + d.valor_total_remuneracao + valor_total_salario + valor_total_auxilio_moradia as valor_total
 					FROM cf_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado -- eleito
@@ -80,6 +85,7 @@ namespace OPS.Core.Repository
                             telefone = reader["telefone"].ToString(),
                             email = reader["email"].ToString(),
                             profissao = reader["profissao"].ToString(),
+                            escolaridade = reader["escolaridade"].ToString(),
                             nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
                             falecimento = Utils.FormataData(reader["falecimento"]),
                             sigla_estado_nascimento = reader["sigla_estado_nascimento"].ToString(),
@@ -87,7 +93,10 @@ namespace OPS.Core.Repository
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
                             secretarios_ativos = reader["secretarios_ativos"].ToString(),
                             valor_mensal_secretarios = Utils.FormataValor(reader["valor_mensal_secretarios"]),
-                            valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"])
+                            valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
+                            valor_total_salario = Utils.FormataValor(reader["valor_total_salario"]),
+                            valor_total_auxilio_moradia = Utils.FormataValor(reader["valor_total_auxilio_moradia"]),
+                            valor_total = Utils.FormataValor(reader["valor_total"])
                         };
                     }
 
@@ -464,6 +473,128 @@ namespace OPS.Core.Repository
             }
         }
 
+        public async Task<List<DeputadoCustoAnualDTO>> CustoAnual(int id)
+        {
+            var result = new List<DeputadoCustoAnualDTO>();
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = @"
+					SELECT d.ano, SUM(d.valor_liquido) AS valor_total
+					FROM cf_despesa d
+					WHERE d.id_cf_deputado = @id
+					group by d.ano
+				";
+                banco.AddParameter("@id", id);
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var dto = new DeputadoCustoAnualDTO
+                        {
+                            ano = Convert.ToInt32(reader["ano"]),
+                            cota_parlamentar = Convert.ToDecimal(reader["valor_total"])
+                        };
+                        result.Add(dto);
+                    }
+                }
+
+                strSql = @"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					FROM cf_deputado_verba_gabinete d
+					WHERE d.id_cf_deputado = @id
+					group by d.ano
+				";
+                banco.AddParameter("@id", id);
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var dto = result.FirstOrDefault(x => x.ano == ano);
+
+                        if (dto != null)
+                        {
+                            dto.verba_gabinete = Convert.ToDecimal(reader["valor_total"]);
+                        }
+                        else
+                        {
+                            dto = new DeputadoCustoAnualDTO
+                            {
+                                ano = ano,
+                                verba_gabinete = Convert.ToDecimal(reader["valor_total"])
+                            };
+                            result.Add(dto);
+                        }
+                    }
+                }
+
+                strSql = @"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					FROM cf_deputado_remuneracao d
+					WHERE d.id_cf_deputado = @id
+					group by d.ano
+				";
+                banco.AddParameter("@id", id);
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var dto = result.FirstOrDefault(x => x.ano == ano);
+
+                        if (dto != null)
+                        {
+                            dto.salario_patronal = Convert.ToDecimal(reader["valor_total"]);
+                        }
+                        else
+                        {
+                            dto = new DeputadoCustoAnualDTO
+                            {
+                                ano = ano,
+                                salario_patronal = Convert.ToDecimal(reader["valor_total"])
+                            };
+                            result.Add(dto);
+                        }
+                    }
+                }
+
+                strSql = @"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					FROM cf_deputado_auxilio_moradia d
+					WHERE d.id_cf_deputado = @id
+					group by d.ano
+				";
+                banco.AddParameter("@id", id);
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var dto = result.FirstOrDefault(x => x.ano == ano);
+
+                        if (dto != null)
+                        {
+                            dto.auxilio_moradia = Convert.ToDecimal(reader["valor_total"]);
+                        }
+                        else
+                        {
+                            dto = new DeputadoCustoAnualDTO
+                            {
+                                ano = ano,
+                                auxilio_moradia = Convert.ToDecimal(reader["valor_total"])
+                            };
+                            result.Add(dto);
+                        }
+                    }
+                }
+            }
+            return result.OrderBy(x => x.ano).ToList();
+        }
+
         public async Task<dynamic> GastosComPessoalPorAno(int id)
         {
             using (AppDb banco = new AppDb())
@@ -623,15 +754,17 @@ namespace OPS.Core.Repository
             }
         }
 
-        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro = null)
+        public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro = null)
         {
             using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT DISTINCT
-						d.id, d.nome_civil, d.nome_parlamentar 
+						d.id, d.nome_civil, d.nome_parlamentar, p.sigla as sigla_partido, e.sigla as sigla_estado 
 					FROM cf_deputado d
+                    LEFT JOIN partido p on p.id = d.id_partido
+                    LEFT JOIN estado e on e.id = d.id_estado
 				");
 
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
@@ -647,14 +780,12 @@ namespace OPS.Core.Repository
                     }
 
                     if (filtro.Periodo > 50)
-                    {
                         strSql.AppendLine($" AND (d.id < 100 OR m.id_legislatura = {filtro.Periodo.ToString()})");
-                    }
 
-                    strSql.AppendLine(@"
-                        ORDER BY d.nome_parlamentar
-                        limit 30
-				    ");
+                    strSql.AppendLine(@" ORDER BY d.nome_parlamentar");
+
+                    if (filtro.Periodo == 0)
+                        strSql.AppendLine(@" limit 30");
                 }
                 else
                 {
@@ -672,16 +803,17 @@ namespace OPS.Core.Repository
 				    ");
                 }
 
-                var lstRetorno = new List<dynamic>();
+                var lstRetorno = new List<DropDownDTO>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
-                        lstRetorno.Add(new
+                        lstRetorno.Add(new DropDownDTO
                         {
-                            id = reader["id"].ToString(),
-                            tokens = new[] { reader["nome_civil"].ToString(), reader["nome_parlamentar"].ToString() },
-                            text = reader["nome_parlamentar"].ToString()
+                            id = uint.Parse(reader["id"].ToString()),
+                            tokens = new[] { reader["nome_civil"].ToString() },
+                            text = reader["nome_parlamentar"].ToString(),
+                            helpText = $"{reader["sigla_partido"]} / {reader["sigla_estado"]}"
                         });
                     }
                 }
