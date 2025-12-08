@@ -8,7 +8,8 @@ namespace OPS.Core.Repository
     {
         /// <summary>
         /// Retorna resumo (8 Itens) dos parlamentares mais e menos gastadores
-        /// 4 Deputados MAIS gastadores (CEAP)
+        /// 4 Deputados Federais MAIS gastadores (CEAP)
+        /// 4 Deputados Estaduais MAIS gastadores (CEAP)
         /// 4 Senadores MAIS gastadores (CEAPS)
         /// </summary>
         /// <returns></returns>
@@ -25,20 +26,39 @@ namespace OPS.Core.Repository
                 );
 
                 strSql.Append(@"
+					SELECT id_cl_deputado, nome_parlamentar, valor_total, sigla_partido, sigla_estado
+					FROM cl_deputado_campeao_gasto
+					order by valor_total desc; "
+                );
+
+                strSql.Append(@"
 					SELECT id_sf_senador, nome_parlamentar, valor_total, sigla_partido, sigla_estado
 					FROM sf_senador_campeao_gasto
 					order by valor_total desc; "
                 );
 
-                var lstDeputados = new List<dynamic>();
+                var lstDeputadosFederais = new List<dynamic>();
+                var lstDeputadosEstaduais = new List<dynamic>();
                 var lstSenadores = new List<dynamic>();
                 using (var reader = banco.ExecuteReader(strSql.ToString()))
                 {
                     while (reader.Read())
                     {
-                        lstDeputados.Add(new
+                        lstDeputadosFederais.Add(new
                         {
                             id_cf_deputado = reader["id_cf_deputado"],
+                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
+                            valor_total = "R$ " + Utils.FormataValor(reader["valor_total"]),
+                            sigla_partido_estado = string.Format("{0} / {1}", reader["sigla_partido"], reader["sigla_estado"])
+                        });
+                    }
+
+                    reader.NextResult();
+                    while (reader.Read())
+                    {
+                        lstDeputadosEstaduais.Add(new
+                        {
+                            id_cl_deputado = reader["id_cl_deputado"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             valor_total = "R$ " + Utils.FormataValor(reader["valor_total"]),
                             sigla_partido_estado = string.Format("{0} / {1}", reader["sigla_partido"], reader["sigla_estado"])
@@ -59,8 +79,9 @@ namespace OPS.Core.Repository
 
                     return new
                     {
-                        camara_federal = lstDeputados,
-                        senado = lstSenadores
+                        senado = lstSenadores,
+                        camara_federal = lstDeputadosFederais,
+                        camara_estadual = lstDeputadosEstaduais
                     };
                 }
             }

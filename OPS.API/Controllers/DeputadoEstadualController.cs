@@ -68,5 +68,19 @@ namespace OPS.API.Controllers
         {
             return await dao.GastosPorAno(id);
         }
+
+        [HttpGet]
+        [Route("ResumoMensal")]
+        public async Task<dynamic> ResumoMensal()
+        {
+            return await dao.ResumoMensal();
+        }
+
+        [HttpGet]
+        [Route("ResumoAnual")]
+        public async Task<dynamic> ResumoAnual()
+        {
+            return await dao.ResumoAnual();
+        }
     }
 }

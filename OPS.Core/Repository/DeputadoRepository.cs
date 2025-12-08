@@ -306,6 +306,7 @@ namespace OPS.Core.Repository
 					SELECT
 						l.id as id_cf_despesa
 						, pj.id as id_fornecedor
+                        , pj.cnpj_cpf
 						, pj.nome as nome_fornecedor
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
@@ -326,19 +327,22 @@ namespace OPS.Core.Repository
 
                 var lstRetorno = new List<dynamic>();
 
-                DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString());
-                while (await reader.ReadAsync())
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    lstRetorno.Add(new
+                    while (await reader.ReadAsync())
                     {
-                        id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                        id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
-                        nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
-                        sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
-                        valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
-                    });
+                        lstRetorno.Add(new
+                        {
+                            id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+                            id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+                            cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
+                            nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
+                            sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(4),
+                            valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(5))
+                        });
+                    }
                 }
-                reader.Close();
+
                 return lstRetorno;
             }
         }
@@ -353,6 +357,7 @@ namespace OPS.Core.Repository
 					SELECT
 						l.id as id_cf_despesa
 						, pj.id as id_fornecedor
+                        , pj.cnpj_cpf
 						, pj.nome as nome_fornecedor
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
@@ -376,19 +381,22 @@ namespace OPS.Core.Repository
 
                 var lstRetorno = new List<dynamic>();
 
-                DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString());
-                while (await reader.ReadAsync())
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
-                    lstRetorno.Add(new
+                    while (await reader.ReadAsync())
                     {
-                        id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                        id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
-                        nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
-                        sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
-                        valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
-                    });
+                        lstRetorno.Add(new
+                        {
+                            id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+                            id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+                            cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
+                            nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
+                            sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(4),
+                            valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(5))
+                        });
+                    }
                 }
-                reader.Close();
+
                 return lstRetorno;
             }
         }

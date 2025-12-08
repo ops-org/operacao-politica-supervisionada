@@ -86,7 +86,7 @@ namespace OPS.Core.Repository
                             telefone = reader["telefone1"].ToString(),
                             telefone2 = reader["telefone2"].ToString(),
                             ente_federativo_responsavel = reader["ente_federativo_responsavel"].ToString(),
-                            obtido_em = Utils.FormataDataHora(reader["obtido_em"]),
+                            obtido_em = Utils.FormataData(reader["obtido_em"]),
                             capital_social = Utils.FormataValor(reader["capital_social"]),
                             doador = reader["doador"],
                             atividade_secundaria = new List<string>()
@@ -202,6 +202,7 @@ SELECT
     tmp.nome_parlamentar, 
     pr.sigla as sigla_partido, 
     e.sigla as sigla_estado, 
+    tmp.ultima_emissao,
     tmp.valor_total
 FROM (
 	SELECT
@@ -210,9 +211,11 @@ FROM (
 		, p.id_partido
 		, p.id_estado
 		, 'Deputado Federal' as tipo
+        , l1.ultima_emissao
 		, l1.valor_total
 	FROM (
 		select 
+            MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor_liquido) AS valor_total
 			, l.id_cf_deputado
 		from cf_despesa l
@@ -232,9 +235,11 @@ FROM (
 		, p.id_partido
 		, p.id_estado
 		, 'Deputado Estadual' as tipo
+        , l1.ultima_emissao
 		, l1.valor_total
 	FROM (
 		select 
+            MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor_liquido) AS valor_total
 			, l.id_cl_deputado
 		from cl_despesa l
@@ -253,9 +258,11 @@ FROM (
 		, p.id_partido
 		, p.id_estado
 		, 'Senador' as tipo
+        , l1.ultima_emissao
 		, l1.valor_total
 	FROM (
 		select 
+            MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor) AS valor_total
 			, l.id_sf_senador
 		from sf_despesa l
@@ -317,6 +324,7 @@ LIMIT 10 ");
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             sigla_partido = reader["sigla_partido"].ToString(),
                             sigla_estado = reader["sigla_estado"].ToString(),
+                            ultima_emissao = Utils.FormataData(reader["ultima_emissao"]),
                             valor_total = Utils.FormataValor(reader["valor_total"]),
                             link_parlamentar,
                             link_despesas

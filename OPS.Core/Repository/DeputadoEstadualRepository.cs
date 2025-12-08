@@ -446,6 +446,89 @@ namespace OPS.Core.Repository
             }
         }
 
+        public async Task<dynamic> ResumoMensal()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(@"select ano, mes, valor from cl_despesa_resumo_mensal"))
+                {
+                    List<dynamic> lstRetorno = new List<dynamic>();
+                    var lstValoresMensais = new decimal?[12];
+                    string anoControle = string.Empty;
+                    bool existeGastoNoAno = false;
+
+                    while (await reader.ReadAsync())
+                    {
+                        if (reader["ano"].ToString() != anoControle)
+                        {
+                            if (existeGastoNoAno)
+                            {
+                                lstRetorno.Add(new
+                                {
+                                    name = anoControle.ToString(),
+                                    data = lstValoresMensais
+                                });
+
+                                lstValoresMensais = new decimal?[12];
+                                existeGastoNoAno = false;
+                            }
+
+                            anoControle = reader["ano"].ToString();
+                        }
+
+                        if (Convert.ToDecimal(reader["valor"]) > 0)
+                        {
+                            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor"]);
+                            existeGastoNoAno = true;
+                        }
+                    }
+
+                    if (existeGastoNoAno)
+                    {
+                        lstRetorno.Add(new
+                        {
+                            name = anoControle.ToString(),
+                            data = lstValoresMensais
+                        });
+                    }
+
+                    return lstRetorno;
+                }
+            }
+        }
+
+        public async Task<dynamic> ResumoAnual()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+                strSql.AppendLine(@"
+					select ano, sum(valor) as valor
+					from cl_despesa_resumo_mensal
+					group by ano
+				");
+
+                var categories = new List<dynamic>();
+                var series = new List<dynamic>();
+
+                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                {
+                    while (await reader.ReadAsync())
+                    {
+
+                        categories.Add(Convert.ToInt32(reader["ano"]));
+                        series.Add(Convert.ToDecimal(reader["valor"]));
+                    }
+                }
+
+                return new
+                {
+                    categories,
+                    series
+                };
+            }
+        }
+
         public async Task<dynamic> Lista(FiltroParlamentarDTO request)
         {
             using (AppDb banco = new AppDb())
