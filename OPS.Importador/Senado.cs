@@ -295,6 +295,12 @@ namespace OPS.Importador
                             }
                         }
                     }
+                    else
+                    {
+                        banco.AddParameter("id", identificacaoParlamentar.CodigoParlamentar);
+                        banco.AddParameter("ativo", lstSenadorAtivo.Contains(identificacaoParlamentar.CodigoParlamentar) ? "S" : "N");
+                        banco.ExecuteNonQuery(@"UPDATE sf_senador SET ativo = @ativo WHERE id = @id");
+                    }
 
                     request = new RestRequest(urlApiSenador + idSenador.ToString() + "/historicoAcademico?v=1");
                     request.AddHeader("Accept", "application/json");
@@ -1746,7 +1752,21 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
                 importacao.DespesasInicio = dInicio.Value;
                 importacao.DespesasFim = null;
             }
-            if (dFim != null) importacao.DespesasFim = dFim.Value;
+
+            if (dFim != null)
+            {
+                importacao.DespesasFim = dFim.Value;
+
+                var sql = "select min(data_emissao) as primeira_despesa, max(data_emissao) as ultima_despesa from sf_despesa";
+                using (var dReader = connection.ExecuteReader(sql))
+                {
+                    if (dReader.Read())
+                    {
+                        importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["primeira_despesa"]) : (DateTime?)null;
+                        importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["ultima_despesa"]) : (DateTime?)null;
+                    }
+                }
+            }
 
             connection.Update(importacao);
         }

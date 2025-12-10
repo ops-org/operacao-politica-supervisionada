@@ -93,7 +93,7 @@ public class ImportadorDespesasBahia : ImportadorDespesasRestApiAnual
                             despesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
                             despesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
 
-                            if (colunasDetalhes[5].HasChildNodes)
+                            if (colunasDetalhes[5].Children.Any())
                                 despesaTemp.Observacao = (colunasDetalhes[5].Children[0] as IHtmlAnchorElement).Href;
                         }
                     }

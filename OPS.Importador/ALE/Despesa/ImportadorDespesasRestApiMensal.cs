@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp;
+using Microsoft.Extensions.Logging;
 using OPS.Importador.Utilities;
 
 namespace OPS.Importador.ALE.Despesa
@@ -33,7 +34,15 @@ namespace OPS.Importador.ALE.Despesa
 
                     using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes }))
                     {
-                        ImportarDespesas(context, ano, mes);
+                        try
+                        {
+                            ImportarDespesas(context, ano, mes);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, ex.Message);
+                        }
+                        
                     }
                 });
 

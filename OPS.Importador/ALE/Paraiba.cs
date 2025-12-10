@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Web;
@@ -12,6 +13,7 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enumerator;
@@ -63,7 +65,6 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             var subDocument = form.SubmitAsyncAutoRetry(dcForm, true).GetAwaiter().GetResult();
 
             var linkPlanilha = (subDocument.QuerySelector("#content ul.lista-v a") as IHtmlAnchorElement).Href;
-            var caminhoArquivo = $"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.ods";
 
             // Parse the URL and get the query string
             Uri uri = new Uri(linkPlanilha);
@@ -72,31 +73,47 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             // Get the 'src' parameter (which is URL encoded)
             string linkPlanilhaLimpa = queryParams["src"];
 
-            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilha, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
+            var extensao = Path.GetExtension(linkPlanilhaLimpa).ToLower();
+            var caminhoArquivo = $"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}{extensao}";
+
+            if (System.IO.File.Exists($"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.{extensao}"))
+                System.IO.File.Delete($"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.{extensao}");
+
+            using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilhaLimpa, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
             {
                 BaixarArquivo(linkPlanilhaLimpa, caminhoArquivo);
 
                 try
                 {
-                    ImportarDespesas(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
+                    if (extensao == ".ods")
+                        ImportarDespesasOds(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
+                    else if (extensao == ".xlsx")
+                    {
+                        if (System.IO.File.Exists($"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.odt"))
+                            System.IO.File.Delete($"{tempPath}/CLPB-{ano}-{mes}-{gabinete.Value}.odt");
+
+                        ImportarDespesasXlsx(caminhoArquivo, ano, mes, gabinete.Value, gabinete.Text);
+                    }
+                    else
+                        throw new BusinessException($"Extensão de arquivo não suportada: {extensao}");
                 }
                 catch (Exception ex)
                 {
 
                     logger.LogError(ex, ex.Message);
 
-#if !DEBUG
+                    //#if !DEBUG
                     //Excluir o arquivo para tentar importar novamente na proxima execução
-                    if(System.IO.File.Exists(caminhoArquivo))
+                    if (System.IO.File.Exists(caminhoArquivo))
                         System.IO.File.Delete(caminhoArquivo);
-#endif
+                    //#endif
 
                 }
             }
         }
     }
 
-    public void ImportarDespesas(string file, int ano, int mes, string gabinete, string nomeParlamentar)
+    public void ImportarDespesasOds(string file, int ano, int mes, string gabinete, string nomeParlamentar)
     {
 
         //Prima di tutto ci serve una istanza 
@@ -155,8 +172,60 @@ public class ImportadorDespesasParaiba : ImportadorDespesasRestApiMensal
             valorTotalDeputado += despesaTemp.Valor;
             despesasIncluidas++;
         }
+    }
 
+    public void ImportarDespesasXlsx(string file, int ano, int mes, string gabinete, string nomeParlamentar)
+    {
+        decimal valorTotalDeputado = 0;
+        int despesasIncluidas = 0;
 
+        using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
+        using (var package = new ExcelPackage(reader.BaseStream))
+        {
+            ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
+            for (int linha = 7; linha <= worksheet.Dimension.End.Row; linha++)
+            {
+                if (linha > 1000) //string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Competencia.GetHashCode())))
+                {
+                    logger.LogError("Valor Não validado: {ValorTotal}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}", valorTotalDeputado, mes, ano, nomeParlamentar);
+                    return;
+                }
+                if (worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString()?.StartsWith("Total de Despesas") ?? false)
+                {
+                    var valorTotalArquivo = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo);
+                    ValidaValorTotal(valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
+
+                    return;
+                }
+                if (string.IsNullOrEmpty(worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString())) continue;
+
+                var despesaTemp = new CamaraEstadualDespesaTemp()
+                {
+                    Nome = nomeParlamentar,
+                    Cpf = gabinete,
+                    Ano = (short)ano,
+                    Mes = (short)mes,
+                    TipoVerba = worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString(),
+                    TipoDespesa = worksheet.Cells[linha, ColunasOds.SubItem.GetHashCode()].Value?.ToString(),
+                    CnpjCpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[linha, ColunasOds.CnpjCpf.GetHashCode()].Value?.ToString()),
+                    Empresa = worksheet.Cells[linha, ColunasOds.Fornecedor.GetHashCode()].Value?.ToString(),
+                    Documento = worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString(),
+                    Observacao = worksheet.Cells[linha, ColunasOds.Documento.GetHashCode()].Value?.ToString(),
+                    Valor = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo),
+
+                };
+
+                var dataEmissao = worksheet.Cells[linha, ColunasOds.Data.GetHashCode()].Value?.ToString();
+                if (!string.IsNullOrEmpty(dataEmissao) && dataEmissao != "#######")
+                    despesaTemp.DataEmissao = Convert.ToDateTime(dataEmissao, cultureInfo);
+                else
+                    despesaTemp.DataEmissao = new DateTime(ano, mes, 1);
+
+                InserirDespesaTemp(despesaTemp);
+                valorTotalDeputado += despesaTemp.Valor;
+                despesasIncluidas++;
+            }
+        }
     }
 
     public override void AjustarDados()
@@ -269,7 +338,8 @@ public class ImportadorParlamentarParaiba : ImportadorParlamentarRestApi
         if (document.StatusCode != HttpStatusCode.OK)
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
-        };
+        }
+        ;
 
         var perfil = document.QuerySelector("#content");
 

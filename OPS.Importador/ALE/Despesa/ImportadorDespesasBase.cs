@@ -200,9 +200,9 @@ namespace OPS.Importador.ALE.Despesa
 
         public virtual void AtualizaParlamentarValores() { }
 
-        public virtual void AtualizaCampeoesGastos() { }
+        //public virtual void AtualizaCampeoesGastos() { }
 
-        public virtual void AtualizaResumoMensal() { }
+        //public virtual void AtualizaResumoMensal() { }
 
         public virtual Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano) { return null; }
 
@@ -238,48 +238,58 @@ namespace OPS.Importador.ALE.Despesa
                 httpClientDefault.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
 
             string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-            if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
+
+            Monitor.Enter(_monitorObj);
+            try
             {
-                arquivoChecksum.Verificacao = DateTime.UtcNow;
-                connection.Update(arquivoChecksum);
-
-                logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
-
-                if (File.Exists(caminhoArquivoTmp))
-                    File.Delete(caminhoArquivoTmp);
-
-                return false;
-            }
-
-            if (arquivoChecksum == null)
-            {
-                logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
-
-                arquivoChecksum = new ArquivoChecksum()
+                if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
                 {
-                    Nome = caminhoArquivoDb,
-                    Checksum = checksum,
-                    TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
-                    Criacao = DateTime.UtcNow,
-                    Atualizacao = DateTime.UtcNow,
-                    Verificacao = DateTime.UtcNow
-                };
-                arquivoChecksum.Id = (uint)connection.Insert(arquivoChecksum);
-            }
-            else
-            {
-                if (arquivoChecksum.Checksum != checksum)
-                {
-                    logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
+                    arquivoChecksum.Verificacao = DateTime.UtcNow;
+                    connection.Update(arquivoChecksum);
 
-                    arquivoChecksum.Checksum = checksum;
-                    arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
-                    arquivoChecksum.Revisado = false;
+                    logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
+
+                    if (File.Exists(caminhoArquivoTmp))
+                        File.Delete(caminhoArquivoTmp);
+
+                    return false;
                 }
 
-                arquivoChecksum.Atualizacao = DateTime.UtcNow;
-                arquivoChecksum.Verificacao = DateTime.UtcNow;
-                connection.Update(arquivoChecksum);
+                if (arquivoChecksum == null)
+                {
+                    logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
+
+                    arquivoChecksum = new ArquivoChecksum()
+                    {
+                        Nome = caminhoArquivoDb,
+                        Checksum = checksum,
+                        TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                        Criacao = DateTime.UtcNow,
+                        Atualizacao = DateTime.UtcNow,
+                        Verificacao = DateTime.UtcNow
+                    };
+                    arquivoChecksum.Id = (uint)connection.Insert(arquivoChecksum);
+                }
+                else
+                {
+                    if (arquivoChecksum.Checksum != checksum)
+                    {
+                        logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
+
+                        arquivoChecksum.Checksum = checksum;
+                        arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+                        arquivoChecksum.Revisado = false;
+                    }
+
+                    arquivoChecksum.Atualizacao = DateTime.UtcNow;
+                    arquivoChecksum.Verificacao = DateTime.UtcNow;
+                    connection.Update(arquivoChecksum);
+                }
+            }
+            finally
+            {
+
+                Monitor.Exit(_monitorObj);
             }
 
             File.Move(caminhoArquivoTmp, caminhoArquivo, true);
@@ -880,7 +890,17 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             var request = new RestRequest(address);
             request.AddHeader("Accept", "application/json");
 
-            return await client.GetAsync<T>(request);
+            try
+            {
+                return await client.GetAsync<T>(request);
+            }
+            catch (TimeoutException)
+            {
+                logger.LogWarning("Timeout ao acessar '{Address}'. Aguardando 1 minuto para nova tentativa.", address);
+                await Task.Delay(TimeSpan.FromMinutes(1));
+
+                return await client.GetAsync<T>(request);
+            }
         }
 
         public async Task<T> RestApiPostAsync<T>(string address, Dictionary<string, string> parameters)
@@ -962,9 +982,69 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
                 importacao.DespesasInicio = dInicio.Value;
                 importacao.DespesasFim = null;
             }
-            if (dFim != null) importacao.DespesasFim = dFim.Value;
+
+            if (dFim != null)
+            {
+                importacao.DespesasFim = dFim.Value;
+
+                var sql = @"
+select 
+    min(d.data_emissao) as primeira_despesa, 
+    max(d.data_emissao) as ultima_despesa 
+from cl_despesa d
+join cl_deputado p ON p.id = d.id_cl_deputado
+where p.id_estado = @idEstado";
+                using (var dReader = connection.ExecuteReader(sql, new { idEstado }))
+                {
+                    if (dReader.Read())
+                    {
+                        importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["primeira_despesa"]) : (DateTime?)null;
+                        importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["ultima_despesa"]) : (DateTime?)null;
+                    }
+                }
+            }
 
             connection.Update(importacao);
+        }
+
+        /// <summary>
+        /// Atualiza indicador 'Campeões de gastos',
+        /// Os 4 deputados que mais gastaram com a CEAP desde o ínicio do mandato 55 (02/2015)
+        /// </summary>
+        public void AtualizaCampeoesGastos()
+        {
+            var strSql =
+                @"truncate table cl_deputado_campeao_gasto;
+    				insert into cl_deputado_campeao_gasto
+    				SELECT l1.id_cl_deputado, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
+    				FROM (
+    					SELECT 
+    						l.id_cl_deputado,
+    						sum(l.valor_liquido) as valor_total
+    					FROM  cl_despesa l
+    					GROUP BY l.id_cl_deputado
+    					order by valor_total desc 
+    					limit 4
+    				) l1 
+    				INNER JOIN cl_deputado d on d.id = l1.id_cl_deputado 
+    				LEFT JOIN partido p on p.id = d.id_partido
+    				LEFT JOIN estado e on e.id = d.id_estado;";
+
+            connection.Execute(strSql);
+        }
+
+        public void AtualizaResumoMensal()
+        {
+            var strSql =
+                @"truncate table cl_despesa_resumo_mensal;
+    				insert into cl_despesa_resumo_mensal
+    				(ano, mes, valor) (
+    					select ano, mes, sum(valor_liquido)
+    					from cl_despesa
+    					group by ano, mes
+    				);";
+
+            connection.Execute(strSql);
         }
     }
 

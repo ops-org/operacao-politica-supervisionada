@@ -40,9 +40,7 @@ namespace OPS.Importador.ALE.Comum
             if (importadorDespesas != null)
             {
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
-                if (importadorDespesas is ImportadorDespesasMinasGerais
-                    || importadorDespesas is ImportadorDespesasPiaui 
-                    || importadorDespesas is ImportadorDespesasRioDeJaneiro)
+                if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
                 {
                     // Dados por mandato
                     ImportarDespesas(2023); // TODO: Primeiro ano do mandato
@@ -61,6 +59,7 @@ namespace OPS.Importador.ALE.Comum
 
                     ImportarDespesasAnoAtual();
                 }
+
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
             }
 

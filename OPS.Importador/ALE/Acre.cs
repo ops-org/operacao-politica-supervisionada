@@ -37,7 +37,7 @@ public class ImportadorDespesasAcre : ImportadorDespesasRestApiAnual
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "https://app.al.ac.leg.br/financa/despesaVI", // TODO: Gastos totais mensais apenas
+            BaseAddress = "https://app.al.ac.leg.br/financas/despesas/despesas-por-classificacao", // TODO: Gastos totais ANUAL apenas
             Estado = Estado.Acre,
             ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };

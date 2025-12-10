@@ -54,12 +54,12 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
     {
         using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
         {
-            // TODO: Criar importação por legislatura
-            if (ano != 2023)
-            {
-                logger.LogWarning("Importação já realizada para o ano de {Ano}", ano);
-                throw new BusinessException($"Importação já realizada para o ano de {ano}");
-            }
+            //// TODO: Criar importação por legislatura
+            //if (ano != 2023)
+            //{
+            //    logger.LogWarning("Importação já realizada para o ano de {Ano}", ano);
+            //    throw new BusinessException($"Importação já realizada para o ano de {ano}");
+            //}
 
             CarregarHashes(ano);
 
@@ -77,7 +77,8 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
                     foreach (ListaFechamentoVerba data in resDiarias.ListaFechamentoVerba)
                     {
                         var dataReferencia = Convert.ToDateTime(data.DataReferencia);
-                        if (dataReferencia.Year < ano) continue; // TODO: Ajustar para importar do mandato
+                        //if (dataReferencia.Year < ano) continue; // TODO: Ajustar para importar do mandato
+                        if (dataReferencia.Year != ano) continue; // TODO: Ajustar para importar do mandato
 
                         ListaMensalDespesasMG despesasMensais;
                         address = $"{config.BaseAddress}api/v2/prestacao_contas/verbas_indenizatorias/deputados/{matricula}/{dataReferencia.Year}/{dataReferencia.Month}?formato=json";
@@ -126,11 +127,11 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
         }
     }
 
-    public override void DefinirCompetencias(int ano)
-    {
-        competenciaInicial = $"{ano}01";
-        competenciaFinal = $"{ano + 4}12";
-    }
+    //public override void DefinirCompetencias(int ano)
+    //{
+    //    competenciaInicial = $"{ano}01";
+    //    competenciaFinal = $"{ano + 4}12";
+    //}
 
     public override void ImportarDespesas(string caminhoArquivo, int ano)
     {

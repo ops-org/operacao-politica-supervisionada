@@ -36,6 +36,7 @@ namespace OPS.Core.Repository
                         , d.profissao
                         , d.site
                         , d.perfil
+                        , d.foto
 						, d.valor_total_ceap
 					FROM cl_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
@@ -67,6 +68,7 @@ namespace OPS.Core.Repository
                             site = reader["site"].ToString(),
                             perfil = reader["perfil"].ToString(),
                             nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
+                            foto = reader["foto"].ToString(),
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"])
                         };
                     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -8,6 +9,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
@@ -32,7 +34,7 @@ public class Parana : ImportadorBase
     }
 }
 
-public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
+public class ImportadorDespesasParana : ImportadorDespesasRestApiAnual
 {
     private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
@@ -46,9 +48,12 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         };
     }
 
-    public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
+    public override void ImportarDespesas(IBrowsingContext context, int ano)
     {
-        ImportarCotaParlamentar(ano, mes);
+        // https://consultas.assembleia.pr.leg.br/#/ressarcimento
+        ImportarCotaParlamentar(ano);
+
+        //OpenPageWaitForCaptchaAndClickConsultar(ano, mes);
 
         // TODO: Para importar as diarias precisamos primeiro importar a posição do parlamentar (ex: 4ª SECRETARIA) e o pessoal do gabinete;
         // http://transparencia.assembleia.pr.leg.br/pessoal/comissionados
@@ -104,19 +109,24 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
         }
     }
 
-    private void ImportarCotaParlamentar(int ano, int mes)
+    private void ImportarCotaParlamentar(int ano)
     {
-        var address = $"{config.BaseAddress}public/ressarcimento/ressarcimentos/{mes}/{ano}";
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
 
-        ParlamentaresPR objParlamentaresPR = RestApiGetWithCustomDateConverter<ParlamentaresPR>(address);
 
-        foreach (var itemParlamentar in objParlamentaresPR.Parlamentares)
+        var files = Directory.EnumerateFiles(tempPath, $"{ano}*");
+        foreach (var item in files)
         {
-            string nomePolitico = ImportarParlamentar(itemParlamentar);
+            var content = File.ReadAllText(item);
+            if (content.Contains("invalid-recaptcha"))
+            {
+                logger.LogError("Arquivo invalido: {CaminhoArquivo}", item);
+                File.Delete(item);
+                continue;
+            }
 
-            var newAddress = address.Replace("ressarcimentos", "despesas-ressarcimento") + "/" + itemParlamentar.Parlamentar.Codigo;
-            DespesasPR objDespesaPR = RestApiGetWithCustomDateConverter<DespesasPR>(newAddress);
-            if (!objDespesaPR.Sucesso) continue;
+            DespesasPR objDespesaPR = JsonSerializer.Deserialize<DespesasPR>(content, options);
 
             foreach (var parlamentarDespesa in objDespesaPR.Despesas)
             {
@@ -126,7 +136,7 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
                     {
                         var despesaTemp = new CamaraEstadualDespesaTemp()
                         {
-                            Nome = nomePolitico.ToTitleCase(),
+                            Nome = parlamentarDespesa.Parlamentar.NomePolitico.Replace("DEPUTADA", "").Replace("DEPUTADO", "").Trim().ToTitleCase(),
                             Cpf = parlamentarDespesa.Parlamentar.Codigo.ToString(),
                             Ano = (short)itensDespesa.Exercicio,
                             TipoDespesa = itensDespesa.TipoDespesa.Descricao,
@@ -161,6 +171,67 @@ public class ImportadorDespesasParana : ImportadorDespesasRestApiMensal
             }
         }
     }
+
+    //private void ImportarCotaParlamentar(int ano, int mes)
+    //{
+    //    // Use Selenium to open the page and wait for cacpcha solve and click in "Consultar" on https://consultas.assembleia.pr.leg.br/#/ressarcimento
+    //    //
+
+    //    var address = $"{config.BaseAddress}public/ressarcimento/ressarcimentos/{mes}/{ano}";
+
+    //    ParlamentaresPR objParlamentaresPR = RestApiGetWithCustomDateConverter<ParlamentaresPR>(address);
+
+    //    foreach (var itemParlamentar in objParlamentaresPR.Parlamentares)
+    //    {
+    //        string nomePolitico = ImportarParlamentar(itemParlamentar);
+
+    //        var newAddress = address.Replace("ressarcimentos", "despesas-ressarcimento") + "/" + itemParlamentar.Parlamentar.Codigo;
+    //        DespesasPR objDespesaPR = RestApiGetWithCustomDateConverter<DespesasPR>(newAddress);
+    //        if (!objDespesaPR.Sucesso) continue;
+
+    //        foreach (var parlamentarDespesa in objDespesaPR.Despesas)
+    //        {
+    //            foreach (var despesa in parlamentarDespesa.DespesasAnuais?[0]?.DespesasMensais?[0]?.Despesas)
+    //            {
+    //                foreach (var itensDespesa in despesa.ItensDespesa)
+    //                {
+    //                    var despesaTemp = new CamaraEstadualDespesaTemp()
+    //                    {
+    //                        Nome = nomePolitico.ToTitleCase(),
+    //                        Cpf = parlamentarDespesa.Parlamentar.Codigo.ToString(),
+    //                        Ano = (short)itensDespesa.Exercicio,
+    //                        TipoDespesa = itensDespesa.TipoDespesa.Descricao,
+    //                        Valor = (decimal)(itensDespesa.Valor - itensDespesa.ValorDevolucao),
+    //                        DataEmissao = itensDespesa.Data,
+    //                        CnpjCpf = itensDespesa.Fornecedor?.Documento,
+    //                        Empresa = itensDespesa.Fornecedor?.Nome,
+    //                        Documento = $"{itensDespesa.NumeroDocumento} [{itensDespesa.Codigo}/{itensDespesa.Numero}]",
+    //                        Observacao = itensDespesa.Descricao
+    //                    };
+
+    //                    if (itensDespesa.Transporte != null)
+    //                    {
+    //                        var t = itensDespesa.Transporte;
+    //                        var v = t.Veiculo;
+
+    //                        despesaTemp.Observacao =
+    //                            $"{t.Descricao}; Veículo: {v.Placa}/{v.Modelo}; Distância: {t.Distancia:N0)}; Periodo: {t.DataSaida:dd/MM/yyyy} à {t.DataChegada:dd/MM/yyyy}";
+    //                    }
+
+    //                    if (itensDespesa.Diaria != null)
+    //                    {
+    //                        var d = itensDespesa.Diaria;
+
+    //                        despesaTemp.Observacao =
+    //                            $"{d.Descricao}; Diárias: {d.NumeroDiarias:N1}; Região: {d.Regiao}";
+    //                    }
+
+    //                    InserirDespesaTemp(despesaTemp);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     private string ImportarParlamentar(Parlamentares itemDespesa)
     {

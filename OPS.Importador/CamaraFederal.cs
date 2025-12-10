@@ -515,7 +515,21 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             importacao.DespesasInicio = dInicio.Value;
             importacao.DespesasFim = null;
         }
-        if (dFim != null) importacao.DespesasFim = dFim.Value;
+
+        if (dFim != null)
+        {
+            importacao.DespesasFim = dFim.Value;
+
+            var sql = "select min(data_emissao) as primeira_despesa, max(data_emissao) as ultima_despesa from cf_despesa";
+            using (var dReader = connection.ExecuteReader(sql))
+            {
+                if (dReader.Read())
+                {
+                    importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["primeira_despesa"]) : (DateTime?)null;
+                    importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["ultima_despesa"]) : (DateTime?)null;
+                }
+            }
+        }
 
         connection.Update(importacao);
     }

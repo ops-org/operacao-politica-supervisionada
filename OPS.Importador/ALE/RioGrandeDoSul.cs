@@ -60,80 +60,114 @@ public class ImportadorDespesasRioGrandeDoSul : ImportadorDespesasRestApiAnual
     private async Task ImportarDespesasAno(IBrowsingContext context, int ano)
     {
         var urlParlamentaresListarMes = $"{config.BaseAddress}/ajax-gastosParlamentaresListarMes?ano={ano}";
-        ParlamentaresListarMes objParlamentaresListarMes = await RestApiGetAsync<ParlamentaresListarMes>(urlParlamentaresListarMes);
-        if (objParlamentaresListarMes.Lista is null)
+        ParlamentaresListarMes objParlamentaresListarMes;
+        try
         {
-            logger.LogWarning("Dados para o ano {Ano} ainda não disponiveis!", ano);
+            objParlamentaresListarMes = await RestApiGetAsync<ParlamentaresListarMes>(urlParlamentaresListarMes);
+            if (objParlamentaresListarMes.Lista is null)
+            {
+                logger.LogWarning("Dados para o ano {Ano} ainda não disponiveis!", ano);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Dados para o ano {Ano} ainda não disponiveis!", ano);
             return;
         }
 
-        foreach (var itemMes in objParlamentaresListarMes.Lista)
+        ParallelOptions parallelOptions = new ParallelOptions
         {
-            var mes = itemMes.Mes;
-            var urlParlamentaresListarGabinete = $"{config.BaseAddress}/ajax-gastosParlamentaresListarGabinete?ano={ano}&mes={mes}";
-            ParlamentaresListarGabinete objParlamentaresListarGabinete = await RestApiGetAsync<ParlamentaresListarGabinete>(urlParlamentaresListarGabinete);
+            MaxDegreeOfParallelism = 5
+        };
 
-            foreach (var gabinete in objParlamentaresListarGabinete.Lista)
+        var meses = objParlamentaresListarMes.Lista.Select(x => x.Mes);
+        Parallel.ForEach(meses, parallelOptions, mes =>
+        {
+            //if (ano == 2019 && mes == 1) continue;
+            if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) return;
+
+            using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes }))
             {
-                var urlDespesas = $"{config.BaseAddress}/parlamentares/gastos/pesquisa?ano={ano}&mes={mes}&solicitante={gabinete.Codigo}";
-                var document = await context.OpenAsyncAutoRetry(urlDespesas);
 
-                var elementoDespesasDoMes = document
-                    .QuerySelectorAll(".contratos-ativos__header-item--contratada")
-                    .FirstOrDefault(x => x.TextContent.Trim().Equals("4- Despesas do Mês"));
-
-                if (elementoDespesasDoMes is null)
+                try
                 {
-                    logger.LogWarning("Dados não disponiveis para o parlamentar {Parlamentar} para {Mes:00}/{Ano}.", gabinete.Parlamentar, mes, ano);
-                    continue;
+                    ImportarDespesasMes(context, ano, mes).Wait();
                 }
-
-                var matrizDespesas = elementoDespesasDoMes
-                    .Closest(".contratos-ativos__row")
-                    .QuerySelectorAll(".contratos-ativos__contrato>.contratos-ativos__conteudo>.remuneracao__nome");
-
-                foreach (var despesa in matrizDespesas)
+                catch (Exception ex)
                 {
-                    var despesaUnica = despesa.QuerySelectorAll(".responsive-value");
-                    if (despesaUnica[0].TextContent.StartsWith("Total")) continue;
-
-                    var despesaTemp = new CamaraEstadualDespesaTemp()
-                    {
-                        Nome = gabinete.Parlamentar.Replace("Gabinete Dep.", "").Replace("55", "").Trim(),
-                        Cpf = gabinete.Codigo.ToString(),
-                        Ano = (short)ano,
-                        Mes = (short)mes,
-                        TipoDespesa = despesaUnica[0].TextContent.Replace(":", ""),
-                        Valor = Convert.ToDecimal(despesaUnica[1].TextContent.Replace(" - R$", ""), cultureInfoBR),
-                        DataEmissao = new DateTime(ano, mes, 1)
-                    };
-
-                    if (despesaTemp.Valor == 0) continue;
-
-                    InserirDespesaTemp(despesaTemp);
+                    logger.LogError(ex, ex.Message);
                 }
+            }
+        });
+    }
 
-                var elementoOutrosCreditos = document
-                    .QuerySelectorAll(".contratos-ativos__contratada-mobile")
-                    .FirstOrDefault(x => x.TextContent.StartsWith("Outros Créditos"));
+    private async Task ImportarDespesasMes(IBrowsingContext context, int ano, int mes)
+    {
 
-                if (elementoOutrosCreditos != null)
+        var urlParlamentaresListarGabinete = $"{config.BaseAddress}/ajax-gastosParlamentaresListarGabinete?ano={ano}&mes={mes}";
+        ParlamentaresListarGabinete objParlamentaresListarGabinete = await RestApiGetAsync<ParlamentaresListarGabinete>(urlParlamentaresListarGabinete);
+
+        foreach (var gabinete in objParlamentaresListarGabinete.Lista)
+        {
+            var urlDespesas = $"{config.BaseAddress}/parlamentares/gastos/pesquisa?ano={ano}&mes={mes}&solicitante={gabinete.Codigo}";
+            var document = await context.OpenAsyncAutoRetry(urlDespesas);
+
+            var elementoDespesasDoMes = document
+                .QuerySelectorAll(".contratos-ativos__header-item--contratada")
+                .FirstOrDefault(x => x.TextContent.Trim().Equals("4- Despesas do Mês"));
+
+            if (elementoDespesasDoMes is null)
+            {
+                logger.LogWarning("Dados não disponiveis para o parlamentar {Parlamentar} para {Mes:00}/{Ano}.", gabinete.Parlamentar, mes, ano);
+                continue;
+            }
+
+            var matrizDespesas = elementoDespesasDoMes
+                .Closest(".contratos-ativos__row")
+                .QuerySelectorAll(".contratos-ativos__contrato>.contratos-ativos__conteudo>.remuneracao__nome");
+
+            foreach (var despesa in matrizDespesas)
+            {
+                var despesaUnica = despesa.QuerySelectorAll(".responsive-value");
+                if (despesaUnica[0].TextContent.StartsWith("Total")) continue;
+
+                var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
-                    var despesaTemp = new CamaraEstadualDespesaTemp()
-                    {
-                        Nome = gabinete.Parlamentar.Replace("Gabinete Dep.", "").Replace("55", "").Trim(),
-                        Cpf = gabinete.Codigo.ToString(),
-                        Ano = (short)ano,
-                        Mes = (short)mes,
-                        TipoDespesa = "Outros Créditos",
-                        Valor = -Convert.ToDecimal(elementoOutrosCreditos.TextContent.Split("R$")[1].Trim(), cultureInfoBR),
-                        DataEmissao = new DateTime(ano, mes, 1)
-                    };
+                    Nome = gabinete.Parlamentar.Replace("Gabinete Dep.", "").Replace("55", "").Trim(),
+                    Cpf = gabinete.Codigo.ToString(),
+                    Ano = (short)ano,
+                    Mes = (short)mes,
+                    TipoDespesa = despesaUnica[0].TextContent.Replace(":", ""),
+                    Valor = Convert.ToDecimal(despesaUnica[1].TextContent.Replace(" - R$", ""), cultureInfoBR),
+                    DataEmissao = new DateTime(ano, mes, 1)
+                };
 
-                    if (despesaTemp.Valor == 0) continue;
+                if (despesaTemp.Valor == 0) continue;
 
-                    InserirDespesaTemp(despesaTemp);
-                }
+                InserirDespesaTemp(despesaTemp);
+            }
+
+            var elementoOutrosCreditos = document
+                .QuerySelectorAll(".contratos-ativos__contratada-mobile")
+                .FirstOrDefault(x => x.TextContent.StartsWith("Outros Créditos"));
+
+            if (elementoOutrosCreditos != null)
+            {
+                var despesaTemp = new CamaraEstadualDespesaTemp()
+                {
+                    Nome = gabinete.Parlamentar.Replace("Gabinete Dep.", "").Replace("55", "").Trim(),
+                    Cpf = gabinete.Codigo.ToString(),
+                    Ano = (short)ano,
+                    Mes = (short)mes,
+                    TipoDespesa = "Outros Créditos",
+                    Valor = -Convert.ToDecimal(elementoOutrosCreditos.TextContent.Split("R$")[1].Trim(), cultureInfoBR),
+                    DataEmissao = new DateTime(ano, mes, 1)
+                };
+
+                if (despesaTemp.Valor == 0) continue;
+
+                InserirDespesaTemp(despesaTemp);
             }
         }
     }

@@ -41,11 +41,16 @@ public static class AngleSharpExtensions
             if (doc.StatusCode == HttpStatusCode.OK)
             {
                 var html = doc.DocumentElement.OuterHtml;
-                if (!doc.Url.Contains("error") &&
-                    !string.IsNullOrEmpty(html) &&
-                    html != "<html><head></head><body></body></html>" &&
-                    !html.StartsWith("<html><head></head><body>")) // Validate empty response and page error redirect
-                    return doc;
+                if (!doc.Url.Contains("error") && !string.IsNullOrEmpty(html))
+                {
+                    if (html.StartsWith("<html><head></head><body>") && !html.StartsWith("<html><head></head><body><option value=\"\"></option>"))
+                    {
+                        Log.Warning("Empty response on request {Address}. Try {Retries} of {MaxRetries}.", address, retries, totalRetries);
+                    }
+
+                    if (!html.StartsWith("<html><head></head><body>") || html.StartsWith("<html><head></head><body><option value=\"\"></option>")) // Validate empty response and page error redirect
+                        return doc;
+                }
             }
 
             if (doc.BaseUri != address)

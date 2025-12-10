@@ -32,6 +32,7 @@ namespace OPS.Core.Repository
 						, d.email
 						, d.valor_total_ceaps
                         , d.valor_total_remuneracao
+                        , d.valor_total_remuneracao + d.valor_total_ceaps as valor_total
                         , d.ativo
                         , (SELECT m.participacao from sf_mandato m WHERE m.id_sf_senador = d.id ORDER BY m.id desc LIMIT 1) as participacao
                         , d.naturalidade
@@ -81,6 +82,7 @@ namespace OPS.Core.Repository
                             naturalidade = reader["naturalidade"].ToString() + (!string.IsNullOrEmpty(reader["silga_estado_naturalidade"].ToString()) ? "(" + reader["silga_estado_naturalidade"].ToString() + ")" : ""),
                             valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
                             valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
+                            valor_total = Utils.FormataValor(reader["valor_total"]),
                         };
                     }
 

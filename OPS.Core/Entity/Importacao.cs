@@ -24,5 +24,11 @@ namespace OPS.Core.Entity
 
         [Column("despesas_fim")]
         public DateTime? DespesasFim { get; set; }
+
+        [Column("primeira_despesa")]
+        public DateTime? PrimeiraDespesa { get; set; }
+
+        [Column("ultima_despesa")]
+        public DateTime? UltimaDespesa { get; set; }
     }
 }

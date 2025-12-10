@@ -22,6 +22,7 @@ using OPS.Core.Repository;
 using OPS.Core.Utilities;
 using OPS.Importador.ALE;
 using OPS.Importador.ALE.Comum;
+using OPS.Importador.ALE.Despesa;
 using OPS.Importador.Utilities;
 using Polly;
 using Polly.Extensions.Http;
@@ -145,6 +146,9 @@ namespace OPS.Importador
                 .AddPolicyHandler((services, request) => HttpPolicyExtensions
                     .HandleTransientHttpError() // HttpRequestException, 5XX and 408
                                                 //.OrResult(response => (int)response.StatusCode == 429) // RetryAfter
+                    .Or<TaskCanceledException>()
+                    .Or<OperationCanceledException>()
+                    .Or<TimeoutException>()
                     .WaitAndRetryAsync(new[]
                         {
                             TimeSpan.FromSeconds(1),
@@ -225,26 +229,30 @@ WHERE nome_civil IS NOT NULL;");
                 //var alagoas = new ImportadorDespesasAlagoas(serviceProvider);
                 //await alagoas.ImportarDespesasArquivo(2025, 8, url, "Francisco Tenorio", new DateTime(2025, 8, 1));
 
+                var crawler = new SeleniunScraper(serviceProvider);
+                crawler.BaixarArquivosParana(DateTime.Today.Year);
+                crawler.BaixarArquivosPiaui();
+
                 var types = new Type[]
                 {
                     typeof(Senado), // csv
                     typeof(CamaraFederal), // csv
-                    //typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> SEM DADOS
+                    //typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    //typeof(Amapa), // crawler mensal/deputado (Apenas BR) <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
-                    //typeof(Amazonas), // crawler mensal/deputado (Apenas BR) <<<<<< ------------------------------------------------------------------ >>>>>>> FORA (fim de semana?)
-                    //typeof(Bahia), // crawler anual <<<<<< ------------------------------------------------------------------ >>>>>>> FORA
+                    typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    typeof(Bahia), // crawler anual
                     typeof(Ceara), // csv mensal
                     typeof(DistritoFederal), // xlsx  (Apenas BR)
                     typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
                     typeof(Goias), // crawler mensal/deputado
                     typeof(Maranhao), // Valores mensais por categoria
-                    typeof(MatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> APENAS TOTAL MENSAL
+                    //typeof(MatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     typeof(MatoGrossoDoSul), // crawler anual
                     typeof(MinasGerais), // xml api mensal/deputado (Apenas BR) 
                     typeof(Para), // json api anual
                     typeof(Paraiba), // arquivo ods mensal/deputado
-                    //typeof(Parana), // json api mensal/deputado <-------- capcha
+                    typeof(Parana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
                     typeof(Pernambuco), // json api mensal/deputado
                     typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual)
                     typeof(RioDeJaneiro), // json api mensal/deputado
@@ -278,19 +286,14 @@ WHERE nome_civil IS NOT NULL;");
                 }
                 Task.WaitAll(tasks.ToArray());
 
+                //var importadorBase = serviceProvider.GetService<ImportadorDespesasBase>();
+                //importadorBase.AtualizaCampeoesGastos();
+                //importadorBase.AtualizaResumoMensal();
                 //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
 
                 //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-                //var mesConsulta = new DateTime(2023, 02, 01);
-
-                //do
-                //{
-                //    importador.ConsultaRemuneracao(mesConsulta.Year, mesConsulta.Month);
-
-                //    mesConsulta = mesConsulta.AddMonths(1);
-                //} while (mesConsulta < mesAtual);
-
                 //importador.ColetaDadosDeputados();
+                //importador.AtualizaParlamentarValores();
                 //importador.ColetaRemuneracaoSecretarios();
 
 
@@ -315,6 +318,7 @@ WHERE nome_civil IS NOT NULL;");
 
                 Fornecedor objFornecedor = serviceProvider.GetService<Fornecedor>();
                 objFornecedor.ConsultarDadosCNPJ().Wait();
+                //objFornecedor.ConsultarDadosCNPJ(somenteNovos: false).Wait();
             }
             catch (Exception ex)
             {
@@ -417,9 +421,47 @@ WHERE nome_civil IS NOT NULL;");
             }
         }
 
+        private static async Task BaixarNotas()
+        {
+            var sql = @"SELECT l.id, d.id_deputado, l.ano, l.id_documento
+FROM cf_despesa l
+JOIN cf_deputado d ON d.id = l.id_cf_deputado
+WHERE l.ano >= 2023
+AND l.id_cf_despesa_tipo = 120
+AND l.tipo_link = 1
+AND l.id > 10501020
+ORDER BY 1";
+            using (var client = new System.Net.Http.HttpClient())
+            using (var banco = new AppDb())
+            {
+                var dic = banco.ExecuteDict(sql);
+                foreach (var item in dic)
+                {
+                    try
+                    {
+                        var nomeArquivo = $"";
+                        var url = $"https://www.camara.leg.br/cota-parlamentar/documentos/publ/{item["id_deputado"]}/{item["ano"]}/{item["id_documento"]}.pdf";
+                        var arquivo = $@"C:\temp\NotasFiscais\{item["id_deputado"]}-{item["ano"]}-{item["id_documento"]}.pdf";
+
+                        if (!File.Exists(arquivo))
+                        {
+                            Console.WriteLine($"Baixando {item["id"]} {url}...");
+                            await client.DownloadFile(url, arquivo);
+
+                            await Task.Delay(1000);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+            }
+        }
+
         private static DateTime? AjustarData(string d)
         {
-            if (!d.Contains("??/??/??") && d != "ATUAL" && d != "-")
+            if (!d.Contains(" ??/??/?? ") && d != "ATUAL" && d != " - ")
             {
                 d = d.Replace("??", "01");
                 if (d.Length == 10)

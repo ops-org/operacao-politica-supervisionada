@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +14,8 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
+using OPS.Core.Utilities;
+using Serilog.Core;
 
 namespace OPS.Importador
 {
@@ -54,7 +57,7 @@ namespace OPS.Importador
         //    }
         //}
 
-        public async Task ConsultarDadosCNPJ()
+        public async Task ConsultarDadosCNPJ(bool somenteNovos = true)
         {
             var telegramApiToken = configuration["AppSettings:TelegramApiToken"];
             var receitaWsApiToken = configuration["AppSettings:ReceitaWsApiToken"];
@@ -75,44 +78,35 @@ namespace OPS.Importador
 
             using (var banco = new AppDb())
             {
-                dtFornecedores = banco.GetTable(
-                    @"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
-                    from fornecedor f
-                    left join fornecedor_info fi on f.id = fi.id_fornecedor
-                    where char_length(f.cnpj_cpf) = 14
-                    -- and f.cnpj_cpf <> '00000000000000'
-                    -- and obtido_em < '2018-01-01'
-                    -- and fi.id_fornecedor is null
-                    -- and ip_colaborador not like '1805%'
-                    -- and fi.id_fornecedor is null
-                    -- and ip_colaborador is null -- not in ('170509', '170510', '170511', '170512')
-                    -- and controle is null
-                    -- and controle <> 0
-                    -- and (f.mensagem is null or f.mensagem <> 'Uma tarefa foi cancelada.')
-                    -- and (controle is null or controle NOT IN (0, 2, 3, 5))
-                    -- and fi.situacao_cadastral = 'ATIVA'
-                    and (controle is null or controle NOT IN (0, 1, 2, 3))
-                    -- AND (fi.situacao_cadastral is null or fi.situacao_cadastral = 'ATIVA')
-                    AND fi.id_fornecedor IS null
-                    AND f.cnpj_cpf NOT LIKE '%*%' -- Dados anonimizados
-                    order by fi.id_fornecedor asc
-                    -- LIMIT 1000");
-
-                //dtFornecedores = banco.GetTable(
-                //   $@"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
-                //    from fornecedor f
-                //    left join fornecedor_info fi on f.id = fi.id_fornecedor
-                //    where char_length(f.cnpj_cpf) = 14
-                //    and obtido_em < '{DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")}'
-                //    and fi.situacao_cadastral = 'ATIVA'
-                //    order by fi.id_fornecedor asc");
+                if (somenteNovos)
+                {
+                    dtFornecedores = banco.GetTable(
+                        @"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
+                        from fornecedor f
+                        left join fornecedor_info fi on f.id = fi.id_fornecedor
+                        where char_length(f.cnpj_cpf) = 14
+                        and (controle is null or controle NOT IN (0, 1, 2, 3))
+                        AND fi.id_fornecedor IS null
+                        AND f.cnpj_cpf NOT LIKE '%*%' -- Dados anonimizados
+                        order by fi.id_fornecedor asc");
+                }
+                else // Atualizar dados antigos
+                {
+                    dtFornecedores = banco.GetTable(
+                       $@"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
+                        from fornecedor f
+                        left join fornecedor_info fi on f.id = fi.id_fornecedor
+                        where char_length(f.cnpj_cpf) = 14
+                        and obtido_em < '{DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")}'
+                        and fi.situacao_cadastral = 'ATIVA'
+                        order by fi.id_fornecedor asc");
+                }
 
                 if (dtFornecedores.Rows.Count == 0)
                 {
                     logger.LogInformation("Não há fornecedores para consultar");
                     return;
                 }
-
 
                 lstFornecedoresAtividade = connection.GetList<FornecedorAtividade>().ToList();
                 lstNaturezaJuridica = connection.GetList<NaturezaJuridica>().ToList();
@@ -162,19 +156,22 @@ namespace OPS.Importador
                         }
                         else
                         {
-                            InserirControle(1, item["cnpj_cpf"].ToString(), response.ReasonPhrase.ToString());
+                            //InserirControle(1, item["cnpj_cpf"].ToString(), response.ReasonPhrase.ToString());
+                            fornecedor = await ConsultaCnpjReceitaWs(item["cnpj_cpf"].ToString());
                         }
-
-                        continue;
+                        //continue;
                     }
 
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, ex.Message);
-                    InserirControle(1, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
-                    continue;
+                    //InserirControle(1, item["cnpj_cpf"].ToString(), ex.GetBaseException().Message);
+                    //continue;
+                    fornecedor = await ConsultaCnpjReceitaWs(item["cnpj_cpf"].ToString());
                 }
+
+                if (fornecedor == null) continue;
 
                 if (connection.State != ConnectionState.Open)
                     connection.Open();
@@ -271,6 +268,7 @@ SELECT MAX(DATA) as data FROM (
 	SELECT MAX(d.data_emissao) FROM cl_despesa d WHERE d.id_fornecedor = @id
 ) tmp
 ", new { id = fornecedor.Id }, transaction);
+
                             if (ulimaNota != null && Convert.ToDateTime(ulimaNota) > Convert.ToDateTime(fornecedor.DataSituacaoEspecial))
                             {
                                 logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, total, fornecedor.Cnpj, fornecedor.NomeFantasia);
@@ -321,6 +319,149 @@ SELECT MAX(DATA) as data FROM (
             //        }
 
             //_logger.LogInformation("{0} de {1} fornecedores novos importados</p>", totalImportados, dtFornecedores.Rows.Count) + strInfoAdicional.ToString();
+        }
+
+        public async Task<FornecedorInfo> ConsultaCnpjReceitaWs(string cnpj)
+        {
+            try
+            {
+                var url = $"https://www.receitaws.com.br/v1/cnpj/{cnpj}";
+                HttpResponseMessage response = await httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseString = await response.Content.ReadAsStringAsync();
+                    var fornecedorWs = JsonSerializer.Deserialize<FornecedorReceitaWs>(responseString);
+
+                    if (fornecedorWs == null)
+                        return null;
+
+                    static DateTime? ParseDateString(string s)
+                    {
+                        if (string.IsNullOrEmpty(s)) return null;
+                        // try common formats
+                        if (DateTime.TryParse(s, out var dt)) return dt;
+                        var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "dd-MM-yyyy", "yyyy-MM-dd HH:mm:ss" };
+                        if (DateTime.TryParseExact(s, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out dt)) return dt;
+                        return null;
+                    }
+
+                    static decimal ParseDecimalString(string s)
+                    {
+                        if (string.IsNullOrWhiteSpace(s)) return 0m;
+                        // remove currency symbols and trim
+                        s = s.Replace("R$", "").Replace("\u00A0", "").Trim();
+                        // try pt-BR then invariant
+                        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, new System.Globalization.CultureInfo("pt-BR"), out var d)) return d;
+                        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d)) return d;
+                        // keep digits and punctuation
+                        var filtered = new string(s.Where(c => char.IsDigit(c) || c == ',' || c == '.').ToArray());
+                        if (decimal.TryParse(filtered, System.Globalization.NumberStyles.Any, new System.Globalization.CultureInfo("pt-BR"), out d)) return d;
+                        if (decimal.TryParse(filtered, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d)) return d;
+                        return 0m;
+                    }
+
+                    static int ParseCodeToInt(string code)
+                    {
+                        if (string.IsNullOrEmpty(code)) return 0;
+                        var digits = new string(code.Where(char.IsDigit).ToArray());
+                        if (int.TryParse(digits, out var v)) return v;
+                        return 0;
+                    }
+
+                    var info = new FornecedorInfo
+                    {
+                        Cnpj = Utils.RemoveCaracteresNaoNumericos(fornecedorWs.Cnpj),
+                        Tipo = fornecedorWs.Tipo,
+                        Porte = fornecedorWs.Porte,
+                        RazaoSocial = fornecedorWs.Nome,
+                        NomeFantasia = fornecedorWs.Fantasia,
+                        Logradouro = fornecedorWs.Logradouro,
+                        Numero = fornecedorWs.Numero,
+                        Complemento = fornecedorWs.Complemento,
+                        Cep = fornecedorWs.Cep,
+                        Bairro = fornecedorWs.Bairro,
+                        Municipio = fornecedorWs.Municipio,
+                        UF = fornecedorWs.Uf,
+                        Email = fornecedorWs.Email,
+                        Telefone1 = fornecedorWs.Telefone,
+                        EnteFederativoResponsavel = fornecedorWs.Efr,
+                        SituacaoCadastral = fornecedorWs.Situacao,
+                        DataSituacaoCadastral = ParseDateString(fornecedorWs.DataSituacao),
+                        MotivoSituacaoCadastral = fornecedorWs.MotivoSituacao,
+                        SituacaoEspecial = fornecedorWs.SituacaoEspecial,
+                        DataSituacaoEspecial = ParseDateString(fornecedorWs.DataSituacaoEspecial),
+                        CapitalSocial = ParseDecimalString(fornecedorWs.CapitalSocial),
+                        OpcaoPeloMEI = fornecedorWs.Simei?.Optante,
+                        DataOpcaoPeloMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataOpcao.ToString()),
+                        DataExclusaoMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataExclusao.ToString()),
+                        OpcaoPeloSimples = fornecedorWs.Simples?.Optante,
+                        DataOpcaoPeloSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataOpcao.ToString()),
+                        DataExclusaoSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataExclusao.ToString()),
+                        NomeCidadeExterior = null,
+                        Pais = null,
+                        ObtidoEm = DateTime.UtcNow
+                    };
+
+                    // Atividade Principal
+                    if (fornecedorWs.AtividadePrincipal != null && fornecedorWs.AtividadePrincipal.Count > 0)
+                    {
+                        info.IdAtividadePrincipal = ParseCodeToInt(fornecedorWs.AtividadePrincipal[0].Code);
+                        info.AtividadePrincipal = fornecedorWs.AtividadePrincipal[0].Text;
+                    }
+
+                    // Atividades Secundarias -> CnaesSecundarios
+                    if (fornecedorWs.AtividadesSecundarias != null)
+                    {
+                        info.CnaesSecundarios = fornecedorWs.AtividadesSecundarias.Select(a => new FornecedorAtividade
+                        {
+                            Id = ParseCodeToInt(a.Code),
+                            Codigo = a.Code,
+                            Descricao = a.Text
+                        }).ToList();
+                    }
+
+                    // Natureza juridica
+                    info.NaturezaJuridica = fornecedorWs.NaturezaJuridica;
+                    info.IdNaturezaJuridica = ParseCodeToInt(fornecedorWs.NaturezaJuridica);
+
+                    // QSA
+                    if (fornecedorWs.Qsa != null)
+                    {
+                        info.Qsa = fornecedorWs.Qsa.Select(q => new QuadroSocietario
+                        {
+                            Nome = q.Nome,
+                            PaisOrigem = q.PaisOrigem,
+                            NomeRepresentante = q.NomeRepLegal,
+                            QualificacaoSocio = q.Qual,
+                            QualificacaoRepresentante = q.QualRepLegal
+                        }).ToList();
+                    }
+
+                    return info;
+                }
+                else
+                {
+                    if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        Console.WriteLine(response.ReasonPhrase);
+                        System.Threading.Thread.Sleep(60000);
+
+                        return await ConsultaCnpjReceitaWs(cnpj);
+                    }
+                    else
+                    {
+                        InserirControle(1, cnpj, response.ReasonPhrase.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                InserirControle(1, cnpj, ex.GetBaseException().Message);
+            }
+
+            return null;
         }
 
         private void InserirControle(int controle, string cnpj_cpf, string mensagem)
@@ -465,4 +606,179 @@ SELECT MAX(DATA) as data FROM (
             return cnpj.EndsWith(digito);
         }
     }
+
+    #region ReceitaWS DTO
+    public class AtividadePrincipal
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; }
+
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
+    }
+
+    public class AtividadesSecundaria
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; }
+
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
+    }
+
+    public class Billing
+    {
+        [JsonPropertyName("free")]
+        public bool Free { get; set; }
+
+        [JsonPropertyName("database")]
+        public bool Database { get; set; }
+    }
+
+    public class Qsa
+    {
+        [JsonPropertyName("nome")]
+        public string Nome { get; set; }
+
+        [JsonPropertyName("qual")]
+        public string Qual { get; set; }
+
+        [JsonPropertyName("pais_origem")]
+        public string PaisOrigem { get; set; }
+
+        [JsonPropertyName("nome_rep_legal")]
+        public string NomeRepLegal { get; set; }
+
+        [JsonPropertyName("qual_rep_legal")]
+        public string QualRepLegal { get; set; }
+    }
+
+    public class FornecedorReceitaWs
+    {
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
+
+        [JsonPropertyName("ultima_atualizacao")]
+        public DateTime UltimaAtualizacao { get; set; }
+
+        [JsonPropertyName("cnpj")]
+        public string Cnpj { get; set; }
+
+        [JsonPropertyName("tipo")]
+        public string Tipo { get; set; }
+
+        [JsonPropertyName("porte")]
+        public string Porte { get; set; }
+
+        [JsonPropertyName("nome")]
+        public string Nome { get; set; }
+
+        [JsonPropertyName("fantasia")]
+        public string Fantasia { get; set; }
+
+        [JsonPropertyName("abertura")]
+        public string Abertura { get; set; }
+
+        [JsonPropertyName("atividade_principal")]
+        public List<AtividadePrincipal> AtividadePrincipal { get; set; }
+
+        [JsonPropertyName("atividades_secundarias")]
+        public List<AtividadesSecundaria> AtividadesSecundarias { get; set; }
+
+        [JsonPropertyName("natureza_juridica")]
+        public string NaturezaJuridica { get; set; }
+
+        [JsonPropertyName("logradouro")]
+        public string Logradouro { get; set; }
+
+        [JsonPropertyName("numero")]
+        public string Numero { get; set; }
+
+        [JsonPropertyName("complemento")]
+        public string Complemento { get; set; }
+
+        [JsonPropertyName("cep")]
+        public string Cep { get; set; }
+
+        [JsonPropertyName("bairro")]
+        public string Bairro { get; set; }
+
+        [JsonPropertyName("municipio")]
+        public string Municipio { get; set; }
+
+        [JsonPropertyName("uf")]
+        public string Uf { get; set; }
+
+        [JsonPropertyName("email")]
+        public string Email { get; set; }
+
+        [JsonPropertyName("telefone")]
+        public string Telefone { get; set; }
+
+        [JsonPropertyName("efr")]
+        public string Efr { get; set; }
+
+        [JsonPropertyName("situacao")]
+        public string Situacao { get; set; }
+
+        [JsonPropertyName("data_situacao")]
+        public string DataSituacao { get; set; }
+
+        [JsonPropertyName("motivo_situacao")]
+        public string MotivoSituacao { get; set; }
+
+        [JsonPropertyName("situacao_especial")]
+        public string SituacaoEspecial { get; set; }
+
+        [JsonPropertyName("data_situacao_especial")]
+        public string DataSituacaoEspecial { get; set; }
+
+        [JsonPropertyName("capital_social")]
+        public string CapitalSocial { get; set; }
+
+        [JsonPropertyName("qsa")]
+        public List<Qsa> Qsa { get; set; }
+
+        [JsonPropertyName("simples")]
+        public Simples Simples { get; set; }
+
+        [JsonPropertyName("simei")]
+        public Simei Simei { get; set; }
+
+        [JsonPropertyName("billing")]
+        public Billing Billing { get; set; }
+    }
+
+    public class Simei
+    {
+        [JsonPropertyName("optante")]
+        public bool? Optante { get; set; }
+
+        [JsonPropertyName("data_opcao")]
+        public DateTime? DataOpcao { get; set; }
+
+        [JsonPropertyName("data_exclusao")]
+        public DateTime? DataExclusao { get; set; }
+
+        [JsonPropertyName("ultima_atualizacao")]
+        public DateTime? UltimaAtualizacao { get; set; }
+    }
+
+    public class Simples
+    {
+        [JsonPropertyName("optante")]
+        public bool? Optante { get; set; }
+
+        [JsonPropertyName("data_opcao")]
+        public DateTime? DataOpcao { get; set; }
+
+        [JsonPropertyName("data_exclusao")]
+        public DateTime? DataExclusao { get; set; }
+
+        [JsonPropertyName("ultima_atualizacao")]
+        public DateTime? UltimaAtualizacao { get; set; }
+    }
+
+
+    #endregion ReceitaWS DTO
 }
