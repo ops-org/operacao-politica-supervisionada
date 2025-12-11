@@ -1253,7 +1253,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 				WHERE tipo_despesa LIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';
 
                 UPDATE ops_tmp.sf_despesa_temp
-                SET tipo_despesa = 'Não especificado'
+                SET tipo_despesa = '<Não especificado>'
                 WHERE tipo_despesa = '';
 			");
         }

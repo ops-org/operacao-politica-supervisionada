@@ -14,7 +14,7 @@ namespace OPS.Core.Repository
 
         public async Task<IEnumerable<DropDownDTO>> Consultar()
         {
-            var sql = "SELECT id, concat(nome, ' (', sigla, ')') as text, concat('Região ', regiao) as helpText, concat('/img/estados/', LOWER(sigla), '.svg') as image FROM estado order by nome;";
+            var sql = "SELECT id, concat(nome, ' (', sigla, ')') as text, concat('Região ', regiao) as helpText, concat('/img/estados/', LOWER(sigla), '.png') as image FROM estado order by nome;";
             IEnumerable<DropDownDTO> lista = await _connection.QueryAsync<DropDownDTO>(sql);
 
             return lista;

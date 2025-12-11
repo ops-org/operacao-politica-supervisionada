@@ -588,7 +588,7 @@ namespace OPS.Core.Repository
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
                             valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
                             sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
-                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "<Sem Partido>",
                             sigla_estado = reader["sigla_estado"].ToString(),
                             nome_estado = reader["nome_estado"].ToString(),
                             situacao = reader["situacao"].ToString(),
@@ -645,7 +645,7 @@ namespace OPS.Core.Repository
                             valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
                             id_partido = reader["id_partido"],
                             sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
-                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "<Sem Partido>",
                             id_estado = reader["id_estado"],
                             sigla_estado = reader["sigla_estado"].ToString(),
                             nome_estado = reader["nome_estado"].ToString()
@@ -952,7 +952,7 @@ namespace OPS.Core.Repository
 					
 						SELECT SQL_CALC_FOUND_ROWS
 						 p.id as id_partido
-						, IFnull(p.nome, 'SEM PARTIDO') as nome_partido
+						, IFnull(p.nome, '<Sem Partido>') as nome_partido
 						, sum(l1.total_notas) as total_notas
 						, count(l1.id_cl_deputado) as total_deputados
                         , sum(l1.valor_total) / count(l1.id_cl_deputado) as valor_medio_por_deputado
@@ -1019,8 +1019,8 @@ namespace OPS.Core.Repository
 
                 sqlSelect.AppendLine(@"
 						SELECT SQL_CALC_FOUND_ROWS
-						 e.id AS id_estado
-						, IFNULL(e.nome, 'Sem Estado / Lideranças de Partido') as nome_estado
+						 IFNULL(e.id, 99) AS id_estado
+						, IFNULL(e.nome, '<Sem Estado / Lideranças de Partido>') as nome_estado
 						, sum(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
 						from (
