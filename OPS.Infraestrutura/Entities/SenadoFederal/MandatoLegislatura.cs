@@ -1,0 +1,24 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace OPS.Infraestrutura.Entities.SenadoFederal
+{
+    [Table("sf_mandato_legislatura")]
+    public class MandatoLegislatura
+    {
+        [Key]
+        [Column("id_sf_mandato")]
+        public uint IdMandato { get; set; }
+
+        [Key]
+        [Column("id_sf_legislatura")]
+        public byte IdLegislatura { get; set; }
+
+        [Column("id_sf_senador")]
+        public uint IdSenador { get; set; }
+
+        // Navigation properties
+        public virtual Mandato Mandato { get; set; } = null!;
+        public virtual Legislatura Legislatura { get; set; } = null!;
+    }
+}

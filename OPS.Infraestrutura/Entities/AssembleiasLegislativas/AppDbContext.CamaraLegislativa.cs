@@ -1,0 +1,93 @@
+using Microsoft.EntityFrameworkCore;
+using OPS.Infraestrutura.Entities.AssembleiasLegislativas;
+
+namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas;
+
+public partial class AppDbContext
+{
+    // Câmara Legislativa (CL) Tables
+    public DbSet<Deputado> Deputados { get; set; }
+    public DbSet<DeputadoCampeaoGasto> DeputadoCampeaoGastos { get; set; }
+    public DbSet<Despesa> Despesas { get; set; }
+    public DbSet<DespesaEspecificacao> DespesaEspecificacoes { get; set; }
+    public DbSet<DespesaResumoMensal> DespesaResumosMensais { get; set; }
+    public DbSet<DespesaTipo> DespesaTipos { get; set; }
+}
+
+public static class CamaraLegislativaConfigurations
+{
+    public static void ConfigureDeputado(this ModelBuilder modelBuilder)
+    {
+        // Configure Deputado
+        modelBuilder.Entity<Deputado>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.HasOne(e => e.Partido); //.WithMany(p => p.Deputados).HasForeignKey(e => e.IdPartido);
+            entity.HasOne(e => e.Estado); //.WithMany(e => e.Deputados).HasForeignKey(e => e.IdEstado);
+        });
+    }
+
+    public static void ConfigureDeputadoCampeaoGasto(this ModelBuilder modelBuilder)
+    {
+        // Configure DeputadoCampeaoGasto
+        modelBuilder.Entity<DeputadoCampeaoGasto>(entity =>
+        {
+            entity.HasKey(e => e.IdDeputado);
+            entity.HasOne(e => e.Deputado).WithMany().HasForeignKey(e => e.IdDeputado);
+        });
+    }
+
+    public static void ConfigureDespesa(this ModelBuilder modelBuilder)
+    {
+        // Configure Despesa
+        modelBuilder.Entity<Despesa>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasOne(e => e.Deputado).WithMany(d => d.Despesas).HasForeignKey(e => e.IdDeputado);
+            entity.HasOne(e => e.DespesaTipo).WithMany(t => t.Despesas).HasForeignKey(e => e.IdDespesaTipo);
+            entity.HasOne(e => e.Fornecedor).WithMany(f => f.DespesasAssembleias).HasForeignKey(e => e.IdFornecedor);
+        });
+    }
+
+    public static void ConfigureDespesaEspecificacao(this ModelBuilder modelBuilder)
+    {
+        // Configure DespesaEspecificacao
+        modelBuilder.Entity<DespesaEspecificacao>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.DespesaTipo).WithMany(t => t.DespesaEspecificacoes).HasForeignKey(e => e.IdDespesaTipo);
+        });
+    }
+
+    public static void ConfigureDespesaResumoMensal(this ModelBuilder modelBuilder)
+    {
+        // Configure DespesaResumoMensal
+        modelBuilder.Entity<DespesaResumoMensal>(entity =>
+        {
+            entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
+            entity.HasOne(e => e.Deputado).WithMany().HasForeignKey(e => e.IdDeputado);
+        });
+    }
+
+    public static void ConfigureDespesaTipo(this ModelBuilder modelBuilder)
+    {
+        // Configure DespesaTipo
+        modelBuilder.Entity<DespesaTipo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+        });
+    }
+
+    // Master method to apply all configurations
+    public static void ConfigureCamaraLegislativaEntities(this ModelBuilder modelBuilder)
+    {
+        modelBuilder.ConfigureDeputado();
+        modelBuilder.ConfigureDeputadoCampeaoGasto();
+        modelBuilder.ConfigureDespesa();
+        modelBuilder.ConfigureDespesaEspecificacao();
+        modelBuilder.ConfigureDespesaResumoMensal();
+        modelBuilder.ConfigureDespesaTipo();
+    }
+}

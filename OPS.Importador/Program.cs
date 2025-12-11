@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,10 +21,12 @@ using OfficeOpenXml;
 using OPS.Core;
 using OPS.Core.Repository;
 using OPS.Core.Utilities;
-using OPS.Importador.ALE;
-using OPS.Importador.ALE.Comum;
-using OPS.Importador.ALE.Despesa;
+using OPS.Importador.Assembleias;
+using OPS.Importador.Assembleias.Comum;
+using OPS.Importador.CamaraFederal;
+using OPS.Importador.SenadoFederal;
 using OPS.Importador.Utilities;
+using OPS.Infraestrutura.Factories;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -70,8 +73,8 @@ namespace OPS.Importador
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
             services.AddTransient<IDbConnection>(_ => new MySqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
 
-            services.AddScoped<Senado>();
-            services.AddScoped<CamaraFederal>();
+            services.AddScoped<SenadoFederal.Senado>();
+            services.AddScoped<Camara>();
 
             services.AddScoped<Acre>();
             services.AddScoped<Alagoas>();
@@ -108,6 +111,8 @@ namespace OPS.Importador
 
             services.AddScoped<Fornecedor>();
             services.AddScoped<HttpLogger>();
+            services.AddSingleton<AppDbContextFactory>(provider => 
+                new AppDbContextFactory(provider, configuration.GetConnectionString("AuditoriaContext")));
             //services.AddRedaction();
 
             services.AddHttpClient<HttpClient>("ResilientClient", config =>
@@ -211,13 +216,13 @@ namespace OPS.Importador
 
                 logger.LogInformation("Iniciando Importação");
 
-                using (var banco = new AppDb())
+                var dbContextFactory = serviceProvider.GetRequiredService<AppDbContextFactory>();
+                using (var dbContext = dbContextFactory.CreateDbContext())
                 {
-                    banco.ExecuteNonQuery(@"
+                    await dbContext.Database.ExecuteSqlRawAsync(@"
 INSERT IGNORE INTO ops_tmp.cl_deputado_de_para (id, nome, id_estado)
 SELECT id, nome_parlamentar, id_estado FROM ops.cl_deputado
 WHERE nome_parlamentar IS NOT NULL;
-
 
 INSERT IGNORE INTO ops_tmp.cl_deputado_de_para (id, nome, id_estado)
 SELECT id, nome_civil, id_estado FROM ops.cl_deputado
@@ -235,8 +240,8 @@ WHERE nome_civil IS NOT NULL;");
 
                 var types = new Type[]
                 {
-                    typeof(Senado), // csv
-                    typeof(CamaraFederal), // csv
+                    typeof(SenadoFederal.Senado), // csv
+                    typeof(Camara), // csv
                     //typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
                     typeof(Amapa), // crawler mensal/deputado (Apenas BR)
@@ -344,49 +349,33 @@ WHERE nome_civil IS NOT NULL;");
 
         private static void ImportarPartidos()
         {
-            var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-            var sb = new StringBuilder();
             var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
-
-            int indice = 0;
-            int Legenda = indice++;
-            int Imagem = indice++;
-            int Sigla = indice++;
-            int Nome = indice++;
-            int Sede = indice++;
-            int Fundacao = indice++;
-            int RegistroSolicitacao = indice++;
-            int RegistroProvisorio = indice++;
-            int RegistroDefinitivo = indice++;
-            int Extincao = indice++;
-            int Motivo = indice++;
-
-            using (var banco = new AppDb())
+            
+            var factory = new AppDbContextFactory(null, Padrao.ConnectionString);
+            using (var dbContext = factory.CreateDbContext())
             {
                 using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
                 {
                     using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
                     {
-                        //csv.Configuration.Delimiter = ",";
-
                         using (var client = new System.Net.Http.HttpClient())
                         {
-                            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)"); //Other
+                            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)");
 
                             while (csv.Read())
                             {
-                                if (csv[Imagem] == "LOGO") continue;
+                                if (csv[2] == "LOGO") continue;
 
-                                if (csv[Imagem] != "")
+                                if (csv[2] != "")
                                 {
                                     try
                                     {
-                                        MatchCollection m1 = Regex.Matches(csv[Imagem], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
+                                        MatchCollection m1 = Regex.Matches(csv[2], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
                                         if (m1.Count > 0)
                                         {
                                             var link = m1[0].Groups[1].Value;
 
-                                            var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[Sigla].ToLower() + ".png";
+                                            var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[3].ToLower() + ".png";
                                             if (!File.Exists(arquivo))
                                                 client.DownloadFile(link, arquivo).Wait();
                                         }
@@ -396,24 +385,27 @@ WHERE nome_civil IS NOT NULL;");
                                         Console.WriteLine(ex.Message);
                                     }
                                 }
+                                
+                                var parameters = new[]
+                                {
+                                    ("@legenda", csv[0] != "-" ? (object)csv[0] : null),
+                                    ("@sigla", csv[2] != "??" ? (object)csv[2] : null),
+                                    ("@nome", csv[3]),
+                                    ("@sede", csv[4] != "??" ? (object)csv[4] : null),
+                                    ("@fundacao", AjustarData(csv[5])),
+                                    ("@registro_solicitacao", AjustarData(csv[6])),
+                                    ("@registro_provisorio", AjustarData(csv[7])),
+                                    ("@registro_definitivo", AjustarData(csv[8])),
+                                    ("@extincao", AjustarData(csv[9])),
+                                    ("@motivo", csv[10])
+                                };
 
-                                banco.AddParameter("legenda", csv[Legenda] != "-" ? csv[Legenda] : null);
-                                banco.AddParameter("sigla", csv[Sigla] != "??" ? csv[Sigla] : null);
-                                banco.AddParameter("nome", csv[Nome]);
-                                banco.AddParameter("sede", csv[Sede] != "??" ? csv[Sede] : null);
-                                banco.AddParameter("fundacao", AjustarData(csv[Fundacao]));
-                                banco.AddParameter("registro_solicitacao", AjustarData(csv[RegistroSolicitacao]));
-                                banco.AddParameter("registro_provisorio", AjustarData(csv[RegistroProvisorio]));
-                                banco.AddParameter("registro_definitivo", AjustarData(csv[RegistroDefinitivo]));
-                                banco.AddParameter("extincao", AjustarData(csv[Extincao]));
-                                banco.AddParameter("motivo", csv[Motivo]);
-
-                                banco.ExecuteNonQuery(
-                                    @"INSERT INTO partido_todos (
+                                dbContext.Database.ExecuteSqlRaw(@"
+                                    INSERT INTO partido_todos (
                                         legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
                                     ) VALUES (
                                         @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
-                                    )");
+                                    )", parameters);
                             }
                         }
                     }
@@ -431,23 +423,23 @@ AND l.id_cf_despesa_tipo = 120
 AND l.tipo_link = 1
 AND l.id > 10501020
 ORDER BY 1";
+            
             using (var client = new System.Net.Http.HttpClient())
-            using (var banco = new AppDb())
+            using (var connection = new MySqlConnection(Padrao.ConnectionString))
             {
-                var dic = banco.ExecuteDict(sql);
-                foreach (var item in dic)
+                await connection.OpenAsync();
+                var results = await connection.QueryAsync(sql);
+                foreach (var item in results)
                 {
                     try
                     {
-                        var nomeArquivo = $"";
-                        var url = $"https://www.camara.leg.br/cota-parlamentar/documentos/publ/{item["id_deputado"]}/{item["ano"]}/{item["id_documento"]}.pdf";
-                        var arquivo = $@"C:\temp\NotasFiscais\{item["id_deputado"]}-{item["ano"]}-{item["id_documento"]}.pdf";
+                        var url = $"https://www.camara.leg.br/cota-parlamentar/documentos/publ/{item.id_deputado}/{item.ano}/{item.id_documento}.pdf";
+                        var arquivo = $@"C:\temp\NotasFiscais\{item.id_deputado}-{item.ano}-{item.id_documento}.pdf";
 
                         if (!File.Exists(arquivo))
                         {
-                            Console.WriteLine($"Baixando {item["id"]} {url}...");
+                            Console.WriteLine($"Baixando {item.id} {url}...");
                             await client.DownloadFile(url, arquivo);
-
                             await Task.Delay(1000);
                         }
                     }

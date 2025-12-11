@@ -1,0 +1,34 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using OPS.Infraestrutura.Entities.Comum;
+
+namespace OPS.Infraestrutura.Entities.SenadoFederal
+{
+    [Table("sf_mandato")]
+    public class Mandato
+    {
+        [Key]
+        [Column("id")]
+        public uint Id { get; set; }
+
+        [Key]
+        [Column("id_sf_senador")]
+        public uint IdSenador { get; set; }
+
+        [Column("id_estado")]
+        public byte? IdEstado { get; set; }
+
+        [Column("participacao")]
+        [StringLength(2)]
+        public string Participacao { get; set; } = null!;
+
+        [Column("exerceu")]
+        public bool Exerceu { get; set; }
+
+        // Navigation properties
+        public virtual Senador Senador { get; set; } = null!;
+        public virtual Estado? Estado { get; set; }
+        public virtual ICollection<MandatoExercicio> MandatoExercicios { get; set; } = new List<MandatoExercicio>();
+        public virtual ICollection<MandatoLegislatura> MandatoLegislaturas { get; set; } = new List<MandatoLegislatura>();
+    }
+}

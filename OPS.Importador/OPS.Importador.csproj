@@ -58,6 +58,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OPS.Core\OPS.Core.csproj" />
+    <ProjectReference Include="..\OPS.Infraestrutura\OPS.Infraestrutura.csproj" />
   </ItemGroup>
 
   <ItemGroup>

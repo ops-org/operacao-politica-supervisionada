@@ -1,0 +1,15 @@
+﻿using System.Collections.Generic;
+
+namespace OPS.Importador.Senado.Entities;
+
+public class Parlamentar
+{
+    public IdentificacaoParlamentar IdentificacaoParlamentar { get; set; }
+
+    public Mandatos Mandatos { get; set; }
+}
+
+public class Parlamentares
+{
+    public List<Parlamentar> Parlamentar { get; set; }
+}
