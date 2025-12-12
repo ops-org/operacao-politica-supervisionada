@@ -234,41 +234,41 @@ WHERE nome_civil IS NOT NULL;");
                 //var alagoas = new ImportadorDespesasAlagoas(serviceProvider);
                 //await alagoas.ImportarDespesasArquivo(2025, 8, url, "Francisco Tenorio", new DateTime(2025, 8, 1));
 
-                var crawler = new SeleniunScraper(serviceProvider);
-                crawler.BaixarArquivosParana(DateTime.Today.Year);
-                crawler.BaixarArquivosPiaui();
+                //var crawler = new SeleniunScraper(serviceProvider);
+                //crawler.BaixarArquivosParana(DateTime.Today.Year);
+                //crawler.BaixarArquivosPiaui();
 
                 var types = new Type[]
                 {
-                    typeof(SenadoFederal.Senado), // csv
-                    typeof(Camara), // csv
-                    //typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    typeof(Amapa), // crawler mensal/deputado (Apenas BR)
-                    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
-                    typeof(Bahia), // crawler anual
-                    typeof(Ceara), // csv mensal
-                    typeof(DistritoFederal), // xlsx  (Apenas BR)
-                    typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                    typeof(Goias), // crawler mensal/deputado
-                    typeof(Maranhao), // Valores mensais por categoria
-                    //typeof(MatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    typeof(MatoGrossoDoSul), // crawler anual
-                    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR) 
-                    typeof(Para), // json api anual
-                    typeof(Paraiba), // arquivo ods mensal/deputado
-                    typeof(Parana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
-                    typeof(Pernambuco), // json api mensal/deputado
-                    typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual)
-                    typeof(RioDeJaneiro), // json api mensal/deputado
-                    typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
-                    typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
-                    typeof(Rondonia), // crawler mensal/deputado
-                    typeof(Roraima), // crawler & odt mensal/deputado
-                    typeof(SantaCatarina), // csv anual
-                    typeof(SaoPaulo), // xml anual
-                    typeof(Sergipe), // crawler & pdf mensal/deputado
-                    typeof(Tocantins), // crawler & pdf mensal/deputado
+                    typeof(Senado), // csv
+                    //typeof(Camara), // csv
+                    ////typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                    //typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Bahia), // crawler anual
+                    //typeof(Ceara), // csv mensal
+                    //typeof(DistritoFederal), // xlsx  (Apenas BR)
+                    //typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    //typeof(Goias), // crawler mensal/deputado
+                    //typeof(Maranhao), // Valores mensais por categoria
+                    ////typeof(MatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(MatoGrossoDoSul), // crawler anual
+                    //typeof(MinasGerais), // xml api mensal/deputado (Apenas BR) 
+                    //typeof(Para), // json api anual
+                    //typeof(Paraiba), // arquivo ods mensal/deputado
+                    //typeof(Parana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
+                    //typeof(Pernambuco), // json api mensal/deputado
+                    //typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual)
+                    //typeof(RioDeJaneiro), // json api mensal/deputado
+                    //typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    //typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Rondonia), // crawler mensal/deputado
+                    //typeof(Roraima), // crawler & odt mensal/deputado
+                    //typeof(SantaCatarina), // csv anual
+                    //typeof(SaoPaulo), // xml anual
+                    //typeof(Sergipe), // crawler & pdf mensal/deputado
+                    //typeof(Tocantins), // crawler & pdf mensal/deputado
                 };
 
                 var tasks = new List<Task>();
@@ -349,6 +349,7 @@ WHERE nome_civil IS NOT NULL;");
 
         private static void ImportarPartidos()
         {
+            // (outra fonnte) https://legis.senado.leg.br/dadosabertos/senador/partidos
             var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
             
             var factory = new AppDbContextFactory(null, Padrao.ConnectionString);

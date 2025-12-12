@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OPS.Infraestrutura.Entities.AssembleiasLegislativas;
 
-namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas;
+namespace OPS.Infraestrutura;
 
 public partial class AppDbContext
 {
@@ -14,9 +14,9 @@ public partial class AppDbContext
     public DbSet<DespesaTipo> DespesaTipos { get; set; }
 }
 
-public static class CamaraLegislativaConfigurations
+public static class AssembleiasLegislativasConfigurations
 {
-    public static void ConfigureDeputado(this ModelBuilder modelBuilder)
+    public static void ConfigureDeputadoEstadual(this ModelBuilder modelBuilder)
     {
         // Configure Deputado
         modelBuilder.Entity<Deputado>(entity =>
@@ -28,7 +28,7 @@ public static class CamaraLegislativaConfigurations
         });
     }
 
-    public static void ConfigureDeputadoCampeaoGasto(this ModelBuilder modelBuilder)
+    public static void ConfigureDeputadoEstadualCampeaoGasto(this ModelBuilder modelBuilder)
     {
         // Configure DeputadoCampeaoGasto
         modelBuilder.Entity<DeputadoCampeaoGasto>(entity =>
@@ -38,7 +38,7 @@ public static class CamaraLegislativaConfigurations
         });
     }
 
-    public static void ConfigureDespesa(this ModelBuilder modelBuilder)
+    public static void ConfigureDespesaDeputadoEstadual(this ModelBuilder modelBuilder)
     {
         // Configure Despesa
         modelBuilder.Entity<Despesa>(entity =>
@@ -51,7 +51,7 @@ public static class CamaraLegislativaConfigurations
         });
     }
 
-    public static void ConfigureDespesaEspecificacao(this ModelBuilder modelBuilder)
+    public static void ConfigureDespesaEspecificacaoDeputadoEstadual(this ModelBuilder modelBuilder)
     {
         // Configure DespesaEspecificacao
         modelBuilder.Entity<DespesaEspecificacao>(entity =>
@@ -61,7 +61,7 @@ public static class CamaraLegislativaConfigurations
         });
     }
 
-    public static void ConfigureDespesaResumoMensal(this ModelBuilder modelBuilder)
+    public static void ConfigureDespesaResumoMensalDeputadoEstadual(this ModelBuilder modelBuilder)
     {
         // Configure DespesaResumoMensal
         modelBuilder.Entity<DespesaResumoMensal>(entity =>
@@ -71,7 +71,7 @@ public static class CamaraLegislativaConfigurations
         });
     }
 
-    public static void ConfigureDespesaTipo(this ModelBuilder modelBuilder)
+    public static void ConfigureDespesaTipoDeputadoEstadual(this ModelBuilder modelBuilder)
     {
         // Configure DespesaTipo
         modelBuilder.Entity<DespesaTipo>(entity =>
@@ -81,13 +81,13 @@ public static class CamaraLegislativaConfigurations
     }
 
     // Master method to apply all configurations
-    public static void ConfigureCamaraLegislativaEntities(this ModelBuilder modelBuilder)
+    public static void ConfigureAssembleiasLegislativasEntities(this ModelBuilder modelBuilder)
     {
-        modelBuilder.ConfigureDeputado();
-        modelBuilder.ConfigureDeputadoCampeaoGasto();
-        modelBuilder.ConfigureDespesa();
-        modelBuilder.ConfigureDespesaEspecificacao();
-        modelBuilder.ConfigureDespesaResumoMensal();
-        modelBuilder.ConfigureDespesaTipo();
+        modelBuilder.ConfigureDeputadoEstadual();
+        modelBuilder.ConfigureDeputadoEstadualCampeaoGasto();
+        modelBuilder.ConfigureDespesaDeputadoEstadual();
+        modelBuilder.ConfigureDespesaEspecificacaoDeputadoEstadual();
+        modelBuilder.ConfigureDespesaResumoMensalDeputadoEstadual();
+        modelBuilder.ConfigureDespesaTipoDeputadoEstadual();
     }
 }

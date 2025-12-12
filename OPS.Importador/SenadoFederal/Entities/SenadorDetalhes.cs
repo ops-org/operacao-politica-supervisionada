@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace OPS.Importador.Senado.Entities;
+namespace OPS.Importador.SenadoFederal.Entities;
 
 public class DadosBasicosParlamentar
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OPS.Importador.Senado.Entities;
+namespace OPS.Importador.SenadoFederal.Entities;
 
 public class Mandato
 {
@@ -19,6 +19,8 @@ public class Mandato
     public Suplentes Suplentes { get; set; }
 
     public Exercicios Exercicios { get; set; }
+
+    public Partidos Partidos { get; set; }
 }
 
 public class Mandatos

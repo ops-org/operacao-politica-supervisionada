@@ -1,4 +1,4 @@
-﻿namespace OPS.Importador.Senado.Entities;
+﻿namespace OPS.Importador.SenadoFederal.Entities;
 
 public class Metadados
 {

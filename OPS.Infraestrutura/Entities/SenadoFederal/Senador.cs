@@ -15,11 +15,11 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
 
         [Column("nome")]
         [StringLength(255)]
-        public string Nome { get; set; } = null!;
+        public string? Nome { get; set; }
 
         [Column("nome_completo")]
         [StringLength(255)]
-        public string NomeCompleto { get; set; } = null!;
+        public string? NomeCompleto { get; set; }
 
         [Column("sexo")]
         [StringLength(1)]
@@ -74,5 +74,12 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
         public virtual ICollection<Mandato> Mandatos { get; set; } = new List<Mandato>();
         public virtual ICollection<MandatoExercicio> MandatoExercicios { get; set; } = new List<MandatoExercicio>();
+        public virtual ICollection<Lotacao> Lotacoes { get; set; } = new List<Lotacao>();
+        public virtual ICollection<Secretario> Secretarios { get; set; } = new List<Secretario>();
+        public virtual ICollection<SecretarioCompleto> SecretariosCompletos { get; set; } = new List<SecretarioCompleto>();
+        public virtual SenadorCampeaoGasto? CampeaoGasto { get; set; }
+        public virtual ICollection<SenadorHistoricoAcademico> HistoricoAcademico { get; set; } = new List<SenadorHistoricoAcademico>();
+        public virtual ICollection<SenadorProfissao> Profissoes { get; set; } = new List<SenadorProfissao>();
+        public virtual ICollection<SenadorPartido> Partidos { get; set; } = new List<SenadorPartido>();
     }
 }

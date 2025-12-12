@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using OPS.Infraestrutura.Entities.Comum;
+using OPS.Infraestrutura.Entities.SenadoFederal;
 
-namespace OPS.Infraestrutura.Entities.SenadoFederal;
+namespace OPS.Infraestrutura;
 
 public partial class AppDbContext
 {
@@ -9,6 +10,7 @@ public partial class AppDbContext
     public DbSet<Senador> Senadores { get; set; }
     public DbSet<Despesa> DespesasSenado { get; set; }
     public DbSet<DespesaTipo> DespesaTiposSenado { get; set; }
+    public DbSet<DespesaResumoMensal> DespesaResumoMensal { get; set; }
     public DbSet<Mandato> MandatosSenado { get; set; }
     public DbSet<MandatoExercicio> MandatoExerciciosSenado { get; set; }
     public DbSet<MandatoLegislatura> MandatoLegislaturasSenado { get; set; }
@@ -22,6 +24,12 @@ public partial class AppDbContext
     public DbSet<Funcao> Funcoes { get; set; }
     public DbSet<Lotacao> Lotacoes { get; set; }
     public DbSet<TipoFolha> TipoFolhas { get; set; }
+    public DbSet<Secretario> Secretarios { get; set; }
+    public DbSet<SecretarioCompleto> SecretariosCompletos { get; set; }
+    public DbSet<SenadorCampeaoGasto> SenadoresCampeaoGasto { get; set; }
+    public DbSet<SenadorHistoricoAcademico> SenadoresHistoricoAcademico { get; set; }
+    public DbSet<SenadorProfissao> SenadoresProfissao { get; set; }
+    public DbSet<SenadorPartido> SenadorPartidos { get; set; }
 }
 
 public static class SenadoFederalConfigurations
@@ -35,7 +43,7 @@ public static class SenadoFederalConfigurations
         });
     }
 
-    public static void ConfigureDespesa(this ModelBuilder modelBuilder)
+    public static void ConfigureDespesaSenado(this ModelBuilder modelBuilder)
     {
         // Configure Despesa (Senado Federal - Composite Key)
         modelBuilder.Entity<Despesa>(entity =>
@@ -43,21 +51,23 @@ public static class SenadoFederalConfigurations
             entity.HasKey(e => new { e.IdSenador, e.Id });
             entity.HasOne(e => e.Senador).WithMany(s => s.Despesas).HasForeignKey(e => e.IdSenador);
             entity.HasOne(e => e.DespesaTipo).WithMany(t => t.Despesas).HasForeignKey(e => e.IdDespesaTipo);
+            entity.HasOne(e => e.Fornecedor).WithMany().HasForeignKey(e => e.IdFornecedor);
         });
     }
 
-    public static void ConfigureMandato(this ModelBuilder modelBuilder)
+    public static void ConfigureMandatoSenado(this ModelBuilder modelBuilder)
     {
         // Configure Mandato (Senado Federal - Composite Key)
         modelBuilder.Entity<Mandato>(entity =>
         {
             entity.HasKey(e => new { e.Id, e.IdSenador });
             entity.HasOne(e => e.Senador).WithMany(s => s.Mandatos).HasForeignKey(e => e.IdSenador);
-            entity.HasOne(e => e.Estado); //.WithMany(e => e.MandatosSenadoFederal).HasForeignKey(e => e.IdEstado);
+            entity.HasOne(e => e.Estado).WithMany().HasForeignKey(e => e.IdEstado);
+            entity.HasOne(e => e.Partido).WithMany().HasForeignKey(e => e.IdPartido);
         });
     }
 
-    public static void ConfigureMandatoExercicio(this ModelBuilder modelBuilder)
+    public static void ConfigureMandatoExercicioSenado(this ModelBuilder modelBuilder)
     {
         // Configure MandatoExercicio
         modelBuilder.Entity<MandatoExercicio>(entity =>
@@ -71,7 +81,7 @@ public static class SenadoFederalConfigurations
         });
     }
 
-    public static void ConfigureMandatoLegislatura(this ModelBuilder modelBuilder)
+    public static void ConfigureMandatoLegislaturaSenado(this ModelBuilder modelBuilder)
     {
         // Configure MandatoLegislatura (Composite Key)
         modelBuilder.Entity<MandatoLegislatura>(entity =>
@@ -83,7 +93,7 @@ public static class SenadoFederalConfigurations
         });
     }
 
-    public static void ConfigureRemuneracao(this ModelBuilder modelBuilder)
+    public static void ConfigureRemuneracaoSenado(this ModelBuilder modelBuilder)
     {
         // Configure Remuneracao
         modelBuilder.Entity<Remuneracao>(entity =>
@@ -100,13 +110,142 @@ public static class SenadoFederalConfigurations
         });
     }
 
+    public static void ConfigureDespesaResumoMensal(this ModelBuilder modelBuilder)
+    {
+        // Configure DespesaResumoMensal (Composite Key)
+        modelBuilder.Entity<DespesaResumoMensal>(entity =>
+        {
+            entity.HasKey(e => new { e.Ano, e.Mes });
+        });
+    }
+
+    public static void ConfigureSenadoFederalSupportEntities(this ModelBuilder modelBuilder)
+    {
+        // Configure basic lookup tables
+        modelBuilder.Entity<Cargo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Descricao).IsUnique();
+        });
+
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Descricao).IsUnique();
+        });
+
+        modelBuilder.Entity<DespesaTipo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Descricao).IsUnique();
+        });
+
+        modelBuilder.Entity<Funcao>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Descricao).IsUnique();
+        });
+
+        modelBuilder.Entity<Legislatura>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+        });
+
+        modelBuilder.Entity<Lotacao>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Descricao).IsUnique();
+            entity.HasOne(e => e.Senador).WithMany(s => s.Lotacoes).HasForeignKey(e => e.IdSenador);
+        });
+
+        modelBuilder.Entity<MotivoAfastamento>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+        });
+
+        modelBuilder.Entity<ReferenciaCargo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Descricao).IsUnique();
+        });
+
+        modelBuilder.Entity<TipoFolha>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+        });
+
+        modelBuilder.Entity<Vinculo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Descricao).IsUnique();
+        });
+    }
+
+    public static void ConfigureSenadoFederalAdditionalEntities(this ModelBuilder modelBuilder)
+    {
+        // Configure SenadorProfissao (Composite Key)
+        modelBuilder.Entity<SenadorProfissao>(entity =>
+        {
+            entity.HasKey(e => new { e.IdSenador, e.IdProfissao });
+            entity.HasOne(e => e.Senador).WithMany(s => s.Profissoes).HasForeignKey(e => e.IdSenador);
+        });
+
+        // Configure SenadorHistoricoAcademico (Composite Key)
+        modelBuilder.Entity<SenadorHistoricoAcademico>(entity =>
+        {
+            entity.HasKey(e => new { e.IdSenador, e.Curso, e.Nivel });
+            entity.HasOne(e => e.Senador).WithMany(s => s.HistoricoAcademico).HasForeignKey(e => e.IdSenador);
+        });
+
+        // Configure SenadorCampeaoGasto
+        modelBuilder.Entity<SenadorCampeaoGasto>(entity =>
+        {
+            entity.HasKey(e => e.IdSenador);
+            entity.HasOne(e => e.Senador).WithOne(s => s.CampeaoGasto).HasForeignKey<SenadorCampeaoGasto>(e => e.IdSenador);
+        });
+
+        // Configure Secretario
+        modelBuilder.Entity<Secretario>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.HasOne(e => e.Senador).WithMany(s => s.Secretarios).HasForeignKey(e => e.IdSenador);
+        });
+
+        // Configure SecretarioCompleto (view-like entity)
+        modelBuilder.Entity<SecretarioCompleto>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.HasOne(e => e.Senador).WithMany().HasForeignKey(e => e.IdSenador);
+        });
+
+        // Configure SenadorPartido
+        modelBuilder.Entity<SenadorPartido>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Senador).WithMany().HasForeignKey(e => e.IdSenador);
+            entity.HasOne(e => e.Partido).WithMany().HasForeignKey(e => e.IdPartido);
+        });
+    }
+
     public static void ConfigureSenadoFederalEntities(this ModelBuilder modelBuilder)
     {
         modelBuilder.ConfigureSenador();
-        modelBuilder.ConfigureDespesa();
-        modelBuilder.ConfigureMandato();
-        modelBuilder.ConfigureMandatoExercicio();
-        modelBuilder.ConfigureMandatoLegislatura();
-        modelBuilder.ConfigureRemuneracao();
+        modelBuilder.ConfigureDespesaSenado();
+        modelBuilder.ConfigureDespesaResumoMensal();
+        modelBuilder.ConfigureMandatoSenado();
+        modelBuilder.ConfigureMandatoExercicioSenado();
+        modelBuilder.ConfigureMandatoLegislaturaSenado();
+        modelBuilder.ConfigureRemuneracaoSenado();
+        modelBuilder.ConfigureSenadoFederalSupportEntities();
+        modelBuilder.ConfigureSenadoFederalAdditionalEntities();
     }
 }

@@ -8,12 +8,10 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     public class SenadorProfissao
     {
         [Key]
-        [Column("id")]
-        public uint Id { get; set; }
-
         [Column("id_sf_senador")]
         public uint IdSenador { get; set; }
 
+        [Key]
         [Column("id_profissao")]
         public uint IdProfissao { get; set; }
 

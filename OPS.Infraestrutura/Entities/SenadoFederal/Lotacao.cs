@@ -18,6 +18,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public string Descricao { get; set; } = null!;
 
         // Navigation properties
+        public virtual Senador? Senador { get; set; }
         public virtual ICollection<Remuneracao> Remuneracoes { get; set; } = new List<Remuneracao>();
     }
 }

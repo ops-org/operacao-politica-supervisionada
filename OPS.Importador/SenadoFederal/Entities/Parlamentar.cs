@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OPS.Importador.Senado.Entities;
+namespace OPS.Importador.SenadoFederal.Entities;
 
 public class Parlamentar
 {

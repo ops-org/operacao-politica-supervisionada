@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using OPS.Infraestrutura.Entities.CamaraFederal;
+using OPS.Infraestrutura.Entities.Comum;
 using OPS.Infraestrutura.Entities.Fornecedores;
 
-namespace OPS.Infraestrutura.Entities.Comum;
+namespace OPS.Infraestrutura;
 
 public partial class AppDbContext
 {

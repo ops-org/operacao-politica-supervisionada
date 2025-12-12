@@ -322,13 +322,6 @@ CREATE TABLE IF NOT EXISTS `sf_senador_profissao` (
 
 -- Exportação de dados foi desmarcado.
 
--- Copiando estrutura para tabela ops.sf_situacao
-CREATE TABLE IF NOT EXISTS `sf_situacao` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `descricao` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `descricao` (`descricao`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -348,6 +341,20 @@ CREATE TABLE IF NOT EXISTS `sf_vinculo` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `descricao` (`descricao`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `sf_senador_partido` (
+	`id` MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`id_sf_senador` MEDIUMINT UNSIGNED NOT NULL,
+	`id_partido` TINYINT UNSIGNED NOT NULL,
+	`filiacao` DATE NULL DEFAULT NULL,
+	`desfiliacao` DATE NULL DEFAULT NULL,
+	PRIMARY KEY (`id`) USING BTREE,
+	UNIQUE INDEX `id_sf_senador_id_partido_filiacao` (`id_sf_senador`, `id_partido`, `filiacao`) USING BTREE,
+	INDEX `id_sf_senador` (`id_sf_senador`) USING BTREE,
+	INDEX `id_partido` (`id_partido`) USING BTREE,
+	CONSTRAINT `FK_sf_mandato_partido_partido` FOREIGN KEY (`id_partido`) REFERENCES `partido` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION,
+	CONSTRAINT `FK_sf_mandato_partido_sf_senador` FOREIGN KEY (`id_sf_senador`) REFERENCES `sf_senador` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Exportação de dados foi desmarcado.
 
