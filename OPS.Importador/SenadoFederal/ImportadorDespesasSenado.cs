@@ -12,15 +12,49 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Utilities;
+using OPS.Infraestrutura;
+using OPS.Infraestrutura.Entities.SenadoFederal;
+using OPS.Infraestrutura.Factories;
 using RestSharp;
 
 namespace OPS.Importador.SenadoFederal
 {
+    /// <summary>
+    /// Column indexes for Senado Federal remuneration CSV file
+    /// </summary>
+    public enum SenadoRemuneracaoCsvColumns
+    {
+        VÍNCULO = 0,
+        CATEGORIA = 1,
+        CARGO = 2,
+        REFERÊNCIA_CARGO = 3,
+        SÍMBOLO_FUNÇÃO = 4,
+        ANO_EXERCÍCIO = 5,
+        LOTAÇÃO_EXERCÍCIO = 6,
+        TIPO_FOLHA = 7,
+        REMUN_BASICA = 8,
+        VANT_PESSOAIS = 9,
+        FUNC_COMISSIONADA = 10,
+        GRAT_NATALINA = 11,
+        HORAS_EXTRAS = 12,
+        OUTRAS_EVENTUAIS = 13,
+        ABONO_PERMANENCIA = 14,
+        REVERSAO_TETO_CONST = 15,
+        IMPOSTO_RENDA = 16,
+        PREVIDENCIA = 17,
+        FALTAS = 18,
+        REM_LIQUIDA = 19,
+        DIARIAS = 20,
+        AUXILIOS = 21,
+        VANT_INDENIZATORIAS = 22
+    }
+
     /// <summary>
     /// Senado Federal
     /// https://www12.senado.leg.br/dados-abertos
@@ -29,6 +63,7 @@ namespace OPS.Importador.SenadoFederal
     {
         protected readonly ILogger<ImportadorDespesasSenado> logger;
         protected readonly IDbConnection connection;
+        protected readonly AppDbContextFactory dbContextFactory;
 
         public string rootPath { get; init; }
         public string tempPath { get; init; }
@@ -43,6 +78,7 @@ namespace OPS.Importador.SenadoFederal
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
             connection = serviceProvider.GetService<IDbConnection>();
+            dbContextFactory = serviceProvider.GetService<AppDbContextFactory>();
 
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -50,332 +86,7 @@ namespace OPS.Importador.SenadoFederal
             importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
 
             httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
-    }
-
-        //public string AtualizaCadastroParlamentarCompleto()
-        //{
-        //    using (var banco = new AppDb())
-        //    {
-        //        var lstSenadorNovo = new List<string>();
-        //        var lstSenador = new List<int>();
-
-        //        using (var reader = banco.ExecuteReader("SELECT s.id FROM sf_senador s left join sf_mandato m ON m.id_sf_senador = s.id WHERE m.id IS null"))
-        //            while (reader.Read())
-        //                lstSenador.Add(Convert.ToInt32(reader["id"]));
-
-        //        using (var reader = banco.ExecuteReader("SELECT id FROM sf_senador order by id"))
-        //            while (reader.Read())
-        //                lstSenadorNovo.Add(reader["id"].ToString());
-
-        //        var lstLegislatura = new List<string>();
-        //        using (var reader = banco.ExecuteReader("SELECT id FROM sf_legislatura"))
-        //            while (reader.Read())
-        //                lstLegislatura.Add(reader["id"].ToString());
-
-        //        var lstMotivoAfastamento = new List<string>();
-        //        using (var reader = banco.ExecuteReader("SELECT id FROM sf_motivo_afastamento"))
-        //            while (reader.Read())
-        //                lstMotivoAfastamento.Add(reader["id"].ToString());
-
-        //        var lstProfissao = new Dictionary<string, int>();
-        //        using (var reader = banco.ExecuteReader("SELECT id, descricao FROM profissao"))
-        //            while (reader.Read())
-        //                lstProfissao.Add(reader["descricao"].ToString(), Convert.ToInt32(reader["id"]));
-
-        //        var restClient = new RestClient();
-        //        //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
-        //        var indice = 0;
-        //        var totalSenadores = lstSenador.Count;
-        //        foreach (var idSenador in lstSenador)
-        //        {
-        //            var reqSenador = new RestRequest($"http://legis.senado.gov.br/dadosabertos/senador/{idSenador}");
-        //            reqSenador.AddHeader("Accept", "application/json");
-
-        //            var resSenador = restClient.Get(reqSenador);
-        //            JsonNode jSenador = JsonNode.Parse(resSenador.Content).AsObject();
-        //            JsonNode arrParlamentar = (JsonNode)jSenador["DetalheParlamentar"]["Parlamentar"];
-
-        //            var parlamentarCompleto = arrParlamentar.Deserialize<SenadorParlamentar>();
-        //            logger.LogInformation("{IndiceAtual}/{Total} Consultando Senador {IdSenador}: {NomeParlamentar}", ++indice, totalSenadores, idSenador, parlamentarCompleto.IdentificacaoParlamentar.NomeParlamentar);
-
-        //            var parlamentar = parlamentarCompleto.IdentificacaoParlamentar;
-
-        //            if (string.IsNullOrEmpty(parlamentar.UfParlamentar))
-        //            {
-        //                try
-        //                {
-        //                    var jUltimoMandato = jSenador["DetalheParlamentar"]["Parlamentar"]["UltimoMandato"];
-        //                    if (jUltimoMandato != null)
-        //                    {
-        //                        if (jUltimoMandato is JsonArray)
-        //                            parlamentar.UfParlamentar = jUltimoMandato[0]["UfParlamentar"]?.ToString();
-        //                        else
-        //                            parlamentar.UfParlamentar = jUltimoMandato["UfParlamentar"]?.ToString();
-        //                    }
-        //                }
-        //                catch (Exception)
-        //                { }
-        //            }
-
-        //            if (string.IsNullOrEmpty(parlamentar.NomeParlamentar))
-        //            {
-        //                parlamentar.NomeParlamentar = parlamentar.NomeCompletoParlamentar;
-        //            }
-
-        //            banco.AddParameter("id", parlamentar.CodigoParlamentar);
-        //            banco.AddParameter("codigo", parlamentar.CodigoPublicoNaLegAtual);
-        //            banco.AddParameter("nome", parlamentar.NomeParlamentar);
-        //            banco.AddParameter("nome_completo", parlamentar.NomeCompletoParlamentar);
-        //            banco.AddParameter("sexo", parlamentar.SexoParlamentar[0].ToString());
-        //            banco.AddParameter("sigla_partido", parlamentar.SiglaPartidoParlamentar);
-        //            banco.AddParameter("sigla_uf", parlamentar.UfParlamentar);
-        //            banco.AddParameter("email", parlamentar.EmailParlamentar);
-        //            banco.AddParameter("site", parlamentar.UrlPaginaParticular);
-
-        //            var dadosBasicos = parlamentarCompleto.DadosBasicosParlamentar ?? new DadosBasicosParlamentar();
-        //            banco.AddParameter("nascimento", dadosBasicos.DataNascimento);
-        //            banco.AddParameter("naturalidade", dadosBasicos.Naturalidade);
-        //            banco.AddParameter("sigla_uf_naturalidade", dadosBasicos.UfNaturalidade);
-
-        //            var lstSenadorProfissao = new List<Profissao>();
-        //            if (arrParlamentar["Profissoes"] != null)
-        //            {
-        //                if (arrParlamentar["Profissoes"]["Profissao"] is JsonArray)
-        //                {
-        //                    lstSenadorProfissao = arrParlamentar["Profissoes"]["Profissao"].Deserialize<List<Profissao>>();
-        //                }
-        //                else
-        //                {
-        //                    lstSenadorProfissao.Add(arrParlamentar["Profissoes"]["Profissao"].Deserialize<Profissao>());
-        //                }
-        //            }
-        //            if (lstSenadorProfissao.Any())
-        //            {
-        //                banco.AddParameter("profissao", string.Join(", ", lstSenadorProfissao.Select(obj => obj.NomeProfissao)));
-        //            }
-        //            else
-        //            {
-        //                banco.AddParameter("profissao", DBNull.Value);
-        //            }
-
-        //            banco.ExecuteNonQuery(@"
-        //                UPDATE sf_senador SET
-        //                    codigo = @codigo
-        //                    , nome = @nome
-        //                    , nome_completo = @nome_completo
-        //                    , sexo = @sexo
-        //                    , nascimento = @nascimento
-        //                    , naturalidade = @naturalidade
-        //                    , id_estado_naturalidade = (SELECT id FROM estado where sigla like @sigla_uf_naturalidade)
-        //                    , profissao = @profissao
-        //                    , id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
-        //                    , id_estado = (SELECT id FROM estado where sigla like @sigla_uf)
-        //                    , email = @email
-        //                    , site = @site
-        //                WHERE id = @id
-        //            ");
-
-        //            if (lstSenadorProfissao.Any())
-        //            {
-        //                foreach (var profissao in lstSenadorProfissao)
-        //                {
-        //                    if (!lstProfissao.ContainsKey(profissao.NomeProfissao))
-        //                    {
-        //                        banco.AddParameter("descricao", profissao.NomeProfissao);
-        //                        var idProfissao = banco.ExecuteScalar(@"INSERT INTO profissao (descricao) values (@descricao); SELECT LAST_INSERT_ID();");
-
-        //                        lstProfissao.Add(profissao.NomeProfissao, Convert.ToInt32(idProfissao));
-        //                    }
-
-        //                    banco.AddParameter("id_sf_senador", idSenador);
-        //                    banco.AddParameter("id_profissao", lstProfissao[profissao.NomeProfissao]);
-
-        //                    banco.ExecuteNonQuery(@"INSERT IGNORE INTO sf_senador_profissao (id_sf_senador, id_profissao) values (@id_sf_senador, @id_profissao)");
-        //                }
-
-        //            }
-
-        //            var lstHistoricoAcademico = new List<SenadorCurso>();
-        //            if (arrParlamentar["HistoricoAcademico"] != null)
-        //            {
-        //                if (arrParlamentar["HistoricoAcademico"]["Curso"] is JsonArray)
-        //                {
-        //                    lstHistoricoAcademico = arrParlamentar["HistoricoAcademico"]["Curso"].Deserialize<List<SenadorCurso>>();
-        //                }
-        //                else
-        //                {
-        //                    lstHistoricoAcademico.Add(arrParlamentar["HistoricoAcademico"]["Curso"].Deserialize<SenadorCurso>());
-        //                }
-        //            }
-        //            foreach (var curso in lstHistoricoAcademico)
-        //            {
-        //                banco.AddParameter("id_sf_senador", idSenador);
-        //                banco.AddParameter("nome_curso", curso.NomeCurso);
-        //                banco.AddParameter("grau_instrucao", curso.GrauInstrucao);
-        //                banco.AddParameter("estabelecimento", curso.Estabelecimento);
-        //                banco.AddParameter("local", curso.Local);
-
-        //                banco.ExecuteNonQuery(@"
-        //                    INSERT IGNORE INTO sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
-        //                    values (@id_sf_senador, @nome_curso, @grau_instrucao, @estabelecimento, @local)");
-        //            }
-
-
-        //            var reqSenadorMandato = new RestRequest($"http://legis.senado.gov.br/dadosabertos/senador/{idSenador.ToString()}/mandatos");
-        //            reqSenadorMandato.AddHeader("Accept", "application/json");
-
-        //            RestResponse resSenadorMandato = restClient.Get(reqSenadorMandato);
-        //            SenadorMandato jSenadorMandato = JsonSerializer.Deserialize<SenadorMandato>(resSenadorMandato.Content);
-        //            var arrPalamentar = jSenadorMandato.MandatoParlamentar.Parlamentar;
-        //            var arrMandatosPalamentar = arrPalamentar.Mandatos?.Mandato;
-
-
-        //            if (arrMandatosPalamentar != null)
-        //            {
-
-        //                logger.LogInformation("Consultando {TotalMandatos} mandato(s)", arrMandatosPalamentar.Count());
-        //                foreach (var mandato in arrMandatosPalamentar)
-        //                {
-        //                    try
-        //                    {
-        //                        //Ignorar mandatos muito antigos
-        //                        if (mandato.CodigoMandato == null) continue;
-
-        //                        #region Mandato
-        //                        banco.AddParameter("id", mandato.CodigoMandato);
-        //                        banco.AddParameter("id_sf_senador", idSenador);
-        //                        banco.AddParameter("sigla_uf", mandato.UfParlamentar);
-        //                        banco.AddParameter("participacao", mandato.DescricaoParticipacao[0].ToString());
-        //                        banco.AddParameter("exerceu", mandato.Exercicios != null);
-
-        //                        banco.ExecuteNonQuery(@"
-        //                                INSERT IGNORE INTO sf_mandato (
-        //                                    id, id_sf_senador, id_estado, participacao, exerceu
-        //                                ) VALUES (
-        //                                    @id, @id_sf_senador, (SELECT id FROM estado where sigla like @sigla_uf), @participacao, @exerceu
-        //                                )
-        //                             ");
-
-        //                        if (mandato.DescricaoParticipacao == "Titular")
-        //                        {
-        //                            if (mandato.Suplentes != null && mandato.Suplentes.Suplente.Any(obj => obj.DescricaoParticipacao == "1º Suplente"))
-        //                            {
-        //                                var id = mandato.Suplentes.Suplente.FirstOrDefault(obj => obj.DescricaoParticipacao == "1º Suplente").CodigoParlamentar;
-        //                                if (!lstSenadorNovo.Contains(id))
-        //                                {
-        //                                    lstSenadorNovo.Add(id);
-
-        //                                    banco.AddParameter("id", id);
-        //                                    banco.ExecuteNonQuery(@"INSERT INTO sf_senador (id) VALUES (@id)");
-        //                                }
-        //                            }
-
-        //                            if (mandato.Suplentes != null && mandato.Suplentes.Suplente.Any(obj => obj.DescricaoParticipacao == "2º Suplente"))
-        //                            {
-        //                                var id = mandato.Suplentes.Suplente.FirstOrDefault(obj => obj.DescricaoParticipacao == "2º Suplente").CodigoParlamentar;
-        //                                if (!lstSenadorNovo.Contains(id))
-        //                                {
-        //                                    lstSenadorNovo.Add(id);
-
-        //                                    banco.AddParameter("id", id);
-        //                                    banco.ExecuteNonQuery(@"INSERT INTO sf_senador(id) VALUES (@id)");
-        //                                }
-        //                            }
-        //                        }
-        //                        #endregion Mandato
-
-        //                        if (mandato.DescricaoParticipacao == "Titular")
-        //                        {
-        //                            #region Mandato Legislatura
-
-        //                            var lstLegislaturaMandato = new List<LegislaturaDoMandato>();
-        //                            lstLegislaturaMandato.Add(mandato.PrimeiraLegislaturaDoMandato);
-        //                            lstLegislaturaMandato.Add(mandato.SegundaLegislaturaDoMandato);
-
-        //                            foreach (var legislatura in lstLegislaturaMandato)
-        //                            {
-        //                                if (!lstLegislatura.Contains(legislatura.NumeroLegislatura))
-        //                                {
-        //                                    banco.AddParameter("id", legislatura.NumeroLegislatura);
-        //                                    banco.AddParameter("inicio", legislatura.DataInicio);
-        //                                    banco.AddParameter("final", legislatura.DataFim);
-        //                                    banco.ExecuteNonQuery(@"
-        //                                         INSERT INTO sf_legislatura (
-        //                  id, inicio, final
-        //                 ) VALUES (
-        //                                             @id, @inicio, @final
-        //                                         )
-        //                                     ");
-
-        //                                    lstLegislatura.Add(legislatura.NumeroLegislatura);
-        //                                }
-
-        //                                banco.AddParameter("id_sf_mandato", mandato.CodigoMandato);
-        //                                banco.AddParameter("id_sf_legislatura", legislatura.NumeroLegislatura);
-        //                                banco.ExecuteNonQuery(@"
-        //                                     INSERT IGNORE INTO sf_mandato_legislatura (
-        //              id_sf_mandato, id_sf_legislatura
-        //             ) VALUES (
-        //                                         @id_sf_mandato, @id_sf_legislatura
-        //                                     )
-        //                                 ");
-        //                            }
-        //                            #endregion Mandato Legislatura
-        //                        }
-
-        //                        #region Mandato Exercicio
-        //                        if (mandato.Exercicios != null)
-        //                        {
-        //                            foreach (var exercicio in mandato.Exercicios.Exercicio)
-        //                            {
-        //                                if (exercicio.SiglaCausaAfastamento != null)
-        //                                {
-        //                                    exercicio.SiglaCausaAfastamento = exercicio.SiglaCausaAfastamento.Trim();
-        //                                    if (!lstMotivoAfastamento.Contains(exercicio.SiglaCausaAfastamento))
-        //                                    {
-        //                                        banco.AddParameter("id", exercicio.SiglaCausaAfastamento);
-        //                                        banco.AddParameter("descricao", exercicio.DescricaoCausaAfastamento);
-        //                                        banco.ExecuteNonQuery(@"
-        //                                                 INSERT INTO sf_motivo_afastamento (
-        //                          id, descricao
-        //                         ) VALUES (
-        //                                                     @id, @descricao
-        //                                                 )
-        //                                             ");
-
-        //                                        lstMotivoAfastamento.Add(exercicio.SiglaCausaAfastamento);
-        //                                    }
-        //                                }
-
-        //                                banco.AddParameter("id", exercicio.CodigoExercicio);
-        //                                banco.AddParameter("id_sf_senador", idSenador);
-        //                                banco.AddParameter("id_sf_mandato", mandato.CodigoMandato);
-        //                                banco.AddParameter("id_sf_motivo_afastamento", exercicio.SiglaCausaAfastamento);
-        //                                banco.AddParameter("inicio", exercicio.DataInicio);
-        //                                banco.AddParameter("final", exercicio.DataFim);
-        //                                banco.ExecuteNonQuery(@"
-        //                                         INSERT IGNORE INTO sf_mandato_exercicio (
-        //                  id, id_sf_mandato, id_sf_senador, id_sf_motivo_afastamento, inicio, final
-        //                 ) VALUES (
-        //                                             @id, @id_sf_mandato, @id_sf_senador, @id_sf_motivo_afastamento, @inicio, @final
-        //                                         )
-        //                                     ");
-        //                            }
-        //                        }
-        //                        #endregion Mandato Exercicio
-        //                    }
-        //                    catch (Exception ex)
-        //                    {
-        //                        logger.LogError(ex, ex.Message);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    return string.Empty;
-        //}
+        }
 
         public void Importar(int ano)
         {
@@ -439,7 +150,7 @@ namespace OPS.Importador.SenadoFederal
                     logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
                     return false;
                 }
-}
+            }
 
             logger.LogDebug("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
 
@@ -999,39 +710,143 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
             }
         }
 
+        private Vinculo GetOrCreateVinculo(AppDbContext dbContext, string descricao, List<Vinculo> vinculos)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                throw new ArgumentException("Vínculo description cannot be empty");
+
+            var vinculo = vinculos.FirstOrDefault(v => v.Descricao.Equals(descricao, StringComparison.CurrentCultureIgnoreCase));
+            if (vinculo == null)
+            {
+                vinculo = new Vinculo { Descricao = descricao };
+                dbContext.Vinculos.Add(vinculo);
+                dbContext.SaveChanges();
+                vinculos.Add(vinculo);
+            }
+            return vinculo;
+        }
+
+        private Categoria GetOrCreateCategoria(AppDbContext dbContext, string descricao, List<Categoria> categorias)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                throw new ArgumentException("Categoria description cannot be empty");
+
+            var categoria = categorias.FirstOrDefault(c => c.Descricao == descricao);
+            if (categoria == null)
+            {
+                categoria = new Categoria { Descricao = descricao };
+                dbContext.Categorias.Add(categoria);
+                dbContext.SaveChanges();
+                categorias.Add(categoria);
+            }
+            return categoria;
+        }
+
+        private Cargo? GetOrCreateCargo(AppDbContext dbContext, string descricao, List<Cargo> cargos)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                return null;
+
+            var cargo = cargos.FirstOrDefault(c => c.Descricao.Equals(descricao, StringComparison.CurrentCultureIgnoreCase));
+            if (cargo == null)
+            {
+                cargo = new Cargo { Descricao = descricao };
+                dbContext.Cargos.Add(cargo);
+                dbContext.SaveChanges();
+                cargos.Add(cargo);
+            }
+            return cargo;
+        }
+
+        private ReferenciaCargo? GetOrCreateReferenciaCargo(AppDbContext dbContext, string descricao, List<ReferenciaCargo> referenciaCargos)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                return null;
+
+            var referenciaCargo = referenciaCargos.FirstOrDefault(l => l.Descricao.Equals(descricao, StringComparison.CurrentCultureIgnoreCase));
+            if (referenciaCargo == null)
+            {
+                referenciaCargo = new ReferenciaCargo { Descricao = descricao };
+                dbContext.ReferenciaCargos.Add(referenciaCargo);
+                dbContext.SaveChanges();
+                referenciaCargos.Add(referenciaCargo);
+            }
+            return referenciaCargo;
+        }
+
+        private Funcao? GetOrCreateFuncao(AppDbContext dbContext, string descricao, List<Funcao> funcoes)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                return null;
+
+            var funcao = funcoes.FirstOrDefault(f => f.Descricao.Equals(descricao, StringComparison.CurrentCultureIgnoreCase));
+            if (funcao == null)
+            {
+                funcao = new Funcao { Descricao = descricao };
+                dbContext.Funcoes.Add(funcao);
+                dbContext.SaveChanges();
+                funcoes.Add(funcao);
+            }
+            return funcao;
+        }
+
+        private Lotacao GetOrCreateLotacao(AppDbContext dbContext, string descricao, List<Lotacao> lotacoes)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                throw new ArgumentException("Lotação description cannot be empty");
+
+            var lotacao = lotacoes.FirstOrDefault(l => l.Descricao.Equals(descricao, StringComparison.CurrentCultureIgnoreCase));
+            if (lotacao == null)
+            {
+                lotacao = new Lotacao { Descricao = descricao };
+                dbContext.Lotacoes.Add(lotacao);
+                dbContext.SaveChanges();
+                lotacoes.Add(lotacao);
+            }
+            return lotacao;
+        }
+
+        private TipoFolha GetOrCreateTipoFolha(AppDbContext dbContext, string descricao, List<TipoFolha> tipoFolhas)
+        {
+            if (string.IsNullOrWhiteSpace(descricao))
+                throw new ArgumentException("Tipo Folha description cannot be empty");
+
+            var tipoFolha = tipoFolhas.FirstOrDefault(t => t.Descricao.Equals(descricao, StringComparison.CurrentCultureIgnoreCase));
+            if (tipoFolha == null)
+            {
+                tipoFolha = new TipoFolha { Descricao = descricao };
+                dbContext.TipoFolhas.Add(tipoFolha);
+                dbContext.SaveChanges();
+                tipoFolhas.Add(tipoFolha);
+            }
+            return tipoFolha;
+        }
+
+        private decimal? ParseDecimal(string value, CultureInfo cultureInfo)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            if (decimal.TryParse(value, NumberStyles.Any, cultureInfo, out decimal result))
+                return result;
+
+            return 0;
+        }
+
         private void CarregaRemuneracaoCsv(string file, int anomes)
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-            var sb = new StringBuilder();
-
-            int indice = 0;
-            int VÍNCULO = indice++;
-            int CATEGORIA = indice++;
-            int CARGO = indice++;
-            int REFERÊNCIA_CARGO = indice++;
-            int SÍMBOLO_FUNÇÃO = indice++;
-            int ANO_EXERCÍCIO = indice++;
-            int LOTAÇÃO_EXERCÍCIO = indice++;
-            int TIPO_FOLHA = indice++;
-            int REMUN_BASICA = indice++;
-            int VANT_PESSOAIS = indice++;
-            int FUNC_COMISSIONADA = indice++;
-            int GRAT_NATALINA = indice++;
-            int HORAS_EXTRAS = indice++;
-            int OUTRAS_EVENTUAIS = indice++;
-            int ABONO_PERMANENCIA = indice++;
-            int REVERSAO_TETO_CONST = indice++;
-            int IMPOSTO_RENDA = indice++;
-            int PREVIDENCIA = indice++;
-            int FALTAS = indice++;
-            int REM_LIQUIDA = indice++;
-            int DIARIAS = indice++;
-            int AUXILIOS = indice++;
-            int VANT_INDENIZATORIAS = indice++;
-
-            using (var banco = new AppDb())
+            // var lotacoes = dbContext.Lotacoes.Where(x => x.Descricao.Contains("Senador", StringComparison.CurrentCultureIgnoreCase)).ToList();
+            using (var dbContext = dbContextFactory.CreateDbContext())
             {
-                LimpaRemuneracaoTemporaria();
+                // Load all data upfront for caching
+                var funcoes = dbContext.Funcoes.ToList();
+                var cargos = dbContext.Cargos.ToList();
+                var categorias = dbContext.Categorias.ToList();
+                var vinculos = dbContext.Vinculos.ToList();
+                var referenciaCargos = dbContext.ReferenciaCargos.ToList();
+                var lotacoes = dbContext.Lotacoes.ToList();
+                var tipoFolhas = dbContext.TipoFolhas.ToList();
 
                 using (var reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
                 {
@@ -1048,8 +863,8 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
                             if (linha == 2)
                             {
                                 if (
-                                        (csv[VÍNCULO] != "VÍNCULO") ||
-                                        (csv[VANT_INDENIZATORIAS].Trim() != "VANT_INDENIZATORIAS")
+                                        (csv[(int)SenadoRemuneracaoCsvColumns.VÍNCULO] != "VÍNCULO") ||
+                                        (csv[(int)SenadoRemuneracaoCsvColumns.VANT_INDENIZATORIAS].Trim() != "VANT_INDENIZATORIAS")
                                     )
                                 {
                                     throw new Exception("Mudança de integração detectada para o Senado Federal");
@@ -1059,133 +874,93 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
                                 continue;
                             }
 
-                            banco.AddParameter("ano_mes", anomes);
-                            banco.AddParameter("vinculo", csv[VÍNCULO]);
-                            banco.AddParameter("categoria", csv[CATEGORIA]);
-                            banco.AddParameter("cargo", csv[CARGO]);
-                            banco.AddParameter("referencia_cargo", csv[REFERÊNCIA_CARGO]);
-                            banco.AddParameter("simbolo_funcao", csv[SÍMBOLO_FUNÇÃO]);
-                            banco.AddParameter("admissao", Convert.ToInt32(csv[ANO_EXERCÍCIO]));
-                            banco.AddParameter("lotacao_exercicio", csv[LOTAÇÃO_EXERCÍCIO]);
-                            banco.AddParameter("tipo_folha", csv[TIPO_FOLHA]);
+                            // Get or create related entities
+                            var vinculo = GetOrCreateVinculo(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.VÍNCULO], vinculos);
+                            var categoria = GetOrCreateCategoria(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.CATEGORIA], categorias);
+                            var cargo = GetOrCreateCargo(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.CARGO], cargos);
+                            var referenciaCargo = GetOrCreateReferenciaCargo(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.REFERÊNCIA_CARGO], referenciaCargos);
+                            var funcao = GetOrCreateFuncao(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.SÍMBOLO_FUNÇÃO], funcoes);
+                            var lotacao = GetOrCreateLotacao(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.LOTAÇÃO_EXERCÍCIO], lotacoes);
+                            var tipoFolha = GetOrCreateTipoFolha(dbContext, csv[(int)SenadoRemuneracaoCsvColumns.TIPO_FOLHA], tipoFolhas);
 
-                            banco.AddParameter("remun_basica", Convert.ToDouble(csv[REMUN_BASICA], cultureInfo));
-                            banco.AddParameter("vant_pessoais", Convert.ToDouble(csv[VANT_PESSOAIS], cultureInfo));
-                            banco.AddParameter("func_comissionada", Convert.ToDouble(csv[FUNC_COMISSIONADA], cultureInfo));
-                            banco.AddParameter("grat_natalina", Convert.ToDouble(csv[GRAT_NATALINA], cultureInfo));
-                            banco.AddParameter("horas_extras", Convert.ToDouble(csv[HORAS_EXTRAS], cultureInfo));
-                            banco.AddParameter("outras_eventuais", Convert.ToDouble(csv[OUTRAS_EVENTUAIS], cultureInfo));
-                            banco.AddParameter("abono_permanencia", Convert.ToDouble(csv[ABONO_PERMANENCIA], cultureInfo));
-                            banco.AddParameter("reversao_teto_const", Convert.ToDouble(csv[REVERSAO_TETO_CONST], cultureInfo));
-                            banco.AddParameter("imposto_renda", Convert.ToDouble(csv[IMPOSTO_RENDA], cultureInfo));
-                            banco.AddParameter("previdencia", Convert.ToDouble(!string.IsNullOrEmpty(csv[PREVIDENCIA]) ? csv[PREVIDENCIA] : "0", cultureInfo));
-                            banco.AddParameter("faltas", Convert.ToDouble(!string.IsNullOrEmpty(csv[FALTAS]) ? csv[FALTAS] : "0", cultureInfo));
-                            banco.AddParameter("rem_liquida", Convert.ToDouble(!string.IsNullOrEmpty(csv[REM_LIQUIDA]) ? csv[REM_LIQUIDA] : "0", cultureInfo));
-                            banco.AddParameter("diarias", Convert.ToDouble(!string.IsNullOrEmpty(csv[DIARIAS]) ? csv[DIARIAS] : "0", cultureInfo));
-                            banco.AddParameter("auxilios", Convert.ToDouble(!string.IsNullOrEmpty(csv[AUXILIOS]) ? csv[AUXILIOS] : "0", cultureInfo));
-                            banco.AddParameter("vant_indenizatorias", Convert.ToDouble(!string.IsNullOrEmpty(csv[VANT_INDENIZATORIAS]) ? csv[VANT_INDENIZATORIAS] : "0".Trim(), cultureInfo));
+                            // Parse numeric values
+                            var remunBasica = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.REMUN_BASICA], cultureInfo);
+                            var vantPessoais = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.VANT_PESSOAIS], cultureInfo);
+                            var funcComissionada = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.FUNC_COMISSIONADA], cultureInfo);
+                            var gratNatalina = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.GRAT_NATALINA], cultureInfo);
+                            var horasExtras = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.HORAS_EXTRAS], cultureInfo);
+                            var outrasEventuais = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.OUTRAS_EVENTUAIS], cultureInfo);
+                            var abonoPermanencia = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.ABONO_PERMANENCIA], cultureInfo);
+                            var reversaoTetoConst = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.REVERSAO_TETO_CONST], cultureInfo);
+                            var impostoRenda = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.IMPOSTO_RENDA], cultureInfo);
+                            var previdencia = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.PREVIDENCIA], cultureInfo);
+                            var faltas = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.FALTAS], cultureInfo);
+                            var remLiquida = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.REM_LIQUIDA], cultureInfo);
+                            var diarias = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.DIARIAS], cultureInfo);
+                            var auxilios = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.AUXILIOS], cultureInfo);
+                            var vantIndenizatorias = ParseDecimal(csv[(int)SenadoRemuneracaoCsvColumns.VANT_INDENIZATORIAS], cultureInfo);
 
-                            banco.ExecuteNonQuery(
-                                @"INSERT INTO ops_tmp.sf_remuneracao_temp (
-								ano_mes, vinculo,categoria,cargo,referencia_cargo,simbolo_funcao,admissao,lotacao_exercicio,tipo_folha,
-                                remun_basica ,vant_pessoais ,func_comissionada ,grat_natalina ,horas_extras ,outras_eventuais ,abono_permanencia ,
-                                reversao_teto_const ,imposto_renda ,previdencia ,faltas ,rem_liquida ,diarias ,auxilios ,vant_indenizatorias
-							) VALUES (
-								@ano_mes,@vinculo,@categoria,@cargo,@referencia_cargo,@simbolo_funcao,@admissao,@lotacao_exercicio,@tipo_folha,
-                                @remun_basica ,@vant_pessoais ,@func_comissionada ,@grat_natalina ,@horas_extras ,@outras_eventuais ,@abono_permanencia ,
-                                @reversao_teto_const ,@imposto_renda ,@previdencia ,@faltas ,@rem_liquida ,@diarias ,@auxilios ,@vant_indenizatorias
-							)");
+                            var custoTotal = (remLiquida ?? 0) - (impostoRenda ?? 0) - (previdencia ?? 0) - (faltas ?? 0) + (diarias ?? 0) + (auxilios ?? 0) + (vantIndenizatorias ?? 0);
 
+                            var remuneracao = new Remuneracao
+                            {
+                                IdVinculo = vinculo.Id,
+                                IdCategoria = categoria.Id,
+                                IdCargo = cargo?.Id,
+                                IdReferenciaCargo = referenciaCargo?.Id,
+                                IdSimboloFuncao = funcao?.Id,
+                                IdLotacao = lotacao.Id,
+                                IdTipoFolha = tipoFolha.Id,
+                                AnoMes = (uint)anomes,
+                                Admissao = Convert.ToUInt16(csv[(int)SenadoRemuneracaoCsvColumns.ANO_EXERCÍCIO]),
+                                RemunBasica = remunBasica,
+                                VantPessoais = vantPessoais,
+                                FuncComissionada = funcComissionada,
+                                GratNatalina = gratNatalina,
+                                HorasExtras = horasExtras,
+                                OutrasEventuais = outrasEventuais,
+                                AbonoPermanencia = abonoPermanencia,
+                                ReversaoTetoConst = reversaoTetoConst,
+                                ImpostoRenda = impostoRenda,
+                                Previdencia = previdencia,
+                                Faltas = faltas,
+                                RemLiquida = remLiquida,
+                                Diarias = diarias,
+                                Auxilios = auxilios,
+                                VantIndenizatorias = vantIndenizatorias,
+                                CustoTotal = custoTotal
+                            };
+
+                            dbContext.Remuneracoes.Add(remuneracao);
 
                             if (linha % 1000 == 0)
                             {
-                                ProcessarRemuneracaoTemp(banco);
+                                dbContext.SaveChanges();
+                                dbContext.ChangeTracker.Clear();
                             }
                         }
                     }
 
-                    logger.LogInformation("{Itens} na fila de processamento!", linha);
+                    logger.LogInformation("{Itens} processados!", linha);
+                    dbContext.SaveChanges();
+                    dbContext.ChangeTracker.Clear();
                 }
-
-                ProcessarRemuneracaoTemp(banco);
-            }
-
-            using (var banco = new AppDb())
-            {
-                banco.AddParameter("ano_mes", anomes);
-                banco.ExecuteNonQuery(@"
+                
+                // Update senator total remuneration
+                var anoMesParam = new MySqlParameter("@ano_mes", anomes);
+                dbContext.Database.ExecuteSqlRaw(@"
                     UPDATE sf_senador s
                     JOIN sf_lotacao l ON l.id_senador = s.id
                     JOIN sf_remuneracao r ON l.id = r.id_lotacao
                     SET valor_total_remuneracao = (
-	                    SELECT SUM(custo_total) AS total
-	                    FROM sf_remuneracao r
-	                    JOIN sf_lotacao l ON l.id = r.id_lotacao
-	                    where l.id_senador = s.id
-                    )
+	                        SELECT SUM(custo_total) AS total
+	                        FROM sf_remuneracao r
+	                        JOIN sf_lotacao l ON l.id = r.id_lotacao
+	                        where l.id_senador = s.id
+	                    )
                     WHERE r.ano_mes = @ano_mes
-			", 3600);
+			    ", anoMesParam);
             }
-        }
-
-        private void ProcessarRemuneracaoTemp(AppDb banco)
-        {
-            var total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_remuneracao_temp");
-
-            banco.ExecuteNonQuery(@"
-                INSERT IGNORE INTO sf_funcao (descricao)
-                SELECT DISTINCT simbolo_funcao FROM ops_tmp.sf_remuneracao_temp WHERE simbolo_funcao <> '' ORDER BY simbolo_funcao;
-                ALTER TABLE sf_funcao AUTO_INCREMENT = 0;
-
-                INSERT IGNORE INTO sf_cargo (descricao)
-                SELECT DISTINCT cargo FROM ops_tmp.sf_remuneracao_temp WHERE cargo <> '' ORDER BY cargo;
-                ALTER TABLE sf_cargo AUTO_INCREMENT = 0;
-
-                INSERT IGNORE INTO sf_categoria (descricao)
-                SELECT DISTINCT categoria FROM ops_tmp.sf_remuneracao_temp WHERE categoria <> '' ORDER BY categoria;
-                ALTER TABLE sf_categoria AUTO_INCREMENT = 0;
-
-                INSERT IGNORE INTO sf_vinculo  (descricao)
-                SELECT DISTINCT vinculo FROM ops_tmp.sf_remuneracao_temp WHERE vinculo <> '' ORDER BY vinculo;
-                ALTER TABLE sf_vinculo AUTO_INCREMENT = 0;
-
-                INSERT IGNORE INTO sf_referencia_cargo (descricao)
-                SELECT DISTINCT referencia_cargo FROM ops_tmp.sf_remuneracao_temp WHERE referencia_cargo IS NOT NULL ORDER BY referencia_cargo;
-                ALTER TABLE sf_referencia_cargo AUTO_INCREMENT = 0;
-
-                INSERT IGNORE INTO sf_lotacao (descricao)
-                SELECT DISTINCT lotacao_exercicio FROM ops_tmp.sf_remuneracao_temp WHERE lotacao_exercicio <> '' ORDER BY lotacao_exercicio;
-                ALTER TABLE sf_lotacao AUTO_INCREMENT = 0;
-            ", 3600);
-
-            banco.ExecuteNonQuery(@"
-                INSERT INTO sf_remuneracao 
-                    (id_vinculo, id_categoria, id_cargo, id_referencia_cargo, id_simbolo_funcao, id_lotacao, id_tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias, custo_total)
-                SELECT 
-                    v.id AS vinculo, ct.id AS categoria, cr.id AS cargo, rc.id as referencia_cargo, sf.id as simbolo_funcao, le.id as lotacao_exercicio, tf.id as tipo_folha, ano_mes, admissao, remun_basica, vant_pessoais, func_comissionada, grat_natalina, horas_extras, outras_eventuais, abono_permanencia, reversao_teto_const, imposto_renda, previdencia, faltas, rem_liquida, diarias, auxilios, vant_indenizatorias,
-                    -- (remun_basica + vant_pessoais + func_comissionada + grat_natalina + horas_extras + outras_eventuais + abono_permanencia + reversao_teto_const + faltas + diarias + auxilios + vant_indenizatorias) AS custo_total,
-                    (rem_liquida - imposto_renda - previdencia - faltas + diarias + auxilios + vant_indenizatorias) AS custo_total
-                FROM ops_tmp.sf_remuneracao_temp tmp
-                JOIN sf_vinculo v ON v.descricao LIKE tmp.vinculo
-                JOIN sf_categoria ct ON ct.descricao LIKE tmp.categoria
-                LEFT JOIN sf_cargo cr ON cr.descricao LIKE tmp.cargo
-                LEFT JOIN sf_referencia_cargo rc ON rc.descricao LIKE tmp.referencia_cargo
-                LEFT JOIN sf_funcao sf ON sf.descricao LIKE tmp.simbolo_funcao
-                JOIN sf_lotacao le ON le.descricao LIKE tmp.lotacao_exercicio
-                JOIN sf_tipo_folha tf ON tf.descricao LIKE tmp.tipo_folha
-			", 3600);
-
-            if (Convert.ToInt32(total) != banco.RowsAffected)
-                throw new Exception("Existem relacionamentos não mapeados!");
-
-            LimpaRemuneracaoTemporaria();
-        }
-
-        private void LimpaRemuneracaoTemporaria()
-        {
-            connection.Execute(@"
-				truncate table ops_tmp.sf_remuneracao_temp;
-			");
         }
 
         public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)

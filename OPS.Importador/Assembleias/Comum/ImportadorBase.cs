@@ -28,42 +28,42 @@ namespace OPS.Importador.Assembleias.Comum
 
         public virtual void ImportarCompleto()
         {
-            //if (importadorParlamentar != null)
-            //{
-            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
-            //    ImportarPerfilParlamentar();
-            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
-
-            //    ImportarImagemParlamentar();
-            //}
-
-            if (importadorDespesas != null)
+            if (importadorParlamentar != null)
             {
-                importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
-                if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
-                {
-                    // Dados por mandato
-                    ImportarDespesas(2023); // TODO: Primeiro ano do mandato
-                }
-                else
-                {
-                    //if (!(importadorDespesas is ImportadorDespesasAmazonas
-                    //    || importadorDespesas is ImportadorDespesasBahia
-                    //    || importadorDespesas is ImportadorDespesasCeara
-                    //    || importadorDespesas is ImportadorDespesasMaranhao
-                    //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
-                    //{
-                    //    ImportarDespesas(DateTime.Now.Year - 2);
-                    //    ImportarDespesasAnoAnterior();
-                    //}
+                importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
+                ImportarPerfilParlamentar();
+                importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
 
-                    ImportarDespesasAnoAtual();
-                }
-
-                importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
+                //ImportarImagemParlamentar();
             }
 
-            ImportarRemuneracao();
+            //if (importadorDespesas != null)
+            //{
+            //    importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
+            //    if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
+            //    {
+            //        // Dados por mandato
+            //        ImportarDespesas(2023); // TODO: Primeiro ano do mandato
+            //    }
+            //    else
+            //    {
+            //        //if (!(importadorDespesas is ImportadorDespesasAmazonas
+            //        //    || importadorDespesas is ImportadorDespesasBahia
+            //        //    || importadorDespesas is ImportadorDespesasCeara
+            //        //    || importadorDespesas is ImportadorDespesasMaranhao
+            //        //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
+            //        //{
+            //        //    ImportarDespesas(DateTime.Now.Year - 2);
+            //        //    ImportarDespesasAnoAnterior();
+            //        //}
+
+            //        ImportarDespesasAnoAtual();
+            //    }
+
+            //    importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
+            //}
+
+            //ImportarRemuneracao();
         }
 
         private void ImportarRemuneracao()

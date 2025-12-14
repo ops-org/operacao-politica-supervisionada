@@ -95,8 +95,9 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 .Select(s => s.Id.ToString())
                 .ToList(),
             NewSenators = dbContext.Senadores // Itens para forçar atualização, Incrementado depois no ImportActiveSenators com novos Suplentes
-                .Where(s => s.Ativo == "S" || s.Nome == null)
-                .OrderBy(s => s.Id)
+                //.Where(s => s.Ativo == "S" || s.Nome == null)
+                //.OrderBy(s => s.Id)
+                .OrderByDescending(s => s.Id)
                 .Select(s => s.Id.ToString())
                 .ToList()
         };
