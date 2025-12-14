@@ -430,15 +430,17 @@ namespace OPS.Core.Repository
             }
         }
 
-        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro = null)
+        public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro = null)
         {
             using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT DISTINCT
-						d.id, d.nome, d.nome_completo
+						d.id, d.nome, d.nome_completo, p.sigla as sigla_partido, e.sigla as sigla_estado 
 					FROM sf_senador d
+                    LEFT JOIN partido p on p.id = d.id_partido
+                    LEFT JOIN estado e on e.id = d.id_estado
 				");
 
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
@@ -452,15 +454,34 @@ namespace OPS.Core.Repository
                         strSql.AppendLine(@" AND (d.nome like '%" + busca + "%' or d.nome_completo like '%" + busca + "%') ");
                     }
 
-                    if (filtro.Periodo > 0)
+                    if ((filtro.Periodo ?? 0) > 0)
                     {
                         strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from sf_mandato m JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura = {filtro.Periodo.ToString()})");
+
+                        strSql.AppendLine(@"
+                            ORDER BY d.nome
+                            limit 30
+				        ");
+                    }
+                    else
+                    {
+                        var legislaturas = new List<int>();
+                        if ((filtro.Ano ?? 0) > 0)
+                            legislaturas = Utils.ObterNumerosLegislatura(filtro.Ano.Value, filtro.Mes);
+                        else
+                            legislaturas = Utils.ObterNumerosLegislatura(DateTime.Now.Year, DateTime.Now.Month);
+
+                        var listaLegislaturas = string.Join(",", legislaturas);
+
+                        strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from sf_mandato m JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura IN ({listaLegislaturas}))");
+
+                        strSql.AppendLine(@"
+                            ORDER BY d.nome
+                            limit 500
+				        ");
                     }
 
-                    strSql.AppendLine(@"
-                        ORDER BY d.nome
-                        limit 30
-				    ");
+
                 }
                 else
                 {
@@ -487,16 +508,17 @@ namespace OPS.Core.Repository
 				    ");
                 }
 
-                var lstRetorno = new List<dynamic>();
+                var lstRetorno = new List<DropDownDTO>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
-                        lstRetorno.Add(new
+                        lstRetorno.Add(new DropDownDTO
                         {
-                            id = reader["id"].ToString(),
-                            tokens = new[] { reader["nome"].ToString(), reader["nome_completo"].ToString() },
-                            text = reader["nome"].ToString()
+                            id = uint.Parse(reader["id"].ToString()),
+                            tokens = new[] { reader["nome_completo"].ToString() },
+                            text = reader["nome"].ToString(),
+                            helpText = $"{reader["sigla_partido"]} / {reader["sigla_estado"]}"
                         });
                     }
                 }
@@ -1270,7 +1292,7 @@ SELECT SQL_CALC_FOUND_ROWS
     r.id,
 	v.descricao as vinculo, 
 	ct.descricao as categoria, 
-	ct.descricao as cargo, 
+	cr.descricao as cargo, 
 	rc.descricao as referencia_cargo, 
 	f.descricao as funcao, 
 	l.descricao as lotacao, 
@@ -1359,7 +1381,7 @@ SELECT
     r.ano_mes, 
 	v.descricao as vinculo, 
 	ct.descricao as categoria, 
-	ct.descricao as cargo, 
+	cr.descricao as cargo, 
 	rc.descricao as referencia_cargo, 
 	f.descricao as funcao, 
 	l.descricao as lotacao, 
@@ -1379,6 +1401,7 @@ SELECT
     r.diarias,
     r.auxilios,
     r.vant_indenizatorias,
+    (r.rem_liquida + r.diarias + r.auxilios + r.vant_indenizatorias) AS total_liquido,
     r.custo_total
 FROM sf_remuneracao r
 JOIN sf_lotacao l ON l.id = r.id_lotacao
@@ -1423,6 +1446,7 @@ WHERE r.id = @id
                             diarias = Utils.FormataValor(reader["diarias"]),
                             auxilios = Utils.FormataValor(reader["auxilios"]),
                             vant_indenizatorias = Utils.FormataValor(reader["vant_indenizatorias"]),
+                            total_liquido = Utils.FormataValor(reader["total_liquido"]),
                             custo_total = Utils.FormataValor(reader["custo_total"])
                         };
                     }

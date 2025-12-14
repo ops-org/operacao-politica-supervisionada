@@ -792,7 +792,7 @@ namespace OPS.Core.Repository
 
                     strSql.AppendLine(@" ORDER BY d.nome_parlamentar");
 
-                    if (filtro.Periodo == 0)
+                    if ((filtro.Periodo ?? 0) == 0)
                         strSql.AppendLine(@" limit 30");
                 }
                 else

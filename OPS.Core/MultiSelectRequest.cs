@@ -9,8 +9,11 @@
 
         public string Busca { get; set; }
 
-        public int Periodo { get; set; }
+        public int? Periodo { get; set; }
 
+        public int? Ano { get; set; }
+
+        public int? Mes { get; set; }
     }
 
 }
