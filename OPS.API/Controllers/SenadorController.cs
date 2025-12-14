@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -44,7 +45,7 @@ namespace OPS.API.Controllers
 
         [HttpPost("Pesquisa")]
         //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
-        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro)
+        public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro)
         {
             return await dao.Pesquisa(filtro);
         }

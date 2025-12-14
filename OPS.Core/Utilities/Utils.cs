@@ -396,6 +396,79 @@ namespace OPS.Core.Utilities
             }
         }
 
+
+        public static List<int> ObterNumerosLegislatura(int ano, int? mes = null)
+        {
+            var legislaturas = new List<int>();
+
+            // Se o mês foi especificado, retorna apenas a legislatura daquele mês
+            if (mes.HasValue)
+            {
+                int mesConsiderado = mes.Value;
+
+                // Janeiro pertence à legislatura anterior
+                int anoEfetivo = mesConsiderado == 1 ? ano - 1 : ano;
+
+                int? legislatura = CalcularLegislatura(anoEfetivo);
+                if (legislatura.HasValue)
+                {
+                    legislaturas.Add(legislatura.Value);
+                }
+            }
+            else
+            {
+                // Sem mês especificado: Janeiro pertence à legislatura anterior e Fev-Dez pertencem à legislatura do ano atual
+
+                // Legislatura de janeiro (ano anterior)
+                int? legislaturaJaneiro = CalcularLegislatura(ano - 1);
+                if (legislaturaJaneiro.HasValue)
+                {
+                    legislaturas.Add(legislaturaJaneiro.Value);
+                }
+
+                // Legislatura de fev-dez (ano atual)
+                int? legislaturaAno = CalcularLegislatura(ano);
+                if (legislaturaAno.HasValue && legislaturaAno != legislaturaJaneiro)
+                {
+                    legislaturas.Add(legislaturaAno.Value);
+                }
+            }
+
+            return legislaturas;
+        }
+
+        private static int? CalcularLegislatura(int anoEfetivo)
+        {
+            if (anoEfetivo >= 2027)
+            {
+                // Calcula quantos ciclos de 4 anos se passaram desde 2023
+                int ciclos = (anoEfetivo - 2027) / 4;
+                return 58 + ciclos;
+            }
+            else if (anoEfetivo >= 2023)
+            {
+                return 57;
+            }
+            else if (anoEfetivo >= 2019)
+            {
+                return 56;
+            }
+            else if (anoEfetivo >= 2015)
+            {
+                return 55;
+            }
+            else if (anoEfetivo >= 2011)
+            {
+                return 54;
+            }
+            else if (anoEfetivo >= 2007)
+            {
+                return 53;
+            }
+
+            return null;
+        }
+
         protected class SendGridMessage
         {
             public List<Personalization> personalizations { get; set; }
