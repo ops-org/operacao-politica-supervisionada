@@ -26,7 +26,7 @@ using OPS.Core.Utilities;
 using OPS.Importador.Assembleias;
 using OPS.Importador.Assembleias.Comum;
 using OPS.Importador.CamaraFederal;
-using OPS.Importador.Empresa;
+using OPS.Importador.Fornecedores;
 using OPS.Importador.SenadoFederal;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura.Factories;
@@ -112,7 +112,7 @@ namespace OPS.Importador
 
             //services.AddScoped<Presidencia>();
 
-            services.AddScoped<Empresa.Fornecedor>();
+            services.AddScoped<Fornecedor>();
             services.AddScoped<HttpLogger>();
             services.AddSingleton<AppDbContextFactory>(provider => 
                 new AppDbContextFactory(provider, configuration.GetConnectionString("AuditoriaContext")));

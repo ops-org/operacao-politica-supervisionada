@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace OPS.Importador.Empresa.ReceitaWS
+namespace OPS.Importador.Fornecedores.ReceitaWS
 {
     #region ReceitaWS DTO
 

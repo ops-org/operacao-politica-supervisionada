@@ -1,6 +1,6 @@
 ﻿using Dapper;
 
-namespace OPS.Core.Entity
+namespace OPS.Importador.Fornecedores.MinhaReceita
 {
     [Table("fornecedor_atividade_secundaria")]
     public class FornecedorAtividadeSecundaria

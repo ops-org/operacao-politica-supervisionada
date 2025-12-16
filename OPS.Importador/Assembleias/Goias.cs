@@ -154,7 +154,7 @@ public class DeputadoGoias
     public string Sala { get; set; }
 }
 
-public class Fornecedor
+public class FornecedorGoias
 {
     [JsonPropertyName("nome")]
     public string Nome { get; set; }
@@ -193,7 +193,7 @@ public class Grupo
 public class Lancamento
 {
     [JsonPropertyName("fornecedor")]
-    public Fornecedor Fornecedor { get; set; }
+    public FornecedorGoias Fornecedor { get; set; }
 }
 
 public class DespesasGoias

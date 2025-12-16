@@ -16,6 +16,7 @@ public partial class AppDbContext
     public DbSet<TrechoViagem> TrechoViagens { get; set; }
     public DbSet<FornecedorAtividade> FornecedorAtividades { get; set; }
     public DbSet<FornecedorAtividadeSecundaria> FornecedorAtividadesSecundarias { get; set; }
+    public DbSet<FornecedorNaturezaJuridica> FornecedorNaturezaJuridicas { get; set; }
     public DbSet<Parametros> Parametros { get; set; }
     public DbSet<PartidoHistorico> PartidoHistoricos { get; set; }
     public DbSet<Pessoa> Pessoas { get; set; }
@@ -79,9 +80,9 @@ public static class ComumConfigurations
         // Configure FornecedorAtividadeSecundaria (Composite Key)
         modelBuilder.Entity<FornecedorAtividadeSecundaria>(entity =>
         {
-            entity.HasKey(e => new { e.IdFornecedor, e.IdFornecedorAtividade });
+            entity.HasKey(e => new { e.IdFornecedor, e.IdAtividade });
             entity.HasOne(e => e.Fornecedor).WithMany().HasForeignKey(e => e.IdFornecedor);
-            entity.HasOne(e => e.FornecedorAtividade).WithMany(a => a.FornecedorAtividadeSecundarias).HasForeignKey(e => e.IdFornecedorAtividade);
+            entity.HasOne(e => e.FornecedorAtividade).WithMany(a => a.FornecedorAtividadeSecundarias).HasForeignKey(e => e.IdAtividade);
         });
     }
 

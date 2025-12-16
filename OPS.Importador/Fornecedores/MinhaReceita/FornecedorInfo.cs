@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Dapper;
 
-namespace OPS.Core.Entity
+namespace OPS.Importador.Fornecedores.MinhaReceita
 {
     [Table("fornecedor_info")]
     public class FornecedorInfo

@@ -1,9 +1,10 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace OPS.Importador.Empresa.ReceitaWS
+namespace OPS.Importador.Fornecedores.ReceitaWS
 {
     #region ReceitaWS DTO
-    public class AtividadePrincipal
+
+    public class AtividadesSecundaria
     {
         [JsonPropertyName("code")]
         public string Code { get; set; }
