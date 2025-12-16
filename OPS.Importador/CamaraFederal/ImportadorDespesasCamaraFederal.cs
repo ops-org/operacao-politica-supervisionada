@@ -24,6 +24,7 @@ using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
+using OPS.Importador.Empresa;
 using OPS.Importador.Utilities;
 using RestSharp;
 
