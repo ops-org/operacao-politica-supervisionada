@@ -76,6 +76,24 @@ namespace OPS.Importador.Fornecedores
 
                 int totalImportados = await ProcessarFornecedores(context, fornecedores, lookupData, telegram, telegraMessage);
                 logger.LogInformation("{TotalImportados} de {TotalFornecedores} fornecedores processados", totalImportados, fornecedores.Count);
+
+                // Atualizar dados anonimizados para NULL (ReceitaWS)
+                await context.Database.ExecuteSqlRawAsync(@"
+                	update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
+                	update fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
+                	update fornecedor_info set numero=null where numero = '' or numero = '********';
+                	update fornecedor_info set complemento=null where complemento = '' or complemento = '********';
+                	update fornecedor_info set cep=null where cep = '' or cep = '********';
+                	update fornecedor_info set bairro=null where bairro = '' or bairro = '********';
+                	update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
+                	update fornecedor_info set estado=null where estado = '' or estado = '**';
+                	update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
+                	update fornecedor_info set telefone1=null where telefone1 = '' or telefone1 = '********';
+                	update fornecedor_info set telefone2=null where telefone2 = '' or telefone2 = '********';
+                	update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
+                	update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
+                	update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
+                ");
             }
         }
 
@@ -108,7 +126,7 @@ namespace OPS.Importador.Fornecedores
                     from fornecedor f
                     left join fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
-                    and obtido_em < '{DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")}'
+                    and obtido_em < {DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")}
                     and fi.situacao_cadastral = 'ATIVA'
                     order by fi.id_fornecedor asc")
                     .Select(f => new FornecedorQueryResult
@@ -296,24 +314,6 @@ SELECT MAX(DATA) as data FROM (
                     logger.LogError(ex, "Erro ao processar fornecedor {CNPJ}", item.CnpjCpf);
                     InserirControle(1, item.CnpjCpf, ex.Message);
                 }
-
-                // Atualizar dados anonimizados para NULL (ReceitaWS)
-                await context.Database.ExecuteSqlRawAsync(@"
-                	update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
-                	update fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
-                	update fornecedor_info set numero=null where numero = '' or numero = '********';
-                	update fornecedor_info set complemento=null where complemento = '' or complemento = '********';
-                	update fornecedor_info set cep=null where cep = '' or cep = '********';
-                	update fornecedor_info set bairro=null where bairro = '' or bairro = '********';
-                	update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
-                	update fornecedor_info set estado=null where estado = '' or estado = '**';
-                	update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
-                	update fornecedor_info set telefone1=null where telefone1 = '' or telefone1 = '********';
-                	update fornecedor_info set telefone2=null where telefone2 = '' or telefone2 = '********';
-                	update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
-                	update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
-                	update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
-                ");
             }
 
             return totalImportados;

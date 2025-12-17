@@ -232,14 +232,9 @@ SELECT id, nome_civil, id_estado FROM ops.cl_deputado
 WHERE nome_civil IS NOT NULL;");
                 }
 
-
-                //var url = "https://www.al.al.leg.br/transparencia/orcamento-e-financas/viap-verba-indenizatoria-de-atividade-parlamentar/2025/francisco-tenorio/agosto/at_download/file";
-                //var alagoas = new ImportadorDespesasAlagoas(serviceProvider);
-                //await alagoas.ImportarDespesasArquivo(2025, 8, url, "Francisco Tenorio", new DateTime(2025, 8, 1));
-
-                //var crawler = new SeleniunScraper(serviceProvider);
-                //crawler.BaixarArquivosParana(DateTime.Today.Year);
-                //crawler.BaixarArquivosPiaui();
+                var crawler = new SeleniunScraper(serviceProvider);
+                crawler.BaixarArquivosParana(DateTime.Today.Year);
+                crawler.BaixarArquivosPiaui();
 
                 var types = new Type[]
                 {
@@ -308,7 +303,7 @@ WHERE nome_civil IS NOT NULL;");
                 //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
                 //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
                 //var mesConsulta = new DateTime(2024, 07, 01);
-                
+
                 //do
                 //{
                 //    importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
