@@ -34,60 +34,60 @@ namespace OPS.Importador.Assembleias.Comum
                 ImportarPerfilParlamentar();
                 importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
 
-                //ImportarImagemParlamentar();
+                ImportarImagemParlamentar();
             }
 
-            //if (importadorDespesas != null)
-            //{
-            //    importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
-            //    if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
-            //    {
-            //        // Dados por mandato
-            //        ImportarDespesas(2023); // TODO: Primeiro ano do mandato
-            //    }
-            //    else
-            //    {
-            //        //if (!(importadorDespesas is ImportadorDespesasAmazonas
-            //        //    || importadorDespesas is ImportadorDespesasBahia
-            //        //    || importadorDespesas is ImportadorDespesasCeara
-            //        //    || importadorDespesas is ImportadorDespesasMaranhao
-            //        //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
-            //        //{
-            //        //    ImportarDespesas(DateTime.Now.Year - 2);
-            //        //    ImportarDespesasAnoAnterior();
-            //        //}
+            if (importadorDespesas != null)
+            {
+                importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
+                if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
+                {
+                    // Dados por mandato
+                    ImportarDespesas(2023); // TODO: Primeiro ano do mandato
+                }
+                else
+                {
+                    //if (!(importadorDespesas is ImportadorDespesasAmazonas
+                    //    || importadorDespesas is ImportadorDespesasBahia
+                    //    || importadorDespesas is ImportadorDespesasCeara
+                    //    || importadorDespesas is ImportadorDespesasMaranhao
+                    //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
+                    //{
+                    //    ImportarDespesas(DateTime.Now.Year - 2);
+                    //    ImportarDespesasAnoAnterior();
+                    //}
 
-            //        ImportarDespesasAnoAtual();
-            //    }
+                    ImportarDespesasAnoAtual();
+                }
 
-            //    importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
-            //}
+                importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
+            }
 
             //ImportarRemuneracao();
         }
 
-        private void ImportarRemuneracao()
-        {
-            //var watch = System.Diagnostics.Stopwatch.StartNew();
-            //using (logger.BeginScope("Remuneração"))
-            //    try
-            //    {
-            //        watch.Restart();
+        //private void ImportarRemuneracao()
+        //{
+        //    var watch = System.Diagnostics.Stopwatch.StartNew();
+        //    using (logger.BeginScope("Remuneração"))
+        //        try
+        //        {
+        //            watch.Restart();
 
-            //        var anoAtual = DateTime.Now;
-            //        logger.LogInformation("Remuneração do(a) {CasaLegislativa}", config.SiglaEstado);
-            //        ImportarRemuneracao(anoAtual.Year, anoAtual.Month);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        logger.LogError(ex, ex.Message);
-            //    }
-            //    finally
-            //    {
-            //        watch.Stop();
-            //        logger.LogDebug("Processamento em {TimeElapsed:c}", watch.Elapsed);
-            //    }
-        }
+        //            var anoAtual = DateTime.Now;
+        //            logger.LogInformation("Remuneração do(a) {CasaLegislativa}", config.SiglaEstado);
+        //            ImportarRemuneracao(anoAtual.Year, anoAtual.Month);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            logger.LogError(ex, ex.Message);
+        //        }
+        //        finally
+        //        {
+        //            watch.Stop();
+        //            logger.LogDebug("Processamento em {TimeElapsed:c}", watch.Elapsed);
+        //        }
+        //}
 
         private void ImportarDespesas(int ano)
         {

@@ -186,11 +186,11 @@ namespace OPS.Importador.Fornecedores
                     fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8);
 
                     // Delete existing related records using EF Core
-                    await context.Database.ExecuteSqlRawAsync(@"
-                        delete from fornecedor_info where id_fornecedor=@id;
-                        delete from fornecedor_atividade_secundaria where id_fornecedor=@id;
-                        delete from fornecedor_socio where id_fornecedor=@id;
-                    ", new { id = fornecedor.Id });
+                    await context.Database.ExecuteSqlInterpolatedAsync($@"
+                        delete from fornecedor_info where id_fornecedor={fornecedor.Id};
+                        delete from fornecedor_atividade_secundaria where id_fornecedor={fornecedor.Id};
+                        delete from fornecedor_socio where id_fornecedor={fornecedor.Id};
+                    ");
 
                     if (fornecedor.IdAtividadePrincipal > 0)
                     {
@@ -203,7 +203,7 @@ namespace OPS.Importador.Fornecedores
 
                     if (fornecedor.IdNaturezaJuridica > 0)
                     {
-                        fornecedor.IdNaturezaJuridica = LocalizaInsereNaturezaJuridica(context, lookupData.NaturezaJuridicas, fornecedor.IdNaturezaJuridica, fornecedor.NaturezaJuridica);
+                        fornecedor.IdNaturezaJuridica = LocalizaInsereNaturezaJuridica(context, lookupData.NaturezaJuridicas, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
                     }
                     else
                     {
@@ -217,11 +217,7 @@ namespace OPS.Importador.Fornecedores
                     var fornecedorInfoEntity = fornecedor.Adapt<FornecedorInfo>();
                     context.FornecedorInfos.Add(fornecedorInfoEntity);
 
-                    await context.Database.ExecuteSqlRawAsync(@"update fornecedor set nome=@nome where id=@id", new
-                    {
-                        id = fornecedor.Id,
-                        nome = fornecedor.RazaoSocial
-                    });
+                    await context.Database.ExecuteSqlInterpolatedAsync($@"update fornecedor set nome={fornecedor.RazaoSocial} where id={fornecedor.Id}");
 
                     // Process secondary activities
                     if (fornecedor.CnaesSecundarios != null)
@@ -269,15 +265,15 @@ namespace OPS.Importador.Fornecedores
                     // Check for inactive companies with recent activity
                     if (fornecedor.SituacaoCadastral != "ATIVA" && fornecedor.DataSituacaoEspecial != null)
                     {
-                        var ultimaNota = await context.Database.SqlQueryRaw<DateTime?>(@"
+                        var ultimaNota = await context.Database.SqlQuery<DateTime?>($@"
 SELECT MAX(DATA) as data FROM (
-    SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = @id
+    SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
     UNION ALL
-    SELECT MAX(d.data_emissao) FROM sf_despesa d WHERE d.id_fornecedor = @id
+    SELECT MAX(d.data_emissao) FROM sf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
     UNION ALL
-    SELECT MAX(d.data_emissao) FROM cl_despesa d WHERE d.id_fornecedor = @id
+    SELECT MAX(d.data_emissao) FROM cl_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
 ) tmp
-", new { id = fornecedor.Id }).FirstOrDefaultAsync();
+").FirstOrDefaultAsync();
 
                         if (ultimaNota != null && ultimaNota > Convert.ToDateTime(fornecedor.DataSituacaoEspecial))
                         {
@@ -312,7 +308,8 @@ SELECT MAX(DATA) as data FROM (
                 	update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
                 	update fornecedor_info set estado=null where estado = '' or estado = '**';
                 	update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
-                	update fornecedor_info set telefone=null where telefone = '' or telefone = '********';
+                	update fornecedor_info set telefone1=null where telefone1 = '' or telefone1 = '********';
+                	update fornecedor_info set telefone2=null where telefone2 = '' or telefone2 = '********';
                 	update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
                 	update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
                 	update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
@@ -499,21 +496,22 @@ SELECT MAX(DATA) as data FROM (
             return item.Id;
         }
 
-        private byte LocalizaInsereNaturezaJuridica(AppDbContext context, List<FornecedorNaturezaJuridica> lstNaturezaJuridica, int codigo, string descricao)
+        private int LocalizaInsereNaturezaJuridica(AppDbContext context, List<FornecedorNaturezaJuridica> lstNaturezaJuridica, string codigo, string descricao)
         {
-            var item = lstNaturezaJuridica.FirstOrDefault(x => x.Id == codigo);
+            var item = lstNaturezaJuridica.FirstOrDefault(x => x.Codigo == codigo);
             if (item == null)
             {
-                var naturezaJuridica = new FornecedorNaturezaJuridica()
+
+                var atividade = new FornecedorNaturezaJuridica()
                 {
-                    Id = (byte)codigo,
+                    Codigo = codigo,
                     Descricao = descricao
                 };
-                context.FornecedorNaturezaJuridicas.Add(naturezaJuridica);
+                context.FornecedorNaturezaJuridicas.Add(atividade);
                 context.SaveChanges();
 
-                lstNaturezaJuridica.Add(naturezaJuridica);
-                return naturezaJuridica.Id;
+                lstNaturezaJuridica.Add(atividade);
+                return atividade.Id;
             }
 
             return item.Id;

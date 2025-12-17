@@ -19,9 +19,11 @@ namespace OPS.Importador.Fornecedores.Mapping
                 .Map(dest => dest.CnpjRadical, src => src.RadicalCnpj)
                 .Map(dest => dest.Tipo, src => src.Tipo)
                 .Map(dest => dest.Nome, src => src.RazaoSocial)
+                .Map(dest => dest.DataDeAbertura, src => src.Abertura) // Fixed: use Abertura property
                 .Map(dest => dest.NomeFantasia, src => src.NomeFantasia)
                 .Map(dest => dest.IdFornecedorAtividadePrincipal, src => src.IdAtividadePrincipal)
                 .Map(dest => dest.IdFornecedorNaturezaJuridica, src => src.IdNaturezaJuridica)
+                .Map(dest => dest.LogradouroTipo, src => src.TipoLogradouro) // Fixed: use TipoLogradouro property
                 .Map(dest => dest.Logradouro, src => src.Logradouro)
                 .Map(dest => dest.Numero, src => src.Numero)
                 .Map(dest => dest.Complemento, src => src.Complemento)
@@ -31,6 +33,7 @@ namespace OPS.Importador.Fornecedores.Mapping
                 .Map(dest => dest.Estado, src => src.UF)
                 .Map(dest => dest.EnderecoEletronico, src => src.Email)
                 .Map(dest => dest.Telefone1, src => src.Telefone1)
+                .Map(dest => dest.Fax, src => src.DddFax) // Fixed: use DddFax property
                 .Map(dest => dest.EnteFederativoResponsavel, src => src.EnteFederativoResponsavel)
                 .Map(dest => dest.SituacaoCadastral, src => src.SituacaoCadastral)
                 .Map(dest => dest.DataDaSituacaoCadastral, src => src.DataSituacaoCadastral)
@@ -45,9 +48,14 @@ namespace OPS.Importador.Fornecedores.Mapping
                 .Map(dest => dest.OpcaoPeloSimples, src => src.OpcaoPeloSimples)
                 .Map(dest => dest.DataOpcaoPeloSimples, src => src.DataOpcaoPeloSimples)
                 .Map(dest => dest.DataExclusaoDoSimples, src => src.DataExclusaoSimples)
+                .Map(dest => dest.CodigoMunicipioIbge, src => src.CodigoMunicipioIBGE != null ? src.CodigoMunicipioIBGE.ToString() : null) // Fixed: avoid null propagation in expression tree
                 .Map(dest => dest.NomeCidadeNoExterior, src => src.NomeCidadeExterior)
-                .Map(dest => dest.Pais, src => src.Pais)
-                .Map(dest => dest.ObtidoEm, src => src.ObtidoEm);
+                .Map(dest => dest.ObtidoEm, src => src.ObtidoEm)
+                .Ignore(dest => dest.IpColaborador) // Ignore - no corresponding source property
+                .Map(dest => dest.NomePais, src => src.Pais) // Fixed: use Pais property
+                .Ignore(dest => dest.Telefone2) // Ignore unmapped property
+                .Ignore(dest => dest.CodigoMunicipio) // Ignore unmapped property
+                .Ignore(dest => dest.Fornecedor); // Ignore navigation property
 
             // Map QuadroSocietario to FornecedorSocio
             TypeAdapterConfig<QuadroSocietario, Infraestrutura.Entities.Fornecedores.FornecedorSocio>
@@ -61,7 +69,8 @@ namespace OPS.Importador.Fornecedores.Mapping
                 .Map(dest => dest.IdFornecedorSocioQualificacao, src => src.IdSocioQualificacao > 0 ? (uint?)src.IdSocioQualificacao : null)
                 .Map(dest => dest.IdFornecedorSocioRepresentanteQualificacao, src => src.IdSocioRepresentanteQualificacao > 0 ? (uint?)src.IdSocioRepresentanteQualificacao : null)
                 .Map(dest => dest.IdFornecedorFaixaEtaria, src => src.IdFaixaEtaria)
-                .Map(dest => dest.DataEntradaSociedade, src => !string.IsNullOrEmpty(src.DataEntradaSociedade) ? (DateTime?)DateTime.Parse(src.DataEntradaSociedade) : null);
+                .Map(dest => dest.DataEntradaSociedade, src => !string.IsNullOrEmpty(src.DataEntradaSociedade) ? (DateTime?)DateTime.Parse(src.DataEntradaSociedade) : null)
+                .Ignore(dest => dest.Fornecedor); // Ignore navigation property
 
             // Map MinhaReceita.FornecedorAtividade to FornecedorAtividadeSecundaria
             TypeAdapterConfig<FornecedorAtividade, InfraFornecedorAtividadeSecundaria>
