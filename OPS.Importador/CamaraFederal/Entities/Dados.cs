@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OPS.Importador.CamaraFederal;
+namespace OPS.Importador.CamaraFederal.Entities;
 
 public class Dados
 {

@@ -676,6 +676,11 @@ namespace OPS.Core.Repository
                     strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Estado) + ") ");
                 }
 
+                if (!string.IsNullOrEmpty(request.NomeParlamentar))
+                {
+                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
+                }
+
                 strSql.AppendLine(@"
                     ORDER BY nome_parlamentar
                     LIMIT 1000
@@ -699,62 +704,6 @@ namespace OPS.Core.Repository
                             nome_estado = reader["nome_estado"].ToString(),
                             situacao = reader["situacao"].ToString(),
                             ativo = reader["situacao"].ToString() == "Exercício",
-                        });
-                    }
-                }
-                return lstRetorno;
-            }
-        }
-
-        public async Task<dynamic> Busca(string value)
-        {
-            using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					SELECT 
-						d.id as id_cf_deputado
-						, d.nome_parlamentar 
-						, d.nome_civil
-						, d.valor_total_ceap
-						, d.id_partido
-						, p.sigla as sigla_partido
-						, p.nome as nome_partido
-						, d.id_estado
-						, e.sigla as sigla_estado
-						, e.nome as nome_estado
-					FROM cf_deputado d
-					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-                    WHERE id_deputado IS NOT NULL");
-
-                if (!string.IsNullOrEmpty(value))
-                {
-                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(value) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(value) + "%')");
-                }
-
-                strSql.AppendLine(@"
-                    ORDER BY nome_parlamentar
-                    limit 100
-				");
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        lstRetorno.Add(new
-                        {
-                            id_cf_deputado = reader["id_cf_deputado"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            nome_civil = reader["nome_civil"].ToString(),
-                            valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
-                            id_partido = reader["id_partido"],
-                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
-                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "<Sem Partido>",
-                            id_estado = reader["id_estado"],
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            nome_estado = reader["nome_estado"].ToString()
                         });
                     }
                 }
@@ -1210,6 +1159,7 @@ namespace OPS.Core.Repository
                         , l.id_fornecedor
                         , pj.cnpj_cpf
                         , d.id as id_cf_deputado
+                        , t.descricao as despesa_tipo
 					FROM (
 						SELECT data_emissao, id, id_cf_deputado, valor_liquido, id_cf_despesa_tipo, id_fornecedor
 						FROM cf_despesa_##LEG## l
@@ -1225,7 +1175,8 @@ namespace OPS.Core.Repository
 					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
 					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
 	                LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado;
+					LEFT JOIN estado e on e.id = d.id_estado
+                    LEFT JOIN cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo;
 
                     SELECT COUNT(1) FROM cf_despesa_##LEG## l WHERE (1=1) ");
 
@@ -1249,6 +1200,7 @@ namespace OPS.Core.Repository
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             sigla_estado = reader["sigla_estado"].ToString(),
                             sigla_partido = reader["sigla_partido"].ToString(),
+                            despesa_tipo = reader["despesa_tipo"].ToString(),
                             valor_liquido = Utils.FormataValor(reader["valor_liquido"])
                         });
                     }

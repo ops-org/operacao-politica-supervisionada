@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace OPS.Importador.CamaraFederal;
+namespace OPS.Importador.CamaraFederal.Entities;
 
 [XmlRoot(ElementName = "xml")]
 public class DeputadoDetalhes

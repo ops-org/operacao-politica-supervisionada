@@ -649,12 +649,12 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
     public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
     {
-        var importacao = connection.GetList<Importacao>(new { nome = "Senado" }).FirstOrDefault();
+        var importacao = connection.GetList<Importacao>(new { chave = "Senado" }).FirstOrDefault();
         if (importacao == null)
         {
             importacao = new Importacao()
             {
-                Nome = "Senado"
+                Chave = "Senado"
             };
             importacao.Id = (ushort)connection.Insert(importacao);
         }

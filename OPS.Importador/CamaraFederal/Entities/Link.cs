@@ -1,4 +1,4 @@
-﻿namespace OPS.Importador.CamaraFederal;
+﻿namespace OPS.Importador.CamaraFederal.Entities;
 
 public class Link
 {

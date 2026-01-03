@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using OPS.Core.Utilities;
 
@@ -6,6 +7,36 @@ namespace OPS.Core.Repository
 {
     public static class InicioRepository
     {
+        public static IEnumerable<dynamic> InfoImportacao()
+        {
+            using (AppDb banco = new AppDb())
+            {
+                var strSql = @"
+SELECT
+	i.id, e.sigla, IFNULL(e.nome, i.chave) as nome, i.`url`, i.info, i.ultima_despesa, i.despesas_fim
+FROM importacao i
+LEFT JOIN estado e ON e.id = i.id
+ORDER BY e.nome, i.id";
+
+                using (var reader = banco.ExecuteReader(strSql.ToString()))
+                {
+                    while (reader.Read())
+                    {
+                        yield return new
+                        {
+                            id = reader["id"],
+                            sigla = reader["sigla"].ToString(),
+                            nome = reader["nome"].ToString(),
+                            url = reader["url"].ToString(),
+                            info = reader["info"].ToString(),
+                            ultima_despesa = Utils.FormataData(reader["ultima_despesa"]),
+                            ultima_importacao = Utils.FormataData(reader["despesas_fim"])
+                        };
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Retorna resumo (8 Itens) dos parlamentares mais e menos gastadores
         /// 4 Deputados Federais MAIS gastadores (CEAP)

@@ -13,6 +13,7 @@ using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
+using OPS.Importador.CamaraFederal.Entities;
 using OPS.Importador.Utilities;
 using RestSharp;
 
@@ -423,12 +424,12 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
     public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
     {
-        var importacao = connection.GetList<Importacao>(new { nome = "Camara Federal" }).FirstOrDefault();
+        var importacao = connection.GetList<Importacao>(new { chave = "Camara Federal" }).FirstOrDefault();
         if (importacao == null)
         {
             importacao = new Importacao()
             {
-                Nome = "Camara Federal"
+                Chave = "Camara Federal"
             };
             importacao.Id = (ushort)connection.Insert(importacao);
         }

@@ -965,12 +965,12 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
         public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
         {
-            var importacao = connection.GetList<Importacao>(new { nome = "Senado" }).FirstOrDefault();
+            var importacao = connection.GetList<Importacao>(new { chave = "Senado" }).FirstOrDefault();
             if (importacao == null)
             {
                 importacao = new Importacao()
                 {
-                    Nome = "Senado"
+                    Chave = "Senado"
                 };
                 importacao.Id = (ushort)connection.Insert(importacao);
             }

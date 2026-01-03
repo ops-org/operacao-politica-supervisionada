@@ -12,13 +12,13 @@ using OpenQA.Selenium.Support.UI;
 
 namespace OPS.Importador.Utilities
 {
-    public class SeleniunScraper
+    public class SeleniumScraper
     {
-        public ILogger<SeleniunScraper> logger { get; set; }
+        public ILogger<SeleniumScraper> logger { get; set; }
 
-        public SeleniunScraper(IServiceProvider serviceProvider)
+        public SeleniumScraper(IServiceProvider serviceProvider)
         {
-            this.logger = serviceProvider.GetService<ILogger<SeleniunScraper>>();
+            this.logger = serviceProvider.GetService<ILogger<SeleniumScraper>>();
         }
 
         public void BaixarArquivosParana(int ano)

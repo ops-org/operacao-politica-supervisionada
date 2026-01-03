@@ -227,7 +227,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
             {
                 importacao = new Importacao()
                 {
-                    Nome = config.Estado.ToString()
+                    Chave = config.Estado.ToString()
                 };
                 importacao.Id = (ushort)connection.Insert(importacao);
             }

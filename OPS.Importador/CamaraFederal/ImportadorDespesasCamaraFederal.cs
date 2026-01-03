@@ -62,12 +62,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
     {
-        var importacao = connection.GetList<Importacao>(new { nome = "Camara Federal" }).FirstOrDefault();
+        var importacao = connection.GetList<Importacao>(new { chave = "Camara Federal" }).FirstOrDefault();
         if (importacao == null)
         {
             importacao = new Importacao()
             {
-                Nome = "Camara Federal"
+                Chave = "Camara Federal"
             };
             importacao.Id = (ushort)connection.Insert(importacao);
         }
@@ -1341,32 +1341,32 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private void CorrigeDespesas()
     {
         connection.Execute(@"
-    				UPDATE ops_tmp.cf_despesa_temp SET numero = NULL WHERE numero = 'S/N' OR numero = '';
-    				UPDATE ops_tmp.cf_despesa_temp SET numeroDeputadoID = NULL WHERE numeroDeputadoID = '';
-    				UPDATE ops_tmp.cf_despesa_temp SET cnpjCPF = NULL WHERE cnpjCPF = '';
-    				UPDATE ops_tmp.cf_despesa_temp SET fornecedor = 'CORREIOS' WHERE cnpjCPF is null and fornecedor LIKE 'CORREIOS%';
-    				UPDATE ops_tmp.cf_despesa_temp SET cnpjCPF = '07501394000100' WHERE cnpjCPF is null and fornecedor LIKE 'POSTO GABBI CENTRO SUL LTDA%';
+    		UPDATE ops_tmp.cf_despesa_temp SET numero = NULL WHERE numero = 'S/N' OR numero = '';
+    		UPDATE ops_tmp.cf_despesa_temp SET numeroDeputadoID = NULL WHERE numeroDeputadoID = '';
+    		UPDATE ops_tmp.cf_despesa_temp SET cnpjCPF = NULL WHERE cnpjCPF = '';
+    		UPDATE ops_tmp.cf_despesa_temp SET fornecedor = 'CORREIOS' WHERE cnpjCPF is null and fornecedor LIKE 'CORREIOS%';
+    		UPDATE ops_tmp.cf_despesa_temp SET cnpjCPF = '07501394000100' WHERE cnpjCPF is null and fornecedor LIKE 'POSTO GABBI CENTRO SUL LTDA%';
 
-                    UPDATE ops_tmp.cf_despesa_temp SET siglaUF = NULL WHERE siglaUF = 'NA';
-                    UPDATE ops_tmp.cf_despesa_temp SET numeroEspecificacaoSubCota = NULL WHERE numeroEspecificacaoSubCota = 0;
-                    UPDATE ops_tmp.cf_despesa_temp SET lote = NULL WHERE lote = 0;
-                    UPDATE ops_tmp.cf_despesa_temp SET ressarcimento = NULL WHERE ressarcimento = 0;
-                    UPDATE ops_tmp.cf_despesa_temp SET idDocumento = NULL WHERE idDocumento = 0;
-                    UPDATE ops_tmp.cf_despesa_temp SET parcela = NULL WHERE parcela = 0;
-                    UPDATE ops_tmp.cf_despesa_temp SET siglaPartido = 'PP' WHERE siglaPartido = 'PP**';
-                    UPDATE ops_tmp.cf_despesa_temp SET siglaPartido = null WHERE siglaPartido = 'NA';
-    			");
+            UPDATE ops_tmp.cf_despesa_temp SET siglaUF = NULL WHERE siglaUF = 'NA';
+            UPDATE ops_tmp.cf_despesa_temp SET numeroEspecificacaoSubCota = NULL WHERE numeroEspecificacaoSubCota = 0;
+            UPDATE ops_tmp.cf_despesa_temp SET lote = NULL WHERE lote = 0;
+            UPDATE ops_tmp.cf_despesa_temp SET ressarcimento = NULL WHERE ressarcimento = 0;
+            UPDATE ops_tmp.cf_despesa_temp SET idDocumento = NULL WHERE idDocumento = 0;
+            UPDATE ops_tmp.cf_despesa_temp SET parcela = NULL WHERE parcela = 0;
+            UPDATE ops_tmp.cf_despesa_temp SET siglaPartido = 'PP' WHERE siglaPartido = 'PP**';
+            UPDATE ops_tmp.cf_despesa_temp SET siglaPartido = null WHERE siglaPartido = 'NA';
+    	");
     }
 
     public void InsereDeputadoFaltante()
     {
         // Atualiza os deputados já existentes quando efetuarem os primeiros gastos com a cota
         var affected = connection.Execute(@"
-                    UPDATE cf_deputado d
-                    inner join ops_tmp.cf_despesa_temp dt on d.id = dt.idDeputado
-                    set d.id_deputado = dt.numeroDeputadoID
-                    where d.id_deputado is null;
-                ");
+            UPDATE cf_deputado d
+            inner join ops_tmp.cf_despesa_temp dt on d.id = dt.idDeputado
+            set d.id_deputado = dt.numeroDeputadoID
+            where d.id_deputado is null;
+        ");
 
         if (affected > 0)
         {
@@ -1378,17 +1378,17 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         // Insere um novo deputado ou liderança
         affected = connection.Execute(@"
-            	    INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar, cpf)
-            	    SELECT idDeputado, numeroDeputadoID, nomeParlamentar, max(cpf)
-            	    FROM ops_tmp.cf_despesa_temp
-            	    WHERE numeroDeputadoID  not in (
-            		    SELECT id_deputado 
-    				    FROM cf_deputado
-            		    WHERE id_deputado IS NOT null
-            	    )
-    				AND numeroDeputadoID IS NOT null
-    				GROUP BY idDeputado, numeroDeputadoID, nomeParlamentar;;
-                ");
+            INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar, cpf)
+            SELECT idDeputado, numeroDeputadoID, nomeParlamentar, max(cpf)
+            FROM ops_tmp.cf_despesa_temp
+            WHERE numeroDeputadoID  not in (
+            	SELECT id_deputado 
+    			FROM cf_deputado
+            	WHERE id_deputado IS NOT null
+            )
+    		AND numeroDeputadoID IS NOT null
+    		GROUP BY idDeputado, numeroDeputadoID, nomeParlamentar;;
+        ");
 
         //DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
 
@@ -1404,14 +1404,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InserePassageiroFaltante()
     {
         var affected = connection.Execute(@"
-            	    INSERT INTO pessoa (nome)
-            	    SELECT DISTINCT passageiro
-            	    FROM ops_tmp.cf_despesa_temp
-            	    WHERE ifnull(passageiro, '') <> ''
-                    AND passageiro not in (
-            		    SELECT nome FROM pessoa
-            	    );
-                ");
+            INSERT INTO pessoa (nome)
+            SELECT DISTINCT passageiro
+            FROM ops_tmp.cf_despesa_temp
+            WHERE ifnull(passageiro, '') <> ''
+            AND passageiro not in (
+                SELECT nome FROM pessoa
+            );
+        ");
 
         if (affected > 0)
         {
@@ -1424,14 +1424,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereTrechoViagemFaltante()
     {
         var affected = connection.Execute(@"
-            	    INSERT INTO trecho_viagem (descricao)
-            	    SELECT DISTINCT trecho
-            	    FROM ops_tmp.cf_despesa_temp
-            	    WHERE ifnull(trecho, '') <> ''
-                    AND trecho not in (
-            		    SELECT descricao FROM trecho_viagem
-            	    );
-                ");
+            INSERT INTO trecho_viagem (descricao)
+            SELECT DISTINCT trecho
+            FROM ops_tmp.cf_despesa_temp
+            WHERE ifnull(trecho, '') <> ''
+            AND trecho not in (
+            	SELECT descricao FROM trecho_viagem
+            );
+        ");
 
         if (affected > 0)
         {
@@ -1444,13 +1444,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereTipoDespesaFaltante(AppDb banco)
     {
         connection.Execute(@"
-            	INSERT INTO cf_despesa_tipo (id, descricao)
-            	select distinct numeroSubCota, descricao
-            	from ops_tmp.cf_despesa_temp
-            	where numeroSubCota  not in (
-            		select id from cf_despesa_tipo
-            	);
-            ");
+            INSERT INTO cf_despesa_tipo (id, descricao)
+            select distinct numeroSubCota, descricao
+            from ops_tmp.cf_despesa_temp
+            where numeroSubCota  not in (
+            	select id from cf_despesa_tipo
+            );
+        ");
 
         if (banco.RowsAffected > 0)
         {
@@ -1463,14 +1463,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereTipoEspecificacaoFaltante()
     {
         var affected = connection.Execute(@"
-                	INSERT INTO cf_especificacao_tipo (id_cf_despesa_tipo, id_cf_especificacao, descricao)
-                	select distinct numeroSubCota, numeroEspecificacaoSubCota, descricaoEspecificacao
-                	from ops_tmp.cf_despesa_temp dt
-                	left join cf_especificacao_tipo tp on tp.id_cf_despesa_tipo = dt.numeroSubCota 
-                		and tp.id_cf_especificacao = dt.numeroEspecificacaoSubCota
-                	where numeroEspecificacaoSubCota <> 0
-                	AND tp.descricao = null;
-                ");
+            INSERT INTO cf_especificacao_tipo (id_cf_despesa_tipo, id_cf_especificacao, descricao)
+            select distinct numeroSubCota, numeroEspecificacaoSubCota, descricaoEspecificacao
+            from ops_tmp.cf_despesa_temp dt
+            left join cf_especificacao_tipo tp on tp.id_cf_despesa_tipo = dt.numeroSubCota 
+                and tp.id_cf_especificacao = dt.numeroEspecificacaoSubCota
+            where numeroEspecificacaoSubCota <> 0
+            AND tp.descricao = null;
+        ");
 
         if (affected > 0)
         {
@@ -1483,23 +1483,23 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereMandatoFaltante()
     {
         var affected = connection.Execute(@"
-                    SET SQL_BIG_SELECTS=1;
+            SET SQL_BIG_SELECTS=1;
 
-    				UPDATE cf_mandato m 
-                    INNER JOIN ( 
-    	                select distinct 
-    	                numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
-    	                from ops_tmp.cf_despesa_temp
-                    ) dt ON m.id_cf_deputado = dt.numeroDeputadoID 
-    	                AND m.id_legislatura = dt.codigoLegislatura 
-                    left join estado e on e.sigla = dt.siglaUF
-                    left join partido p on p.sigla = dt.siglaPartido
-                    SET m.id_carteira_parlamantar = numeroCarteiraParlamentar
-                    where dt.codigoLegislatura <> 0
-                    AND m.id_carteira_parlamantar IS NULL;
+    		UPDATE cf_mandato m 
+            INNER JOIN ( 
+    	        select distinct 
+    	        numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
+    	        from ops_tmp.cf_despesa_temp
+            ) dt ON m.id_cf_deputado = dt.numeroDeputadoID 
+    	        AND m.id_legislatura = dt.codigoLegislatura 
+            left join estado e on e.sigla = dt.siglaUF
+            left join partido p on p.sigla = dt.siglaPartido
+            SET m.id_carteira_parlamantar = numeroCarteiraParlamentar
+            where dt.codigoLegislatura <> 0
+            AND m.id_carteira_parlamantar IS NULL;
 
-                    SET SQL_BIG_SELECTS=0;
-    			");
+            SET SQL_BIG_SELECTS=0;
+    	");
 
         if (affected > 0)
         {
@@ -1507,25 +1507,25 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         }
 
         affected = connection.Execute(@"
-                    SET SQL_BIG_SELECTS=1;
+            SET SQL_BIG_SELECTS=1;
 
-    				INSERT INTO cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
-    				select distinct dt.numeroDeputadoID, codigoLegislatura, numeroCarteiraParlamentar, e.id, p.id 
-    				from ( 
-    					select distinct 
-    					numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
-    					from ops_tmp.cf_despesa_temp
-    				) dt
-    				left join estado e on e.sigla = dt.siglaUF
-    				left join partido p on p.sigla = dt.siglaPartido
-    				left join cf_mandato m on m.id_cf_deputado = dt.numeroDeputadoID 
-    					AND m.id_legislatura = dt.codigoLegislatura 
-    					-- AND m.id_carteira_parlamantar = numeroCarteiraParlamentar
-    				where dt.codigoLegislatura <> 0
-    				AND m.id is null;
+    		INSERT INTO cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
+    		select distinct dt.numeroDeputadoID, codigoLegislatura, numeroCarteiraParlamentar, e.id, p.id 
+    		from ( 
+    			select distinct 
+    			numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
+    			from ops_tmp.cf_despesa_temp
+    		) dt
+    		left join estado e on e.sigla = dt.siglaUF
+    		left join partido p on p.sigla = dt.siglaPartido
+    		left join cf_mandato m on m.id_cf_deputado = dt.numeroDeputadoID 
+    			AND m.id_legislatura = dt.codigoLegislatura 
+    			-- AND m.id_carteira_parlamantar = numeroCarteiraParlamentar
+    		where dt.codigoLegislatura <> 0
+    		AND m.id is null;
 
-                    SET SQL_BIG_SELECTS=0;
-    			");
+            SET SQL_BIG_SELECTS=0;
+    	");
 
         if (affected > 0)
         {
@@ -1538,14 +1538,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereLegislaturaFaltante()
     {
         var affected = connection.Execute(@"
-    				INSERT INTO cf_legislatura (id, ano)
-    				select distinct codigoLegislatura, legislatura
-    				from ops_tmp.cf_despesa_temp dt
-    				where codigoLegislatura <> 0
-    				AND codigoLegislatura  not in (
-    					select id from cf_legislatura
-    				);
-    			");
+    		INSERT INTO cf_legislatura (id, ano)
+    		select distinct codigoLegislatura, legislatura
+    		from ops_tmp.cf_despesa_temp dt
+    		where codigoLegislatura <> 0
+    		AND codigoLegislatura  not in (
+    			select id from cf_legislatura
+    		);
+    	");
 
         if (affected > 0)
         {
@@ -1558,25 +1558,25 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public void InsereFornecedorFaltante()
     {
         var affected = connection.Execute(@"
-                    SET SQL_BIG_SELECTS=1;
+            SET SQL_BIG_SELECTS=1;
 
-    				INSERT INTO fornecedor (nome, cnpj_cpf)
-    				select MAX(dt.fornecedor), dt.cnpjCPF
-    				from ops_tmp.cf_despesa_temp dt
-    				left join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
-    				where dt.cnpjCPF is not null
-    				and f.id is null
-    				GROUP BY dt.cnpjCPF;
+    		INSERT INTO fornecedor (nome, cnpj_cpf)
+    		select MAX(dt.fornecedor), dt.cnpjCPF
+    		from ops_tmp.cf_despesa_temp dt
+    		left join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
+    		where dt.cnpjCPF is not null
+    		and f.id is null
+    		GROUP BY dt.cnpjCPF;
 
-    				INSERT INTO fornecedor (nome, cnpj_cpf)
-    				select DISTINCT dt.fornecedor, dt.cnpjCPF
-    				from ops_tmp.cf_despesa_temp dt
-    				left join fornecedor f on f.nome = dt.fornecedor
-    				where dt.cnpjCPF is null
-    				and f.id is null;
+    		INSERT INTO fornecedor (nome, cnpj_cpf)
+    		select DISTINCT dt.fornecedor, dt.cnpjCPF
+    		from ops_tmp.cf_despesa_temp dt
+    		left join fornecedor f on f.nome = dt.fornecedor
+    		where dt.cnpjCPF is null
+    		and f.id is null;
 
-                    SET SQL_BIG_SELECTS=0;
-    			");
+            SET SQL_BIG_SELECTS=0;
+    	");
 
         if (affected > 0)
         {
@@ -1587,65 +1587,65 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public void InsereDespesaFinal(int ano)
     {
         var affected = connection.Execute(@$"
-    SET SQL_BIG_SELECTS=1;
-    ALTER TABLE cf_despesa DISABLE KEYS;
+            SET SQL_BIG_SELECTS=1;
+            ALTER TABLE cf_despesa DISABLE KEYS;
 
-    INSERT INTO cf_despesa (
-    	ano,
-    	mes,
-    	id_documento,
-    	id_cf_deputado,
-    	id_cf_legislatura,
-    	id_cf_mandato,
-    	id_cf_despesa_tipo,
-    	id_cf_especificacao,
-    	id_fornecedor,
-    	id_passageiro,
-    	numero_documento,
-    	tipo_documento,
-    	data_emissao,
-    	valor_documento,
-    	valor_glosa,
-    	valor_liquido,
-    	valor_restituicao,
-    	id_trecho_viagem,
-        tipo_link,
-        hash
-    )
-    SELECT 
-    	dt.ano,
-    	dt.mes,
-    	dt.idDocumento,
-    	d.id,
-    	dt.codigoLegislatura,
-    	m.id,
-    	numeroSubCota,
-    	numeroEspecificacaoSubCota,
-    	f.id,
-    	p.id,
-    	numero,
-    	tipoDocumento,
-    	dataEmissao,
-    	valorDocumento,
-    	valorGlosa,
-    	valorLiquido,
-    	restituicao,
-    	tv.id,
-        IFNULL(urlDocumento, 0),
-        dt.hash
-    from ops_tmp.cf_despesa_temp dt
-    LEFT JOIN cf_deputado d on d.id_deputado = dt.numeroDeputadoID
-    LEFT JOIN pessoa p on p.nome = dt.passageiro
-    LEFT JOIN trecho_viagem tv on tv.descricao = dt.trecho
-    LEFT join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
-    	or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome like dt.fornecedor)
-    left join cf_mandato m on m.id_cf_deputado = d.id
-    	and m.id_legislatura = dt.codigoLegislatura 
-    	and m.id_carteira_parlamantar = numeroCarteiraParlamentar;
+            INSERT INTO cf_despesa (
+    	        ano,
+    	        mes,
+    	        id_documento,
+    	        id_cf_deputado,
+    	        id_cf_legislatura,
+    	        id_cf_mandato,
+    	        id_cf_despesa_tipo,
+    	        id_cf_especificacao,
+    	        id_fornecedor,
+    	        id_passageiro,
+    	        numero_documento,
+    	        tipo_documento,
+    	        data_emissao,
+    	        valor_documento,
+    	        valor_glosa,
+    	        valor_liquido,
+    	        valor_restituicao,
+    	        id_trecho_viagem,
+                tipo_link,
+                hash
+            )
+            SELECT 
+    	        dt.ano,
+    	        dt.mes,
+    	        dt.idDocumento,
+    	        d.id,
+    	        dt.codigoLegislatura,
+    	        m.id,
+    	        numeroSubCota,
+    	        numeroEspecificacaoSubCota,
+    	        f.id,
+    	        p.id,
+    	        numero,
+    	        tipoDocumento,
+    	        dataEmissao,
+    	        valorDocumento,
+    	        valorGlosa,
+    	        valorLiquido,
+    	        restituicao,
+    	        tv.id,
+                IFNULL(urlDocumento, 0),
+                dt.hash
+            from ops_tmp.cf_despesa_temp dt
+            LEFT JOIN cf_deputado d on d.id_deputado = dt.numeroDeputadoID
+            LEFT JOIN pessoa p on p.nome = dt.passageiro
+            LEFT JOIN trecho_viagem tv on tv.descricao = dt.trecho
+            LEFT join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
+    	        or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome like dt.fornecedor)
+            left join cf_mandato m on m.id_cf_deputado = d.id
+    	        and m.id_legislatura = dt.codigoLegislatura 
+    	        and m.id_carteira_parlamantar = numeroCarteiraParlamentar;
 
-    ALTER TABLE cf_despesa ENABLE KEYS;
-    SET SQL_BIG_SELECTS=0;
-    			", 3600);
+            ALTER TABLE cf_despesa ENABLE KEYS;
+            SET SQL_BIG_SELECTS=0;
+    	", 3600);
 
         var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
         if (affected != totalTemp)
@@ -1666,15 +1666,15 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         foreach (var legislatura in Legislaturas)
         {
             connection.Execute(@$"
-    TRUNCATE TABLE cf_despesa_{legislatura};
+                TRUNCATE TABLE cf_despesa_{legislatura};
 
-    INSERT INTO cf_despesa_{legislatura} 
-        (id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, ano_mes, data_emissao, valor_liquido)
-    SELECT 
-         id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, concat(ano, LPAD(mes, 2, '0')), data_emissao, valor_liquido 
-    FROM cf_despesa
-    WHERE id_cf_legislatura = {legislatura};
-    			", 3600);
+                INSERT INTO cf_despesa_{legislatura} 
+                    (id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, ano_mes, data_emissao, valor_liquido)
+                SELECT 
+                     id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, concat(ano, LPAD(mes, 2, '0')), data_emissao, valor_liquido 
+                FROM cf_despesa
+                WHERE id_cf_legislatura = {legislatura};
+    		", 3600);
         }
     }
 

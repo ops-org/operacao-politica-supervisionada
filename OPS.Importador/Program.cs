@@ -114,7 +114,7 @@ namespace OPS.Importador
 
             services.AddScoped<Fornecedor>();
             services.AddScoped<HttpLogger>();
-            services.AddSingleton<AppDbContextFactory>(provider => 
+            services.AddSingleton<AppDbContextFactory>(provider =>
                 new AppDbContextFactory(provider, configuration.GetConnectionString("AuditoriaContext")));
             //services.AddRedaction();
 
@@ -219,6 +219,7 @@ namespace OPS.Importador
 
                 logger.LogInformation("Iniciando Importação");
 
+
                 var dbContextFactory = serviceProvider.GetRequiredService<AppDbContextFactory>();
                 using (var dbContext = dbContextFactory.CreateDbContext())
                 {
@@ -232,41 +233,41 @@ SELECT id, nome_civil, id_estado FROM ops.cl_deputado
 WHERE nome_civil IS NOT NULL;");
                 }
 
-                var crawler = new SeleniunScraper(serviceProvider);
-                crawler.BaixarArquivosParana(DateTime.Today.Year);
-                crawler.BaixarArquivosPiaui();
+                //var crawler = new SeleniumScraper(serviceProvider);
+                //crawler.BaixarArquivosParana(DateTime.Today.Year);
+                //crawler.BaixarArquivosPiaui();
 
                 var types = new Type[]
                 {
-                    typeof(Senado), // csv
-                    typeof(Camara), // csv
+                    //typeof(Senado), // csv
+                    //typeof(Camara), // csv
                     //typeof(Acre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    typeof(Amapa), // crawler mensal/deputado (Apenas BR)
-                    typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
-                    typeof(Bahia), // crawler anual
-                    typeof(Ceara), // csv mensal
-                    typeof(DistritoFederal), // xlsx  (Apenas BR)
-                    typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                    typeof(Goias), // crawler mensal/deputado
-                    typeof(Maranhao), // Valores mensais por categoria
+                    //typeof(Alagoas), // Dados em PDF scaneado e de baixa qualidade!
+                    //typeof(Amapa), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Amazonas), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Bahia), // crawler anual
+                    //typeof(Ceara), // csv mensal
+                    //typeof(DistritoFederal), // xlsx  (Apenas BR)
+                    //typeof(EspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    //typeof(Goias), // crawler mensal/deputado
+                    //typeof(Maranhao), // Valores mensais por categoria
                     //typeof(MatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    typeof(MatoGrossoDoSul), // crawler anual
-                    typeof(MinasGerais), // xml api mensal/deputado (Apenas BR) 
-                    typeof(Para), // json api anual
-                    typeof(Paraiba), // arquivo ods mensal/deputado
-                    typeof(Parana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
-                    typeof(Pernambuco), // json api mensal/deputado
-                    typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual)
-                    typeof(RioDeJaneiro), // json api mensal/deputado
-                    typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
-                    typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                    //typeof(MatoGrossoDoSul), // crawler anual
+                    //typeof(MinasGerais), // xml api mensal/deputado (Apenas BR) 
+                    //typeof(Para), // json api anual
+                    //typeof(Paraiba), // arquivo ods mensal/deputado
+                    //typeof(Parana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
+                    //typeof(Pernambuco), // json api mensal/deputado
+                    //typeof(Piaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium)
+                    //typeof(RioDeJaneiro), // json api mensal/deputado
+                    //typeof(RioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    //typeof(RioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
                     typeof(Rondonia), // crawler mensal/deputado
-                    typeof(Roraima), // crawler & odt mensal/deputado
-                    typeof(SantaCatarina), // csv anual
-                    typeof(SaoPaulo), // xml anual
-                    typeof(Sergipe), // crawler & pdf mensal/deputado
-                    typeof(Tocantins), // crawler & pdf mensal/deputado
+                    //typeof(Roraima), // crawler & odt mensal/deputado
+                    //typeof(SantaCatarina), // csv anual
+                    //typeof(SaoPaulo), // xml anual
+                    //typeof(Sergipe), // crawler & pdf mensal/deputado
+                    //typeof(Tocantins), // crawler & pdf mensal/deputado
                 };
 
                 var tasks = new List<Task>();
@@ -349,7 +350,7 @@ WHERE nome_civil IS NOT NULL;");
         {
             // (outra fonnte) https://legis.senado.leg.br/dadosabertos/senador/partidos
             var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
-            
+
             var factory = new AppDbContextFactory(null, Padrao.ConnectionString);
             using (var dbContext = factory.CreateDbContext())
             {
@@ -384,7 +385,7 @@ WHERE nome_civil IS NOT NULL;");
                                         Console.WriteLine(ex.Message);
                                     }
                                 }
-                                
+
                                 var parameters = new[]
                                 {
                                     ("@legenda", csv[0] != "-" ? (object)csv[0] : null),
@@ -422,7 +423,7 @@ AND l.id_cf_despesa_tipo = 120
 AND l.tipo_link = 1
 AND l.id > 10501020
 ORDER BY 1";
-            
+
             using (var client = new System.Net.Http.HttpClient())
             using (var connection = new MySqlConnection(Padrao.ConnectionString))
             {
@@ -462,6 +463,63 @@ ORDER BY 1";
             }
 
             return null;
+        }
+
+        private static async Task AjustarFornecedores()
+        {
+            var sql = @"SELECT id, cnpj_cpf from fornecedor f
+WHERE LENGTH(f.cnpj_cpf) = 14
+AND f.cnpj_cpf LIKE '***%'";
+
+            using (var connection = new MySqlConnection(Padrao.ConnectionString))
+            {
+                await connection.OpenAsync();
+                var results = await connection.QueryAsync(sql);
+                foreach (var item in results)
+                {
+                    try
+                    {
+                        var cnpjIncorreto = item.cnpj_cpf.ToString();
+                        var sqlFind = $@"SELECT id_fornecedor, cnpj from fornecedor_info WHERE cnpj LIKE '{cnpjIncorreto.Replace("*", "_")}'";
+                        var results1 = await connection.QueryAsync(sqlFind);
+
+                        if (results1.Count() == 1)
+                        {
+                            var idFornecodorIncorreto = item.id.ToString();
+                            var idFornecodorCorreto = results1.First().id_fornecedor.ToString();
+
+                            
+                            var cnpjCorreto = results1.First().cnpj.ToString();
+
+                            Console.WriteLine($"Corrigindo Fornecedor {idFornecodorIncorreto} -> {idFornecodorCorreto} CNPJ: {cnpjIncorreto} -> {cnpjCorreto}");
+
+                            var sqlUpdate = $@"
+UPDATE cl_despesa SET id_fornecedor = {idFornecodorCorreto}  WHERE id_fornecedor = {idFornecodorIncorreto};
+UPDATE cf_despesa SET id_fornecedor = {idFornecodorCorreto}  WHERE id_fornecedor = {idFornecodorIncorreto};
+UPDATE sf_despesa SET id_fornecedor = {idFornecodorCorreto}  WHERE id_fornecedor = {idFornecodorIncorreto};
+
+UPDATE fornecedor SET 
+    valor_total_ceap_camara = NULL,
+    valor_total_ceap_senado = NULL,
+    valor_total_ceap_assembleias = NULL
+WHERE id = {idFornecodorIncorreto};
+
+UPDATE forcecedor_cnpj_incorreto SET 
+    id_fornecedor_correto = {idFornecodorCorreto},
+    cnpj_correto = '{cnpjCorreto}'
+WHERE cnpj_incorreto = '{cnpjIncorreto}';
+
+";
+                            await connection.ExecuteAsync(sqlUpdate);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+            }
         }
     }
 }

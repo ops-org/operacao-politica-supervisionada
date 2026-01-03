@@ -8,7 +8,6 @@
 //using Microsoft.Extensions.Logging;
 //using OPS.Core;
 //using OPS.Core.Entity;
-//using OPS.Core.Enum;
 
 //namespace OPS.Importador;
 

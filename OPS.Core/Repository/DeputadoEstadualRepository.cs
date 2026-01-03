@@ -549,7 +549,7 @@ namespace OPS.Core.Repository
 						, d.id_estado
 						, e.sigla as sigla_estado
 						, e.nome as nome_estado
-                        , d.situacao
+                        -- , d.situacao
 					FROM cl_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
@@ -568,6 +568,11 @@ namespace OPS.Core.Repository
                 if (!string.IsNullOrEmpty(request.Estado))
                 {
                     strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Estado) + ") ");
+                }
+
+                if (!string.IsNullOrEmpty(request.NomeParlamentar))
+                {
+                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
                 }
 
                 strSql.AppendLine(@"
@@ -591,64 +596,8 @@ namespace OPS.Core.Repository
                             nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "<Sem Partido>",
                             sigla_estado = reader["sigla_estado"].ToString(),
                             nome_estado = reader["nome_estado"].ToString(),
-                            situacao = reader["situacao"].ToString(),
-                            ativo = reader["situacao"].ToString() == "Exercício",
-                        });
-                    }
-                }
-                return lstRetorno;
-            }
-        }
-
-        public async Task<dynamic> Busca(string value)
-        {
-            using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					SELECT 
-						d.id as id_cl_deputado
-						, d.nome_parlamentar 
-						, d.nome_civil
-						, d.valor_total_ceap
-						, d.id_partido
-						, p.sigla as sigla_partido
-						, p.nome as nome_partido
-						, d.id_estado
-						, e.sigla as sigla_estado
-						, e.nome as nome_estado
-					FROM cl_deputado d
-					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-                    WHERE id_deputado IS NOT NULL");
-
-                if (!string.IsNullOrEmpty(value))
-                {
-                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(value) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(value) + "%')");
-                }
-
-                strSql.AppendLine(@"
-                    ORDER BY nome_parlamentar
-                    limit 100
-				");
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        lstRetorno.Add(new
-                        {
-                            id_cl_deputado = reader["id_cl_deputado"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            nome_civil = reader["nome_civil"].ToString(),
-                            valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"]),
-                            id_partido = reader["id_partido"],
-                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
-                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "<Sem Partido>",
-                            id_estado = reader["id_estado"],
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            nome_estado = reader["nome_estado"].ToString()
+                            //situacao = reader["situacao"].ToString(),
+                            //ativo = reader["situacao"].ToString() == "Exercício",
                         });
                     }
                 }

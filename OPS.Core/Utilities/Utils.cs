@@ -109,19 +109,28 @@ namespace OPS.Core.Utilities
         /// <summary>
         /// Formatar uma string CNPJ
         /// </summary>
-        /// <param name="CNPJ">string CNPJ sem formatacao</param>
+        /// <param name="cnpj">string CNPJ sem formatacao</param>
         /// <returns>string CNPJ formatada</returns>
         /// <example>Recebe '99999999999999' Devolve '99.999.999/9999-99'</example>
 
-        public static string FormatCNPJ(string CNPJ)
+        public static string FormatCNPJ(string cnpj)
         {
             try
             {
-                return Convert.ToUInt64(CNPJ).ToString(@"00\.000\.000\/0000\-00");
+                return Convert.ToUInt64(cnpj).ToString(@"00\.000\.000\/0000\-00");
             }
             catch (Exception)
             {
-                return CNPJ;
+                try
+                {
+                    // Anonimized data
+                    return $"{cnpj.Substring(0, 2)}.{cnpj.Substring(2, 3)}.{cnpj.Substring(5, 3)}/{cnpj.Substring(8, 4)}-{cnpj.Substring(12, 2)}";
+
+                }
+                catch (Exception)
+                {
+                    return cnpj;
+                }
             }
 
         }
@@ -129,31 +138,31 @@ namespace OPS.Core.Utilities
         /// <summary>
         /// Formatar uma string CPF
         /// </summary>
-        /// <param name="CPF">string CPF sem formatacao</param>
+        /// <param name="cpf">string CPF sem formatacao</param>
         /// <returns>string CPF formatada</returns>
         /// <example>Recebe '99999999999' Devolve '999.999.999-99'</example>
 
-        public static string FormatCPF(string CPF)
+        public static string FormatCPF(string cpf)
         {
-            return FormatCPFParcial(CPF.Substring(4, 6));
+            return FormatCPFParcial(cpf.Substring(4, 6));
         }
 
         /// <summary>
         /// Formatar uma string CPF
         /// </summary>
-        /// <param name="CPF">string CPF sem formatacao</param>
+        /// <param name="cpf">string CPF sem formatacao</param>
         /// <returns>string CPF formatada</returns>
         /// <example>Recebe '99999999999' Devolve '999.999.999-99'</example>
 
-        public static string FormatCPFParcial(string CPF)
+        public static string FormatCPFParcial(string cpf)
         {
             try
             {
-                return Convert.ToUInt64(CPF).ToString(@"***\.000\.000\-**");
+                return Convert.ToUInt64(cpf).ToString(@"***\.000\.000\-**");
             }
             catch (Exception)
             {
-                return CPF;
+                return cpf;
             }
         }
 
@@ -167,6 +176,17 @@ namespace OPS.Core.Utilities
         public static string RemoveCaracteresNaoNumericos(string str)
         {
             return Regex.Replace(str ?? "", @"[^\d]", "");
+        }
+
+        public static string RemoveCaracteresNaoNumericosExetoAsterisco(string str)
+        {
+            var value = Regex.Replace(str ?? "", @"[^\d*]", "");
+
+            // Correção para CPF com mascara de Rondonia
+            if (value.StartsWith("***", StringComparison.InvariantCultureIgnoreCase) && value.EndsWith("***", StringComparison.InvariantCultureIgnoreCase) && value.Length == 12)
+                return value.Substring(0, 11);
+
+            return value;
         }
 
         public static string RemoveCaracteresNumericos(string str)

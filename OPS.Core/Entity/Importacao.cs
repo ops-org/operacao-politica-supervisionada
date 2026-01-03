@@ -3,15 +3,21 @@ using Dapper;
 
 namespace OPS.Core.Entity
 {
-    [Table("importacao", Schema = "ops_tmp")]
+    [Table("importacao")]
     public class Importacao
     {
         [Key]
         [Column("id")]
         public ushort Id { get; set; }
 
-        [Column("nome")]
-        public string Nome { get; set; }
+        [Column("chave")]
+        public string Chave { get; set; }
+
+        [Column("url")]
+        public string Url { get; set; }
+
+        [Column("info")]
+        public string Info { get; set; }
 
         [Column("parlamentar_inicio")]
         public DateTime? ParlamentarInicio { get; set; }

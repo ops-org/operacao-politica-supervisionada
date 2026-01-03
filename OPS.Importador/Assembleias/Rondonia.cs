@@ -139,7 +139,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                 }
 
                 // Há CPF com mascara cagada: Prestador: NOME ***.863.572*-** ENDERECO
-                var patternPrestador = @"Prestador: (?<prestador>.*) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})|(\*{3}\.\d{3}\.\d{3}\*-\*{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
+                var patternPrestador = @"Prestador: (?<prestador>.*?) (?<cnpj>\d{5,20}|(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})|(\d{3}\.\d{3}\.\d{3}-\d{2})|(\*{3}\.\d{3}\.\d{3}\*-\*{2})) (?<endereco>.*)"; // Classe: (?<classe>[^|]*) | Data: (?<data>\\d{2}\\/\\d{2}\\/\\d{4}) | Valor R\\$ (?<valor>[\\d.,]*) | (.*)
                 decimal valorTotalCalculado = 0;
                 decimal valorTotalPagina = 0;
                 var despesasIncluidas = 0;

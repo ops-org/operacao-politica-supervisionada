@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OPS.Core.Model;
@@ -21,6 +22,7 @@ namespace OPS.Core.Repository
                         @"SELECT 
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
+                            , pj.categoria
 							, pji.tipo
 							, IFNULL(pji.nome, pj.nome) as nome
 							, pj.doador
@@ -65,6 +67,7 @@ namespace OPS.Core.Repository
                             id_fornecedor = reader["id_fornecedor"].ToString(),
                             cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                             data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
+                            categoria = reader["categoria"].ToString(),
                             tipo = reader["tipo"].ToString(),
                             nome = reader["nome"].ToString(),
                             nome_fantasia = reader["nome_fantasia"].ToString(),
@@ -804,21 +807,34 @@ order by ano
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT 
-						f.id_fornecedor
-						, f.cnpj
-						, f.nome
-						, f.nome_fantasia
-                        , f.estado
-					FROM fornecedor_info f
+						f.id as id_fornecedor
+						, IFNULL(fi.cnpj, f.cnpj_cpf) as cnpj
+						, IFNULL(fi.nome, f.nome) as nome
+						, fi.nome_fantasia
+                        , fi.estado
+					FROM fornecedor f
+                    LEFT JOIN fornecedor_info fi on fi.id_fornecedor = f.id
                     WHERE 1=1");
 
                 if (!string.IsNullOrEmpty(value))
                 {
-                    strSql.AppendLine("	AND (f.nome like '%" + Utils.MySqlEscape(value) + "%' or f.nome_fantasia like '%" + Utils.MySqlEscape(value) + "%')");
+                    var cpfCnpj = value
+                        .Replace(".", "", StringComparison.InvariantCultureIgnoreCase)
+                        .Replace("/", "", StringComparison.InvariantCultureIgnoreCase)
+                        .Replace("-", "", StringComparison.InvariantCultureIgnoreCase);
+
+                    if (cpfCnpj.Replace("*", "", StringComparison.InvariantCultureIgnoreCase).Trim().All(char.IsDigit)) // Is number?
+                    {
+                        strSql.AppendLine("	AND f.cnpj_cpf like '%" + Utils.MySqlEscape(cpfCnpj) + "%'");
+                    }
+                    else
+                    {
+                        strSql.AppendLine("	AND (IFNULL(fi.nome, f.nome) like '%" + Utils.MySqlEscape(value) + "%' or fi.nome_fantasia like '%" + Utils.MySqlEscape(value) + "%')");
+                    }
                 }
 
                 strSql.AppendLine(@"
-                    ORDER BY nome, cnpj
+                    ORDER BY IFNULL(fi.nome, f.nome), IFNULL(fi.cnpj, f.cnpj_cpf)
                     limit 100
 				");
 

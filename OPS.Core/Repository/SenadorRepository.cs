@@ -56,8 +56,8 @@ namespace OPS.Core.Repository
                             case "N": exercicio = "Fora de Exercício"; break;
                         }
 
-                        var participacao = "";
-                        switch (reader["participacao"].ToString())
+                        var participacao = reader["participacao"].ToString();
+                        switch (participacao)
                         {
                             case "T": participacao = "Titular"; break;
                             case "1": participacao = "1º Suplente"; break;
@@ -97,7 +97,7 @@ namespace OPS.Core.Repository
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT 
+					SELECT DISTINCT
 						d.id as id_sf_senador
 						, d.nome as nome_parlamentar 
 						, d.nome_completo as nome_civil
@@ -113,8 +113,12 @@ namespace OPS.Core.Repository
 					LEFT JOIN estado e on e.id = d.id_estado
                     JOIN sf_mandato m ON m.id_sf_senador = d.id
 					JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
-                    WHERE m.exerceu = 1
-                    AND ml.id_sf_legislatura = " + request.Periodo.ToString());
+                    WHERE m.exerceu = 1");
+
+                if (request.Periodo > 0)
+                {
+                    strSql.AppendLine($" AND ml.id_sf_legislatura = {request.Periodo} ");
+                }
 
                 if (!string.IsNullOrEmpty(request.Partido))
                 {
@@ -126,9 +130,14 @@ namespace OPS.Core.Repository
                     strSql.AppendLine("	AND d.id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Estado) + ") ");
                 }
 
+                if (!string.IsNullOrEmpty(request.NomeParlamentar))
+                {
+                    strSql.AppendLine("	AND (d.nome like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_completo like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
+                }
+
                 strSql.AppendLine(@"
                     ORDER BY nome_parlamentar
-                    -- LIMIT 1000
+                    LIMIT 1000
 				");
 
                 TextInfo textInfo = new CultureInfo("pt-BR", false).TextInfo;
@@ -371,62 +380,6 @@ namespace OPS.Core.Repository
                     categories,
                     series
                 };
-            }
-        }
-
-        public async Task<dynamic> Busca(string value)
-        {
-            using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					SELECT 
-						s.id as id_sf_senador
-						, s.nome
-						, s.nome_completo
-						, s.valor_total_ceaps
-						, s.id_partido
-						, p.sigla as sigla_partido
-						, p.nome as nome_partido
-						, s.id_estado
-						, e.sigla as sigla_estado
-						, e.nome as nome_estado
-					FROM sf_senador s
-					LEFT JOIN partido p on p.id = s.id_partido
-					LEFT JOIN estado e on e.id = s.id_estado
-                    WHERE valor_total_ceaps > 0");
-
-                if (!string.IsNullOrEmpty(value))
-                {
-                    strSql.AppendLine("	AND (s.nome like '%" + Utils.MySqlEscape(value) + "%' or s.nome_completo like '%" + Utils.MySqlEscape(value) + "%')");
-                }
-
-                strSql.AppendLine(@"
-                    ORDER BY nome
-                    limit 100
-				");
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        lstRetorno.Add(new
-                        {
-                            id_sf_senador = reader["id_sf_senador"],
-                            nome = reader["nome"].ToString(),
-                            nome_completo = reader["nome_completo"].ToString(),
-                            valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
-                            id_partido = reader["id_partido"],
-                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
-                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
-                            id_estado = reader["id_estado"],
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            nome_estado = reader["nome_estado"].ToString()
-                        });
-                    }
-                }
-                return lstRetorno;
             }
         }
 
@@ -904,11 +857,13 @@ namespace OPS.Core.Repository
                         , pj.cnpj_cpf
                         , e.sigla as sigla_estado
 						, p.sigla as sigla_partido
+                        , t.descricao as despesa_tipo
 					FROM sf_despesa l
 					JOIN sf_senador d on d.id = l.id_sf_senador
 					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
                     LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
+                    LEFT JOIN sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo
 					WHERE (1=1)
 				");
 
@@ -938,6 +893,7 @@ namespace OPS.Core.Repository
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             sigla_estado = reader["sigla_estado"].ToString(),
                             sigla_partido = reader["sigla_partido"].ToString(),
+                            despesa_tipo = reader["despesa_tipo"].ToString(),
                             valor_total = Utils.FormataValor(reader["valor_total"])
                         });
                     }
