@@ -235,7 +235,7 @@ WHERE nome_civil IS NOT NULL;");
                 {
                     typeof(SenadoFederal.Senado), // csv
                     typeof(CamaraFederal.Camara), // csv
-                    typeof(Assembleias.Estados.Acre.ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(Assembleias.Estados.Acre.ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     typeof(Assembleias.Estados.Alagoas.ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
                     typeof(Assembleias.Estados.Amapa.ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
                     typeof(Assembleias.Estados.Amazonas.ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
@@ -245,7 +245,7 @@ WHERE nome_civil IS NOT NULL;");
                     typeof(Assembleias.Estados.EspiritoSanto.ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
                     typeof(Assembleias.Estados.Goias.ImportacaoGoias), // crawler mensal/deputado
                     typeof(Assembleias.Estados.Maranhao.ImportacaoMaranhao), // Valores mensais por categoria
-                    typeof(Assembleias.Estados.MatoGrosso.ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(Assembleias.Estados.MatoGrosso.ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     typeof(Assembleias.Estados.MatoGrossoDoSul.ImportacaoMatoGrossoDoSul), // crawler anual
                     typeof(Assembleias.Estados.MinasGerais.ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
                     typeof(Assembleias.Estados.Para.ImportacaoPara), // json api anual

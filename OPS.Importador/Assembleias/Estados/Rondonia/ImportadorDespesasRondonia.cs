@@ -170,7 +170,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                         if (maches.Any())
                         {
                             Match matchPrestador = maches[0];
-                            despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(matchPrestador.Groups["cnpj"].Value);
+                            despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericosExetoAsterisco(matchPrestador.Groups["cnpj"].Value);
                             despesaTemp.Empresa = matchPrestador.Groups["prestador"].Value.Trim();
                         }
                         else if (linhaPartes[0].Contains("COPIADORA RORIZ LTDA 22. 882.427/0001-01"))

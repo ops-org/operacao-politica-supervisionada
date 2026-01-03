@@ -221,7 +221,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
 
         public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
         {
-            var importacao = connection.GetList<Importacao>(new { nome = config.Estado.ToString() }).FirstOrDefault();
+            var importacao = connection.GetList<Importacao>(new { chave = config.Estado.ToString() }).FirstOrDefault();
             if (importacao == null)
             {
                 importacao = new Importacao()

@@ -56,10 +56,10 @@ namespace OPS.Importador.Assembleias.Comum
                     //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
                     //{
                     //    ImportarDespesas(DateTime.Now.Year - 2);
-                    //    ImportarDespesasAnoAnterior();
+                    ImportarDespesasAnoAnterior();
                     //}
 
-                    ImportarDespesasAnoAtual();
+                    //ImportarDespesasAnoAtual();
                 }
 
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
