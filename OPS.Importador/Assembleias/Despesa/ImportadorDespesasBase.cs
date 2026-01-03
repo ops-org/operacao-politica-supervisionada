@@ -9,7 +9,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
-using ICSharpCode.SharpZipLib.Checksum;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,6 @@ using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias;
 using OPS.Importador.Utilities;
 using RestSharp;
 

@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias;
 using RestSharp;
 using Serilog;
 

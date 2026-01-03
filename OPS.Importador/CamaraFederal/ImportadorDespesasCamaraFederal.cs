@@ -1184,7 +1184,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         if (despesaTemp.CnpjCpf != "00000000000001" && despesaTemp.CnpjCpf != "00000000000002" /*Linha Direta*/ && despesaTemp.CnpjCpf != "00000000000006")
                             logger.LogWarning("Validar CPNJ '{CnpjCpf} - {NomeEmpresa}'.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
                     }
-                    else if (despesaTemp.CnpjCpf.Length == 14 && !Fornecedor.validarCNPJ(despesaTemp.CnpjCpf))
+                    else if (despesaTemp.CnpjCpf.Length == 14 && !ImportacaoFornecedor.validarCNPJ(despesaTemp.CnpjCpf))
                     {
                         logger.LogWarning("CPNJ '{CnpjCpf} - {NomeEmpresa}' Invalido.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
                     }

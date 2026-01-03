@@ -1,9 +1,9 @@
 using System;
 using Mapster;
-using MinhaReceitaFornecedorInfo = OPS.Importador.Fornecedores.MinhaReceita.FornecedorInfo;
-using InfraFornecedorInfo = OPS.Infraestrutura.Entities.Fornecedores.FornecedorInfo;
-using InfraFornecedorAtividadeSecundaria = OPS.Infraestrutura.Entities.Fornecedores.FornecedorAtividadeSecundaria;
 using OPS.Importador.Fornecedores.MinhaReceita;
+using InfraFornecedorAtividadeSecundaria = OPS.Infraestrutura.Entities.Fornecedores.FornecedorAtividadeSecundaria;
+using InfraFornecedorInfo = OPS.Infraestrutura.Entities.Fornecedores.FornecedorInfo;
+using MinhaReceitaFornecedorInfo = OPS.Importador.Fornecedores.MinhaReceita.FornecedorInfo;
 
 namespace OPS.Importador.Fornecedores.Mapping
 {

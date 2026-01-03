@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
 using OPS.Importador.Assembleias.Despesa;
+using OPS.Importador.Assembleias.Estados.Piaui;
+using OPS.Importador.Assembleias.Estados.RioDeJaneiro;
 using OPS.Importador.Assembleias.Parlamentar;
 
 namespace OPS.Importador.Assembleias.Comum

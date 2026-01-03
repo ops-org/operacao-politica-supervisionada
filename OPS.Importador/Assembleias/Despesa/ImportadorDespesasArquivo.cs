@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using OPS.Importador.Assembleias;
 
 namespace OPS.Importador.Assembleias.Despesa
 {
@@ -28,7 +27,7 @@ namespace OPS.Importador.Assembleias.Despesa
                     using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = _urlOrigem, ["Arquivo"] = System.IO.Path.GetFileName(caminhoArquivo) }))
                     {
                         var novoArquivoBaixado = BaixarArquivo(_urlOrigem, caminhoArquivo);
-                        if(anoAtual != ano && importacaoIncremental && !novoArquivoBaixado && arquivos.Count == 1 && config.Estado != Estado.Piaui) 
+                        if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado && arquivos.Count == 1 && config.Estado != Estado.Piaui)
                         {
                             logger.LogInformation("Importação ignorada para arquivo previamente importado!");
                             return;

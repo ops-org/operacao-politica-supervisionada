@@ -42,7 +42,7 @@ namespace OPS.Importador.Assembleias.Despesa
                         {
                             logger.LogError(ex, ex.Message);
                         }
-                        
+
                     }
                 });
 

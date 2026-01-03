@@ -26,12 +26,12 @@
  */
 
 using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using System.Threading.Tasks;
-using System.IO;
-using System.Threading;
-using System.Text;
 
 namespace OPS.Importador.Utilities
 {

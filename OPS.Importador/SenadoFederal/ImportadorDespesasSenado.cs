@@ -945,7 +945,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
                     dbContext.SaveChanges();
                     dbContext.ChangeTracker.Clear();
                 }
-                
+
                 // Update senator total remuneration
                 var anoMesParam = new MySqlParameter("@ano_mes", anomes);
                 dbContext.Database.ExecuteSqlRaw(@"

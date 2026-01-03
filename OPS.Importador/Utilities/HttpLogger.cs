@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
@@ -44,7 +43,7 @@ namespace OPS.Importador.Utilities
             //    headers.ToString(),
             //    content);
             //else
-                _logger.LogDebug("Request {Method} {URI}{Content}", request.Method, request.RequestUri, content);
+            _logger.LogDebug("Request {Method} {URI}{Content}", request.Method, request.RequestUri, content);
 
             return null;
         }
