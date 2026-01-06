@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTO;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
@@ -19,161 +20,86 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> Consultar(int id)
         {
-            // using (AppDb banco = new AppDb())
+            var deputado = await _context.Deputados
+                .Include(d => d.Partido)
+                .Include(d => d.Estado)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
+            if (deputado == null) return null;
+
+            return new
             {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					SELECT 
-						d.id as id_cl_deputado
-						, d.id_partido
-						, p.sigla as sigla_partido
-						, p.nome as nome_partido
-						, d.id_estado
-						, e.sigla as sigla_estado
-						, e.nome as nome_estado
-						, d.nome_parlamentar
-						, d.nome_civil
-						, d.sexo
-						, d.telefone
-						, d.email
-						, d.nascimento
-						, d.naturalidade
-                        , d.profissao
-                        , d.site
-                        , d.perfil
-                        , d.foto
-						, d.valor_total_ceap
-					FROM cl_deputado d
-					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado -- eleito
-					WHERE d.id = @id
-				");
-
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        return new
-                        {
-                            id_cl_deputado = reader["id_cl_deputado"],
-                            id_partido = reader["id_partido"],
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            nome_partido = reader["nome_partido"].ToString(),
-                            id_estado = reader["id_estado"],
-                            sigla_partido = reader["sigla_partido"].ToString(),
-                            nome_estado = reader["nome_estado"].ToString(),
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            nome_civil = reader["nome_civil"].ToString(),
-                            sexo = reader["sexo"].ToString(),
-                            telefone = reader["telefone"].ToString(),
-                            email = reader["email"].ToString(),
-                            profissao = reader["profissao"].ToString(),
-                            naturalidade = reader["naturalidade"].ToString(),
-                            site = reader["site"].ToString(),
-                            perfil = reader["perfil"].ToString(),
-                            nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
-                            foto = reader["foto"].ToString(),
-                            valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"])
-                        };
-                    }
-
-                    return null;
-                }
-            }
+                id_cl_deputado = deputado.Id,
+                id_partido = deputado.IdPartido,
+                sigla_estado = deputado.Estado?.Sigla,
+                nome_partido = deputado.Partido?.Nome,
+                id_estado = deputado.IdEstado,
+                sigla_partido = deputado.Partido?.Sigla,
+                nome_estado = deputado.Estado?.Nome,
+                nome_parlamentar = deputado.NomeParlamentar,
+                nome_civil = deputado.Nome,
+                sexo = deputado.Sexo,
+                telefone = "", // Not available in entity
+                email = deputado.Email,
+                profissao = "", // Not available in entity
+                naturalidade = "", // Not available in entity
+                site = deputado.Site,
+                perfil = "", // Not available in entity
+                foto = "", // Not available in entity
+                nascimento = Utils.NascimentoFormatado(deputado.Nascimento),
+                valor_total_ceap = Utils.FormataValor(0m) // Not available in entity
+            };
         }
 
         public async Task<dynamic> MaioresFornecedores(int id)
         {
-            // using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-
-                strSql.AppendLine(@"
-					SELECT
-						 pj.id as id_fornecedor
-						, pj.cnpj_cpf
-						, pj.nome AS nome_fornecedor
-						, l1.valor_total
-					from(
-						SELECT
-						sum(l.valor_liquido) as valor_total
-						, l.id_fornecedor
-						FROM cl_despesa l
-						WHERE l.id_cl_deputado = @id
-                        AND l.id_fornecedor IS NOT NULL
-						GROUP BY l.id_fornecedor
-						order by 1 desc
-						LIMIT 10
-					) l1
-					JOIN fornecedor pj on pj.id = l1.id_fornecedor
-					order by l1.valor_total desc
-				");
-
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+            var maioresFornecedores = await _context.DespesasAssembleias
+                .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.Valor.HasValue)
+                .GroupBy(d => d.IdFornecedor)
+                .Select(g => new
                 {
-                    List<dynamic> lstRetorno = new List<dynamic>();
-                    while (await reader.ReadAsync())
-                    {
-                        lstRetorno.Add(new
-                        {
-                            id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
+                    IdFornecedor = g.Key,
+                    ValorTotal = g.Sum(d => d.Valor)
+                })
+                .OrderByDescending(g => g.ValorTotal)
+                .Take(10)
+                .Join(_context.Fornecedores,
+                    g => g.IdFornecedor,
+                    f => f.Id,
+                    (g, f) => new { g.IdFornecedor, f.CnpjCpf, f.Nome, g.ValorTotal })
+                .OrderByDescending(x => x.ValorTotal)
+                .ToListAsync();
 
-                    return lstRetorno;
-                }
-            }
+            return maioresFornecedores.Select(f => new
+            {
+                id_fornecedor = f.IdFornecedor.ToString(),
+                cnpj_cpf = Utils.FormatCnpjCpf(f.CnpjCpf ?? ""),
+                nome_fornecedor = f.Nome ?? "",
+                valor_total = Utils.FormataValor(f.ValorTotal)
+            }).ToList();
         }
 
         public async Task<dynamic> MaioresNotas(int id)
         {
-            // using (AppDb banco = new AppDb())
+            var maioresNotas = await _context.DespesasAssembleias
+                .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.Valor.HasValue)
+                .OrderByDescending(d => d.Valor)
+                .Take(10)
+                .Join(_context.Fornecedores,
+                    d => d.IdFornecedor,
+                    f => f.Id,
+                    (d, f) => new { d.Id, d.IdFornecedor, f.CnpjCpf, f.Nome, d.Valor })
+                .OrderByDescending(x => x.Valor)
+                .ToListAsync();
+
+            return maioresNotas.Select(n => new
             {
-                var strSql = new StringBuilder();
-
-                strSql.AppendLine(@"
-					SELECT
-						 l1.id as id_cl_despesa
-						, l1.id_fornecedor
-						, pj.cnpj_cpf
-						, pj.nome AS nome_fornecedor
-						, l1.valor_liquido
-					from (
-						SELECT
-						    l.id
-						    , l.valor_liquido
-						    , l.id_fornecedor
-						FROM cl_despesa l
-						WHERE l.id_cl_deputado = @id
-                        AND l.id_fornecedor IS NOT NULL
-						order by l.valor_liquido desc
-						LIMIT 10
-					) l1
-					JOIN fornecedor pj on pj.id = l1.id_fornecedor
-					order by l1.valor_liquido desc 
-				");
-
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
-                {
-                    List<dynamic> lstRetorno = new List<dynamic>();
-                    while (await reader.ReadAsync())
-                    {
-                        lstRetorno.Add(new
-                        {
-                            id_cl_despesa = reader["id_cl_despesa"].ToString(),
-                            id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            valor_liquido = Utils.FormataValor(reader["valor_liquido"])
-                        });
-                    }
-
-                    return lstRetorno;
-                }
-            }
+                id_cl_despesa = n.Id.ToString(),
+                id_fornecedor = n.IdFornecedor.ToString(),
+                cnpj_cpf = Utils.FormatCnpjCpf(n.CnpjCpf ?? ""),
+                nome_fornecedor = n.Nome ?? "",
+                valor_liquido = Utils.FormataValor(n.Valor)
+            }).ToList();
         }
 
         public async Task<dynamic> Documento(int id)
@@ -219,7 +145,7 @@ namespace OPS.Core.Repository
 					WHERE l.id = @id
 				 ");
 
-                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     if (await reader.ReadAsync())
                     {
@@ -299,7 +225,7 @@ namespace OPS.Core.Repository
 
                 var lstRetorno = new List<dynamic>();
 
-                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id);
+                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
                 while (await reader.ReadAsync())
                 {
                     lstRetorno.Add(new
@@ -311,7 +237,7 @@ namespace OPS.Core.Repository
                         valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
                     });
                 }
-                reader.Close();
+                
                 return lstRetorno;
             }
         }
@@ -348,7 +274,7 @@ namespace OPS.Core.Repository
 
                 var lstRetorno = new List<dynamic>();
 
-                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id);
+                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
                 while (await reader.ReadAsync())
                 {
                     lstRetorno.Add(new
@@ -360,46 +286,31 @@ namespace OPS.Core.Repository
                         valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
                     });
                 }
-                reader.Close();
+                
                 return lstRetorno;
             }
         }
 
         public async Task<dynamic> GastosPorAno(int id)
         {
-            // using (AppDb banco = new AppDb())
+            // Note: Using DespesasAssembleias which has valor field instead of valor_liquido
+            // and ano field needs to be derived from data_emissao or available in the entity
+            var gastosPorAno = await _context.DespesasAssembleias
+                .Where(d => d.IdDeputado == id && d.Valor.HasValue && d.DataEmissao.HasValue)
+                .GroupBy(d => d.DataEmissao.Value.Year)
+                .Select(g => new
+                {
+                    Ano = g.Key,
+                    ValorTotal = g.Sum(d => d.Valor)
+                })
+                .OrderBy(g => g.Ano)
+                .ToListAsync();
+
+            return new
             {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					SELECT d.ano_mes/100 as ano, SUM(d.valor_liquido) AS valor_total
-					FROM cl_despesa d
-					WHERE d.id_cl_deputado = @id
-					group by ano
-					order by ano
-				");
-
-                var categories = new List<dynamic>();
-                var series = new List<dynamic>();
-
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        categories.Add(Convert.ToInt32(reader["ano"]));
-                        series.Add(Convert.ToDecimal(reader["valor_total"]));
-                    }
-                }
-
-                return new
-                {
-                    categories,
-                    series
-                };
-
-                //using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
-                //{
-                //    List<dynamic> lstRetorno = new List<dynamic>();
-                //    var lstValoresMensais = new decimal?[12];
+                categories = gastosPorAno.Select(g => g.Ano),
+                series = gastosPorAno.Select(g => g.ValorTotal)
+            };
                 //    string anoControle = string.Empty;
                 //    bool existeGastoNoAno = false;
 
@@ -440,47 +351,24 @@ namespace OPS.Core.Repository
 
                 //    return lstRetorno;
                 //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
-                //}
-            }
         }
 
         public async Task<dynamic> ResumoMensal()
         {
-            // using (AppDb banco = new AppDb())
+            var resumoMensal = await _context.DespesaResumosMensais
+                .OrderBy(r => r.Ano)
+                .ThenBy(r => r.Mes)
+                .ToListAsync();
+
+            var lstRetorno = new List<dynamic>();
+            var lstValoresMensais = new decimal?[12];
+            string anoControle = string.Empty;
+            bool existeGastoNoAno = false;
+
+            foreach (var item in resumoMensal)
             {
-                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from cl_despesa_resumo_mensal"))
+                if (item.Ano.ToString() != anoControle)
                 {
-                    List<dynamic> lstRetorno = new List<dynamic>();
-                    var lstValoresMensais = new decimal?[12];
-                    string anoControle = string.Empty;
-                    bool existeGastoNoAno = false;
-
-                    while (await reader.ReadAsync())
-                    {
-                        if (reader["ano"].ToString() != anoControle)
-                        {
-                            if (existeGastoNoAno)
-                            {
-                                lstRetorno.Add(new
-                                {
-                                    name = anoControle.ToString(),
-                                    data = lstValoresMensais
-                                });
-
-                                lstValoresMensais = new decimal?[12];
-                                existeGastoNoAno = false;
-                            }
-
-                            anoControle = reader["ano"].ToString();
-                        }
-
-                        if (Convert.ToDecimal(reader["valor"]) > 0)
-                        {
-                            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor"]);
-                            existeGastoNoAno = true;
-                        }
-                    }
-
                     if (existeGastoNoAno)
                     {
                         lstRetorno.Add(new
@@ -488,43 +376,50 @@ namespace OPS.Core.Repository
                             name = anoControle.ToString(),
                             data = lstValoresMensais
                         });
+
+                        lstValoresMensais = new decimal?[12];
+                        existeGastoNoAno = false;
                     }
 
-                    return lstRetorno;
+                    anoControle = item.Ano.ToString();
+                }
+
+                if (item.ValorTotal > 0)
+                {
+                    lstValoresMensais[item.Mes - 1] = item.ValorTotal.Value;
+                    existeGastoNoAno = true;
                 }
             }
+
+            if (existeGastoNoAno)
+            {
+                lstRetorno.Add(new
+                {
+                    name = anoControle.ToString(),
+                    data = lstValoresMensais
+                });
+            }
+
+            return lstRetorno;
         }
 
         public async Task<dynamic> ResumoAnual()
         {
-            // using (AppDb banco = new AppDb())
+            var resumoAnual = await _context.DespesaResumosMensais
+                .GroupBy(r => r.Ano)
+                .Select(g => new
+                {
+                    Ano = g.Key,
+                    ValorTotal = g.Sum(r => r.ValorTotal)
+                })
+                .OrderBy(g => g.Ano)
+                .ToListAsync();
+
+            return new
             {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					select ano, sum(valor) as valor
-					from cl_despesa_resumo_mensal
-					group by ano
-				");
-
-                var categories = new List<dynamic>();
-                var series = new List<dynamic>();
-
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
-                {
-                    while (await reader.ReadAsync())
-                    {
-
-                        categories.Add(Convert.ToInt32(reader["ano"]));
-                        series.Add(Convert.ToDecimal(reader["valor"]));
-                    }
-                }
-
-                return new
-                {
-                    categories,
-                    series
-                };
-            }
+                categories = resumoAnual.Select(r => r.Ano),
+                series = resumoAnual.Select(r => r.ValorTotal)
+            };
         }
 
         public async Task<dynamic> Lista(FiltroParlamentarDTO request)

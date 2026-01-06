@@ -5,6 +5,7 @@ using OPS.Infraestrutura.Entities.Comum;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 using OPS.Infraestrutura.Entities.AssembleiasLegislativas;
 using OPS.Infraestrutura.Entities.TSE;
+using OPS.Infraestrutura.Entities.Fornecedores;
 
 namespace OPS.Infraestrutura
 {
@@ -35,6 +36,8 @@ namespace OPS.Infraestrutura
             modelBuilder.ConfigureAssembleiasLegislativasEntities();
             modelBuilder.ConfigureSenadoFederalEntities();
             modelBuilder.ConfigureComumEntities();
+            modelBuilder.ConfigureFornecedorEntities();
+            modelBuilder.ConfigureTSEEntities();
         }
     }
 }

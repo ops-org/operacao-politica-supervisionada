@@ -7,14 +7,18 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.CamaraFederal.Entities;
 using OPS.Importador.Utilities;
+using OPS.Infraestrutura;
+using OPS.Infraestrutura.Factories;
 using RestSharp;
 
 namespace OPS.Importador.CamaraFederal;
@@ -23,6 +27,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 {
     protected readonly ILogger<ImportadorParlamentarCamaraFederal> logger;
     protected readonly IDbConnection connection;
+    protected readonly AppDbContextFactory dbContextFactory;
 
     public string rootPath { get; set; }
     public string tempPath { get; set; }
@@ -35,6 +40,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     {
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarCamaraFederal>>();
         connection = serviceProvider.GetService<IDbConnection>();
+        dbContextFactory = serviceProvider.GetService<AppDbContextFactory>();
 
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -43,14 +49,12 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("DefaultClient");
     }
 
-    public Task Importar()
+    public async Task Importar()
     {
-        ImportarDeputados(legislaturaAtual - 1);
-
-        return Task.CompletedTask;
+        await ImportarDeputados(legislaturaAtual - 1);
     }
 
-    public void ImportarDeputados(int legislaturaInicial)
+    public async Task ImportarDeputados(int legislaturaInicial)
     {
         int novos = 0;
         int pagina;
@@ -62,9 +66,9 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         List<Dado> deputados;
         List<Link> links;
 
-        using (var banco = new AppDb())
+        using (var context = dbContextFactory.CreateDbContext())
         {
-            banco.ExecuteNonQuery(@"UPDATE cf_deputado SET id_cf_gabinete=NULL");
+            await context.Database.ExecuteSqlRawAsync(@"UPDATE cf_deputado SET id_cf_gabinete=NULL");
 
             for (int leg = legislaturaInicial; leg <= legislaturaAtual; leg++)
             {
@@ -95,8 +99,8 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                         Dados deputadoDetalhes = null;
                         string situacao = null;
 
-                        banco.AddParameter("id", deputado.id);
-                        var count = banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_deputado WHERE id=@id");
+                        var count = context.Database.GetDbConnection().ExecuteScalar<int>(@"SELECT COUNT(1) FROM cf_deputado WHERE id=@id", 
+                            new NpgsqlParameter("id", deputado.id));
 
                         request = new RestRequest(deputado.id.ToString());
                         request.AddHeader("Accept", "application/json");
@@ -147,22 +151,15 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                         int? id_cf_gabinete = null;
                         if (deputadoDetalhes.ultimoStatus.gabinete.sala != null)
                         {
-                            banco.AddParameter("sala", deputadoDetalhes.ultimoStatus.gabinete.sala.PadLeft(3, '0'));
-                            var id = banco.ExecuteScalar(@"SELECT id from cf_gabinete where sala = @sala");
+                            var id = context.Database.GetDbConnection().ExecuteScalar<int>(@"SELECT id from cf_gabinete where sala = @sala",
+                                new NpgsqlParameter("sala", deputadoDetalhes.ultimoStatus.gabinete.sala.PadLeft(3, '0')));
 
                             var gabinete = deputadoDetalhes.ultimoStatus.gabinete;
 
                             if (!string.IsNullOrEmpty(gabinete.sala))
                                 if (id == null || Convert.IsDBNull(id))
                                 {
-                                    banco.AddParameter("id", gabinete.sala);
-                                    banco.AddParameter("nome", gabinete.nome);
-                                    banco.AddParameter("predio", gabinete.predio);
-                                    banco.AddParameter("andar", gabinete.andar);
-                                    banco.AddParameter("sala", gabinete.sala);
-                                    banco.AddParameter("telefone", gabinete.telefone);
-
-                                    banco.ExecuteNonQuery(@"INSERT INTO cf_gabinete (
+                                    await context.Database.ExecuteSqlRawAsync(@"INSERT INTO cf_gabinete (
                                             id,
                                             nome,
                                             predio,
@@ -176,7 +173,13 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                             @andar,
                                             @sala,
                                             @telefone
-                                        )");
+                                        )",
+                                        new NpgsqlParameter("id", gabinete.sala),
+                                        new NpgsqlParameter("nome", gabinete.nome),
+                                        new NpgsqlParameter("predio", gabinete.predio),
+                                        new NpgsqlParameter("andar", gabinete.andar),
+                                        new NpgsqlParameter("sala", gabinete.sala),
+                                        new NpgsqlParameter("telefone", gabinete.telefone));
 
                                     id_cf_gabinete = Convert.ToInt32(gabinete.sala);
                                 }
@@ -186,19 +189,18 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                                     if (leg == legislaturaAtual)
                                     {
-                                        banco.AddParameter("nome", gabinete.nome);
-                                        banco.AddParameter("predio", gabinete.predio);
-                                        banco.AddParameter("andar", gabinete.andar);
-                                        banco.AddParameter("telefone", gabinete.telefone);
-                                        banco.AddParameter("sala", gabinete.sala);
-
-                                        banco.ExecuteNonQuery(@"UPDATE cf_gabinete SET
+                                        await context.Database.ExecuteSqlRawAsync(@"UPDATE cf_gabinete SET
                                                 nome = @nome,
                                                 predio = @predio,
                                                 andar = @andar,
                                                 telefone = @telefone
                                                 WHERE sala = @sala
-                                            ");
+                                            ",
+                                            new NpgsqlParameter("nome", gabinete.nome),
+                                            new NpgsqlParameter("predio", gabinete.predio),
+                                            new NpgsqlParameter("andar", gabinete.andar),
+                                            new NpgsqlParameter("telefone", gabinete.telefone),
+                                            new NpgsqlParameter("sala", gabinete.sala));
                                     }
                                 }
                         }
@@ -217,25 +219,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                         if (Convert.ToInt32(count) == 0)
                         {
-                            banco.AddParameter("id", deputado.id);
-                            banco.AddParameter("sigla_partido", siglaPartido);
-                            banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
-                            banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
-                            banco.AddParameter("cpf", deputadoDetalhes.cpf);
-                            banco.AddParameter("nome_civil", deputadoDetalhes.nomeCivil.ToTitleCase());
-                            banco.AddParameter("nome_parlamentar", (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase());
-                            banco.AddParameter("sexo", deputadoDetalhes.sexo);
-                            banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
-                            banco.AddParameter("situacao", situacao);
-                            banco.AddParameter("email", deputadoDetalhes.ultimoStatus.gabinete.email?.ToLower());
-                            banco.AddParameter("nascimento", deputadoDetalhes.dataNascimento);
-                            banco.AddParameter("falecimento", deputadoDetalhes.dataFalecimento);
-                            banco.AddParameter("sigla_estado_nascimento", deputadoDetalhes.ufNascimento);
-                            banco.AddParameter("municipio", deputadoDetalhes.municipioNascimento);
-                            banco.AddParameter("website", deputadoDetalhes.urlWebsite);
-                            banco.AddParameter("escolaridade", deputadoDetalhes.escolaridade);
-
-                            banco.ExecuteNonQuery(@"INSERT INTO cf_deputado (
+                            await context.Database.ExecuteSqlRawAsync(@"INSERT INTO cf_deputado (
                                     id,
                                     id_partido, 
                                     id_estado,
@@ -271,31 +255,30 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                     @municipio, 
                                     @website,
                                     @escolaridade
-                                )");
+                                )",
+                                new NpgsqlParameter("id", deputado.id),
+                                new NpgsqlParameter("sigla_partido", siglaPartido),
+                                new NpgsqlParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf),
+                                new NpgsqlParameter("id_cf_gabinete", id_cf_gabinete),
+                                new NpgsqlParameter("cpf", deputadoDetalhes.cpf),
+                                new NpgsqlParameter("nome_civil", deputadoDetalhes.nomeCivil.ToTitleCase()),
+                                new NpgsqlParameter("nome_parlamentar", (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase()),
+                                new NpgsqlParameter("sexo", deputadoDetalhes.sexo),
+                                new NpgsqlParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral),
+                                new NpgsqlParameter("situacao", situacao),
+                                new NpgsqlParameter("email", deputadoDetalhes.ultimoStatus.gabinete.email?.ToLower()),
+                                new NpgsqlParameter("nascimento", deputadoDetalhes.dataNascimento),
+                                new NpgsqlParameter("falecimento", deputadoDetalhes.dataFalecimento),
+                                new NpgsqlParameter("sigla_estado_nascimento", deputadoDetalhes.ufNascimento),
+                                new NpgsqlParameter("municipio", deputadoDetalhes.municipioNascimento),
+                                new NpgsqlParameter("website", deputadoDetalhes.urlWebsite),
+                                new NpgsqlParameter("escolaridade", deputadoDetalhes.escolaridade));
 
                             novos++;
                         }
                         else
                         {
-                            banco.AddParameter("sigla_partido", siglaPartido);
-                            banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
-                            banco.AddParameter("id_cf_gabinete", id_cf_gabinete);
-                            banco.AddParameter("cpf", deputadoDetalhes.cpf);
-                            banco.AddParameter("nome_civil", deputadoDetalhes.nomeCivil.ToTitleCase());
-                            banco.AddParameter("nome_parlamentar", (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase());
-                            banco.AddParameter("sexo", deputadoDetalhes.sexo);
-                            banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
-                            banco.AddParameter("situacao", situacao);
-                            banco.AddParameter("email", deputadoDetalhes.ultimoStatus.gabinete.email?.ToLower());
-                            banco.AddParameter("nascimento", deputadoDetalhes.dataNascimento.NullIfEmpty());
-                            banco.AddParameter("falecimento", deputadoDetalhes.dataFalecimento.NullIfEmpty());
-                            banco.AddParameter("sigla_estado_nascimento", deputadoDetalhes.ufNascimento);
-                            banco.AddParameter("municipio", deputadoDetalhes.municipioNascimento);
-                            banco.AddParameter("website", deputadoDetalhes.urlWebsite);
-                            banco.AddParameter("escolaridade", deputadoDetalhes.escolaridade);
-                            banco.AddParameter("id", deputado.id);
-
-                            banco.ExecuteNonQuery(@"
+                            await context.Database.ExecuteSqlRawAsync(@"
                                     UPDATE cf_deputado 
                                     SET 
                                         id_partido = (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
@@ -315,25 +298,35 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                         website = @website,
                                         escolaridade = @escolaridade
                                     WHERE id = @id
-                            ");
+                            ",
+                            new NpgsqlParameter("sigla_partido", siglaPartido),
+                            new NpgsqlParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf),
+                            new NpgsqlParameter("id_cf_gabinete", id_cf_gabinete),
+                            new NpgsqlParameter("cpf", deputadoDetalhes.cpf),
+                            new NpgsqlParameter("nome_civil", deputadoDetalhes.nomeCivil.ToTitleCase()),
+                            new NpgsqlParameter("nome_parlamentar", (deputadoDetalhes.ultimoStatus.nomeEleitoral ?? deputadoDetalhes.nomeCivil).ToTitleCase()),
+                            new NpgsqlParameter("sexo", deputadoDetalhes.sexo),
+                            new NpgsqlParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral),
+                            new NpgsqlParameter("situacao", situacao),
+                            new NpgsqlParameter("email", deputadoDetalhes.ultimoStatus.gabinete.email?.ToLower()),
+                            new NpgsqlParameter("nascimento", deputadoDetalhes.dataNascimento.NullIfEmpty()),
+                            new NpgsqlParameter("falecimento", deputadoDetalhes.dataFalecimento.NullIfEmpty()),
+                            new NpgsqlParameter("sigla_estado_nascimento", deputadoDetalhes.ufNascimento),
+                            new NpgsqlParameter("municipio", deputadoDetalhes.municipioNascimento),
+                            new NpgsqlParameter("website", deputadoDetalhes.urlWebsite),
+                            new NpgsqlParameter("escolaridade", deputadoDetalhes.escolaridade),
+                            new NpgsqlParameter("id", deputado.id));
                         }
 
                         if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
                         {
-                            banco.AddParameter("id_cf_deputado", deputado.id);
-                            banco.AddParameter("id_legislatura", leg);
-                            var countMandato = banco.ExecuteScalar(@"
-                                    SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura");
+                            var countMandato = context.Database.GetDbConnection().ExecuteScalar<int>(
+                                    "SELECT 1 FROM cf_mandato WHERE id_cf_deputado = @id_cf_deputado AND id_legislatura = @id_legislatura",
+                                    new { id_cf_deputado = deputado.id, id_legislatura = leg });
 
-                            if (Convert.ToInt32(countMandato) == 0)
+                            if (countMandato == 0)
                             {
-                                banco.AddParameter("id_cf_deputado", deputado.id);
-                                banco.AddParameter("id_legislatura", leg);
-                                banco.AddParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf);
-                                banco.AddParameter("sigla_partido", siglaPartido);
-                                banco.AddParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral);
-
-                                banco.ExecuteNonQuery(@"INSERT INTO cf_mandato (
+                                await context.Database.ExecuteSqlRawAsync(@"INSERT INTO cf_mandato (
                                         id_cf_deputado,
                                         id_legislatura,
                                         id_estado,
@@ -345,7 +338,12 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                         (SELECT id FROM estado where sigla like @sigla_estado), 
                                         (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido), 
                                         @condicao
-                                    )");
+                                    )",
+                                    new NpgsqlParameter("id_cf_deputado", deputado.id),
+                                    new NpgsqlParameter("id_legislatura", leg),
+                                    new NpgsqlParameter("sigla_estado", deputadoDetalhes.ultimoStatus.siglaUf),
+                                    new NpgsqlParameter("sigla_partido", siglaPartido),
+                                    new NpgsqlParameter("condicao", deputadoDetalhes.ultimoStatus.condicaoEleitoral));
                             }
                         }
                     }
@@ -374,14 +372,13 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
             MaxAutomaticRedirections = 20
         });
 
-        using (var banco = new AppDb())
         {
             string sql = "SELECT id, nome_parlamentar FROM cf_deputado where id > 100 order by id -- AND situacao = 'Exercício'";
-            DataTable table = banco.GetTable(sql, 0);
+            var deputados = connection.Query<(int id, string nome_parlamentar)>(sql);
 
-            foreach (DataRow row in table.Rows)
+            foreach (var deputado in deputados)
             {
-                string id = row["id"].ToString();
+                string id = deputado.id.ToString();
                 string src = sDeputadosImagesPath + id + ".jpg";
                 if (File.Exists(src))
                 {
@@ -409,13 +406,13 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                     ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
 
 
-                    logger.LogDebug("Atualizado imagem do parlamentar {Parlamentar}.", row["nome_parlamentar"].ToString());
+                    logger.LogDebug("Atualizado imagem do parlamentar {Parlamentar}.", deputado.nome_parlamentar);
                 }
                 catch (Exception ex)
                 {
                     if (!ex.Message.Contains("404"))
                     {
-                        logger.LogInformation(ex.GetBaseException(), "Imagem do parlamentar {Parlamentar} inexistente.", row["nome_parlamentar"].ToString());
+                        logger.LogInformation(ex.GetBaseException(), "Imagem do parlamentar {Parlamentar} inexistente.", deputado.nome_parlamentar);
                     }
                 }
             }

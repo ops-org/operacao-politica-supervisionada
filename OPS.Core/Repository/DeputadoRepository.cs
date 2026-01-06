@@ -79,9 +79,9 @@ namespace OPS.Core.Repository
                 })
                 .OrderByDescending(g => g.ValorTotal)
                 .Take(10)
-                .Join(_context.Fornecedores, 
-                    g => g.IdFornecedor, 
-                    f => f.Id, 
+                .Join(_context.Fornecedores,
+                    g => g.IdFornecedor,
+                    f => f.Id,
                     (g, f) => new { g.IdFornecedor, f.CnpjCpf, f.Nome, g.ValorTotal })
                 .OrderByDescending(x => x.ValorTotal)
                 .ToListAsync();
@@ -161,7 +161,7 @@ namespace OPS.Core.Repository
 					WHERE l.id = @id
 				 ");
 
-                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     if (await reader.ReadAsync())
                     {
@@ -242,7 +242,7 @@ namespace OPS.Core.Repository
 
                 var lstRetorno = new List<dynamic>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -295,7 +295,7 @@ namespace OPS.Core.Repository
 
                 var lstRetorno = new List<dynamic>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -331,7 +331,7 @@ namespace OPS.Core.Repository
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id ))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -406,7 +406,7 @@ namespace OPS.Core.Repository
 					group by d.ano
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -426,7 +426,7 @@ namespace OPS.Core.Repository
 					group by d.ano
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -456,7 +456,7 @@ namespace OPS.Core.Repository
 					group by d.ano
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -486,7 +486,7 @@ namespace OPS.Core.Repository
 					group by d.ano
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -528,7 +528,7 @@ namespace OPS.Core.Repository
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1046,6 +1046,7 @@ namespace OPS.Core.Repository
             {
                 var sqlWhere = new StringBuilder();
 
+                AdicionaFiltroPeriodo(request, sqlWhere);
                 AdicionaFiltroDeputado(request, sqlWhere);
                 AdicionaFiltroDespesa(request, sqlWhere);
                 AdicionaFiltroFornecedor(request, sqlWhere);
@@ -1076,7 +1077,7 @@ namespace OPS.Core.Repository
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
-                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC"));
+                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano DESC, l.mes DESC, l.data_emissao DESC, l.valor_liquido DESC"));
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(@" ) l
@@ -1089,8 +1090,6 @@ namespace OPS.Core.Repository
                     SELECT COUNT(1) FROM cf_despesa l -- _##LEG## l WHERE (1=1) ");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
@@ -1128,77 +1127,81 @@ namespace OPS.Core.Repository
         private void AdicionaFiltroPeriodo(DataTablesRequest request, StringBuilder sqlSelect)
         {
             int periodo = Convert.ToInt32(request.Filters["Periodo"].ToString());
-            int legislatura = 57;
-            if (periodo > 50)
-                legislatura = periodo;
+            //int legislatura = 57;
+            //if (periodo > 50)
+            //    legislatura = periodo;
 
-            sqlSelect = sqlSelect.Replace("##LEG##", legislatura.ToString());
+            //sqlSelect = sqlSelect.Replace("##LEG##", legislatura.ToString());
 
-            //DateTime dataIni = DateTime.Today;
-            //DateTime dataFim = DateTime.Today;
-            //switch (periodo)
-            //{
-            //    case 1: //PERIODO_MES_ATUAL
-            //        sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyMM"));
-            //        break;
+            DateTime dataIni = DateTime.Today;
+            DateTime dataFim = DateTime.Today;
+            switch (periodo)
+            {
+                case 1: //PERIODO_MES_ATUAL
+                    sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyMM"));
+                    break;
 
-            //    case 2: //PERIODO_MES_ANTERIOR
-            //        dataIni = dataIni.AddMonths(-1);
-            //        sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyMM"));
-            //        break;
+                case 2: //PERIODO_MES_ANTERIOR
+                    dataIni = dataIni.AddMonths(-1);
+                    sqlSelect.AppendLine(" AND l.ano_mes = " + dataIni.ToString("yyMM"));
+                    break;
 
-            //    case 3: //PERIODO_MES_ULT_4
-            //        dataIni = dataIni.AddMonths(-3);
-            //        sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyMM"));
-            //        break;
+                case 3: //PERIODO_MES_ULT_4
+                    dataIni = dataIni.AddMonths(-3);
+                    sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyMM"));
+                    break;
 
-            //    case 4: //PERIODO_ANO_ATUAL
-            //        dataIni = new DateTime(dataIni.Year, 1, 1);
-            //        sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyMM"));
-            //        break;
+                case 4: //PERIODO_ANO_ATUAL
+                    dataIni = new DateTime(dataIni.Year, 1, 1);
+                    sqlSelect.AppendLine(" AND l.ano_mes >= " + dataIni.ToString("yyMM"));
+                    break;
 
-            //    case 5: //PERIODO_ANO_ANTERIOR
-            //        dataIni = new DateTime(dataIni.Year, 1, 1).AddYears(-1);
-            //        dataFim = new DateTime(dataIni.Year, 12, 31);
-            //        sqlSelect.AppendFormat(" AND l.ano_mes BETWEEN {0} AND {1}", dataIni.ToString("yyMM"), dataFim.ToString("yyMM"));
-            //        break;
+                case 5: //PERIODO_ANO_ANTERIOR
+                    dataIni = new DateTime(dataIni.Year, 1, 1).AddYears(-1);
+                    dataFim = new DateTime(dataIni.Year, 12, 31);
+                    sqlSelect.AppendFormat(" AND l.ano_mes BETWEEN {0} AND {1}", dataIni.ToString("yyMM"), dataFim.ToString("yyMM"));
+                    break;
 
-            //    case 56: //PERIODO_MANDATO_56
-            //        sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 1902 AND 2301");
-            //        break;
+                case 57: //PERIODO_MANDATO_57
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 2302 AND 2701");
+                    break;
 
-            //    case 55: //PERIODO_MANDATO_55
-            //        sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 1502 AND 1901");
-            //        break;
+                case 56: //PERIODO_MANDATO_56
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 1902 AND 2301");
+                    break;
 
-            //    case 54: //PERIODO_MANDATO_54
-            //        sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 1102 AND 1501");
-            //        break;
+                case 55: //PERIODO_MANDATO_55
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 1502 AND 1901");
+                    break;
 
-            //    case 53: //PERIODO_MANDATO_53
-            //        sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 0702 AND 1101");
-            //        break;
+                case 54: //PERIODO_MANDATO_54
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 1102 AND 1501");
+                    break;
 
-            //        //case "0": //Customizado
-            //        //    if (request.Filters.ContainsKey("PeriodoCustom") && !string.IsNullOrEmpty(request.Filters["PeriodoCustom"].ToString()))
-            //        //    {
-            //        //        var periodo = request.Filters["PeriodoCustom"].ToString().Split('-');
+                case 53: //PERIODO_MANDATO_53
+                    sqlSelect.AppendLine(" AND l.ano_mes BETWEEN 0702 AND 1101");
+                    break;
 
-            //        //        if (periodo[0].Length == 6 && periodo[1].Length == 6)
-            //        //        {
-            //        //            sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0} AND {1}", periodo[0], periodo[1]));
-            //        //        }
-            //        //        else if (periodo[0].Length == 6)
-            //        //        {
-            //        //            sqlSelect.AppendLine(string.Format(" AND l.ano_mes >= {0}", periodo[0]));
-            //        //        }
-            //        //        else if (periodo[1].Length == 6)
-            //        //        {
-            //        //            sqlSelect.AppendLine(string.Format(" AND l.ano_mes <= {0}", periodo[1]));
-            //        //        }
-            //        //    }
-            //        //    break;
-            //}
+                    //case "0": //Customizado
+                    //    if (request.Filters.ContainsKey("PeriodoCustom") && !string.IsNullOrEmpty(request.Filters["PeriodoCustom"].ToString()))
+                    //    {
+                    //        var periodo = request.Filters["PeriodoCustom"].ToString().Split('-');
+
+                    //        if (periodo[0].Length == 6 && periodo[1].Length == 6)
+                    //        {
+                    //            sqlSelect.AppendLine(string.Format(" AND l.ano_mes BETWEEN {0} AND {1}", periodo[0], periodo[1]));
+                    //        }
+                    //        else if (periodo[0].Length == 6)
+                    //        {
+                    //            sqlSelect.AppendLine(string.Format(" AND l.ano_mes >= {0}", periodo[0]));
+                    //        }
+                    //        else if (periodo[1].Length == 6)
+                    //        {
+                    //            sqlSelect.AppendLine(string.Format(" AND l.ano_mes <= {0}", periodo[1]));
+                    //        }
+                    //    }
+                    //    break;
+            }
         }
 
         private void AdicionaFiltroPartidoDeputado(DataTablesRequest request, StringBuilder sqlSelect)
@@ -1481,7 +1484,7 @@ AND co.periodo_ate IS null
 
                 strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     var lstRetorno = new List<dynamic>();
                     while (await reader.ReadAsync())
@@ -1545,7 +1548,7 @@ AND co.periodo_ate IS null
 
                 strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     var lstRetorno = new List<dynamic>();
                     while (await reader.ReadAsync())
@@ -1604,7 +1607,7 @@ AND co.periodo_ate IS null
                 int ausencia_total = 0;
                 int ausencia_justificada_total = 0;
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     if (reader.HasRows)
                     {
@@ -1864,7 +1867,7 @@ AND co.periodo_ate IS null
 					FROM cf_sessao_presenca sp
 					INNER JOIN cf_deputado d on d.id = sp.id_cf_deputado
 					WHERE sp.id_cf_sessao = {0}
-				", id);
+				", new { id });
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "d.nome_parlamentar asc")));
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
@@ -1873,7 +1876,7 @@ AND co.periodo_ate IS null
                     @"SELECT FOUND_ROWS() as row_count;");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -2195,7 +2198,7 @@ LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
 WHERE r.id = @id
 ");
 
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), new { id }))
                 {
                     if (await reader.ReadAsync())
                     {

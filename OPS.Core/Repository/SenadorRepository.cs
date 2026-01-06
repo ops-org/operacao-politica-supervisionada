@@ -50,7 +50,7 @@ namespace OPS.Core.Repository
 					WHERE d.id = @id
 				";
 
-                using (var reader = await ExecuteReaderAsync(strSql, id))
+                using (var reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
                     if (await reader.ReadAsync())
                     {
@@ -198,7 +198,7 @@ namespace OPS.Core.Repository
 					order by l1.valor_total desc
 				");
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     while (await reader.ReadAsync())
@@ -244,7 +244,7 @@ namespace OPS.Core.Repository
 					order by l1.valor desc 
 				");
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     while (await reader.ReadAsync())
@@ -280,7 +280,7 @@ namespace OPS.Core.Repository
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -365,7 +365,7 @@ namespace OPS.Core.Repository
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1369,7 +1369,7 @@ LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
 WHERE r.id = @id
 ");
 
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), id))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), new { id }))
                 {
                     if (await reader.ReadAsync())
                     {

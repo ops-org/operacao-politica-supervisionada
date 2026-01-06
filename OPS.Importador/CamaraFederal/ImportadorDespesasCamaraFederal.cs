@@ -1,4 +1,4 @@
-Ôªøusing System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -96,723 +96,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         connection.Update(importacao);
     }
 
-    //    #region Importa√ß√£o Deputados
+    #region ImportaÁ„o Dados CEAP CSV
 
-    //    /// <summary>
-    //    /// Importar mandatos
-    //    /// </summary>
-    //    public void ImportarMandatos()
-    //    {
-    //        // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
-    //        // http://www.camara.leg.br/internet/deputado/DeputadosXML_52a55.zip
-
-    //        var doc = new XmlDocument();
-    //        doc.Load(@"C:\Users\Lenovo\Downloads\Deputados.xml");
-    //        XmlNode deputados = doc.DocumentElement;
-
-    //        var deputado = deputados.SelectNodes("Deputados/Deputado");
-    //        var sqlFields = new StringBuilder();
-    //        var sqlValues = new StringBuilder();
-
-    //        using (var banco = new AppDb())
-    //        {
-    //            banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp");
-
-    //            foreach (XmlNode fileNode in deputado)
-    //            {
-    //                sqlFields.Clear();
-    //                sqlValues.Clear();
-
-    //                foreach (XmlNode item in fileNode.SelectNodes("*"))
-    //                {
-    //                    sqlFields.Append($",{item.Name}");
-
-    //                    sqlValues.Append($",@{item.Name}");
-    //                    banco.AddParameter(item.Name, item.InnerText);
-    //                }
-
-    //                banco.ExecuteNonQuery("INSERT cf_mandato_temp (" + sqlFields.ToString().Substring(1) + ")  values (" +
-    //                                      sqlValues.ToString().Substring(1) + ")");
-    //            }
-
-    //            banco.ExecuteNonQuery(@"
-    //                    SET SQL_BIG_SELECTS=1;
-
-    //					INSERT INTO cf_mandato (
-    //	                    id_cf_deputado,
-    //	                    id_legislatura,
-    //	                    id_carteira_parlamantar,
-    //	                    id_estado, 
-    //	                    id_partido,
-    //                        condicao
-    //                    )
-    //                    select 
-    //	                    mt.ideCadastro,
-    //	                    mt.numLegislatura,
-    //	                    mt.Matricula,
-    //	                    e.id, 
-    //	                    p.id,
-    //	                    mt.Condicao
-    //                    FROM cf_mandato_temp mt
-    //                    left join partido p on p.sigla = mt.LegendaPartidoEleito
-    //                    left join estado e on e.sigla = mt.UFEleito
-    //                    /* Inserir apenas faltantes */
-    //                    LEFT JOIN cf_mandato m ON m.id_cf_deputado = mt.ideCadastro
-    //	                    AND m.id_legislatura = mt.numLegislatura 
-    //	                    AND m.id_carteira_parlamantar = mt.Matricula
-    //                    WHERE m.id is null;
-
-    //                    SET SQL_BIG_SELECTS=0;
-    //				");
-
-    //            //banco.ExecuteNonQuery("TRUNCATE TABLE cf_mandato_temp;");
-    //        }
-    //    }
-
-    //    //    /// <summary>
-    //    //    /// Atualiza informa√ß√µes dos deputados em exerc√≠cio na C√¢mara dos Deputados (1)
-    //    //    /// CREATE TABLE `cf_deputado_temp` (
-    //    //    ///	`ideCadastro` BIGINT(19) NULL DEFAULT NULL,
-    //    //    ///	`codOrcamento` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`condicao` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`matricula` INT(10) NULL DEFAULT NULL,
-    //    //    ///	`idParlamentar` INT(10) NULL DEFAULT NULL,
-    //    //    ///	`nome` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`nomeParlamentar` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`urlFoto` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`sexo` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`uf` VARCHAR(2) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`partido` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`gabinete` VARCHAR(20) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`anexo` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`fone` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    ///	`email` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci'
-    //    //    /// )
-    //    // COLLATE='utf8mb4_0900_ai_ci'
-    //    // ENGINE=InnoDB
-    //    //    /// </summary>
-    //    //    public  string AtualizaInfoDeputados()
-    //    //    {
-    //    //        TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-    //    //        string retorno = string.Empty;
-    //    //        // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
-
-    //    //        var doc = new XmlDocument();
-    //    //        var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx");
-    //    //        var request = new RestRequest("ObterDeputados", Method.GET);
-    //    //        var response = client.Execute(request);
-    //    //        doc.LoadXml(response.Content);
-    //    //        XmlNode deputados = doc.DocumentElement;
-
-    //    //        var deputado = deputados.SelectNodes("*");
-    //    //        var sqlFields = new StringBuilder();
-    //    //        var sqlValues = new StringBuilder();
-
-    //    //        using (var banco = new AppDb())
-    //    //        {
-    //    //            banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
-
-    //    //            foreach (XmlNode fileNode in deputado)
-    //    //            {
-    //    //                sqlFields.Clear();
-    //    //                sqlValues.Clear();
-
-    //    //                foreach (XmlNode item in fileNode.SelectNodes("*"))
-    //    //                {
-    //    //                    if (item.Name != "comissoes")
-    //    //                    {
-    //    //                        sqlFields.Append(string.Format(",{0}", item.Name));
-
-    //    //                        sqlValues.Append(string.Format(",@{0}", item.Name));
-    //    //                        if (item.Name == "nome" || item.Name == "nomeParlamentar")
-    //    //                        {
-    //    //                            banco.AddParameter(item.Name, textInfo.ToTitleCase(item.InnerText));
-    //    //                        }
-    //    //                        else
-    //    //                        {
-    //    //                            banco.AddParameter(item.Name, item.InnerText);
-    //    //                        }
-
-    //    //                    }
-    //    //                }
-
-    //    //                banco.ExecuteNonQuery("INSERT cf_deputado_temp (" + sqlFields.ToString().Substring(1) +
-    //    //                                      ")  values (" + sqlValues.ToString().Substring(1) + ")");
-    //    //            }
-
-
-    //    //            banco.ExecuteNonQuery(@"
-    //    //                SET SQL_BIG_SELECTS=1;
-
-    //    //	update cf_deputado d
-    //    //	left join cf_deputado_temp dt on dt.numeroDeputadoID = d.id_deputado
-    //    //	left join partido p on p.sigla = dt.partido
-    //    //	left join estado e on e.sigla = dt.uf
-    //    //	set
-    //    //                    -- d.condicao = dt.condicao,
-    //    //		-- d.nome_civil = dt.nome,
-    //    //		-- d.nome_parlamentar = dt.nomeParlamentar,
-    //    //		-- d.url_foto = dt.urlFoto,
-    //    //		-- d.sexo = LEFT(dt.sexo, 1),
-    //    //		-- d.id_estado = e.id,
-    //    //		-- d.id_partido = p.id,
-    //    //		-- d.gabinete = dt.gabinete,
-    //    //		-- d.anexo = dt.anexo,
-    //    //		-- d.fone = dt.fone,
-    //    //		 d.email = dt.email
-    //    //	where dt.nomeParlamentar is not null;
-
-    //    //                SET SQL_BIG_SELECTS=0;
-    //    //");
-
-    //    //            if (banco.Rows > 0)
-    //    //            {
-    //    //                retorno = "<p>" + banco.Rows + "+ Mandato<p>";
-    //    //            }
-
-    //    //            //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp");
-
-    //    //            return retorno;
-    //    //        }
-    //    //    }
-
-    //    //    /// <summary>
-    //    //    /// Atualiza informa√ß√µes dos deputados em exerc√≠cio na C√¢mara dos Deputados (2)
-    //    //    /// CREATE TABLE `cf_deputado_temp_detalhes` (
-    //    //    /// 	`numLegislatura` INT(10) NULL DEFAULT NULL,
-    //    //    /// 	`ideCadastro` BIGINT(19) NULL DEFAULT NULL,
-    //    //    /// 	`idParlamentarDeprecated` INT(10) NULL DEFAULT NULL,
-    //    //    /// 	`nomeCivil` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`nomeParlamentarAtual` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`sexo` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`ufRepresentacaoAtual` VARCHAR(2) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`sigla` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`numero` VARCHAR(20) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`anexo` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`telefone` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`email` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`nomeProfissao` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
-    //    //    /// 	`dataNascimento` DATE NULL DEFAULT NULL,
-    //    //    /// 	`dataFalecimento` DATE NULL DEFAULT NULL,
-    //    //    /// 	`situacaoNaLegislaturaAtual` VARCHAR(30) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci'
-    //    //    /// )
-    //    //    /// COLLATE='utf8mb4_0900_ai_ci'
-    //    //    /// ENGINE=InnoDB
-    //    //    /// </summary>
-    //    //    public  string AtualizaInfoDeputadosCompleto(bool cargaInicial = false)
-    //    //    {
-    //    //        string retorno = string.Empty;
-    //    //        // http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/deputados
-
-    //    //        var sqlFields = new StringBuilder();
-    //    //        var sqlValues = new StringBuilder();
-
-    //    //        using (var banco = new AppDb())
-    //    //        {
-    //    //            banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes");
-
-    //    //            var dt = banco.GetTable("SELECT id from cf_deputado" + (!cargaInicial ? " WHERE situacao <> 'Fim de Mandato'" : ""));
-
-    //    //            foreach (DataRow dr in dt.Rows)
-    //    //            {
-    //    //                // Retorna detalhes dos deputados com hist√≥rico de participa√ß√£o em comiss√µes, per√≠odos de exerc√≠cio, filia√ß√µes partid√°rias e lideran√ßas.
-    //    //                var doc = new XmlDocument();
-    //    //                var client = new RestClient("http://www.camara.leg.br/SitCamaraWS/Deputados.asmx/");
-    //    //                var request = new RestRequest("ObterDetalhesDeputado?numLegislatura=" + (!cargaInicial ? "56" : "") + "&numeroDeputadoID=" + dr["id"].ToString(), Method.GET);
-
-    //    //                try
-    //    //                {
-    //    //                    var response = client.Execute(request);
-    //    //                    doc.LoadXml(response.Content);
-    //    //                }
-    //    //                catch (Exception)
-    //    //                {
-    //    //                    Thread.Sleep(5000);
-
-    //    //                    try
-    //    //                    {
-    //    //                        var response = client.Execute(request);
-    //    //                        doc.LoadXml(response.Content);
-    //    //                    }
-    //    //                    catch (Exception)
-    //    //                    {
-    //    //                        continue;
-    //    //                    }
-    //    //                }
-
-    //    //                XmlNode deputados = doc.DocumentElement;
-    //    //                var deputado = deputados.SelectNodes("*");
-
-    //    //                foreach (XmlNode fileNode in deputado)
-    //    //                {
-    //    //                    sqlFields.Clear();
-    //    //                    sqlValues.Clear();
-
-    //    //                    foreach (XmlNode item in fileNode.ChildNodes)
-    //    //                    {
-    //    //                        if (item.Name == "comissoes") break;
-    //    //                        if ((item.Name != "partidoAtual") && (item.Name != "gabinete"))
-    //    //                        {
-    //    //                            object value;
-    //    //                            if (item.Name.StartsWith("data"))
-    //    //                                if (!string.IsNullOrEmpty(item.InnerText))
-    //    //                                    value = DateTime.Parse(item.InnerText).ToString("yyyy-MM-dd");
-    //    //                                else
-    //    //                                    value = DBNull.Value;
-    //    //                            else
-    //    //                                value = item.InnerText;
-
-    //    //                            sqlFields.Append($",{item.Name}");
-    //    //                            sqlValues.Append($",@{item.Name}");
-    //    //                            banco.AddParameter(item.Name, value);
-    //    //                        }
-    //    //                        else
-    //    //                        {
-    //    //                            foreach (XmlNode item2 in item.ChildNodes)
-    //    //                            {
-    //    //                                if ((item2.Name == "idPartido") || (item2.Name == "nome")) continue;
-
-
-    //    //                                sqlFields.Append($",{item2.Name}");
-    //    //                                sqlValues.Append($",@{item2.Name}");
-    //    //                                banco.AddParameter(item2.Name, item2.InnerText);
-    //    //                            }
-    //    //                        }
-    //    //                    }
-
-    //    //                    try
-    //    //                    {
-    //    //                        banco.ExecuteNonQuery("INSERT cf_deputado_temp_detalhes (" +
-    //    //                                               sqlFields.ToString().Substring(1) + ")  values (" +
-    //    //                                               sqlValues.ToString().Substring(1) + ")");
-
-    //    //                        break;
-    //    //                    }
-    //    //                    catch
-    //    //                    {
-    //    //                        // ignored
-    //    //                    }
-    //    //                }
-    //    //            }
-
-    //    //            banco.ExecuteNonQuery(@"
-    //    //            	update cf_deputado d
-    //    //            	left join (
-    //    //            		select		
-    //    //            			numeroDeputadoID,
-    //    //            			idParlamentarDeprecated,
-    //    //            			nomeCivil,
-    //    //            			nomeParlamentarAtual,
-    //    //            			sexo,
-    //    //            			nomeProfissao,
-    //    //            			dataNascimento,
-    //    //            			ufRepresentacaoAtual,
-    //    //            			max(email) as email,
-    //    //            			max(sigla) as sigla,
-    //    //            			max(numero) as numero,
-    //    //            			max(anexo) as anexo,
-    //    //            			max(telefone) as telefone,
-    //    //            			max(dataFalecimento) as dataFalecimento
-    //    //            		from cf_deputado_temp_detalhes
-    //    //            		group by 1, 2, 3, 4, 5, 6, 7, 8
-    //    //            	) dt on dt.numeroDeputadoID = d.id_cf_deputado
-    //    //            	left join partido p on p.sigla = dt.sigla
-    //    //            	left join estado e on e.sigla = dt.ufRepresentacaoAtual
-    //    //            	set
-    //    //            		d.nome_civil = dt.nomeCivil,
-    //    //            		d.nome_parlamentar = dt.nomeParlamentarAtual,
-    //    //            		d.sexo = LEFT(dt.sexo, 1),
-    //    //            		d.id_estado = e.id,
-    //    //            		d.id_partido = p.id,
-    //    //            		d.gabinete = dt.numero,
-    //    //            		d.anexo = dt.anexo,
-    //    //            		d.fone = dt.telefone,
-    //    //            		d.email = dt.email,
-    //    //            		d.profissao = dt.nomeProfissao,
-    //    //            		d.nascimento = dt.dataNascimento,
-    //    //            		d.falecimento = dt.dataFalecimento
-    //    //            	where dt.nomeParlamentarAtual is not null;
-    //    //            ");
-
-    //    //            if (banco.Rows > 0)
-    //    //            {
-    //    //                retorno = "<p>" + banco.Rows + "+ Mandato<p>";
-    //    //            }
-
-    //    //            //banco.ExecuteNonQuery("TRUNCATE TABLE cf_deputado_temp_detalhes;");
-    //    //        }
-
-    //    //        return retorno;
-    //    //    }
-
-    //    public string ImportaPresencasDeputados()
-    //    {
-    //        var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-    //        var sb = new StringBuilder();
-    //        Console.WriteLine("Iniciando Importa√ß√£o de presen√ßas");
-
-
-    //        string checksum = string.Empty;
-
-    //        DataTable dtMandatos;
-    //        DataTable dtSessoes;
-    //        using (var banco = new AppDb())
-    //        {
-    //            dtMandatos = banco.GetTable("select id_cf_deputado, id_legislatura, id_carteira_parlamantar from cf_mandato");
-    //            dtSessoes = banco.GetTable("select id, id_legislatura, data, inicio, tipo, numero, checksum from cf_sessao");
-    //        }
-
-    //        //Carregar a partir da legislatura 53 (2007/02/01). Existem dados desde 24/02/99
-    //        DateTime dtPesquisa = Padrao.DeputadoFederalPresencaUltimaAtualizacao.Date; //new DateTime(2007, 2, 1);
-    //        if (dtPesquisa == DateTime.MinValue) dtPesquisa = new DateTime(2016, 2, 9);
-    //        int ano_inicio = dtPesquisa.Year;
-    //        var dtNow = DateTime.Now.Date;
-
-    //        if (dtPesquisa == dtNow)
-    //        {
-    //            Console.WriteLine("Presen√ßas j√° importadas hoje!");
-    //            sb.AppendFormat("Presen√ßas j√° importadas hoje!");
-    //            return sb.ToString();
-    //        }
-
-    //        //var dtUltimaIntegracao = dtPesquisa.AddDays(-7);
-    //        int presencas_importadas = 0;
-
-    //        dtPesquisa = dtPesquisa.AddDays(-30);
-
-    //        while (true)
-    //        {
-    //            dtPesquisa = dtPesquisa.AddDays(1);
-    //            if (dtPesquisa > dtNow) break;
-
-    //            var doc = new XmlDocument();
-    //            RestResponse response;
-    //            var restClient = new RestClient("http://www.camara.leg.br/SitCamaraWS/sessoesreunioes.asmx/");
-    //            //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
-    //            var request =
-    //                new RestRequest(
-    //                   string.Format("ListarPresencasDia?data={0:dd/MM/yyyy}&numLegislatura=&numMatriculaParlamentar=&siglaPartido=&siglaUF=", dtPesquisa));
-
-    //            //if (dtPesquisa < dtUltimaIntegracao && dtSessoes.Select().All(r => Convert.ToDateTime(r["data"]) != dtPesquisa))
-    //            //{
-    //            //    Console.WriteLine("N√£o Houve sess√£o no dia: " + dtPesquisa.ToShortDateString());
-    //            //    sb.AppendFormat("<p>N√£o Houve sess√£o no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
-
-    //            //    // N√£o houve sess√£o no dia.
-    //            //    continue;
-    //            //}
-
-    //            try
-    //            {
-    //                response = restClient.Get(request);
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                Console.WriteLine("Erro:" + ex.ToFullDescriptionString());
-
-    //                if (ex.Message.Contains("timeout"))
-    //                {
-    //                    Thread.Sleep(5000);
-
-    //                    dtPesquisa = dtPesquisa.AddDays(-1);
-    //                    continue;
-    //                }
-    //                else
-    //                {
-    //                    sb.AppendFormat("<p>Erro:{0}</p>", ex.ToFullDescriptionString());
-
-    //                    return sb.ToString();
-    //                }
-    //            }
-
-    //            if (!response.Content.Contains("qtdeSessoesDia"))
-    //            {
-    //                if (response.Content.Contains(@"<?xml version=""1.0"" encoding=""utf-8""?>"))
-    //                {
-    //                    //sb.AppendFormat("<p>N√£o Houve sess√£o no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
-    //                    continue;
-    //                }
-    //            }
-
-    //            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-    //            {
-    //                checksum = BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(response.Content)));
-    //                List<DataRow> drSessoes = dtSessoes.Select().Where(r => Convert.ToDateTime(r["data"]) == dtPesquisa).ToList();
-
-    //                if (drSessoes.Count > 0)
-    //                {
-    //                    if (drSessoes[0]["checksum"].ToString() == checksum)
-    //                    {
-    //                        sb.AppendFormat("<p>Sem altera√ß√µes na sess√£o no dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
-    //                        continue;
-    //                    }
-    //                    else
-    //                    {
-    //                        using (var banco = new AppDb())
-    //                        {
-    //                            foreach (DataRow dr in drSessoes)
-    //                            {
-    //                                var id_cf_sessao = Convert.ToInt32(dr["id"]);
-
-    //                                banco.AddParameter("id", id_cf_sessao);
-    //                                banco.ExecuteNonQuery("delete from cf_sessao_presenca where id_cf_sessao=@id");
-
-    //                                banco.AddParameter("id", id_cf_sessao);
-    //                                banco.ExecuteNonQuery("delete from cf_sessao where id=@id");
-    //                            }
-    //                        }
-    //                    }
-    //                }
-    //            }
-
-    //            doc.LoadXml(response.Content);
-
-    //            Console.WriteLine("Importando presen√ßas do dia: " + dtPesquisa.ToShortDateString());
-    //            sb.AppendFormat("<p>Importando presen√ßas do dia: {0:dd/MM/yyyy}</p>", dtPesquisa);
-    //            XmlNode dia = doc.DocumentElement;
-
-    //            var lstSessaoDia = new Dictionary<string, int>();
-
-    //            using (var banco = new AppDb())
-    //            {
-    //                var count = Convert.ToInt32(dia["qtdeSessoesDia"].InnerText);
-    //                for (var i = 0; i < count; i++)
-    //                {
-    //                    presencas_importadas++;
-    //                    var temp = dia.SelectNodes("parlamentares/parlamentar/sessoesDia/sessaoDia").Item(i);
-
-    //                    var inicio = temp["inicio"].InnerText;
-
-    //                    if (lstSessaoDia.ContainsKey(inicio)) continue; // ignorar registro duplicado
-
-    //                    var descricao =
-    //                        temp["descricao"].InnerText
-    //                            .Replace("N ¬∫", "").Replace("N¬∫", "")
-    //                            .Replace("SESS√ÉO PREPARAT√ìRIA", "SESS√ÉO_PREPARAT√ìRIA")
-    //                            .Split(new[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-    //                    banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-    //                    banco.AddParameter("data", dtPesquisa);
-    //                    banco.AddParameter("inicio", Convert.ToDateTime(inicio, cultureInfo));
-
-    //                    //1=> ORDIN√ÅRIA, 2=> EXTRAORDIN√ÅRIA, 3=> SESS√ÉO PREPARAT√ìRIA
-    //                    var tipo = 0;
-    //                    switch (descricao[0])
-    //                    {
-    //                        case "ORDIN√ÅRIA":
-    //                        case "ORDINARIA":
-    //                            tipo = 1;
-    //                            break;
-    //                        case "EXTRAORDIN√ÅRIA":
-    //                        case "EXTRAORDINARIA":
-    //                            tipo = 2;
-    //                            break;
-    //                        case "SESS√ÉO_PREPARAT√ìRIA":
-    //                        case "SESS√ÉO_PREPARATORIA":
-    //                        case "PREPARAT√ìRIA":
-    //                        case "PREPARATORIA":
-    //                            tipo = 3;
-    //                            break;
-    //                        default:
-    //                            throw new NotImplementedException("");
-    //                    }
-
-    //                    banco.AddParameter("tipo", tipo);
-    //                    banco.AddParameter("numero", descricao[1]);
-    //                    banco.AddParameter("checksum", checksum);
-
-    //                    var id_cf_secao = Convert.ToInt32(banco.ExecuteScalar(
-    //                        @"INSERT cf_sessao (
-    //								id_legislatura, data, inicio, tipo, numero, checksum
-    //							) values ( 
-    //								@id_legislatura, @data, @inicio, @tipo, @numero, @checksum
-    //							); 
-
-    //							SELECT LAST_INSERT_ID();"));
-
-    //                    lstSessaoDia.Add(inicio, id_cf_secao);
-    //                }
-
-    //                var parlamentares = dia.SelectNodes("parlamentares/parlamentar");
-
-    //                foreach (XmlNode parlamentar in parlamentares)
-    //                {
-    //                    var sessoesDia = parlamentar.SelectNodes("sessoesDia/sessaoDia");
-
-    //                    foreach (XmlNode sessaoDia in sessoesDia)
-    //                    {
-    //                        string id_cf_deputado;
-    //                        var drMqandato = dtMandatos.Select(
-    //                            string.Format("id_legislatura={0} and id_carteira_parlamantar={1}",
-    //                                dia["legislatura"].InnerText,
-    //                                parlamentar["carteiraParlamentar"].InnerText
-    //                            ));
-
-    //                        if (drMqandato.Length == 0)
-    //                        {
-    //                            try
-    //                            {
-    //                                var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
-    //                                banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
-    //                                id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where coalesce(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
-    //                            }
-    //                            catch (Exception)
-    //                            {
-    //                                sb.AppendFormat("<p>1. Parlamentar '{0}' n√£o consta na base de dados, e foi ignorado na importa√ß√£o de presen√ßas. Legislatura: {1}, Carteira: {2}.</p>",
-    //                                    parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
-    //                                continue;
-    //                            }
-
-    //                            drMqandato = dtMandatos.Select(string.Format("id_legislatura={0} and id_cf_deputado={1}", dia["legislatura"].InnerText, id_cf_deputado));
-
-    //                            if (drMqandato.Length > 0)
-    //                            {
-    //                                drMqandato[0]["id_carteira_parlamantar"] = parlamentar["carteiraParlamentar"].InnerText;
-
-    //                                banco.AddParameter("id_carteira_parlamantar", parlamentar["carteiraParlamentar"].InnerText);
-    //                                banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-    //                                banco.AddParameter("id_cf_deputado", id_cf_deputado);
-    //                                banco.ExecuteNonQuery("UPDATE cf_mandato SET id_carteira_parlamantar=@id_carteira_parlamantar WHERE id_legislatura=@id_legislatura and id_cf_deputado=@id_cf_deputado");
-    //                            }
-    //                        }
-
-    //                        if (drMqandato.Length > 0)
-    //                        {
-    //                            id_cf_deputado = drMqandato[0]["id_cf_deputado"].ToString();
-    //                        }
-    //                        else
-    //                        {
-    //                            var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
-    //                            var sigla_partido = "";
-    //                            var sigla_estado = "";
-    //                            try
-    //                            {
-    //                                var temp = nome_parlamentar[1].Split('/');
-    //                                sigla_partido = temp[0];
-    //                                sigla_estado = temp[1];
-    //                            }
-    //                            catch (Exception e)
-    //                            {
-    //                                var x = e;
-    //                            }
-
-    //                            try
-    //                            {
-    //                                banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
-    //                                id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where coalesce(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
-    //                            }
-    //                            catch (Exception)
-    //                            {
-    //                                sb.AppendFormat("<p>1. Parlamentar '{0}' n√£o consta na base de dados, e foi ignorado na importa√ß√£o de presen√ßas. Legislatura: {1}, Carteira: {2}.</p>",
-    //                                    parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
-    //                                continue;
-    //                            }
-
-    //                            banco.AddParameter("id_cf_deputado", id_cf_deputado);
-    //                            banco.AddParameter("id_legislatura", dia["legislatura"].InnerText);
-    //                            banco.AddParameter("id_carteira_parlamantar", parlamentar["carteiraParlamentar"].InnerText);
-    //                            banco.AddParameter("sigla_estado", sigla_estado);
-    //                            banco.AddParameter("sigla_partido", sigla_partido);
-
-    //                            try
-    //                            {
-    //                                banco.ExecuteScalar(
-    //                                    @"INSERT INTO cf_mandato (
-    //	                                    id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido
-    //                                    ) VALUES (
-    //	                                    @id_cf_deputado
-    //                                        , @id_legislatura
-    //                                        , @id_carteira_parlamantar
-    //                                        , (SELECT id FROM estado where sigla like @sigla_estado)
-    //                                        , (SELECT id FROM partido where sigla like @sigla_partido OR nome like @sigla_partido)
-    //                                    );");
-
-    //                                // generate the data you want to insert
-    //                                var toInsert = dtMandatos.NewRow();
-    //                                toInsert["id_cf_deputado"] = id_cf_deputado;
-    //                                toInsert["id_legislatura"] = dia["legislatura"].InnerText;
-    //                                toInsert["id_carteira_parlamantar"] = parlamentar["carteiraParlamentar"].InnerText;
-
-    //                                // insert in the desired place
-    //                                dtMandatos.Rows.Add(toInsert);
-    //                            }
-    //                            catch (Exception)
-    //                            {
-    //                                // parlamentar n√£o existe na base
-    //                                Console.WriteLine(parlamentar["nomeParlamentar"].InnerText + "/" + dia["legislatura"].InnerText + "/" + parlamentar["carteiraParlamentar"].InnerText);
-
-    //                                sb.AppendFormat("<p>2. Parlamentar '{0}' n√£o consta na base de dados, e foi ignorado na importa√ß√£o de presen√ßas. Legislatura: {1}, Carteira: {2}.</p>",
-    //                                    parlamentar["nomeParlamentar"].InnerText, dia["legislatura"].InnerText, parlamentar["carteiraParlamentar"].InnerText);
-    //                            }
-    //                        }
-
-
-    //                        banco.AddParameter("id_cf_sessao", lstSessaoDia[sessaoDia["inicio"].InnerText]);
-    //                        banco.AddParameter("id_cf_deputado", Convert.ToInt32(id_cf_deputado));
-
-    //                        banco.AddParameter("presente", sessaoDia["frequencia"].InnerText == "Presen√ßa" ? 1 : 0);
-    //                        banco.AddParameter("justificativa", parlamentar["justificativa"].InnerText);
-    //                        banco.AddParameter("presenca_externa", parlamentar["presencaExterna"].InnerText);
-
-    //                        banco.ExecuteNonQuery(
-    //                            "INSERT cf_sessao_presenca (id_cf_sessao, id_cf_deputado, presente, justificativa, presenca_externa) values (@id_cf_sessao, @id_cf_deputado, @presente, @justificativa, @presenca_externa);");
-    //                    }
-    //                }
-    //            }
-    //        }
-
-    //        Padrao.DeputadoFederalPresencaUltimaAtualizacao = DateTime.Now;
-
-    //        using (var banco = new AppDb())
-    //        {
-    //            banco.AddParameter("cf_deputado_presenca_ultima_atualizacao", Padrao.DeputadoFederalPresencaUltimaAtualizacao);
-    //            banco.ExecuteNonQuery(@"UPDATE parametros SET cf_deputado_presenca_ultima_atualizacao=@cf_deputado_presenca_ultima_atualizacao");
-
-    //            banco.ExecuteNonQuery(@"	
-    //UPDATE cf_sessao s
-    //LEFT JOIN (
-    //	SELECT
-    //		id_cf_sessao
-    //		, sum(IF(sp.presente = 1, 1, 0)) as presenca
-    //		, sum(IF(sp.presente = 0 and sp.justificativa = '', 1, 0)) as ausencia
-    //		, sum(IF(sp.presente = 0 and sp.justificativa <> '', 1, 0)) as ausencia_justificada
-    //	FROM cf_sessao_presenca sp 
-    //	GROUP BY id_cf_sessao
-    //) sp on sp.id_cf_sessao = s.id
-    //SET 
-    //    s.presencas = coalesce(sp.presenca, 0),
-    //    s.ausencias = coalesce(sp.ausencia, 0),
-    //    s.ausencias_justificadas = coalesce(sp.ausencia_justificada, 0)
-    //WHERE presencas = 0");
-    //        }
-
-    //        //if (presencas_importadas > 0)
-    //        //{
-    //        //    using (var banco = new Banco())
-    //        //    {
-    //        //        for (int ano = ano_inicio; ano <= dtPesquisa.Year; ano++)
-    //        //        {
-    //        //            banco.AddParameter("ano", ano);
-    //        //            var total_sessoes = Convert.ToInt32(banco.ExecuteScalar(@"SELECT COUNT(1) FROM cf_sessao WHERE year(data)=@ano"));
-
-    //        //            banco.AddParameter("ano", ano);
-    //        //            banco.AddParameter("total_sessoes", total_sessoes);
-    //        //            banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
-
-
-    //        //            banco.ExecuteNonQuery(@"UPDATE cf_legislatura SET total_sessoes=@total_sessoes WHERE ano=@ano");
-    //        //        }
-    //        //    }
-    //        //}
-    //        return sb.ToString();
-    //    }
-
-    //#endregion Importa√ß√£o Deputados
-
-    #region Importa√ß√£o Dados CEAP CSV
-
-    public void Importar(int ano)
+    public Task Importar(int ano)
     {
         var anoAtual = DateTime.Today.Year;
         logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
@@ -827,8 +113,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             bool novoArquivoBaixado = BaixarArquivo(_urlOrigem, caminhoArquivo);
             if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado)
             {
-                logger.LogInformation("Importa√ß√£o ignorada para arquivo previamente importado!");
-                return;
+                logger.LogInformation("ImportaÁ„o ignorada para arquivo previamente importado!");
+                return Task.CompletedTask;
             }
 
             try
@@ -847,13 +133,15 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 logger.LogError(ex, ex.Message);
 
 #if !DEBUG
-                //Excluir o arquivo para tentar importar novamente na proxima execu√ß√£o
+                //Excluir o arquivo para tentar importar novamente na proxima execuÁ„o
                 if(File.Exists(caminhoArquivo))
                     File.Delete(caminhoArquivo);
 #endif
 
             }
         }
+
+        return Task.CompletedTask;
     }
 
     protected void DescompactarArquivo(string caminhoArquivo)
@@ -918,7 +206,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             arquivoChecksum.Verificacao = DateTime.UtcNow;
             connection.Update(arquivoChecksum);
 
-            logger.LogDebug("Arquivo '{CaminhoArquivo}' √© identico ao j√° existente.", caminhoArquivo);
+            logger.LogDebug("Arquivo '{CaminhoArquivo}' È identico ao j· existente.", caminhoArquivo);
 
             if (File.Exists(caminhoArquivoTmp))
                 File.Delete(caminhoArquivoTmp);
@@ -928,7 +216,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         if (arquivoChecksum == null)
         {
-            logger.LogDebug("Arquivo '{CaminhoArquivo}' √© novo.", caminhoArquivo);
+            logger.LogDebug("Arquivo '{CaminhoArquivo}' È novo.", caminhoArquivo);
 
             connection.Insert(new ArquivoChecksum()
             {
@@ -976,10 +264,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var totalColunas = ColunasCEAP.Length;
         var lstHash = new Dictionary<string, UInt64>();
 
-        using (var banco = new AppDb())
+        using (var transaction = connection.BeginTransaction())
         {
             var sql = $"select id, hash from cf_despesa where ano={ano} and hash IS NOT NULL";
-            IEnumerable<dynamic> lstHashDB = connection.Query(sql);
+            IEnumerable<dynamic> lstHashDB = connection.Query(sql, transaction: transaction);
 
             foreach (IDictionary<string, object> dReader in lstHashDB)
             {
@@ -1011,7 +299,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     {
                         if (csv[i] != ColunasCEAP[i])
                         {
-                            throw new Exception("Mudan√ßa de integra√ß√£o detectada para o C√¢mara Federal");
+                            throw new Exception("MudanÁa de integraÁ„o detectada para o C‚mara Federal");
                         }
                     }
                 }
@@ -1060,7 +348,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     else
                     {
                         if (!string.IsNullOrEmpty(despesaTemp.UrlDocumento))
-                            logger.LogError("Documento '{Valor}' n√£o reconhecido!", despesaTemp.UrlDocumento);
+                            logger.LogError("Documento '{Valor}' n„o reconhecido!", despesaTemp.UrlDocumento);
 
                         despesaTemp.UrlDocumento = "0";
                     }
@@ -1128,7 +416,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                             despesaTemp.CnpjCpf = "02012862000160";
                         else if (despesaTemp.Fornecedor.Contains("TAP AIR PORTUGAL", StringComparison.InvariantCultureIgnoreCase) ||
                             despesaTemp.Fornecedor.Contains("TAP PORTUGAL", StringComparison.InvariantCultureIgnoreCase) ||
-                            despesaTemp.Fornecedor.Contains("Transportes A√©reos Portugueses", StringComparison.InvariantCultureIgnoreCase) ||
+                            despesaTemp.Fornecedor.Contains("Transportes AÈreos Portugueses", StringComparison.InvariantCultureIgnoreCase) ||
                             despesaTemp.Fornecedor == "TAP")
 
                             despesaTemp.CnpjCpf = "33136896000190";
@@ -1190,7 +478,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     }
 
                     // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
-                    // Para armazenamento na base de dados a hash √© gerado com o valor, para que mudan√ßas no total provoquem uma atualiza√ß√£o.
+                    // Para armazenamento na base de dados a hash È gerado com o valor, para que mudanÁas no total provoquem uma atualizaÁ„o.
                     var options = new JsonSerializerOptions
                     {
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
@@ -1214,8 +502,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             foreach (var id in lstHash.Values)
             {
-                banco.AddParameter("id", id);
-                banco.ExecuteNonQuery("delete from cf_despesa where id=@id");
+                connection.Execute("delete from cf_despesa where id=@id", new { id });
             }
 
             if (itensProcessadosAno > 0)
@@ -1307,7 +594,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public virtual void ValidaImportacao(int ano)
     {
-        logger.LogDebug("Validar importa√ß√£o");
+        logger.LogDebug("Validar importaÁ„o");
 
         var sql = @$"
     select 
@@ -1335,7 +622,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     select count(1) from ops_tmp.cf_despesa_temp where idDeputado not in (select id from cf_deputado);");
 
         if (despesasSemParlamentar > 0)
-            logger.LogError("H√° deputados n√£o identificados!");
+            logger.LogError("H· deputados n„o identificados!");
     }
 
     private void CorrigeDespesas()
@@ -1360,7 +647,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public void InsereDeputadoFaltante()
     {
-        // Atualiza os deputados j√° existentes quando efetuarem os primeiros gastos com a cota
+        // Atualiza os deputados j· existentes quando efetuarem os primeiros gastos com a cota
         var affected = connection.Execute(@"
             UPDATE cf_deputado d
             inner join ops_tmp.cf_despesa_temp dt on d.id = dt.idDeputado
@@ -1376,7 +663,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             logger.LogInformation("{Itens} parlamentares atualizados!", affected);
         }
 
-        // Insere um novo deputado ou lideran√ßa
+        // Insere um novo deputado ou lideranÁa
         affected = connection.Execute(@"
             INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar, cpf)
             SELECT idDeputado, numeroDeputadoID, nomeParlamentar, max(cpf)
@@ -1441,9 +728,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         return string.Empty;
     }
 
-    private string InsereTipoDespesaFaltante(AppDb banco)
+    private string InsereTipoDespesaFaltante()
     {
-        connection.Execute(@"
+        var affected = connection.Execute(@"
             INSERT INTO cf_despesa_tipo (id, descricao)
             select distinct numeroSubCota, descricao
             from ops_tmp.cf_despesa_temp
@@ -1452,9 +739,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             );
         ");
 
-        if (banco.RowsAffected > 0)
+        if (affected > 0)
         {
-            logger.LogInformation("{Itens} tipos de despesa incluidos!", banco.RowsAffected);
+            logger.LogInformation("{Itens} tipos de despesa incluidos!", affected);
         }
 
         return string.Empty;
@@ -1474,7 +761,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         if (affected > 0)
         {
-            logger.LogInformation("{Itens} tipo especifica√ß√£o incluidos!", affected);
+            logger.LogInformation("{Itens} tipo especificaÁ„o incluidos!", affected);
         }
 
         return string.Empty;
@@ -1649,7 +936,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
         if (affected != totalTemp)
-            logger.LogWarning("{Itens} despesas incluidas. H√° {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
+            logger.LogWarning("{Itens} despesas incluidas. H· {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
         else if (affected > 0)
             logger.LogInformation("{Itens} despesas incluidas!", affected);
     }
@@ -1683,7 +970,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         connection.Execute(@"truncate table ops_tmp.cf_despesa_temp;");
     }
 
-    #endregion Importa√ß√£o Dados CEAP CSV
+    #endregion ImportaÁ„o Dados CEAP CSV
 
 
     #region Processar Resumo CEAP
@@ -1718,8 +1005,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     }
 
     /// <summary>
-    /// Atualiza indicador 'Campe√µes de gastos',
-    /// Os 4 deputados que mais gastaram com a CEAP desde o √≠nicio do mandato 55 (02/2015)
+    /// Atualiza indicador 'Campeıes de gastos',
+    /// Os 4 deputados que mais gastaram com a CEAP desde o Ìnicio do mandato 55 (02/2015)
     /// </summary>
     public void AtualizaCampeoesGastos()
     {
@@ -1760,8 +1047,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     #endregion Processar Resumo CEAP
 
 
-    //    #region Importa√ß√£o Remunera√ß√£o
-    //    // N√£o atualizado
+    //    #region ImportaÁ„o RemuneraÁ„o
+    //    // N„o atualizado
     //    public void ConsultaRemuneracao(int ano, int mes)
     //    {
     //        var meses = new string[] { "janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro" };
@@ -1815,18 +1102,18 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        int AnoIngresso = indice++;
     //        int RemuneracaoFixa = indice++;
     //        int VantagensdeNaturezaPessoal = indice++;
-    //        int Fun√ßaoCargoComissao = indice++;
+    //        int FunÁaoCargoComissao = indice++;
     //        int GratificacaoNatalina = indice++;
     //        int Ferias = indice++;
     //        int OutrasRemuneracoesEventuaisProvisorias = indice++;
     //        int AbonodePermanencia = indice++;
     //        int RedutorConstitucional = indice++;
-    //        int ConstribuicaoPrevidenci√°ria = indice++;
+    //        int ConstribuicaoPrevidenci·ria = indice++;
     //        int ImpostodeRenda = indice++;
     //        int RemuneracaoAposDescontosObrigatorios = indice++;
     //        int Diarias = indice++;
     //        int Auxilios = indice++;
-    //        int VantagensIndenizat√≥rias = indice++;
+    //        int VantagensIndenizatÛrias = indice++;
 
     //        //int linhaAtual = 0;
 
@@ -1871,10 +1158,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                        {
     //                            if (
     //                                    (csv[CargoIndividualizadodoServidor] != "Cargo Individualizado do Servidor") ||
-    //                                    (csv[VantagensIndenizat√≥rias].Trim() != "Vantagens Indenizat√≥rias")
+    //                                    (csv[VantagensIndenizatÛrias].Trim() != "Vantagens IndenizatÛrias")
     //                                )
     //                            {
-    //                                throw new Exception("Mudan√ßa de integra√ß√£o detectada para o CamaraFederal Federal");
+    //                                throw new Exception("MudanÁa de integraÁ„o detectada para o CamaraFederal Federal");
     //                            }
 
     //                            // Pular linha de titulo
@@ -1888,27 +1175,27 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                            break;
     //                        }
 
-    //                        banco.AddParameter("id", Convert.ToInt32(id));
-    //                        banco.AddParameter("ano_mes", anomes);
-    //                        banco.AddParameter("cargo", csv[CargoIndividualizadodoServidor].Replace(id, "").Trim());
-    //                        banco.AddParameter("grupo_funcional", csv[GrupoFuncional]);
-    //                        banco.AddParameter("tipo_folha", csv[FolhadePagamento]);
-    //                        banco.AddParameter("admissao", csv[AnoIngresso] != "null" && csv[AnoIngresso] != "" ? Convert.ToInt32(csv[AnoIngresso].Replace(",00", "")) : (int?)null);
 
-    //                        banco.AddParameter("remun_basica", Convert.ToDouble(csv[RemuneracaoFixa], cultureInfo));
-    //                        banco.AddParameter("vant_pessoais", Convert.ToDouble(csv[VantagensdeNaturezaPessoal], cultureInfo));
-    //                        banco.AddParameter("func_comissionada", Convert.ToDouble(csv[Fun√ßaoCargoComissao], cultureInfo));
-    //                        banco.AddParameter("grat_natalina", Convert.ToDouble(csv[GratificacaoNatalina], cultureInfo));
-    //                        banco.AddParameter("ferias", Convert.ToDouble(csv[Ferias], cultureInfo));
-    //                        banco.AddParameter("outras_eventuais", Convert.ToDouble(csv[OutrasRemuneracoesEventuaisProvisorias], cultureInfo));
-    //                        banco.AddParameter("abono_permanencia", Convert.ToDouble(csv[AbonodePermanencia], cultureInfo));
-    //                        banco.AddParameter("reversao_teto_const", Convert.ToDouble(csv[RedutorConstitucional], cultureInfo));
-    //                        banco.AddParameter("imposto_renda", Convert.ToDouble(csv[ImpostodeRenda], cultureInfo));
-    //                        banco.AddParameter("previdencia", Convert.ToDouble(!string.IsNullOrEmpty(csv[ConstribuicaoPrevidenci√°ria]) ? csv[ConstribuicaoPrevidenci√°ria] : "0", cultureInfo));
-    //                        banco.AddParameter("rem_liquida", Convert.ToDouble(!string.IsNullOrEmpty(csv[RemuneracaoAposDescontosObrigatorios]) ? csv[RemuneracaoAposDescontosObrigatorios] : "0", cultureInfo));
-    //                        banco.AddParameter("diarias", Convert.ToDouble(!string.IsNullOrEmpty(csv[Diarias]) ? csv[Diarias] : "0", cultureInfo));
-    //                        banco.AddParameter("auxilios", Convert.ToDouble(!string.IsNullOrEmpty(csv[Auxilios]) ? csv[Auxilios] : "0", cultureInfo));
-    //                        banco.AddParameter("vant_indenizatorias", Convert.ToDouble(!string.IsNullOrEmpty(csv[VantagensIndenizat√≥rias]) ? csv[VantagensIndenizat√≥rias] : "0".Trim(), cultureInfo));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     //                        //string hash = banco.ParametersHash();
@@ -1918,7 +1205,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                        //    continue;
     //                        //}
 
-    //                        //banco.AddParameter("hash", hash);
+
 
     //                        banco.ExecuteNonQuery(
     //                            @"INSERT INTO ops_tmp.cf_remuneracao_temp (
@@ -1941,7 +1228,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //            //if (lstHash.Count == 0 && linhaAtual == 0)
     //            //{
-    //            //    sb.AppendFormat("<p>N√£o h√° novos itens para importar! #2</p>");
+    //            //    sb.AppendFormat("<p>N„o h· novos itens para importar! #2</p>");
     //            //    return sb.ToString();
     //            //}
 
@@ -1977,7 +1264,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        //        }
     //        //    }
 
-    //        //    sb.AppendFormat("<p>Resumo atualiza√ß√£o: {0}</p>", sResumoValores);
+    //        //    sb.AppendFormat("<p>Resumo atualizaÁ„o: {0}</p>", sResumoValores);
     //        //}
 
     //        return sb.ToString();
@@ -1985,7 +1272,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //private void LimpaRemuneracaoTemporaria(AppDb banco)
     //{
-    //    banco.ExecuteNonQuery(@"
+    //    var affected = banco.Execute(@"
     //				truncate table ops_tmp.cf_remuneracao_temp;
     //			");
     //}
@@ -2003,10 +1290,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         // ";
 
         ConcurrentQueue<Dictionary<string, object>> queue;
-        using (var db = new AppDb())
+        // Migrated to IDbConnection - removed AppDb usage
         {
             // Executar para colocar todas na fila de processamento
-            // db.ExecuteNonQuery("update cf_deputado set processado=0, secretarios_ativos=0 where processado=1;");
+            // connection.Execute("update cf_deputado set processado=0, secretarios_ativos=0 where processado=1;");
 
             var sqlDeputados = @"
     SELECT cd.id as id_cf_deputado, nome_parlamentar, cd.situacao -- DISTINCT
@@ -2014,10 +1301,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     -- JOIN cf_mandato m ON m.id_cf_deputado = cd.id
     -- WHERE id_legislatura = 57                                
     WHERE cd.processado = 0
-    -- where cd.situacao = 'Exerc√≠cio'
+    -- where cd.situacao = 'ExercÌcio'
     -- order by cd.id desc
     ";
-            var dcDeputado = db.ExecuteDict(sqlDeputados);
+            var dcDeputado = connection.Query<Dictionary<string, object>>(sqlDeputados).ToList();
             queue = new ConcurrentQueue<Dictionary<string, object>>(dcDeputado);
         }
 
@@ -2047,7 +1334,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         var sqlInsertImovelFuncional = "insert ignore into cf_deputado_imovel_funcional (id_cf_deputado, uso_de, uso_ate, total_dias) values (@id_cf_deputado, @uso_de, @uso_ate, @total_dias)";
 
-        using (var db = new AppDb())
+        // Migrated to IDbConnection - removed AppDb usage
         {
             while (queue.TryDequeue(out deputado))
             {
@@ -2078,7 +1365,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                 {
                                     using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
                                     {
-                                        await ColetaSalarioDeputado(db, context, idDeputado, ano);
+                                        await ColetaSalarioDeputado( context, idDeputado, ano);
 
                                         address = $"https://www.camara.leg.br/deputados/{idDeputado}?ano={ano}";
                                         document = await context.OpenAsyncAutoRetry(address);
@@ -2091,7 +1378,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                         var lstInfo = document.QuerySelectorAll(".recursos-beneficios-deputado-container .beneficio");
                                         if (!lstInfo.Any())
                                         {
-                                            logger.LogError("Nenhuma informa√ß√£o de beneficio: {address}", address);
+                                            logger.LogError("Nenhuma informaÁ„o de beneficio: {address}", address);
                                             continue;
                                         }
 
@@ -2104,12 +1391,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                             var valor = Convert.ToDecimal(colunas[1].TextContent, cultureInfoBR);
                                             var percentual = Convert.ToDecimal(colunas[2].TextContent.Replace("%", ""), cultureInfoUS);
 
-                                            db.AddParameter("@id_cf_deputado", idDeputado);
-                                            db.AddParameter("@ano", ano);
-                                            db.AddParameter("@mes", mes);
-                                            db.AddParameter("@valor", valor);
-                                            db.AddParameter("@percentual", percentual);
-                                            db.ExecuteNonQuery("insert ignore into cf_deputado_verba_gabinete (id_cf_deputado, ano, mes, valor, percentual) values (@id_cf_deputado, @ano, @mes, @valor, @percentual);");
+
+
+
+
+
+                                            connection.Execute("insert ignore into cf_deputado_verba_gabinete (id_cf_deputado, ano, mes, valor, percentual) values (@id_cf_deputado, @ano, @mes, @valor, @percentual);");
                                         }
 
                                         var cotaParlamentarMensal = document.QuerySelectorAll("#gastomensalcotaparlamentar tbody tr");
@@ -2123,12 +1410,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                             if (!string.IsNullOrEmpty(colunas[2].TextContent.Replace("%", "")))
                                                 percentual = Convert.ToDecimal(colunas[2].TextContent.Replace("%", ""), cultureInfoUS);
 
-                                            db.AddParameter("@id_cf_deputado", idDeputado);
-                                            db.AddParameter("@ano", ano);
-                                            db.AddParameter("@mes", mes);
-                                            db.AddParameter("@valor", valor);
-                                            db.AddParameter("@percentual", percentual);
-                                            db.ExecuteNonQuery("insert ignore into cf_deputado_cota_parlamentar (id_cf_deputado, ano, mes, valor, percentual) values (@id_cf_deputado, @ano, @mes, @valor, @percentual);");
+
+
+
+
+
+                                            connection.Execute("insert ignore into cf_deputado_cota_parlamentar (id_cf_deputado, ano, mes, valor, percentual) values (@id_cf_deputado, @ano, @mes, @valor, @percentual);");
                                         }
 
                                         foreach (var info in lstInfo)
@@ -2146,14 +1433,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                                             if ((ano == DateTime.Today.Year))
                                                                 qtdSecretarios = Convert.ToInt32(valor.Split(' ')[0]);
 
-                                                            await ColetaPessoalGabinete(db, context, idDeputado, ano);
+                                                            await ColetaPessoalGabinete( context, idDeputado, ano);
                                                         }
                                                         break;
-                                                    case "Sal√°rio mensal bruto":
+                                                    case "Sal·rio mensal bruto":
                                                         // Nada: Deve Consultar por ano
                                                         break;
-                                                    case "Im√≥vel funcional":
-                                                        if (!valor.StartsWith("N√£o fez") && !valor.StartsWith("N√£o faz") && !valor.StartsWith("N√£o h√° dado"))
+                                                    case "ImÛvel funcional":
+                                                        if (!valor.StartsWith("N„o fez") && !valor.StartsWith("N„o faz") && !valor.StartsWith("N„o h· dado"))
                                                         {
                                                             var lstImovelFuncional = valor.Split("\n");
                                                             foreach (var item in lstImovelFuncional)
@@ -2170,28 +1457,28 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                                                     dias = (int)dataFinal.Value.Subtract(dataInicial).TotalDays;
                                                                 }
 
-                                                                db.AddParameter("@id_cf_deputado", idDeputado);
-                                                                db.AddParameter("@uso_de", dataInicial);
-                                                                db.AddParameter("@uso_ate", dataFinal);
-                                                                db.AddParameter("@total_dias", dias);
-                                                                db.ExecuteNonQuery(sqlInsertImovelFuncional);
+
+
+
+
+                                                                connection.Execute(sqlInsertImovelFuncional);
                                                             }
                                                         }
                                                         break;
-                                                    case "Aux√≠lio-moradia":
-                                                        if (valor != "N√£o recebe o aux√≠lio")
+                                                    case "AuxÌlio-moradia":
+                                                        if (valor != "N„o recebe o auxÌlio")
                                                         {
-                                                            await ColetaAuxilioMoradia(db, context, idDeputado, ano);
+                                                            await ColetaAuxilioMoradia( context, idDeputado, ano);
                                                         }
                                                         break;
-                                                    case "Viagens em miss√£o oficial":
+                                                    case "Viagens em miss„o oficial":
                                                         if (valor != "0")
                                                         {
-                                                            await ColetaMissaoOficial(db, context, idDeputado, ano);
+                                                            await ColetaMissaoOficial( context, idDeputado, ano);
                                                         }
                                                         break;
-                                                    case "Passaporte diplom√°tico":
-                                                        if (valor != "N√£o possui")
+                                                    case "Passaporte diplom·tico":
+                                                        if (valor != "N„o possui")
                                                         {
                                                             possuiPassaporteDiplimatico = true;
                                                         }
@@ -2212,13 +1499,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                             }
                             else
                             {
-                                processado = 2; // N√£o coletar novamente
+                                processado = 2; // N„o coletar novamente
                             }
                         }
                     }
                     catch (BusinessException)
                     {
-                        //processado = 2; // N√£o coletar novamente
+                        //processado = 2; // N„o coletar novamente
                         processado = 3; // Verificar
                     }
                     catch (Exception ex)
@@ -2227,21 +1514,21 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         logger.LogError(ex, ex.Message);
                     }
 
-                    //db.AddParameter("@id_cf_deputado", idDeputado);
-                    //db.AddParameter("@processado", processado);
-                    //db.ExecuteNonQuery("update cf_deputado set processado = @processado where id = @id_cf_deputado");
 
-                    db.AddParameter("@id_cf_deputado", idDeputado);
-                    db.AddParameter("@passaporte", possuiPassaporteDiplimatico);
-                    db.AddParameter("@secretarios_ativos", qtdSecretarios);
-                    db.AddParameter("@processado", processado);
-                    db.ExecuteNonQuery("update cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado");
+
+                    //connection.Execute("update cf_deputado set processado = @processado where id = @id_cf_deputado");
+
+
+
+
+
+                    connection.Execute("update cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado");
                 }
             }
         }
     }
 
-    private async Task ColetaSalarioDeputado(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+    private async Task ColetaSalarioDeputado(IBrowsingContext context, int idDeputado, int ano)
     {
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/remuneracao?ano={ano}";
         var document = await context.OpenAsyncAutoRetry(address);
@@ -2275,13 +1562,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 var valor = Convert.ToDecimal(colunas[1].TextContent.Trim(), cultureInfo);
                 var link = (colunas[1].FirstElementChild as IHtmlAnchorElement).Href; // todo?
 
-                //db.AddParameter("@id_cf_deputado", idDeputado);
-                //db.AddParameter("@ano", ano);
-                //db.AddParameter("@mes", mes);
-                //db.AddParameter("@valor", valor);
-                //db.ExecuteNonQuery("insert ignore into cf_deputado_salario (id_cf_deputado, ano, mes, valor) values (@id_cf_deputado, @ano, @mes, @valor);");
 
-                // N√£o considera gratifica√ß√£o natalina e outros adicionais
+
+
+
+                //connection.Execute("insert ignore into cf_deputado_salario (id_cf_deputado, ano, mes, valor) values (@id_cf_deputado, @ano, @mes, @valor);");
+
+                // N„o considera gratificaÁ„o natalina e outros adicionais
                 var salario = new DeputadoFederalRemuneracao()
                 {
                     IdDeputado = (uint)idDeputado,
@@ -2295,7 +1582,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     lock (padlock)
                         connection.Insert(salario);
 
-                    logger.LogDebug("Inserida remunera√ß√£o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, idDeputado);
+                    logger.LogDebug("Inserida remuneraÁ„o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, idDeputado);
                 }
                 catch (Exception ex)
                 {
@@ -2305,12 +1592,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         logger.LogWarning("Registro duplicado ignorado: {@Salario}", salario);
                 }
 
-                await ColetaSalarioDeputadoDetalhado(db, context, idDeputado, ano, mes);
+                await ColetaSalarioDeputadoDetalhado( context, idDeputado, ano, mes);
             }
         }
     }
 
-    private async Task ColetaSalarioDeputadoDetalhado(AppDb db, IBrowsingContext context, int idDeputado, int ano, short mes)
+    private async Task ColetaSalarioDeputadoDetalhado(IBrowsingContext context, int idDeputado, int ano, short mes)
     {
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/remuneracao-deputado-detalhado?mesAno={mes:00}{ano}";
         var document = await context.OpenAsyncAutoRetry(address);
@@ -2333,7 +1620,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             using (logger.BeginScope(new Dictionary<string, object> { ["Folha"] = titulo }))
             {
-                if (titulo.Split("‚Äì")[0].Trim() != $"{mes:00}{ano}")
+                if (titulo.Split("ñ")[0].Trim() != $"{mes:00}{ano}")
                 {
                     throw new NotImplementedException("Algo esta errado!");
                 }
@@ -2343,7 +1630,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                 var cabecalho = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item");
                 var categoriaFuncional = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Categoria funcional"))?.TextContent.Split(":")[1].Trim();
-                var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exerc√≠cio"))?.TextContent.Split(":")[1].Trim();
+                var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercÌcio"))?.TextContent.Split(":")[1].Trim();
                 var cargo = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Cargo"))?.TextContent.Split(":")[1].Trim();
 
                 var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
@@ -2360,7 +1647,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 }
 
                 byte tipo = 0;
-                switch (titulo.Split("‚Äì")[1].Trim())
+                switch (titulo.Split("ñ")[1].Trim())
                 {
                     case "FOLHA NORMAL":
                         tipo = 1;
@@ -2371,10 +1658,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     case "FOLHA COMPLEMENTAR ESPECIAL":
                         tipo = 3;
                         break;
-                    case "FOLHA DE ADIANTAMENTO GRATIFICA√á√ÉO NATALINA":
+                    case "FOLHA DE ADIANTAMENTO GRATIFICA«√O NATALINA":
                         tipo = 4;
                         break;
-                    case "FOLHA DE GRATIFICA√á√ÉO NATALINA":
+                    case "FOLHA DE GRATIFICA«√O NATALINA":
                         tipo = 5;
                         break;
                     default:
@@ -2405,7 +1692,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     lock (padlock)
                         connection.Insert(folha);
 
-                    logger.LogDebug("Inserida remunera√ß√£o Detalhada de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, titulo);
+                    logger.LogDebug("Inserida remuneraÁ„o Detalhada de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, titulo);
                 }
                 catch (Exception ex)
                 {
@@ -2418,7 +1705,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         }
     }
 
-    private async Task ColetaPessoalGabinete(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+    private async Task ColetaPessoalGabinete(IBrowsingContext context, int idDeputado, int ano)
     {
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/pessoal-gabinete?ano={ano}";
         var document = await context.OpenAsyncAutoRetry(address);
@@ -2477,7 +1764,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         }
     }
 
-    //    //    private async Task ColetaPessoalGabinete(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+    //    //    private async Task ColetaPessoalGabinete(IBrowsingContext context, int idDeputado, int ano)
     //    //    {
     //    //        var dataControle = DateTime.Today.ToString("yyyy-MM-dd");
     //    //        var address = $"https://www.camara.leg.br/deputados/{idDeputado}/pessoal-gabinete?ano={ano}";
@@ -2508,24 +1795,24 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //    //                DateTime? dataFinal = periodoPartes.Length == 4 ? Convert.ToDateTime(periodoPartes[3]) : null;
 
     //    //                var sqlSelectSecretario = "select id from cf_funcionario where chave = @chave";
-    //    //                db.AddParameter("@chave", chave);
-    //    //                var objId = db.ExecuteScalar(sqlSelectSecretario);
+
+    //    //                var objId = ExecuteScalar(sqlSelectSecretario);
     //    //                if (objId is not null)
     //    //                {
     //    //                    idSecretario = Convert.ToInt32(objId);
 
-    //    //                    db.AddParameter("@id", idSecretario);
-    //    //                    db.ExecuteNonQuery($"UPDATE cf_funcionario SET controle='{dataControle}', processado=0 WHERE id=@id;");
+
+    //    //                    connection.Execute($"UPDATE cf_funcionario SET controle='{dataControle}', processado=0 WHERE id=@id;");
     //    //                }
     //    //                else
     //    //                {
     //    //                    var sqlInsertSecretario = "insert into cf_funcionario (chave, nome, processado, controle) values (@chave, @nome, 0, @controle);";
-    //    //                    db.AddParameter("@chave", chave);
-    //    //                    db.AddParameter("@nome", nome);
-    //    //                    db.AddParameter("@controle", dataControle);
-    //    //                    db.ExecuteNonQuery(sqlInsertSecretario);
 
-    //    //                    idSecretario = Convert.ToInt32(db.ExecuteScalar("select LAST_INSERT_ID()"));
+
+
+    //    //                    connection.Execute(sqlInsertSecretario);
+
+    //    //                    idSecretario = Convert.ToInt32(ExecuteScalar("select LAST_INSERT_ID()"));
     //    //                }
 
     //    //                var sqlInsertSecretarioContratacao = @"
@@ -2533,26 +1820,26 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //    //values (@id_cf_funcionario, @id_cf_deputado, (select id from cf_funcionario_grupo_funcional where nome like @grupo), (select id from cf_funcionario_nivel where nome like @nivel), @periodo_de, @periodo_ate)
     //    //-- ON DUPLICATE KEY UPDATE periodo_ate = @periodo_ate";
 
-    //    //                db.AddParameter("@id_cf_funcionario", idSecretario);
-    //    //                db.AddParameter("@id_cf_deputado", idDeputado);
-    //    //                db.AddParameter("@grupo", grupo); // Secret√°rio Parlamentar
-    //    //                //db.AddParameter("@cargo", grupo); // Secret√°rio Parlamentar
-    //    //                db.AddParameter("@nivel", cargo);
-    //    //                db.AddParameter("@periodo_de", dataInicial);
-    //    //                db.AddParameter("@periodo_ate", dataFinal);
-    //    //                db.ExecuteNonQuery(sqlInsertSecretarioContratacao);
+
+
+
+
+
+
+
+    //    //                connection.Execute(sqlInsertSecretarioContratacao);
 
     //    //                //if (objId is not null && (dataFinal == null || dataFinal >= new DateTime(2021, 6, 1)))
     //    //                //{
     //    //                //    var sqlUpdateSecretario = "UPDATE cf_funcionario set processado = 0 where id = @idSecretario;";
-    //    //                //    db.AddParameter("@idSecretario", idSecretario);
-    //    //                //    db.ExecuteNonQuery(sqlUpdateSecretario);
+
+    //    //                //    connection.Execute(sqlUpdateSecretario);
     //    //                //}
     //    //            }
     //    //        }
     //    //    }
 
-    private async Task ColetaAuxilioMoradia(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+    private async Task ColetaAuxilioMoradia(IBrowsingContext context, int idDeputado, int ano)
     {
         var sqlInsertAuxilioMoradia = "insert ignore into cf_deputado_auxilio_moradia (id_cf_deputado, ano, mes, valor) values (@id_cf_deputado, @ano, @mes, @valor)";
         var address = $"https://www.camara.leg.br/deputados/{idDeputado}/auxilio-moradia/?ano={ano}";
@@ -2573,16 +1860,16 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 var mes = Convert.ToInt32(colunas[0].TextContent.Trim());
                 var valor = Convert.ToDecimal(colunas[1].TextContent.Trim());
 
-                db.AddParameter("@id_cf_deputado", idDeputado);
-                db.AddParameter("@ano", ano);
-                db.AddParameter("@mes", mes);
-                db.AddParameter("@valor", valor);
-                db.ExecuteNonQuery(sqlInsertAuxilioMoradia);
+
+
+
+
+                connection.Execute(sqlInsertAuxilioMoradia);
             }
         }
     }
 
-    private async Task ColetaMissaoOficial(AppDb db, IBrowsingContext context, int idDeputado, int ano)
+    private async Task ColetaMissaoOficial(IBrowsingContext context, int idDeputado, int ano)
     {
         var sqlInsertAuxilioMoradia =
             "insert ignore into cf_deputado_missao_oficial (id_cf_deputado, periodo, assunto, destino, passagens, diarias, relatorio) values (@id_cf_deputado, @periodo, @assunto, @destino, @passagens, @diarias, @relatorio)";
@@ -2608,14 +1895,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 var diarias = Convert.ToDecimal(colunas[4].TextContent.Trim());
                 var relatorio = (colunas[5].FirstElementChild as IHtmlAnchorElement)?.Href;
 
-                db.AddParameter("@id_cf_deputado", idDeputado);
-                db.AddParameter("@periodo", periodo);
-                db.AddParameter("@assunto", assunto);
-                db.AddParameter("@destino", destino);
-                db.AddParameter("@passagens", passagens);
-                db.AddParameter("@diarias", diarias);
-                db.AddParameter("@relatorio", relatorio);
-                db.ExecuteNonQuery(sqlInsertAuxilioMoradia);
+
+
+
+
+
+
+
+                connection.Execute(sqlInsertAuxilioMoradia);
             }
         }
     }
@@ -2624,50 +1911,50 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public void DefineColunasRemuneracaoSecretarios()
     {
         colunasBanco = new Dictionary<string, string>();
-        // 1 - Remunera√ß√£o B√°sica
-        colunasBanco.Add("a - Remunera√ß√£o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
+        // 1 - RemuneraÁ„o B·sica
+        colunasBanco.Add("a - RemuneraÁ„o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
         colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
-        // 2 - Remunera√ß√£o Eventual/Provis√≥ria
-        colunasBanco.Add("a - Fun√ß√£o ou Cargo em Comiss√£o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
-        colunasBanco.Add("b - Gratifica√ß√£o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
-        colunasBanco.Add("c - F√©rias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
-        colunasBanco.Add("d - Outras Remunera√ß√µes Eventuais/Provis√≥rias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
-        // 3 - Abono Perman√™ncia
-        colunasBanco.Add("a - Abono Perman√™ncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
-        // 4 - Descontos Obrigat√≥rios(-)
+        // 2 - RemuneraÁ„o Eventual/ProvisÛria
+        colunasBanco.Add("a - FunÁ„o ou Cargo em Comiss„o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
+        colunasBanco.Add("b - GratificaÁ„o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
+        colunasBanco.Add("c - FÈrias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
+        colunasBanco.Add("d - Outras RemuneraÁıes Eventuais/ProvisÛrias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
+        // 3 - Abono PermanÍncia
+        colunasBanco.Add("a - Abono PermanÍncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
+        // 4 - Descontos ObrigatÛrios(-)
         colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
-        colunasBanco.Add("b - Contribui√ß√£o Previdenci√°ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
+        colunasBanco.Add("b - ContribuiÁ„o Previdenci·ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
         colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
-        // 5 - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios
-        colunasBanco.Add("a - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
+        // 5 - RemuneraÁ„o apÛs Descontos ObrigatÛrios
+        colunasBanco.Add("a - RemuneraÁ„o apÛs Descontos ObrigatÛrios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
         // 6 - Outros
-        colunasBanco.Add("a - Di√°rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
-        colunasBanco.Add("b - Aux√≠lios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
-        colunasBanco.Add("c - Vantagens Indenizat√≥rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
+        colunasBanco.Add("a - Di·rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
+        colunasBanco.Add("b - AuxÌlios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
+        colunasBanco.Add("c - Vantagens IndenizatÛrias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
     }
 
     //    public void ColetaRemuneracaoSecretarios()
     //    {
-    //        // 1 - Remunera√ß√£o B√°sica
-    //        colunasBanco.Add("a - Remunera√ß√£o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
+    //        // 1 - RemuneraÁ„o B·sica
+    //        colunasBanco.Add("a - RemuneraÁ„o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
     //        colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
-    //        // 2 - Remunera√ß√£o Eventual/Provis√≥ria
-    //        colunasBanco.Add("a - Fun√ß√£o ou Cargo em Comiss√£o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
-    //        colunasBanco.Add("b - Gratifica√ß√£o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
-    //        colunasBanco.Add("c - F√©rias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
-    //        colunasBanco.Add("d - Outras Remunera√ß√µes Eventuais/Provis√≥rias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
-    //        // 3 - Abono Perman√™ncia
-    //        colunasBanco.Add("a - Abono Perman√™ncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
-    //        // 4 - Descontos Obrigat√≥rios(-)
+    //        // 2 - RemuneraÁ„o Eventual/ProvisÛria
+    //        colunasBanco.Add("a - FunÁ„o ou Cargo em Comiss„o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
+    //        colunasBanco.Add("b - GratificaÁ„o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
+    //        colunasBanco.Add("c - FÈrias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
+    //        colunasBanco.Add("d - Outras RemuneraÁıes Eventuais/ProvisÛrias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
+    //        // 3 - Abono PermanÍncia
+    //        colunasBanco.Add("a - Abono PermanÍncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
+    //        // 4 - Descontos ObrigatÛrios(-)
     //        colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
-    //        colunasBanco.Add("b - Contribui√ß√£o Previdenci√°ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
+    //        colunasBanco.Add("b - ContribuiÁ„o Previdenci·ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
     //        colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
-    //        // 5 - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios
-    //        colunasBanco.Add("a - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
+    //        // 5 - RemuneraÁ„o apÛs Descontos ObrigatÛrios
+    //        colunasBanco.Add("a - RemuneraÁ„o apÛs Descontos ObrigatÛrios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
     //        // 6 - Outros
-    //        colunasBanco.Add("a - Di√°rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
-    //        colunasBanco.Add("b - Aux√≠lios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
-    //        colunasBanco.Add("c - Vantagens Indenizat√≥rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
+    //        colunasBanco.Add("a - Di·rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
+    //        colunasBanco.Add("b - AuxÌlios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
+    //        colunasBanco.Add("c - Vantagens IndenizatÛrias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
 
     //        var sqlDeputados = @"
     //SELECT f.id as id_cf_funcionario, f.chave 
@@ -2677,9 +1964,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //";
 
     //        ConcurrentQueue<Dictionary<string, object>> queue;
-    //        using (var db = new AppDb())
+    //        // Migrated to IDbConnection - removed AppDb usage
     //        {
-    //            var dcDeputado = db.ExecuteDict(sqlDeputados);
+    //            var dcDeputado = connection.Query<Dictionary<string, object>>(sqlDeputados).ToList();
     //            queue = new ConcurrentQueue<Dictionary<string, object>>(dcDeputado);
     //        }
 
@@ -2702,7 +1989,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        {
     //            if (secretario is null) continue;
 
-    //            logger.LogDebug("Inciando coleta da remunera√ß√£o para os funcionario {IdFuncionario}", secretario["id_cf_funcionario"]);
+    //            logger.LogDebug("Inciando coleta da remuneraÁ„o para os funcionario {IdFuncionario}", secretario["id_cf_funcionario"]);
     //            await ConsultarRemuneracaoSecretario(colunasBanco, secretario, context);
     //        }
     //    }
@@ -2764,7 +2051,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                    {
     //                        if (document.QuerySelector(".remuneracao-funcionario") != null)
     //                        {
-    //                            logger.LogError("Remunera√ß√£o indispon√≠vel! Mensagem: {MensagemErro}", document.QuerySelector(".remuneracao-funcionario").TextContent.Trim());
+    //                            logger.LogError("RemuneraÁ„o indisponÌvel! Mensagem: {MensagemErro}", document.QuerySelector(".remuneracao-funcionario").TextContent.Trim());
     //                            MarcarComoProcessado(idFuncionario);
     //                        }
 
@@ -2849,13 +2136,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                if (elMesSelecionadoNoCalendario.IsHidden || elMesSelecionadoNoCalendario.OuterHtml.Contains("display: none;") || mes > mesSelecionado)
     //                                {
     //                                    logger.LogDebug(
-    //                                        "N√£o h√° remunera√ß√£o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #1",
+    //                                        "N„o h· remuneraÁ„o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #1",
     //                                        elMesSelecionadoNoCalendario.TextContent.Trim().Split(" ")[1], mes, ano.Text);
     //                                    continue;
     //                                }
     //                                if (new DateTime(Convert.ToInt32(ano.InnerHtml), mes, 1) <= dtUltimaRemuneracaoColetada)
     //                                {
-    //                                    logger.LogDebug("Remunera√ß√£o j√° coletada para {MesRemuneracao}/{AnoRemuneracao}", mes, ano.Text);
+    //                                    logger.LogDebug("RemuneraÁ„o j· coletada para {MesRemuneracao}/{AnoRemuneracao}", mes, ano.Text);
     //                                    continue;
     //                                }
 
@@ -2872,10 +2159,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                }
 
     //                                var dadosIndisponiveis = document.QuerySelectorAll(".remuneracao-funcionario");
-    //                                if (dadosIndisponiveis.Any() && dadosIndisponiveis[0].TextContent.Trim() == "Ainda n√£o h√° dados dispon√≠veis.")
+    //                                if (dadosIndisponiveis.Any() && dadosIndisponiveis[0].TextContent.Trim() == "Ainda n„o h· dados disponÌveis.")
     //                                {
     //                                    logger.LogDebug(
-    //                                        "N√£o h√° remunera√ß√£o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #2",
+    //                                        "N„o h· remuneraÁ„o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #2",
     //                                        elMesSelecionadoNoCalendario.TextContent.Trim().Split(" ")[1], mes, ano.Text);
     //                                    continue;
     //                                }
@@ -2894,7 +2181,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //                                    using (logger.BeginScope(new Dictionary<string, object> { ["Folha"] = titulo }))
     //                                    {
-    //                                        if (titulo.Split("‚Äì")[0].Trim() != $"{mes:00}{ano.Text}")
+    //                                        if (titulo.Split("ñ")[0].Trim() != $"{mes:00}{ano.Text}")
     //                                        {
     //                                            throw new NotImplementedException("Algo esta errado!");
     //                                        }
@@ -2904,9 +2191,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //                                        var cabecalho = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item");
     //                                        var categoriaFuncional = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Categoria funcional"))?.TextContent.Split(":")[1].Trim();
-    //                                        var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exerc√≠cio"))?.TextContent.Split(":")[1].Trim();
+    //                                        var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercÌcio"))?.TextContent.Split(":")[1].Trim();
     //                                        var cargo = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Cargo"))?.TextContent.Split(":")[1].Trim();
-    //                                        var nivel = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Fun√ß√£o/cargo em comiss√£o"))?.TextContent.Split(":")[1].Trim();
+    //                                        var nivel = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("FunÁ„o/cargo em comiss„o"))?.TextContent.Split(":")[1].Trim();
 
     //                                        var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
     //                                        foreach (var linha in linhas)
@@ -2922,7 +2209,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                        }
 
     //                                        byte tipo = 0;
-    //                                        switch (titulo.Split("‚Äì")[1].Trim())
+    //                                        switch (titulo.Split("ñ")[1].Trim())
     //                                        {
     //                                            case "FOLHA NORMAL":
     //                                                tipo = 1;
@@ -2933,10 +2220,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                            case "FOLHA COMPLEMENTAR ESPECIAL":
     //                                                tipo = 3;
     //                                                break;
-    //                                            case "FOLHA DE ADIANTAMENTO GRATIFICA√á√ÉO NATALINA":
+    //                                            case "FOLHA DE ADIANTAMENTO GRATIFICA«√O NATALINA":
     //                                                tipo = 4;
     //                                                break;
-    //                                            case "FOLHA DE GRATIFICA√á√ÉO NATALINA":
+    //                                            case "FOLHA DE GRATIFICA«√O NATALINA":
     //                                                tipo = 5;
     //                                                break;
     //                                            default:
@@ -2992,12 +2279,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                        }
     //                                        else
     //                                        {
-    //                                            logger.LogWarning("N√£o foi identificada a contrata√ß√£o do funcionario {IdFuncionario} em {Mes}/{Ano}", idFuncionario, mes, ano.Text);
+    //                                            logger.LogWarning("N„o foi identificada a contrataÁ„o do funcionario {IdFuncionario} em {Mes}/{Ano}", idFuncionario, mes, ano.Text);
     //                                        }
 
     //                                        folhas.Add(folha);
 
-    //                                        logger.LogDebug("Inserida remunera√ß√£o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano.Text, titulo);
+    //                                        logger.LogDebug("Inserida remuneraÁ„o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano.Text, titulo);
     //                                    }
     //                                }
     //                            }
@@ -3067,9 +2354,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //";
     //        var context = httpClient.CreateAngleSharpContext();
 
-    //        using (var db = new AppDb())
+    //        // Migrated to IDbConnection - removed AppDb usage
     //        {
-    //            db.ExecuteNonQuery("truncate table cf_funcionario_temp");
+    //            connection.Execute("truncate table cf_funcionario_temp");
 
     //            foreach (var address in addresses)
     //            {
@@ -3107,7 +2394,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //                        if (categoria.StartsWith("Deputado")) categoria = "Deputado";
     //                        if (categoria.StartsWith("Ex-deputado")) categoria = "Ex-deputado";
-    //                        if (area == "‚Äî") area = null;
+    //                        if (area == "ó") area = null;
 
     //                        Console.WriteLine();
     //                        Console.WriteLine($"Funcionario: {nome}");
@@ -3125,31 +2412,31 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                    case "Cargo":
     //                                        colunasDB += ", cargo";
     //                                        valoresDB += ", @cargo";
-    //                                        db.AddParameter("@cargo", valor);
+
     //                                        break;
-    //                                    case "N√≠vel":
+    //                                    case "NÌvel":
     //                                        colunasDB += ", nivel";
     //                                        valoresDB += ", @nivel";
-    //                                        db.AddParameter("@nivel", valor);
+
     //                                        break;
-    //                                    case "Fun√ß√£o comissionada":
+    //                                    case "FunÁ„o comissionada":
     //                                        colunasDB += ", funcao_comissionada";
     //                                        valoresDB += ", @funcao_comissionada";
-    //                                        db.AddParameter("@funcao_comissionada", valor);
+
     //                                        break;
     //                                    case "Local de trabalho":
     //                                        colunasDB += ", local_trabalho";
     //                                        valoresDB += ", @local_trabalho";
-    //                                        db.AddParameter("@local_trabalho", valor);
+
     //                                        break;
-    //                                    case "Data da designa√ß√£o da fun√ß√£o":
+    //                                    case "Data da designaÁ„o da funÁ„o":
     //                                        colunasDB += ", data_designacao_funcao";
     //                                        valoresDB += ", @data_designacao_funcao";
-    //                                        db.AddParameter("@data_designacao_funcao", Convert.ToDateTime(valor));
+
     //                                        break;
-    //                                    case "Situa√ß√£o":
+    //                                    case "SituaÁ„o":
     //                                    case "Categoria funcional":
-    //                                    case "√Årea de atua√ß√£o":
+    //                                    case "¡rea de atuaÁ„o":
     //                                        break;
     //                                    default:
     //                                        throw new NotImplementedException($"Vefificar beneficios do funcionario {nome}.");
@@ -3163,12 +2450,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                            }
     //                        }
 
-    //                        db.AddParameter("@chave", chave.Replace("#", ""));
-    //                        db.AddParameter("@nome", nome);
-    //                        db.AddParameter("@categoria_funcional", categoria);
-    //                        db.AddParameter("@area_atuacao", area);
-    //                        db.AddParameter("@situacao", situacao);
-    //                        db.ExecuteNonQuery(string.Format(sqlInsert, colunasDB, valoresDB));
+
+
+
+
+
+    //                        connection.Execute(string.Format(sqlInsert, colunasDB, valoresDB));
     //                    }
 
     //                    if (linhas.Count() < 20)
@@ -3181,11 +2468,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
 
 
-    //            db.ExecuteNonQuery(@"
+    //            ExecuteNonQuery(@"
     //INSERT ignore INTO cf_funcionario(chave, nome)
     //SELECT chave, nome FROM cf_funcionario_temp t");
 
-    //            db.ExecuteNonQuery(@"
+    //            ExecuteNonQuery(@"
     //INSERT INTO cf_funcionario_contratacao 
     //	(id_cf_deputado, id_cf_funcionario, id_cf_funcionario_grupo_funcional, id_cf_funcionario_cargo, id_cf_funcionario_nivel, id_cf_funcionario_funcao_comissionada, 
     //		id_cf_funcionario_area_atuacao, id_cf_funcionario_local_trabalho, id_cf_funcionario_situacao, periodo_de, periodo_ate)
@@ -3204,7 +2491,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        }
     //    }
 
-    //    #endregion Importa√ß√£o Remunera√ß√£o
+    //    #endregion ImportaÁ„o RemuneraÁ„o
 
     public void AtualizaParlamentarValores()
     {

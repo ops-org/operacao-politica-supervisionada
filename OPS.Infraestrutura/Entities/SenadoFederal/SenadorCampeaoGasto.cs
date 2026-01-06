@@ -25,6 +25,12 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         [StringLength(2)]
         public string? SiglaEstado { get; set; }
 
+        [Column("ano")]
+        public short? Ano { get; set; }
+
+        [Column("mes")]
+        public short? Mes { get; set; }
+
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;
     }

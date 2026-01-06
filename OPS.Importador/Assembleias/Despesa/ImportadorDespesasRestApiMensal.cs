@@ -14,7 +14,7 @@ namespace OPS.Importador.Assembleias.Despesa
         {
         }
 
-        public void Importar(int ano)
+        public Task Importar(int ano)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
@@ -48,6 +48,8 @@ namespace OPS.Importador.Assembleias.Despesa
 
                 ProcessarDespesas(ano);
             }
+
+            return Task.CompletedTask;
         }
 
         public abstract void ImportarDespesas(IBrowsingContext context, int ano, int mes);

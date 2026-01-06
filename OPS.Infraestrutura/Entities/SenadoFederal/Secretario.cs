@@ -45,6 +45,36 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         [Column("em_exercicio")]
         public bool? EmExercicio { get; set; }
 
+        [Column("ano_mes")]
+        public int? AnoMes { get; set; }
+
+        [Column("admissao")]
+        public int? Admissao { get; set; }
+
+        [Column("situacao")]
+        public int? Situacao { get; set; }
+
+        [Column("id_funcao")]
+        public int? IdFuncao { get; set; }
+
+        [Column("id_categoria")]
+        public int? IdCategoria { get; set; }
+
+        [Column("id_referencia_cargo")]
+        public int? IdReferenciaCargo { get; set; }
+
+        [Column("id_especialidade")]
+        public int? IdEspecialidade { get; set; }
+
+        [Column("id_lotacao")]
+        public int? IdLotacao { get; set; }
+
+        [Column("id_tipo_folha")]
+        public int? IdTipoFolha { get; set; }
+
+        [Column("id_vinculo")]
+        public int? IdVinculo { get; set; }
+
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;
     }

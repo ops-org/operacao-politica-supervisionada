@@ -13,23 +13,21 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         [Column("id_sf_senador")]
         public uint IdSenador { get; set; }
 
-        [Column("instituicao")]
+        [Column("nome_curso")]
         [StringLength(255)]
-        public string? Instituicao { get; set; }
+        public string? NomeCurso { get; set; }
 
-        [Column("curso")]
-        [StringLength(255)]
-        public string? Curso { get; set; }
-
-        [Column("nivel")]
+        [Column("grau_instrucao")]
         [StringLength(50)]
-        public string? Nivel { get; set; }
+        public string? GrauInstrucao { get; set; }
 
-        [Column("ano_inicio")]
-        public ushort? AnoInicio { get; set; }
+        [Column("estabelecimento")]
+        [StringLength(255)]
+        public string? Estabelecimento { get; set; }
 
-        [Column("ano_conclusao")]
-        public ushort? AnoConclusao { get; set; }
+        [Column("local")]
+        [StringLength(255)]
+        public string? Local { get; set; }
 
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;

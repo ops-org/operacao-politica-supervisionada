@@ -10,22 +10,11 @@ public partial class AppDbContext
     // Common Tables
     public DbSet<Estado> Estados { get; set; }
     public DbSet<Partido> Partidos { get; set; }
-    public DbSet<Fornecedor> Fornecedores { get; set; }
-    public DbSet<FornecedorInfo> FornecedorInfos { get; set; }
-    public DbSet<FornecedorSocio> FornecedorSocios { get; set; }
     public DbSet<TrechoViagem> TrechoViagens { get; set; }
-    public DbSet<FornecedorAtividade> FornecedorAtividades { get; set; }
-    public DbSet<FornecedorAtividadeSecundaria> FornecedorAtividadesSecundarias { get; set; }
-    public DbSet<FornecedorNaturezaJuridica> FornecedorNaturezaJuridicas { get; set; }
-    public DbSet<Parametros> Parametros { get; set; }
     public DbSet<PartidoHistorico> PartidoHistoricos { get; set; }
     public DbSet<Pessoa> Pessoas { get; set; }
     public DbSet<PessoaNew> PessoasNew { get; set; }
     public DbSet<Profissao> Profissoes { get; set; }
-    public DbSet<EleicaoCandidato> EleicaoCandidatos { get; set; }
-    public DbSet<EleicaoCandidatura> EleicaoCandidaturas { get; set; }
-    public DbSet<EleicaoCargo> EleicaoCargos { get; set; }
-    public DbSet<EleicaoDoacao> EleicaoDoacoes { get; set; }
 }
 
 public static class ComumConfigurations
@@ -39,6 +28,7 @@ public static class ComumConfigurations
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasIndex(e => e.Sigla).IsUnique();
             entity.HasIndex(e => e.Nome).IsUnique();
+            entity.ToTable("estado", "public");
         });
     }
 
@@ -51,47 +41,7 @@ public static class ComumConfigurations
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasIndex(e => e.Sigla).IsUnique();
             entity.HasIndex(e => e.Nome).IsUnique();
-        });
-    }
-
-    public static void ConfigureFornecedorInfo(this ModelBuilder modelBuilder)
-    {
-        // Configure FornecedorInfo
-        modelBuilder.Entity<FornecedorInfo>(entity =>
-        {
-            entity.HasKey(e => e.IdFornecedor);
-            entity.HasOne(e => e.Fornecedor).WithOne(f => f.FornecedorInfo).HasForeignKey<FornecedorInfo>(e => e.IdFornecedor);
-        });
-    }
-
-    public static void ConfigureFornecedorSocio(this ModelBuilder modelBuilder)
-    {
-        // Configure FornecedorSocio
-        modelBuilder.Entity<FornecedorSocio>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.HasOne(e => e.Fornecedor).WithMany(f => f.FornecedorSocios).HasForeignKey(e => e.IdFornecedor);
-        });
-    }
-
-    public static void ConfigureFornecedorAtividadeSecundaria(this ModelBuilder modelBuilder)
-    {
-        // Configure FornecedorAtividadeSecundaria (Composite Key)
-        modelBuilder.Entity<FornecedorAtividadeSecundaria>(entity =>
-        {
-            entity.HasKey(e => new { e.IdFornecedor, e.IdAtividade });
-            entity.HasOne(e => e.Fornecedor).WithMany().HasForeignKey(e => e.IdFornecedor);
-            entity.HasOne(e => e.FornecedorAtividade).WithMany(a => a.FornecedorAtividadeSecundarias).HasForeignKey(e => e.IdAtividade);
-        });
-    }
-
-    public static void ConfigureParametros(this ModelBuilder modelBuilder)
-    {
-        // Configure Parametros
-        modelBuilder.Entity<Parametros>(entity =>
-        {
-            entity.HasKey(e => e.Id);
+            entity.ToTable("partido", "public");
         });
     }
 
@@ -102,6 +52,7 @@ public static class ComumConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Partido).WithMany(p => p.PartidoHistoricos).HasForeignKey(e => e.IdPartido);
+            entity.ToTable("partido_historico", "public");
         });
     }
 
@@ -112,6 +63,7 @@ public static class ComumConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Estado).WithMany().HasForeignKey(e => e.IdEstado);
+            entity.ToTable("pessoa", "public");
         });
     }
 
@@ -122,6 +74,7 @@ public static class ComumConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Estado).WithMany().HasForeignKey(e => e.IdEstado);
+            entity.ToTable("pessoa_new", "public");
         });
     }
 
@@ -131,44 +84,7 @@ public static class ComumConfigurations
         modelBuilder.Entity<Profissao>(entity =>
         {
             entity.HasKey(e => e.Id);
-        });
-    }
-
-    public static void ConfigureEleicaoCandidato(this ModelBuilder modelBuilder)
-    {
-        // Configure EleicaoCandidato
-        modelBuilder.Entity<EleicaoCandidato>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Cpf).IsUnique();
-        });
-    }
-
-    public static void ConfigureEleicaoCandidatura(this ModelBuilder modelBuilder)
-    {
-        // Configure EleicaoCandidatura
-        modelBuilder.Entity<EleicaoCandidatura>(entity =>
-        {
-            entity.HasKey(e => new { e.Numero, e.Cargo, e.Ano, e.SiglaEstado });
-        });
-    }
-
-    public static void ConfigureEleicaoCargo(this ModelBuilder modelBuilder)
-    {
-        // Configure EleicaoCargo
-        modelBuilder.Entity<EleicaoCargo>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Nome).IsUnique();
-        });
-    }
-
-    public static void ConfigureEleicaoDoacao(this ModelBuilder modelBuilder)
-    {
-        // Configure EleicaoDoacao
-        modelBuilder.Entity<EleicaoDoacao>(entity =>
-        {
-            entity.HasKey(e => e.Id);
+            entity.ToTable("profissao", "public");
         });
     }
 
@@ -176,17 +92,9 @@ public static class ComumConfigurations
     {
         modelBuilder.ConfigureEstado();
         modelBuilder.ConfigurePartido();
-        modelBuilder.ConfigureFornecedorInfo();
-        modelBuilder.ConfigureFornecedorSocio();
-        modelBuilder.ConfigureFornecedorAtividadeSecundaria();
-        modelBuilder.ConfigureParametros();
         modelBuilder.ConfigurePartidoHistorico();
         modelBuilder.ConfigurePessoa();
         modelBuilder.ConfigurePessoaNew();
         modelBuilder.ConfigureProfissao();
-        modelBuilder.ConfigureEleicaoCandidato();
-        modelBuilder.ConfigureEleicaoCandidatura();
-        modelBuilder.ConfigureEleicaoCargo();
-        modelBuilder.ConfigureEleicaoDoacao();
     }
 }

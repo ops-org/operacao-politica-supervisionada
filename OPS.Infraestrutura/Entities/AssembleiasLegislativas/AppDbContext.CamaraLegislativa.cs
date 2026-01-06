@@ -23,8 +23,9 @@ public static class AssembleiasLegislativasConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasOne(e => e.Partido); //.WithMany(p => p.Deputados).HasForeignKey(e => e.IdPartido);
-            entity.HasOne(e => e.Estado); //.WithMany(e => e.Deputados).HasForeignKey(e => e.IdEstado);
+            entity.HasOne(e => e.Partido).WithMany(p => p.DeputadosEstaduais).HasForeignKey(e => e.IdPartido);
+            entity.HasOne(e => e.Estado).WithMany(e => e.DeputadosEstaduais).HasForeignKey(e => e.IdEstado);
+            entity.ToTable("cl_deputado", "assembleias");
         });
     }
 
@@ -35,6 +36,7 @@ public static class AssembleiasLegislativasConfigurations
         {
             entity.HasKey(e => e.IdDeputado);
             entity.HasOne(e => e.Deputado).WithMany().HasForeignKey(e => e.IdDeputado);
+            entity.ToTable("cl_deputado_campeao_gasto", "assembleias");
         });
     }
 
@@ -48,6 +50,7 @@ public static class AssembleiasLegislativasConfigurations
             entity.HasOne(e => e.Deputado).WithMany(d => d.Despesas).HasForeignKey(e => e.IdDeputado);
             entity.HasOne(e => e.DespesaTipo).WithMany(t => t.Despesas).HasForeignKey(e => e.IdDespesaTipo);
             entity.HasOne(e => e.Fornecedor).WithMany(f => f.DespesasAssembleias).HasForeignKey(e => e.IdFornecedor);
+            entity.ToTable("cl_despesa", "assembleias");
         });
     }
 
@@ -57,7 +60,9 @@ public static class AssembleiasLegislativasConfigurations
         modelBuilder.Entity<DespesaEspecificacao>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasOne(e => e.DespesaTipo).WithMany(t => t.DespesaEspecificacoes).HasForeignKey(e => e.IdDespesaTipo);
+            entity.ToTable("cl_despesa_especificacao", "assembleias");
         });
     }
 
@@ -66,8 +71,8 @@ public static class AssembleiasLegislativasConfigurations
         // Configure DespesaResumoMensal
         modelBuilder.Entity<DespesaResumoMensal>(entity =>
         {
-            entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
-            entity.HasOne(e => e.Deputado).WithMany().HasForeignKey(e => e.IdDeputado);
+            entity.HasKey(e => new { e.Ano, e.Mes });
+            entity.ToTable("cl_despesa_resumo_mensal", "assembleias");
         });
     }
 
@@ -77,6 +82,8 @@ public static class AssembleiasLegislativasConfigurations
         modelBuilder.Entity<DespesaTipo>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.ToTable("cl_despesa_tipo", "assembleias");
         });
     }
 

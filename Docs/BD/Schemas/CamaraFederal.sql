@@ -1,604 +1,821 @@
--- --------------------------------------------------------
--- Servidor:                     127.0.0.1
--- Versão do servidor:           8.0.40 - MySQL Community Server - GPL
--- OS do Servidor:               Win64
--- HeidiSQL Versão:              12.9.0.6999
--- --------------------------------------------------------
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
--- Copiando estrutura para tabela ops.cf_deputado
-CREATE TABLE IF NOT EXISTS `cf_deputado` (
-  `id` mediumint unsigned NOT NULL COMMENT 'ideDeputado',
-  `id_deputado` mediumint unsigned DEFAULT NULL COMMENT 'nuDeputadoId',
-  `id_partido` tinyint unsigned NOT NULL,
-  `id_estado` tinyint unsigned DEFAULT NULL,
-  `id_cf_gabinete` smallint unsigned DEFAULT NULL COMMENT 'Usado para importação dos secretarios parlamentares',
-  `cpf` varchar(15) DEFAULT NULL,
-  `nome_parlamentar` varchar(100) DEFAULT NULL,
-  `nome_civil` varchar(100) DEFAULT NULL,
-  `nome_importacao_presenca` varchar(100) DEFAULT NULL,
-  `sexo` varchar(2) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `nascimento` date DEFAULT NULL,
-  `falecimento` date DEFAULT NULL,
-  `id_estado_nascimento` tinyint unsigned DEFAULT NULL,
-  `municipio` varchar(500) DEFAULT NULL,
-  `website` varchar(255) DEFAULT NULL,
-  `profissao` varchar(255) DEFAULT NULL,
-  `escolaridade` varchar(100) DEFAULT NULL,
-  `condicao` varchar(50) DEFAULT NULL,
-  `situacao` varchar(20) DEFAULT NULL,
-  `passaporte_diplomatico` bit(1) NOT NULL DEFAULT b'0',
-  `processado` tinyint NOT NULL DEFAULT (0),
-  `valor_total_ceap` decimal(16,2) unsigned NOT NULL DEFAULT '0.00' COMMENT 'Valor acumulado gasto com a cota parlamentar em todas as legislaturas',
-  `secretarios_ativos` tinyint unsigned DEFAULT NULL COMMENT 'Quantidade de secretarios',
-  `valor_mensal_secretarios` decimal(16,2) NOT NULL DEFAULT '0.00',
-  `valor_total_remuneracao` decimal(16,2) NOT NULL DEFAULT '0.00' COMMENT 'Renomear para valor_total_gabinete',
-  `valor_total_salario` decimal(16,2) NOT NULL DEFAULT '0.00' COMMENT 'Renomear para valor_total_remuneracao',
-  `valor_total_auxilio_moradia` decimal(16,2) NOT NULL DEFAULT '0.00',
-  PRIMARY KEY (`id`),
-  KEY `id_deputado` (`id_deputado`),
-  KEY `id_partido` (`id_partido`),
-  KEY `id_estado` (`id_estado`),
-  KEY `id_cf_gabinete` (`id_cf_gabinete`),
-  KEY `id_estado_nascimento` (`id_estado_nascimento`),
-  KEY `nome_parlamentar` (`nome_parlamentar`),
-  KEY `quantidade_secretarios` (`secretarios_ativos`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_auxilio_moradia
-CREATE TABLE IF NOT EXISTS `cf_deputado_auxilio_moradia` (
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `ano` smallint unsigned DEFAULT NULL,
-  `mes` smallint unsigned DEFAULT NULL,
-  `valor` decimal(10,2) unsigned DEFAULT NULL,
-  UNIQUE KEY `id_cf_deputado` (`id_cf_deputado`,`ano`,`mes`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_campeao_gasto
-CREATE TABLE IF NOT EXISTS `cf_deputado_campeao_gasto` (
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `nome_parlamentar` varchar(100) DEFAULT NULL,
-  `valor_total` decimal(10,2) unsigned DEFAULT NULL,
-  `sigla_partido` varchar(20) DEFAULT NULL,
-  `sigla_estado` varchar(2) DEFAULT NULL,
-  PRIMARY KEY (`id_cf_deputado`),
-  KEY `nome_parlamentar` (`nome_parlamentar`),
-  CONSTRAINT `FK_cf_deputado_campeao_gasto_cf_deputado` FOREIGN KEY (`id_cf_deputado`) REFERENCES `cf_deputado` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_cota_parlamentar
-CREATE TABLE IF NOT EXISTS `cf_deputado_cota_parlamentar` (
-  `id_cf_deputado` int NOT NULL,
-  `ano` smallint NOT NULL,
-  `mes` smallint NOT NULL,
-  `valor` decimal(10,2) NOT NULL,
-  `percentual` decimal(10,2) DEFAULT NULL,
-  UNIQUE KEY `id_cl_deputado_ano_mes` (`id_cf_deputado`,`ano`,`mes`) USING BTREE,
-  KEY `id_cl_deputado` (`id_cf_deputado`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_gabinete
-CREATE TABLE IF NOT EXISTS `cf_deputado_gabinete` (
-  `id` int NOT NULL,
-  `nome` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_imovel_funcional
-CREATE TABLE IF NOT EXISTS `cf_deputado_imovel_funcional` (
-  `id_cf_deputado` mediumint NOT NULL,
-  `uso_de` date NOT NULL,
-  `uso_ate` date DEFAULT NULL,
-  `total_dias` smallint DEFAULT NULL,
-  UNIQUE KEY `id_cf_deputado` (`id_cf_deputado`,`uso_de`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_missao_oficial
-CREATE TABLE IF NOT EXISTS `cf_deputado_missao_oficial` (
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `periodo` varchar(50) NOT NULL,
-  `assunto` varchar(4000) NOT NULL,
-  `destino` varchar(255) DEFAULT NULL,
-  `passagens` decimal(10,2) DEFAULT NULL,
-  `diarias` decimal(10,2) DEFAULT NULL,
-  `relatorio` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_remuneracao
-CREATE TABLE IF NOT EXISTS `cf_deputado_remuneracao` (
-  `id_cf_deputado` int unsigned NOT NULL,
-  `ano` smallint NOT NULL,
-  `mes` smallint NOT NULL,
-  `valor` decimal(10,2) NOT NULL,
-  UNIQUE KEY `id_cl_deputado_ano_mes` (`id_cf_deputado`,`ano`,`mes`) USING BTREE,
-  KEY `id_cl_deputado` (`id_cf_deputado`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_deputado_verba_gabinete
-CREATE TABLE IF NOT EXISTS `cf_deputado_verba_gabinete` (
-  `id_cf_deputado` int NOT NULL,
-  `ano` smallint NOT NULL,
-  `mes` smallint NOT NULL,
-  `valor` decimal(10,2) NOT NULL,
-  `percentual` decimal(10,2) DEFAULT NULL,
-  UNIQUE KEY `id_cl_deputado_ano_mes` (`id_cf_deputado`,`ano`,`mes`) USING BTREE,
-  KEY `id_cl_deputado` (`id_cf_deputado`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa
-CREATE TABLE IF NOT EXISTS `cf_despesa` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `ano` smallint unsigned NOT NULL,
-  `mes` tinyint unsigned NOT NULL,
-  `id_cf_legislatura` tinyint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_cf_mandato` smallint unsigned DEFAULT NULL,
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_cf_especificacao` tinyint unsigned DEFAULT NULL,
-  `id_fornecedor` mediumint unsigned NOT NULL,
-  `id_documento` bigint unsigned DEFAULT NULL,
-  `id_passageiro` mediumint unsigned DEFAULT NULL,
-  `id_trecho_viagem` mediumint unsigned DEFAULT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `valor_documento` decimal(10,2) DEFAULT NULL,
-  `valor_glosa` decimal(10,2) NOT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  `valor_restituicao` decimal(10,2) DEFAULT NULL,
-  `tipo_documento` tinyint unsigned NOT NULL DEFAULT '0' COMMENT '0: Nota Fiscal; 1: Recibo; 2: Despesa no Exterior',
-  `tipo_link` tinyint unsigned NOT NULL DEFAULT '0' COMMENT '0: Sem Arquivo; 1: Recibo; 2: Nota Fiscal Eletronica',
-  `numero_documento` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `hash` varbinary(100) DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_fornecedor` (`id_fornecedor`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `id_cf_mandato` (`id_cf_mandato`) USING BTREE,
-  KEY `id_cf_despesa_tipo` (`id_cf_despesa_tipo`) USING BTREE,
-  KEY `id_cf_especificacao` (`id_cf_especificacao`) USING BTREE,
-  KEY `id_legislatura` (`id_cf_legislatura`),
-  KEY `ano` (`ano`),
-  KEY `mes` (`mes`)
-) ENGINE=InnoDB AUTO_INCREMENT=11201357 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_53
-CREATE TABLE IF NOT EXISTS `cf_despesa_53` (
-  `id` bigint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_fornecedor` mediumint unsigned NOT NULL,
-  `ano_mes` mediumint unsigned NOT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_fornecedor` (`id_fornecedor`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `id_cf_despesa_tipo` (`id_cf_despesa_tipo`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_54
-CREATE TABLE IF NOT EXISTS `cf_despesa_54` (
-  `id` bigint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_fornecedor` mediumint unsigned NOT NULL,
-  `ano_mes` mediumint unsigned NOT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_fornecedor` (`id_fornecedor`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `id_cf_despesa_tipo` (`id_cf_despesa_tipo`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_55
-CREATE TABLE IF NOT EXISTS `cf_despesa_55` (
-  `id` bigint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_fornecedor` mediumint unsigned NOT NULL,
-  `ano_mes` mediumint unsigned NOT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_fornecedor` (`id_fornecedor`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `id_cf_despesa_tipo` (`id_cf_despesa_tipo`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_56
-CREATE TABLE IF NOT EXISTS `cf_despesa_56` (
-  `id` bigint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_fornecedor` mediumint unsigned NOT NULL,
-  `ano_mes` mediumint unsigned NOT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_fornecedor` (`id_fornecedor`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `id_cf_despesa_tipo` (`id_cf_despesa_tipo`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_57
-CREATE TABLE IF NOT EXISTS `cf_despesa_57` (
-  `id` bigint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_fornecedor` mediumint unsigned NOT NULL,
-  `ano_mes` mediumint unsigned NOT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_fornecedor` (`id_fornecedor`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `id_cf_despesa_tipo` (`id_cf_despesa_tipo`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_resumo_mensal
-CREATE TABLE IF NOT EXISTS `cf_despesa_resumo_mensal` (
-  `ano` int unsigned NOT NULL,
-  `mes` int unsigned NOT NULL,
-  `valor` decimal(10,2) unsigned DEFAULT NULL,
-  PRIMARY KEY (`ano`,`mes`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_despesa_tipo
-CREATE TABLE IF NOT EXISTS `cf_despesa_tipo` (
-  `id` smallint unsigned NOT NULL,
-  `descricao` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `descricao` (`descricao`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_especificacao_tipo
-CREATE TABLE IF NOT EXISTS `cf_especificacao_tipo` (
-  `id_cf_despesa_tipo` smallint unsigned NOT NULL,
-  `id_cf_especificacao` tinyint unsigned NOT NULL,
-  `descricao` varchar(100) NOT NULL,
-  PRIMARY KEY (`id_cf_despesa_tipo`,`id_cf_especificacao`),
-  KEY `descricao` (`descricao`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario
-CREATE TABLE IF NOT EXISTS `cf_funcionario` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `chave` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs NOT NULL,
-  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `processado` tinyint NOT NULL DEFAULT '0',
-  `controle` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `chave` (`chave`) USING BTREE,
-  KEY `idx_nome` (`nome`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=89281 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_area_atuacao
-CREATE TABLE IF NOT EXISTS `cf_funcionario_area_atuacao` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `nome` (`nome`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_cargo
-CREATE TABLE IF NOT EXISTS `cf_funcionario_cargo` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `nome` (`nome`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_contratacao
-CREATE TABLE IF NOT EXISTS `cf_funcionario_contratacao` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `id_cf_deputado` mediumint unsigned DEFAULT NULL,
-  `id_cf_funcionario` mediumint unsigned NOT NULL,
-  `id_cf_funcionario_grupo_funcional` tinyint unsigned DEFAULT NULL,
-  `id_cf_funcionario_cargo` tinyint unsigned DEFAULT NULL,
-  `id_cf_funcionario_nivel` tinyint unsigned DEFAULT NULL,
-  `id_cf_funcionario_funcao_comissionada` smallint unsigned DEFAULT NULL,
-  `id_cf_funcionario_area_atuacao` tinyint unsigned DEFAULT NULL,
-  `id_cf_funcionario_local_trabalho` tinyint unsigned DEFAULT NULL,
-  `id_cf_funcionario_situacao` tinyint unsigned DEFAULT NULL,
-  `periodo_de` date DEFAULT NULL,
-  `periodo_ate` date DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `cf_secretario_contratacao_unique` (`id_cf_funcionario`,`id_cf_deputado`,`periodo_de`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_grupo_funcional` (`id_cf_funcionario_grupo_funcional`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_cargo` (`id_cf_funcionario_cargo`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_nivel` (`id_cf_funcionario_nivel`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_area_atuacao` (`id_cf_funcionario_area_atuacao`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_local_trabalho` (`id_cf_funcionario_local_trabalho`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_situacao` (`id_cf_funcionario_situacao`) USING BTREE,
-  KEY `FK_cf_funcionario_contratacao_cf_funcionario_funcao_comissionada` (`id_cf_funcionario_funcao_comissionada`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=142802 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_funcao_comissionada
-CREATE TABLE IF NOT EXISTS `cf_funcionario_funcao_comissionada` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `nome` (`nome`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=512 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_grupo_funcional
-CREATE TABLE IF NOT EXISTS `cf_funcionario_grupo_funcional` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `nome` (`nome`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_local_trabalho
-CREATE TABLE IF NOT EXISTS `cf_funcionario_local_trabalho` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `nome` (`nome`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_nivel
-CREATE TABLE IF NOT EXISTS `cf_funcionario_nivel` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `nome` (`nome`)
-) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_remuneracao
-CREATE TABLE IF NOT EXISTS `cf_funcionario_remuneracao` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `id_cf_funcionario` mediumint unsigned NOT NULL,
-  `id_cf_funcionario_contratacao` mediumint unsigned DEFAULT NULL,
-  `id_cf_deputado` mediumint unsigned DEFAULT NULL,
-  `referencia` date NOT NULL,
-  `tipo` tinyint unsigned DEFAULT NULL,
-  `remuneracao_fixa` decimal(10,2) DEFAULT NULL,
-  `vantagens_natureza_pessoal` decimal(10,2) DEFAULT NULL,
-  `funcao_ou_cargo_em_comissao` decimal(10,2) DEFAULT NULL,
-  `gratificacao_natalina` decimal(10,2) DEFAULT NULL,
-  `ferias` decimal(10,2) DEFAULT NULL,
-  `outras_remuneracoes` decimal(10,2) DEFAULT NULL,
-  `abono_permanencia` decimal(10,2) DEFAULT NULL,
-  `valor_bruto` decimal(10,2) DEFAULT NULL,
-  `redutor_constitucional` decimal(10,2) DEFAULT NULL,
-  `contribuicao_previdenciaria` decimal(10,2) DEFAULT NULL,
-  `imposto_renda` decimal(10,2) DEFAULT NULL,
-  `valor_liquido` decimal(10,2) DEFAULT NULL,
-  `valor_diarias` decimal(10,2) DEFAULT NULL,
-  `valor_auxilios` decimal(10,2) DEFAULT NULL,
-  `valor_vantagens` decimal(10,2) DEFAULT NULL,
-  `valor_outros` decimal(10,2) DEFAULT NULL,
-  `valor_total` decimal(10,2) DEFAULT NULL COMMENT 'valor_bruto + valor_outros',
-  `nivel` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `contratacao` date DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `id_cf_secretario` (`id_cf_funcionario`,`referencia`,`tipo`) USING BTREE,
-  KEY `FK_cf_funcionario_remuneracao_cf_funcionario_contratacao` (`id_cf_funcionario_contratacao`) USING BTREE,
-  KEY `FK_cf_funcionario_remuneracao_cf_deputado` (`id_cf_deputado`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1079473 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_situacao
-CREATE TABLE IF NOT EXISTS `cf_funcionario_situacao` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `nome` (`nome`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_funcionario_tipo_folha
-CREATE TABLE IF NOT EXISTS `cf_funcionario_tipo_folha` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_gabinete
-CREATE TABLE IF NOT EXISTS `cf_gabinete` (
-  `id` smallint unsigned NOT NULL,
-  `nome` varchar(50) DEFAULT NULL,
-  `predio` varchar(50) DEFAULT NULL,
-  `andar` tinyint unsigned DEFAULT NULL,
-  `sala` varchar(50) DEFAULT NULL,
-  `telefone` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `nome` (`nome`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_legislatura
-CREATE TABLE IF NOT EXISTS `cf_legislatura` (
-  `id` tinyint unsigned NOT NULL,
-  `ano` smallint unsigned DEFAULT NULL,
-  `inicio` mediumint unsigned DEFAULT NULL,
-  `final` mediumint unsigned DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `ano` (`ano`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_mandato
-CREATE TABLE IF NOT EXISTS `cf_mandato` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `id_legislatura` tinyint unsigned DEFAULT NULL,
-  `id_carteira_parlamantar` mediumint unsigned DEFAULT NULL,
-  `id_estado` tinyint unsigned DEFAULT NULL,
-  `id_partido` tinyint unsigned DEFAULT NULL,
-  `condicao` varchar(10) DEFAULT NULL,
-  `valor_total_ceap` decimal(26,2) unsigned DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_cf_deputado_id_legislatura` (`id_cf_deputado`,`id_legislatura`),
-  KEY `id_cf_deputado` (`id_cf_deputado`),
-  KEY `id_legislatura` (`id_legislatura`),
-  KEY `id_estado` (`id_estado`),
-  KEY `id_carteira_parlamantar` (`id_carteira_parlamantar`),
-  KEY `id_partido` (`id_partido`),
-  CONSTRAINT `FK_cf_mandato_cf_legislatura` FOREIGN KEY (`id_legislatura`) REFERENCES `cf_legislatura` (`id`),
-  CONSTRAINT `FK_cf_mandato_estado` FOREIGN KEY (`id_estado`) REFERENCES `estado` (`id`),
-  CONSTRAINT `FK_cf_mandato_partido` FOREIGN KEY (`id_partido`) REFERENCES `partido` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10915 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_secretario
-CREATE TABLE IF NOT EXISTS `cf_secretario` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `id_cf_deputado` mediumint unsigned NOT NULL DEFAULT '0',
-  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `periodo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `cargo` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `valor_bruto` decimal(10,2) DEFAULT NULL,
-  `valor_liquido` decimal(10,2) DEFAULT NULL,
-  `valor_outros` decimal(10,2) DEFAULT NULL,
-  `link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `referencia` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `em_exercicio` bit(1) DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`) USING BTREE,
-  KEY `idx_nome` (`nome`) USING BTREE,
-  KEY `idx_link` (`link`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=12816 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_secretario_historico
-CREATE TABLE IF NOT EXISTS `cf_secretario_historico` (
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `nome` varchar(100) DEFAULT NULL,
-  `cargo` varchar(45) DEFAULT NULL,
-  `periodo` varchar(255) DEFAULT NULL,
-  `valor_bruto` decimal(10,2) DEFAULT NULL,
-  `valor_liquido` decimal(10,2) DEFAULT NULL,
-  `valor_outros` decimal(10,2) DEFAULT NULL,
-  `link` varchar(255) DEFAULT NULL,
-  `referencia` varchar(255) DEFAULT NULL,
-  `ano_mes` int unsigned DEFAULT NULL,
-  KEY `idx_id_cf_deputado` (`id_cf_deputado`),
-  KEY `idx_nome` (`nome`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_senador_verba_gabinete
-CREATE TABLE IF NOT EXISTS `cf_senador_verba_gabinete` (
-  `id_sf_senador` int NOT NULL,
-  `ano` smallint NOT NULL,
-  `mes` smallint NOT NULL,
-  `valor` decimal(10,2) NOT NULL,
-  `percentual` decimal(10,2) DEFAULT NULL,
-  UNIQUE KEY `id_sf_senador_ano_mes` (`id_sf_senador`,`ano`,`mes`) USING BTREE,
-  KEY `id_sf_senador` (`id_sf_senador`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_sessao
-CREATE TABLE IF NOT EXISTS `cf_sessao` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `id_legislatura` tinyint unsigned NOT NULL,
-  `data` date NOT NULL,
-  `inicio` datetime NOT NULL,
-  `tipo` tinyint unsigned NOT NULL,
-  `numero` varchar(45) DEFAULT NULL,
-  `presencas` smallint unsigned NOT NULL DEFAULT '0',
-  `ausencias` smallint unsigned NOT NULL DEFAULT '0',
-  `ausencias_justificadas` smallint unsigned NOT NULL DEFAULT '0',
-  `checksum` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_legislatura` (`id_legislatura`),
-  KEY `data` (`data`)
-) ENGINE=InnoDB AUTO_INCREMENT=4772 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC;
-
--- Exportação de dados foi desmarcado.
-
--- Copiando estrutura para tabela ops.cf_sessao_presenca
-CREATE TABLE IF NOT EXISTS `cf_sessao_presenca` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `id_cf_sessao` mediumint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `presente` char(1) NOT NULL,
-  `justificativa` varchar(100) DEFAULT NULL,
-  `presenca_externa` char(1) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_cf_sessao` (`id_cf_sessao`),
-  KEY `id_cf_deputado` (`id_cf_deputado`),
-  CONSTRAINT `FK_cf_sessao_presenca_cf_sessao` FOREIGN KEY (`id_cf_sessao`) REFERENCES `cf_sessao` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2443476 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC;
-
--- Exportação de dados foi desmarcado.
-
-/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
-/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
-/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+/*
+ Navicat Premium Dump SQL
+
+ Source Server         : Postgres WSL
+ Source Server Type    : PostgreSQL
+ Source Server Version : 160011 (160011)
+ Source Host           : 172.31.250.64:5432
+ Source Catalog        : ops
+ Source Schema         : camara
+
+ Target Server Type    : PostgreSQL
+ Target Server Version : 160011 (160011)
+ File Encoding         : 65001
+
+ Date: 06/01/2026 20:54:23
+*/
+
+
+-- ----------------------------
+-- Table structure for cf_deputado
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado";
+CREATE TABLE "camara"."cf_deputado" (
+  "id" int4 NOT NULL,
+  "id_deputado" int4,
+  "id_partido" int2 NOT NULL,
+  "id_estado" int2,
+  "id_cf_gabinete" int4,
+  "cpf" varchar(15) COLLATE "pg_catalog"."default",
+  "nome_parlamentar" varchar(100) COLLATE "pg_catalog"."default",
+  "nome_civil" varchar(100) COLLATE "pg_catalog"."default",
+  "nome_importacao_presenca" varchar(100) COLLATE "pg_catalog"."default",
+  "sexo" varchar(2) COLLATE "pg_catalog"."default",
+  "email" varchar(100) COLLATE "pg_catalog"."default",
+  "nascimento" date,
+  "falecimento" date,
+  "id_estado_nascimento" int2,
+  "municipio" varchar(500) COLLATE "pg_catalog"."default",
+  "website" varchar(255) COLLATE "pg_catalog"."default",
+  "profissao" varchar(255) COLLATE "pg_catalog"."default",
+  "escolaridade" varchar(100) COLLATE "pg_catalog"."default",
+  "condicao" varchar(50) COLLATE "pg_catalog"."default",
+  "situacao" varchar(20) COLLATE "pg_catalog"."default",
+  "passaporte_diplomatico" int2,
+  "processado" int2 NOT NULL,
+  "valor_total_ceap" numeric(16,2) NOT NULL,
+  "secretarios_ativos" int2,
+  "valor_mensal_secretarios" numeric(16,2) NOT NULL,
+  "valor_total_remuneracao" numeric(16,2) NOT NULL,
+  "valor_total_salario" numeric(16,2) NOT NULL,
+  "valor_total_auxilio_moradia" numeric(16,2) NOT NULL
+)
+;
+COMMENT ON COLUMN "camara"."cf_deputado"."id" IS 'ideDeputado';
+COMMENT ON COLUMN "camara"."cf_deputado"."id_deputado" IS 'nuDeputadoId';
+COMMENT ON COLUMN "camara"."cf_deputado"."id_cf_gabinete" IS 'Usado para importação dos secretarios parlamentares';
+COMMENT ON COLUMN "camara"."cf_deputado"."valor_total_ceap" IS 'Valor acumulado gasto com a cota parlamentar em todas as legislaturas';
+COMMENT ON COLUMN "camara"."cf_deputado"."secretarios_ativos" IS 'Quantidade de secretarios';
+COMMENT ON COLUMN "camara"."cf_deputado"."valor_total_remuneracao" IS 'Renomear para valor_total_gabinete';
+COMMENT ON COLUMN "camara"."cf_deputado"."valor_total_salario" IS 'Renomear para valor_total_remuneracao';
+
+-- ----------------------------
+-- Table structure for cf_deputado_auxilio_moradia
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_auxilio_moradia";
+CREATE TABLE "camara"."cf_deputado_auxilio_moradia" (
+  "id_cf_deputado" int4 NOT NULL,
+  "ano" int4,
+  "mes" int4,
+  "valor" numeric(10,2)
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_campeao_gasto
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_campeao_gasto";
+CREATE TABLE "camara"."cf_deputado_campeao_gasto" (
+  "id_cf_deputado" int4 NOT NULL,
+  "nome_parlamentar" varchar(100) COLLATE "pg_catalog"."default",
+  "valor_total" numeric(10,2),
+  "sigla_partido" varchar(20) COLLATE "pg_catalog"."default",
+  "sigla_estado" varchar(2) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_cota_parlamentar
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_cota_parlamentar";
+CREATE TABLE "camara"."cf_deputado_cota_parlamentar" (
+  "id_cf_deputado" int4 NOT NULL,
+  "ano" int2 NOT NULL,
+  "mes" int2 NOT NULL,
+  "valor" numeric(10,2) NOT NULL,
+  "percentual" numeric(10,2)
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_gabinete
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_gabinete";
+CREATE TABLE "camara"."cf_deputado_gabinete" (
+  "id" int4 NOT NULL,
+  "nome" varchar(500) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_imovel_funcional
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_imovel_funcional";
+CREATE TABLE "camara"."cf_deputado_imovel_funcional" (
+  "id_cf_deputado" int4 NOT NULL,
+  "uso_de" date NOT NULL,
+  "uso_ate" date,
+  "total_dias" int2
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_missao_oficial
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_missao_oficial";
+CREATE TABLE "camara"."cf_deputado_missao_oficial" (
+  "id_cf_deputado" int4 NOT NULL,
+  "periodo" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
+  "assunto" varchar(4000) COLLATE "pg_catalog"."default" NOT NULL,
+  "destino" varchar(255) COLLATE "pg_catalog"."default",
+  "passagens" numeric(10,2),
+  "diarias" numeric(10,2),
+  "relatorio" varchar(255) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_remuneracao
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_remuneracao";
+CREATE TABLE "camara"."cf_deputado_remuneracao" (
+  "id_cf_deputado" int8 NOT NULL,
+  "ano" int2 NOT NULL,
+  "mes" int2 NOT NULL,
+  "valor" numeric(10,2) NOT NULL
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_deputado_verba_gabinete
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_deputado_verba_gabinete";
+CREATE TABLE "camara"."cf_deputado_verba_gabinete" (
+  "id_cf_deputado" int4 NOT NULL,
+  "ano" int2 NOT NULL,
+  "mes" int2 NOT NULL,
+  "valor" numeric(10,2) NOT NULL,
+  "percentual" numeric(10,2)
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_despesa
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_despesa";
+CREATE TABLE "camara"."cf_despesa" (
+  "id" numeric(20,0) NOT NULL,
+  "ano" int4 NOT NULL,
+  "mes" int2 NOT NULL,
+  "id_cf_legislatura" int2 NOT NULL,
+  "id_cf_deputado" int4 NOT NULL,
+  "id_cf_mandato" int4,
+  "id_cf_despesa_tipo" int4 NOT NULL,
+  "id_cf_especificacao" int2,
+  "id_fornecedor" int4 NOT NULL,
+  "id_documento" numeric(20,0),
+  "id_passageiro" int4,
+  "id_trecho_viagem" int4,
+  "data_emissao" date,
+  "valor_documento" numeric(10,2),
+  "valor_glosa" numeric(10,2) NOT NULL,
+  "valor_liquido" numeric(10,2) NOT NULL,
+  "valor_restituicao" numeric(10,2),
+  "tipo_documento" int2 NOT NULL,
+  "tipo_link" int2 NOT NULL,
+  "numero_documento" varchar(100) COLLATE "pg_catalog"."default",
+  "hash" bytea
+)
+;
+COMMENT ON COLUMN "camara"."cf_despesa"."tipo_documento" IS '0: Nota Fiscal; 1: Recibo; 2: Despesa no Exterior';
+COMMENT ON COLUMN "camara"."cf_despesa"."tipo_link" IS '0: Sem Arquivo; 1: Recibo; 2: Nota Fiscal Eletronica';
+
+-- ----------------------------
+-- Table structure for cf_despesa_resumo_mensal
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_despesa_resumo_mensal";
+CREATE TABLE "camara"."cf_despesa_resumo_mensal" (
+  "ano" int8 NOT NULL,
+  "mes" int8 NOT NULL,
+  "valor" numeric(10,2)
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_despesa_tipo
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_despesa_tipo";
+CREATE TABLE "camara"."cf_despesa_tipo" (
+  "id" int4 NOT NULL,
+  "descricao" varchar(100) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_especificacao_tipo
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_especificacao_tipo";
+CREATE TABLE "camara"."cf_especificacao_tipo" (
+  "id_cf_despesa_tipo" int4 NOT NULL,
+  "id_cf_especificacao" int2 NOT NULL,
+  "descricao" varchar(100) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario";
+CREATE TABLE "camara"."cf_funcionario" (
+  "id" int4 NOT NULL,
+  "chave" varchar(45) COLLATE "pg_catalog"."default" NOT NULL,
+  "nome" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
+  "processado" int2 NOT NULL,
+  "controle" char(10) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_area_atuacao
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_area_atuacao";
+CREATE TABLE "camara"."cf_funcionario_area_atuacao" (
+  "id" int2 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_cargo
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_cargo";
+CREATE TABLE "camara"."cf_funcionario_cargo" (
+  "id" int2 NOT NULL,
+  "nome" varchar(100) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_contratacao
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_contratacao";
+CREATE TABLE "camara"."cf_funcionario_contratacao" (
+  "id" int4 NOT NULL,
+  "id_cf_deputado" int4,
+  "id_cf_funcionario" int4 NOT NULL,
+  "id_cf_funcionario_grupo_funcional" int2,
+  "id_cf_funcionario_cargo" int2,
+  "id_cf_funcionario_nivel" int2,
+  "id_cf_funcionario_funcao_comissionada" int4,
+  "id_cf_funcionario_area_atuacao" int2,
+  "id_cf_funcionario_local_trabalho" int2,
+  "id_cf_funcionario_situacao" int2,
+  "periodo_de" date,
+  "periodo_ate" date
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_funcao_comissionada
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_funcao_comissionada";
+CREATE TABLE "camara"."cf_funcionario_funcao_comissionada" (
+  "id" int4 NOT NULL,
+  "nome" varchar(255) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_grupo_funcional
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_grupo_funcional";
+CREATE TABLE "camara"."cf_funcionario_grupo_funcional" (
+  "id" int2 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_local_trabalho
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_local_trabalho";
+CREATE TABLE "camara"."cf_funcionario_local_trabalho" (
+  "id" int2 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_nivel
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_nivel";
+CREATE TABLE "camara"."cf_funcionario_nivel" (
+  "id" int2 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_remuneracao
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_remuneracao";
+CREATE TABLE "camara"."cf_funcionario_remuneracao" (
+  "id" int4 NOT NULL,
+  "id_cf_funcionario" int4 NOT NULL,
+  "id_cf_funcionario_contratacao" int4,
+  "id_cf_deputado" int4,
+  "referencia" date NOT NULL,
+  "tipo" int2,
+  "remuneracao_fixa" numeric(10,2),
+  "vantagens_natureza_pessoal" numeric(10,2),
+  "funcao_ou_cargo_em_comissao" numeric(10,2),
+  "gratificacao_natalina" numeric(10,2),
+  "ferias" numeric(10,2),
+  "outras_remuneracoes" numeric(10,2),
+  "abono_permanencia" numeric(10,2),
+  "valor_bruto" numeric(10,2),
+  "redutor_constitucional" numeric(10,2),
+  "contribuicao_previdenciaria" numeric(10,2),
+  "imposto_renda" numeric(10,2),
+  "valor_liquido" numeric(10,2),
+  "valor_diarias" numeric(10,2),
+  "valor_auxilios" numeric(10,2),
+  "valor_vantagens" numeric(10,2),
+  "valor_outros" numeric(10,2),
+  "valor_total" numeric(10,2),
+  "nivel" varchar(5) COLLATE "pg_catalog"."default",
+  "contratacao" date
+)
+;
+COMMENT ON COLUMN "camara"."cf_funcionario_remuneracao"."valor_total" IS 'valor_bruto + valor_outros';
+
+-- ----------------------------
+-- Table structure for cf_funcionario_situacao
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_situacao";
+CREATE TABLE "camara"."cf_funcionario_situacao" (
+  "id" int2 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_funcionario_tipo_folha
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_funcionario_tipo_folha";
+CREATE TABLE "camara"."cf_funcionario_tipo_folha" (
+  "id" int2 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_gabinete
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_gabinete";
+CREATE TABLE "camara"."cf_gabinete" (
+  "id" int4 NOT NULL,
+  "nome" varchar(50) COLLATE "pg_catalog"."default",
+  "predio" varchar(50) COLLATE "pg_catalog"."default",
+  "andar" int2,
+  "sala" varchar(50) COLLATE "pg_catalog"."default",
+  "telefone" varchar(20) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_legislatura
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_legislatura";
+CREATE TABLE "camara"."cf_legislatura" (
+  "id" int2 NOT NULL,
+  "ano" int4,
+  "inicio" int4,
+  "final" int4
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_mandato
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_mandato";
+CREATE TABLE "camara"."cf_mandato" (
+  "id" int4 NOT NULL,
+  "id_cf_deputado" int4 NOT NULL,
+  "id_legislatura" int2,
+  "id_carteira_parlamantar" int4,
+  "id_estado" int2,
+  "id_partido" int2,
+  "condicao" varchar(10) COLLATE "pg_catalog"."default",
+  "valor_total_ceap" numeric(26,2)
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_secretario
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_secretario";
+CREATE TABLE "camara"."cf_secretario" (
+  "id" int4 NOT NULL,
+  "id_cf_deputado" int4 NOT NULL,
+  "nome" varchar(100) COLLATE "pg_catalog"."default",
+  "periodo" varchar(100) COLLATE "pg_catalog"."default",
+  "cargo" varchar(45) COLLATE "pg_catalog"."default",
+  "valor_bruto" numeric(10,2),
+  "valor_liquido" numeric(10,2),
+  "valor_outros" numeric(10,2),
+  "link" varchar(255) COLLATE "pg_catalog"."default",
+  "referencia" varchar(255) COLLATE "pg_catalog"."default",
+  "em_exercicio" int2
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_secretario_historico
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_secretario_historico";
+CREATE TABLE "camara"."cf_secretario_historico" (
+  "id_cf_deputado" int4 NOT NULL,
+  "nome" varchar(100) COLLATE "pg_catalog"."default",
+  "cargo" varchar(45) COLLATE "pg_catalog"."default",
+  "periodo" varchar(255) COLLATE "pg_catalog"."default",
+  "valor_bruto" numeric(10,2),
+  "valor_liquido" numeric(10,2),
+  "valor_outros" numeric(10,2),
+  "link" varchar(255) COLLATE "pg_catalog"."default",
+  "referencia" varchar(255) COLLATE "pg_catalog"."default",
+  "ano_mes" int8
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_senador_verba_gabinete
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_senador_verba_gabinete";
+CREATE TABLE "camara"."cf_senador_verba_gabinete" (
+  "id_sf_senador" int4 NOT NULL,
+  "ano" int2 NOT NULL,
+  "mes" int2 NOT NULL,
+  "valor" numeric(10,2) NOT NULL,
+  "percentual" numeric(10,2)
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_sessao
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_sessao";
+CREATE TABLE "camara"."cf_sessao" (
+  "id" int4 NOT NULL,
+  "id_legislatura" int2 NOT NULL,
+  "data" date NOT NULL,
+  "inicio" timestamp(6) NOT NULL,
+  "tipo" int2 NOT NULL,
+  "numero" varchar(45) COLLATE "pg_catalog"."default",
+  "presencas" int4 NOT NULL,
+  "ausencias" int4 NOT NULL,
+  "ausencias_justificadas" int4 NOT NULL,
+  "checksum" varchar(100) COLLATE "pg_catalog"."default"
+)
+;
+
+-- ----------------------------
+-- Table structure for cf_sessao_presenca
+-- ----------------------------
+DROP TABLE IF EXISTS "camara"."cf_sessao_presenca";
+CREATE TABLE "camara"."cf_sessao_presenca" (
+  "id" int8 NOT NULL,
+  "id_cf_sessao" int4 NOT NULL,
+  "id_cf_deputado" int4 NOT NULL,
+  "presente" char(1) COLLATE "pg_catalog"."default" NOT NULL,
+  "justificativa" varchar(100) COLLATE "pg_catalog"."default",
+  "presenca_externa" char(1) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
+
+-- ----------------------------
+-- Indexes structure for table cf_deputado
+-- ----------------------------
+CREATE INDEX "id_cf_gabinete" ON "camara"."cf_deputado" USING btree (
+  "id_cf_gabinete" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_deputado" ON "camara"."cf_deputado" USING btree (
+  "id_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_estado" ON "camara"."cf_deputado" USING btree (
+  "id_estado" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_estado_nascimento" ON "camara"."cf_deputado" USING btree (
+  "id_estado_nascimento" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_partido" ON "camara"."cf_deputado" USING btree (
+  "id_partido" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "nome_parlamentar" ON "camara"."cf_deputado" USING btree (
+  "nome_parlamentar" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+CREATE INDEX "quantidade_secretarios" ON "camara"."cf_deputado" USING btree (
+  "secretarios_ativos" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_deputado
+-- ----------------------------
+ALTER TABLE "camara"."cf_deputado" ADD CONSTRAINT "cf_deputado_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_deputado_auxilio_moradia
+-- ----------------------------
+CREATE UNIQUE INDEX "id_cf_deputado" ON "camara"."cf_deputado_auxilio_moradia" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "ano" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "mes" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_deputado_campeao_gasto
+-- ----------------------------
+ALTER TABLE "camara"."cf_deputado_campeao_gasto" ADD CONSTRAINT "cf_deputado_campeao_gasto_pkey" PRIMARY KEY ("id_cf_deputado");
+
+-- ----------------------------
+-- Indexes structure for table cf_deputado_cota_parlamentar
+-- ----------------------------
+CREATE INDEX "id_cl_deputado" ON "camara"."cf_deputado_cota_parlamentar" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "id_cl_deputado_ano_mes" ON "camara"."cf_deputado_cota_parlamentar" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "ano" "pg_catalog"."int2_ops" ASC NULLS LAST,
+  "mes" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_deputado_gabinete
+-- ----------------------------
+ALTER TABLE "camara"."cf_deputado_gabinete" ADD CONSTRAINT "cf_deputado_gabinete_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_despesa
+-- ----------------------------
+CREATE INDEX "ano" ON "camara"."cf_despesa" USING btree (
+  "ano" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_cf_despesa_tipo" ON "camara"."cf_despesa" USING btree (
+  "id_cf_despesa_tipo" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_cf_especificacao" ON "camara"."cf_despesa" USING btree (
+  "id_cf_especificacao" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_cf_mandato" ON "camara"."cf_despesa" USING btree (
+  "id_cf_mandato" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "id_legislatura" ON "camara"."cf_despesa" USING btree (
+  "id_cf_legislatura" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "idx_id_cf_deputado" ON "camara"."cf_despesa" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "idx_id_fornecedor" ON "camara"."cf_despesa" USING btree (
+  "id_fornecedor" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "mes" ON "camara"."cf_despesa" USING btree (
+  "mes" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_despesa
+-- ----------------------------
+ALTER TABLE "camara"."cf_despesa" ADD CONSTRAINT "cf_despesa_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_despesa_resumo_mensal
+-- ----------------------------
+ALTER TABLE "camara"."cf_despesa_resumo_mensal" ADD CONSTRAINT "cf_despesa_resumo_mensal_pkey" PRIMARY KEY ("ano", "mes");
+
+-- ----------------------------
+-- Indexes structure for table cf_despesa_tipo
+-- ----------------------------
+CREATE INDEX "descricao" ON "camara"."cf_despesa_tipo" USING btree (
+  "descricao" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_despesa_tipo
+-- ----------------------------
+ALTER TABLE "camara"."cf_despesa_tipo" ADD CONSTRAINT "cf_despesa_tipo_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_especificacao_tipo
+-- ----------------------------
+ALTER TABLE "camara"."cf_especificacao_tipo" ADD CONSTRAINT "cf_especificacao_tipo_pkey" PRIMARY KEY ("id_cf_despesa_tipo", "id_cf_especificacao");
+
+-- ----------------------------
+-- Indexes structure for table cf_funcionario
+-- ----------------------------
+CREATE UNIQUE INDEX "chave" ON "camara"."cf_funcionario" USING btree (
+  "chave" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+CREATE INDEX "idx_nome" ON "camara"."cf_funcionario" USING btree (
+  "nome" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario" ADD CONSTRAINT "cf_funcionario_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_funcionario_area_atuacao
+-- ----------------------------
+CREATE UNIQUE INDEX "nome" ON "camara"."cf_funcionario_area_atuacao" USING btree (
+  "nome" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_area_atuacao
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_area_atuacao" ADD CONSTRAINT "cf_funcionario_area_atuacao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_cargo
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_cargo" ADD CONSTRAINT "cf_funcionario_cargo_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_funcionario_contratacao
+-- ----------------------------
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_deputado" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_area_atuacao" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_area_atuacao" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_cargo" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_cargo" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_funcao_comissionad" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_funcao_comissionada" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_grupo_funcional" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_grupo_funcional" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_local_trabalho" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_local_trabalho" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_nivel" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_nivel" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_contratacao_cf_funcionario_situacao" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario_situacao" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "cf_secretario_contratacao_unique" ON "camara"."cf_funcionario_contratacao" USING btree (
+  "id_cf_funcionario" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "periodo_de" "pg_catalog"."date_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_contratacao
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_contratacao" ADD CONSTRAINT "cf_funcionario_contratacao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_funcao_comissionada
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_funcao_comissionada" ADD CONSTRAINT "cf_funcionario_funcao_comissionada_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_grupo_funcional
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_grupo_funcional" ADD CONSTRAINT "cf_funcionario_grupo_funcional_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_local_trabalho
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_local_trabalho" ADD CONSTRAINT "cf_funcionario_local_trabalho_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_nivel
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_nivel" ADD CONSTRAINT "cf_funcionario_nivel_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_funcionario_remuneracao
+-- ----------------------------
+CREATE INDEX "FK_cf_funcionario_remuneracao_cf_deputado" ON "camara"."cf_funcionario_remuneracao" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE INDEX "FK_cf_funcionario_remuneracao_cf_funcionario_contratacao" ON "camara"."cf_funcionario_remuneracao" USING btree (
+  "id_cf_funcionario_contratacao" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "id_cf_secretario" ON "camara"."cf_funcionario_remuneracao" USING btree (
+  "id_cf_funcionario" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "referencia" "pg_catalog"."date_ops" ASC NULLS LAST,
+  "tipo" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_remuneracao
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_remuneracao" ADD CONSTRAINT "cf_funcionario_remuneracao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_situacao
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_situacao" ADD CONSTRAINT "cf_funcionario_situacao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_funcionario_tipo_folha
+-- ----------------------------
+ALTER TABLE "camara"."cf_funcionario_tipo_folha" ADD CONSTRAINT "cf_funcionario_tipo_folha_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_gabinete
+-- ----------------------------
+ALTER TABLE "camara"."cf_gabinete" ADD CONSTRAINT "cf_gabinete_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cf_legislatura
+-- ----------------------------
+ALTER TABLE "camara"."cf_legislatura" ADD CONSTRAINT "cf_legislatura_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_mandato
+-- ----------------------------
+CREATE INDEX "id_carteira_parlamantar" ON "camara"."cf_mandato" USING btree (
+  "id_carteira_parlamantar" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "id_cf_deputado_id_legislatura" ON "camara"."cf_mandato" USING btree (
+  "id_cf_deputado" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "id_legislatura" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_mandato
+-- ----------------------------
+ALTER TABLE "camara"."cf_mandato" ADD CONSTRAINT "cf_mandato_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_secretario
+-- ----------------------------
+CREATE INDEX "idx_link" ON "camara"."cf_secretario" USING btree (
+  "link" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_secretario
+-- ----------------------------
+ALTER TABLE "camara"."cf_secretario" ADD CONSTRAINT "cf_secretario_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_senador_verba_gabinete
+-- ----------------------------
+CREATE INDEX "id_sf_senador" ON "camara"."cf_senador_verba_gabinete" USING btree (
+  "id_sf_senador" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "id_sf_senador_ano_mes" ON "camara"."cf_senador_verba_gabinete" USING btree (
+  "id_sf_senador" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "ano" "pg_catalog"."int2_ops" ASC NULLS LAST,
+  "mes" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Indexes structure for table cf_sessao
+-- ----------------------------
+CREATE INDEX "data" ON "camara"."cf_sessao" USING btree (
+  "data" "pg_catalog"."date_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_sessao
+-- ----------------------------
+ALTER TABLE "camara"."cf_sessao" ADD CONSTRAINT "cf_sessao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table cf_sessao_presenca
+-- ----------------------------
+CREATE INDEX "id_cf_sessao" ON "camara"."cf_sessao_presenca" USING btree (
+  "id_cf_sessao" "pg_catalog"."int4_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table cf_sessao_presenca
+-- ----------------------------
+ALTER TABLE "camara"."cf_sessao_presenca" ADD CONSTRAINT "cf_sessao_presenca_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Foreign Keys structure for table cf_deputado_campeao_gasto
+-- ----------------------------
+ALTER TABLE "camara"."cf_deputado_campeao_gasto" ADD CONSTRAINT "cf_deputado_campeao_gasto_id_cf_deputado_fkey" FOREIGN KEY ("id_cf_deputado") REFERENCES "public"."cf_deputado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Keys structure for table cf_mandato
+-- ----------------------------
+ALTER TABLE "camara"."cf_mandato" ADD CONSTRAINT "cf_mandato_id_estado_fkey" FOREIGN KEY ("id_estado") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "camara"."cf_mandato" ADD CONSTRAINT "cf_mandato_id_legislatura_fkey" FOREIGN KEY ("id_legislatura") REFERENCES "public"."cf_legislatura" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "camara"."cf_mandato" ADD CONSTRAINT "cf_mandato_id_partido_fkey" FOREIGN KEY ("id_partido") REFERENCES "public"."partido" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Keys structure for table cf_sessao_presenca
+-- ----------------------------
+ALTER TABLE "camara"."cf_sessao_presenca" ADD CONSTRAINT "cf_sessao_presenca_id_cf_sessao_fkey" FOREIGN KEY ("id_cf_sessao") REFERENCES "public"."cf_sessao" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

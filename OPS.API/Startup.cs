@@ -9,9 +9,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
-using Microsoft.OpenApi.Models;
 using Npgsql;
+using Microsoft.EntityFrameworkCore;
 using OPS.Core.Repository;
+using OPS.Infraestrutura;
+using Microsoft.OpenApi;
 
 namespace OPS.API
 {
@@ -29,6 +31,9 @@ namespace OPS.API
         {
             Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
             //new ParametrosRepository().CarregarPadroes();
+
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(Configuration.GetConnectionString("AuditoriaContext")));
 
             services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
 

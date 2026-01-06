@@ -32,7 +32,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public byte? IdFornecedorFaixaEtaria { get; set; }
 
         [Column("id_fornecedor_socio_qualificacao")]
-        public uint? IdFornecedorSocioQualificacao { get; set; }
+        public byte? IdFornecedorSocioQualificacao { get; set; }
 
         [Column("nome_representante")]
         [StringLength(255)]
@@ -43,9 +43,11 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public string? CpfRepresentante { get; set; }
 
         [Column("id_fornecedor_socio_representante_qualificacao")]
-        public uint? IdFornecedorSocioRepresentanteQualificacao { get; set; }
+        public byte? IdFornecedorSocioRepresentanteQualificacao { get; set; }
 
         // Navigation properties
         public virtual Fornecedor Fornecedor { get; set; } = null!;
+        public virtual FornecedorSocioQualificacao? FornecedorSocioQualificacao { get; set; }
+        public virtual FornecedorSocioQualificacao? FornecedorSocioRepresentanteQualificacao { get; set; }
     }
 }

@@ -21,13 +21,12 @@ public static class TSEConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
-            
             entity.Property(e => e.Descricao).HasMaxLength(50);
             entity.Property(e => e.Turno).HasMaxLength(50);
             entity.Property(e => e.Tipo).HasMaxLength(50);
             entity.Property(e => e.Abrangencia).HasMaxLength(50);
             
-            entity.ToTable("tse_eleicao");
+            entity.ToTable("tse_eleicao", "tse");
         });
     }
 
@@ -38,14 +37,12 @@ public static class TSEConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            
             entity.Property(e => e.Cpf).HasMaxLength(11);
             entity.Property(e => e.Nome).HasMaxLength(255);
             entity.Property(e => e.Email).HasMaxLength(255);
             
             entity.HasIndex(e => e.Cpf).IsUnique();
-            
-            entity.ToTable("tse_eleicao_candidato");
+            entity.ToTable("tse_eleicao_candidato", "tse");
         });
     }
 
@@ -60,7 +57,6 @@ public static class TSEConfigurations
             entity.Property(e => e.Cargo).ValueGeneratedNever();
             entity.Property(e => e.Ano).ValueGeneratedNever();
             entity.Property(e => e.SiglaEstado).HasMaxLength(2).IsUnicode(false);
-            
             entity.Property(e => e.SiglaPartido).HasMaxLength(50);
             entity.Property(e => e.SiglaPartidoVice).HasMaxLength(50);
             entity.Property(e => e.NomeUrna).HasMaxLength(255);
@@ -68,7 +64,7 @@ public static class TSEConfigurations
             entity.Property(e => e.Sequencia).HasMaxLength(50);
             entity.Property(e => e.SequenciaVice).HasMaxLength(50);
             
-            entity.ToTable("tse_eleicao_candidatura");
+            entity.ToTable("tse_eleicao_candidatura", "tse");
         });
     }
 
@@ -79,12 +75,9 @@ public static class TSEConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            
             entity.Property(e => e.Nome).HasMaxLength(50);
             
-            entity.HasIndex(e => e.Nome).IsUnique();
-            
-            entity.ToTable("tse_eleicao_cargo");
+            entity.ToTable("tse_eleicao_cargo", "tse");
         });
     }
 
@@ -101,7 +94,7 @@ public static class TSEConfigurations
             entity.Property(e => e.RaizCnpjCpfDoador).HasMaxLength(14);
             entity.Property(e => e.ValorReceita).HasColumnType("decimal(10,2)");
             
-            entity.ToTable("tse_eleicao_doacao");
+            entity.ToTable("tse_eleicao_doacao", "tse");
         });
     }
 

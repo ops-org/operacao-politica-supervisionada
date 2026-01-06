@@ -1,132 +1,174 @@
--- --------------------------------------------------------
--- Servidor:                     127.0.0.1
--- Versão do servidor:           8.0.40 - MySQL Community Server - GPL
--- OS do Servidor:               Win64
--- HeidiSQL Versão:              12.9.0.6999
--- --------------------------------------------------------
+/*
+ Navicat Premium Dump SQL
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+ Source Server         : Postgres WSL
+ Source Server Type    : PostgreSQL
+ Source Server Version : 160011 (160011)
+ Source Host           : 172.31.250.64:5432
+ Source Catalog        : ops
+ Source Schema         : assembleias
 
--- Copiando estrutura para tabela ops.cf_sessao_presenca
-CREATE TABLE IF NOT EXISTS `cf_sessao_presenca` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `id_cf_sessao` mediumint unsigned NOT NULL,
-  `id_cf_deputado` mediumint unsigned NOT NULL,
-  `presente` char(1) NOT NULL,
-  `justificativa` varchar(100) DEFAULT NULL,
-  `presenca_externa` char(1) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_cf_sessao` (`id_cf_sessao`),
-  KEY `id_cf_deputado` (`id_cf_deputado`),
-  CONSTRAINT `FK_cf_sessao_presenca_cf_sessao` FOREIGN KEY (`id_cf_sessao`) REFERENCES `cf_sessao` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2443476 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC;
+ Target Server Type    : PostgreSQL
+ Target Server Version : 160011 (160011)
+ File Encoding         : 65001
 
--- Exportação de dados foi desmarcado.
+ Date: 06/01/2026 20:54:10
+*/
 
--- Copiando estrutura para tabela ops.cl_deputado
-CREATE TABLE IF NOT EXISTS `cl_deputado` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `matricula` mediumint unsigned DEFAULT NULL,
-  `gabinete` mediumint unsigned DEFAULT NULL,
-  `id_partido` tinyint unsigned NOT NULL,
-  `id_estado` tinyint unsigned NOT NULL,
-  `cpf` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `cpf_parcial` varchar(6) DEFAULT NULL,
-  `nome_parlamentar` varchar(255) NOT NULL,
-  `nome_civil` varchar(255) DEFAULT NULL,
-  `nome_importacao` varchar(255) DEFAULT NULL,
-  `nascimento` date DEFAULT NULL,
-  `sexo` char(2) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `naturalidade` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `escolaridade` varchar(100) DEFAULT NULL,
-  `profissao` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `telefone` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `site` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `perfil` varchar(100) DEFAULT NULL,
-  `foto` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `valor_total_ceap` decimal(12,2) NOT NULL DEFAULT '0.00',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `cl_cpf` (`cpf`),
-  UNIQUE KEY `cpf_parcial` (`cpf_parcial`),
-  UNIQUE KEY `id_estado_nome_civil` (`id_estado`,`nome_civil`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=8497 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Câmara Legislativa - Deputados Estaduais';
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for cl_deputado
+-- ----------------------------
+DROP TABLE IF EXISTS "assembleias"."cl_deputado";
+CREATE TABLE "assembleias"."cl_deputado" (
+  "id" int4 NOT NULL,
+  "matricula" int4,
+  "gabinete" int4,
+  "id_partido" int2 NOT NULL,
+  "id_estado" int2 NOT NULL,
+  "cpf" varchar(11) COLLATE "pg_catalog"."default",
+  "cpf_parcial" varchar(6) COLLATE "pg_catalog"."default",
+  "nome_parlamentar" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "nome_civil" varchar(255) COLLATE "pg_catalog"."default",
+  "nome_importacao" varchar(255) COLLATE "pg_catalog"."default",
+  "nascimento" date,
+  "sexo" char(2) COLLATE "pg_catalog"."default",
+  "email" varchar(100) COLLATE "pg_catalog"."default",
+  "naturalidade" varchar(100) COLLATE "pg_catalog"."default",
+  "escolaridade" varchar(100) COLLATE "pg_catalog"."default",
+  "profissao" varchar(150) COLLATE "pg_catalog"."default",
+  "telefone" varchar(100) COLLATE "pg_catalog"."default",
+  "site" varchar(500) COLLATE "pg_catalog"."default",
+  "perfil" varchar(100) COLLATE "pg_catalog"."default",
+  "foto" varchar(200) COLLATE "pg_catalog"."default",
+  "valor_total_ceap" numeric(12,2) NOT NULL,
+  "valor_total_remuneracao" numeric(12,2) NOT NULL
+)
+;
+COMMENT ON TABLE "assembleias"."cl_deputado" IS 'Câmara Legislativa - Deputados Estaduais';
 
--- Copiando estrutura para tabela ops.cl_deputado_campeao_gasto
-CREATE TABLE IF NOT EXISTS `cl_deputado_campeao_gasto` (
-  `id_cl_deputado` mediumint unsigned NOT NULL,
-  `nome_parlamentar` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `valor_total` decimal(10,2) unsigned DEFAULT NULL,
-  `sigla_partido` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `sigla_estado` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id_cl_deputado`) USING BTREE,
-  KEY `nome_parlamentar` (`nome_parlamentar`) USING BTREE,
-  CONSTRAINT `FK_cl_deputado_campeao_gasto_cf_deputado` FOREIGN KEY (`id_cl_deputado`) REFERENCES `cl_deputado` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Table structure for cl_deputado_campeao_gasto
+-- ----------------------------
+DROP TABLE IF EXISTS "assembleias"."cl_deputado_campeao_gasto";
+CREATE TABLE "assembleias"."cl_deputado_campeao_gasto" (
+  "id_cl_deputado" int4 NOT NULL,
+  "nome_parlamentar" varchar(100) COLLATE "pg_catalog"."default",
+  "valor_total" numeric(10,2),
+  "sigla_partido" varchar(20) COLLATE "pg_catalog"."default",
+  "sigla_estado" varchar(2) COLLATE "pg_catalog"."default"
+)
+;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for cl_despesa
+-- ----------------------------
+DROP TABLE IF EXISTS "assembleias"."cl_despesa";
+CREATE TABLE "assembleias"."cl_despesa" (
+  "id" int8 NOT NULL,
+  "id_cl_deputado" int8 NOT NULL,
+  "id_cl_despesa_tipo" int8,
+  "id_cl_despesa_especificacao" int8,
+  "id_fornecedor" int8,
+  "data_emissao" date,
+  "ano_mes" int4,
+  "numero_documento" varchar(50) COLLATE "pg_catalog"."default",
+  "valor_liquido" numeric(10,2) NOT NULL,
+  "favorecido" varchar(200) COLLATE "pg_catalog"."default",
+  "observacao" varchar(8000) COLLATE "pg_catalog"."default",
+  "hash" bytea
+)
+;
 
--- Copiando estrutura para tabela ops.cl_despesa
-CREATE TABLE IF NOT EXISTS `cl_despesa` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `id_cl_deputado` int unsigned NOT NULL,
-  `id_cl_despesa_tipo` int unsigned DEFAULT NULL,
-  `id_cl_despesa_especificacao` int unsigned DEFAULT NULL,
-  `id_fornecedor` int unsigned DEFAULT NULL,
-  `data_emissao` date DEFAULT NULL,
-  `ano_mes` mediumint unsigned DEFAULT NULL,
-  `numero_documento` varchar(50) DEFAULT NULL,
-  `valor_liquido` decimal(10,2) NOT NULL,
-  `favorecido` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `observacao` varchar(8000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `hash` varbinary(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_cl_deputado_ano_mes_hash` (`id_cl_deputado`,`ano_mes`,`hash`)
-) ENGINE=InnoDB AUTO_INCREMENT=990896 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Table structure for cl_despesa_especificacao
+-- ----------------------------
+DROP TABLE IF EXISTS "assembleias"."cl_despesa_especificacao";
+CREATE TABLE "assembleias"."cl_despesa_especificacao" (
+  "id" int4 NOT NULL,
+  "id_cl_despesa_tipo" int4,
+  "descricao" varchar(400) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for cl_despesa_resumo_mensal
+-- ----------------------------
+DROP TABLE IF EXISTS "assembleias"."cl_despesa_resumo_mensal";
+CREATE TABLE "assembleias"."cl_despesa_resumo_mensal" (
+  "ano" int8 NOT NULL,
+  "mes" int8 NOT NULL,
+  "valor" numeric(10,2)
+)
+;
 
--- Copiando estrutura para tabela ops.cl_despesa_especificacao
-CREATE TABLE IF NOT EXISTS `cl_despesa_especificacao` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `id_cl_despesa_tipo` smallint unsigned DEFAULT NULL,
-  `descricao` varchar(400) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=807 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Table structure for cl_despesa_tipo
+-- ----------------------------
+DROP TABLE IF EXISTS "assembleias"."cl_despesa_tipo";
+CREATE TABLE "assembleias"."cl_despesa_tipo" (
+  "id" int4 NOT NULL,
+  "descricao" varchar(150) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Indexes structure for table cl_deputado
+-- ----------------------------
+CREATE UNIQUE INDEX "cl_cpf" ON "assembleias"."cl_deputado" USING btree (
+  "cpf" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "cpf_parcial" ON "assembleias"."cl_deputado" USING btree (
+  "cpf_parcial" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "email" ON "assembleias"."cl_deputado" USING btree (
+  "email" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+CREATE UNIQUE INDEX "id_estado_nome_civil" ON "assembleias"."cl_deputado" USING btree (
+  "id_estado" "pg_catalog"."int2_ops" ASC NULLS LAST,
+  "nome_civil" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
 
--- Copiando estrutura para tabela ops.cl_despesa_resumo_mensal
-CREATE TABLE IF NOT EXISTS `cl_despesa_resumo_mensal` (
-  `ano` int unsigned NOT NULL,
-  `mes` int unsigned NOT NULL,
-  `valor` decimal(10,2) unsigned DEFAULT NULL,
-  PRIMARY KEY (`ano`,`mes`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Primary Key structure for table cl_deputado
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_deputado" ADD CONSTRAINT "cl_deputado_pkey" PRIMARY KEY ("id");
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Primary Key structure for table cl_deputado_campeao_gasto
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_deputado_campeao_gasto" ADD CONSTRAINT "cl_deputado_campeao_gasto_pkey" PRIMARY KEY ("id_cl_deputado");
 
--- Copiando estrutura para tabela ops.cl_despesa_tipo
-CREATE TABLE IF NOT EXISTS `cl_despesa_tipo` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `descricao` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Indexes structure for table cl_despesa
+-- ----------------------------
+CREATE UNIQUE INDEX "id_cl_deputado_ano_mes_hash" ON "assembleias"."cl_despesa" USING btree (
+  "id_cl_deputado" "pg_catalog"."int8_ops" ASC NULLS LAST,
+  "ano_mes" "pg_catalog"."int4_ops" ASC NULLS LAST,
+  "hash" "pg_catalog"."bytea_ops" ASC NULLS LAST
+);
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Primary Key structure for table cl_despesa
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_despesa" ADD CONSTRAINT "cl_despesa_pkey" PRIMARY KEY ("id");
 
-/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
-/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
-/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+-- ----------------------------
+-- Primary Key structure for table cl_despesa_especificacao
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_despesa_especificacao" ADD CONSTRAINT "cl_despesa_especificacao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table cl_despesa_resumo_mensal
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_despesa_resumo_mensal" ADD CONSTRAINT "cl_despesa_resumo_mensal_pkey" PRIMARY KEY ("ano", "mes");
+
+-- ----------------------------
+-- Primary Key structure for table cl_despesa_tipo
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_despesa_tipo" ADD CONSTRAINT "cl_despesa_tipo_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Foreign Keys structure for table cl_deputado_campeao_gasto
+-- ----------------------------
+ALTER TABLE "assembleias"."cl_deputado_campeao_gasto" ADD CONSTRAINT "cl_deputado_campeao_gasto_id_cl_deputado_fkey" FOREIGN KEY ("id_cl_deputado") REFERENCES "public"."cl_deputado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

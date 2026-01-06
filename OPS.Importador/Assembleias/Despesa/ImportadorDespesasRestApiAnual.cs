@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AngleSharp;
 using OPS.Importador.Utilities;
 
@@ -11,7 +12,7 @@ namespace OPS.Importador.Assembleias.Despesa
         {
         }
 
-        public void Importar(int ano)
+        public Task Importar(int ano)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
@@ -22,6 +23,8 @@ namespace OPS.Importador.Assembleias.Despesa
                 ImportarDespesas(context, ano);
                 ProcessarDespesas(ano);
             }
+
+            return Task.CompletedTask;
         }
 
         public abstract void ImportarDespesas(IBrowsingContext context, int ano);

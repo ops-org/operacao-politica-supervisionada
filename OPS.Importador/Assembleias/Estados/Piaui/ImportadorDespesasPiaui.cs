@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using CsvHelper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
@@ -27,7 +28,7 @@ namespace OPS.Importador.Assembleias.Estados.Piaui
             };
         }
 
-        public override void Importar(int ano)
+        public new Task Importar(int ano)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
@@ -69,6 +70,8 @@ namespace OPS.Importador.Assembleias.Estados.Piaui
 
                 ProcessarDespesas(ano);
             }
+
+            return Task.CompletedTask;
         }
 
         public override void DefinirCompetencias(int ano)
