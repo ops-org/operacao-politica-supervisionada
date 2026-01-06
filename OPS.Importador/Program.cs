@@ -206,7 +206,7 @@ namespace OPS.Importador
 
             try
             {
-                new ParametrosRepository().CarregarPadroes();
+                // new ParametrosRepository().CarregarPadroes();
 
                 var logger = serviceProvider.GetService<ILogger<Program>>();
                 DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger, configuration).GetSqlResiliencePolicies());

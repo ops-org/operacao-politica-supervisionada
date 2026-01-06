@@ -8,11 +8,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Npgsql;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Enumerator;
@@ -132,7 +132,7 @@ namespace OPS.Importador.Assembleias.Despesa
                     {
                         AtualizaValorTotal();
                     }
-                    catch (MySqlException ex) when (ex.ErrorCode == MySqlErrorCode.LockDeadlock)
+                    catch (NpgsqlException ex) when (ex.SqlState == "40P01")
                     {
                         AtualizaValorTotal();
                     }

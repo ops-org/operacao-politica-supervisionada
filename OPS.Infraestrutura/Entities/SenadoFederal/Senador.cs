@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using OPS.Infraestrutura.Entities.Comum;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
@@ -81,5 +82,8 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<SenadorHistoricoAcademico> HistoricoAcademico { get; set; } = new List<SenadorHistoricoAcademico>();
         public virtual ICollection<SenadorProfissao> Profissoes { get; set; } = new List<SenadorProfissao>();
         public virtual ICollection<SenadorPartido> Partidos { get; set; } = new List<SenadorPartido>();
+        public virtual Partido? Partido { get; set; }
+        public virtual Estado? Estado { get; set; }
+        public virtual Estado? EstadoNaturalidade { get; set; }
     }
 }

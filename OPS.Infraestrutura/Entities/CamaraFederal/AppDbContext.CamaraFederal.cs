@@ -1,21 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OPS.Infraestrutura.Entities.CamaraFederal;
 
-namespace OPS.Infraestrutura.Entities.CamaraFederal;
+namespace OPS.Infraestrutura;
 
 public partial class AppDbContext
 {
-    // Câmara Federal (CF) Tables
-    public DbSet<Deputado> Deputados { get; set; }
-    public DbSet<Despesa> Despesas { get; set; }
-    public DbSet<Legislatura> Legislaturas { get; set; }
-    public DbSet<Mandato> Mandatos { get; set; }
-    public DbSet<DespesaTipo> DespesaTipos { get; set; }
+    // Câmara Federal (CF) Tables - Essential for DeputadoRepository
+    public DbSet<Deputado> DeputadosFederais { get; set; }
+    public DbSet<Despesa> DespesasCamaraFederal { get; set; }
+    public DbSet<Legislatura> LegislaturasCamaraFederal { get; set; }
+    public DbSet<Mandato> MandatosCamaraFederal { get; set; }
+    public DbSet<DespesaTipo> DespesaTiposCamaraFederal { get; set; }
     public DbSet<EspecificacaoTipo> EspecificacaoTipos { get; set; }
-    public DbSet<Gabinete> Gabinetes { get; set; }
-    public DbSet<Sessao> Sessoes { get; set; }
+    public DbSet<Gabinete> GabinetesCamaraFederal { get; set; }
+    public DbSet<Sessao> SessoesCamaraFederal { get; set; }
     public DbSet<SessaoPresenca> SessaoPresencas { get; set; }
-    public DbSet<Secretario> Secretarios { get; set; }
-    public DbSet<Funcionario> Funcionarios { get; set; }
+    public DbSet<Secretario> SecretariosCamaraFederal { get; set; }
+    public DbSet<Funcionario> FuncionariosCamaraFederal { get; set; }
     public DbSet<FuncionarioContratacao> FuncionarioContratacoes { get; set; }
     public DbSet<FuncionarioGrupoFuncional> FuncionarioGruposFuncionais { get; set; }
     public DbSet<FuncionarioCargo> FuncionarioCargos { get; set; }
@@ -29,37 +30,32 @@ public partial class AppDbContext
 
     // Additional CF Tables
     public DbSet<DeputadoAuxilioMoradia> DeputadoAuxilioMoradias { get; set; }
-    public DbSet<DeputadoCampeaoGasto> DeputadoCampeaoGastos { get; set; }
+    public DbSet<DeputadoCampeaoGasto> DeputadoCampeaoGastosCamara { get; set; }
     public DbSet<DeputadoCotaParlamentar> DeputadoCotaParlamentares { get; set; }
     public DbSet<DeputadoGabinete> DeputadoGabinetes { get; set; }
     public DbSet<DeputadoImovelFuncional> DeputadoImoveisFuncionais { get; set; }
     public DbSet<DeputadoMissaoOficial> DeputadoMissoesOficiais { get; set; }
     public DbSet<DeputadoRemuneracao> DeputadoRemuneracoes { get; set; }
     public DbSet<DeputadoVerbaGabinete> DeputadoVerbasGabinete { get; set; }
-    public DbSet<Despesa53> Despesas53 { get; set; }
-    public DbSet<Despesa54> Despesas54 { get; set; }
-    public DbSet<Despesa55> Despesas55 { get; set; }
-    public DbSet<Despesa56> Despesas56 { get; set; }
-    public DbSet<Despesa57> Despesas57 { get; set; }
-    public DbSet<DespesaResumoMensal> DespesaResumosMensais { get; set; }
+    public DbSet<DespesaResumoMensal> DespesaResumosMensaisCamara { get; set; }
     public DbSet<SecretarioHistorico> SecretarioHistoricos { get; set; }
     public DbSet<SenadorVerbaGabinete> SenadorVerbasGabinete { get; set; }
 }
 
-public static class CamaraFederalConfigurations
+public static class CamaraFederalEntityConfigurations
 {
     public static void ConfigureDeputado(this ModelBuilder modelBuilder)
     {
         // Configure Deputado
         modelBuilder.Entity<Deputado>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasOne(e => e.Partido).WithMany(p => p.DeputadosFederais).HasForeignKey(e => e.IdPartido);
-            entity.HasOne(e => e.Estado).WithMany(e => e.DeputadosFedarais).HasForeignKey(e => e.IdEstado);
-            entity.HasOne(e => e.EstadoNascimento).WithMany().HasForeignKey(e => e.IdEstadoNascimento);
-            entity.HasOne(e => e.Gabinete).WithMany(g => g.Deputados).HasForeignKey(e => e.IdGabinete);
-        });
+    {
+        entity.HasKey(e => e.Id);
+        entity.Property(e => e.Id).ValueGeneratedNever();
+        entity.HasOne(e => e.Partido).WithMany(p => p.DeputadosFederais).HasForeignKey(e => e.IdPartido);
+        entity.HasOne(e => e.Estado).WithMany(e => e.DeputadosFedarais).HasForeignKey(e => e.IdEstado);
+        entity.HasOne(e => e.EstadoNascimento).WithMany().HasForeignKey(e => e.IdEstadoNascimento);
+        entity.HasOne(e => e.Gabinete).WithMany(g => g.Deputados).HasForeignKey(e => e.IdGabinete);
+    });
     }
 
     public static void ConfigureDespesa(this ModelBuilder modelBuilder)

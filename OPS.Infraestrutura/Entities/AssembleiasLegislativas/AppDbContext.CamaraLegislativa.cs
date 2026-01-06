@@ -8,7 +8,7 @@ public partial class AppDbContext
     // Câmara Legislativa (CL) Tables
     public DbSet<Deputado> Deputados { get; set; }
     public DbSet<DeputadoCampeaoGasto> DeputadoCampeaoGastos { get; set; }
-    public DbSet<Despesa> Despesas { get; set; }
+    public DbSet<Despesa> DespesasAssembleias { get; set; }
     public DbSet<DespesaEspecificacao> DespesaEspecificacoes { get; set; }
     public DbSet<DespesaResumoMensal> DespesaResumosMensais { get; set; }
     public DbSet<DespesaTipo> DespesaTipos { get; set; }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using OPS.Core;
 using OPS.Core.DTO;
 using OPS.Core.Repository;
+using OPS.Infraestrutura;
 
 namespace OPS.API.Controllers
 {
@@ -17,29 +18,27 @@ namespace OPS.API.Controllers
 
         private IWebHostEnvironment Environment { get; }
         private IConfiguration Configuration { get; }
+        private readonly SenadorRepository _senadorRepository;
 
-        SenadorRepository dao;
-
-        public SenadorController(IConfiguration configuration, IWebHostEnvironment env)
+        public SenadorController(IConfiguration configuration, IWebHostEnvironment env, SenadorRepository senadorRepository)
         {
             Environment = env;
             Configuration = configuration;
-
-            dao = new SenadorRepository();
+            _senadorRepository = senadorRepository;
         }
 
         [HttpGet]
         [Route("{id:int}")]
         public async Task<dynamic> Consultar(int id)
         {
-            return await dao.Consultar(id);
+            return await _senadorRepository.Consultar(id);
         }
 
         [HttpPost("Lista")]
         //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
         {
-            return await dao.Lista(filtro);
+            return await _senadorRepository.Lista(filtro);
         }
 
 
@@ -47,14 +46,14 @@ namespace OPS.API.Controllers
         //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro)
         {
-            return await dao.Pesquisa(filtro);
+            return await _senadorRepository.Pesquisa(filtro);
         }
 
         [HttpPost]
         [Route("Lancamentos")]
         public async Task<dynamic> Lancamentos(DataTablesRequest request)
         {
-            return await dao.Lancamentos(request);
+            return await _senadorRepository.Lancamentos(request);
         }
 
         [HttpGet]
@@ -62,55 +61,48 @@ namespace OPS.API.Controllers
         //[CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> TipoDespesa()
         {
-            return await dao.TipoDespesa();
+            return await _senadorRepository.TipoDespesa();
         }
 
         [HttpGet]
         [Route("{id:int}/GastosPorAno")]
         public async Task<dynamic> GastosPorAno(int id)
         {
-            return await dao.GastosPorAno(id);
+            return await _senadorRepository.GastosPorAno(id);
         }
 
         [HttpGet("{id:int}/GastosComPessoalPorAno")]
         public async Task<dynamic> GastosComPessoalPorAno(int id)
         {
-            return await dao.GastosComPessoalPorAno(id);
+            return await _senadorRepository.GastosComPessoalPorAno(id);
         }
-
-        //[HttpGet]
-        //[Route("Documento/{id:int}")]
-        //public async Task<dynamic> Documento(int id)
-        //{
-        //	return await dao.Documento(id);
-        //}
 
         [HttpGet]
         [Route("{id:int}/MaioresNotas")]
         public async Task<dynamic> MaioresNotas(int id)
         {
-            return await dao.MaioresNotas(id);
+            return await _senadorRepository.MaioresNotas(id);
         }
 
         [HttpGet]
         [Route("{id:int}/MaioresFornecedores")]
         public async Task<dynamic> MaioresFornecedores(int id)
         {
-            return await dao.MaioresFornecedores(id);
+            return await _senadorRepository.MaioresFornecedores(id);
         }
 
         [HttpGet]
         [Route("SenadoResumoMensal")]
         public async Task<dynamic> SenadoResumoMensal()
         {
-            return await dao.SenadoResumoMensal();
+            return await _senadorRepository.SenadoResumoMensal();
         }
 
         [HttpGet]
         [Route("SenadoResumoAnual")]
         public async Task<dynamic> SenadoResumoAnual()
         {
-            return await dao.SenadoResumoAnual();
+            return await _senadorRepository.SenadoResumoAnual();
         }
 
         [HttpGet("Imagem/{id}")]
@@ -135,7 +127,7 @@ namespace OPS.API.Controllers
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Lotacao()
         {
-            return await dao.Lotacao();
+            return await _senadorRepository.Lotacao();
         }
 
         [HttpGet]
@@ -143,7 +135,7 @@ namespace OPS.API.Controllers
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Cargo()
         {
-            return await dao.Cargo();
+            return await _senadorRepository.Cargo();
         }
 
         [HttpGet]
@@ -151,7 +143,7 @@ namespace OPS.API.Controllers
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Categoria()
         {
-            return await dao.Categoria();
+            return await _senadorRepository.Categoria();
         }
 
         [HttpGet]
@@ -159,21 +151,21 @@ namespace OPS.API.Controllers
         // [CacheOutput(ClientTimeSpan = 43200 /* 12h */, ServerTimeSpan = 43200 /* 12h */)]
         public async Task<dynamic> Vinculo()
         {
-            return await dao.Vinculo();
+            return await _senadorRepository.Vinculo();
         }
 
         [HttpPost]
         [Route("Remuneracao")]
         public async Task<dynamic> Remuneracao(DataTablesRequest request)
         {
-            return await dao.Remuneracao(request);
+            return await _senadorRepository.Remuneracao(request);
         }
 
         [HttpGet]
         [Route("Remuneracao/{id:int}")]
         public async Task<dynamic> Remuneracao(int id)
         {
-            return await dao.Remuneracao(id);
+            return await _senadorRepository.Remuneracao(id);
         }
     }
 }

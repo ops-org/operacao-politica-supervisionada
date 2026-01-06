@@ -2,19 +2,25 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OPS.Core.DTO;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
+using OPS.Infraestrutura;
 
 namespace OPS.Core.Repository
 {
-    public class SenadorRepository
+    public class SenadorRepository : BaseRepository
     {
+        public SenadorRepository(AppDbContext context) : base(context)
+        {
+        }
+
         public async Task<dynamic> Consultar(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = @"
 					SELECT 
@@ -43,9 +49,8 @@ namespace OPS.Core.Repository
 					LEFT JOIN estado en on e.id = d.id_estado_naturalidade
 					WHERE d.id = @id
 				";
-                banco.AddParameter("@id", id);
 
-                using (var reader = await banco.ExecuteReaderAsync(strSql))
+                using (var reader = await ExecuteReaderAsync(strSql, id))
                 {
                     if (await reader.ReadAsync())
                     {
@@ -93,7 +98,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> Lista(FiltroParlamentarDTO request)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -142,7 +147,7 @@ namespace OPS.Core.Repository
 
                 TextInfo textInfo = new CultureInfo("pt-BR", false).TextInfo;
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -169,7 +174,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> MaioresFornecedores(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -193,9 +198,7 @@ namespace OPS.Core.Repository
 					order by l1.valor_total desc
 				");
 
-                banco.AddParameter("@id", id);
-
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     while (await reader.ReadAsync())
@@ -216,7 +219,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> MaioresNotas(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
 
@@ -241,9 +244,7 @@ namespace OPS.Core.Repository
 					order by l1.valor desc 
 				");
 
-                banco.AddParameter("@id", id);
-
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     while (await reader.ReadAsync())
@@ -265,7 +266,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> GastosPorAno(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -275,12 +276,11 @@ namespace OPS.Core.Repository
 					group by d.ano
 					order by d.ano
 				");
-                banco.AddParameter("@id", id);
 
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -295,7 +295,7 @@ namespace OPS.Core.Repository
                     series
                 };
 
-                //using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                //using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 //{
                 //    var lstValoresMensais = new decimal?[12];
                 //    string anoControle = string.Empty;
@@ -351,7 +351,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> GastosComPessoalPorAno(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -361,12 +361,11 @@ namespace OPS.Core.Repository
 					group by d.ano
 					order by d.ano
 				");
-                banco.AddParameter("@id", id);
 
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -385,7 +384,7 @@ namespace OPS.Core.Repository
 
         public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro = null)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -462,7 +461,7 @@ namespace OPS.Core.Repository
                 }
 
                 var lstRetorno = new List<DropDownDTO>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -507,7 +506,7 @@ namespace OPS.Core.Repository
 
         private async Task<dynamic> LancamentosParlamentar(DataTablesRequest request)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -546,7 +545,7 @@ namespace OPS.Core.Repository
                 AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -575,7 +574,7 @@ namespace OPS.Core.Repository
 
         private async Task<dynamic> LancamentosFornecedor(DataTablesRequest request)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -611,7 +610,7 @@ namespace OPS.Core.Repository
                 AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -639,7 +638,7 @@ namespace OPS.Core.Repository
 
         private async Task<dynamic> LancamentosDespesa(DataTablesRequest request)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -674,7 +673,7 @@ namespace OPS.Core.Repository
                 AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -701,7 +700,7 @@ namespace OPS.Core.Repository
 
         private async Task<dynamic> LancamentosPartido(DataTablesRequest request)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -740,7 +739,7 @@ namespace OPS.Core.Repository
                 AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -769,7 +768,7 @@ namespace OPS.Core.Repository
 
         private async Task<dynamic> LancamentosEstado(DataTablesRequest request)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -806,7 +805,7 @@ namespace OPS.Core.Repository
                 AdicionaResultadoComum(request, sqlSelect);
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -841,7 +840,7 @@ namespace OPS.Core.Repository
             AdicionaFiltroPartidoSenador(request, sqlWhere);
             AdicionaFiltroEstadoSenador(request, sqlWhere);
 
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -878,7 +877,7 @@ namespace OPS.Core.Repository
                 sqlSelect.Append(sqlWhere);
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -910,7 +909,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaFiltroPeriodo(DataTablesRequest request, StringBuilder sqlSelect)
+        private void AdicionaFiltroPeriodo(DataTablesRequest request, StringBuilder sqlSelect)
         {
             //DateTime dataIni = DateTime.Today;
             //DateTime dataFim = DateTime.Today;
@@ -960,7 +959,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaFiltroEstadoSenador(DataTablesRequest request, StringBuilder sqlSelect)
+        private void AdicionaFiltroEstadoSenador(DataTablesRequest request, StringBuilder sqlSelect)
         {
             if (request.Filters.ContainsKey("Estado") && !string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
             {
@@ -968,7 +967,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaFiltroPartidoSenador(DataTablesRequest request, StringBuilder sqlSelect)
+        private void AdicionaFiltroPartidoSenador(DataTablesRequest request, StringBuilder sqlSelect)
         {
             if (request.Filters.ContainsKey("Partido") && !string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
             {
@@ -976,7 +975,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaFiltroFornecedor(DataTablesRequest request, StringBuilder sqlSelect)
+        private void AdicionaFiltroFornecedor(DataTablesRequest request, StringBuilder sqlSelect)
         {
             if (request.Filters.ContainsKey("Fornecedor") && !string.IsNullOrEmpty(request.Filters["Fornecedor"].ToString()))
             {
@@ -986,10 +985,10 @@ namespace OPS.Core.Repository
                 {
                     if (Fornecedor.Length == 14 || Fornecedor.Length == 11)
                     {
-                        using (AppDb banco = new AppDb())
+                        // using (AppDb banco = new AppDb())
                         {
-                            var id_fornecedor =
-                                banco.ExecuteScalar("select id from fornecedor where cnpj_cpf = '" + Utils.RemoveCaracteresNaoNumericos(Fornecedor) + "'");
+                            var cnpjCpf = Utils.RemoveCaracteresNaoNumericos(Fornecedor);
+                            var id_fornecedor = _context.Fornecedores.Where(x => x.CnpjCpf == cnpjCpf).Select(x => x.Id).FirstOrDefault();
 
                             if (!Convert.IsDBNull(id_fornecedor))
                             {
@@ -1005,7 +1004,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaFiltroDespesa(DataTablesRequest request, StringBuilder sqlSelect)
+        private void AdicionaFiltroDespesa(DataTablesRequest request, StringBuilder sqlSelect)
         {
             if (request.Filters.ContainsKey("Despesa") && !string.IsNullOrEmpty(request.Filters["Despesa"].ToString()))
             {
@@ -1013,7 +1012,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaFiltroSenador(DataTablesRequest request, StringBuilder sqlSelect)
+        private void AdicionaFiltroSenador(DataTablesRequest request, StringBuilder sqlSelect)
         {
             if (request.Filters.ContainsKey("IdParlamentar") && !string.IsNullOrEmpty(request.Filters["IdParlamentar"].ToString()))
             {
@@ -1021,7 +1020,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect, string defaultSort = "valor_total desc")
+        private void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect, string defaultSort = "valor_total desc")
         {
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(defaultSort));
             sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
@@ -1031,14 +1030,14 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> TipoDespesa()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM sf_despesa_tipo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1055,9 +1054,9 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> SenadoResumoMensal()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(@"select ano, mes, valor from sf_despesa_resumo_mensal"))
+                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from sf_despesa_resumo_mensal"))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
@@ -1106,7 +1105,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> SenadoResumoAnual()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -1118,7 +1117,7 @@ namespace OPS.Core.Repository
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1221,7 +1220,7 @@ namespace OPS.Core.Repository
                 sqlWhere.AppendLine("	AND s.id IS NOT NULL ");
             }
 
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
                 if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
@@ -1276,7 +1275,7 @@ WHERE (1=1)
                 sqlSelect.AppendLine("SELECT 99 -- FOUND_ROWS();");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
                 {
                     if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
                     {
@@ -1326,7 +1325,7 @@ WHERE (1=1)
 
         public async Task<dynamic> Remuneracao(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var sqlSelect = new StringBuilder();
 
@@ -1370,8 +1369,7 @@ LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
 WHERE r.id = @id
 ");
 
-                banco.AddParameter("@id", id);
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), id))
                 {
                     if (await reader.ReadAsync())
                     {
@@ -1414,14 +1412,14 @@ WHERE r.id = @id
 
         public async Task<dynamic> Lotacao()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM sf_lotacao ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1438,14 +1436,14 @@ WHERE r.id = @id
 
         public async Task<dynamic> Cargo()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM sf_cargo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1462,14 +1460,14 @@ WHERE r.id = @id
 
         public async Task<dynamic> Categoria()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM sf_categoria ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -1486,14 +1484,14 @@ WHERE r.id = @id
 
         public async Task<dynamic> Vinculo()
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine("SELECT id, descricao FROM sf_vinculo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {

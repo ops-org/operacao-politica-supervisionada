@@ -8,11 +8,11 @@ using System.Net.Http;
 using System.Text;
 using CsvHelper;
 using Dapper;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
 using OPS.Core;
 using OPS.Core.Entity;
 using OPS.Core.Utilities;
@@ -947,7 +947,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
                 }
 
                 // Update senator total remuneration
-                var anoMesParam = new MySqlParameter("@ano_mes", anomes);
+                var anoMesParam = new NpgsqlParameter("@ano_mes", anomes);
                 dbContext.Database.ExecuteSqlRaw(@"
                     UPDATE sf_senador s
                     JOIN sf_lotacao l ON l.id_senador = s.id

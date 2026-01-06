@@ -40,6 +40,19 @@ public static class SenadoFederalConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
+            
+            // Configure foreign keys
+            entity.HasOne(e => e.Partido)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdPartido);
+                  
+            entity.HasOne(e => e.Estado)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdEstado);
+                  
+            entity.HasOne(e => e.EstadoNaturalidade)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdEstadoNaturalidade);
         });
     }
 

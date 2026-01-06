@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using OPS.Infraestrutura;
 
 namespace OPS.Infraestrutura.Factories
 {
@@ -17,7 +19,7 @@ namespace OPS.Infraestrutura.Factories
         public AppDbContext CreateDbContext()
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
+            optionsBuilder.UseNpgsql(_connectionString);
             return new AppDbContext(optionsBuilder.Options);
         }
 

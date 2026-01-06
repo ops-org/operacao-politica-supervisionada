@@ -28,10 +28,17 @@ namespace OPS.API
         public void ConfigureServices(IServiceCollection services)
         {
             Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
-            new ParametrosRepository().CarregarPadroes();
+            //new ParametrosRepository().CarregarPadroes();
 
             services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
 
+            services.AddScoped<DeputadoRepository>();
+            services.AddScoped<SenadorRepository>();
+            services.AddScoped<DeputadoEstadualRepository>();
+            services.AddScoped<FornecedorRepository>();
+            //services.AddScoped<PresidenciaRepository>();
+            //services.AddScoped<ParametrosRepository>();
+            services.AddScoped<InicioRepository>();
             services.AddScoped<PartidoRepository>();
             services.AddScoped<EstadoRepository>();
 

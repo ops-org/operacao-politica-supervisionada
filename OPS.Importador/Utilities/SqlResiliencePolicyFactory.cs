@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
+using Npgsql;
 using Polly;
 using Polly.Registry;
 
@@ -10,7 +10,7 @@ namespace OPS.Importador.Utilities
 {
     public class SqlResiliencePolicyFactory
     {
-        private readonly ISet<int> _transientDbErrors = new HashSet<int>(new[] { 1205 });
+        private readonly ISet<string> _transientDbErrors = new HashSet<string>(new[] { "57014", "57P01", "57P02", "57P03", "58030", "53300" });
         private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
@@ -27,7 +27,7 @@ namespace OPS.Importador.Utilities
             {
                 "DbDeadLockResilience",
                 Policy
-                    .Handle<MySqlException>(ex => _transientDbErrors.Contains(ex.Number))
+                    .Handle<NpgsqlException>(ex => _transientDbErrors.Contains(ex.SqlState))
                     .WaitAndRetry(
                         retryCount: transientErrorRetries,
                         sleepDurationProvider: attempt => TimeSpan.FromMilliseconds(attempt * 100),
@@ -50,7 +50,7 @@ namespace OPS.Importador.Utilities
                 LogLevel.Warning,
                 exception,
                 @$"Transient DB Failure while executing query,
-                error number: {((MySqlException)exception).Number};
+                error number: {((NpgsqlException)exception).SqlState};
                 reattempt number: {reattemptCount}");
     }
 }

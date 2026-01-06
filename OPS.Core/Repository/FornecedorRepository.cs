@@ -6,19 +6,21 @@ using System.Text;
 using System.Threading.Tasks;
 using OPS.Core.Model;
 using OPS.Core.Utilities;
+using OPS.Infraestrutura;
 
 namespace OPS.Core.Repository
 {
-    public class FornecedorRepository
+    public class FornecedorRepository : BaseRepository
     {
-
-        public dynamic Consulta(int id)
+        public FornecedorRepository(AppDbContext context) : base(context)
         {
-            using (AppDb banco = new AppDb())
-            {
-                banco.AddParameter("id", id);
+        }
 
-                using (var reader = banco.ExecuteReader(
+        public async Task<dynamic> Consulta(int id)
+        {
+            // using (AppDb banco = new AppDb())
+            {
+                using (var reader = await ExecuteReaderAsync(
                         @"SELECT 
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
@@ -58,9 +60,9 @@ namespace OPS.Core.Repository
                         FROM fornecedor_atividade_secundaria fas 
                         INNER JOIN fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
                         where id_fornecedor = @id;"
-                    ))
+                    , id))
                 {
-                    if (reader.Read())
+                    if (await reader.ReadAsync())
                     {
                         var fornecedor = new
                         {
@@ -109,11 +111,11 @@ namespace OPS.Core.Repository
             }
         }
 
-        public dynamic QuadroSocietario(int id)
+        public async Task<dynamic> QuadroSocietario(int id)
         {
             try
             {
-                using (AppDb banco = new AppDb())
+                // using (AppDb banco = new AppDb())
                 {
                     string strSql =
                         @"SELECT
@@ -126,12 +128,10 @@ namespace OPS.Core.Repository
 						LEFT JOIN fornecedor_socio_qualificacao fsq2 on fsq2.id = fs.id_fornecedor_socio_representante_qualificacao
 						where fs.id_fornecedor = @id";
 
-                    banco.AddParameter("id", id);
-
-                    using (var reader = banco.ExecuteReader(strSql))
+                    using (var reader = await ExecuteReaderAsync(strSql, id))
                     {
                         List<dynamic> lstRetorno = new List<dynamic>();
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             lstRetorno.Add(new
                             {
@@ -152,9 +152,9 @@ namespace OPS.Core.Repository
             return null;
         }
 
-        public dynamic SenadoresMaioresGastos(int id)
+        public async Task<dynamic> SenadoresMaioresGastos(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql =
                     @"SELECT
@@ -173,12 +173,10 @@ namespace OPS.Core.Repository
 					) l1
 					LEFT JOIN sf_senador p ON p.id = l1.id_sf_senador";
 
-                banco.AddParameter("@id", id);
-
-                using (var reader = banco.ExecuteReader(strSql))
+                using (var reader = await ExecuteReaderAsync(strSql, id))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         lstRetorno.Add(new
                         {
@@ -193,9 +191,9 @@ namespace OPS.Core.Repository
             }
         }
 
-        public dynamic MaioresGastos(int id)
+        public async Task<dynamic> MaioresGastos(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.Append(@"
@@ -281,12 +279,10 @@ LEFT JOIN estado e on e.id = tmp.id_estado
 ORDER BY valor_total desc
 LIMIT 10 ");
 
-                banco.AddParameter("@id", id);
-
-                using (var reader = banco.ExecuteReader(strSql.ToString()))
+                using (var reader = await ExecuteReaderAsync(strSql.ToString(), id))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         string link_parlamentar = "", link_despesas = "";
                         var tipo = reader["tipo"].ToString();
@@ -341,7 +337,7 @@ LIMIT 10 ");
 
         public async Task<dynamic> RecebimentosPorAno(int id)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 string strSql = @"
 SELECT ano, SUM(valor) AS valor
@@ -369,12 +365,10 @@ group by ano
 order by ano
 				";
 
-                banco.AddParameter("@id", id);
-
                 var categories = new List<dynamic>();
                 var series = new List<dynamic>();
 
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), id))
                 {
                     while (await reader.ReadAsync())
                     {
@@ -393,7 +387,7 @@ order by ano
 
         //		public dynamic RecebimentosMensaisPorAno(int id)
         //		{
-        //			using (AppDb banco = new AppDb())
+        //			// using (AppDb banco = new AppDb())
         //			{
         //				string strSql = @"
         //SELECT l.mes, l.ano, SUM(l.valor_liquido) AS valor_total
@@ -461,348 +455,330 @@ order by ano
         //			}
         //		}
 
-        public int AtualizaDados(Fornecedor fornecedor)
-        {
-            int id_fornecedor = 0;
+    //    public int AtualizaDados(Fornecedor fornecedor)
+    //    {
+    //        int id_fornecedor = 0;
 
-            using (AppDb banco = new AppDb())
-            {
-                bool fornecedor_existente = false;
+    //        using (AppDb banco = new AppDb())
+    //        {
+    //            bool fornecedor_existente = false;
 
-                string strSqlLocaliza = @"
-					SELECT f.id, fi.id_fornecedor
-					FROM fornecedor f
-					LEFT JOIN fornecedor_info fi on fi.id_fornecedor = f.id
-					where f.cnpj_cpf = @cnpj_cpf
-				";
-                banco.AddParameter("cnpj_cpf", fornecedor.CnpjCpf);
+    //            string strSqlLocaliza = @"
+				//	SELECT f.id, fi.id_fornecedor
+				//	FROM fornecedor f
+				//	LEFT JOIN fornecedor_info fi on fi.id_fornecedor = f.id
+				//	where f.cnpj_cpf = @cnpj_cpf
+				//";
+    //            banco.AddParameter("cnpj_cpf", fornecedor.CnpjCpf);
 
-                using (var dReader = banco.ExecuteReader(strSqlLocaliza))
-                {
-                    if (dReader.Read())
-                    {
-                        id_fornecedor = Convert.ToInt32(dReader["id"]);
-                        fornecedor_existente = !Convert.IsDBNull(dReader["id_fornecedor"]);
-                    }
-                    else
-                    {
-                        throw new BusinessException("Fornecedor inexistente.");
-                    }
-                }
+    //            using (var dReader = banco.ExecuteReader(strSqlLocaliza))
+    //            {
+    //                if (dReader.Read())
+    //                {
+    //                    id_fornecedor = Convert.ToInt32(dReader["id"]);
+    //                    fornecedor_existente = !Convert.IsDBNull(dReader["id_fornecedor"]);
+    //                }
+    //                else
+    //                {
+    //                    throw new BusinessException("Fornecedor inexistente.");
+    //                }
+    //            }
 
-                object id_fornecedor_atividade_principal;
-                object id_fornecedor_natureza_juridica;
+    //            object id_fornecedor_atividade_principal;
+    //            object id_fornecedor_natureza_juridica;
 
-                try
-                {
-                    banco.AddParameter("codigo", fornecedor.AtividadePrincipal.Split(' ')[0]);
-                    id_fornecedor_atividade_principal = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
-                }
-                catch (Exception)
-                {
-                    id_fornecedor_atividade_principal = DBNull.Value;
-                }
+    //            try
+    //            {
+    //                banco.AddParameter("codigo", fornecedor.AtividadePrincipal.Split(' ')[0]);
+    //                id_fornecedor_atividade_principal = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
+    //            }
+    //            catch (Exception)
+    //            {
+    //                id_fornecedor_atividade_principal = DBNull.Value;
+    //            }
 
-                try
-                {
-                    banco.AddParameter("codigo", fornecedor.NaturezaJuridica.Split(' ')[0]);
-                    id_fornecedor_natureza_juridica = banco.ExecuteScalar("select id from fornecedor_natureza_juridica where codigo=@codigo");
-                }
-                catch (Exception)
-                {
-                    id_fornecedor_natureza_juridica = DBNull.Value;
-                }
+    //            try
+    //            {
+    //                banco.AddParameter("codigo", fornecedor.NaturezaJuridica.Split(' ')[0]);
+    //                id_fornecedor_natureza_juridica = banco.ExecuteScalar("select id from fornecedor_natureza_juridica where codigo=@codigo");
+    //            }
+    //            catch (Exception)
+    //            {
+    //                id_fornecedor_natureza_juridica = DBNull.Value;
+    //            }
 
-                banco.AddParameter("tipo", fornecedor.Tipo);
-                banco.AddParameter("nome", fornecedor.RazaoSocial);
-                banco.AddParameter("data_de_abertura", Utils.ParseDateTime(fornecedor.DataAbertura));
-                banco.AddParameter("nome_fantasia", fornecedor.NomeFantasia);
-                banco.AddParameter("id_fornecedor_atividade_principal", id_fornecedor_atividade_principal);
-                banco.AddParameter("id_fornecedor_natureza_juridica", id_fornecedor_natureza_juridica);
-                banco.AddParameter("logradouro", fornecedor.Logradouro);
-                banco.AddParameter("numero", fornecedor.Numero);
-                banco.AddParameter("complemento", fornecedor.Complemento);
-                banco.AddParameter("cep", fornecedor.Cep);
-                banco.AddParameter("bairro", fornecedor.Bairro);
-                banco.AddParameter("municipio", fornecedor.Cidade);
-                banco.AddParameter("estado", fornecedor.Uf);
-                banco.AddParameter("situacao_cadastral", fornecedor.Situacao);
-                banco.AddParameter("data_da_situacao_cadastral", Utils.ParseDateTime(fornecedor.DataSituacao));
-                banco.AddParameter("motivo_situacao_cadastral", fornecedor.MotivoSituacao);
-                banco.AddParameter("situacao_especial", fornecedor.SituacaoEspecial);
-                banco.AddParameter("data_situacao_especial", Utils.ParseDateTime(fornecedor.DataSituacaoEspecial));
-                banco.AddParameter("endereco_eletronico", fornecedor.Email);
-                banco.AddParameter("telefone", fornecedor.Telefone);
-                banco.AddParameter("ente_federativo_responsavel", fornecedor.EnteFederativoResponsavel);
-                banco.AddParameter("capital_social", ObterValor(fornecedor.CapitalSocial));
-                //banco.AddParameter("ip_colaborador", fornecedor.UsuarioInclusao);
-                banco.AddParameter("id_fornecedor", id_fornecedor);
+    //            banco.AddParameter("tipo", fornecedor.Tipo);
+    //            banco.AddParameter("nome", fornecedor.RazaoSocial);
+    //            banco.AddParameter("data_de_abertura", Utils.ParseDateTime(fornecedor.DataAbertura));
+    //            banco.AddParameter("nome_fantasia", fornecedor.NomeFantasia);
+    //            banco.AddParameter("id_fornecedor_atividade_principal", id_fornecedor_atividade_principal);
+    //            banco.AddParameter("id_fornecedor_natureza_juridica", id_fornecedor_natureza_juridica);
+    //            banco.AddParameter("logradouro", fornecedor.Logradouro);
+    //            banco.AddParameter("numero", fornecedor.Numero);
+    //            banco.AddParameter("complemento", fornecedor.Complemento);
+    //            banco.AddParameter("cep", fornecedor.Cep);
+    //            banco.AddParameter("bairro", fornecedor.Bairro);
+    //            banco.AddParameter("municipio", fornecedor.Cidade);
+    //            banco.AddParameter("estado", fornecedor.Uf);
+    //            banco.AddParameter("situacao_cadastral", fornecedor.Situacao);
+    //            banco.AddParameter("data_da_situacao_cadastral", Utils.ParseDateTime(fornecedor.DataSituacao));
+    //            banco.AddParameter("motivo_situacao_cadastral", fornecedor.MotivoSituacao);
+    //            banco.AddParameter("situacao_especial", fornecedor.SituacaoEspecial);
+    //            banco.AddParameter("data_situacao_especial", Utils.ParseDateTime(fornecedor.DataSituacaoEspecial));
+    //            banco.AddParameter("endereco_eletronico", fornecedor.Email);
+    //            banco.AddParameter("telefone", fornecedor.Telefone);
+    //            banco.AddParameter("ente_federativo_responsavel", fornecedor.EnteFederativoResponsavel);
+    //            banco.AddParameter("capital_social", ObterValor(fornecedor.CapitalSocial));
+    //            //banco.AddParameter("ip_colaborador", fornecedor.UsuarioInclusao);
+    //            banco.AddParameter("id_fornecedor", id_fornecedor);
 
-                string sql;
-                if (!fornecedor_existente)
-                {
-                    banco.AddParameter("cnpj", fornecedor.CnpjCpf);
+    //            string sql;
+    //            if (!fornecedor_existente)
+    //            {
+    //                banco.AddParameter("cnpj", fornecedor.CnpjCpf);
 
-                    sql =
-                        @"INSERT INTO fornecedor_info (
-							tipo,
-							nome,
-							data_de_abertura,
-							nome_fantasia,
-							id_fornecedor_atividade_principal,
-							id_fornecedor_natureza_juridica,
-							logradouro,
-							numero,
-							complemento,
-							cep,
-							bairro,
-							municipio,
-							estado,
-							situacao_cadastral,
-							data_da_situacao_cadastral,
-							motivo_situacao_cadastral,
-							situacao_especial,
-							data_situacao_especial,
-							endereco_eletronico,
-							telefone1,
-							ente_federativo_responsavel,
-							capital_social,
-							obtido_em,
-							id_fornecedor,
-							cnpj
-						) VALUES (
-							@tipo,
-							@nome,
-							@data_de_abertura,
-							@nome_fantasia,
-							@id_fornecedor_atividade_principal,
-							@id_fornecedor_natureza_juridica,
-							@logradouro,
-							@numero,
-							@complemento,
-							@cep,
-							@bairro,
-							@municipio,
-							@estado,
-							@situacao_cadastral,
-							@data_da_situacao_cadastral,
-							@motivo_situacao_cadastral,
-							@situacao_especial,
-							@data_situacao_especial,
-							@endereco_eletronico,
-							@telefone,
-							@ente_federativo_responsavel,
-							@capital_social,
-							NOW(),
-							@id_fornecedor,
-							@cnpj
-						)
-					";
-                }
-                else
-                {
-                    sql =
-                        @"UPDATE fornecedor_info SET
-							tipo								= @tipo,
-							nome								= @nome,
-							data_de_abertura					= @data_de_abertura,
-							nome_fantasia						= @nome_fantasia,
-							id_fornecedor_atividade_principal	= @id_fornecedor_atividade_principal,
-							id_fornecedor_natureza_juridica		= @id_fornecedor_natureza_juridica,
-							logradouro							= @logradouro,
-							numero								= @numero,
-							complemento							= @complemento,
-							cep									= @cep,
-							bairro								= @bairro,
-							municipio							= @municipio,
-							estado								= @estado,
-							situacao_cadastral					= @situacao_cadastral,
-							data_da_situacao_cadastral			= @data_da_situacao_cadastral,
-							motivo_situacao_cadastral			= @motivo_situacao_cadastral,
-							situacao_especial					= @situacao_especial,
-							data_situacao_especial				= @data_situacao_especial,
-							endereco_eletronico					= @endereco_eletronico,
-							telefone1							= @telefone,
-							ente_federativo_responsavel			= @ente_federativo_responsavel,
-							capital_social						= @capital_social,
-							obtido_em							= NOW()
-						WHERE id_fornecedor						= @id_fornecedor
-					";
-                }
+    //                sql =
+    //                    @"INSERT INTO fornecedor_info (
+				//			tipo,
+				//			nome,
+				//			data_de_abertura,
+				//			nome_fantasia,
+				//			id_fornecedor_atividade_principal,
+				//			id_fornecedor_natureza_juridica,
+				//			logradouro,
+				//			numero,
+				//			complemento,
+				//			cep,
+				//			bairro,
+				//			municipio,
+				//			estado,
+				//			situacao_cadastral,
+				//			data_da_situacao_cadastral,
+				//			motivo_situacao_cadastral,
+				//			situacao_especial,
+				//			data_situacao_especial,
+				//			endereco_eletronico,
+				//			telefone1,
+				//			ente_federativo_responsavel,
+				//			capital_social,
+				//			obtido_em,
+				//			id_fornecedor,
+				//			cnpj
+				//		) VALUES (
+				//			@tipo,
+				//			@nome,
+				//			@data_de_abertura,
+				//			@nome_fantasia,
+				//			@id_fornecedor_atividade_principal,
+				//			@id_fornecedor_natureza_juridica,
+				//			@logradouro,
+				//			@numero,
+				//			@complemento,
+				//			@cep,
+				//			@bairro,
+				//			@municipio,
+				//			@estado,
+				//			@situacao_cadastral,
+				//			@data_da_situacao_cadastral,
+				//			@motivo_situacao_cadastral,
+				//			@situacao_especial,
+				//			@data_situacao_especial,
+				//			@endereco_eletronico,
+				//			@telefone,
+				//			@ente_federativo_responsavel,
+				//			@capital_social,
+				//			NOW(),
+				//			@id_fornecedor,
+				//			@cnpj
+				//		)
+				//	";
+    //            }
+    //            else
+    //            {
+    //                sql =
+    //                    @"UPDATE fornecedor_info SET
+				//			tipo								= @tipo,
+				//			nome								= @nome,
+				//			data_de_abertura					= @data_de_abertura,
+				//			nome_fantasia						= @nome_fantasia,
+				//			id_fornecedor_atividade_principal	= @id_fornecedor_atividade_principal,
+				//			id_fornecedor_natureza_juridica		= @id_fornecedor_natureza_juridica,
+				//			logradouro							= @logradouro,
+				//			numero								= @numero,
+				//			complemento							= @complemento,
+				//			cep									= @cep,
+				//			bairro								= @bairro,
+				//			municipio							= @municipio,
+				//			estado								= @estado,
+				//			situacao_cadastral					= @situacao_cadastral,
+				//			data_da_situacao_cadastral			= @data_da_situacao_cadastral,
+				//			motivo_situacao_cadastral			= @motivo_situacao_cadastral,
+				//			situacao_especial					= @situacao_especial,
+				//			data_situacao_especial				= @data_situacao_especial,
+				//			endereco_eletronico					= @endereco_eletronico,
+				//			telefone1							= @telefone,
+				//			ente_federativo_responsavel			= @ente_federativo_responsavel,
+				//			capital_social						= @capital_social,
+				//			obtido_em							= NOW()
+				//		WHERE id_fornecedor						= @id_fornecedor
+				//	";
+    //            }
 
-                banco.ExecuteNonQuery(sql.ToString());
+    //            banco.ExecuteNonQuery(sql.ToString());
 
-                banco.AddParameter("id_fornecedor", id_fornecedor);
-                banco.ExecuteScalar("DELETE FROM fornecedor_atividade_secundaria WHERE id_fornecedor = @id_fornecedor");
+    //            banco.AddParameter("id_fornecedor", id_fornecedor);
+    //            banco.ExecuteScalar("DELETE FROM fornecedor_atividade_secundaria WHERE id_fornecedor = @id_fornecedor");
 
-                if (fornecedor.lstFornecedorQuadroSocietario != null)
-                {
-                    foreach (var atividade in fornecedor.AtividadeSecundaria)
-                    {
-                        if (string.IsNullOrEmpty(atividade) || atividade == "********") continue;
+    //            if (fornecedor.lstFornecedorQuadroSocietario != null)
+    //            {
+    //                foreach (var atividade in fornecedor.AtividadeSecundaria)
+    //                {
+    //                    if (string.IsNullOrEmpty(atividade) || atividade == "********") continue;
 
-                        object id_fornecedor_atividade;
+    //                    object id_fornecedor_atividade;
 
-                        try
-                        {
-                            banco.AddParameter("codigo", atividade.Split(' ')[0]);
-                            id_fornecedor_atividade = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
-                        }
-                        catch (Exception)
-                        {
-                            continue;
-                        }
+    //                    try
+    //                    {
+    //                        banco.AddParameter("codigo", atividade.Split(' ')[0]);
+    //                        id_fornecedor_atividade = banco.ExecuteScalar("select id from fornecedor_atividade where codigo=@codigo");
+    //                    }
+    //                    catch (Exception)
+    //                    {
+    //                        continue;
+    //                    }
 
-                        banco.AddParameter("id_fornecedor", id_fornecedor);
-                        banco.AddParameter("id_fornecedor_atividade", id_fornecedor_atividade);
+    //                    banco.AddParameter("id_fornecedor", id_fornecedor);
+    //                    banco.AddParameter("id_fornecedor_atividade", id_fornecedor_atividade);
 
-                        banco.ExecuteNonQuery(
-                            @"INSERT fornecedor_atividade_secundaria (
-								id_fornecedor, 
-								id_fornecedor_atividade
-							) VALUES (
-								@id_fornecedor, 
-								@id_fornecedor_atividade
-							)");
-                    }
-                }
+    //                    banco.ExecuteNonQuery(
+    //                        @"INSERT fornecedor_atividade_secundaria (
+				//				id_fornecedor, 
+				//				id_fornecedor_atividade
+				//			) VALUES (
+				//				@id_fornecedor, 
+				//				@id_fornecedor_atividade
+				//			)");
+    //                }
+    //            }
 
-                banco.AddParameter("id_fornecedor", id_fornecedor);
-                banco.ExecuteScalar("DELETE FROM fornecedor_socio WHERE id_fornecedor = @id_fornecedor");
+    //            banco.AddParameter("id_fornecedor", id_fornecedor);
+    //            banco.ExecuteScalar("DELETE FROM fornecedor_socio WHERE id_fornecedor = @id_fornecedor");
 
-                if (fornecedor.lstFornecedorQuadroSocietario != null)
-                {
-                    foreach (var qas in fornecedor.lstFornecedorQuadroSocietario)
-                    {
-                        banco.AddParameter("id_fornecedor", id_fornecedor);
-                        banco.AddParameter("nome", qas.Nome);
+    //            if (fornecedor.lstFornecedorQuadroSocietario != null)
+    //            {
+    //                foreach (var qas in fornecedor.lstFornecedorQuadroSocietario)
+    //                {
+    //                    banco.AddParameter("id_fornecedor", id_fornecedor);
+    //                    banco.AddParameter("nome", qas.Nome);
 
-                        if (!string.IsNullOrEmpty(qas.Qualificacao))
-                        {
-                            banco.AddParameter("id_fornecedor_socio_qualificacao", Convert.ToInt32(qas.Qualificacao.Split('-')[0]));
-                        }
-                        else
-                        {
-                            banco.AddParameter("id_fornecedor_socio_qualificacao", DBNull.Value);
-                        }
+    //                    if (!string.IsNullOrEmpty(qas.Qualificacao))
+    //                    {
+    //                        banco.AddParameter("id_fornecedor_socio_qualificacao", Convert.ToInt32(qas.Qualificacao.Split('-')[0]));
+    //                    }
+    //                    else
+    //                    {
+    //                        banco.AddParameter("id_fornecedor_socio_qualificacao", DBNull.Value);
+    //                    }
 
-                        banco.AddParameter("nome_representante", qas.NomeRepresentanteLegal);
+    //                    banco.AddParameter("nome_representante", qas.NomeRepresentanteLegal);
 
-                        if (!string.IsNullOrEmpty(qas.QualificacaoRepresentanteLegal))
-                        {
-                            banco.AddParameter("id_fornecedor_socio_representante_qualificacao", Convert.ToInt32(qas.QualificacaoRepresentanteLegal.Split('-')[0]));
-                        }
-                        else
-                        {
-                            banco.AddParameter("id_fornecedor_socio_representante_qualificacao", DBNull.Value);
-                        }
+    //                    if (!string.IsNullOrEmpty(qas.QualificacaoRepresentanteLegal))
+    //                    {
+    //                        banco.AddParameter("id_fornecedor_socio_representante_qualificacao", Convert.ToInt32(qas.QualificacaoRepresentanteLegal.Split('-')[0]));
+    //                    }
+    //                    else
+    //                    {
+    //                        banco.AddParameter("id_fornecedor_socio_representante_qualificacao", DBNull.Value);
+    //                    }
 
-                        banco.ExecuteNonQuery(
-                            @"INSERT fornecedor_socio (
-								id_fornecedor, 
-								nome, 
-								id_fornecedor_socio_qualificacao, 
-								nome_representante, 
-								id_fornecedor_socio_representante_qualificacao
-							) VALUES (
-								@id_fornecedor, 
-								@nome, 
-								@id_fornecedor_socio_qualificacao, 
-								@nome_representante, 
-								@id_fornecedor_socio_representante_qualificacao
-							)");
-                    }
-                }
+    //                    banco.ExecuteNonQuery(
+    //                        @"INSERT fornecedor_socio (
+				//				id_fornecedor, 
+				//				nome, 
+				//				id_fornecedor_socio_qualificacao, 
+				//				nome_representante, 
+				//				id_fornecedor_socio_representante_qualificacao
+				//			) VALUES (
+				//				@id_fornecedor, 
+				//				@nome, 
+				//				@id_fornecedor_socio_qualificacao, 
+				//				@nome_representante, 
+				//				@id_fornecedor_socio_representante_qualificacao
+				//			)");
+    //                }
+    //            }
 
-                banco.AddParameter("@id", id_fornecedor);
-                banco.AddParameter("@controle", null);
-                banco.AddParameter("@mensagem", null);
+    //            banco.AddParameter("@id", id_fornecedor);
+    //            banco.AddParameter("@controle", null);
+    //            banco.AddParameter("@mensagem", null);
 
-                banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where id=@id;");
-            }
+    //            banco.ExecuteNonQuery(@"update fornecedor set controle=@controle, mensagem=@mensagem where id=@id;");
+    //        }
 
-            return id_fornecedor;
-        }
+    //        return id_fornecedor;
+    //    }
 
-        private object ObterValor(object d)
-        {
-            if (string.IsNullOrEmpty(d as string) || Convert.IsDBNull(d))
-            {
-                return DBNull.Value;
-            }
-            else
-            {
-                try
-                {
-                    return Convert.ToDecimal(d.ToString().Split(' ')[0].Replace("R$", "").Trim());
-                }
-                catch (Exception)
-                {
-                    return DBNull.Value;
-                }
-            }
-        }
+        //private object ObterValor(object d)
+        //{
+        //    if (string.IsNullOrEmpty(d as string) || Convert.IsDBNull(d))
+        //    {
+        //        return DBNull.Value;
+        //    }
+        //    else
+        //    {
+        //        try
+        //        {
+        //            return Convert.ToDecimal(d.ToString().Split(' ')[0].Replace("R$", "").Trim());
+        //        }
+        //        catch (Exception)
+        //        {
+        //            return DBNull.Value;
+        //        }
+        //    }
+        //}
 
         public dynamic Consulta(string cnpj, string nome)
         {
-            string sSql = @"SELECT 
-							id as id_fornecedor
-							, cnpj_cpf
-							, nome
-							, doador
-						FROM fornecedor
-                        WHERE (1=1)";
+            var query = _context.Fornecedores.AsQueryable();
 
-            using (AppDb banco = new AppDb())
+            if (!string.IsNullOrEmpty(cnpj))
             {
-                if (!string.IsNullOrEmpty(cnpj))
+                cnpj = Utils.RemoveCaracteresNaoNumericos(cnpj);
+
+                if (cnpj.Length == 14 || cnpj.Length == 11)
                 {
-                    cnpj = Utils.RemoveCaracteresNaoNumericos(cnpj);
-
-                    if (cnpj.Length == 14 || cnpj.Length == 11)
-                    {
-                        banco.AddParameter("cnpj", cnpj);
-                        sSql += " AND cnpj_cpf = @cnpj";
-                    }
-                    else
-                    {
-                        banco.AddParameter("cnpj", cnpj + "%");
-                        sSql += " AND cnpj_cpf like @cnpj";
-                    }
-
+                    query = query.Where(f => f.CnpjCpf == cnpj);
                 }
                 else
                 {
-                    if (!string.IsNullOrEmpty(nome))
-                    {
-                        banco.AddParameter("nome", "%" + Utils.MySqlEscape(nome) + "%");
-                        sSql += " AND nome like @nome";
-                    }
-                }
-
-                sSql += " order by nome limit 100;";
-
-                var lstFornecedor = new List<dynamic>();
-                using (var reader = banco.ExecuteReader(sSql))
-                {
-                    while (reader.Read())
-                    {
-                        lstFornecedor.Add(new
-                        {
-                            id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome = reader["nome"].ToString(),
-                        });
-                    }
-
-                    return lstFornecedor;
+                    query = query.Where(f => f.CnpjCpf.StartsWith(cnpj));
                 }
             }
+            else
+            {
+                if (!string.IsNullOrEmpty(nome))
+                {
+                    query = query.Where(f => f.Nome.Contains(nome));
+                }
+            }
+
+            var fornecedores = query
+                .OrderBy(f => f.Nome)
+                .Take(100)
+                .Select(f => new
+                {
+                    id_fornecedor = f.Id.ToString(),
+                    cnpj_cpf = Utils.FormatCnpjCpf(f.CnpjCpf),
+                    nome = f.Nome
+                })
+                .ToList();
+
+            return fornecedores;
         }
 
         public async Task<List<dynamic>> Busca(string value)
         {
-            using (AppDb banco = new AppDb())
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
@@ -839,7 +815,7 @@ order by ano
 				");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await banco.ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {

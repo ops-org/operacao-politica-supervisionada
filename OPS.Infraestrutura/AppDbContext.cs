@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OPS.Infraestrutura.Entities.CamaraFederal;
 using OPS.Infraestrutura.Entities.Comum;
+using OPS.Infraestrutura.Entities.SenadoFederal;
+using OPS.Infraestrutura.Entities.AssembleiasLegislativas;
+using OPS.Infraestrutura.Entities.TSE;
 
 namespace OPS.Infraestrutura
 {

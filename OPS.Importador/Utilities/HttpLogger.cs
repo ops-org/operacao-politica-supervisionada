@@ -75,7 +75,7 @@ namespace OPS.Importador.Utilities
 
         static async Task<string> ReadableResponse(HttpResponseMessage response)
         {
-            string? contentType = response.Content.Headers.GetValues("Content-Type")?.FirstOrDefault();
+            string contentType = response.Content.Headers.GetValues("Content-Type")?.FirstOrDefault() ?? string.Empty;
             if (contentType == "application/zip")
                 return $"ZIP file {response.Content.Headers.GetValues("Content-Length").FirstOrDefault()} bytes";
 

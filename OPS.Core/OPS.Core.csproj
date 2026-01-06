@@ -20,4 +20,8 @@
     <PackageReference Include="System.Runtime.Caching" Version="10.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OPS.Infraestrutura\OPS.Infraestrutura.csproj" />
+  </ItemGroup>
+
 </Project>

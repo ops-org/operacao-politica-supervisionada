@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using OPS.Core.Utilities;
+using OPS.Infraestrutura;
 
 namespace OPS.Core.Repository
 {
-    public static class InicioRepository
+    public class InicioRepository : BaseRepository
     {
-        public static IEnumerable<dynamic> InfoImportacao()
+        public InicioRepository(AppDbContext context) : base(context)
         {
-            using (AppDb banco = new AppDb())
+        }
+
+        public async Task<IEnumerable<dynamic>> InfoImportacao()
+        {
+            // using (AppDb banco = new AppDb())
             {
                 var strSql = @"
 SELECT
@@ -18,11 +25,12 @@ FROM importacao i
 LEFT JOIN estado e ON e.id = i.id
 ORDER BY e.nome, i.id";
 
-                using (var reader = banco.ExecuteReader(strSql.ToString()))
+                var results = new List<dynamic>();
+                using (var reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
-                        yield return new
+                        results.Add(new
                         {
                             id = reader["id"],
                             sigla = reader["sigla"].ToString(),
@@ -31,9 +39,10 @@ ORDER BY e.nome, i.id";
                             info = reader["info"].ToString(),
                             ultima_despesa = Utils.FormataData(reader["ultima_despesa"]),
                             ultima_importacao = Utils.FormataData(reader["despesas_fim"])
-                        };
+                        });
                     }
                 }
+                return results;
             }
         }
 
@@ -44,78 +53,50 @@ ORDER BY e.nome, i.id";
         /// 4 Senadores MAIS gastadores (CEAPS)
         /// </summary>
         /// <returns></returns>
-        public static object ParlamentarResumoGastos()
+        public object ParlamentarResumoGastos()
         {
-            using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-
-                strSql.Append(@"
-					SELECT id_cf_deputado, nome_parlamentar, valor_total, sigla_partido, sigla_estado
-					FROM cf_deputado_campeao_gasto
-					order by valor_total desc; "
-                );
-
-                strSql.Append(@"
-					SELECT id_cl_deputado, nome_parlamentar, valor_total, sigla_partido, sigla_estado
-					FROM cl_deputado_campeao_gasto
-					order by valor_total desc; "
-                );
-
-                strSql.Append(@"
-					SELECT id_sf_senador, nome_parlamentar, valor_total, sigla_partido, sigla_estado
-					FROM sf_senador_campeao_gasto
-					order by valor_total desc; "
-                );
-
-                var lstDeputadosFederais = new List<dynamic>();
-                var lstDeputadosEstaduais = new List<dynamic>();
-                var lstSenadores = new List<dynamic>();
-                using (var reader = banco.ExecuteReader(strSql.ToString()))
+            var deputadosFederais = _context.DeputadoCampeaoGastosCamara
+                .OrderByDescending(d => d.ValorTotal)
+                .Take(4)
+                .Select(d => new
                 {
-                    while (reader.Read())
-                    {
-                        lstDeputadosFederais.Add(new
-                        {
-                            id_cf_deputado = reader["id_cf_deputado"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            valor_total = "R$ " + Utils.FormataValor(reader["valor_total"]),
-                            sigla_partido_estado = string.Format("{0} / {1}", reader["sigla_partido"], reader["sigla_estado"])
-                        });
-                    }
+                    id_cf_deputado = d.IdDeputado,
+                    nome_parlamentar = d.NomeParlamentar,
+                    valor_total = "R$ " + Utils.FormataValor(d.ValorTotal),
+                    sigla_partido_estado = d.SiglaPartido + " / " + d.SiglaEstado
+                })
+                .ToList();
 
-                    reader.NextResult();
-                    while (reader.Read())
-                    {
-                        lstDeputadosEstaduais.Add(new
-                        {
-                            id_cl_deputado = reader["id_cl_deputado"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            valor_total = "R$ " + Utils.FormataValor(reader["valor_total"]),
-                            sigla_partido_estado = string.Format("{0} / {1}", reader["sigla_partido"], reader["sigla_estado"])
-                        });
-                    }
+            var deputadosEstaduais = _context.DeputadoCampeaoGastos
+                .OrderByDescending(d => d.ValorTotal)
+                .Take(4)
+                .Select(d => new
+                {
+                    id_cl_deputado = d.IdDeputado,
+                    nome_parlamentar = d.NomeParlamentar,
+                    valor_total = "R$ " + Utils.FormataValor(d.ValorTotal),
+                    sigla_partido_estado = d.SiglaPartido + " / " + d.SiglaEstado
+                })
+                .ToList();
 
-                    reader.NextResult();
-                    while (reader.Read())
-                    {
-                        lstSenadores.Add(new
-                        {
-                            id_sf_senador = reader["id_sf_senador"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            valor_total = "R$ " + Utils.FormataValor(reader["valor_total"]),
-                            sigla_partido_estado = string.Format("{0} / {1}", reader["sigla_partido"], reader["sigla_estado"])
-                        });
-                    }
+            var senadores = _context.SenadoresCampeaoGasto
+                .OrderByDescending(s => s.ValorTotal)
+                .Take(4)
+                .Select(s => new
+                {
+                    id_sf_senador = s.IdSenador,
+                    nome_parlamentar = s.NomeParlamentar,
+                    valor_total = "R$ " + Utils.FormataValor(s.ValorTotal),
+                    sigla_partido_estado = s.SiglaPartido + " / " + s.SiglaEstado
+                })
+                .ToList();
 
-                    return new
-                    {
-                        senado = lstSenadores,
-                        camara_federal = lstDeputadosFederais,
-                        camara_estadual = lstDeputadosEstaduais
-                    };
-                }
-            }
+            return new
+            {
+                senado = senadores,
+                camara_federal = deputadosFederais,
+                camara_estadual = deputadosEstaduais
+            };
         }
     }
 }

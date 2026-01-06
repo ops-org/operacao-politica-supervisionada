@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core.Repository;
+using OPS.Infraestrutura;
 
 namespace OPS.API.Controllers
 {
@@ -17,12 +18,11 @@ namespace OPS.API.Controllers
         public IConfiguration Configuration { get; }
         public FornecedorRepository dao { get; }
 
-        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env)
+        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env, FornecedorRepository fornecedorRepository)
         {
             Environment = env;
             Configuration = configuration;
-
-            dao = new FornecedorRepository();
+            dao = fornecedorRepository;
         }
 
         [HttpGet]

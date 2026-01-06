@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
+using Npgsql;
 using OPS.Core;
 using OPS.Core.Utilities;
 using OPS.Importador.Fornecedores.Mapping;
@@ -252,7 +252,7 @@ namespace OPS.Importador.Fornecedores
 
                                 context.FornecedorAtividadesSecundarias.Add(atividade);
                             }
-                            catch (MySqlException ex)
+                            catch (Npgsql.NpgsqlException ex)
                             {
                                 if (!ex.Message.Contains("Duplicate entry")) throw;
                             }
