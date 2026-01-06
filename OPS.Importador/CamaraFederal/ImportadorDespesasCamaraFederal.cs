@@ -655,7 +655,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                            {
     //                                var nome_parlamentar = parlamentar["nomeParlamentar"].InnerText.Split('-');
     //                                banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
-    //                                id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where IFNULL(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
+    //                                id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where coalesce(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
     //                            }
     //                            catch (Exception)
     //                            {
@@ -700,7 +700,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                            try
     //                            {
     //                                banco.AddParameter("nome_parlamentar", nome_parlamentar[0]);
-    //                                id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where IFNULL(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
+    //                                id_cf_deputado = banco.ExecuteScalar("SELECT id FROM cf_deputado where coalesce(nome_importacao_presenca, nome_parlamentar) like @nome_parlamentar").ToString();
     //                            }
     //                            catch (Exception)
     //                            {
@@ -781,9 +781,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //	GROUP BY id_cf_sessao
     //) sp on sp.id_cf_sessao = s.id
     //SET 
-    //    s.presencas = IFNULL(sp.presenca, 0),
-    //    s.ausencias = IFNULL(sp.ausencia, 0),
-    //    s.ausencias_justificadas = IFNULL(sp.ausencia_justificada, 0)
+    //    s.presencas = coalesce(sp.presenca, 0),
+    //    s.ausencias = coalesce(sp.ausencia, 0),
+    //    s.ausencias_justificadas = coalesce(sp.ausencia_justificada, 0)
     //WHERE presencas = 0");
     //        }
 
@@ -1312,7 +1312,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var sql = @$"
     select 
         count(1) as itens, 
-        IFNULL(sum(valor_liquido), 0) as valor_total 
+        coalesce(sum(valor_liquido), 0) as valor_total 
     from cf_despesa d 
     where d.ano = {ano}";
 
@@ -1407,7 +1407,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             INSERT INTO pessoa (nome)
             SELECT DISTINCT passageiro
             FROM ops_tmp.cf_despesa_temp
-            WHERE ifnull(passageiro, '') <> ''
+            WHERE coalesce(passageiro, '') <> ''
             AND passageiro not in (
                 SELECT nome FROM pessoa
             );
@@ -1427,7 +1427,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             INSERT INTO trecho_viagem (descricao)
             SELECT DISTINCT trecho
             FROM ops_tmp.cf_despesa_temp
-            WHERE ifnull(trecho, '') <> ''
+            WHERE coalesce(trecho, '') <> ''
             AND trecho not in (
             	SELECT descricao FROM trecho_viagem
             );
@@ -1631,7 +1631,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     	        valorLiquido,
     	        restituicao,
     	        tv.id,
-                IFNULL(urlDocumento, 0),
+                coalesce(urlDocumento, 0),
                 dt.hash
             from ops_tmp.cf_despesa_temp dt
             LEFT JOIN cf_deputado d on d.id_deputado = dt.numeroDeputadoID

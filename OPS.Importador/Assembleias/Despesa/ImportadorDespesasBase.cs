@@ -301,7 +301,7 @@ namespace OPS.Importador.Assembleias.Despesa
 
             connection.Execute(@$"
 UPDATE cl_deputado dp 
-SET valor_total_ceap = IFNULL((
+SET valor_total_ceap = coalesce((
         SELECT SUM(ds.valor_liquido) FROM cl_despesa ds WHERE ds.id_cl_deputado = dp.id
     ), 0)
 WHERE id_estado = {idEstado};");
@@ -367,7 +367,7 @@ ORDER BY despesa_tipo;
                 chaveImportacao = "cpf";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select cpf 
@@ -381,7 +381,7 @@ where cpf not in (
                 chaveImportacao = "cpf_parcial";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
-select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select cpf_parcial 
@@ -395,7 +395,7 @@ where cpf not in (
                 chaveImportacao = "matricula";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, matricula, id_estado)
-select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select matricula 
@@ -409,7 +409,7 @@ where cpf not in (
                 chaveImportacao = "gabinete";
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, gabinete, id_estado)
-select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where cpf not in (
     select gabinete 
@@ -422,7 +422,7 @@ where cpf not in (
             {
                 connection.Execute(@$"
 UPDATE ops_tmp.cl_despesa_temp t
-JOIN ops_tmp.cl_deputado_de_para d ON IFNULL(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
+JOIN ops_tmp.cl_deputado_de_para d ON coalesce(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
 SET t.id_cl_deputado = d.id");
 
                 if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
@@ -430,7 +430,7 @@ SET t.id_cl_deputado = d.id");
                     chaveImportacao = "nome_civil";
                     affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where id_cl_deputado is null
 and nome_civil not in (
@@ -445,7 +445,7 @@ and nome_civil not in (
                     chaveImportacao = "nome_parlamentar";
                     affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct nome, IFNULL(nome_civil, nome), cpf, {idEstado}
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
 from ops_tmp.cl_despesa_temp
 where id_cl_deputado is null
 and nome not in (
@@ -465,7 +465,7 @@ WHERE {chaveImportacao} IS NOT NULL");
 
                     connection.Execute(@$"
 UPDATE ops_tmp.cl_despesa_temp t
-JOIN ops_tmp.cl_deputado_de_para d ON IFNULL(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
+JOIN ops_tmp.cl_deputado_de_para d ON coalesce(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
 SET t.id_cl_deputado = d.id");
                 }
             }
@@ -579,7 +579,7 @@ SELECT
     dts.id,
     f.id AS id_fornecedor,
     d.data_emissao,
-    concat(IFNULL(d.ano, year(d.data_emissao)), LPAD(IFNULL(d.mes, month(d.data_emissao)), 2, '0')) AS ano_mes,
+    concat(coalesce(d.ano, year(d.data_emissao)), LPAD(coalesce(d.mes, month(d.data_emissao)), 2, '0')) AS ano_mes,
     d.documento AS numero_documento,
     d.valor AS valor,
     CASE WHEN f.id IS NULL THEN d.empresa else null END AS favorecido,
@@ -653,7 +653,7 @@ inner join cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}
             var sql = @$"
 select 
     count(1) as itens, 
-    IFNULL(sum(valor_liquido), 0) as valor_total 
+    coalesce(sum(valor_liquido), 0) as valor_total 
 from cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}

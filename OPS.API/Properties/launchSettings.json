@@ -2,7 +2,7 @@
   "profiles": {
     "OPS.API": {
       "commandName": "Project",
-      "launchUrl": "inicio/parlamentarresumogastos",
+      "launchUrl": "http://localhost:5200/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
@@ -10,7 +10,7 @@
     },
     "Docker": {
       "commandName": "Docker",
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/inicio/parlamentarresumogastos",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/",
       "publishAllPorts": true,
       "useSSL": true
     }

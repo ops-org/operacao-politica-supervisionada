@@ -16,8 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
-using MySqlConnector.Logging;
+using Npgsql;
 using OfficeOpenXml;
 using OPS.Core;
 using OPS.Core.Repository;
@@ -36,8 +35,8 @@ namespace OPS.Importador
         {
             ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
 
-            SqlMapper.AddTypeHandler(typeof(DateTime), new MySqlConnectorDateTimeHandler());
-            SqlMapper.AddTypeHandler(typeof(DateTime?), new MySqlConnectorDateTimeHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTime), new NpgsqlDateTimeHandler());
+            SqlMapper.AddTypeHandler(typeof(DateTime?), new NpgsqlDateTimeHandler());
 
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             Serilog.Debugging.SelfLog.Enable(Console.Error);
@@ -68,7 +67,7 @@ namespace OPS.Importador
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-            services.AddTransient<IDbConnection>(_ => new MySqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
+            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
 
             services.AddScoped<SenadoFederal.Senado>();
             services.AddScoped<CamaraFederal.Camara>();
@@ -202,7 +201,8 @@ namespace OPS.Importador
 
 
             Padrao.ConnectionString = configuration.GetConnectionString("AuditoriaContext");
-            MySqlConnectorLogManager.Provider = new SerilogLoggerProvider();
+            // Npgsql logging is handled differently - remove MySQL-specific logging
+            // MySqlConnectorLogManager.Provider = new SerilogLoggerProvider();
 
             try
             {
@@ -419,7 +419,7 @@ AND l.id > 10501020
 ORDER BY 1";
 
             using (var client = new System.Net.Http.HttpClient())
-            using (var connection = new MySqlConnection(Padrao.ConnectionString))
+            using (var connection = new NpgsqlConnection(Padrao.ConnectionString))
             {
                 await connection.OpenAsync();
                 var results = await connection.QueryAsync(sql);
@@ -465,7 +465,7 @@ ORDER BY 1";
 WHERE LENGTH(f.cnpj_cpf) = 14
 AND f.cnpj_cpf LIKE '***%'";
 
-            using (var connection = new MySqlConnection(Padrao.ConnectionString))
+            using (var connection = new NpgsqlConnection(Padrao.ConnectionString))
             {
                 await connection.OpenAsync();
                 var results = await connection.QueryAsync(sql);

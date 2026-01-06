@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MySqlConnector;
+using Npgsql;
 using OPS.Core.DTO;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
@@ -266,7 +266,7 @@ namespace OPS.Core.Repository
                             id_documento = await reader.GetValueOrDefaultAsync<dynamic>(1),
                             numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
                             tipo_documento = sTipoDocumento,
-                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<MySqlDateTime?>(4)),
+                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<DateTime?>(4)),
                             valor_documento = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(5)),
                             valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
                             valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
@@ -811,7 +811,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						 d.id as id_cf_deputado
 						, d.nome_parlamentar
 						, e.sigla as sigla_estado
@@ -823,7 +823,7 @@ namespace OPS.Core.Repository
 						    count(l.id) AS total_notas
 					        , sum(l.valor_liquido) as valor_total
 					        , l.id_cf_deputado
-					    FROM cf_despesa_##LEG## l
+					    FROM cf_despesa l -- _##LEG## l
 					    WHERE (1=1)
 				");
 
@@ -879,7 +879,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						l1.id_fornecedor
 						, pj.nome AS nome_fornecedor
 						, l1.total_notas
@@ -890,7 +890,7 @@ namespace OPS.Core.Repository
 						    l.id_fornecedor
 						    , count(l.id) AS total_notas
 						    , sum(l.valor_liquido) as valor_total
-					    FROM cf_despesa_##LEG## l
+					    FROM cf_despesa l -- _##LEG## l
 					    WHERE (1=1)
 				");
 
@@ -953,7 +953,7 @@ namespace OPS.Core.Repository
 						count(l.id) AS total_notas
 						, sum(l.valor_liquido) as valor_total
 						, l.id_cf_despesa_tipo
-					FROM cf_despesa_##LEG## l
+					FROM cf_despesa l -- _##LEG## l
 					WHERE (1=1)
 				");
 
@@ -1007,9 +1007,9 @@ namespace OPS.Core.Repository
 
                 sqlSelect.AppendLine(@"
 					
-						SELECT SQL_CALC_FOUND_ROWS
+						SELECT
 						 p.id as id_partido
-						, IFnull(p.nome, '<Sem Partido>') as nome_partido
+						, coalesce(p.nome, '<Sem Partido>') as nome_partido
 						, sum(l1.total_notas) as total_notas
 						, count(l1.id_cf_deputado) as total_deputados
                         , sum(l1.valor_total) / count(l1.id_cf_deputado) as valor_medio_por_deputado
@@ -1019,7 +1019,7 @@ namespace OPS.Core.Repository
 							 count(l.id) AS total_notas
 							, sum(l.valor_liquido) as valor_total
 							, l.id_cf_deputado
-							FROM cf_despesa_##LEG## l
+							FROM cf_despesa l -- _##LEG## l
 							WHERE (1=1)
 				");
 
@@ -1075,9 +1075,9 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-						SELECT SQL_CALC_FOUND_ROWS
-						 IFNULL(e.id, 99) AS id_estado
-						, IFNULL(e.nome, '<Sem Estado / Lideranças de Partido>') as nome_estado
+						SELECT
+						 coalesce(e.id, 99) AS id_estado
+						, coalesce(e.nome, '<Sem Estado / Lideranças de Partido>') as nome_estado
 						, sum(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
 						from (
@@ -1085,7 +1085,7 @@ namespace OPS.Core.Repository
 							 count(l.id) AS total_notas
 							, sum(l.valor_liquido) as valor_total
 							, l.id_cf_deputado
-							FROM cf_despesa_##LEG## l
+							FROM cf_despesa l -- _##LEG## l
 							WHERE (1=1)
 				");
 
@@ -1148,7 +1148,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 						l.data_emissao
 						, pj.nome AS nome_fornecedor
 						, d.nome_parlamentar
@@ -1162,14 +1162,14 @@ namespace OPS.Core.Repository
                         , t.descricao as despesa_tipo
 					FROM (
 						SELECT data_emissao, id, id_cf_deputado, valor_liquido, id_cf_despesa_tipo, id_fornecedor
-						FROM cf_despesa_##LEG## l
+						FROM cf_despesa l -- _##LEG## l
 						WHERE (1=1)
 				");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC"));
-                sqlSelect.AppendFormat(" LIMIT {0},{1} ", request.Start, request.Length);
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(@" ) l
 					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
@@ -1178,7 +1178,7 @@ namespace OPS.Core.Repository
 					LEFT JOIN estado e on e.id = d.id_estado
                     LEFT JOIN cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo;
 
-                    SELECT COUNT(1) FROM cf_despesa_##LEG## l WHERE (1=1) ");
+                    SELECT COUNT(1) FROM cf_despesa l -- _##LEG## l WHERE (1=1) ");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
@@ -1372,9 +1372,9 @@ namespace OPS.Core.Repository
         private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect)
         {
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("valor_total desc"));
-            sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+            sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine("SELECT FOUND_ROWS();");
+            sqlSelect.AppendLine("SELECT 99 -- FOUND_ROWS();");
         }
 
         public async Task<dynamic> TipoDespesa()
@@ -1473,7 +1473,7 @@ namespace OPS.Core.Repository
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 						p.id as id_cf_deputado
 						, p.nome_parlamentar
 						, p.quantidade_secretarios
@@ -1489,7 +1489,7 @@ namespace OPS.Core.Repository
                 //}
 
                 strSql.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, "p.nome_parlamentar"));
-                strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+                strSql.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
@@ -1539,7 +1539,7 @@ namespace OPS.Core.Repository
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-SELECT DISTINCT SQL_CALC_FOUND_ROWS
+SELECT DISTINCT
 	co.id_cf_funcionario
 	, s.nome
 	, ca.nome as cargo
@@ -1569,7 +1569,7 @@ AND co.periodo_ate IS null
                 //}
 
                 strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
-                strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+                strSql.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
@@ -1619,7 +1619,7 @@ AND co.periodo_ate IS null
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 	                    s.nome
 	                    , SUM(r.valor_outros + r.valor_bruto) as custo_total
 	                    , s.link
@@ -1634,7 +1634,7 @@ AND co.periodo_ate IS null
                 banco.AddParameter("@id", id);
 
                 strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
-                strSql.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+                strSql.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
 
@@ -1868,7 +1868,7 @@ AND co.periodo_ate IS null
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS 
+					SELECT 
 						s.id as id_cf_sessao
                         , s.numero
 						, s.inicio
@@ -1884,10 +1884,10 @@ AND co.periodo_ate IS null
                 sqlSelect.Append(sqlWhere);
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting("s.inicio desc")));
-                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
-                    @"SELECT FOUND_ROWS();");
+                    @"SELECT 99 -- FOUND_ROWS();");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
@@ -1949,7 +1949,7 @@ AND co.periodo_ate IS null
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendFormat(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 						sp.id_cf_deputado
 						, d.nome_parlamentar
 						, sp.presente
@@ -1961,7 +1961,7 @@ AND co.periodo_ate IS null
 				", id);
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "d.nome_parlamentar asc")));
-                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
                     @"SELECT FOUND_ROWS() as row_count;");
@@ -2152,7 +2152,7 @@ AND co.periodo_ate IS null
                 if (eAgrupamento != AgrupamentoRemuneracaoCamara.AnoMes)
                 {
                     sqlSelect.AppendLine($@"
-SELECT SQL_CALC_FOUND_ROWS
+SELECT
 	{strSelectFiels},
     COUNT(1) AS quantidade,
     SUM(r.valor_total) AS valor_total
@@ -2169,7 +2169,7 @@ WHERE (1=1)
                 {
 
                     sqlSelect.AppendLine(@"
-SELECT SQL_CALC_FOUND_ROWS
+SELECT
     d.nome_parlamentar as deputado
     , s.nome as funcionario
 	, r.referencia
@@ -2195,8 +2195,8 @@ WHERE (1=1)
                 sqlSelect.Append(sqlGroupBy);
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(" valor_total desc"));
-                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
-                sqlSelect.Append(" SELECT FOUND_ROWS();");
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
+                sqlSelect.Append(" SELECT 99 -- FOUND_ROWS();");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))

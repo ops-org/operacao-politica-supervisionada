@@ -77,9 +77,9 @@ namespace Dapper
             //{
             //    case Dialect.PostgreSQL:
             //        _dialect = Dialect.PostgreSQL;
-            //        _encapsulation = "\"{0}\"";
-            //        _getIdentitySql = string.Format("SELECT LASTVAL() AS id");
-            //        _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
+            _encapsulation = "\"{0}\"";
+            _getIdentitySql = string.Format("SELECT LASTVAL() AS id");
+            _getPagedListSql = "Select {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {RowsPerPage} OFFSET (({PageNumber}-1) * {RowsPerPage})";
             //        break;
             //    case Dialect.SQLite:
             //        _dialect = Dialect.SQLite;
@@ -89,9 +89,9 @@ namespace Dapper
             //        break;
             //    case Dialect.MySQL:
             //        _dialect = Dialect.MySQL;
-            _encapsulation = "`{0}`";
-            _getIdentitySql = string.Format("SELECT LAST_INSERT_ID() AS id");
-            _getPagedListSql = "Select SQL_CALC_FOUND_ROWS {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {Offset},{RowsPerPage}; SELECT FOUND_ROWS();";
+            //_encapsulation = "`{0}`";
+            //_getIdentitySql = string.Format("SELECT LAST_INSERT_ID() AS id");
+            //_getPagedListSql = "Select SQL_CALC_FOUND_ROWS {SelectColumns} from {TableName} {WhereClause} Order By {OrderBy} LIMIT {Offset},{RowsPerPage}; SELECT FOUND_ROWS();";
             //        break;
             //    case Dialect.Oracle:
             //        _dialect = Dialect.Oracle;

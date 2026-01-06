@@ -333,7 +333,7 @@ namespace OPS.Importador.SenadoFederal
 
                         banco.ExecuteNonQuery(
                             @"INSERT INTO ops_tmp.sf_despesa_temp (
-								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, `data`, detalhamento, valor_reembolsado, cod_documento, hash
+								ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, data, detalhamento, valor_reembolsado, cod_documento, hash
 							) VALUES (
 								@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @cod_documento, @hash
 							)");
@@ -399,7 +399,7 @@ where d.ano_mes between {ano}01 and {ano}12");
                     linhasProcessadasAno, totalFinal);
 
             var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
-select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) from sf_senador);");
 
             if (despesasSemParlamentar > 0)
                 logger.LogError("Há deputados não identificados!");
@@ -424,12 +424,12 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
         //private string InsereSenadorFaltante(AppDb banco)
         //{
-        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) from sf_senador);");
         //    //if (Convert.ToInt32(total) > 0)
         //    //{
         //    //	CarregaSenadoresAtuais();
 
-        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnull(nome_importacao, nome) from sf_senador);");
+        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) from sf_senador);");
         //    //if (Convert.ToInt32(total) > 0)
         //    //{
         //    //    throw new Exception("Existem despesas de senadores que não estão cadastrados!");
@@ -485,12 +485,12 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 					d.ano,
 					d.mes,
 					d.documento,
-					d.`data`,
+					d.data,
 					d.detalhamento,
 					d.valor_reembolsado,
 					d.hash
 				FROM ops_tmp.sf_despesa_temp d
-				inner join sf_senador p on ifnull(p.nome_importacao, p.nome) = d.senador
+				inner join sf_senador p on coalesce(p.nome_importacao, p.nome) = d.senador
 				inner join sf_despesa_tipo dt on dt.descricao = d.tipo_despesa
 				inner join fornecedor f on f.cnpj_cpf = d.cnpj_cpf;
     
@@ -507,7 +507,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 
             //         banco.ExecuteNonQuery(@"
             //	UPDATE ops_tmp.sf_despesa_temp t 
-            //	inner join sf_senador p on ifnull(p.nome_importacao, p.nome) = t.senador
+            //	inner join sf_senador p on coalesce(p.nome_importacao, p.nome) = t.senador
             //	inner join sf_despesa_tipo dt on dt.descricao = t.tipo_despesa
             //	inner join fornecedor f on f.cnpj_cpf = t.cnpj_cpf
             //             inner join sf_despesa d on d.id = t.cod_documento and p.id = d.id_sf_senador
@@ -518,7 +518,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
             //		d.ano = t.ano,
             //		d.mes = t.mes,
             //		d.documento = t.documento,
-            //		d.data_emissao = t.`data`,
+            //		d.data_emissao = t.data,
             //		d.detalhamento = t.detalhamento,
             //		d.valor = t.valor_reembolsado,
             //		d.hash = t.hash
@@ -592,7 +592,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select ifnul
 					        d.ano,
 					        d.mes,
 					        d.documento,
-					        d.`data`,
+					        d.data,
 					        d.detalhamento,
 					        d.valor_reembolsado
 					    from (

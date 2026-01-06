@@ -24,7 +24,7 @@ namespace OPS.Core.Repository
 							, pj.cnpj_cpf
                             , pj.categoria
 							, pji.tipo
-							, IFNULL(pji.nome, pj.nome) as nome
+							, coalesce(pji.nome, pj.nome) as nome
 							, pj.doador
 							, pji.data_de_abertura
 							, pji.nome_fantasia
@@ -353,7 +353,7 @@ FROM (
 
     UNION ALL
 
-    SELECT CAST(l.ano_mes/100 as signed) as ano , SUM(l.valor_liquido) AS valor
+    SELECT l.ano_mes/100 as ano , SUM(l.valor_liquido) AS valor
     FROM cl_despesa l
     WHERE l.id_fornecedor = @id
     group by ano
@@ -808,8 +808,8 @@ order by ano
                 strSql.AppendLine(@"
 					SELECT 
 						f.id as id_fornecedor
-						, IFNULL(fi.cnpj, f.cnpj_cpf) as cnpj
-						, IFNULL(fi.nome, f.nome) as nome
+						, coalesce(fi.cnpj, f.cnpj_cpf) as cnpj
+						, coalesce(fi.nome, f.nome) as nome
 						, fi.nome_fantasia
                         , fi.estado
 					FROM fornecedor f
@@ -829,12 +829,12 @@ order by ano
                     }
                     else
                     {
-                        strSql.AppendLine("	AND (IFNULL(fi.nome, f.nome) like '%" + Utils.MySqlEscape(value) + "%' or fi.nome_fantasia like '%" + Utils.MySqlEscape(value) + "%')");
+                        strSql.AppendLine("	AND (coalesce(fi.nome, f.nome) like '%" + Utils.MySqlEscape(value) + "%' or fi.nome_fantasia like '%" + Utils.MySqlEscape(value) + "%')");
                     }
                 }
 
                 strSql.AppendLine(@"
-                    ORDER BY IFNULL(fi.nome, f.nome), IFNULL(fi.cnpj, f.cnpj_cpf)
+                    ORDER BY coalesce(fi.nome, f.nome), coalesce(fi.cnpj, f.cnpj_cpf)
                     limit 100
 				");
 

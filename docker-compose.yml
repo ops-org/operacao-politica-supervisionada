@@ -1,6 +1,18 @@
 version: '3.9'
 
 services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ops
+      POSTGRES_USER: ops
+      POSTGRES_PASSWORD: xxx
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    container_name: ops-postgres
+
   ops.api:
     image: ${DOCKER_REGISTRY-}ops-api
     build:
@@ -9,6 +21,8 @@ services:
       target: runtime
     environment:
         ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      - postgres
     #ports:
     #  - "3080:3080"
     container_name: ops-api
@@ -30,3 +44,6 @@ services:
     volumes:
        #- ./my-app:/usr/src/app/my-app
        - /usr/src/app/vue-ui/node_modules
+
+volumes:
+  postgres_data:

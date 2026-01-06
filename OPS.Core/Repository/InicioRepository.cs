@@ -13,7 +13,7 @@ namespace OPS.Core.Repository
             {
                 var strSql = @"
 SELECT
-	i.id, e.sigla, IFNULL(e.nome, i.chave) as nome, i.`url`, i.info, i.ultima_despesa, i.despesas_fim
+	i.id, e.sigla, coalesce(e.nome, i.chave) as nome, i.url, i.info, i.ultima_despesa, i.despesas_fim
 FROM importacao i
 LEFT JOIN estado e ON e.id = i.id
 ORDER BY e.nome, i.id";

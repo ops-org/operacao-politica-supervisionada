@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 using System.Threading.Tasks;
-using MySqlConnector;
+using Npgsql;
 using OPS.Core.DTO;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
@@ -241,7 +241,7 @@ namespace OPS.Core.Repository
                             id_documento = await reader.GetValueOrDefaultAsync<dynamic>(1),
                             numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
                             tipo_documento = sTipoDocumento,
-                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<MySqlDateTime?>(4)),
+                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<DateTime?>(4)),
                             valor_documento = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(5)),
                             valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
                             valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
@@ -374,7 +374,7 @@ namespace OPS.Core.Repository
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT cast(d.ano_mes/100 as signed) as ano, SUM(d.valor_liquido) AS valor_total
+					SELECT d.ano_mes/100 as ano, SUM(d.valor_liquido) AS valor_total
 					FROM cl_despesa d
 					WHERE d.id_cl_deputado = @id
 					group by ano
@@ -703,7 +703,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT 
 						 d.id as id_cl_deputado
 						, d.nome_parlamentar
 						, e.sigla as sigla_estado
@@ -771,7 +771,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT 
 						l1.id_fornecedor
 						, pj.nome AS nome_fornecedor
 						, l1.total_notas
@@ -899,9 +899,9 @@ namespace OPS.Core.Repository
 
                 sqlSelect.AppendLine(@"
 					
-						SELECT SQL_CALC_FOUND_ROWS
+						SELECT 
 						 p.id as id_partido
-						, IFnull(p.nome, '<Sem Partido>') as nome_partido
+						, coalesce(p.nome, '<Sem Partido>') as nome_partido
 						, sum(l1.total_notas) as total_notas
 						, count(l1.id_cl_deputado) as total_deputados
                         , sum(l1.valor_total) / count(l1.id_cl_deputado) as valor_medio_por_deputado
@@ -967,9 +967,9 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-						SELECT SQL_CALC_FOUND_ROWS
-						 IFNULL(e.id, 99) AS id_estado
-						, IFNULL(e.nome, '<Sem Estado / Lideranças de Partido>') as nome_estado
+						SELECT 
+						 coalesce(e.id, 99) AS id_estado
+						, coalesce(e.nome, '<Sem Estado / Lideranças de Partido>') as nome_estado
 						, sum(l1.total_notas) as total_notas
 						, sum(l1.valor_total) as valor_total
 						from (
@@ -1041,7 +1041,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT 
 						l.data_emissao
 						, pj.nome AS nome_fornecedor
 						, d.nome_parlamentar
@@ -1064,7 +1064,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC"));
-                sqlSelect.AppendFormat(" LIMIT {0},{1} ", request.Start, request.Length);
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(@" ) l
 					INNER JOIN cl_deputado d on d.id = l.id_cl_deputado
@@ -1218,9 +1218,9 @@ namespace OPS.Core.Repository
         private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect)
         {
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("valor_total desc"));
-            sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+            sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine("SELECT FOUND_ROWS();");
+            sqlSelect.AppendLine("SELECT 99 -- FOUND_ROWS();");
         }
 
         public async Task<dynamic> TipoDespesa()

@@ -9,7 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
-using MySqlConnector;
+using Microsoft.OpenApi.Models;
+using Npgsql;
 using OPS.Core.Repository;
 
 namespace OPS.API
@@ -29,7 +30,7 @@ namespace OPS.API
             Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
             new ParametrosRepository().CarregarPadroes();
 
-            services.AddTransient<IDbConnection>(_ => new MySqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
+            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
 
             services.AddScoped<PartidoRepository>();
             services.AddScoped<EstadoRepository>();
@@ -95,6 +96,30 @@ namespace OPS.API
             //services.AddMvc().AddNewtonsoftJson();
             services.AddControllers();
             services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+
+            // Add Swagger services
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "OPS API",
+                    Version = "v1",
+                    Description = "Operação Política Supervisionada API",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "OPS Team",
+                        Email = "vanderlei@ops.org.br"
+                    }
+                });
+
+                // Include XML comments if file exists
+                var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = System.IO.Path.Combine(System.AppContext.BaseDirectory, xmlFile);
+                if (System.IO.File.Exists(xmlPath))
+                {
+                    c.IncludeXmlComments(xmlPath);
+                }
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -160,6 +185,17 @@ namespace OPS.API
             app.UseResponseCompression();
 
             app.UseHttpCacheHeaders();
+
+            // Enable Swagger in development
+            if (env.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "OPS API v1");
+                    c.RoutePrefix = string.Empty; // Sets Swagger UI at root
+                });
+            }
 
 
             app.UseStaticFiles(new StaticFileOptions

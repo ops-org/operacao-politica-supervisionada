@@ -41,7 +41,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						 null as id_ano
 						, l1.ano
 						, l1.total_notas
@@ -100,9 +100,9 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						 d.id as id_pessoa_servidor
-						, ifnull(d.nome, d.cpf) as nome_servidor
+						, coalesce(d.nome, d.cpf) as nome_servidor
 						, l1.total_notas
 						, l1.valor_total
                     FROM (
@@ -220,7 +220,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						l1.id_fornecedor
 						, pj.nome AS nome_fornecedor
 						, l1.total_notas
@@ -292,10 +292,10 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 						l.data_pgto
 						, pj.nome AS nome_fornecedor
-						, ifnull(d.nome, d.cpf) as nome_servidor
+						, coalesce(d.nome, d.cpf) as nome_servidor
 						, l.valor_liquido
                         , l.id as id_pr_despesa
                         , l.id_fornecedor
@@ -310,7 +310,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano DESC, l.data_pgto DESC, l.valor_liquido DESC"));
-                sqlSelect.AppendFormat(" LIMIT {0},{1} ", request.Start, request.Length);
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(@" ) l
 					INNER JOIN pessoa d on d.id = l.id_pessoa_servidor
@@ -418,9 +418,9 @@ namespace OPS.Core.Repository
         private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect)
         {
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("valor_total desc"));
-            sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+            sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine("SELECT FOUND_ROWS();");
+            sqlSelect.AppendLine("SELECT 99 -- FOUND_ROWS();");
         }
 
 

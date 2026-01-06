@@ -4,7 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
-using MySqlConnector;
+using Npgsql;
 using OPS.Core.Utilities;
 
 namespace OPS.Core
@@ -12,11 +12,11 @@ namespace OPS.Core
     public class AppDb : IDisposable
     {
         private bool _mBeginTransaction;
-        private MySqlConnection _mConnection;
-        private MySqlCommand _mCommand;
+        private NpgsqlConnection _mConnection;
+        private NpgsqlCommand _mCommand;
 
-        private List<MySqlParameter> _mParametros;
-        private MySqlTransaction _mTransaction;
+        private List<NpgsqlParameter> _mParametros;
+        private NpgsqlTransaction _mTransaction;
 
         public AppDb()
         {
@@ -50,12 +50,9 @@ namespace OPS.Core
 
         private void Initializer(string connectionString)
         {
-            _mParametros = new List<MySqlParameter>();
-            _mConnection = new MySqlConnection(connectionString);
+            _mParametros = new List<NpgsqlParameter>();
+            _mConnection = new NpgsqlConnection(connectionString);
             _mConnection.Open();
-
-            //ExecuteNonQuery("set @@session.time_zone = '-02:00'"); //Horário de verão
-            //ExecuteNonQuery("set @@session.time_zone = '-03:00'");
 
             _mBeginTransaction = false;
         }
@@ -81,7 +78,9 @@ namespace OPS.Core
 
             RowsAffected = _mCommand.ExecuteNonQuery();
 
-            LastInsertedId = _mCommand.LastInsertedId;
+            // PostgreSQL doesn't have LastInsertedId in the same way as MySQL
+            // This would need to be handled with RETURNING clauses or currval()
+            // LastInsertedId = _mCommand.LastInsertedId;
 
             return true;
         }
@@ -108,7 +107,7 @@ namespace OPS.Core
             return _mCommand.ExecuteScalar();
         }
 
-        public MySqlDataReader ExecuteReader(string sql, int timeOut = 600)
+        public NpgsqlDataReader ExecuteReader(string sql, int timeOut = 600)
         {
             if (_mCommand == null)
                 _mCommand = _mConnection.CreateCommand();
@@ -222,7 +221,7 @@ namespace OPS.Core
             _mCommand.CommandText = sql;
             _mCommand.CommandTimeout = timeOut;
 
-            using (var adaper = new MySqlDataAdapter(_mCommand))
+            using (var adaper = new NpgsqlDataAdapter(_mCommand))
             {
                 using (var data = new DataSet())
                 {
@@ -263,7 +262,7 @@ namespace OPS.Core
 
         public void AddParameter(string name, object value)
         {
-            _mParametros.Add(new MySqlParameter(name, value));
+            _mParametros.Add(new NpgsqlParameter(name, value));
         }
 
         public byte[] ParametersHash()
@@ -282,7 +281,7 @@ namespace OPS.Core
         public void ResetConnection()
         {
             _mCommand = null;
-            _mConnection = new MySqlConnection(Padrao.ConnectionString);
+            _mConnection = new NpgsqlConnection(Padrao.ConnectionString);
             _mConnection.Open();
 
             _mBeginTransaction = false;

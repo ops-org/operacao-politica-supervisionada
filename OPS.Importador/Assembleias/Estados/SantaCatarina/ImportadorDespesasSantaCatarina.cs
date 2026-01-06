@@ -113,7 +113,7 @@ namespace OPS.Importador.Assembleias.Estados.SantaCatarina
         {
             connection.Execute(@"
         	        UPDATE cl_deputado dp SET
-                        valor_total_ceap = IFNULL((
+                        valor_total_ceap = coalesce((
                             SELECT SUM(ds.valor_liquido) FROM cl_despesa ds WHERE ds.id_cl_deputado = dp.id
                         ), 0);");
         }

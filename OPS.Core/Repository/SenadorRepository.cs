@@ -512,7 +512,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						 d.id as id_sf_senador
 						, d.nome as nome_parlamentar
 						, e.sigla as sigla_estado
@@ -580,7 +580,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						l1.id_fornecedor
 						, pj.nome AS nome_fornecedor
 						, l1.total_notas
@@ -644,7 +644,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-                    SELECT SQL_CALC_FOUND_ROWS
+                    SELECT
 						l1.id_sf_despesa_tipo
 						, td.descricao
 						, l1.total_notas
@@ -706,7 +706,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 						p.id as id_partido
 					    , p.nome as nome_partido
 					    , sum(l1.total_notas) as total_notas
@@ -774,7 +774,7 @@ namespace OPS.Core.Repository
                 var sqlSelect = new StringBuilder();
 
                 sqlSelect.AppendLine(@"
-					SELECT SQL_CALC_FOUND_ROWS
+					SELECT
 						e.id as id_estado
 					    , e.nome as nome_estado
 					    , count(l1.total_notas) as total_notas
@@ -870,7 +870,7 @@ namespace OPS.Core.Repository
                 sqlSelect.Append(sqlWhere);
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor DESC"));
-                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
                     @"SELECT count(1) FROM sf_despesa l WHERE (1=1) ");
@@ -1024,9 +1024,9 @@ namespace OPS.Core.Repository
         private static void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect, string defaultSort = "valor_total desc")
         {
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(defaultSort));
-            sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
+            sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine("SELECT FOUND_ROWS();");
+            sqlSelect.AppendLine("SELECT 99 -- FOUND_ROWS();");
         }
 
         public async Task<dynamic> TipoDespesa()
@@ -1227,7 +1227,7 @@ namespace OPS.Core.Repository
                 if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
                 {
                     sqlSelect.AppendLine($@"
-SELECT SQL_CALC_FOUND_ROWS
+SELECT
 	{strSelectFiels},
     COUNT(1) AS quantidade,
     SUM(r.custo_total) AS valor_total
@@ -1244,7 +1244,7 @@ WHERE (1=1)
                 {
 
                     sqlSelect.AppendLine(@"
-SELECT SQL_CALC_FOUND_ROWS
+SELECT
     r.id,
 	v.descricao as vinculo, 
 	ct.descricao as categoria, 
@@ -1272,8 +1272,8 @@ WHERE (1=1)
                 sqlSelect.Append(sqlGroupBy);
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(" valor_total desc"));
-                sqlSelect.AppendFormat(" LIMIT {0},{1}; ", request.Start, request.Length);
-                sqlSelect.AppendLine("SELECT FOUND_ROWS();");
+                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
+                sqlSelect.AppendLine("SELECT 99 -- FOUND_ROWS();");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await banco.ExecuteReaderAsync(sqlSelect.ToString()))
