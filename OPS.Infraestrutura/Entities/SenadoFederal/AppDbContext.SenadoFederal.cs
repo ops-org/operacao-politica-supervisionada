@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OPS.Infraestrutura.Entities.CamaraFederal;
 using OPS.Infraestrutura.Entities.Comum;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 
@@ -8,13 +9,13 @@ public partial class AppDbContext
 {
     // Senado Federal (SF) Tables
     public DbSet<Senador> Senadores { get; set; }
-    public DbSet<Despesa> DespesasSenado { get; set; }
-    public DbSet<DespesaTipo> DespesaTiposSenado { get; set; }
-    public DbSet<DespesaResumoMensal> DespesaResumoMensal { get; set; }
-    public DbSet<Mandato> MandatosSenado { get; set; }
+    public DbSet<DespesaSenado> DespesasSenado { get; set; }
+    public DbSet<DespesaTipoSenado> DespesaTiposSenado { get; set; }
+    public DbSet<DespesaResumoMensalSenado> DespesaResumoMensal { get; set; }
+    public DbSet<MandatoSenado> MandatosSenado { get; set; }
     public DbSet<MandatoExercicio> MandatoExerciciosSenado { get; set; }
     public DbSet<MandatoLegislatura> MandatoLegislaturasSenado { get; set; }
-    public DbSet<Legislatura> LegislaturasSenado { get; set; }
+    public DbSet<LegislaturaSenado> LegislaturasSenado { get; set; }
     public DbSet<MotivoAfastamento> MotivoAfastamentos { get; set; }
     public DbSet<Remuneracao> Remuneracoes { get; set; }
     public DbSet<Vinculo> Vinculos { get; set; }
@@ -24,12 +25,14 @@ public partial class AppDbContext
     public DbSet<Funcao> Funcoes { get; set; }
     public DbSet<Lotacao> Lotacoes { get; set; }
     public DbSet<TipoFolha> TipoFolhas { get; set; }
-    public DbSet<Secretario> Secretarios { get; set; }
+    public DbSet<SecretarioSenado> Secretarios { get; set; }
     public DbSet<SecretarioCompleto> SecretariosCompletos { get; set; }
     public DbSet<SenadorCampeaoGasto> SenadoresCampeaoGasto { get; set; }
     public DbSet<SenadorHistoricoAcademico> SenadoresHistoricoAcademico { get; set; }
     public DbSet<SenadorProfissao> SenadoresProfissao { get; set; }
     public DbSet<SenadorPartido> SenadorPartidos { get; set; }
+
+    public DbSet<SenadorVerbaGabinete> SenadorVerbasGabinete { get; set; }
 }
 
 public static class SenadoFederalConfigurations
@@ -60,7 +63,7 @@ public static class SenadoFederalConfigurations
     public static void ConfigureDespesaSenado(this ModelBuilder modelBuilder)
     {
         // Configure Despesa (Senado Federal - Composite Key)
-        modelBuilder.Entity<Despesa>(entity =>
+        modelBuilder.Entity<DespesaSenado>(entity =>
         {
             entity.HasKey(e => new { e.IdSenador, e.Id });
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
@@ -74,7 +77,7 @@ public static class SenadoFederalConfigurations
     public static void ConfigureMandatoSenado(this ModelBuilder modelBuilder)
     {
         // Configure Mandato (Senado Federal - Composite Key)
-        modelBuilder.Entity<Mandato>(entity =>
+        modelBuilder.Entity<MandatoSenado>(entity =>
         {
             entity.HasKey(e => new { e.Id, e.IdSenador });
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -134,7 +137,7 @@ public static class SenadoFederalConfigurations
     public static void ConfigureDespesaResumoMensalSenado(this ModelBuilder modelBuilder)
     {
         // Configure DespesaResumoMensal (Composite Key)
-        modelBuilder.Entity<DespesaResumoMensal>(entity =>
+        modelBuilder.Entity<DespesaResumoMensalSenado>(entity =>
         {
             entity.HasKey(e => new { e.Ano, e.Mes });
             entity.ToTable("sf_despesa_resumo_mensal", "senado");
@@ -158,7 +161,7 @@ public static class SenadoFederalConfigurations
             entity.ToTable("sf_categoria", "senado");
         });
 
-        modelBuilder.Entity<DespesaTipo>(entity =>
+        modelBuilder.Entity<DespesaTipoSenado>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -172,7 +175,7 @@ public static class SenadoFederalConfigurations
             entity.ToTable("sf_funcao", "senado");
         });
 
-        modelBuilder.Entity<Legislatura>(entity =>
+        modelBuilder.Entity<LegislaturaSenado>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -243,7 +246,7 @@ public static class SenadoFederalConfigurations
         });
 
         // Configure Secretario
-        modelBuilder.Entity<Secretario>(entity =>
+        modelBuilder.Entity<SecretarioSenado>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -271,6 +274,16 @@ public static class SenadoFederalConfigurations
         });
     }
 
+    public static void ConfigureSenadorVerbaGabinete(this ModelBuilder modelBuilder)
+    {
+        // Configure SenadorVerbaGabinete
+        modelBuilder.Entity<SenadorVerbaGabinete>(entity =>
+        {
+            entity.HasKey(e => e.IdSenador);
+            entity.ToTable("sf_senador_verba_gabinete", "senado");
+        });
+    }
+
     public static void ConfigureSenadoFederalEntities(this ModelBuilder modelBuilder)
     {
         modelBuilder.ConfigureSenador();
@@ -282,5 +295,6 @@ public static class SenadoFederalConfigurations
         modelBuilder.ConfigureRemuneracaoSenado();
         modelBuilder.ConfigureSenadoFederalSupportEntities();
         modelBuilder.ConfigureSenadoFederalAdditionalEntities();
+        modelBuilder.ConfigureSenadorVerbaGabinete();
     }
 }

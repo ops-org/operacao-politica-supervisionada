@@ -5,7 +5,7 @@ using OPS.Infraestrutura.Entities.Fornecedores;
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_despesa")]
-    public class Despesa
+    public class DespesaSenado
     {
         [Key]
         [Column("id_sf_senador")]
@@ -48,7 +48,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
 
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;
-        public virtual DespesaTipo? DespesaTipo { get; set; }
+        public virtual DespesaTipoSenado? DespesaTipo { get; set; }
         public virtual Fornecedor? Fornecedor { get; set; }
     }
 }

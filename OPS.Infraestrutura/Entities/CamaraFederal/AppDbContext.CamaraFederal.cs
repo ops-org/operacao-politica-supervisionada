@@ -7,15 +7,15 @@ public partial class AppDbContext
 {
     // Câmara Federal (CF) Tables - Essential for DeputadoRepository
     public DbSet<Deputado> DeputadosFederais { get; set; }
-    public DbSet<Despesa> DespesasCamaraFederal { get; set; }
-    public DbSet<Legislatura> LegislaturasCamaraFederal { get; set; }
-    public DbSet<Mandato> MandatosCamaraFederal { get; set; }
-    public DbSet<DespesaTipo> DespesaTiposCamaraFederal { get; set; }
+    public DbSet<DespesaCamara> DespesasCamaraFederal { get; set; }
+    public DbSet<LegislaturaCamara> LegislaturasCamaraFederal { get; set; }
+    public DbSet<MandatoCamara> MandatosCamaraFederal { get; set; }
+    public DbSet<DespesaTipoCamara> DespesaTiposCamaraFederal { get; set; }
     public DbSet<EspecificacaoTipo> EspecificacaoTipos { get; set; }
     public DbSet<Gabinete> GabinetesCamaraFederal { get; set; }
     public DbSet<Sessao> SessoesCamaraFederal { get; set; }
     public DbSet<SessaoPresenca> SessaoPresencas { get; set; }
-    public DbSet<Secretario> SecretariosCamaraFederal { get; set; }
+    public DbSet<SecretarioCamara> SecretariosCamaraFederal { get; set; }
     public DbSet<Funcionario> FuncionariosCamaraFederal { get; set; }
     public DbSet<FuncionarioContratacao> FuncionarioContratacoes { get; set; }
     public DbSet<FuncionarioGrupoFuncional> FuncionarioGruposFuncionais { get; set; }
@@ -39,7 +39,7 @@ public partial class AppDbContext
     public DbSet<DeputadoVerbaGabinete> DeputadoVerbasGabinete { get; set; }
     public DbSet<DespesaResumoMensal> DespesaResumosMensaisCamara { get; set; }
     public DbSet<SecretarioHistorico> SecretarioHistoricos { get; set; }
-    public DbSet<SenadorVerbaGabinete> SenadorVerbasGabinete { get; set; }
+    
 }
 
 public static class CamaraFederalEntityConfigurations
@@ -62,7 +62,7 @@ public static class CamaraFederalEntityConfigurations
     public static void ConfigureDespesa(this ModelBuilder modelBuilder)
     {
         // Configure Despesa (Câmara Federal)
-        modelBuilder.Entity<Despesa>(entity =>
+        modelBuilder.Entity<DespesaCamara>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
@@ -79,7 +79,7 @@ public static class CamaraFederalEntityConfigurations
     public static void ConfigureMandato(this ModelBuilder modelBuilder)
     {
         // Configure Mandato (Câmara Federal)
-        modelBuilder.Entity<Mandato>(entity =>
+        modelBuilder.Entity<MandatoCamara>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
@@ -119,7 +119,7 @@ public static class CamaraFederalEntityConfigurations
     public static void ConfigureLegislatura(this ModelBuilder modelBuilder)
     {
         // Configure Legislatura
-        modelBuilder.Entity<Legislatura>(entity =>
+        modelBuilder.Entity<LegislaturaCamara>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -130,7 +130,7 @@ public static class CamaraFederalEntityConfigurations
     public static void ConfigureDespesaTipo(this ModelBuilder modelBuilder)
     {
         // Configure DespesaTipo
-        modelBuilder.Entity<DespesaTipo>(entity =>
+        modelBuilder.Entity<DespesaTipoCamara>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -163,7 +163,7 @@ public static class CamaraFederalEntityConfigurations
     public static void ConfigureSecretario(this ModelBuilder modelBuilder)
     {
         // Configure Secretario
-        modelBuilder.Entity<Secretario>(entity =>
+        modelBuilder.Entity<SecretarioCamara>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -393,15 +393,6 @@ public static class CamaraFederalEntityConfigurations
         });
     }
 
-    public static void ConfigureSenadorVerbaGabinete(this ModelBuilder modelBuilder)
-    {
-        // Configure SenadorVerbaGabinete
-        modelBuilder.Entity<SenadorVerbaGabinete>(entity =>
-        {
-            entity.HasKey(e => e.IdSenador);
-            entity.ToTable("cf_senador_verba_gabinete", "camara");
-        });
-    }
 
     // Master method to apply all configurations
     public static void ConfigureCamaraFederalEntities(this ModelBuilder modelBuilder)
@@ -437,6 +428,6 @@ public static class CamaraFederalEntityConfigurations
         modelBuilder.ConfigureDeputadoVerbaGabinete();
         modelBuilder.ConfigureDespesaResumoMensal();
         modelBuilder.ConfigureSecretarioHistorico();
-        modelBuilder.ConfigureSenadorVerbaGabinete();
+        
     }
 }

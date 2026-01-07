@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_legislatura")]
-    public class Legislatura
+    public class LegislaturaCamara
     {
         [Key]
         [Column("id")]
@@ -20,8 +20,8 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public uint? Final { get; set; }
 
         // Navigation properties
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
-        public virtual ICollection<Mandato> Mandatos { get; set; } = new List<Mandato>();
+        public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
+        public virtual ICollection<MandatoCamara> Mandatos { get; set; } = new List<MandatoCamara>();
         public virtual ICollection<Sessao> Sessoes { get; set; } = new List<Sessao>();
     }
 }

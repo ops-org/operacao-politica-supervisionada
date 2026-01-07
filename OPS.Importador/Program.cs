@@ -498,7 +498,7 @@ UPDATE fornecedor SET
     valor_total_ceap_assembleias = NULL
 WHERE id = {idFornecodorIncorreto};
 
-UPDATE forcecedor_cnpj_incorreto SET 
+UPDATE fornecedor_cnpj_incorreto SET 
     id_fornecedor_correto = {idFornecodorCorreto},
     cnpj_correto = '{cnpjCorreto}'
 WHERE cnpj_incorreto = '{cnpjIncorreto}';

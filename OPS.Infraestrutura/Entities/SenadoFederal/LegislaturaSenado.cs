@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_legislatura")]
-    public class Legislatura
+    public class LegislaturaSenado
     {
         [Key]
         [Column("id")]

@@ -29,7 +29,7 @@ namespace OPS.Infraestrutura.Entities.Comum
         public virtual ICollection<AssembleiasLegislativas.Deputado> DeputadosEstaduais { get; set; } = new List<AssembleiasLegislativas.Deputado>();
         public virtual ICollection<CamaraFederal.Deputado> DeputadosFederais { get; set; } = new List<CamaraFederal.Deputado>();
         public virtual ICollection<PartidoHistorico> PartidoHistoricos { get; set; } = new List<PartidoHistorico>();
-        public virtual ICollection<SenadoFederal.Mandato> Mandatos { get; set; } = new List<SenadoFederal.Mandato>();
+        public virtual ICollection<SenadoFederal.MandatoSenado> Mandatos { get; set; } = new List<SenadoFederal.MandatoSenado>();
         public virtual ICollection<SenadoFederal.SenadorPartido> SenadorPartidos { get; set; } = new List<SenadoFederal.SenadorPartido>();
     }
 }

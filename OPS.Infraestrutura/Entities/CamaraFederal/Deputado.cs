@@ -109,10 +109,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual Estado? Estado { get; set; }
         public virtual Estado? EstadoNascimento { get; set; }
         public virtual Gabinete? Gabinete { get; set; }
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
-        public virtual ICollection<Mandato> Mandatos { get; set; } = new List<Mandato>();
+        public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
+        public virtual ICollection<MandatoCamara> Mandatos { get; set; } = new List<MandatoCamara>();
         public virtual ICollection<SessaoPresenca> SessaoPresencas { get; set; } = new List<SessaoPresenca>();
-        public virtual ICollection<Secretario> Secretarios { get; set; } = new List<Secretario>();
+        public virtual ICollection<SecretarioCamara> Secretarios { get; set; } = new List<SecretarioCamara>();
         public virtual ICollection<FuncionarioContratacao> FuncionarioContratacoes { get; set; } = new List<FuncionarioContratacao>();
         public virtual ICollection<FuncionarioRemuneracao> FuncionarioRemuneracoes { get; set; } = new List<FuncionarioRemuneracao>();
     }

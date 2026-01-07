@@ -19,7 +19,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string Descricao { get; set; } = null!;
 
         // Navigation properties
-        public virtual DespesaTipo DespesaTipo { get; set; } = null!;
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
+        public virtual DespesaTipoCamara DespesaTipo { get; set; } = null!;
+        public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
     }
 }

@@ -5,7 +5,7 @@ using OPS.Infraestrutura.Entities.Fornecedores;
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_despesa")]
-    public class Despesa
+    public class DespesaCamara
     {
         [Key]
         [Column("id")]
@@ -74,9 +74,9 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
 
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;
-        public virtual Legislatura Legislatura { get; set; } = null!;
-        public virtual Mandato? Mandato { get; set; }
-        public virtual DespesaTipo DespesaTipo { get; set; } = null!;
+        public virtual LegislaturaCamara Legislatura { get; set; } = null!;
+        public virtual MandatoCamara? Mandato { get; set; }
+        public virtual DespesaTipoCamara DespesaTipo { get; set; } = null!;
         public virtual EspecificacaoTipo? EspecificacaoTipo { get; set; }
         public virtual Fornecedor Fornecedor { get; set; } = null!;
         public virtual TrechoViagem? TrechoViagem { get; set; }

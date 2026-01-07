@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_despesa_tipo")]
-    public class DespesaTipo
+    public class DespesaTipoSenado
     {
         [Key]
         [Column("id")]
@@ -15,6 +15,6 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public string Descricao { get; set; } = null!;
 
         // Navigation properties
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
+        public virtual ICollection<DespesaSenado> Despesas { get; set; } = new List<DespesaSenado>();
     }
 }

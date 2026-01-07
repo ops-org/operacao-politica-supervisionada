@@ -51,15 +51,15 @@ namespace OPS.Core.Repository
 							, pji.ente_federativo_responsavel
 							, pji.obtido_em
 							, pji.capital_social
-						FROM fornecedor pj
-						LEFT JOIN fornecedor_info pji on pji.id_fornecedor = pj.id
-						LEFT JOIN fornecedor_atividade a on a.id = pji.id_fornecedor_atividade_principal
-						LEFT JOIN fornecedor_natureza_juridica nj on nj.id = pji.id_fornecedor_natureza_juridica
+						FROM fornecedor.fornecedor pj
+						LEFT JOIN fornecedor.fornecedor_info pji on pji.id_fornecedor = pj.id
+						LEFT JOIN fornecedor.fornecedor_atividade a on a.id = pji.id_fornecedor_atividade_principal
+						LEFT JOIN fornecedor.fornecedor_natureza_juridica nj on nj.id = pji.id_fornecedor_natureza_juridica
 						WHERE pj.id = @id;
 
                         SELECT fa.codigo, fa.descricao
-                        FROM fornecedor_atividade_secundaria fas 
-                        INNER JOIN fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
+                        FROM fornecedor.fornecedor_atividade_secundaria fas 
+                        INNER JOIN fornecedor.fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
                         where id_fornecedor = @id;"
                     , new { id }))
                 {
@@ -147,13 +147,13 @@ namespace OPS.Core.Repository
 						select 
 							SUM(l.valor) AS valor_total
 							, l.id_sf_senador
-						from sf_despesa l
+						from senado.sf_despesa l
 						WHERE l.id_fornecedor = @id
 						GROUP BY l.id_sf_senador
 						ORDER BY valor_total desc
 						LIMIT 10
 					) l1
-					LEFT JOIN sf_senador p ON p.id = l1.id_sf_senador";
+					LEFT JOIN senado.sf_senador p ON p.id = l1.id_sf_senador";
 
                 using (var reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
@@ -201,13 +201,13 @@ FROM (
             MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor_liquido) AS valor_total
 			, l.id_cf_deputado
-		from cf_despesa l
+		FROM camara.cf_despesa l
 		WHERE l.id_fornecedor = @id
 		GROUP BY l.id_cf_deputado
 		ORDER BY valor_total desc
 		LIMIT 10
 	) l1
-	JOIN cf_deputado p ON p.id = l1.id_cf_deputado
+	JOIN camara.cf_deputado p ON p.id = l1.id_cf_deputado
 	
 
 	UNION ALL
@@ -225,13 +225,13 @@ FROM (
             MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor_liquido) AS valor_total
 			, l.id_cl_deputado
-		from cl_despesa l
+		from assembleias.cl_despesa l
 		WHERE l.id_fornecedor = @id
 		GROUP BY l.id_cl_deputado
 		ORDER BY valor_total desc
 		LIMIT 10
 	) l1
-	JOIN cl_deputado p ON p.id = l1.id_cl_deputado
+	JOIN  assembleias.cl_deputado p ON p.id = l1.id_cl_deputado
 
 	UNION ALL
 
@@ -248,13 +248,13 @@ FROM (
             MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor) AS valor_total
 			, l.id_sf_senador
-		from sf_despesa l
+		from senado.sf_despesa l
 		WHERE l.id_fornecedor = @id
 		GROUP BY l.id_sf_senador
 		ORDER BY valor_total desc
 		LIMIT 10
 	) l1
-	JOIN sf_senador p ON p.id = l1.id_sf_senador
+	JOIN senado.sf_senador p ON p.id = l1.id_sf_senador
 ) tmp
 LEFT JOIN partido pr on pr.id = tmp.id_partido
 LEFT JOIN estado e on e.id = tmp.id_estado
@@ -318,21 +318,21 @@ LIMIT 10 ");
 SELECT ano, SUM(valor) AS valor
 FROM (
     SELECT l.ano, SUM(l.valor_liquido) AS valor
-    FROM cf_despesa l
+    FROM camara.cf_despesa l
     WHERE l.id_fornecedor = @id
     group by l.ano
 
     UNION ALL
 
     SELECT l.ano_mes/100 as ano , SUM(l.valor_liquido) AS valor
-    FROM cl_despesa l
+    FROM  assembleias.cl_despesa l
     WHERE l.id_fornecedor = @id
     group by ano
 
     UNION ALL
 
     SELECT l.ano, SUM(l.valor) AS valor
-    FROM sf_despesa l
+    from senado.sf_despesa l
     WHERE l.id_fornecedor = @id
     group by l.ano
 ) tmp
@@ -366,7 +366,7 @@ order by ano
         //			{
         //				string strSql = @"
         //SELECT l.mes, l.ano, SUM(l.valor_liquido) AS valor_total
-        //FROM cf_despesa l
+        //FROM camara.cf_despesa l
         //WHERE l.id_fornecedor = @id
         //group by l.ano, l.mes
 
@@ -374,7 +374,7 @@ order by ano
         //UNION ALL
 
         //SELECT l.mes, l.ano, SUM(l.valor) AS valor_total
-        //FROM sf_despesa l
+        //from senado.sf_despesa l
         //WHERE l.id_fornecedor = @id
         //group by l.ano, l.mes
 

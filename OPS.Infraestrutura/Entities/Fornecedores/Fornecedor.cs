@@ -34,7 +34,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public virtual FornecedorInfo? FornecedorInfo { get; set; }
         public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
         public virtual ICollection<AssembleiasLegislativas.Despesa> DespesasAssembleias { get; set; } = new List<AssembleiasLegislativas.Despesa>();
-        public virtual ICollection<CamaraFederal.Despesa> DespesasCamara { get; set; } = new List<CamaraFederal.Despesa>();
-        public virtual ICollection<SenadoFederal.Despesa> DespesasSenado { get; set; } = new List<SenadoFederal.Despesa>();
+        public virtual ICollection<CamaraFederal.DespesaCamara> DespesasCamara { get; set; } = new List<CamaraFederal.DespesaCamara>();
+        public virtual ICollection<SenadoFederal.DespesaSenado> DespesasSenado { get; set; } = new List<SenadoFederal.DespesaSenado>();
     }
 }

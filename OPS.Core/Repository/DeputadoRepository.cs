@@ -150,10 +150,10 @@ namespace OPS.Core.Repository
 						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
                         , l.tipo_link
-					FROM cf_despesa l
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN cf_deputado d ON d.id = l.id_cf_deputado
-					LEFT JOIN cf_despesa_tipo td ON td.id = l.id_cf_despesa_tipo
+					FROM camara.cf_despesa l
+					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN camara.cf_deputado d ON d.id = l.id_cf_deputado
+					LEFT JOIN camara.cf_despesa_tipo td ON td.id = l.id_cf_despesa_tipo
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
 	                LEFT JOIN trecho_viagem tv ON tv.id = l.id_trecho_viagem
@@ -227,15 +227,15 @@ namespace OPS.Core.Repository
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
 					FROM (
-						select id, id_cf_deputado, id_fornecedor, data_emissao from cf_despesa
+						select id, id_cf_deputado, id_fornecedor, data_emissao FROM camara.cf_despesa
 						where id = @id
 					) l1 
-					INNER JOIN cf_despesa l on
+					INNER JOIN camara.cf_despesa l on
 						l1.id_cf_deputado = l.id_cf_deputado and
 						l1.data_emissao = l.data_emissao and
 						l1.id <> l.id
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN fornecedor_info pji ON pji.id_fornecedor = pj.id
+					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
 					order by l.valor_liquido desc
 					limit 50
 				 ");
@@ -278,17 +278,17 @@ namespace OPS.Core.Repository
 						, l.valor_liquido
 					FROM (
 						select id, id_cf_deputado, id_fornecedor, id_cf_despesa_tipo, ano, mes 
-                        from cf_despesa
+                        FROM camara.cf_despesa
 						where id = @id
 					) l1 
-					INNER JOIN cf_despesa l on
+					INNER JOIN camara.cf_despesa l on
 					l1.id_cf_deputado = l.id_cf_deputado and
 					l1.ano = l.ano and
 					l1.mes = l.mes and
 					l1.id_cf_despesa_tipo = l.id_cf_despesa_tipo and
 					l1.id <> l.id
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN fornecedor_info pji ON pji.id_fornecedor = pj.id
+					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
 					order by l.valor_liquido desc
 					limit 50
 				 ");
@@ -322,7 +322,7 @@ namespace OPS.Core.Repository
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT d.ano, SUM(d.valor_liquido) AS valor_total
-					FROM cf_despesa d
+					FROM camara.cf_despesa d
 					WHERE d.id_cf_deputado = @id
 					group by d.ano
 					order by d.ano
@@ -401,7 +401,7 @@ namespace OPS.Core.Repository
             {
                 var strSql = @"
 					SELECT d.ano, SUM(d.valor_liquido) AS valor_total
-					FROM cf_despesa d
+					FROM camara.cf_despesa d
 					WHERE d.id_cf_deputado = @id
 					group by d.ano
 				";
@@ -421,7 +421,7 @@ namespace OPS.Core.Repository
 
                 strSql = @"
 					SELECT d.ano, SUM(d.valor) AS valor_total
-					FROM cf_deputado_verba_gabinete d
+					FROM camara.cf_deputado_verba_gabinete d
 					WHERE d.id_cf_deputado = @id
 					group by d.ano
 				";
@@ -451,7 +451,7 @@ namespace OPS.Core.Repository
 
                 strSql = @"
 					SELECT d.ano, SUM(d.valor) AS valor_total
-					FROM cf_deputado_remuneracao d
+					FROM camara.cf_deputado_remuneracao d
 					WHERE d.id_cf_deputado = @id
 					group by d.ano
 				";
@@ -481,7 +481,7 @@ namespace OPS.Core.Repository
 
                 strSql = @"
 					SELECT d.ano, SUM(d.valor) AS valor_total
-					FROM cf_deputado_auxilio_moradia d
+					FROM camara.cf_deputado_auxilio_moradia d
 					WHERE d.id_cf_deputado = @id
 					group by d.ano
 				";
@@ -519,7 +519,7 @@ namespace OPS.Core.Repository
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT d.ano, SUM(d.valor) AS valor_total
-					FROM cf_deputado_verba_gabinete d
+					FROM camara.cf_deputado_verba_gabinete d
 					WHERE d.id_cf_deputado = @id
 					group by d.ano
 					order by d.ano
@@ -564,14 +564,14 @@ namespace OPS.Core.Repository
 						, e.sigla as sigla_estado
 						, e.nome as nome_estado
                         , d.situacao
-					FROM cf_deputado d
+					FROM camara.cf_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
                     WHERE 1=1");
 
                 if (request.Periodo > 50)
                 {
-                    strSql.AppendLine($" AND d.id_deputado IN(select m.id_cf_deputado from cf_mandato m where m.id_legislatura = {request.Periodo.ToString()})");
+                    strSql.AppendLine($" AND d.id_deputado IN(select m.id_cf_deputado FROM camara.cf_mandato m where m.id_legislatura = {request.Periodo.ToString()})");
                 }
 
                 if (!string.IsNullOrEmpty(request.Partido))
@@ -627,7 +627,7 @@ namespace OPS.Core.Repository
                 strSql.AppendLine(@"
 					SELECT DISTINCT
 						d.id, d.nome_civil, d.nome_parlamentar, p.sigla as sigla_partido, e.sigla as sigla_estado 
-					FROM cf_deputado d
+					FROM camara.cf_deputado d
                     LEFT JOIN partido p on p.id = d.id_partido
                     LEFT JOIN estado e on e.id = d.id_estado
 				");
@@ -635,7 +635,7 @@ namespace OPS.Core.Repository
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
                 {
                     strSql.AppendLine(@"
-                        LEFT JOIN cf_mandato m on m.id_cf_deputado = d.id_deputado
+                        LEFT JOIN camara.cf_mandato m on m.id_cf_deputado = d.id_deputado
                         WHERE d.id_deputado IS NOT NULL ");
 
                     if (!string.IsNullOrEmpty(filtro.Busca))
@@ -731,7 +731,7 @@ namespace OPS.Core.Repository
 						    count(l.id) AS total_notas
 					        , sum(l.valor_liquido) as valor_total
 					        , l.id_cf_deputado
-					    FROM cf_despesa l -- _##LEG## l
+					    FROM camara.cf_despesa l 
 					    WHERE (1=1)
 				");
 
@@ -745,7 +745,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					GROUP BY id_cf_deputado
                     ) l1
-					JOIN cf_deputado d on d.id = l1.id_cf_deputado
+					JOIN camara.cf_deputado d on d.id = l1.id_cf_deputado
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
                 ");
@@ -798,7 +798,7 @@ namespace OPS.Core.Repository
 						    l.id_fornecedor
 						    , count(l.id) AS total_notas
 						    , sum(l.valor_liquido) as valor_total
-					    FROM cf_despesa l -- _##LEG## l
+					    FROM camara.cf_despesa l 
 					    WHERE (1=1)
 				");
 
@@ -812,7 +812,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					    GROUP BY l.id_fornecedor
                     ) l1
-					LEFT JOIN fornecedor pj on pj.id = l1.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
 				");
 
                 AdicionaResultadoComum(request, sqlSelect);
@@ -861,7 +861,7 @@ namespace OPS.Core.Repository
 						count(l.id) AS total_notas
 						, sum(l.valor_liquido) as valor_total
 						, l.id_cf_despesa_tipo
-					FROM cf_despesa l -- _##LEG## l
+					FROM camara.cf_despesa l 
 					WHERE (1=1)
 				");
 
@@ -876,7 +876,7 @@ namespace OPS.Core.Repository
 					GROUP BY id_cf_despesa_tipo
 					
 					) l1
-					LEFT JOIN cf_despesa_tipo td on td.id = l1.id_cf_despesa_tipo
+					LEFT JOIN camara.cf_despesa_tipo td on td.id = l1.id_cf_despesa_tipo
 				");
 
                 AdicionaResultadoComum(request, sqlSelect);
@@ -927,7 +927,7 @@ namespace OPS.Core.Repository
 							 count(l.id) AS total_notas
 							, sum(l.valor_liquido) as valor_total
 							, l.id_cf_deputado
-							FROM cf_despesa l -- _##LEG## l
+							FROM camara.cf_despesa l 
 							WHERE (1=1)
 				");
 
@@ -941,7 +941,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 						GROUP BY id_cf_deputado
 					) l1
-					INNER JOIN cf_deputado d on d.id = l1.id_cf_deputado
+					INNER JOIN camara.cf_deputado d on d.id = l1.id_cf_deputado
 					LEFT JOIN partido p on p.id = d.id_partido
 					GROUP BY p.id, p.nome
 				");
@@ -993,7 +993,7 @@ namespace OPS.Core.Repository
 							 count(l.id) AS total_notas
 							, sum(l.valor_liquido) as valor_total
 							, l.id_cf_deputado
-							FROM cf_despesa l -- _##LEG## l
+							FROM camara.cf_despesa l 
 							WHERE (1=1)
 				");
 
@@ -1007,7 +1007,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 						GROUP BY id_cf_deputado
 					) l1
-					JOIN cf_deputado d on d.id = l1.id_cf_deputado
+					JOIN camara.cf_deputado d on d.id = l1.id_cf_deputado
 					LEFT JOIN estado e on e.id = d.id_estado
 					GROUP BY e.id, e.nome
                 ");
@@ -1071,7 +1071,7 @@ namespace OPS.Core.Repository
                         , t.descricao as despesa_tipo
 					FROM (
 						SELECT data_emissao, id, id_cf_deputado, valor_liquido, id_cf_despesa_tipo, id_fornecedor
-						FROM cf_despesa l -- _##LEG## l
+						FROM camara.cf_despesa l 
 						WHERE (1=1)
 				");
 
@@ -1081,13 +1081,13 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(@" ) l
-					INNER JOIN cf_deputado d on d.id = l.id_cf_deputado
-					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
+					INNER JOIN camara.cf_deputado d on d.id = l.id_cf_deputado
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
 	                LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
-                    LEFT JOIN cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo;
+                    LEFT JOIN camara.cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo;
 
-                    SELECT COUNT(1) FROM cf_despesa l -- _##LEG## l WHERE (1=1) ");
+                    SELECT COUNT(1) FROM camara.cf_despesa l WHERE (1=1) ");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
@@ -1208,7 +1208,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Partido") && !string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cf_deputado IN (SELECT id FROM camara.cf_deputado where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
             }
         }
 
@@ -1216,7 +1216,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.TryGetValue("Estado", out object value) && !string.IsNullOrEmpty(value.ToString()))
             {
-                sqlSelect.Append("	AND l.id_cf_deputado IN (SELECT id FROM cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(value.ToString()) + ")");
+                sqlSelect.Append("	AND l.id_cf_deputado IN (SELECT id FROM camara.cf_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(value.ToString()) + ")");
                 if (value.ToString().Contains("99", StringComparison.InvariantCultureIgnoreCase))
                     sqlSelect.Append("OR id_estado IS NULL");
 
@@ -1294,7 +1294,7 @@ namespace OPS.Core.Repository
             //using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM cf_despesa_tipo ");
+                strSql.AppendLine("SELECT id, descricao FROM camara.cf_despesa_tipo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
@@ -1321,7 +1321,7 @@ namespace OPS.Core.Repository
                 strSql.AppendLine(@"
 					SELECT DISTINCT
 						s.id, s.nome
-					FROM cf_funcionario s
+					FROM camara.cf_funcionario s
 				");
 
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
@@ -1391,7 +1391,7 @@ namespace OPS.Core.Repository
 						, p.quantidade_secretarios
 						, p.custo_secretarios
 						, p.custo_total_secretarios
-					from cf_deputado p
+					FROM camara.cf_deputado p
 					where p.quantidade_secretarios > 0
 				");
 
@@ -1462,11 +1462,11 @@ SELECT DISTINCT
 	, r.valor_total
     , r.referencia
 	, s.chave
-FROM cf_funcionario s
-JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
-left JOIN cf_funcionario_remuneracao r ON r.id_cf_funcionario = s.id -- AND r.id_cf_deputado = co.id_cf_deputado
-JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
-JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+FROM camara.cf_funcionario s
+JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+left JOIN camara.cf_funcionario_remuneracao r ON r.id_cf_funcionario = s.id -- AND r.id_cf_deputado = co.id_cf_deputado
+JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
 WHERE co.id_cf_deputado = @id
 AND r.referencia = '2021-07-01'
 AND ca.nome = r.cargo
@@ -1534,10 +1534,10 @@ AND co.periodo_ate IS null
 	                    s.nome
 	                    , SUM(r.valor_outros + r.valor_bruto) as custo_total
 	                    , s.link
-                    from cf_funcionario_remuneracao r
+                    FROM camara.cf_funcionario_remuneracao r
                     left join (
 	                    select distinct id_cf_deputado, nome, link
-	                    from cf_funcionario s
+	                    FROM camara.cf_funcionario s
                     ) s on s.link = r.id_cf_funcionario
                     WHERE s.id_cf_deputado = @id
                     group by s.link, s.nome
@@ -1589,8 +1589,8 @@ AND co.periodo_ate IS null
 						, sum(IF(sp.presente = 1, 1, 0)) as presenca
 						, sum(IF(sp.presente = 0 and sp.justificativa = '', 1, 0)) as ausencia
 						, sum(IF(sp.presente = 0 and sp.justificativa <> '', 1, 0)) as ausencia_justificada
-					FROM cf_sessao_presenca sp
-					inner join cf_sessao s on s.id = sp.id_cf_sessao
+					FROM camara.cf_sessao_presenca sp
+					inner JOIN camara.cf_sessao s on s.id = sp.id_cf_sessao
 					where sp.id_cf_deputado = @id
 					group by sp.id_cf_deputado, year(s.data)
 					order by year(s.data)
@@ -1689,7 +1689,7 @@ AND co.periodo_ate IS null
         {
             //using (AppDb banco = new AppDb())
             {
-                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from cf_despesa_resumo_mensal"))
+                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor FROM camara.cf_despesa_resumo_mensal"))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
@@ -1743,7 +1743,7 @@ AND co.periodo_ate IS null
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					select ano, sum(valor) as valor
-					from cf_despesa_resumo_mensal sf
+					FROM camara.cf_despesa_resumo_mensal sf
 					group by ano
 				");
 
@@ -1786,7 +1786,7 @@ AND co.periodo_ate IS null
 						, s.ausencias
 						, s.ausencias_justificadas
                         , (s.presencas + s.ausencias + s.ausencias_justificadas) as participantes
-					FROM cf_sessao s
+					FROM camara.cf_sessao s
 					WHERE (1=1)
 				");
 
@@ -1864,8 +1864,8 @@ AND co.periodo_ate IS null
 						, sp.presente
 						, sp.justificativa
 						, sp.presenca_externa
-					FROM cf_sessao_presenca sp
-					INNER JOIN cf_deputado d on d.id = sp.id_cf_deputado
+					FROM camara.cf_sessao_presenca sp
+					INNER JOIN camara.cf_deputado d on d.id = sp.id_cf_deputado
 					WHERE sp.id_cf_sessao = {0}
 				", new { id });
 
@@ -1937,7 +1937,7 @@ AND co.periodo_ate IS null
             //using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, nome FROM cf_funcionario_grupo_funcional ");
+                strSql.AppendLine("SELECT id, nome FROM camara.cf_funcionario_grupo_funcional ");
                 strSql.AppendFormat("ORDER BY nome ");
 
                 var lstRetorno = new List<dynamic>();
@@ -1961,7 +1961,7 @@ AND co.periodo_ate IS null
             //using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, nome FROM cf_funcionario_cargo ");
+                strSql.AppendLine("SELECT id, nome FROM camara.cf_funcionario_cargo ");
                 strSql.AppendFormat("ORDER BY nome ");
 
                 var lstRetorno = new List<dynamic>();
@@ -2065,12 +2065,12 @@ SELECT
 	{strSelectFiels},
     COUNT(1) AS quantidade,
     SUM(r.valor_total) AS valor_total
-FROM cf_funcionario s
-LEFT JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
-JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
-LEFT JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
-JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
-LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
+FROM camara.cf_funcionario s
+LEFT JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN camara.cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+LEFT JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+LEFT JOIN camara.cf_deputado d ON d.id = co.id_cf_deputado
 WHERE (1=1)
 ");
                 }
@@ -2089,13 +2089,13 @@ SELECT
     , ca.nome as cargo
 	, gf.nome AS grupo_funcional
 	, tf.nome as tipo_folha
-FROM cf_funcionario s
-JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
-JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
-LEFT JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
-LEFT JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
-LEFT JOIN cf_funcionario_tipo_folha tf on tf.id = r.tipo
-LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
+FROM camara.cf_funcionario s
+JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN camara.cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+LEFT JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+LEFT JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+LEFT JOIN camara.cf_funcionario_tipo_folha tf on tf.id = r.tipo
+LEFT JOIN camara.cf_deputado d ON d.id = co.id_cf_deputado
 WHERE (1=1) 
 ");
                 }
@@ -2188,13 +2188,13 @@ SELECT
     , r.valor_vantagens as vant_indenizatorias
     , r.valor_outros
     , r.valor_total
-FROM cf_funcionario s
-LEFT JOIN cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
-JOIN cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
-LEFT JOIN cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
-JOIN cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
-JOIN cf_funcionario_tipo_folha tf on tf.id = r.tipo
-LEFT JOIN cf_deputado d ON d.id = co.id_cf_deputado
+FROM camara.cf_funcionario s
+LEFT JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
+JOIN camara.cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
+LEFT JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
+JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
+JOIN camara.cf_funcionario_tipo_folha tf on tf.id = r.tipo
+LEFT JOIN camara.cf_deputado d ON d.id = co.id_cf_deputado
 WHERE r.id = @id
 ");
 

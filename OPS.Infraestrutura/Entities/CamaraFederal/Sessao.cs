@@ -40,7 +40,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string? Checksum { get; set; }
 
         // Navigation properties
-        public virtual Legislatura Legislatura { get; set; } = null!;
+        public virtual LegislaturaCamara Legislatura { get; set; } = null!;
         public virtual ICollection<SessaoPresenca> SessaoPresencas { get; set; } = new List<SessaoPresenca>();
     }
 }

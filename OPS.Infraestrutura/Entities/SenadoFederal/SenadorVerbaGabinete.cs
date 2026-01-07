@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using OPS.Infraestrutura.Entities.SenadoFederal;
 
-namespace OPS.Infraestrutura.Entities.CamaraFederal
+namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("cf_senador_verba_gabinete")]
     public class SenadorVerbaGabinete

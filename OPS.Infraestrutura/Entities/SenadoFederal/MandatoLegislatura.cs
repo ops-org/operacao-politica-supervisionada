@@ -18,7 +18,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public uint IdSenador { get; set; }
 
         // Navigation properties
-        public virtual Mandato Mandato { get; set; } = null!;
-        public virtual Legislatura Legislatura { get; set; } = null!;
+        public virtual MandatoSenado Mandato { get; set; } = null!;
+        public virtual LegislaturaSenado Legislatura { get; set; } = null!;
     }
 }

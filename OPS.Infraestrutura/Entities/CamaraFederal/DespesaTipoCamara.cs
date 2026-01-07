@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_despesa_tipo")]
-    public class DespesaTipo
+    public class DespesaTipoCamara
     {
         [Key]
         [Column("id")]
@@ -15,7 +15,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string? Descricao { get; set; }
 
         // Navigation properties
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
+        public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
         public virtual ICollection<EspecificacaoTipo> EspecificacaoTipos { get; set; } = new List<EspecificacaoTipo>();
     }
 }

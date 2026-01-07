@@ -28,7 +28,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
 
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;
-        public virtual Mandato Mandato { get; set; } = null!;
+        public virtual MandatoSenado Mandato { get; set; } = null!;
         public virtual MotivoAfastamento? MotivoAfastamento { get; set; }
     }
 }

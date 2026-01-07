@@ -32,10 +32,11 @@ namespace OPS.API
             Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
             //new ParametrosRepository().CarregarPadroes();
 
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("AuditoriaContext")));
+            services.AddDbContext<AppDbContext>(options => options
+                    .UseNpgsql(Configuration.GetConnectionString("AuditoriaContext"))
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
-            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
+            //services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
 
             services.AddScoped<DeputadoRepository>();
             services.AddScoped<SenadorRepository>();

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_despesa_resumo_mensal")]
-    public class DespesaResumoMensal
+    public class DespesaResumoMensalSenado
     {
         [Key]
         [Column("id_sf_senador")]

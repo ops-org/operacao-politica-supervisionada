@@ -5,7 +5,7 @@ using OPS.Infraestrutura.Entities.Comum;
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_mandato")]
-    public class Mandato
+    public class MandatoCamara
     {
         [Key]
         [Column("id")]
@@ -35,9 +35,9 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
 
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;
-        public virtual Legislatura? Legislatura { get; set; }
+        public virtual LegislaturaCamara? Legislatura { get; set; }
         public virtual Estado? Estado { get; set; }
         public virtual Partido? Partido { get; set; }
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
+        public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
     }
 }

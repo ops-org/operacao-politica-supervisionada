@@ -40,10 +40,10 @@ namespace OPS.Core.Repository
                         , d.valor_total_remuneracao
                         , d.valor_total_remuneracao + d.valor_total_ceaps as valor_total
                         , d.ativo
-                        , (SELECT m.participacao from sf_mandato m WHERE m.id_sf_senador = d.id ORDER BY m.id desc LIMIT 1) as participacao
+                        , (SELECT m.participacao from senado.sf_mandato m WHERE m.id_sf_senador = d.id ORDER BY m.id desc LIMIT 1) as participacao
                         , d.naturalidade
                         , e.sigla as silga_estado_naturalidade
-					FROM sf_senador d
+					from senado.sf_senador d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
 					LEFT JOIN estado en on e.id = d.id_estado_naturalidade
@@ -113,11 +113,11 @@ namespace OPS.Core.Repository
                         , d.valor_total_ceaps
                         , d.valor_total_remuneracao
                         , d.ativo
-					FROM sf_senador d
+					from senado.sf_senador d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
-                    JOIN sf_mandato m ON m.id_sf_senador = d.id
-					JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
+                    JOIN senado.sf_mandato m ON m.id_sf_senador = d.id
+					JOIN senado.sf_mandato_legislatura ml on ml.id_sf_mandato = m.id
                     WHERE m.exerceu = 1");
 
                 if (request.Periodo > 0)
@@ -188,13 +188,13 @@ namespace OPS.Core.Repository
 						SELECT
 							l.id_fornecedor
 							, SUM(l.valor) as valor_total
-						FROM sf_despesa l
+						from senado.sf_despesa l
 						WHERE l.id_sf_senador = @id
 						GROUP BY l.id_fornecedor
 						order by valor_total desc
 						LIMIT 10
 					) l1
-					LEFT JOIN fornecedor pj on pj.id = l1.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
 					order by l1.valor_total desc
 				");
 
@@ -235,12 +235,12 @@ namespace OPS.Core.Repository
 						l.id
 						, l.valor
 						, l.id_fornecedor
-						FROM sf_despesa l
+						from senado.sf_despesa l
 						WHERE l.id_sf_senador = @id
 						order by l.valor desc
 						LIMIT 10
 					) l1
-					LEFT JOIN fornecedor pj on pj.id = l1.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
 					order by l1.valor desc 
 				");
 
@@ -271,7 +271,7 @@ namespace OPS.Core.Repository
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT d.ano, SUM(d.valor) AS valor_total
-					FROM sf_despesa d
+					from senado.sf_despesa d
 					WHERE d.id_sf_senador = @id
 					group by d.ano
 					order by d.ano
@@ -356,7 +356,7 @@ namespace OPS.Core.Repository
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT d.ano, SUM(d.valor) AS valor_total
-					FROM cf_senador_verba_gabinete d
+					FROM senado.sf_senador_verba_gabinete d
 					WHERE d.id_sf_senador = @id
 					group by d.ano
 					order by d.ano
@@ -390,7 +390,7 @@ namespace OPS.Core.Repository
                 strSql.AppendLine(@"
 					SELECT DISTINCT
 						d.id, d.nome, d.nome_completo, p.sigla as sigla_partido, e.sigla as sigla_estado 
-					FROM sf_senador d
+					from senado.sf_senador d
                     LEFT JOIN partido p on p.id = d.id_partido
                     LEFT JOIN estado e on e.id = d.id_estado
 				");
@@ -408,7 +408,7 @@ namespace OPS.Core.Repository
 
                     if ((filtro.Periodo ?? 0) > 0)
                     {
-                        strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from sf_mandato m JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura = {filtro.Periodo.ToString()})");
+                        strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from senado.sf_mandato m JOIN senado.sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura = {filtro.Periodo.ToString()})");
 
                         strSql.AppendLine(@"
                             ORDER BY d.nome
@@ -425,7 +425,7 @@ namespace OPS.Core.Repository
 
                         var listaLegislaturas = string.Join(",", legislaturas);
 
-                        strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from sf_mandato m JOIN sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura IN ({listaLegislaturas}))");
+                        strSql.AppendLine($" AND d.id IN(select m.id_sf_senador from senado.sf_mandato m JOIN senado.sf_mandato_legislatura ml on ml.id_sf_mandato = m.id and m.exerceu = 1 where ml.id_sf_legislatura IN ({listaLegislaturas}))");
 
                         strSql.AppendLine(@"
                             ORDER BY d.nome
@@ -451,7 +451,7 @@ namespace OPS.Core.Repository
                             AND d.id IN(
                                 /* Somente senadores com despesas */
                                 select distinct id_sf_senador
-                                from sf_despesa
+                                from senado.sf_despesa
                             ) ");
                     }
 
@@ -523,7 +523,7 @@ namespace OPS.Core.Repository
 						    count(l.id) AS total_notas
 					    , sum(l.valor) as valor_total
 					    , l.id_sf_senador
-					    FROM sf_despesa l
+					    from senado.sf_despesa l
 					    WHERE (1=1)
 				");
 
@@ -537,7 +537,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					    GROUP BY id_sf_senador
                     ) l1
-					LEFT JOIN sf_senador d on d.id = l1.id_sf_senador
+					LEFT JOIN senado.sf_senador d on d.id = l1.id_sf_senador
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
 				");
@@ -590,7 +590,7 @@ namespace OPS.Core.Repository
 						    l.id_fornecedor
 						    , count(l.id) AS total_notas
 						    , sum(l.valor) as valor_total
-					    FROM sf_despesa l
+					    from senado.sf_despesa l
 					    WHERE (1=1)
 				");
 
@@ -604,7 +604,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					    GROUP BY l.id_fornecedor
                     ) l1
-					LEFT JOIN fornecedor pj on pj.id = l1.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
 				");
 
                 AdicionaResultadoComum(request, sqlSelect);
@@ -653,7 +653,7 @@ namespace OPS.Core.Repository
 						    count(l.id) AS total_notas
 						    , sum(l.valor) as valor_total
 						    , l.id_sf_despesa_tipo
-					    FROM sf_despesa l
+					    from senado.sf_despesa l
 					    WHERE (1=1)
 				");
 
@@ -667,7 +667,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					    GROUP BY id_sf_despesa_tipo
                     ) l1
-					LEFT JOIN sf_despesa_tipo td on td.id = l1.id_sf_despesa_tipo
+					LEFT JOIN senado.sf_despesa_tipo td on td.id = l1.id_sf_despesa_tipo
 				");
 
                 AdicionaResultadoComum(request, sqlSelect);
@@ -717,7 +717,7 @@ namespace OPS.Core.Repository
 							count(l.id) AS total_notas
 						    , sum(l.valor) as valor_total
 						    , l.id_sf_senador
-						FROM sf_despesa l
+						from senado.sf_despesa l
 						WHERE (1=1)
 				");
 
@@ -731,7 +731,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 						GROUP BY id_sf_senador
 					) l1
-					INNER JOIN sf_senador d on d.id = l1.id_sf_senador
+					INNER JOIN senado.sf_senador d on d.id = l1.id_sf_senador
 					LEFT JOIN partido p on p.id = d.id_partido
 					GROUP BY p.id, p.nome
 				");
@@ -783,7 +783,7 @@ namespace OPS.Core.Repository
 							count(l.id) AS total_notas
 						    , sum(l.valor) as valor_total
 						    , l.id_sf_senador
-						FROM sf_despesa l
+						from senado.sf_despesa l
 						WHERE (1=1)
 				");
 
@@ -797,7 +797,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 						GROUP BY id_sf_senador
 					) l1
-					JOIN sf_senador d on d.id = l1.id_sf_senador
+					JOIN senado.sf_senador d on d.id = l1.id_sf_senador
 					LEFT JOIN estado e on e.id = d.id_estado
 					GROUP BY e.id, e.nome
 				");
@@ -857,12 +857,12 @@ namespace OPS.Core.Repository
                         , e.sigla as sigla_estado
 						, p.sigla as sigla_partido
                         , t.descricao as despesa_tipo
-					FROM sf_despesa l
-					JOIN sf_senador d on d.id = l.id_sf_senador
-					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
+					from senado.sf_despesa l
+					JOIN senado.sf_senador d on d.id = l.id_sf_senador
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
                     LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
-                    LEFT JOIN sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo
+                    LEFT JOIN senado.sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo
 					WHERE (1=1)
 				");
 
@@ -872,7 +872,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
-                    @"SELECT count(1) FROM sf_despesa l WHERE (1=1) ");
+                    @"SELECT count(1) from senado.sf_despesa l WHERE (1=1) ");
 
                 sqlSelect.Append(sqlWhere);
 
@@ -963,7 +963,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Estado") && !string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_estado IN(" + request.Filters["Estado"].ToString() + ")) ");
+                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id from senado.sf_senador where id_estado IN(" + request.Filters["Estado"].ToString() + ")) ");
             }
         }
 
@@ -971,7 +971,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Partido") && !string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id FROM sf_senador where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
+                sqlSelect.AppendLine("	AND l.id_sf_senador IN (SELECT id from senado.sf_senador where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
             }
         }
 
@@ -1033,7 +1033,7 @@ namespace OPS.Core.Repository
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM sf_despesa_tipo ");
+                strSql.AppendLine("SELECT id, descricao from senado.sf_despesa_tipo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
@@ -1056,7 +1056,7 @@ namespace OPS.Core.Repository
         {
             // using (AppDb banco = new AppDb())
             {
-                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from sf_despesa_resumo_mensal"))
+                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from senado.sf_despesa_resumo_mensal"))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
@@ -1110,7 +1110,7 @@ namespace OPS.Core.Repository
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					select ano, sum(valor) as valor
-					from sf_despesa_resumo_mensal
+					from senado.sf_despesa_resumo_mensal
 					group by ano
 				");
 
@@ -1230,12 +1230,12 @@ SELECT
 	{strSelectFiels},
     COUNT(1) AS quantidade,
     SUM(r.custo_total) AS valor_total
-FROM sf_remuneracao r
-JOIN sf_vinculo v ON v.id = r.id_vinculo
-JOIN sf_categoria ct ON ct.id = r.id_categoria
-LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
-JOIN sf_lotacao l ON l.id = r.id_lotacao
-LEFT JOIN sf_senador s on s.id = l.id_senador
+from senado.sf_remuneracao r
+JOIN senado.sf_vinculo v ON v.id = r.id_vinculo
+JOIN senado.sf_categoria ct ON ct.id = r.id_categoria
+LEFT JOIN senado.sf_cargo cr ON cr.id = r.id_cargo 
+JOIN senado.sf_lotacao l ON l.id = r.id_lotacao
+LEFT JOIN senado.sf_senador s on s.id = l.id_senador
 WHERE (1=1)
 ");
                 }
@@ -1254,15 +1254,15 @@ SELECT
 	tf.descricao as tipo_folha, 
 	r.ano_mes, 
 	r.custo_total as valor_total
-FROM sf_remuneracao r
-JOIN sf_lotacao l ON l.id = r.id_lotacao
-JOIN sf_vinculo v ON v.id = r.id_vinculo
-JOIN sf_categoria ct ON ct.id = r.id_categoria
-JOIN sf_tipo_folha tf ON tf.id = r.id_tipo_folha
-LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
-LEFT JOIN sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
-LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
-LEFT JOIN sf_senador s on s.id = l.id_senador
+from senado.sf_remuneracao r
+JOIN senado.sf_lotacao l ON l.id = r.id_lotacao
+JOIN senado.sf_vinculo v ON v.id = r.id_vinculo
+JOIN senado.sf_categoria ct ON ct.id = r.id_categoria
+JOIN senado.sf_tipo_folha tf ON tf.id = r.id_tipo_folha
+LEFT JOIN senado.sf_cargo cr ON cr.id = r.id_cargo 
+LEFT JOIN senado.sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
+LEFT JOIN senado.sf_funcao f ON f.id = r.id_simbolo_funcao
+LEFT JOIN senado.sf_senador s on s.id = l.id_senador
 WHERE (1=1) 
 ");
                 }
@@ -1358,14 +1358,14 @@ SELECT
     r.vant_indenizatorias,
     (r.rem_liquida + r.diarias + r.auxilios + r.vant_indenizatorias) AS total_liquido,
     r.custo_total
-FROM sf_remuneracao r
-JOIN sf_lotacao l ON l.id = r.id_lotacao
-JOIN sf_vinculo v ON v.id = r.id_vinculo
-JOIN sf_categoria ct ON ct.id = r.id_categoria
-JOIN sf_tipo_folha tf ON tf.id = r.id_tipo_folha
-LEFT JOIN sf_cargo cr ON cr.id = r.id_cargo 
-LEFT JOIN sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
-LEFT JOIN sf_funcao f ON f.id = r.id_simbolo_funcao
+from senado.sf_remuneracao r
+JOIN senado.sf_lotacao l ON l.id = r.id_lotacao
+JOIN senado.sf_vinculo v ON v.id = r.id_vinculo
+JOIN senado.sf_categoria ct ON ct.id = r.id_categoria
+JOIN senado.sf_tipo_folha tf ON tf.id = r.id_tipo_folha
+LEFT JOIN senado.sf_cargo cr ON cr.id = r.id_cargo 
+LEFT JOIN senado.sf_referencia_cargo rc ON rc.id = r.id_referencia_cargo
+LEFT JOIN senado.sf_funcao f ON f.id = r.id_simbolo_funcao
 WHERE r.id = @id
 ");
 
@@ -1415,7 +1415,7 @@ WHERE r.id = @id
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM sf_lotacao ");
+                strSql.AppendLine("SELECT id, descricao from senado.sf_lotacao ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
@@ -1439,7 +1439,7 @@ WHERE r.id = @id
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM sf_cargo ");
+                strSql.AppendLine("SELECT id, descricao from senado.sf_cargo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
@@ -1463,7 +1463,7 @@ WHERE r.id = @id
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM sf_categoria ");
+                strSql.AppendLine("SELECT id, descricao from senado.sf_categoria ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();
@@ -1487,7 +1487,7 @@ WHERE r.id = @id
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM sf_vinculo ");
+                strSql.AppendLine("SELECT id, descricao from senado.sf_vinculo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();

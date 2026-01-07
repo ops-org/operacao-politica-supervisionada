@@ -65,13 +65,13 @@ public static class FornecedorConfigurations
         });
     }
 
-    public static void ConfigureForcecedorCnpjIncorreto(this ModelBuilder modelBuilder)
+    public static void ConfigureFornecedorCnpjIncorreto(this ModelBuilder modelBuilder)
     {
-        // Configure ForcecedorCnpjIncorreto
+        // Configure FornecedorCnpjIncorreto
         modelBuilder.Entity<ForcecedorCnpjIncorreto>(entity =>
         {
             entity.HasKey(e => e.CnpjIncorreto);
-            entity.ToTable("forcecedor_cnpj_incorreto", "fornecedor");
+            entity.ToTable("fornecedor_cnpj_incorreto", "fornecedor");
         });
     }
 
@@ -102,7 +102,7 @@ public static class FornecedorConfigurations
         modelBuilder.ConfigureFornecedorInfo();
         modelBuilder.ConfigureFornecedorSocio();
         modelBuilder.ConfigureFornecedorAtividadeSecundaria();
-        modelBuilder.ConfigureForcecedorCnpjIncorreto();
+        modelBuilder.ConfigureFornecedorCnpjIncorreto();
         modelBuilder.ConfigureFornecedorFaixaEtaria();
         modelBuilder.ConfigureFornecedorSocioQualificacao();
         

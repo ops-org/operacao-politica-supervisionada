@@ -134,10 +134,10 @@ namespace OPS.Core.Repository
 						, pj.cnpj_cpf
 						, pj.nome AS nome_fornecedor
                         , l.tipo_link
-					FROM cl_despesa l
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN cl_deputado d ON d.id = l.id_cl_deputado
-					LEFT JOIN cl_despesa_tipo td ON td.id = l.id_cl_despesa_tipo
+					FROM assembleias.cl_despesa l
+					LEFT JOIN fornecedor.fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN assembleias.cl_deputado d ON d.id = l.id_cl_deputado
+					LEFT JOIN assembleias.cl_despesa_tipo td ON td.id = l.id_cl_despesa_tipo
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
 	                LEFT JOIN trecho_viagem tv ON tv.id = l.id_trecho_viagem
@@ -210,15 +210,15 @@ namespace OPS.Core.Repository
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
 					FROM (
-						select id, id_cl_deputado, id_fornecedor, data_emissao from cl_despesa
+						select id, id_cl_deputado, id_fornecedor, data_emissao FROM assembleias.cl_despesa
 						where id = @id
 					) l1 
-					INNER JOIN cl_despesa l on
+					INNER JOIN assembleias.cl_despesa l on
 						l1.id_cl_deputado = l.id_cl_deputado and
 						l1.data_emissao = l.data_emissao and
 						l1.id <> l.id
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN fornecedor_info pji ON pji.id_fornecedor = pj.id
+					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
 					order by l.valor_liquido desc
 					limit 50
 				 ");
@@ -257,17 +257,17 @@ namespace OPS.Core.Repository
 						, l.valor_liquido
 					FROM (
 						select id, id_cl_deputado, id_fornecedor, id_cl_despesa_tipo, ano, mes 
-                        from cl_despesa
+                        FROM assembleias.cl_despesa
 						where id = @id
 					) l1 
-					INNER JOIN cl_despesa l on
+					INNER JOIN assembleias.cl_despesa l on
 					l1.id_cl_deputado = l.id_cl_deputado and
 					l1.ano = l.ano and
 					l1.mes = l.mes and
 					l1.id_cl_despesa_tipo = l.id_cl_despesa_tipo and
 					l1.id <> l.id
-					LEFT JOIN fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN fornecedor_info pji ON pji.id_fornecedor = pj.id
+					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
 					order by l.valor_liquido desc
 					limit 50
 				 ");
@@ -441,14 +441,14 @@ namespace OPS.Core.Repository
 						, e.sigla as sigla_estado
 						, e.nome as nome_estado
                         -- , d.situacao
-					FROM cl_deputado d
+					FROM assembleias.cl_deputado d
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
                     WHERE 1=1");
 
                 //if (request.Periodo > 50)
                 //{
-                //    strSql.AppendLine($" AND d.id IN(select m.id_cl_deputado from cl_mandato m where m.id_legislatura = {request.Periodo.ToString()})");
+                //    strSql.AppendLine($" AND d.id IN(select m.id_cl_deputado FROM assembleias.cl_mandato m where m.id_legislatura = {request.Periodo.ToString()})");
                 //}
 
                 if (!string.IsNullOrEmpty(request.Partido))
@@ -504,7 +504,7 @@ namespace OPS.Core.Repository
                 strSql.AppendLine(@"
 					SELECT DISTINCT
 						d.id, d.nome_civil, d.nome_parlamentar 
-					FROM cl_deputado d
+					FROM assembleias.cl_deputado d
 				");
 
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
@@ -606,7 +606,7 @@ namespace OPS.Core.Repository
 						    count(l.id) AS total_notas
 					        , sum(l.valor_liquido) as valor_total
 					        , l.id_cl_deputado
-					    FROM cl_despesa l
+					    FROM assembleias.cl_despesa l
 					    WHERE (1=1)
 				");
 
@@ -620,7 +620,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					GROUP BY id_cl_deputado
                     ) l1
-					JOIN cl_deputado d on d.id = l1.id_cl_deputado
+					JOIN assembleias.cl_deputado d on d.id = l1.id_cl_deputado
 					LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
                 ");
@@ -673,7 +673,7 @@ namespace OPS.Core.Repository
 						    l.id_fornecedor
 						    , count(l.id) AS total_notas
 						    , sum(l.valor_liquido) as valor_total
-					    FROM cl_despesa l
+					    FROM assembleias.cl_despesa l
 					    WHERE (1=1)
 				");
 
@@ -687,7 +687,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 					    GROUP BY l.id_fornecedor
                     ) l1
-					LEFT JOIN fornecedor pj on pj.id = l1.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
 				");
 
                 AdicionaResultadoComum(request, sqlSelect);
@@ -736,7 +736,7 @@ namespace OPS.Core.Repository
 						count(l.id) AS total_notas
 						, sum(l.valor_liquido) as valor_total
 						, l.id_cl_despesa_tipo
-					FROM cl_despesa l
+					FROM assembleias.cl_despesa l
 					WHERE (1=1)
 				");
 
@@ -751,7 +751,7 @@ namespace OPS.Core.Repository
 					GROUP BY id_cl_despesa_tipo
 					
 					) l1
-					LEFT JOIN cl_despesa_tipo td on td.id = l1.id_cl_despesa_tipo
+					LEFT JOIN assembleias.cl_despesa_tipo td on td.id = l1.id_cl_despesa_tipo
 				");
 
                 AdicionaResultadoComum(request, sqlSelect);
@@ -802,7 +802,7 @@ namespace OPS.Core.Repository
 							 count(l.id) AS total_notas
 							, sum(l.valor_liquido) as valor_total
 							, l.id_cl_deputado
-							FROM cl_despesa l
+							FROM assembleias.cl_despesa l
 							WHERE (1=1)
 				");
 
@@ -816,7 +816,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 						GROUP BY id_cl_deputado
 					) l1
-					INNER JOIN cl_deputado d on d.id = l1.id_cl_deputado
+					INNER JOIN assembleias.cl_deputado d on d.id = l1.id_cl_deputado
 					LEFT JOIN partido p on p.id = d.id_partido
 					GROUP BY p.id, p.nome
 				");
@@ -868,7 +868,7 @@ namespace OPS.Core.Repository
 							 count(l.id) AS total_notas
 							, sum(l.valor_liquido) as valor_total
 							, l.id_cl_deputado
-							FROM cl_despesa l
+							FROM assembleias.cl_despesa l
 							WHERE (1=1)
 				");
 
@@ -882,7 +882,7 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendLine(@"
 						GROUP BY id_cl_deputado
 					) l1
-					JOIN cl_deputado d on d.id = l1.id_cl_deputado
+					JOIN assembleias.cl_deputado d on d.id = l1.id_cl_deputado
 					LEFT JOIN estado e on e.id = d.id_estado
 					GROUP BY e.id, e.nome
                 ");
@@ -948,7 +948,7 @@ namespace OPS.Core.Repository
                         , d.id as id_cl_deputado
 					FROM (
 						SELECT data_emissao, id, id_cl_deputado, valor_liquido, id_cl_despesa_tipo, id_cl_despesa_especificacao, id_fornecedor, favorecido
-						FROM cl_despesa l
+						FROM assembleias.cl_despesa l
 						WHERE (1=1)
 				");
 
@@ -958,14 +958,14 @@ namespace OPS.Core.Repository
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(@" ) l
-					INNER JOIN cl_deputado d on d.id = l.id_cl_deputado
-					LEFT JOIN fornecedor pj on pj.id = l.id_fornecedor
+					INNER JOIN assembleias.cl_deputado d on d.id = l.id_cl_deputado
+					LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
 	                LEFT JOIN partido p on p.id = d.id_partido
 					LEFT JOIN estado e on e.id = d.id_estado
-                    LEFT JOIN cl_despesa_tipo t on t.id = l.id_cl_despesa_tipo
-                    LEFT JOIN cl_despesa_especificacao de on de.id = l.id_cl_despesa_especificacao;
+                    LEFT JOIN assembleias.cl_despesa_tipo t on t.id = l.id_cl_despesa_tipo
+                    LEFT JOIN assembleias.cl_despesa_especificacao de on de.id = l.id_cl_despesa_especificacao;
 
-                    SELECT COUNT(1) FROM cl_despesa l WHERE (1=1) ");
+                    SELECT COUNT(1) FROM assembleias.cl_despesa l WHERE (1=1) ");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
@@ -1038,7 +1038,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Partido") && !string.IsNullOrEmpty(request.Filters["Partido"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM assembleias.cl_deputado where id_partido IN(" + request.Filters["Partido"].ToString() + ")) ");
             }
         }
 
@@ -1046,7 +1046,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Estado") && !string.IsNullOrEmpty(request.Filters["Estado"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM cl_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["Estado"].ToString()) + ")) ");
+                sqlSelect.AppendLine("	AND l.id_cl_deputado IN (SELECT id FROM assembleias.cl_deputado where id_estado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["Estado"].ToString()) + ")) ");
             }
         }
 
@@ -1120,7 +1120,7 @@ namespace OPS.Core.Repository
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine("SELECT id, descricao FROM cl_despesa_tipo ");
+                strSql.AppendLine("SELECT id, descricao FROM assembleias.cl_despesa_tipo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<dynamic>();

@@ -72,11 +72,11 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public byte[]? Hash { get; set; }
 
         // Navigation properties
-        public virtual ICollection<Despesa> Despesas { get; set; } = new List<Despesa>();
-        public virtual ICollection<Mandato> Mandatos { get; set; } = new List<Mandato>();
+        public virtual ICollection<DespesaSenado> Despesas { get; set; } = new List<DespesaSenado>();
+        public virtual ICollection<MandatoSenado> Mandatos { get; set; } = new List<MandatoSenado>();
         public virtual ICollection<MandatoExercicio> MandatoExercicios { get; set; } = new List<MandatoExercicio>();
         public virtual ICollection<Lotacao> Lotacoes { get; set; } = new List<Lotacao>();
-        public virtual ICollection<Secretario> Secretarios { get; set; } = new List<Secretario>();
+        public virtual ICollection<SecretarioSenado> Secretarios { get; set; } = new List<SecretarioSenado>();
         public virtual ICollection<SecretarioCompleto> SecretariosCompletos { get; set; } = new List<SecretarioCompleto>();
         public virtual SenadorCampeaoGasto? CampeaoGasto { get; set; }
         public virtual ICollection<SenadorHistoricoAcademico> HistoricoAcademico { get; set; } = new List<SenadorHistoricoAcademico>();

@@ -5,7 +5,7 @@ using OPS.Infraestrutura.Entities.Comum;
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_mandato")]
-    public class Mandato
+    public class MandatoSenado
     {
         [Key]
         [Column("id")]
