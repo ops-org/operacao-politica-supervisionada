@@ -11,7 +11,7 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
         public byte Id { get; set; }
 
         [Column("descricao")]
-        [StringLength(100)]
+        [StringLength(150)]
         public string Descricao { get; set; } = null!;
 
         // Navigation properties

@@ -1741,10 +1741,12 @@ AND co.periodo_ate IS null
             //using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine(@"
+                strSql.AppendLine($@"
 					select ano, sum(valor) as valor
 					FROM camara.cf_despesa_resumo_mensal sf
-					group by ano
+                    WHERE ano > {DateTime.UtcNow.AddYears(-10).Year}
+					GROUP BY ano
+                    ORDER BY ano
 				");
 
                 var categories = new List<dynamic>();

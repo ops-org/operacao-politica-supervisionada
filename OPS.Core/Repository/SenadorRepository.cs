@@ -1108,10 +1108,12 @@ namespace OPS.Core.Repository
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					select ano, sum(valor) as valor
-					from senado.sf_despesa_resumo_mensal
-					group by ano
+                strSql.AppendLine($@"
+					SELECT ano, sum(valor) as valor
+					FROM senado.sf_despesa_resumo_mensal
+                    WHERE ano > {DateTime.UtcNow.AddYears(-10).Year}
+					GROUP BY ano
+                    ORDER BY ano
 				");
 
                 var categories = new List<dynamic>();

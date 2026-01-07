@@ -55,19 +55,19 @@ namespace OPS.API.Controllers
         [HttpGet("{id:int}/MaioresNotas")]
         public async Task<dynamic> MaioresNotas(int id)
         {
-            return await _deputadoEstadualRepository.MaioresNotas(id);
+            return await _deputadoEstadualRepository.MaioresNotas((uint)id);
         }
 
         [HttpGet("{id:int}/MaioresFornecedores")]
         public async Task<dynamic> MaioresFornecedores(int id)
         {
-            return await _deputadoEstadualRepository.MaioresFornecedores(id);
+            return await _deputadoEstadualRepository.MaioresFornecedores((uint)id);
         }
 
         [HttpGet("{id:int}/GastosPorAno")]
         public async Task<dynamic> GastosPorAno(int id)
         {
-            return await _deputadoEstadualRepository.GastosPorAno(id);
+            return await _deputadoEstadualRepository.GastosPorAno((uint)id);
         }
 
         [HttpGet]

@@ -14,7 +14,7 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
         public byte IdDespesaTipo { get; set; }
 
         [Column("descricao")]
-        [StringLength(100)]
+        [StringLength(400)]
         public string Descricao { get; set; } = null!;
 
         // Navigation properties

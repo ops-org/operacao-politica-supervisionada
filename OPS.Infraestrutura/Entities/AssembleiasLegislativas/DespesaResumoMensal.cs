@@ -7,21 +7,15 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
     public class DespesaResumoMensal
     {
         [Key]
-        [Column("id_cl_deputado")]
-        public uint IdDeputado { get; set; }
-
-        [Key]
         [Column("ano")]
-        public ushort Ano { get; set; }
+        public long Ano { get; set; }
 
         [Key]
         [Column("mes")]
-        public ushort Mes { get; set; }
+        public long Mes { get; set; }
 
-        [Column("valor_total", TypeName = "decimal(10,2)")]
-        public decimal? ValorTotal { get; set; }
+        [Column("valor", TypeName = "decimal(10,2)")]
+        public decimal? Valor { get; set; }
 
-        // Navigation properties
-        public virtual Deputado Deputado { get; set; } = null!;
-    }
+        }
 }

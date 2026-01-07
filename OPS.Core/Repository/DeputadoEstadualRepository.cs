@@ -12,7 +12,7 @@ using OPS.Infraestrutura;
 
 namespace OPS.Core.Repository
 {
-    public class DeputadoEstadualRepository: BaseRepository
+    public class DeputadoEstadualRepository : BaseRepository
     {
         public DeputadoEstadualRepository(AppDbContext context) : base(context)
         {
@@ -37,29 +37,29 @@ namespace OPS.Core.Repository
                 sigla_partido = deputado.Partido?.Sigla,
                 nome_estado = deputado.Estado?.Nome,
                 nome_parlamentar = deputado.NomeParlamentar,
-                nome_civil = deputado.Nome,
+                nome_civil = deputado.NomeCivil,
                 sexo = deputado.Sexo,
-                telefone = "", // Not available in entity
+                telefone = deputado.Telefone,
                 email = deputado.Email,
-                profissao = "", // Not available in entity
-                naturalidade = "", // Not available in entity
+                profissao = deputado.Profissao,
+                naturalidade = deputado.Naturalidade,
                 site = deputado.Site,
-                perfil = "", // Not available in entity
-                foto = "", // Not available in entity
+                perfil = deputado.Perfil,
+                foto = deputado.Foto,
                 nascimento = Utils.NascimentoFormatado(deputado.Nascimento),
-                valor_total_ceap = Utils.FormataValor(0m) // Not available in entity
+                valor_total_ceap = deputado.ValorTotalCeap
             };
         }
 
-        public async Task<dynamic> MaioresFornecedores(int id)
+        public async Task<dynamic> MaioresFornecedores(uint id)
         {
             var maioresFornecedores = await _context.DespesasAssembleias
-                .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.Valor.HasValue)
+                .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.ValorLiquido > 0)
                 .GroupBy(d => d.IdFornecedor)
                 .Select(g => new
                 {
                     IdFornecedor = g.Key,
-                    ValorTotal = g.Sum(d => d.Valor)
+                    ValorTotal = g.Sum(d => d.ValorLiquido)
                 })
                 .OrderByDescending(g => g.ValorTotal)
                 .Take(10)
@@ -79,17 +79,17 @@ namespace OPS.Core.Repository
             }).ToList();
         }
 
-        public async Task<dynamic> MaioresNotas(int id)
+        public async Task<dynamic> MaioresNotas(uint id)
         {
             var maioresNotas = await _context.DespesasAssembleias
-                .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.Valor.HasValue)
-                .OrderByDescending(d => d.Valor)
+                .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.ValorLiquido > 0)
+                .OrderByDescending(d => d.ValorLiquido)
                 .Take(10)
                 .Join(_context.Fornecedores,
                     d => d.IdFornecedor,
                     f => f.Id,
-                    (d, f) => new { d.Id, d.IdFornecedor, f.CnpjCpf, f.Nome, d.Valor })
-                .OrderByDescending(x => x.Valor)
+                    (d, f) => new { d.Id, d.IdFornecedor, f.CnpjCpf, f.Nome, d.ValorLiquido })
+                .OrderByDescending(x => x.ValorLiquido)
                 .ToListAsync();
 
             return maioresNotas.Select(n => new
@@ -98,7 +98,7 @@ namespace OPS.Core.Repository
                 id_fornecedor = n.IdFornecedor.ToString(),
                 cnpj_cpf = Utils.FormatCnpjCpf(n.CnpjCpf ?? ""),
                 nome_fornecedor = n.Nome ?? "",
-                valor_liquido = Utils.FormataValor(n.Valor)
+                valor_liquido = Utils.FormataValor(n.ValorLiquido)
             }).ToList();
         }
 
@@ -237,7 +237,7 @@ namespace OPS.Core.Repository
                         valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
                     });
                 }
-                
+
                 return lstRetorno;
             }
         }
@@ -286,22 +286,22 @@ namespace OPS.Core.Repository
                         valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
                     });
                 }
-                
+
                 return lstRetorno;
             }
         }
 
-        public async Task<dynamic> GastosPorAno(int id)
+        public async Task<dynamic> GastosPorAno(uint id)
         {
             // Note: Using DespesasAssembleias which has valor field instead of valor_liquido
             // and ano field needs to be derived from data_emissao or available in the entity
             var gastosPorAno = await _context.DespesasAssembleias
-                .Where(d => d.IdDeputado == id && d.Valor.HasValue && d.DataEmissao.HasValue)
+                .Where(d => d.IdDeputado == id && d.ValorLiquido > 0 && d.DataEmissao.HasValue)
                 .GroupBy(d => d.DataEmissao.Value.Year)
                 .Select(g => new
                 {
                     Ano = g.Key,
-                    ValorTotal = g.Sum(d => d.Valor)
+                    ValorTotal = g.Sum(d => d.ValorLiquido)
                 })
                 .OrderBy(g => g.Ano)
                 .ToListAsync();
@@ -311,46 +311,46 @@ namespace OPS.Core.Repository
                 categories = gastosPorAno.Select(g => g.Ano),
                 series = gastosPorAno.Select(g => g.ValorTotal)
             };
-                //    string anoControle = string.Empty;
-                //    bool existeGastoNoAno = false;
+            //    string anoControle = string.Empty;
+            //    bool existeGastoNoAno = false;
 
-                //    while (await reader.ReadAsync())
-                //    {
-                //        if (reader["ano"].ToString() != anoControle)
-                //        {
-                //            if (existeGastoNoAno)
-                //            {
-                //                lstRetorno.Add(new
-                //                {
-                //                    name = anoControle.ToString(),
-                //                    data = lstValoresMensais
-                //                });
+            //    while (await reader.ReadAsync())
+            //    {
+            //        if (reader["ano"].ToString() != anoControle)
+            //        {
+            //            if (existeGastoNoAno)
+            //            {
+            //                lstRetorno.Add(new
+            //                {
+            //                    name = anoControle.ToString(),
+            //                    data = lstValoresMensais
+            //                });
 
-                //                lstValoresMensais = new decimal?[12];
-                //                existeGastoNoAno = false;
-                //            }
+            //                lstValoresMensais = new decimal?[12];
+            //                existeGastoNoAno = false;
+            //            }
 
-                //            anoControle = reader["ano"].ToString();
-                //        }
+            //            anoControle = reader["ano"].ToString();
+            //        }
 
-                //        if (Convert.ToDecimal(reader["valor_total"]) > 0)
-                //        {
-                //            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
-                //            existeGastoNoAno = true;
-                //        }
-                //    }
+            //        if (Convert.ToDecimal(reader["valor_total"]) > 0)
+            //        {
+            //            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
+            //            existeGastoNoAno = true;
+            //        }
+            //    }
 
-                //    if (existeGastoNoAno)
-                //    {
-                //        lstRetorno.Add(new
-                //        {
-                //            name = anoControle.ToString(),
-                //            data = lstValoresMensais
-                //        });
-                //    }
+            //    if (existeGastoNoAno)
+            //    {
+            //        lstRetorno.Add(new
+            //        {
+            //            name = anoControle.ToString(),
+            //            data = lstValoresMensais
+            //        });
+            //    }
 
-                //    return lstRetorno;
-                //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
+            //    return lstRetorno;
+            //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
         }
 
         public async Task<dynamic> ResumoMensal()
@@ -384,9 +384,9 @@ namespace OPS.Core.Repository
                     anoControle = item.Ano.ToString();
                 }
 
-                if (item.ValorTotal > 0)
+                if (item.Valor > 0)
                 {
-                    lstValoresMensais[item.Mes - 1] = item.ValorTotal.Value;
+                    lstValoresMensais[item.Mes - 1] = item.Valor.Value;
                     existeGastoNoAno = true;
                 }
             }
@@ -410,7 +410,7 @@ namespace OPS.Core.Repository
                 .Select(g => new
                 {
                     Ano = g.Key,
-                    ValorTotal = g.Sum(r => r.ValorTotal)
+                    ValorTotal = g.Sum(r => r.Valor)
                 })
                 .OrderBy(g => g.Ano)
                 .ToListAsync();
