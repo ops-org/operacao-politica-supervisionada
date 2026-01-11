@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -184,7 +179,7 @@ namespace OPS.Importador.Assembleias.Estados.RioGrandeDoNorte
                         despesaTemp.DataEmissao = Convert.ToDateTime(match.Groups[1].Value, cultureInfo);
                         despesaTemp.Documento = match.Groups[2].Value.Trim();
 
-                        if (despesaTemp.Documento.Length > 100 || ano != despesaTemp.DataEmissao.Year || mes != despesaTemp.DataEmissao.Month)
+                        if (despesaTemp.Documento.Length > 100 || ano != despesaTemp.DataEmissao.Value.Year || mes != despesaTemp.DataEmissao.Value.Month)
                         {
                             if (match.Groups[1].Value == "31/05/2013")
                                 despesaTemp.DataEmissao = new DateTime(ano, mes, 31);

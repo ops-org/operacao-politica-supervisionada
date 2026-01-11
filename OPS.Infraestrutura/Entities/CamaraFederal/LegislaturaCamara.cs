@@ -11,13 +11,13 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public byte Id { get; set; }
 
         [Column("ano")]
-        public ushort? Ano { get; set; }
+        public short? Ano { get; set; }
 
         [Column("inicio")]
-        public uint? Inicio { get; set; }
+        public int? Inicio { get; set; }
 
         [Column("final")]
-        public uint? Final { get; set; }
+        public int? Final { get; set; }
 
         // Navigation properties
         public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();

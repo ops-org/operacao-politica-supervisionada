@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace OPS.Importador.Assembleias.Despesa
+﻿namespace OPS.Importador.Assembleias.Despesa
 {
     public interface IImportadorDespesas
     {

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Estados.Acre.Entities;
 using OPS.Importador.Assembleias.Parlamentar;
@@ -35,7 +30,7 @@ namespace OPS.Importador.Assembleias.Estados.Acre
 
             foreach (var parlamentar in objDeputadosAcre)
             {
-                var matricula = (uint)parlamentar.Id;
+                var matricula = (int)parlamentar.Id;
                 DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew(matricula);
 
                 deputado.UrlPerfil = $"https://sapl.al.ac.leg.br/parlamentar/{parlamentar.Id}";

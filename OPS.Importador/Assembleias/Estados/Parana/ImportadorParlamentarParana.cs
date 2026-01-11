@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using Dapper;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -25,7 +20,7 @@ namespace OPS.Importador.Assembleias.Estados.Parana
                 Estado = Estado.Parana,
             });
 
-            deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
+            deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
         public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
@@ -46,7 +41,7 @@ namespace OPS.Importador.Assembleias.Estados.Parana
                 deputado = new DeputadoEstadual()
                 {
                     NomeParlamentar = nomeParlamentar,
-                    IdEstado = (ushort)config.Estado.GetHashCode()
+                    IdEstado = (byte)config.Estado.GetHashCode()
                 };
             }
 

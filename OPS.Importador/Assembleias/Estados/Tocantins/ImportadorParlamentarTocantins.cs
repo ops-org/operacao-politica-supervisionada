@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -30,7 +27,7 @@ namespace OPS.Importador.Assembleias.Estados.Tocantins
 
             deputado.UrlPerfil = (document.QuerySelector("a.btn-perfil") as IHtmlAnchorElement).Href;
             deputado.UrlFoto = (document.QuerySelector("img.foto-deputado") as IHtmlImageElement)?.Source;
-            deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
+            deputado.Matricula = Convert.ToInt32(deputado.UrlPerfil.Split(@"/").Last());
             deputado.IdPartido = BuscarIdPartido(document.QuerySelector("h5").TextContent.Trim());
 
             deputado.Telefone = document.QuerySelectorAll("h6")[0].TextContent.Trim();

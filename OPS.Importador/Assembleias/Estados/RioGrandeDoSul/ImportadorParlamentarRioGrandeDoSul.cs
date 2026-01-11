@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Estados.RioGrandeDoSul.Entities;
 using OPS.Importador.Assembleias.Parlamentar;
@@ -27,7 +25,7 @@ namespace OPS.Importador.Assembleias.Estados.RioGrandeDoSul
 
             foreach (var parlamentar in objDeputadosRS.Lista)
             {
-                var matricula = (uint)parlamentar.IdDeputado;
+                var matricula = (int)parlamentar.IdDeputado;
                 var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
                 deputado.UrlPerfil = $"https://ww4.al.rs.gov.br/deputados/{parlamentar.IdDeputado}";

@@ -20,7 +20,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         [Column("idade_maxima")]
         public byte? IdadeMaxima { get; set; }
 
-        // Navigation properties
-        public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
+        // Navigation properties - removed to prevent shadow property creation
+        // public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
     }
 }

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -34,7 +29,7 @@ namespace OPS.Importador.Assembleias.Estados.Piaui
 
             foreach (var parlamentar in parlamentares)
             {
-                var matricula = (uint)parlamentar.Id;
+                var matricula = (int)parlamentar.Id;
                 parlamentar.NomeParlamentar = parlamentar.NomeParlamentar.Split(new[] { '/', '-', '(' })[0].Trim();
                 DeputadoEstadual deputado = GetDeputadoByNameOrNew(parlamentar.NomeParlamentar);
 

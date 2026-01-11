@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp;
 using AngleSharp.Html.Dom;
-using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -29,7 +24,7 @@ namespace OPS.Importador.Assembleias.Estados.Amapa
             };
 
             // TODO: Filtrar legislatura atual
-            deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
+            deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
         public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)

@@ -1,12 +1,12 @@
-﻿using System.Text.Json.Serialization;
-using Dapper;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace OPS.Importador.Fornecedores.MinhaReceita
 {
     [Table("fornecedor_socio")]
     public class QuadroSocietario
     {
-        [Key]
+        //[Key]
         [Column("id")]
         public int Id { get; set; }
 

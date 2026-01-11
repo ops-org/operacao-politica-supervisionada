@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Net;
 using System.Text.Json;
-using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -226,10 +221,10 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
     //        int affected = connection.Execute(@$"
     //INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
     //select distinct Nome, cpf, {idEstado}
-    //from ops_tmp.cl_despesa_temp
+    //from temp.cl_despesa_temp
     //where nome not in (
     //    select nome_parlamentar 
-    //    FROM cl_deputado 
+    //    FROM assembleias.cl_deputado 
     //    WHERE id_estado = {idEstado}
     //);
     //                ");
@@ -266,7 +261,7 @@ SELECT
     d.valor AS valor,
     CASE WHEN f.id IS NULL THEN d.empresa else null END AS observacao,
     d.hash
-FROM ops_tmp.cl_despesa_temp d
+FROM temp.cl_despesa_temp d
 inner join cl_deputado p on id_estado = {idEstado} and p.nome_parlamentar = d.nome
 left join cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
 LEFT join fornecedor f on f.cnpj_cpf = d.cnpj_cpf

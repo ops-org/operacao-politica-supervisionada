@@ -1,8 +1,6 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 
@@ -134,7 +132,7 @@ namespace OPS.Importador.Assembleias.Estados.DistritoFederal
         //                    db.AddParameter("@nome", nome);
         //                    db.ExecuteNonQuery(@"
         //update cl_deputado set 
-        //    id_partido = (SELECT id FROM partido where sigla like @partido OR nome like @partido) -- ,
+        //    id_partido = (SELECT id FROM partido where sigla ILIKE @partido OR nome ILIKE @partido) -- ,
         //    -- nascimento = @nascimento, 
         //    -- nome_civil = @nomeCivil, 
         //    -- email = @email, 

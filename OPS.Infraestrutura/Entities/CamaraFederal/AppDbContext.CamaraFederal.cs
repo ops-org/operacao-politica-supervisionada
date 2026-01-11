@@ -39,10 +39,11 @@ public partial class AppDbContext
     public DbSet<DeputadoVerbaGabinete> DeputadoVerbasGabinete { get; set; }
     public DbSet<DespesaResumoMensal> DespesaResumosMensaisCamara { get; set; }
     public DbSet<SecretarioHistorico> SecretarioHistoricos { get; set; }
-    
+    public DbSet<DeputadoFederalRemuneracaoDetalhes> DeputadoFederalRemuneracaoDetalhes { get; set; } // TODO: Add configs
+
 }
 
-public static class CamaraFederalEntityConfigurations
+public static class CamaraFederalConfigurations
 {
     public static void ConfigureDeputado(this ModelBuilder modelBuilder)
     {
@@ -428,6 +429,6 @@ public static class CamaraFederalEntityConfigurations
         modelBuilder.ConfigureDeputadoVerbaGabinete();
         modelBuilder.ConfigureDespesaResumoMensal();
         modelBuilder.ConfigureSecretarioHistorico();
-        
+
     }
 }

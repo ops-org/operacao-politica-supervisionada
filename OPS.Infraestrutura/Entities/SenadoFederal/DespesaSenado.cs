@@ -9,7 +9,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id_sf_senador")]
-        public uint IdSenador { get; set; }
+        public int IdSenador { get; set; }
 
         [Key]
         [Column("id")]
@@ -19,16 +19,16 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public byte? IdDespesaTipo { get; set; }
 
         [Column("id_fornecedor")]
-        public uint? IdFornecedor { get; set; }
+        public int? IdFornecedor { get; set; }
 
         [Column("ano_mes", TypeName = "decimal(6,0)")]
-        public uint? AnoMes { get; set; }
+        public int? AnoMes { get; set; }
 
         [Column("ano")]
-        public ushort? Ano { get; set; }
+        public short? Ano { get; set; }
 
         [Column("mes")]
-        public ushort? Mes { get; set; }
+        public short? Mes { get; set; }
 
         [Column("documento")]
         [StringLength(50)]

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;

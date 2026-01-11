@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using OPS.Infraestrutura.Entities.CamaraFederal;
-using OPS.Infraestrutura.Entities.SenadoFederal;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
@@ -10,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("cnpj_cpf")]
         [StringLength(15)]
@@ -19,6 +17,10 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         [Column("nome")]
         [StringLength(255)]
         public string Nome { get; set; } = null!;
+
+        [Column("categoria")]
+        [StringLength(2)]
+        public string? Categoria { get; set; }
 
         [Column("doador")]
         public byte Doador { get; set; }
@@ -32,9 +34,9 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
 
         // Navigation properties
         public virtual FornecedorInfo? FornecedorInfo { get; set; }
-        public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
-        public virtual ICollection<AssembleiasLegislativas.Despesa> DespesasAssembleias { get; set; } = new List<AssembleiasLegislativas.Despesa>();
-        public virtual ICollection<CamaraFederal.DespesaCamara> DespesasCamara { get; set; } = new List<CamaraFederal.DespesaCamara>();
-        public virtual ICollection<SenadoFederal.DespesaSenado> DespesasSenado { get; set; } = new List<SenadoFederal.DespesaSenado>();
+        //public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
+        //public virtual ICollection<AssembleiasLegislativas.DespesaAssembleias> DespesasAssembleias { get; set; } = new List<AssembleiasLegislativas.DespesaAssembleias>();
+        //public virtual ICollection<CamaraFederal.DespesaCamara> DespesasCamara { get; set; } = new List<CamaraFederal.DespesaCamara>();
+        //public virtual ICollection<SenadoFederal.DespesaSenado> DespesasSenado { get; set; } = new List<SenadoFederal.DespesaSenado>();
     }
 }

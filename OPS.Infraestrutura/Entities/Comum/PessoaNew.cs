@@ -8,34 +8,55 @@ namespace OPS.Infraestrutura.Entities.Comum
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
-
-        [Column("nome")]
-        [StringLength(255)]
-        public string Nome { get; set; } = null!;
+        public long Id { get; set; }
 
         [Column("cpf")]
-        [StringLength(20)]
-        public string? Cpf { get; set; }
+        [StringLength(15)]
+        public string Cpf { get; set; } = null!;
 
-        [Column("cnpj")]
-        [StringLength(20)]
-        public string? Cnpj { get; set; }
+        [Column("cpf_parcial")]
+        [StringLength(6)]
+        public string? CpfParcial { get; set; }
+
+        [Column("nome")]
+        [StringLength(100)]
+        public string? Nome { get; set; }
 
         [Column("data_nascimento")]
-        public DateTime? DataNascimento { get; set; }
+        public DateOnly? DataNascimento { get; set; }
 
-        [Column("sexo")]
-        [StringLength(1)]
-        public string? Sexo { get; set; }
+        [Column("id_nacionalidade")]
+        public byte? IdNacionalidade { get; set; }
 
-        [Column("id_estado")]
-        public byte? IdEstado { get; set; }
+        [Column("id_estado_nascimento")]
+        public byte? IdEstadoNascimento { get; set; }
 
-        [Column("id_municipio")]
-        public uint? IdMunicipio { get; set; }
+        [Column("municipio_nascimento")]
+        [StringLength(100)]
+        public string? MunicipioNascimento { get; set; }
+
+        [Column("id_genero")]
+        public byte? IdGenero { get; set; }
+
+        [Column("id_etnia")]
+        public byte? IdEtnia { get; set; }
+
+        [Column("id_estado_civil")]
+        public byte? IdEstadoCivil { get; set; }
+
+        [Column("id_grau_instrucao")]
+        public byte? IdGrauInstrucao { get; set; }
+
+        [Column("id_ocupacao")]
+        public int? IdOcupacao { get; set; }
 
         // Navigation properties
-        public virtual Estado? Estado { get; set; }
+        public virtual Estado? EstadoNascimento { get; set; }
+        public virtual Estado? Nacionalidade { get; set; }
+        public virtual Estado? Genero { get; set; }
+        public virtual Estado? Etnia { get; set; }
+        public virtual Estado? EstadoCivil { get; set; }
+        public virtual Estado? GrauInstrucao { get; set; }
+        public virtual Profissao? Ocupacao { get; set; }
     }
 }

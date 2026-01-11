@@ -12,7 +12,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public ulong Id { get; set; }
 
         [Column("ano")]
-        public ushort Ano { get; set; }
+        public short Ano { get; set; }
 
         [Column("mes")]
         public byte Mes { get; set; }
@@ -21,28 +21,28 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public byte IdLegislatura { get; set; }
 
         [Column("id_cf_deputado")]
-        public uint IdDeputado { get; set; }
+        public int IdDeputado { get; set; }
 
         [Column("id_cf_mandato")]
-        public ushort? IdMandato { get; set; }
+        public short? IdMandato { get; set; }
 
         [Column("id_cf_despesa_tipo")]
-        public ushort IdDespesaTipo { get; set; }
+        public short IdDespesaTipo { get; set; }
 
         [Column("id_cf_especificacao")]
         public byte? IdEspecificacao { get; set; }
 
         [Column("id_fornecedor")]
-        public uint IdFornecedor { get; set; }
+        public int IdFornecedor { get; set; }
 
         [Column("id_documento")]
         public ulong? IdDocumento { get; set; }
 
         [Column("id_passageiro")]
-        public uint? IdPassageiro { get; set; }
+        public int? IdPassageiro { get; set; }
 
         [Column("id_trecho_viagem")]
-        public ushort? IdTrechoViagem { get; set; }
+        public short? IdTrechoViagem { get; set; }
 
         [Column("data_emissao")]
         public DateTime? DataEmissao { get; set; }

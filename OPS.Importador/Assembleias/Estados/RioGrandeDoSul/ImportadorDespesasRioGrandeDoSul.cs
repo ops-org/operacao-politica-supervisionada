@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using AngleSharp;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -268,7 +263,7 @@ namespace OPS.Importador.Assembleias.Estados.RioGrandeDoSul
         public override void AjustarDados()
         {
             connection.Execute($@"
-UPDATE ops_tmp.cl_despesa_temp temp
+UPDATE temp.cl_despesa_temp temp
 JOIN cl_deputado d ON d.nome_civil = temp.nome_civil
 SET temp.nome = d.nome_parlamentar
 WHERE despesa_tipo = 'Diárias'

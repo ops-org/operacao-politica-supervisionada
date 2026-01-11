@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Globalization;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Dapper;
-using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -48,7 +40,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
 
             CarregarHashes(ano);
 
-            var dc = connection.Query<Dictionary<string, object>>($"select id, matricula, nome_parlamentar from cl_deputado where id_estado = {idEstado}").ToList();
+            var dc = connection.Query<Dictionary<string, object>>($"select id, matricula, nome_parlamentar FROM assembleias.cl_deputado where id_estado = {idEstado}").ToList();
             foreach (var item in dc)
             {
                 var matricula = item["matricula"].ToString();

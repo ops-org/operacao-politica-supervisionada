@@ -8,10 +8,11 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
         [Column("id_fornecedor")]
-        public uint IdFornecedor { get; set; }
+        public int IdFornecedor { get; set; }
 
         [Column("nome")]
         [StringLength(255)]
@@ -45,9 +46,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         [Column("id_fornecedor_socio_representante_qualificacao")]
         public byte? IdFornecedorSocioRepresentanteQualificacao { get; set; }
 
-        // Navigation properties
+        // Navigation properties - only keep essential one to avoid complexity
         public virtual Fornecedor Fornecedor { get; set; } = null!;
-        public virtual FornecedorSocioQualificacao? FornecedorSocioQualificacao { get; set; }
-        public virtual FornecedorSocioQualificacao? FornecedorSocioRepresentanteQualificacao { get; set; }
     }
 }

@@ -24,7 +24,7 @@ namespace OPS.Infraestrutura.Entities.Comum
 
         // Navigation properties
         public virtual ICollection<CamaraFederal.Deputado> DeputadosFedarais { get; set; } = new List<CamaraFederal.Deputado>();
-        public virtual ICollection<AssembleiasLegislativas.Deputado> DeputadosEstaduais { get; set; } = new List<AssembleiasLegislativas.Deputado>();
+        public virtual ICollection<AssembleiasLegislativas.DeputadoEstadual> DeputadosEstaduais { get; set; } = new List<AssembleiasLegislativas.DeputadoEstadual>();
         //public virtual ICollection<CamaraFederal.Mandato> MandatosCamaraFederal { get; set; } = new List<CamaraFederal.Mandato>();
         //public virtual ICollection<SenadoFederal.Mandato> MandatosSenadoFederal { get; set; } = new List<SenadoFederal.Mandato>();
     }

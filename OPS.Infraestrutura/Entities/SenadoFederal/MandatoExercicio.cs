@@ -8,13 +8,13 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_sf_senador")]
-        public uint IdSenador { get; set; }
+        public int IdSenador { get; set; }
 
         [Column("id_sf_mandato")]
-        public uint IdMandato { get; set; }
+        public int IdMandato { get; set; }
 
         [Column("id_sf_motivo_afastamento")]
         [StringLength(5)]

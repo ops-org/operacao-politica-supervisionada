@@ -387,6 +387,14 @@ namespace OPS.Core.Utilities
             return null;
         }
 
+        public static DateTime? ToDate(this string value)
+        {
+            if (!string.IsNullOrEmpty(value?.Trim()))
+                return Convert.ToDateTime(value);
+
+            return null;
+        }
+
         public static T NullIfEmpty<T>(this T value) where T : class
         {
             if (!string.IsNullOrEmpty(value?.ToString().Trim()))

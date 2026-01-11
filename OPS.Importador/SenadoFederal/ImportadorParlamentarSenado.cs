@@ -1,40 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.SenadoFederal.Entities;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
+using OPS.Infraestrutura.Entities.Fornecedores;
 using OPS.Infraestrutura.Entities.SenadoFederal;
-using OPS.Infraestrutura.Factories;
 using RestSharp;
 
 namespace OPS.Importador.SenadoFederal;
 
 public class SenatorLists
 {
-    public List<string> ActiveSenators { get; set; } = new();
-    public List<string> AllSenators { get; set; } = new();
-    public List<string> NewSenators { get; set; } = new();
+    public List<int> ActiveSenators { get; set; } = new();
+    public List<int> AllSenators { get; set; } = new();
+    public List<int> NewSenators { get; set; } = new();
 }
 
 public class ImportadorParlamentarSenado : IImportadorParlamentar
 {
     protected readonly ILogger<ImportadorParlamentarSenado> logger;
     protected readonly IDbConnection connection;
-    protected readonly AppDbContextFactory dbContextFactory;
+    protected readonly AppDbContext dbContext;
     public string rootPath { get; init; }
     public string tempPath { get; init; }
 
@@ -44,7 +37,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
     {
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarSenado>>();
         connection = serviceProvider.GetService<IDbConnection>();
-        dbContextFactory = serviceProvider.GetService<AppDbContextFactory>();
+        dbContext = serviceProvider.GetService<AppDbContext>();
 
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -55,7 +48,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
     public Task Importar()
     {
-        using (var dbContext = dbContextFactory.CreateDbContext())
+        //using (var dbContext = dbContextFactory.CreateDbContext())
         //using (var transaction = dbContext.Database.BeginTransaction())
         {
             try
@@ -63,12 +56,14 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 var senatorLists = GetSenatorLists(dbContext);
 
                 // Mark all senators as inactive
-                dbContext.Database.ExecuteSqlRaw("UPDATE sf_senador SET ativo = 'N' WHERE ativo = 'S'");
+                dbContext.Senadores
+                    .Where(x => x.Ativo == "S")
+                    .ExecuteUpdate(x => x.SetProperty(y => y.Ativo, "N"));
 
                 var restClient = new RestClient(httpClient);
-                ImportActiveSenators(dbContext, restClient, senatorLists); // Can Change senatorLists
+                ImportActiveSenators(restClient, senatorLists); // Can Change senatorLists
 
-                UpdateSenatorDetails(dbContext, restClient, senatorLists);
+                UpdateSenatorDetails(restClient, senatorLists);
 
                 //transaction.Commit();
             }
@@ -87,20 +82,20 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
     {
         return new SenatorLists
         {
-            ActiveSenators = new List<string>(), // Prenchido no ImportActiveSenators
+            ActiveSenators = new List<int>(), // Prenchido no ImportActiveSenators
             AllSenators = dbContext.Senadores
                 .OrderBy(s => s.Id)
-                .Select(s => s.Id.ToString())
+                .Select(s => s.Id)
                 .ToList(),
             NewSenators = dbContext.Senadores // Itens para forçar atualização, Incrementado depois no ImportActiveSenators com novos Suplentes
                 .Where(s => s.Ativo == "S" || s.Nome == null)
                 .OrderBy(s => s.Id)
-                .Select(s => s.Id.ToString())
+                .Select(s => s.Id)
                 .ToList()
         };
     }
 
-    private void ImportActiveSenators(AppDbContext dbContext, RestClient restClient, SenatorLists senatorLists)
+    private void ImportActiveSenators(RestClient restClient, SenatorLists senatorLists)
     {
         #region Importar senadores ativos
         var request = new RestRequest("https://legis.senado.gov.br/dadosabertos/senador/lista/atual");
@@ -118,23 +113,23 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 var senador = senadores.Current;
                 var parlamentar = JsonSerializer.Deserialize<IdentificacaoParlamentar>(senador.GetProperty("IdentificacaoParlamentar"));
 
-                var codigoParlamentar = Convert.ToUInt32(parlamentar.CodigoParlamentar);
+                var codigoParlamentar = Convert.ToInt32(parlamentar.CodigoParlamentar);
                 var existe = dbContext.Senadores.Find(codigoParlamentar);
                 if (existe == null)
                 {
                     logger.LogInformation("Novo Senador {IdSenador}: {NomeParlamentar}", parlamentar.CodigoParlamentar, parlamentar.NomeParlamentar);
 
                     var partido = dbContext.Partidos
-                        .FirstOrDefault(p => EF.Functions.Like(p.Sigla, parlamentar.SiglaPartidoParlamentar) ||
-                                             EF.Functions.Like(p.Nome, parlamentar.SiglaPartidoParlamentar));
+                        .FirstOrDefault(p => EF.Functions.ILike(p.Sigla, parlamentar.SiglaPartidoParlamentar) ||
+                                             EF.Functions.ILike(p.Nome, parlamentar.SiglaPartidoParlamentar));
 
                     var estado = dbContext.Estados
-                        .FirstOrDefault(e => EF.Functions.Like(e.Sigla, parlamentar.UfParlamentar));
+                        .FirstOrDefault(e => EF.Functions.ILike(e.Sigla, parlamentar.UfParlamentar));
 
                     var novoSenador = new Senador
                     {
-                        Id = Convert.ToUInt32(parlamentar.CodigoParlamentar),
-                        Codigo = Convert.ToUInt32(parlamentar.CodigoPublicoNaLegAtual),
+                        Id = Convert.ToInt32(parlamentar.CodigoParlamentar),
+                        Codigo = Convert.ToInt32(parlamentar.CodigoPublicoNaLegAtual),
                         Nome = parlamentar.NomeParlamentar,
                         NomeCompleto = parlamentar.NomeCompletoParlamentar,
                         Sexo = parlamentar.SexoParlamentar[0].ToString(),
@@ -148,15 +143,16 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                     dbContext.Senadores.Add(novoSenador);
                     dbContext.SaveChanges();
 
-                    senatorLists.AllSenators.Add(parlamentar.CodigoParlamentar);
+                    senatorLists.AllSenators.Add(Convert.ToInt32(parlamentar.CodigoParlamentar));
                 }
                 else
                 {
-                    senatorLists.ActiveSenators.Add(parlamentar.CodigoParlamentar);
+                    var idSenador = Convert.ToInt32(parlamentar.CodigoParlamentar);
+                    senatorLists.ActiveSenators.Add(idSenador);
 
-                    if (!senatorLists.AllSenators.Contains(parlamentar.CodigoParlamentar))
+                    if (!senatorLists.AllSenators.Contains(idSenador))
                     {
-                        senatorLists.AllSenators.Add(parlamentar.CodigoParlamentar);
+                        senatorLists.AllSenators.Add(idSenador);
                     }
                 }
             }
@@ -169,7 +165,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         #endregion Importar senadores ativos
     }
 
-    private void UpdateSenatorDetails(AppDbContext dbContext, RestClient restClient, SenatorLists senatorLists)
+    private void UpdateSenatorDetails(RestClient restClient, SenatorLists senatorLists)
     {
         #region Atualizar senadores ativos e os que estavam ativos antes da importação
         var urlApiSenador = "https://legis.senado.gov.br/dadosabertos/senador/";
@@ -188,15 +184,15 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             .ToDictionary(p => p.Descricao, p => (int)p.Id);
 
         // Atualizar Senadores ativos
-        UpdateActiveSenatorDetails(dbContext, restClient, senatorLists, urlApiSenador, lstLegislatura, lstMotivoAfastamento, lstProfissao);
+        UpdateActiveSenatorDetails(restClient, senatorLists, urlApiSenador, lstLegislatura, lstMotivoAfastamento, lstProfissao);
 
         // Atualizar novo senadores (o metodo acima pode incluir novos senadores, ex: suplentes)
-        UpdateActiveSenatorDetails(dbContext, restClient, senatorLists, urlApiSenador, lstLegislatura, lstMotivoAfastamento, lstProfissao, onlyNew: true);
+        UpdateActiveSenatorDetails(restClient, senatorLists, urlApiSenador, lstLegislatura, lstMotivoAfastamento, lstProfissao, onlyNew: true);
 
         #endregion Atualizar senadores ativos e os que estavam ativos antes da importação
     }
 
-    private void UpdateActiveSenatorDetails(AppDbContext dbContext, RestClient restClient, SenatorLists senatorLists, string urlApiSenador, List<string> lstLegislatura, List<string> lstMotivoAfastamento, Dictionary<string, int> lstProfissao, bool onlyNew = false)
+    private void UpdateActiveSenatorDetails(RestClient restClient, SenatorLists senatorLists, string urlApiSenador, List<string> lstLegislatura, List<string> lstMotivoAfastamento, Dictionary<string, int> lstProfissao, bool onlyNew = false)
     {
         var senadoresParaAtualizar = onlyNew ? senatorLists.NewSenators.ToList() : senatorLists.ActiveSenators.ToList();
         var indice = 0;
@@ -212,7 +208,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             SenadorDetalhes senador = JsonSerializer.Deserialize<SenadorDetalhes>(resSenador.Content);
             var parlamentar = senador.DetalheParlamentar.Parlamentar;
             var identificacaoParlamentar = parlamentar.IdentificacaoParlamentar;
-            var senadorToUpdate = dbContext.Senadores.Find(Convert.ToUInt32(identificacaoParlamentar.CodigoParlamentar));
+            var senadorToUpdate = dbContext.Senadores.Find(Convert.ToInt32(identificacaoParlamentar.CodigoParlamentar));
             if (senadorToUpdate == null) continue;
 
             var jParlamentar = jSenador.RootElement.GetProperty("DetalheParlamentar").GetProperty("Parlamentar");
@@ -229,16 +225,16 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
             var lstSenadorProfissao = GetSenatorProfessions(restClient, urlApiSenador, idSenador, senador);
 
-            ProcessSenatorBasicData(dbContext, senadorToUpdate, identificacaoParlamentar, lstSenadorProfissao, senatorLists);
+            ProcessSenatorBasicData(senadorToUpdate, identificacaoParlamentar, lstSenadorProfissao, senatorLists);
 
             if (lstSenadorProfissao.Any())
             {
-                ProcessSenatorProfessions(dbContext, idSenador, lstSenadorProfissao, lstProfissao);
+                ProcessSenatorProfessions(idSenador, lstSenadorProfissao, lstProfissao);
             }
 
-            ProcessSenatorAcademicHistory(dbContext, restClient, urlApiSenador, idSenador);
+            ProcessSenatorAcademicHistory(restClient, urlApiSenador, idSenador);
 
-            ProcessSenatorMandates(dbContext, restClient, urlApiSenador, idSenador, lstLegislatura, lstMotivoAfastamento, senatorLists);
+            ProcessSenatorMandates(restClient, urlApiSenador, idSenador, lstLegislatura, lstMotivoAfastamento, senatorLists);
         }
     }
 
@@ -258,7 +254,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             }
     }
 
-    private List<Entities.Profissao> GetSenatorProfessions(RestClient restClient, string urlApiSenador, string idSenador, SenadorDetalhes senador)
+    private List<Entities.Profissao> GetSenatorProfessions(RestClient restClient, string urlApiSenador, int idSenador, SenadorDetalhes senador)
     {
         var request = new RestRequest(urlApiSenador + idSenador.ToString() + "/profissao?v=1");
         request.AddHeader("Accept", "application/json");
@@ -288,16 +284,16 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         return lstSenadorProfissao;
     }
 
-    private void ProcessSenatorBasicData(AppDbContext dbContext, Senador senadorToUpdate, IdentificacaoParlamentar identificacaoParlamentar, List<Entities.Profissao> lstSenadorProfissao, SenatorLists senatorLists)
+    private void ProcessSenatorBasicData(Senador senadorToUpdate, IdentificacaoParlamentar identificacaoParlamentar, List<Entities.Profissao> lstSenadorProfissao, SenatorLists senatorLists)
     {
         var partido = dbContext.Partidos
-            .FirstOrDefault(p => EF.Functions.Like(p.Sigla, identificacaoParlamentar.SiglaPartidoParlamentar) ||
-                                 EF.Functions.Like(p.Nome, identificacaoParlamentar.SiglaPartidoParlamentar));
+            .FirstOrDefault(p => EF.Functions.ILike(p.Sigla, identificacaoParlamentar.SiglaPartidoParlamentar) ||
+                                 EF.Functions.ILike(p.Nome, identificacaoParlamentar.SiglaPartidoParlamentar));
 
         var estado = dbContext.Estados
-            .FirstOrDefault(e => EF.Functions.Like(e.Sigla, identificacaoParlamentar.UfParlamentar));
+            .FirstOrDefault(e => EF.Functions.ILike(e.Sigla, identificacaoParlamentar.UfParlamentar));
 
-        senadorToUpdate.Codigo = Convert.ToUInt32(identificacaoParlamentar.CodigoPublicoNaLegAtual);
+        senadorToUpdate.Codigo = Convert.ToInt32(identificacaoParlamentar.CodigoPublicoNaLegAtual);
         senadorToUpdate.Nome = identificacaoParlamentar.NomeParlamentar;
         senadorToUpdate.NomeCompleto = identificacaoParlamentar.NomeCompletoParlamentar;
         senadorToUpdate.Sexo = identificacaoParlamentar.SexoParlamentar[0].ToString();
@@ -306,45 +302,44 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         senadorToUpdate.IdEstado ??= estado?.Id;
         senadorToUpdate.Email = identificacaoParlamentar.EmailParlamentar;
         senadorToUpdate.Site = identificacaoParlamentar.UrlPaginaParticular;
-        senadorToUpdate.Ativo = senatorLists.ActiveSenators.Contains(identificacaoParlamentar.CodigoParlamentar) ? "S" : "N";
+        senadorToUpdate.Ativo = senatorLists.ActiveSenators.Contains(Convert.ToInt32(identificacaoParlamentar.CodigoParlamentar)) ? "S" : "N";
 
         dbContext.SaveChanges();
     }
 
-    private void ProcessSenatorProfessions(AppDbContext dbContext, string idSenador, List<Entities.Profissao> lstSenadorProfissao, Dictionary<string, int> lstProfissao)
+    private void ProcessSenatorProfessions(int idSenador, List<Entities.Profissao> lstSenadorProfissao, Dictionary<string, int> lstProfissao)
     {
         foreach (var profissao in lstSenadorProfissao)
         {
             if (!lstProfissao.ContainsKey(profissao.NomeProfissao))
             {
-                using (var profissaoDbContext = dbContextFactory.CreateDbContext())
                 {
                     var novaProfissao = new OPS.Infraestrutura.Entities.Comum.Profissao
                     {
                         Descricao = profissao.NomeProfissao
                     };
-                    profissaoDbContext.Profissoes.Add(novaProfissao);
-                    profissaoDbContext.SaveChanges();
+                    dbContext.Profissoes.Add(novaProfissao);
+                    dbContext.SaveChanges();
 
                     lstProfissao.Add(profissao.NomeProfissao, (int)novaProfissao.Id);
                 }
             }
 
             // Add senator-profession relationship using EF Core
-            using (var senadorProfissaoDbContext = dbContextFactory.CreateDbContext())
+            //using (var senadorProfissaoDbContext = dbContextFactory.CreateDbContext())
             {
                 var senadorProfissao = new OPS.Infraestrutura.Entities.SenadoFederal.SenadorProfissao
                 {
-                    IdSenador = Convert.ToUInt32(idSenador),
-                    IdProfissao = (uint)lstProfissao[profissao.NomeProfissao]
+                    IdSenador = Convert.ToInt32(idSenador),
+                    IdProfissao = (int)lstProfissao[profissao.NomeProfissao]
                 };
-                senadorProfissaoDbContext.SenadoresProfissao.Add(senadorProfissao);
-                senadorProfissaoDbContext.SaveChanges();
+                dbContext.SenadoresProfissao.Add(senadorProfissao);
+                dbContext.SaveChanges();
             }
         }
     }
 
-    private void ProcessSenatorAcademicHistory(AppDbContext dbContext, RestClient restClient, string urlApiSenador, string idSenador)
+    private void ProcessSenatorAcademicHistory(RestClient restClient, string urlApiSenador, int idSenador)
     {
         var request = new RestRequest(urlApiSenador + idSenador.ToString() + "/historicoAcademico?v=1");
         request.AddHeader("Accept", "application/json");
@@ -371,15 +366,16 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 foreach (var curso in lstCursos)
                 {
                     dbContext.Database.ExecuteSqlRaw(@"
-                        INSERT IGNORE INTO sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
-                        values ({0}, {1}, {2}, {3}, {4})",
+                        INSERT INTO senado.sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
+                        values ({0}, {1}, {2}, {3}, {4})
+                        ON CONFLICT (id_sf_senador, nome_curso, grau_instrucao) DO NOTHING;",
                         idSenador, curso.NomeCurso, curso.GrauInstrucao, curso.Estabelecimento, curso.Local);
                 }
             }
         }
     }
 
-    private void ProcessSenatorMandates(AppDbContext dbContext, RestClient restClient, string urlApiSenador, string idSenador, List<string> lstLegislatura, List<string> lstMotivoAfastamento, SenatorLists senatorLists)
+    private void ProcessSenatorMandates(RestClient restClient, string urlApiSenador, int idSenador, List<string> lstLegislatura, List<string> lstMotivoAfastamento, SenatorLists senatorLists)
     {
         var request = new RestRequest(urlApiSenador + idSenador.ToString() + "/mandatos?v=5");
         request.AddHeader("Accept", "application/json");
@@ -398,7 +394,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
                 try
                 {
-                    ProcessMandato(dbContext, mandato, idSenador, senatorLists, lstLegislatura, lstMotivoAfastamento);
+                    ProcessMandato(mandato, idSenador, senatorLists, lstLegislatura, lstMotivoAfastamento);
                 }
                 catch (Exception ex)
                 {
@@ -408,7 +404,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         }
     }
 
-    private void ProcessMandato(AppDbContext dbContext, Entities.Mandato mandato, string idSenador, SenatorLists senatorLists, List<string> lstLegislatura, List<string> lstMotivoAfastamento)
+    private void ProcessMandato(Entities.Mandato mandato, int idSenador, SenatorLists senatorLists, List<string> lstLegislatura, List<string> lstMotivoAfastamento)
     {
         #region Mandato
         var exerceuMandato = mandato.Exercicios?.Exercicio?.Any() ?? false;
@@ -418,46 +414,47 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         {
             siglaPartido = siglaPartido.Trim();
             var partido = dbContext.Partidos
-                            .FirstOrDefault(p => EF.Functions.Like(p.Sigla, siglaPartido) ||
-                                                 EF.Functions.Like(p.Nome, siglaPartido));
+                            .FirstOrDefault(p => EF.Functions.ILike(p.Sigla, siglaPartido) ||
+                                                 EF.Functions.ILike(p.Nome, siglaPartido));
 
             idPartido = partido?.Id ?? 0;
         }
 
         var estado = dbContext.Estados
-                    .FirstOrDefault(e => EF.Functions.Like(e.Sigla, mandato.UfParlamentar));
+                    .FirstOrDefault(e => EF.Functions.ILike(e.Sigla, mandato.UfParlamentar));
 
-        dbContext.Database.ExecuteSqlRaw(@"
-            INSERT INTO sf_mandato (
+        var idMandato = Convert.ToInt32(mandato.CodigoMandato);
+        dbContext.Database.ExecuteSqlInterpolated($@"
+            INSERT INTO senado.sf_mandato (
                 id, id_sf_senador, id_estado, id_partido, participacao, exerceu
             ) VALUES (
-                {0}, {1}, {2}, {3}, {4}, {5}
+                {idMandato}, {idSenador}, {estado.Id}, {idPartido}, {mandato.DescricaoParticipacao}, {exerceuMandato}
             )
-            ON DUPLICATE KEY UPDATE
-                id_estado = {2},
-                id_partido = {3},
-                participacao = {4},
-                exerceu = {5}",
-            mandato.CodigoMandato, idSenador, estado.Id, idPartido, mandato.DescricaoParticipacao, exerceuMandato);
+            ON CONFLICT (id, id_sf_senador) DO UPDATE SET
+                id_estado = EXCLUDED.id_estado,
+                id_partido = EXCLUDED.id_partido,
+                participacao = EXCLUDED.participacao,
+                exerceu = EXCLUDED.exerceu
+            WHERE EXCLUDED.id = {idMandato} and EXCLUDED.id_sf_senador = {idSenador}");
 
-        ProcessSuplentes(dbContext, mandato, idSenador, senatorLists);
+        ProcessSuplentes(mandato, senatorLists);
 
-        ProcessLegislaturas(dbContext, mandato, lstLegislatura);
+        ProcessLegislaturas(mandato, idSenador, lstLegislatura);
 
-        ProcessExercicios(dbContext, mandato, idSenador, lstMotivoAfastamento);
+        ProcessExercicios(mandato, idSenador, lstMotivoAfastamento);
 
-        ProcessPartidos(dbContext, mandato, idSenador);
+        ProcessPartidos(mandato, idSenador);
 
         #endregion Mandato Exercicio
     }
 
-    private void ProcessPartidos(AppDbContext dbContext, Entities.Mandato mandato, string idSenador)
+    private void ProcessPartidos(Entities.Mandato mandato, int idSenador)
     {
         if (mandato.Partidos?.Partido == null) return;
 
         foreach (var partido in mandato.Partidos.Partido)
         {
-            int idPartido = 0;
+            byte idPartido = 0;
             if (!string.IsNullOrEmpty(partido.Sigla))
             {
                 {
@@ -465,13 +462,13 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 }
                 // Find party in database
                 var partidoDb = dbContext.Partidos
-                    .FirstOrDefault(p => EF.Functions.Like(p.Sigla, partido.Sigla));
+                    .FirstOrDefault(p => EF.Functions.ILike(p.Sigla, partido.Sigla));
 
                 if (partidoDb == null)
                 {
                     // TODO: Remover se não gerar logs
                     partidoDb = dbContext.Partidos
-                       .FirstOrDefault(p => EF.Functions.Like(p.Nome, partido.Sigla));
+                       .FirstOrDefault(p => EF.Functions.ILike(p.Nome, partido.Sigla));
 
                     if (partidoDb != null)
                     {
@@ -489,45 +486,62 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             if (!string.IsNullOrEmpty(partido.DataFiliacao) &&
                 DateTime.TryParse(partido.DataFiliacao, out DateTime filiacaoDate))
             {
-                filiacao = filiacaoDate;
+                filiacao = DateTime.SpecifyKind(filiacaoDate, DateTimeKind.Utc); ;
             }
 
             if (!string.IsNullOrEmpty(partido.DataDesfiliacao) &&
                 DateTime.TryParse(partido.DataDesfiliacao, out DateTime desfiliacaoDate))
             {
-                desfiliacao = desfiliacaoDate;
+                desfiliacao = DateTime.SpecifyKind(desfiliacaoDate, DateTimeKind.Utc);
             }
 
-            dbContext.Database.ExecuteSqlRaw(@"
-                INSERT INTO sf_senador_partido (
-                    id_sf_senador, id_partido, filiacao, desfiliacao
-                ) VALUES (
-                    {0}, {1}, {2}, {3}
-                ) ON DUPLICATE KEY UPDATE
-                    desfiliacao = {3}",
-                idSenador, idPartido, filiacao, desfiliacao);
+            var senadorPartidoDb = dbContext.SenadorPartidos
+                .FirstOrDefault(p => p.IdSenador == idSenador && p.IdPartido == idPartido && p.Filiacao == filiacao);
+
+            if (senadorPartidoDb != null)
+            {
+                senadorPartidoDb.Desfiliacao = desfiliacao;
+
+                dbContext.SaveChanges();
+            }
+            else
+            {
+                dbContext.SenadorPartidos.Add(new SenadorPartido
+                {
+                    IdSenador = idSenador,
+                    IdPartido = idPartido,
+                    Filiacao = filiacao,
+                    Desfiliacao = desfiliacao
+                });
+
+                dbContext.SaveChanges();
+
+            }
         }
+
+        //dbContext.SaveChanges();
+        dbContext.ChangeTracker.Clear();
     }
 
-    private void ProcessSuplentes(AppDbContext dbContext, Entities.Mandato mandato, string idSenador, SenatorLists senatorLists)
+    private void ProcessSuplentes(Entities.Mandato mandato, SenatorLists senatorLists)
     {
         if (mandato.Suplentes?.Suplente == null || mandato.DescricaoParticipacao != "Titular") return;
 
         foreach (var suplente in mandato.Suplentes.Suplente)
         {
-            var idSuplente = suplente.CodigoParlamentar;
+            var idSuplente = Convert.ToInt32(suplente.CodigoParlamentar);
 
             // Ensure senator exists
             if (!senatorLists.AllSenators.Contains(idSuplente))
             {
                 senatorLists.AllSenators.Add(idSuplente);
                 senatorLists.NewSenators.Add(idSuplente);
-                dbContext.Database.ExecuteSqlRaw("INSERT INTO sf_senador (id) VALUES ({0})", idSuplente);
+                dbContext.Database.ExecuteSqlRaw("INSERT INTO senado.sf_senador (id) VALUES ({0})", idSuplente);
             }
         }
     }
 
-    private void ProcessLegislaturas(AppDbContext dbContext, Entities.Mandato mandato, List<string> lstLegislatura)
+    private void ProcessLegislaturas(Entities.Mandato mandato, int idSenador, List<string> lstLegislatura)
     {
         var lstLegislaturaMandato = new List<LegislaturaDoMandato>();
         lstLegislaturaMandato.Add(mandato.PrimeiraLegislaturaDoMandato);
@@ -537,26 +551,38 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         {
             if (!lstLegislatura.Contains(legislatura.NumeroLegislatura))
             {
-                dbContext.Database.ExecuteSqlRaw(@"
-                    INSERT INTO sf_legislatura (
-                        id, inicio, final
-                    ) VALUES (
-                        {0}, {1}, {2}
-                    )", legislatura.NumeroLegislatura, legislatura.DataInicio, legislatura.DataFim);
+                dbContext.LegislaturasSenado.Add(new LegislaturaSenado
+                {
+                    Id = (byte)Convert.ToInt16(legislatura.NumeroLegislatura),
+                    Inicio = Convert.ToDateTime(legislatura.DataInicio),
+                    Final = Convert.ToDateTime(legislatura.DataFim)
+                });
 
                 lstLegislatura.Add(legislatura.NumeroLegislatura);
             }
 
-            dbContext.Database.ExecuteSqlRaw(@"
-                INSERT IGNORE INTO sf_mandato_legislatura (
-                    id_sf_mandato, id_sf_legislatura
-                ) VALUES (
-                    {0}, {1}
-                )", mandato.CodigoMandato, legislatura.NumeroLegislatura);
+            var idMandato = Convert.ToInt32(mandato.CodigoMandato);
+            var idLegislatura = Convert.ToInt16(legislatura.NumeroLegislatura);
+
+            var existeMandatoCadastrado = dbContext.MandatoLegislaturasSenado
+                .Any(x => x.IdMandato == idMandato && x.IdLegislatura == idLegislatura);
+
+            if(!existeMandatoCadastrado)
+            {
+                dbContext.MandatoLegislaturasSenado.Add(new MandatoLegislatura
+                {
+                    IdMandato = idMandato,
+                    IdLegislatura = (byte)idLegislatura,
+                    IdSenador = idSenador
+                });
+            }
         }
+
+        dbContext.SaveChanges(); // TODO: Remove
+        dbContext.ChangeTracker.Clear();
     }
 
-    private void ProcessExercicios(AppDbContext dbContext, Entities.Mandato mandato, string idSenador, List<string> lstMotivoAfastamento)
+    private void ProcessExercicios(Entities.Mandato mandato, int idSenador, List<string> lstMotivoAfastamento)
     {
         if (mandato.Exercicios?.Exercicio == null) return;
 
@@ -567,33 +593,47 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 exercicio.SiglaCausaAfastamento = exercicio.SiglaCausaAfastamento.Trim();
                 if (!lstMotivoAfastamento.Contains(exercicio.SiglaCausaAfastamento))
                 {
-                    dbContext.Database.ExecuteSqlRaw(@"
-                        INSERT INTO sf_motivo_afastamento (
-                            id, descricao
-                        ) VALUES (
-                            {0}, {1}
-                        )", exercicio.SiglaCausaAfastamento, exercicio.DescricaoCausaAfastamento);
+                    dbContext.MotivoAfastamentos.Add(new MotivoAfastamento
+                    {
+                        Id = exercicio.SiglaCausaAfastamento,
+                        Descricao = exercicio.DescricaoCausaAfastamento
+                    });
 
                     lstMotivoAfastamento.Add(exercicio.SiglaCausaAfastamento);
                 }
             }
 
-            dbContext.Database.ExecuteSqlRaw(@"
-                INSERT INTO sf_mandato_exercicio (
-                    id, id_sf_mandato, id_sf_senador, id_sf_motivo_afastamento, inicio, final
-                ) VALUES (
-                    {0}, {1}, {2}, {3}, {4}, {5}
-                ) ON DUPLICATE KEY UPDATE
-                    id_sf_motivo_afastamento = {3},
-                    final = {5}", exercicio.CodigoExercicio, mandato.CodigoMandato, idSenador, exercicio.SiglaCausaAfastamento, exercicio.DataInicio, exercicio.DataFim);
+            var idExercicio = Convert.ToInt32(exercicio.CodigoExercicio);
+            var idMandato = Convert.ToInt32(mandato.CodigoMandato);
+
+            var exercicioDb = dbContext.MandatoExerciciosSenado.Where(x => x.Id == idExercicio).FirstOrDefault();
+            if (exercicioDb != null)
+            {
+                exercicioDb.IdMotivoAfastamento = exercicio.SiglaCausaAfastamento;
+            }
+            else
+            {
+                dbContext.MandatoExerciciosSenado.Add(new MandatoExercicio
+                {
+                    Id = idExercicio,
+                    IdMandato = idMandato,
+                    IdSenador = idSenador,
+                    IdMotivoAfastamento = exercicio.SiglaCausaAfastamento,
+                    Inicio = Convert.ToDateTime(exercicio.DataInicio),
+                    Final = Convert.ToDateTime(exercicio.DataFim)
+                });
+                
+            }
         }
+
+        dbContext.SaveChanges(); // TODO: Remove
+        dbContext.ChangeTracker.Clear();
     }
 
     public async Task DownloadFotos()
     {
         var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, @"public\img\senador\");
 
-        using (var dbContext = dbContextFactory.CreateDbContext())
         {
             var activeSenators = dbContext.Senadores
                 .Where(s => s.Ativo == "S")
@@ -647,14 +687,14 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
     public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
     {
-        var importacao = connection.GetList<Importacao>(new { chave = "Senado" }).FirstOrDefault();
+        var importacao = dbContext.Importacoes.FirstOrDefault(x => x.Chave == "Senado");
         if (importacao == null)
         {
             importacao = new Importacao()
             {
                 Chave = "Senado"
             };
-            importacao.Id = (ushort)connection.Insert(importacao);
+            dbContext.Importacoes.Add(importacao);
         }
 
         if (pInicio != null)
@@ -664,7 +704,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         }
         if (pFim != null) importacao.ParlamentarFim = pFim.Value;
 
-        connection.Update(importacao);
+        dbContext.SaveChanges();
     }
 
 }

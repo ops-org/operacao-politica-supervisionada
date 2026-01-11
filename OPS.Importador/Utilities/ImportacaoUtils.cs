@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
+﻿using System.Drawing;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
-using OPS.Core.Entity;
 
 namespace OPS.Importador.Utilities
 {

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11304.161 d18.3
+VisualStudioVersion = 18.3.11304.161
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.Core", "OPS.Core\OPS.Core.csproj", "{C0DB3D1D-3236-476C-B3DF-2E730B71D67D}"
 EndProject
@@ -14,6 +14,29 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.Core.Test", "OPS.Core.Test\OPS.Core.Test.csproj", "{D4694FB6-E728-48E0-925D-248EE42D4E9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.Infraestrutura", "OPS.Infraestrutura\OPS.Infraestrutura.csproj", "{5B447A54-81E3-4901-BE55-A7EC77E352ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{ACD6F3C6-6175-474A-ACBD-B6653266ADB1}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Docs\BD\Schemas\AssembleiasLegislativas.sql = Docs\BD\Schemas\AssembleiasLegislativas.sql
+		Docs\BD\Schemas\CamaraFederal.sql = Docs\BD\Schemas\CamaraFederal.sql
+		CNAME = CNAME
+		Docs\BD\Schemas\Comum.sql = Docs\BD\Schemas\Comum.sql
+		CONTRIBUTING.md = CONTRIBUTING.md
+		docker-compose.dcproj = docker-compose.dcproj
+		docker-compose.override.yml = docker-compose.override.yml
+		docker-compose.yml = docker-compose.yml
+		Docs\BD\Schemas\Fornecedor.sql = Docs\BD\Schemas\Fornecedor.sql
+		launchSettings.json = launchSettings.json
+		LICENCE = LICENCE
+		README.md = README.md
+		Docs\BD\Schemas\SenadoFederal.sql = Docs\BD\Schemas\SenadoFederal.sql
+		stylecop.json = stylecop.json
+		Docs\BD\Schemas\Temp.sql = Docs\BD\Schemas\Temp.sql
+		Docs\BD\Schemas\TribunalSuperiorEleitoral.sql = Docs\BD\Schemas\TribunalSuperiorEleitoral.sql
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

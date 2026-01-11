@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 
@@ -24,11 +21,11 @@ namespace OPS.Importador.Assembleias.Estados.MatoGrossoDoSul
         public override DeputadoEstadual ColetarDadosLista(IElement parlamentar)
         {
             var urlPerfil = (parlamentar.QuerySelector("a.cbp-l-caption-buttonRight") as IHtmlAnchorElement).Href;
-            var deputado = GetDeputadoByMatriculaOrNew(Convert.ToUInt32(urlPerfil.Split(@"/").Last()));
+            var deputado = GetDeputadoByMatriculaOrNew(Convert.ToInt32(urlPerfil.Split(@"/").Last()));
 
             deputado.UrlPerfil = urlPerfil;
             deputado.UrlFoto = (parlamentar.QuerySelector(".cbp-caption-defaultWrap img") as IHtmlImageElement)?.Source;
-            deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
+            deputado.Matricula = Convert.ToInt32(deputado.UrlPerfil.Split(@"/").Last());
 
             deputado.NomeParlamentar = parlamentar.QuerySelector(".cbp-l-grid-projects-title").TextContent.Trim().ToTitleCase();
             deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".cbp-l-grid-projects-desc").TextContent.Trim());

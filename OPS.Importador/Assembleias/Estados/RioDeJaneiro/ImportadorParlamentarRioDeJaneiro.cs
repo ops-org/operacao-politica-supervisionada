@@ -1,8 +1,5 @@
-﻿using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Estados.RioDeJaneiro.Entities;
 using OPS.Importador.Assembleias.Parlamentar;
@@ -31,7 +28,7 @@ namespace OPS.Importador.Assembleias.Estados.RioDeJaneiro
 
             foreach (var parlamentar in objDeputadosRJ.Data)
             {
-                var matricula = (uint)parlamentar.Id;
+                var matricula = (int)parlamentar.Id;
                 DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew(matricula);
 
                 if (parlamentar.RemoteId != null)

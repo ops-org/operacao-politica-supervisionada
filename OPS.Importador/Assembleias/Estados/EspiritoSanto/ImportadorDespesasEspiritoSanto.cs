@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp;
 using AngleSharp.Html.Dom;
-using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Utilities;
@@ -28,7 +23,7 @@ namespace OPS.Importador.Assembleias.Estados.EspiritoSanto
             };
 
             // TODO: Filtrar legislatura atual
-            deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
+            deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
         public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
@@ -49,8 +44,8 @@ namespace OPS.Importador.Assembleias.Estados.EspiritoSanto
 
                     if (deputado != null)
                     {
-                        deputado.Gabinete = Convert.ToUInt32(gabinete.Value);
-                        connection.Update(deputado);
+                        deputado.Gabinete = Convert.ToInt32(gabinete.Value);
+                        dbContext.SaveChanges();
                     }
                     else
                         logger.LogError("Parlamentar {Gabinete}: {Parlamentar} não existe ou não possui gabinete relacionado!", gabinete.Value, gabinete.Text);

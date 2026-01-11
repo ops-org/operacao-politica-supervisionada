@@ -1,9 +1,6 @@
-﻿using System;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 
@@ -33,7 +30,7 @@ namespace OPS.Importador.Assembleias.Estados.Bahia
 
             deputado.UrlPerfil = (parlamentar.QuerySelector(".list-item a") as IHtmlAnchorElement).Href;
             deputado.UrlFoto = (parlamentar.QuerySelector(".list-item img") as IHtmlImageElement)?.Source;
-            deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
+            deputado.Matricula = Convert.ToInt32(deputado.UrlPerfil.Split(@"/").Last());
             deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".partido-nome").TextContent.Trim());
 
             return deputado;

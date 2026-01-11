@@ -9,7 +9,7 @@ namespace OPS.Infraestrutura.Entities.Comum
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("descricao")]
         [StringLength(100)]

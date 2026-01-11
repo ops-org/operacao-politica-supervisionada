@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
+﻿using System.Globalization;
 using System.Text;
 using System.Web;
 using AngleSharp;
@@ -11,7 +8,6 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -217,44 +213,46 @@ namespace OPS.Importador.Assembleias.Estados.Paraiba
         {
             // Atualizar numero do gabinete no perfil do parlamentar
             connection.Execute(@"
-UPDATE ops_tmp.cl_despesa_temp dt
+UPDATE temp.cl_despesa_temp dt
 JOIN cl_deputado d ON d.nome_parlamentar = dt.nome AND d.id_estado = 25
 SET d.gabinete = dt.cpf
 WHERE d.gabinete IS null;
 
-UPDATE ops_tmp.cl_despesa_temp dt
+UPDATE temp.cl_despesa_temp dt
 JOIN cl_deputado d ON d.nome_civil = dt.nome AND d.id_estado = 25
 SET d.gabinete = dt.cpf
 WHERE d.gabinete IS NULL;");
 
+            // TODO: mover para fornecedor_de_para
+            // TODO: Validar *** aplicado no CPF e CNPJ
             // Desanonimizar os CNPJs/CPFs dentro do possivel
             connection.Execute(@"
-INSERT IGNORE INTO ops_tmp.fornecedor_correcao (cnpj_cpf, nome)
+INSERT IGNORE INTO temp.fornecedor_correcao (cnpj_cpf, nome)
 SELECT distinct cnpj_cpf, empresa 
-FROM ops_tmp.cl_despesa_temp;
+FROM temp.cl_despesa_temp;
 
-UPDATE ops_tmp.fornecedor_correcao d
-JOIN fornecedor_info f ON f.nome = d.nome AND f.cnpj LIKE CONCAT('___', d.cnpj_cpf, '___')
+UPDATE temp.fornecedor_correcao d
+JOIN fornecedor_info f ON f.nome = d.nome AND f.cnpj ILIKE CONCAT('___', d.cnpj_cpf, '___')
 SET d.cnpj_cpf_correto = f.cnpj
 WHERE LENGTH(d.cnpj_cpf) = 8
 AND f.tipo = 'MATRIZ'
 AND d.cnpj_cpf_correto IS NULL;
 
-UPDATE ops_tmp.cl_despesa_temp d
-JOIN ops_tmp.fornecedor_correcao c ON c.nome = d.empresa AND c.cnpj_cpf = d.cnpj_cpf
+UPDATE temp.cl_despesa_temp d
+JOIN temp.fornecedor_correcao c ON c.nome = d.empresa AND c.cnpj_cpf = d.cnpj_cpf
 SET d.cnpj_cpf = c.cnpj_cpf_correto
 WHERE c.cnpj_cpf_correto IS NOT null;
 
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***') WHERE LENGTH(d.cnpj_cpf) = 5;
-UPDATE ops_tmp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***') WHERE LENGTH(d.cnpj_cpf) = 8;
+UPDATE temp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***') WHERE LENGTH(d.cnpj_cpf) = 5;
+UPDATE temp.cl_despesa_temp d SET d.cnpj_cpf = CONCAT('***', d.cnpj_cpf, '***') WHERE LENGTH(d.cnpj_cpf) = 8;
                 ");
 
 
-            var cnpjInvalidos = connection.ExecuteScalar<int>(@"select count(1) from ops_tmp.cl_despesa_temp where LENGTH(cnpj_cpf) != 11 && LENGTH(cnpj_cpf) != 14");
+            var cnpjInvalidos = connection.ExecuteScalar<int>(@"select count(1) from temp.cl_despesa_temp where LENGTH(cnpj_cpf) != 11 && LENGTH(cnpj_cpf) != 14");
             if (cnpjInvalidos > 0)
             {
                 throw new BusinessException("Há CPNJs/CPFs invalidos que devem ser corrigidos manualmente! #2");
-                // SELECT DISTINCT d.empresa, d.cnpj_cpf FROM ops_tmp.cl_despesa_temp d WHERE LENGTH(d.cnpj_cpf) < 10
+                // SELECT DISTINCT d.empresa, d.cnpj_cpf FROM temp.cl_despesa_temp d WHERE LENGTH(d.cnpj_cpf) < 10
             }
         }
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 
@@ -43,8 +39,8 @@ namespace OPS.Importador.Assembleias.Estados.Amapa
         //    {
         //        DeputadoEstadual deputado = new()
         //        {
-        //            Matricula = (uint)matricula,
-        //            IdEstado = (ushort)Estado.Amapa.GetHashCode(),
+        //            Matricula = (int)matricula,
+        //            IdEstado = (short)Estado.Amapa.GetHashCode(),
         //            UrlPerfil = $"http://www.al.ap.gov.br/pagina.php?pg=exibir_parlamentar&iddeputado={matricula}"
         //        };
 
@@ -75,7 +71,7 @@ namespace OPS.Importador.Assembleias.Estados.Amapa
         {
             // http://www.al.ap.gov.br/pagina.php?pg=exibir_parlamentar&iddeputado=78
             var urlPerfil = (parlamentar.QuerySelector("a") as IHtmlAnchorElement).Href;
-            var matricula = (uint)Convert.ToInt32(urlPerfil.Split("iddeputado=")[1]);
+            var matricula = (int)Convert.ToInt32(urlPerfil.Split("iddeputado=")[1]);
 
             var deputado = GetDeputadoByMatriculaOrNew(matricula);
 

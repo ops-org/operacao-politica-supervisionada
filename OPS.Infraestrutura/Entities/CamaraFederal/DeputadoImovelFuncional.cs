@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id_cf_deputado")]
-        public uint IdDeputado { get; set; }
+        public int IdDeputado { get; set; }
 
         [Column("endereco")]
         [StringLength(255)]

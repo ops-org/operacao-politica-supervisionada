@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Data;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
+using OPS.Infraestrutura;
 using RestSharp;
 using Serilog;
 
@@ -19,6 +13,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
     {
         protected readonly ILogger<ImportadorParlamentarBase> logger;
         protected readonly IDbConnection connection;
+        protected readonly AppDbContext dbContext;
         protected ImportadorParlamentarConfig config;
 
         public int registrosInseridos { get; private set; } = 0;
@@ -33,6 +28,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
         {
             logger = serviceProvider.GetService<ILogger<ImportadorParlamentarBase>>();
             connection = serviceProvider.GetService<IDbConnection>();
+            dbContext = serviceProvider.GetService<AppDbContext>();
 
             httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
         }
@@ -49,7 +45,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
             return Task.CompletedTask;
         }
 
-        public ushort BuscarIdPartido(string partido)
+        public byte BuscarIdPartido(string partido)
         {
             if (partido == "PATRI" || partido.Equals("PATRIOTAS", StringComparison.InvariantCultureIgnoreCase)) partido = "PATRIOTA";
             else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
@@ -67,10 +63,10 @@ namespace OPS.Importador.Assembleias.Parlamentar
             else if (partido.Contains("PMN")) partido = "MOBILIZA";
             else if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido)) partido = "S.PART.";
 
-            var IdPartido = connection.GetList<Partido>(new { Sigla = partido }).FirstOrDefault()?.Id;
+            var IdPartido = dbContext.Partidos.FirstOrDefault(x => x.Sigla == partido)?.Id;
             if (IdPartido == null)
             {
-                IdPartido = connection.GetList<Partido>(new { Nome = partido }).FirstOrDefault()?.Id;
+                IdPartido = dbContext.Partidos.FirstOrDefault(x => x.Nome == partido)?.Id;
                 if (IdPartido == null)
                 {
                     Log.Error("Partido '{Partido}' Inexistenete", partido);
@@ -84,12 +80,8 @@ namespace OPS.Importador.Assembleias.Parlamentar
 
         protected DeputadoEstadual GetDeputadoByNameOrNew(string nomeParlamentar)
         {
-            var id = connection
-                .GetList<DeputadoEstadualDepara>(new
-                {
-                    id_estado = config.Estado,
-                    nome = nomeParlamentar
-                })
+            var id = dbContext.DeputadoEstadualDeparas
+                .Where(d => d.IdEstado == config.Estado.GetHashCode() && d.Nome == nomeParlamentar)
                 .Select(d => d.Id)
                 .FirstOrDefault();
 
@@ -97,7 +89,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
             {
                 return new DeputadoEstadual()
                 {
-                    IdEstado = (ushort)config.Estado,
+                    IdEstado = (byte)config.Estado,
                     NomeParlamentar = nomeParlamentar
                 };
             }
@@ -119,7 +111,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
             //    })
             //    .FirstOrDefault();
 
-            return connection.Get<DeputadoEstadual>(id);
+            return dbContext.DeputadosEstaduais.Find(id);
         }
 
         //protected DeputadoEstadual GetDeputadoByFullNameOrNew(string nome)
@@ -137,19 +129,15 @@ namespace OPS.Importador.Assembleias.Parlamentar
 
         //    return new DeputadoEstadual()
         //    {
-        //        IdEstado = (ushort)config.Estado,
+        //        IdEstado = (short)config.Estado,
         //        NomeCivil = nome
         //    };
         //}
 
-        protected DeputadoEstadual GetDeputadoByMatriculaOrNew(uint matricula)
+        protected DeputadoEstadual GetDeputadoByMatriculaOrNew(int matricula)
         {
-            var deputado = connection
-                .GetList<DeputadoEstadual>(new
-                {
-                    id_estado = config.Estado,
-                    matricula
-                })
+            var deputado = dbContext.DeputadosEstaduais
+                .Where(d => d.IdEstado == config.Estado.GetHashCode() && d.Matricula == matricula)
                 .FirstOrDefault();
 
             if (deputado != null)
@@ -157,7 +145,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
 
             return new DeputadoEstadual()
             {
-                IdEstado = (ushort)config.Estado,
+                IdEstado = (byte)config.Estado,
                 Matricula = matricula
             };
         }
@@ -168,10 +156,11 @@ namespace OPS.Importador.Assembleias.Parlamentar
             {
                 if (deputado.Id == 0)
                 {
-                    deputado.Id = (uint)connection.Insert(deputado);
+                    dbContext.DeputadosEstaduais.Add(deputado);
+                    dbContext.SaveChanges();
                     registrosInseridos++;
 
-                    connection.Insert<uint?, DeputadoEstadualDepara>(new DeputadoEstadualDepara()
+                    dbContext.DeputadoEstadualDeparas.Add(new DeputadoEstadualDepara()
                     {
                         Id = deputado.Id,
                         Nome = deputado.NomeParlamentar,
@@ -179,10 +168,9 @@ namespace OPS.Importador.Assembleias.Parlamentar
                     });
                 }
                 else
-                {
-                    connection.Update(deputado);
                     registrosAtualizados++;
-                }
+
+                dbContext.SaveChanges();
             }
         }
 
@@ -221,14 +209,14 @@ namespace OPS.Importador.Assembleias.Parlamentar
 
         public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)
         {
-            var importacao = connection.GetList<Importacao>(new { chave = config.Estado.ToString() }).FirstOrDefault();
+            var importacao = dbContext.Importacoes.FirstOrDefault(x => x.Chave == config.Estado.ToString());
             if (importacao == null)
             {
                 importacao = new Importacao()
                 {
                     Chave = config.Estado.ToString()
                 };
-                importacao.Id = (ushort)connection.Insert(importacao);
+                dbContext.Importacoes.Add(importacao);
             }
 
             if (pInicio != null)
@@ -238,7 +226,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
             }
             if (pFim != null) importacao.ParlamentarFim = pFim.Value;
 
-            connection.Update(importacao);
+            dbContext.SaveChanges();
         }
     }
 

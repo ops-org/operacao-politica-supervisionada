@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 
@@ -58,7 +55,7 @@ namespace OPS.Importador.Assembleias.Estados.RioGrandeDoNorte
 
         //        deputado.UrlPerfil = urlPerfil;
         //        if (deputado.Matricula == null)
-        //            deputado.Matricula = Convert.ToUInt32(urlPerfil.Split("/")[4]); // https://www.al.rn.leg.br/deputado/<matricula>/<slug>
+        //            deputado.Matricula = Convert.ToInt32(urlPerfil.Split("/")[4]); // https://www.al.rn.leg.br/deputado/<matricula>/<slug>
 
         //        deputado.UrlFoto = (document.QuerySelector(".section-new img.img-fluid") as IHtmlImageElement)?.Source;
 
@@ -89,9 +86,9 @@ namespace OPS.Importador.Assembleias.Estados.RioGrandeDoNorte
 
             deputado.UrlPerfil = (item as IHtmlAnchorElement).Href;
             if (deputado.Matricula == null)
-                deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split("/")[4]); // https://www.al.rn.leg.br/deputado/<matricula>/<slug>
-                                                                                         // deputado.UrlFoto = (item.QuerySelector("img") as IHtmlImageElement)?.Source;
-                                                                                         //deputado.IdPartido = BuscarIdPartido(item.QuerySelector(".party-deputies").TextContent.Trim());
+                deputado.Matricula = Convert.ToInt32(deputado.UrlPerfil.Split("/")[4]); // https://www.al.rn.leg.br/deputado/<matricula>/<slug>
+                                                                                        // deputado.UrlFoto = (item.QuerySelector("img") as IHtmlImageElement)?.Source;
+                                                                                        //deputado.IdPartido = BuscarIdPartido(item.QuerySelector(".party-deputies").TextContent.Trim());
 
             return deputado;
         }

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using OPS.Core;
 using OPS.Core.DTO;
 using OPS.Core.Repository;
-using OPS.Infraestrutura;
 
 namespace OPS.API.Controllers
 {

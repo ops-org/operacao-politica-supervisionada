@@ -6,21 +6,20 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     [Table("cf_deputado_remuneracao")]
     public class DeputadoRemuneracao
     {
-        [Key]
+        [Key, Required]
         [Column("id_cf_deputado")]
-        public uint IdDeputado { get; set; }
+        public int IdDeputado { get; set; }
 
-        [Column("referencia")]
-        public uint Referencia { get; set; }
+        [Key, Required]
+        [Column("ano")]
+        public short Ano { get; set; }
 
-        [Column("remuneracao_fixa", TypeName = "decimal(10,2)")]
-        public decimal? RemuneracaoFixa { get; set; }
+        [Key, Required]
+        [Column("mes")]
+        public short Mes { get; set; }
 
-        [Column("verba_parlamentar", TypeName = "decimal(10,2)")]
-        public decimal? VerbaParlamentar { get; set; }
-
-        [Column("valor_total", TypeName = "decimal(10,2)")]
-        public decimal? ValorTotal { get; set; }
+        [Column("valor")]
+        public decimal Valor { get; set; }
 
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;

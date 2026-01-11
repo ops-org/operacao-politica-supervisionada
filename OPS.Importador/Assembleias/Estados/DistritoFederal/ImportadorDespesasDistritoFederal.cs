@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using CsvHelper;
 using Dapper;
 using OfficeOpenXml;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -469,13 +465,13 @@ namespace OPS.Importador.Assembleias.Estados.DistritoFederal
         public override void AjustarDados()
         {
             connection.Execute(@"
-UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = NULL WHERE cnpj_cpf = '';
-UPDATE ops_tmp.cl_despesa_temp SET observacao = NULL WHERE observacao = 'não consta documento';
-UPDATE ops_tmp.cl_despesa_temp SET despesa_tipo = null WHERE despesa_tipo IN('', 'VII', 'VIII', 'IV');
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = NULL WHERE cnpj_cpf = '';
+UPDATE temp.cl_despesa_temp SET observacao = NULL WHERE observacao = 'não consta documento';
+UPDATE temp.cl_despesa_temp SET despesa_tipo = null WHERE despesa_tipo IN('', 'VII', 'VIII', 'IV');
 
 
-UPDATE ops_tmp.cl_despesa_temp SET cpf = '01281695165' WHERE cpf IN('01281695166', '01281695167', '01281695168', '01281695169', '01281695170'); -- Gabriel Magno
-UPDATE ops_tmp.cl_despesa_temp SET cpf = '35924780104' WHERE cpf IN('35924780105'); -- Hermeto
+UPDATE temp.cl_despesa_temp SET cpf = '01281695165' WHERE cpf IN('01281695166', '01281695167', '01281695168', '01281695169', '01281695170'); -- Gabriel Magno
+UPDATE temp.cl_despesa_temp SET cpf = '35924780104' WHERE cpf IN('35924780105'); -- Hermeto
 
 ");
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using OPS.Importador.Assembleias.Comum;
+﻿using OPS.Importador.Assembleias.Comum;
 
 namespace OPS.Importador.Assembleias.Estados.Maranhao
 {

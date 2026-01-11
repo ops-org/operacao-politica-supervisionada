@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using OPS.Core.Repository;
-using OPS.Infraestrutura;
 
 namespace OPS.API.Controllers
 {

@@ -1,8 +1,7 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 
@@ -16,34 +15,29 @@ namespace OPS.Core.Repository
 
         public async Task<IEnumerable<dynamic>> InfoImportacao()
         {
-            // using (AppDb banco = new AppDb())
-            {
-                var strSql = @"
-SELECT
-	i.id, e.sigla, coalesce(e.nome, i.chave) as nome, i.url, i.info, i.ultima_despesa, i.despesas_fim
-FROM importacao i
-LEFT JOIN estado e ON e.id = i.id
-ORDER BY e.nome, i.id";
-
-                var results = new List<dynamic>();
-                using (var reader = await ExecuteReaderAsync(strSql.ToString()))
+            var results = await _context.Importacoes
+                .GroupJoin(_context.Estados,
+                    i => i.IdEstado,
+                    e => e.Id,
+                    (i, estados) => new { i, estados })
+                .SelectMany(
+                    x => x.estados.DefaultIfEmpty(),
+                    (x, e) => new { x.i, e })
+                .OrderBy(x => x.e.Nome)
+                .ThenBy(x => x.i.Id)
+                .Select(x => new
                 {
-                    while (await reader.ReadAsync())
-                    {
-                        results.Add(new
-                        {
-                            id = reader["id"],
-                            sigla = reader["sigla"].ToString(),
-                            nome = reader["nome"].ToString(),
-                            url = reader["url"].ToString(),
-                            info = reader["info"].ToString(),
-                            ultima_despesa = Utils.FormataData(reader["ultima_despesa"]),
-                            ultima_importacao = Utils.FormataData(reader["despesas_fim"])
-                        });
-                    }
-                }
-                return results;
-            }
+                    id = x.i.Id,
+                    sigla = x.e.Sigla,
+                    nome = x.e.Nome != null ? x.e.Nome : x.i.Chave,
+                    url = x.i.Url,
+                    info = x.i.Info,
+                    ultima_despesa = Utils.FormataData(x.i.UltimaDespesa),
+                    ultima_importacao = Utils.FormataData(x.i.DespesasFim)
+                })
+                .ToListAsync();
+
+            return results;
         }
 
         /// <summary>

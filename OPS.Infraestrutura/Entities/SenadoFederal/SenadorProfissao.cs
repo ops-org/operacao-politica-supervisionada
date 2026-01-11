@@ -9,11 +9,11 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id_sf_senador")]
-        public uint IdSenador { get; set; }
+        public int IdSenador { get; set; }
 
         [Key]
         [Column("id_profissao")]
-        public uint IdProfissao { get; set; }
+        public int IdProfissao { get; set; }
 
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;

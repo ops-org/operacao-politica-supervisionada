@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp;
-using Dapper;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Utilities;
@@ -25,7 +20,7 @@ namespace OPS.Importador.Assembleias.Estados.Maranhao
                 ChaveImportacao = ChaveDespesaTemp.Matricula
             };
 
-            deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
+            deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
         public override void ImportarDespesas(IBrowsingContext context, int ano, int mes)
@@ -49,7 +44,7 @@ namespace OPS.Importador.Assembleias.Estados.Maranhao
             //        {
             //            if (deputado.Matricula != i)
             //            {
-            //                deputado.Matricula = (uint)i;
+            //                deputado.Matricula = (int)i;
             //                connection.Update(deputado);
             //            }
             //        }

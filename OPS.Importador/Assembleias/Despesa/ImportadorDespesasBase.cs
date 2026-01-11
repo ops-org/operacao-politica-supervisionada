@@ -1,23 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Data;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using Npgsql;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Utilities;
+using OPS.Infraestrutura;
 using RestSharp;
 
 namespace OPS.Importador.Assembleias.Despesa
@@ -32,6 +25,8 @@ namespace OPS.Importador.Assembleias.Despesa
         public ILogger<ImportadorDespesasBase> logger { get; set; }
 
         public IDbConnection connection { get; set; }
+
+        public AppDbContext dbContext { get; set; }
 
         public string rootPath { get; set; }
 
@@ -66,7 +61,7 @@ namespace OPS.Importador.Assembleias.Despesa
         /// </summary>
         protected int lote { get; set; }
 
-        protected Dictionary<string, uint> lstHash { get; private set; }
+        protected Dictionary<string, int> lstHash { get; private set; }
 
         private HttpClient _httpClientResilient;
         /// <summary>
@@ -89,6 +84,7 @@ namespace OPS.Importador.Assembleias.Despesa
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasBase>>();
             connection = serviceProvider.GetService<IDbConnection>();
+            dbContext = serviceProvider.GetService<AppDbContext>();
 
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -182,10 +178,11 @@ namespace OPS.Importador.Assembleias.Despesa
                 if (lstHash.Remove(key)) continue;
 
                 despesa.Hash = hash;
-                connection.Insert(despesa);
+                dbContext.CamaraEstadualDespesaTemps.Add(despesa);
                 despesaInserida++;
             }
 
+            dbContext.SaveChanges();
             if (despesaInserida > 0)
                 logger.LogInformation("{Itens} despesas inseridas na tabela temporaria para {Estado} em {Ano}.", despesaInserida, config.Estado.ToString(), ano);
 
@@ -208,11 +205,11 @@ namespace OPS.Importador.Assembleias.Despesa
         protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
         {
             var caminhoArquivoDb = caminhoArquivo.Replace(_tempPath, "");
-            arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            arquivoChecksum = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
 
             if (importacaoIncremental && File.Exists(caminhoArquivo))
             {
-                var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+                var arquivoDB = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
                 if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
                 {
                     logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
@@ -244,7 +241,6 @@ namespace OPS.Importador.Assembleias.Despesa
                 if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
                 {
                     arquivoChecksum.Verificacao = DateTime.UtcNow;
-                    connection.Update(arquivoChecksum);
 
                     logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
 
@@ -262,12 +258,12 @@ namespace OPS.Importador.Assembleias.Despesa
                     {
                         Nome = caminhoArquivoDb,
                         Checksum = checksum,
-                        TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                        TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length,
                         Criacao = DateTime.UtcNow,
                         Atualizacao = DateTime.UtcNow,
                         Verificacao = DateTime.UtcNow
                     };
-                    arquivoChecksum.Id = (uint)connection.Insert(arquivoChecksum);
+                    dbContext.ArquivoChecksums.Add(arquivoChecksum);
                 }
                 else
                 {
@@ -276,14 +272,15 @@ namespace OPS.Importador.Assembleias.Despesa
                         logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
 
                         arquivoChecksum.Checksum = checksum;
-                        arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+                        arquivoChecksum.TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length;
                         arquivoChecksum.Revisado = false;
                     }
 
                     arquivoChecksum.Atualizacao = DateTime.UtcNow;
                     arquivoChecksum.Verificacao = DateTime.UtcNow;
-                    connection.Update(arquivoChecksum);
                 }
+
+                dbContext.SaveChanges();
             }
             finally
             {
@@ -302,7 +299,7 @@ namespace OPS.Importador.Assembleias.Despesa
             connection.Execute(@$"
 UPDATE cl_deputado dp 
 SET valor_total_ceap = coalesce((
-        SELECT SUM(ds.valor_liquido) FROM cl_despesa ds WHERE ds.id_cl_deputado = dp.id
+        SELECT SUM(ds.valor_liquido) FROM assembleias.cl_despesa ds WHERE ds.id_cl_deputado = dp.id
     ), 0)
 WHERE id_estado = {idEstado};");
         }
@@ -313,7 +310,7 @@ WHERE id_estado = {idEstado};");
             if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
             {
                 connection.Execute($@"
-UPDATE ops_tmp.cl_despesa_temp temp
+UPDATE temp.cl_despesa_temp temp
 JOIN cl_deputado d ON d.nome_importacao = temp.nome_civil
 SET temp.nome_civil = d.nome_civil
 WHERE d.id_estado = {idEstado}
@@ -323,7 +320,7 @@ AND temp.nome_civil is not null
             else if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar)
             {
                 connection.Execute($@"
-UPDATE ops_tmp.cl_despesa_temp temp
+UPDATE temp.cl_despesa_temp temp
 JOIN cl_deputado d ON d.nome_importacao = temp.nome
 SET temp.nome = d.nome_parlamentar
 WHERE d.id_estado = {idEstado}
@@ -342,10 +339,10 @@ AND d.nome_parlamentar IS NOT null
             var affected = connection.Execute(@"
 INSERT INTO cl_despesa_especificacao (descricao)
 select distinct despesa_tipo
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where despesa_tipo is not null
 and despesa_tipo not in (
-    select descricao from cl_despesa_especificacao
+    select descricao FROM assembleias.cl_despesa_especificacao
 )
 ORDER BY despesa_tipo;
                 ");
@@ -368,10 +365,10 @@ ORDER BY despesa_tipo;
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
 select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where cpf not in (
     select cpf 
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND cpf IS NOT NULL
 );");
@@ -382,10 +379,10 @@ where cpf not in (
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
 select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where cpf not in (
     select cpf_parcial 
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND cpf_parcial IS NOT NULL
 );");
@@ -396,10 +393,10 @@ where cpf not in (
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, matricula, id_estado)
 select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where cpf not in (
     select matricula 
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND matricula IS NOT NULL
 );");
@@ -410,10 +407,10 @@ where cpf not in (
                 affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, gabinete, id_estado)
 select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where cpf not in (
     select gabinete 
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND gabinete IS NOT NULL
 );");
@@ -421,8 +418,8 @@ where cpf not in (
             else if (config.ChaveImportacao != ChaveDespesaTemp.IdDeputado)
             {
                 connection.Execute(@$"
-UPDATE ops_tmp.cl_despesa_temp t
-JOIN ops_tmp.cl_deputado_de_para d ON coalesce(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
+UPDATE temp.cl_despesa_temp t
+JOIN temp.cl_deputado_de_para d ON coalesce(t.nome, t.nome_civil) ILIKE d.nome AND d.id_estado = {idEstado}
 SET t.id_cl_deputado = d.id");
 
                 if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
@@ -431,11 +428,11 @@ SET t.id_cl_deputado = d.id");
                     affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
 select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where id_cl_deputado is null
 and nome_civil not in (
     select nome_civil
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND nome_civil IS NOT null
 );");
@@ -446,11 +443,11 @@ and nome_civil not in (
                     affected = connection.Execute(@$"
 INSERT INTO cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
 select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from ops_tmp.cl_despesa_temp
+from temp.cl_despesa_temp
 where id_cl_deputado is null
 and nome not in (
     select nome_parlamentar
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND nome_parlamentar IS NOT null
 );");
@@ -459,13 +456,13 @@ and nome not in (
                 if (affected > 0)
                 {
                     connection.Execute(@$"
-INSERT IGNORE INTO ops_tmp.cl_deputado_de_para (id, nome, id_estado)
-SELECT id, {chaveImportacao}, id_estado FROM ops.cl_deputado
+INSERT IGNORE INTO temp.cl_deputado_de_para (id, nome, id_estado)
+SELECT id, {chaveImportacao}, id_estado FROM assembleias.cl_deputado
 WHERE {chaveImportacao} IS NOT NULL");
 
                     connection.Execute(@$"
-UPDATE ops_tmp.cl_despesa_temp t
-JOIN ops_tmp.cl_deputado_de_para d ON coalesce(t.nome, t.nome_civil) LIKE d.nome AND d.id_estado = {idEstado}
+UPDATE temp.cl_despesa_temp t
+JOIN temp.cl_deputado_de_para d ON coalesce(t.nome, t.nome_civil) ILIKE d.nome AND d.id_estado = {idEstado}
 SET t.id_cl_deputado = d.id");
                 }
             }
@@ -480,17 +477,17 @@ SET t.id_cl_deputado = d.id");
             {
                 sqlDeputadosNaoLocalizados = @$"
 SELECT GROUP_CONCAT(DISTINCT nome)
-FROM ops_tmp.cl_despesa_temp
+FROM temp.cl_despesa_temp
 WHERE id_cl_deputado is null;";
             }
             else
             {
                 sqlDeputadosNaoLocalizados = @$"
 SELECT GROUP_CONCAT(DISTINCT nome)
-FROM ops_tmp.cl_despesa_temp
+FROM temp.cl_despesa_temp
 WHERE cpf NOT IN (
     SELECT {chaveImportacao}
-    FROM cl_deputado 
+    FROM assembleias.cl_deputado 
     WHERE id_estado = {idEstado} 
     AND {chaveImportacao} IS NOT null
 );";
@@ -511,7 +508,7 @@ WHERE cpf NOT IN (
             var affected = connection.Execute(@"
 INSERT INTO fornecedor (nome, cnpj_cpf)
 select MAX(dt.empresa), dt.cnpj_cpf
-from ops_tmp.cl_despesa_temp dt
+from temp.cl_despesa_temp dt
 left join fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
 where dt.cnpj_cpf is not null
 and f.id is null
@@ -530,7 +527,7 @@ GROUP BY dt.cnpj_cpf;
         {
             var affected = connection.Execute(@$"
 DELETE d
-from cl_despesa d 
+FROM assembleias.cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
 and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
@@ -540,7 +537,7 @@ and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
 
         public virtual void InsereDespesaFinal(int ano)
         {
-            var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cl_despesa_temp");
+            var totalTemp = connection.ExecuteScalar<int>("select count(1) from temp.cl_despesa_temp");
             if (totalTemp == 0) return;
 
             logger.LogDebug("Inserir despesa final");
@@ -556,7 +553,7 @@ and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
                 condicaoSql = "p.gabinete = d.cpf";
             else
             {
-                condicaoSql = "p.id like d.id_cl_deputado";
+                condicaoSql = "p.id ILIKE d.id_cl_deputado";
             }
 
             var sql = @$"
@@ -585,7 +582,7 @@ SELECT
     CASE WHEN f.id IS NULL THEN d.empresa else null END AS favorecido,
     d.observacao,
     d.hash
-FROM ops_tmp.cl_despesa_temp d
+FROM temp.cl_despesa_temp d
 inner join cl_deputado p on id_estado = {idEstado} and {condicaoSql}
 left join cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
 LEFT join fornecedor f on f.cnpj_cpf = d.cnpj_cpf
@@ -615,7 +612,7 @@ ORDER BY d.id;
 
                 var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
 SELECT COUNT(1)
-FROM ops_tmp.cl_despesa_temp d
+FROM temp.cl_despesa_temp d
 WHERE d.id_cl_deputado IS NULL");
 
                 if (despesasSemParlamentar > 0)
@@ -631,7 +628,7 @@ WHERE d.id_cl_deputado IS NULL");
             {
                 var ultimaDataEmissao = connection.ExecuteScalar<DateTime>($@"
 SELECT MAX(d.data_emissao) AS ultima_emissao
-FROM cl_despesa d
+FROM assembleias.cl_despesa d
 inner join cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}");
 
                 if (ultimaDataEmissao > DateTime.Today)
@@ -654,7 +651,7 @@ inner join cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}
 select 
     count(1) as itens, 
     coalesce(sum(valor_liquido), 0) as valor_total 
-from cl_despesa d 
+FROM assembleias.cl_despesa d 
 join cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
 and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
@@ -675,7 +672,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         public virtual void LimpaDespesaTemporaria()
         {
-            connection.Execute("truncate table ops_tmp.cl_despesa_temp");
+            connection.Execute("truncate table temp.cl_despesa_temp");
         }
 
         public virtual void DeletarDespesasInexistentes(int ano)
@@ -690,7 +687,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
             if (!config.Completo && lstHash.Values.Any())
             {
-                var itensDbCount = connection.ExecuteScalar<uint>("SELECT count(1) FROM ops_tmp.cl_despesa_temp");
+                var itensDbCount = connection.ExecuteScalar<int>("SELECT count(1) FROM temp.cl_despesa_temp");
                 if (itensDbCount == 0 && lstHash.Count() > itensDbCount)
                 {
                     logger.LogError("Tentando remover ({ItensArquivo}) mais itens que estamos incluindo ({ItensDB})! Verifique a importação.", lstHash.Count(), itensDbCount);
@@ -699,7 +696,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
                 foreach (var dc in lstHash)
                 {
-                    connection.Execute($"delete from cl_despesa where id IN({dc.Value})");
+                    connection.Execute($"delete FROM assembleias.cl_despesa where id IN({dc.Value})");
                 }
 
                 logger.LogInformation("{TotalDeleted} despesas removidas!", lstHash.Count());
@@ -713,15 +710,15 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             valorTotalProcessadoAno = 0;
             itensProcessadosAno = 0;
 
-            lstHash = new Dictionary<string, uint>();
-            var sql = $"select d.id, d.hash from cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
+            lstHash = new Dictionary<string, int>();
+            var sql = $"select d.id, d.hash FROM assembleias.cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             IEnumerable<dynamic> lstHashDB = connection.Query(sql);
 
             foreach (IDictionary<string, object> dReader in lstHashDB)
             {
                 var hex = Convert.ToHexString((byte[])dReader["hash"]);
                 if (!lstHash.ContainsKey(hex))
-                    lstHash.Add(hex, (uint)dReader["id"]);
+                    lstHash.Add(hex, (int)dReader["id"]);
                 else
                     logger.LogError("Hash {HASH} esta duplicada na base de dados.", hex);
             }
@@ -756,34 +753,29 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         public DeputadoEstadual GetDeputadoByNameOrNew(string nomeParlamentar)
         {
-            return connection
-                .GetList<DeputadoEstadual>(new
-                {
-                    id_estado = idEstado,
-                    nome_parlamentar = nomeParlamentar
-                })
-                .FirstOrDefault()
-                ?? new DeputadoEstadual()
-                {
-                    IdEstado = (ushort)idEstado,
-                    NomeParlamentar = nomeParlamentar
-                };
+            var deputado = dbContext.DeputadosEstaduais
+                .Where(d => d.IdEstado == idEstado && d.NomeParlamentar == nomeParlamentar)
+                .FirstOrDefault();
+
+
+            return deputado ?? new DeputadoEstadual()
+            {
+                IdEstado = (byte)idEstado,
+                NomeParlamentar = nomeParlamentar
+            };
         }
 
-        public DeputadoEstadual GetDeputadoByMatriculaOrNew(uint matricula)
+        public DeputadoEstadual GetDeputadoByMatriculaOrNew(int matricula)
         {
-            return connection
-                .GetList<DeputadoEstadual>(new
-                {
-                    id_estado = idEstado,
-                    matricula
-                })
-                .FirstOrDefault()
-                ?? new DeputadoEstadual()
-                {
-                    IdEstado = (ushort)idEstado,
-                    Matricula = matricula
-                };
+            var deputado = dbContext.DeputadosEstaduais
+                .Where(d => d.IdEstado == idEstado && d.Matricula == matricula)
+                .FirstOrDefault();
+
+            return deputado ?? new DeputadoEstadual()
+            {
+                IdEstado = (byte)idEstado,
+                Matricula = matricula
+            };
         }
 
         public void InserirDespesaTemp(CamaraEstadualDespesaTemp despesaTemp)
@@ -796,12 +788,12 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             var dateToCompare = DateTime.Today;
             if (despesaTemp.Mes.HasValue) dateToCompare = (new DateTime(despesaTemp.Ano, despesaTemp.Mes.Value, 1)).AddMonths(1).AddDays(-1);
 
-            if (despesaTemp.DataEmissao.Year != despesaTemp.Ano && despesaTemp.DataEmissao.AddMonths(3).Year != despesaTemp.Ano)
+            if (despesaTemp.DataEmissao?.Year != despesaTemp.Ano && despesaTemp.DataEmissao?.AddMonths(3).Year != despesaTemp.Ano)
             {
                 // Validar ano com 3 meses de tolerancia.
                 //logger.LogWarning("Despesa com ano incorreto: {@Despesa}", despesaTemp);
 
-                var dt = despesaTemp.DataEmissao;
+                var dt = despesaTemp.DataEmissao!.Value;
                 despesaTemp.DataEmissao = new DateTime(despesaTemp.Ano, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
             }
             else if (despesaTemp.DataEmissao > dateToCompare)
@@ -809,7 +801,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
                 // Validar despesa com data futura.
                 //logger.LogWarning("Despesa com data incorreta/futura: {@Despesa}", despesaTemp);
 
-                var dt = despesaTemp.DataEmissao;
+                var dt = despesaTemp.DataEmissao!.Value;
                 // Tentamos trocar apenas o ano.
                 despesaTemp.DataEmissao = new DateTime(despesaTemp.Ano, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
@@ -941,7 +933,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             {
                 arquivoChecksum.ValorTotal = valorTotalArquivo;
                 arquivoChecksum.Divergencia = valorTotalArquivo - valorTotalCalculado;
-                connection.Update(arquivoChecksum);
+                dbContext.SaveChanges();
             }
 
             if (diferenca > 100)
@@ -966,14 +958,14 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
         {
-            var importacao = connection.GetList<Importacao>(new { chave = config.Estado.ToString() }).FirstOrDefault();
+            var importacao = dbContext.Importacoes.FirstOrDefault(x => x.Chave == config.Estado.ToString());
             if (importacao == null)
             {
                 importacao = new Importacao()
                 {
                     Chave = config.Estado.ToString()
                 };
-                importacao.Id = (ushort)connection.Insert(importacao);
+                dbContext.Importacoes.Add(importacao);
             }
 
             if (dInicio != null)
@@ -990,20 +982,20 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 select 
     min(d.data_emissao) as primeira_despesa, 
     max(d.data_emissao) as ultima_despesa 
-from cl_despesa d
+FROM assembleias.cl_despesa d
 join cl_deputado p ON p.id = d.id_cl_deputado
 where p.id_estado = @idEstado";
                 using (var dReader = connection.ExecuteReader(sql, new { idEstado }))
                 {
                     if (dReader.Read())
                     {
-                        importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["primeira_despesa"]) : (DateTime?)null;
-                        importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["ultima_despesa"]) : (DateTime?)null;
+                        importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? DateOnly.Parse(dReader["primeira_despesa"].ToString()) : (DateOnly?)null;
+                        importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? DateOnly.Parse(dReader["ultima_despesa"].ToString()) : (DateOnly?)null;
                     }
                 }
             }
 
-            connection.Update(importacao);
+            dbContext.SaveChanges();
         }
 
         /// <summary>
@@ -1039,7 +1031,7 @@ where p.id_estado = @idEstado";
     				insert into cl_despesa_resumo_mensal
     				(ano, mes, valor) (
     					select ano, mes, sum(valor_liquido)
-    					from cl_despesa
+    					FROM assembleias.cl_despesa
     					group by ano, mes
     				);";
 

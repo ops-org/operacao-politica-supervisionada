@@ -26,10 +26,10 @@ namespace OPS.Core.Repository
             {
                 await connection.OpenAsync();
             }
-            
+
             var command = connection.CreateCommand();
             command.CommandText = sql;
-            
+
             if (parameters != null)
             {
                 command.Parameters.AddRange(ConvertAnonymousToParameters(parameters));

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Xml;
+﻿using System.Xml;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
@@ -28,7 +26,7 @@ namespace OPS.Importador.Assembleias.Estados.SaoPaulo
 
             foreach (XmlNode fileNode in deputadoXml)
             {
-                var matricula = Convert.ToUInt32(fileNode.SelectSingleNode("Matricula").InnerText.Trim());
+                var matricula = Convert.ToInt32(fileNode.SelectSingleNode("Matricula").InnerText.Trim());
                 var deputado = GetDeputadoByMatriculaOrNew(matricula);
 
                 deputado.NomeParlamentar = fileNode.SelectSingleNode("NomeParlamentar").InnerText.Trim().ToTitleCase();

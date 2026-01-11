@@ -1,6 +1,4 @@
-﻿using System;
-using AngleSharp;
-using OPS.Core.Entity;
+﻿using AngleSharp;
 using OPS.Core.Enumerator;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Assembleias.Estados.MatoGrosso.Entities;

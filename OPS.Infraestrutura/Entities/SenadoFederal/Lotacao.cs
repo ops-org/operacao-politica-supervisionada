@@ -8,10 +8,10 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id")]
-        public ushort Id { get; set; }
+        public short Id { get; set; }
 
         [Column("id_senador")]
-        public uint? IdSenador { get; set; }
+        public int? IdSenador { get; set; }
 
         [Column("descricao")]
         [StringLength(100)]

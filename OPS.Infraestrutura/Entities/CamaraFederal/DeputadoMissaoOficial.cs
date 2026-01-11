@@ -8,10 +8,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id_cf_deputado")]
-        public uint IdDeputado { get; set; }
+        public int IdDeputado { get; set; }
 
         // [Column("id_trecho_viagem")]
-        // public ushort? IdTrechoViagem { get; set; }
+        // public short? IdTrechoViagem { get; set; }
 
         [Column("data_saida")]
         public DateTime? DataSaida { get; set; }

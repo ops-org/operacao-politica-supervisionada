@@ -1,5 +1,5 @@
-﻿using System.Text.Json.Serialization;
-using Dapper;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace OPS.Importador.Fornecedores.MinhaReceita
 {
@@ -7,7 +7,7 @@ namespace OPS.Importador.Fornecedores.MinhaReceita
     public class FornecedorAtividade
     {
 
-        [Key]
+        //[Key]
         [Column("id")]
         [JsonPropertyName("codigo")]
         public int Id { get; set; }

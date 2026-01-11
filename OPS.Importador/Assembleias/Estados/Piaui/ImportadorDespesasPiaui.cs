@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
+﻿using System.Globalization;
 using System.Text;
-using System.Threading.Tasks;
 using CsvHelper;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -57,8 +52,8 @@ namespace OPS.Importador.Assembleias.Estados.Piaui
                         {
                             var despesaTemp = new CamaraEstadualDespesaTemp();
                             despesaTemp.DataEmissao = Convert.ToDateTime("01/" + csv[ColunasDespesas.Competencia.GetHashCode()], cultureInfo);
-                            despesaTemp.Ano = (short)despesaTemp.DataEmissao.Year;
-                            despesaTemp.Mes = (short)despesaTemp.DataEmissao.Month;
+                            despesaTemp.Ano = (short)despesaTemp.DataEmissao.Value.Year;
+                            despesaTemp.Mes = (short)despesaTemp.DataEmissao.Value.Month;
                             despesaTemp.Nome = csv[ColunasDespesas.Parlamentar.GetHashCode()].Trim().ToTitleCase();
                             despesaTemp.TipoDespesa = csv[ColunasDespesas.Subcota.GetHashCode()].Trim();
                             despesaTemp.Valor = Convert.ToDecimal(csv[ColunasDespesas.Valor.GetHashCode()], cultureInfo);

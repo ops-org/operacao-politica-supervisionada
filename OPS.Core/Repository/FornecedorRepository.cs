@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using OPS.Core.Model;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 
@@ -114,24 +113,25 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> QuadroSocietario(int id)
         {
-                var quadroSocietario = await _context.FornecedorSocios
-                    .Include(fs => fs.FornecedorSocioQualificacao)
-                    .Include(fs => fs.FornecedorSocioRepresentanteQualificacao)
-                    .Where(fs => fs.IdFornecedor == id)
-                    .Select(fs => new
-                    {
-                        nome = fs.Nome,
-                        qualificacao = fs.FornecedorSocioQualificacao != null 
-                            ? fs.FornecedorSocioQualificacao.Descricao 
-                            : null,
-                        nome_representante_legal = fs.NomeRepresentante,
-                        qualificacao_representante_legal = fs.FornecedorSocioRepresentanteQualificacao != null 
-                            ? fs.FornecedorSocioRepresentanteQualificacao.Descricao 
-                            : null
-                    })
-                    .ToListAsync();
+            //var quadroSocietario = await _context.FornecedorSocios
+            //    .Include(fs => fs.FornecedorSocioQualificacao)
+            //    .Include(fs => fs.FornecedorSocioRepresentanteQualificacao)
+            //    .Where(fs => fs.IdFornecedor == id)
+            //    .Select(fs => new
+            //    {
+            //        nome = fs.Nome,
+            //        qualificacao = fs.FornecedorSocioQualificacao != null
+            //            ? fs.FornecedorSocioQualificacao.Descricao
+            //            : null,
+            //        nome_representante_legal = fs.NomeRepresentante,
+            //        qualificacao_representante_legal = fs.FornecedorSocioRepresentanteQualificacao != null
+            //            ? fs.FornecedorSocioRepresentanteQualificacao.Descricao
+            //            : null
+            //    })
+            //    .ToListAsync();
 
-                return quadroSocietario;
+            //return quadroSocietario;
+            return null;
         }
 
         public async Task<dynamic> SenadoresMaioresGastos(int id)
@@ -472,46 +472,65 @@ order by ano
 
         public async Task<List<dynamic>> Busca(string value)
         {
-            var query = _context.Fornecedores
-                .Include(f => f.FornecedorInfo)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
-                var cpfCnpj = value
-                    .Replace(".", "", StringComparison.InvariantCultureIgnoreCase)
-                    .Replace("/", "", StringComparison.InvariantCultureIgnoreCase)
-                    .Replace("-", "", StringComparison.InvariantCultureIgnoreCase);
-
-                if (cpfCnpj.Replace("*", "", StringComparison.InvariantCultureIgnoreCase).Trim().All(char.IsDigit)) // Is number?
-                {
-                    query = query.Where(f => f.CnpjCpf != null && f.CnpjCpf.Contains(cpfCnpj));
-                }
-                else
-                {
-                    query = query.Where(f => 
-                        (f.FornecedorInfo != null && f.FornecedorInfo.Nome != null && f.FornecedorInfo.Nome.Contains(value)) ||
-                        (f.FornecedorInfo != null && f.FornecedorInfo.NomeFantasia != null && f.FornecedorInfo.NomeFantasia.Contains(value)) ||
-                        (f.Nome.Contains(value))
-                    );
-                }
+                var fornecedores = await _context.Fornecedores
+                    .OrderBy(f => f.Nome)
+                    .Take(100)
+                    .Select(f => new
+                    {
+                        id_fornecedor = f.Id.ToString(),
+                        cnpj = Utils.FormatCnpjCpf(f.CnpjCpf),
+                        nome = f.Nome,
+                        nome_fantasia = (string)null,
+                        estado = (string)null
+                    })
+                    .ToListAsync();
+                return fornecedores.Cast<dynamic>().ToList();
             }
 
-            var fornecedores = (await query
-                .OrderBy(f => f.FornecedorInfo.Nome ?? f.Nome)
-                .ThenBy(f => f.FornecedorInfo.Cnpj ?? f.CnpjCpf)
-                .Take(100)
-                .Select(f => new
-                {
-                    id_fornecedor = f.Id.ToString(),
-                    cnpj = Utils.FormatCnpjCpf(f.FornecedorInfo != null ? f.FornecedorInfo.Cnpj : f.CnpjCpf),
-                    nome = f.FornecedorInfo != null ? f.FornecedorInfo.Nome : f.Nome,
-                    nome_fantasia = f.FornecedorInfo != null ? f.FornecedorInfo.NomeFantasia : null,
-                    estado = f.FornecedorInfo != null ? f.FornecedorInfo.Estado : null
-                })
-                .ToListAsync()).Cast<dynamic>().ToList();
+            var cpfCnpj = value
+                .Replace(".", "", StringComparison.InvariantCultureIgnoreCase)
+                .Replace("/", "", StringComparison.InvariantCultureIgnoreCase)
+                .Replace("-", "", StringComparison.InvariantCultureIgnoreCase);
 
-            return fornecedores;
+            if (cpfCnpj.Replace("*", "", StringComparison.InvariantCultureIgnoreCase).Trim().All(char.IsDigit))
+            {
+                var fornecedores = await _context.Fornecedores
+                    .Where(f => f.CnpjCpf != null && f.CnpjCpf.Contains(cpfCnpj))
+                    .OrderBy(f => f.Nome)
+                    .Take(100)
+                    .Select(f => new
+                    {
+                        id_fornecedor = f.Id.ToString(),
+                        cnpj = Utils.FormatCnpjCpf(f.CnpjCpf),
+                        nome = f.Nome,
+                        nome_fantasia = (string)null,
+                        estado = (string)null
+                    })
+                    .ToListAsync();
+                return fornecedores.Cast<dynamic>().ToList();
+            }
+
+            var fornecedoresPorNome = await _context.Fornecedores
+                .Include(f => f.FornecedorInfo)
+                .Where(f => f.Nome.Contains(value) ||
+                           (f.FornecedorInfo != null && f.FornecedorInfo.Nome != null && f.FornecedorInfo.Nome.Contains(value)) ||
+                           (f.FornecedorInfo != null && f.FornecedorInfo.NomeFantasia != null && f.FornecedorInfo.NomeFantasia.Contains(value)))
+                .OrderBy(f => f.FornecedorInfo != null ? f.FornecedorInfo.Nome : f.Nome)
+                .Take(100)
+                .ToListAsync();
+
+            var result = fornecedoresPorNome.Select(f => new
+            {
+                id_fornecedor = f.Id.ToString(),
+                cnpj = Utils.FormatCnpjCpf(f.FornecedorInfo?.Cnpj ?? f.CnpjCpf),
+                nome = f.FornecedorInfo?.Nome ?? f.Nome,
+                nome_fantasia = f.FornecedorInfo?.NomeFantasia,
+                estado = f.FornecedorInfo?.Estado
+            }).ToList();
+
+            return result.Cast<dynamic>().ToList();
         }
     }
 }

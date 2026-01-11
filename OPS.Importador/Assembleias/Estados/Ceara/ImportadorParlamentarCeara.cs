@@ -1,9 +1,6 @@
-﻿using System;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 
@@ -29,7 +26,7 @@ public class ImportadorParlamentarCeara : ImportadorParlamentarCrawler
 
         deputado.UrlPerfil = (parlamentar.QuerySelector(".deputado_card--nome a") as IHtmlAnchorElement).Href;
         deputado.UrlFoto = (parlamentar.QuerySelector("img") as IHtmlImageElement)?.Source;
-        //deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"/").Last());
+        //deputado.Matricula = Convert.ToInt32(deputado.UrlPerfil.Split(@"/").Last());
         deputado.IdPartido = BuscarIdPartido(parlamentar.QuerySelector(".deputado_card--partido").TextContent.Trim());
 
         return deputado;

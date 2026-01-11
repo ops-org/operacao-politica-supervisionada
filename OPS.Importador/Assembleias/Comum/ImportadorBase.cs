@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
@@ -42,24 +41,29 @@ namespace OPS.Importador.Assembleias.Comum
             if (importadorDespesas != null)
             {
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
-                if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
-                {
-                    // Dados por mandato
-                    ImportarDespesas(2023); // TODO: Primeiro ano do mandato
-                }
-                else
-                {
-                    //if (!(importadorDespesas is ImportadorDespesasAmazonas
-                    //    || importadorDespesas is ImportadorDespesasBahia
-                    //    || importadorDespesas is ImportadorDespesasCeara
-                    //    || importadorDespesas is ImportadorDespesasMaranhao
-                    //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
-                    //{
-                    //    ImportarDespesas(DateTime.Now.Year - 2);
-                    ImportarDespesasAnoAnterior();
-                    //}
+                //if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
+                //{
+                //    // Dados por mandato
+                //    ImportarDespesas(2023); // TODO: Primeiro ano do mandato
+                //}
+                //else
+                //{
+                //    //if (!(importadorDespesas is ImportadorDespesasAmazonas
+                //    //    || importadorDespesas is ImportadorDespesasBahia
+                //    //    || importadorDespesas is ImportadorDespesasCeara
+                //    //    || importadorDespesas is ImportadorDespesasMaranhao
+                //    //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
+                //    //{
+                //    //    ImportarDespesas(DateTime.Now.Year - 2);
+                //    ImportarDespesasAnoAnterior();
+                //    //}
 
-                    //ImportarDespesasAnoAtual();
+                //    //ImportarDespesasAnoAtual();
+                //}
+
+                for (int i = 2008; i < 2025; i++)
+                {
+                    ImportarDespesas(i);
                 }
 
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);

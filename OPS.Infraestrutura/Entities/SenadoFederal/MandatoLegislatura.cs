@@ -8,14 +8,14 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id_sf_mandato")]
-        public uint IdMandato { get; set; }
+        public int IdMandato { get; set; }
 
         [Key]
         [Column("id_sf_legislatura")]
         public byte IdLegislatura { get; set; }
 
         [Column("id_sf_senador")]
-        public uint IdSenador { get; set; }
+        public int IdSenador { get; set; }
 
         // Navigation properties
         public virtual MandatoSenado Mandato { get; set; } = null!;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OPS.Importador.Assembleias.Estados.MatoGrosso.Entities
+﻿namespace OPS.Importador.Assembleias.Estados.MatoGrosso.Entities
 {
     public class Empenho
     {

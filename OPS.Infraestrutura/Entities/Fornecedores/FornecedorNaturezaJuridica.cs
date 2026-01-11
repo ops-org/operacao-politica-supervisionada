@@ -19,6 +19,6 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public string Descricao { get; set; } = null!;
 
         // Navigation properties
-        public virtual ICollection<Fornecedor> Fornecedores { get; set; } = new List<Fornecedor>();
+        //public virtual ICollection<Fornecedor> Fornecedores { get; set; } = new List<Fornecedor>();
     }
 }

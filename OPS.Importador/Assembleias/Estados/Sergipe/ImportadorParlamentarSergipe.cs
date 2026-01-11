@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -29,7 +26,7 @@ namespace OPS.Importador.Assembleias.Estados.Sergipe
 
             deputado.UrlPerfil = (document.QuerySelector("a.kt-widget__username") as IHtmlAnchorElement).Href;
             deputado.UrlFoto = (document.QuerySelector("img.kt-widget__img") as IHtmlImageElement)?.Source;
-            deputado.Matricula = Convert.ToUInt32(deputado.UrlPerfil.Split(@"=").Last());
+            deputado.Matricula = Convert.ToInt32(deputado.UrlPerfil.Split(@"=").Last());
             deputado.IdPartido = BuscarIdPartido(document.QuerySelector("span.kt-widget__username").TextContent.Replace("(", "").Replace(")", "").Trim());
 
             return deputado;

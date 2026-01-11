@@ -1,25 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
 using CsvHelper;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.SenadoFederal;
-using OPS.Infraestrutura.Factories;
 
 namespace OPS.Importador.SenadoFederal
 {
@@ -27,7 +19,7 @@ namespace OPS.Importador.SenadoFederal
     {
         protected readonly ILogger<ImportadorDespesasSenado> logger;
         protected readonly IDbConnection connection;
-        protected readonly AppDbContextFactory dbContextFactory;
+        protected readonly AppDbContext dbContext;
 
         public string rootPath { get; init; }
         public string tempPath { get; init; }
@@ -42,7 +34,7 @@ namespace OPS.Importador.SenadoFederal
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
             connection = serviceProvider.GetService<IDbConnection>();
-            dbContextFactory = serviceProvider.GetService<AppDbContextFactory>();
+            dbContext = serviceProvider.GetService<AppDbContext>();
 
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -210,7 +202,7 @@ namespace OPS.Importador.SenadoFederal
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
             // var lotacoes = dbContext.Lotacoes.Where(x => x.Descricao.Contains("Senador", StringComparison.CurrentCultureIgnoreCase)).ToList();
-            using (var dbContext = dbContextFactory.CreateDbContext())
+            //using (var dbContext = dbContextFactory.CreateDbContext())
             {
                 // Load all data upfront for caching
                 var funcoes = dbContext.Funcoes.ToList();
@@ -284,8 +276,8 @@ namespace OPS.Importador.SenadoFederal
                                 IdSimboloFuncao = funcao?.Id,
                                 IdLotacao = lotacao.Id,
                                 IdTipoFolha = tipoFolha.Id,
-                                AnoMes = (uint)anomes,
-                                Admissao = Convert.ToUInt16(csv[(int)SenadoRemuneracaoCsvColumns.ANO_EXERCÍCIO]),
+                                AnoMes = (int)anomes,
+                                Admissao = Convert.ToInt16(csv[(int)SenadoRemuneracaoCsvColumns.ANO_EXERCÍCIO]),
                                 RemunBasica = remunBasica,
                                 VantPessoais = vantPessoais,
                                 FuncComissionada = funcComissionada,
@@ -327,7 +319,7 @@ namespace OPS.Importador.SenadoFederal
                     JOIN sf_remuneracao r ON l.id = r.id_lotacao
                     SET valor_total_remuneracao = (
 	                        SELECT SUM(custo_total) AS total
-	                        FROM sf_remuneracao r
+	                        FROM senado.sf_remuneracao r
 	                        JOIN sf_lotacao l ON l.id = r.id_lotacao
 	                        where l.id_senador = s.id
 	                    )
@@ -343,7 +335,7 @@ namespace OPS.Importador.SenadoFederal
 
             if (importacaoIncremental && File.Exists(caminhoArquivo))
             {
-                var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+                var arquivoDB = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
                 if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
                 {
                     logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
@@ -368,11 +360,10 @@ namespace OPS.Importador.SenadoFederal
             httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
 
             string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-            var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            var arquivoChecksum = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
             if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
             {
                 arquivoChecksum.Verificacao = DateTime.UtcNow;
-                connection.Update(arquivoChecksum);
 
                 logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
 
@@ -386,11 +377,11 @@ namespace OPS.Importador.SenadoFederal
             {
                 logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
 
-                connection.Insert(new ArquivoChecksum()
+                dbContext.ArquivoChecksums.Add(new ArquivoChecksum()
                 {
                     Nome = caminhoArquivoDb,
                     Checksum = checksum,
-                    TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                    TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length,
                     Criacao = DateTime.UtcNow,
                     Atualizacao = DateTime.UtcNow,
                     Verificacao = DateTime.UtcNow
@@ -403,15 +394,15 @@ namespace OPS.Importador.SenadoFederal
                     logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
 
                     arquivoChecksum.Checksum = checksum;
-                    arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+                    arquivoChecksum.TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length;
 
                 }
 
                 arquivoChecksum.Atualizacao = DateTime.UtcNow;
                 arquivoChecksum.Verificacao = DateTime.UtcNow;
-                connection.Update(arquivoChecksum);
             }
 
+            dbContext.SaveChanges();
             File.Move(caminhoArquivoTmp, caminhoArquivo, true);
             return true;
         }

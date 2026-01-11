@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
-using Dapper;
 
 namespace OPS.Importador.Fornecedores.MinhaReceita
 {
@@ -9,7 +7,7 @@ namespace OPS.Importador.Fornecedores.MinhaReceita
     public class FornecedorInfo
     {
 
-        [Key, Required]
+        //[Key, Required]
         [Column("id_fornecedor")]
         public int Id { get; set; }
 

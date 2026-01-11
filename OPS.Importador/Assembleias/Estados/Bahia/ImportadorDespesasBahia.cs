@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -60,7 +56,7 @@ namespace OPS.Importador.Assembleias.Estados.Bahia
                         //TipoDespesa = colunas[4].TextContent.Trim()
                     };
 
-                    using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano, ["Mes"] = despesaTemp.DataEmissao.Month, ["Parlamentar"] = despesaTemp.Nome }))
+                    using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano, ["Mes"] = despesaTemp.DataEmissao.Value.Month, ["Parlamentar"] = despesaTemp.Nome }))
                     {
                         try
                         {
@@ -84,7 +80,7 @@ namespace OPS.Importador.Assembleias.Estados.Bahia
                         catch (Exception ex)
                         {
                             // TODO? Revisar
-                            using (var reader = connection.ExecuteReader($"SELECT distinct hash FROM cl_despesa WHERE numero_documento LIKE '{processo}/%'"))
+                            using (var reader = connection.ExecuteReader($"SELECT distinct hash FROM assembleias.cl_despesa WHERE numero_documento ILIKE '{processo}/%'"))
                             {
                                 while (reader.Read())
                                 {

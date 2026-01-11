@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.TSE
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("nome")]
         [StringLength(50)]

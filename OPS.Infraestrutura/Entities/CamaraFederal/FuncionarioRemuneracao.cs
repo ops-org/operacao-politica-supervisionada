@@ -8,16 +8,16 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_cf_funcionario")]
-        public uint IdFuncionario { get; set; }
+        public int IdFuncionario { get; set; }
 
         [Column("id_cf_funcionario_contratacao")]
-        public uint? IdFuncionarioContratacao { get; set; }
+        public int? IdFuncionarioContratacao { get; set; }
 
         [Column("id_cf_deputado")]
-        public uint? IdDeputado { get; set; }
+        public int? IdDeputado { get; set; }
 
         [Column("referencia")]
         public DateTime Referencia { get; set; }

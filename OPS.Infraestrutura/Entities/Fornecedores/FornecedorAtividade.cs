@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("codigo")]
         [StringLength(15)]

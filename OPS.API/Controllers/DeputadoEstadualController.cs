@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using OPS.Core;
 using OPS.Core.DTO;
 using OPS.Core.Repository;
-using OPS.Infraestrutura;
 
 namespace OPS.API.Controllers
 {
@@ -55,19 +54,19 @@ namespace OPS.API.Controllers
         [HttpGet("{id:int}/MaioresNotas")]
         public async Task<dynamic> MaioresNotas(int id)
         {
-            return await _deputadoEstadualRepository.MaioresNotas((uint)id);
+            return await _deputadoEstadualRepository.MaioresNotas((int)id);
         }
 
         [HttpGet("{id:int}/MaioresFornecedores")]
         public async Task<dynamic> MaioresFornecedores(int id)
         {
-            return await _deputadoEstadualRepository.MaioresFornecedores((uint)id);
+            return await _deputadoEstadualRepository.MaioresFornecedores((int)id);
         }
 
         [HttpGet("{id:int}/GastosPorAno")]
         public async Task<dynamic> GastosPorAno(int id)
         {
-            return await _deputadoEstadualRepository.GastosPorAno((uint)id);
+            return await _deputadoEstadualRepository.GastosPorAno((int)id);
         }
 
         [HttpGet]

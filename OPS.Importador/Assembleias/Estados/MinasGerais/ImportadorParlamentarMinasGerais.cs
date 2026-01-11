@@ -1,8 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Estados.MinasGerais.Entities;
@@ -49,7 +45,7 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
             foreach (DeputadoMG deputado in deputados.List)
             {
                 var matricula = deputado.Id;
-                var deputadoDb = GetDeputadoByMatriculaOrNew((uint)matricula);
+                var deputadoDb = GetDeputadoByMatriculaOrNew((int)matricula);
 
                 deputadoDb.IdPartido = BuscarIdPartido(deputado.Partido);
                 deputadoDb.NomeParlamentar = deputado.Nome.ToTitleCase();

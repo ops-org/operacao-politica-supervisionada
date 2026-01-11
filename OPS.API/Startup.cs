@@ -1,19 +1,18 @@
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.IO.Compression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
-using Npgsql;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using OPS.Core.Repository;
 using OPS.Infraestrutura;
-using Microsoft.OpenApi;
+using OPS.Infraestrutura.Interceptors;
 
 namespace OPS.API
 {

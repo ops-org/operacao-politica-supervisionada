@@ -1,9 +1,6 @@
-﻿using System;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -27,7 +24,7 @@ public class ImportadorParlamentarGoias : ImportadorParlamentarCrawler
     {
         var colunas = parlamentar.QuerySelectorAll("td");
         var urlPerfil = (colunas[0].QuerySelector("a") as IHtmlAnchorElement).Href;
-        var matricula = Convert.ToUInt32(urlPerfil.Split(@"/").Last());
+        var matricula = Convert.ToInt32(urlPerfil.Split(@"/").Last());
 
         var deputado = GetDeputadoByMatriculaOrNew(matricula);
 

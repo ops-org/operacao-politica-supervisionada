@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Net;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -36,7 +31,7 @@ namespace OPS.Importador.Assembleias.Estados.Paraiba
 
             foreach (var parlamentar in parlamentares)
             {
-                var matricula = (uint)parlamentar.Id;
+                var matricula = (int)parlamentar.Id;
                 DeputadoEstadual deputado = GetDeputadoByNameOrNew(parlamentar.NomeParlamentar);
 
                 deputado.UrlPerfil = $"https://sapl3.al.pb.leg.br/parlamentar/{parlamentar.Id}";

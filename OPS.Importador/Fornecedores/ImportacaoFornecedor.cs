@@ -1,22 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using OPS.Core;
+using OPS.Core.DTO;
 using OPS.Core.Utilities;
-using OPS.Importador.Fornecedores.Mapping;
-using OPS.Importador.Fornecedores.ReceitaWS;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.Fornecedores;
-using OPS.Infraestrutura.Factories;
 
 namespace OPS.Importador.Fornecedores
 {
@@ -30,83 +22,77 @@ namespace OPS.Importador.Fornecedores
     public class ImportacaoFornecedor
     {
         public ILogger<ImportacaoFornecedor> logger { get; private set; }
-
-        private readonly AppDbContextFactory dbContextFactory;
-
+        private readonly AppDbContext dbContext;
         public IConfiguration configuration { get; private set; }
-
         public HttpClient httpClient { get; }
 
-        public ImportacaoFornecedor(ILogger<ImportacaoFornecedor> logger, IConfiguration configuration, IServiceProvider serviceProvider, AppDbContextFactory dbContextFactory)
+        public ImportacaoFornecedor(ILogger<ImportacaoFornecedor> logger, IConfiguration configuration, IServiceProvider serviceProvider, AppDbContext dbContext)
         {
             this.logger = logger;
             this.configuration = configuration;
-            this.dbContextFactory = dbContextFactory;
+            this.dbContext = dbContext;
 
             httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
 
-            // Configure Mapster mappings
-            FornecedorMappingProfile.Configure();
         }
 
         public async Task ConsultarDadosCNPJ(bool somenteNovos = true)
         {
             var telegramApiToken = configuration["AppSettings:TelegramApiToken"];
             var telegram = new TelegramApi(telegramApiToken);
-            var telegraMessage = new Core.Entity.TelegramMessage()
+            var telegraMessage = new TelegramMessage()
             {
                 ChatId = "-1001378778982", // OPS - Alertas
                 ParseMode = "html",
                 Text = ""
             };
 
-            using (var context = dbContextFactory.CreateDbContext())
+            //using (var context = dbContextFactory.CreateDbContext())
             {
-                var fornecedores = await ObterFornecedoresParaConsulta(context, somenteNovos);
+                var fornecedores = await ObterFornecedoresParaConsulta(somenteNovos);
                 if (fornecedores.Count == 0)
                 {
                     logger.LogInformation("Não há fornecedores para consultar");
                     return;
                 }
 
-                var lookupData = await ObterDadosLookup(context);
                 logger.LogInformation("Consultando CNPJ's Local: {Total} itens.", fornecedores.Count);
 
-                int totalImportados = await ProcessarFornecedores(context, fornecedores, lookupData, telegram, telegraMessage);
+                int totalImportados = await ProcessarFornecedores(fornecedores, telegram, telegraMessage);
                 logger.LogInformation("{TotalImportados} de {TotalFornecedores} fornecedores processados", totalImportados, fornecedores.Count);
 
                 // Atualizar dados anonimizados para NULL (ReceitaWS)
-                await context.Database.ExecuteSqlRawAsync(@"
-                	update fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
-                	update fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
-                	update fornecedor_info set numero=null where numero = '' or numero = '********';
-                	update fornecedor_info set complemento=null where complemento = '' or complemento = '********';
-                	update fornecedor_info set cep=null where cep = '' or cep = '********';
-                	update fornecedor_info set bairro=null where bairro = '' or bairro = '********';
-                	update fornecedor_info set municipio=null where municipio = '' or municipio = '********';
-                	update fornecedor_info set estado=null where estado = '' or estado = '**';
-                	update fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
-                	update fornecedor_info set telefone1=null where telefone1 = '' or telefone1 = '********';
-                	update fornecedor_info set telefone2=null where telefone2 = '' or telefone2 = '********';
-                	update fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
-                	update fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
-                	update fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
+                await dbContext.Database.ExecuteSqlRawAsync(@"
+                	update fornecedor.fornecedor_info set nome_fantasia=null where nome_fantasia = '' or nome_fantasia = '********';
+                	update fornecedor.fornecedor_info set logradouro=null where logradouro = '' or logradouro = '********';
+                	update fornecedor.fornecedor_info set numero=null where numero = '' or numero = '********';
+                	update fornecedor.fornecedor_info set complemento=null where complemento = '' or complemento = '********';
+                	update fornecedor.fornecedor_info set cep=null where cep = '' or cep = '********';
+                	update fornecedor.fornecedor_info set bairro=null where bairro = '' or bairro = '********';
+                	update fornecedor.fornecedor_info set municipio=null where municipio = '' or municipio = '********';
+                	update fornecedor.fornecedor_info set estado=null where estado = '' or estado = '**';
+                	update fornecedor.fornecedor_info set endereco_eletronico=null where endereco_eletronico = '' or endereco_eletronico = '********';
+                	update fornecedor.fornecedor_info set telefone1=null where telefone1 = '' or telefone1 = '********';
+                	update fornecedor.fornecedor_info set telefone2=null where telefone2 = '' or telefone2 = '********';
+                	update fornecedor.fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
+                	update fornecedor.fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
+                	update fornecedor.fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
                 ");
             }
         }
 
-        private async Task<List<FornecedorQueryResult>> ObterFornecedoresParaConsulta(AppDbContext context, bool somenteNovos)
+        private async Task<List<FornecedorQueryResult>> ObterFornecedoresParaConsulta(bool somenteNovos)
         {
             if (somenteNovos)
             {
-                return await context.Fornecedores.FromSqlRaw(
+                return await dbContext.Fornecedores.FromSqlRaw(
                     @"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
-                    from fornecedor f
-                    left join fornecedor_info fi on f.id = fi.id_fornecedor
+                    from fornecedor.fornecedor f
+                    left join fornecedor.fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
                     and (controle is null or controle NOT IN (0, 1, 2, 3))
                     AND fi.id_fornecedor IS null
-                    AND f.cnpj_cpf NOT LIKE '%*%' -- Dados anonimizados
+                    AND f.cnpj_cpf NOT ILIKE '%*%' -- Dados anonimizados
                     order by fi.id_fornecedor asc")
                     .Select(f => new FornecedorQueryResult
                     {
@@ -119,12 +105,12 @@ namespace OPS.Importador.Fornecedores
             else // Atualizar dados antigos
             {
                 var cutoffDate = DateTime.UtcNow.AddDays(-30);
-                return await context.Fornecedores.FromSqlInterpolated(
+                return await dbContext.Fornecedores.FromSqlInterpolated(
                     $@"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
-                    from fornecedor f
-                    left join fornecedor_info fi on f.id = fi.id_fornecedor
+                    from fornecedor.fornecedor f
+                    left join fornecedor.fornecedor_info fi on f.id = fi.id_fornecedor
                     where char_length(f.cnpj_cpf) = 14
-                    and obtido_em < {DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")}
+                    and obtido_em < {cutoffDate}
                     and fi.situacao_cadastral = 'ATIVA'
                     order by fi.id_fornecedor asc")
                     .Select(f => new FornecedorQueryResult
@@ -137,17 +123,13 @@ namespace OPS.Importador.Fornecedores
             }
         }
 
-        private async Task<(List<FornecedorAtividade> Atividades, List<FornecedorNaturezaJuridica> NaturezaJuridicas)> ObterDadosLookup(AppDbContext context)
-        {
-            var lstFornecedoresAtividade = await context.FornecedorAtividades.ToListAsync();
-            var lstNaturezaJuridica = await context.FornecedorNaturezaJuridicas.ToListAsync();
-            return (lstFornecedoresAtividade, lstNaturezaJuridica);
-        }
-
-        private async Task<int> ProcessarFornecedores(AppDbContext context, List<FornecedorQueryResult> fornecedores, (List<FornecedorAtividade> Atividades, List<FornecedorNaturezaJuridica> NaturezaJuridicas) lookupData, TelegramApi telegram, Core.Entity.TelegramMessage telegraMessage)
+        private async Task<int> ProcessarFornecedores(List<FornecedorQueryResult> fornecedores, TelegramApi telegram, TelegramMessage telegraMessage)
         {
             int totalImportados = 0;
             int atual = 0;
+
+            var lstFornecedoresAtividade = await dbContext.FornecedorAtividades.ToListAsync();
+            var lstNaturezaJuridica = await dbContext.FornecedorNaturezaJuridicas.ToListAsync();
 
             foreach (var item in fornecedores)
             {
@@ -193,73 +175,96 @@ namespace OPS.Importador.Fornecedores
                 if (fornecedor == null) continue;
 
                 // Use EF Core transaction for this supplier
-                using var transaction = await context.Database.BeginTransactionAsync();
+                using var transaction = await dbContext.Database.BeginTransactionAsync();
 
                 try
                 {
                     fornecedor.Id = item.Id;
-                    fornecedor.ObtidoEm = DateTime.Today;
+                    fornecedor.ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
                     fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8);
 
-                    // Delete existing related records using EF Core
-                    await context.Database.ExecuteSqlInterpolatedAsync($@"
-                        delete from fornecedor_info where id_fornecedor={fornecedor.Id};
-                        delete from fornecedor_atividade_secundaria where id_fornecedor={fornecedor.Id};
-                        delete from fornecedor_socio where id_fornecedor={fornecedor.Id};
-                    ");
+                    await dbContext.FornecedorSocios.Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
+                    await dbContext.FornecedorAtividadesSecundarias.Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
 
                     if (fornecedor.IdAtividadePrincipal > 0)
-                    {
-                        fornecedor.IdAtividadePrincipal = (int)LocalizaInsereAtividade(context, lookupData.Atividades, fornecedor.IdAtividadePrincipal, fornecedor.AtividadePrincipal);
-                    }
-                    else
-                    {
-                        throw new NotImplementedException("Atividade principal não encontrada");
-                    }
+                        fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.IdAtividadePrincipal, fornecedor.AtividadePrincipal);
 
                     if (fornecedor.IdNaturezaJuridica > 0)
-                    {
-                        fornecedor.IdNaturezaJuridica = LocalizaInsereNaturezaJuridica(context, lookupData.NaturezaJuridicas, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
-                    }
-                    else
-                    {
-                        throw new NotImplementedException("Natureza jurídica não encontrada");
-                    }
+                        fornecedor.IdNaturezaJuridica = await LocalizaInsereNaturezaJuridica(lstNaturezaJuridica, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
 
                     if (fornecedor.MotivoSituacaoCadastral == "SEM MOTIVO")
                         fornecedor.MotivoSituacaoCadastral = null;
 
-                    // Use Mapster for entity mapping
-                    var fornecedorInfoEntity = fornecedor.Adapt<FornecedorInfo>();
-                    context.FornecedorInfos.Add(fornecedorInfoEntity);
+                    var fornecedorInfo = await dbContext.FornecedorInfos.FirstOrDefaultAsync(f => f.IdFornecedor == fornecedor.Id);
 
-                    await context.Database.ExecuteSqlInterpolatedAsync($@"update fornecedor set nome={fornecedor.RazaoSocial} where id={fornecedor.Id}");
+                    if (fornecedorInfo == null)
+                    {
+                        fornecedorInfo = new FornecedorInfo()
+                        {
+                            IdFornecedor = fornecedor.Id
+                        };
+
+                        dbContext.FornecedorInfos.Add(fornecedorInfo);
+                    }
+
+                    fornecedorInfo.Cnpj = fornecedor.Cnpj;
+                    fornecedorInfo.CnpjRadical = fornecedor.RadicalCnpj;
+                    fornecedorInfo.Tipo = fornecedor.Tipo;
+                    fornecedorInfo.Nome = fornecedor.RazaoSocial;
+                    fornecedorInfo.DataDeAbertura = fornecedor.Abertura;
+                    fornecedorInfo.NomeFantasia = fornecedor.NomeFantasia;
+                    fornecedorInfo.IdFornecedorAtividadePrincipal = fornecedor.IdAtividadePrincipal;
+                    fornecedorInfo.IdFornecedorNaturezaJuridica = fornecedor.IdNaturezaJuridica;
+                    fornecedorInfo.LogradouroTipo = fornecedor.TipoLogradouro;
+                    fornecedorInfo.Logradouro = fornecedor.Logradouro;
+                    fornecedorInfo.Numero = fornecedor.Numero;
+                    fornecedorInfo.Complemento = fornecedor.Complemento;
+                    fornecedorInfo.Cep = fornecedor.Cep;
+                    fornecedorInfo.Bairro = fornecedor.Bairro;
+                    fornecedorInfo.Municipio = fornecedor.Municipio;
+                    fornecedorInfo.Estado = fornecedor.UF;
+                    fornecedorInfo.EnderecoEletronico = fornecedor.Email;
+                    fornecedorInfo.Telefone1 = fornecedor.Telefone1;
+                    fornecedorInfo.Fax = fornecedor.DddFax;
+                    fornecedorInfo.EnteFederativoResponsavel = fornecedor.EnteFederativoResponsavel;
+                    fornecedorInfo.SituacaoCadastral = fornecedor.SituacaoCadastral;
+                    fornecedorInfo.DataDaSituacaoCadastral = fornecedor.DataSituacaoCadastral;
+                    fornecedorInfo.MotivoSituacaoCadastral = fornecedor.MotivoSituacaoCadastral;
+                    fornecedorInfo.SituacaoEspecial = fornecedor.SituacaoEspecial;
+                    fornecedorInfo.DataSituacaoEspecial = fornecedor.DataSituacaoEspecial;
+                    fornecedorInfo.CapitalSocial = fornecedor.CapitalSocial;
+                    fornecedorInfo.Porte = fornecedor.Porte;
+                    fornecedorInfo.OpcaoPeloMei = fornecedor.OpcaoPeloMEI;
+                    fornecedorInfo.DataOpcaoPeloMei = fornecedor.DataOpcaoPeloMEI;
+                    fornecedorInfo.DataExclusaoDoMei = fornecedor.DataExclusaoMEI;
+                    fornecedorInfo.OpcaoPeloSimples = fornecedor.OpcaoPeloSimples;
+                    fornecedorInfo.DataOpcaoPeloSimples = fornecedor.DataOpcaoPeloSimples;
+                    fornecedorInfo.DataExclusaoDoSimples = fornecedor.DataExclusaoSimples;
+                    fornecedorInfo.CodigoMunicipioIbge = fornecedor.CodigoMunicipioIBGE?.ToString();
+                    fornecedorInfo.NomeCidadeNoExterior = fornecedor.NomeCidadeExterior;
+                    fornecedorInfo.ObtidoEm = fornecedor.ObtidoEm;
+                    fornecedorInfo.NomePais = fornecedor.Pais;
+
+                    dbContext.Fornecedores.Where(x => x.Id == fornecedor.Id)
+                        .ExecuteUpdate(x => x.SetProperty(y => y.Nome, fornecedor.RazaoSocial).SetProperty(y => y.Categoria, "PJ"));
 
                     // Process secondary activities
                     if (fornecedor.CnaesSecundarios != null)
                     {
-                        foreach (var atividadesSecundaria in fornecedor.CnaesSecundarios)
+                        foreach (var atividadesSecundaria in fornecedor.CnaesSecundarios.DistinctBy(x => x.Id))
                         {
-                            try
-                            {
-                                var idAtividade = LocalizaInsereAtividade(context, lookupData.Item1, atividadesSecundaria.Id, atividadesSecundaria.Descricao);
+                            var idAtividade = await LocalizaInsereAtividade(lstFornecedoresAtividade, atividadesSecundaria.Id, atividadesSecundaria.Descricao);
 
-                                var atividade = new FornecedorAtividadeSecundaria()
-                                {
-                                    IdFornecedor = (uint)fornecedor.Id,
-                                    IdAtividade = idAtividade
-                                };
-
-                                context.FornecedorAtividadesSecundarias.Add(atividade);
-                            }
-                            catch (Npgsql.NpgsqlException ex)
+                            var atividade = new FornecedorAtividadeSecundaria()
                             {
-                                if (!ex.Message.Contains("Duplicate entry")) throw;
-                            }
+                                IdFornecedor = (int)fornecedor.Id,
+                                IdAtividade = idAtividade
+                            };
+
+                            dbContext.FornecedorAtividadesSecundarias.Add(atividade);
                         }
-                    }
 
-                    await context.SaveChangesAsync();
+                    }
 
                     // Process partners (QSA)
                     if (fornecedor.Qsa != null)
@@ -269,11 +274,24 @@ namespace OPS.Importador.Fornecedores
                             qsa.IdFornecedor = fornecedor.Id;
                             if (qsa.CpfRepresentante == "***000000**")
                                 qsa.CpfRepresentante = null;
-                            return qsa.Adapt<FornecedorSocio>();
+
+                            return new FornecedorSocio
+                            {
+                                IdFornecedor = (int)qsa.IdFornecedor,
+                                CnpjCpf = qsa.CnpjCpf,
+                                Nome = qsa.Nome,
+                                PaisOrigem = qsa.PaisOrigem,
+                                NomeRepresentante = qsa.NomeRepresentante,
+                                CpfRepresentante = qsa.CpfRepresentante,
+                                IdFornecedorSocioQualificacao = qsa.IdSocioQualificacao > 0 ? (byte?)qsa.IdSocioQualificacao : null,
+                                IdFornecedorSocioRepresentanteQualificacao = qsa.IdSocioRepresentanteQualificacao > 0 ? (byte?)qsa.IdSocioRepresentanteQualificacao : null,
+                                IdFornecedorFaixaEtaria = qsa.IdFaixaEtaria,
+                                DataEntradaSociedade = !string.IsNullOrEmpty(qsa.DataEntradaSociedade) ? DateTime.Parse(qsa.DataEntradaSociedade).Date : null
+                            };
                         }).ToList();
 
-                        context.FornecedorSocios.AddRange(socios);
-                        await context.SaveChangesAsync();
+                        dbContext.FornecedorSocios.AddRange(socios);
+                        //await context.SaveChangesAsync();
                     }
 
                     totalImportados++;
@@ -281,17 +299,19 @@ namespace OPS.Importador.Fornecedores
                     // Check for inactive companies with recent activity
                     if (fornecedor.SituacaoCadastral != "ATIVA" && fornecedor.DataSituacaoEspecial != null)
                     {
-                        var ultimaNota = await context.Database.SqlQuery<DateTime?>($@"
-SELECT MAX(DATA) as data FROM (
-    SELECT MAX(d.data_emissao) AS data FROM cf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
-    UNION ALL
-    SELECT MAX(d.data_emissao) FROM sf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
-    UNION ALL
-    SELECT MAX(d.data_emissao) FROM cl_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
-) tmp
-").FirstOrDefaultAsync();
+                        var connection = dbContext.Database.GetDbConnection();
+                        var command = connection.CreateCommand();
+                        command.CommandText = $@"
+                            SELECT MAX(data) FROM (
+                                SELECT MAX(d.data_emissao) as data FROM camara.cf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
+                                UNION ALL
+                                SELECT MAX(d.data_emissao) as data FROM senado.sf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
+                                UNION ALL
+                                SELECT MAX(d.data_emissao) as data FROM assembleias.cl_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
+                            ) tmp";
+                        var ultimaNota = await command.ExecuteScalarAsync() as DateOnly?;
 
-                        if (ultimaNota != null && ultimaNota > Convert.ToDateTime(fornecedor.DataSituacaoEspecial))
+                        if (ultimaNota != null && fornecedor.DataSituacaoEspecial.HasValue && ultimaNota > DateOnly.FromDateTime(fornecedor.DataSituacaoEspecial.Value))
                         {
                             logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
 
@@ -300,14 +320,15 @@ SELECT MAX(DATA) as data FROM (
                         }
                     }
 
+                    await dbContext.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    dbContext.ChangeTracker.Clear();
                     InserirControle(0, item.CnpjCpf, "");
                     logger.LogInformation("Atualizando [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
                 }
                 catch (Exception ex)
                 {
-
-
                     await transaction.RollbackAsync();
                     logger.LogError(ex, "Erro ao processar fornecedor {CNPJ}", item.CnpjCpf);
                     InserirControle(1, item.CnpjCpf, ex.Message);
@@ -327,9 +348,9 @@ SELECT MAX(DATA) as data FROM (
                 if (response.IsSuccessStatusCode)
                 {
                     string responseString = await response.Content.ReadAsStringAsync();
-                    var fornecedorWs = JsonSerializer.Deserialize<FornecedorReceitaWs>(responseString);
+                    var fornecedorWs = JsonSerializer.Deserialize<ReceitaWS.FornecedorReceitaWs>(responseString);
 
-                    if (fornecedorWs == null)
+                    if (fornecedorWs == null || fornecedorWs.Status == "ERROR")
                         return null;
 
                     static DateTime? ParseDateString(string s)
@@ -396,7 +417,7 @@ SELECT MAX(DATA) as data FROM (
                         DataExclusaoSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataExclusao.ToString()),
                         NomeCidadeExterior = null,
                         Pais = null,
-                        ObtidoEm = DateTime.UtcNow
+                        ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified)
                     };
 
                     // Atividade Principal
@@ -462,17 +483,20 @@ SELECT MAX(DATA) as data FROM (
 
         private void InserirControle(int controle, string cnpj_cpf, string mensagem)
         {
-            using (var context = dbContextFactory.CreateDbContext())
+            //using (var context = dbContextFactory.CreateDbContext())
             {
-                context.Database.ExecuteSqlRaw(@"update fornecedor set controle=@controle, mensagem=@mensagem where cnpj_cpf=@cnpj_cpf;",
-                    controle, mensagem, cnpj_cpf);
+                dbContext.Fornecedores
+                    .Where(x => x.CnpjCpf == cnpj_cpf)
+                        .ExecuteUpdate(x => x
+                            .SetProperty(y => y.Controle, (sbyte)controle)
+                            .SetProperty(y => y.Mensagem, mensagem));
             }
 
             if (controle > 0)
                 logger.LogInformation("Controle Fornecedor: {Controle} - {CnpjCpf} - {Mensagem}", controle, cnpj_cpf, mensagem);
         }
 
-        private uint LocalizaInsereAtividade(AppDbContext context, List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
+        private async Task<int> LocalizaInsereAtividade(List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
         {
             var codigoFormatado = codigo.ToString(@"00\.00-0-00");
             var item = lstFornecedoresAtividade.FirstOrDefault(x => x.Codigo == codigoFormatado);
@@ -483,18 +507,19 @@ SELECT MAX(DATA) as data FROM (
                     Codigo = codigoFormatado,
                     Descricao = descricao
                 };
-                context.FornecedorAtividades.Add(atividade);
-                context.SaveChanges();
+                dbContext.FornecedorAtividades.Add(atividade);
+                //await dbContext.SaveChangesAsync();
 
                 lstFornecedoresAtividade.Add(atividade);
 
+                // Don't save here - let the main transaction handle it
                 return atividade.Id;
             }
 
             return item.Id;
         }
 
-        private int LocalizaInsereNaturezaJuridica(AppDbContext context, List<FornecedorNaturezaJuridica> lstNaturezaJuridica, string codigo, string descricao)
+        private async Task<int> LocalizaInsereNaturezaJuridica(List<FornecedorNaturezaJuridica> lstNaturezaJuridica, string codigo, string descricao)
         {
             var item = lstNaturezaJuridica.FirstOrDefault(x => x.Codigo == codigo);
             if (item == null)
@@ -505,8 +530,8 @@ SELECT MAX(DATA) as data FROM (
                     Codigo = codigo,
                     Descricao = descricao
                 };
-                context.FornecedorNaturezaJuridicas.Add(atividade);
-                context.SaveChanges();
+                dbContext.FornecedorNaturezaJuridicas.Add(atividade);
+                //await dbContext.SaveChangesAsync();
 
                 lstNaturezaJuridica.Add(atividade);
                 return atividade.Id;

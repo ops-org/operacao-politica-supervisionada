@@ -8,13 +8,13 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_cf_deputado")]
-        public uint? IdDeputado { get; set; }
+        public int? IdDeputado { get; set; }
 
         [Column("id_cf_funcionario")]
-        public uint IdFuncionario { get; set; }
+        public int IdFuncionario { get; set; }
 
         [Column("id_cf_funcionario_grupo_funcional")]
         public byte? IdFuncionarioGrupoFuncional { get; set; }
@@ -26,7 +26,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public byte? IdFuncionarioNivel { get; set; }
 
         [Column("id_cf_funcionario_funcao_comissionada")]
-        public ushort? IdFuncionarioFuncaoComissionada { get; set; }
+        public short? IdFuncionarioFuncaoComissionada { get; set; }
 
         [Column("id_cf_funcionario_area_atuacao")]
         public byte? IdFuncionarioAreaAtuacao { get; set; }

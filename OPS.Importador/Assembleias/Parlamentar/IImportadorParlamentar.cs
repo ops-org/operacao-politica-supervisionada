@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace OPS.Importador.Assembleias.Parlamentar
+﻿namespace OPS.Importador.Assembleias.Parlamentar
 {
     public interface IImportadorParlamentar
     {

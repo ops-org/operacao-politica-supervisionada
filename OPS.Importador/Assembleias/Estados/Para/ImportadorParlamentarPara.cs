@@ -1,13 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.Utilities;
@@ -50,7 +46,7 @@ namespace OPS.Importador.Assembleias.Estados.Para
             foreach (Match m in maches)
             {
                 var matricula = m.Groups[1].Value;
-                var deputado = GetDeputadoByMatriculaOrNew(Convert.ToUInt32(matricula));
+                var deputado = GetDeputadoByMatriculaOrNew(Convert.ToInt32(matricula));
                 if (deputado == null) continue;
 
                 deputado.UrlPerfil = $"https://alepa.pa.gov.br/Institucional/Deputado/{matricula}";

@@ -1,31 +1,35 @@
-using System;
+Ôªøusing System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using CsvHelper;
 using Dapper;
+using DDDN.OdtToHtml;
+using EFCore.BulkExtensions;
 using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql.Bulk;
 using OPS.Core;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
+using OPS.Importador.Assembleias.Estados.RioDeJaneiro.Entities;
 using OPS.Importador.Fornecedores;
 using OPS.Importador.Utilities;
+using OPS.Infraestrutura;
+using OPS.Infraestrutura.Entities.CamaraFederal;
+using OPS.Infraestrutura.Entities.Fornecedores;
+using Polly;
 using RestSharp;
 
 namespace OPS.Importador.CamaraFederal;
@@ -34,6 +38,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 {
     protected readonly ILogger<ImportadorDespesasCamaraFederal> logger;
     protected readonly IDbConnection connection;
+    protected readonly AppDbContext dbContext;
 
     public string rootPath { get; set; }
     public string tempPath { get; set; }
@@ -51,6 +56,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     {
         logger = serviceProvider.GetService<ILogger<ImportadorDespesasCamaraFederal>>();
         connection = serviceProvider.GetService<IDbConnection>();
+        dbContext = serviceProvider.GetService<AppDbContext>();
+        connection = dbContext.Database.GetDbConnection();
 
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -62,14 +69,15 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
     {
-        var importacao = connection.GetList<Importacao>(new { chave = "Camara Federal" }).FirstOrDefault();
+        var importacao = dbContext.Importacoes.FirstOrDefault(x => x.Chave == "Camara Federal");
         if (importacao == null)
         {
             importacao = new Importacao()
             {
                 Chave = "Camara Federal"
             };
-            importacao.Id = (ushort)connection.Insert(importacao);
+
+            dbContext.Importacoes.Add(importacao);
         }
 
         if (dInicio != null)
@@ -82,21 +90,21 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         {
             importacao.DespesasFim = dFim.Value;
 
-            var sql = "select min(data_emissao) as primeira_despesa, max(data_emissao) as ultima_despesa from cf_despesa";
+            var sql = "select min(data_emissao) as primeira_despesa, max(data_emissao) as ultima_despesa from camara.cf_despesa";
             using (var dReader = connection.ExecuteReader(sql))
             {
                 if (dReader.Read())
                 {
-                    importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["primeira_despesa"]) : (DateTime?)null;
-                    importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["ultima_despesa"]) : (DateTime?)null;
+                    importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? DateOnly.Parse(dReader["primeira_despesa"].ToString()) : (DateOnly?)null;
+                    importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? DateOnly.Parse(dReader["ultima_despesa"].ToString()) : (DateOnly?)null;
                 }
             }
         }
 
-        connection.Update(importacao);
+        dbContext.SaveChanges();
     }
 
-    #region ImportaÁ„o Dados CEAP CSV
+    #region Importa√ß√£o Dados CEAP CSV
 
     public Task Importar(int ano)
     {
@@ -113,7 +121,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             bool novoArquivoBaixado = BaixarArquivo(_urlOrigem, caminhoArquivo);
             if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado)
             {
-                logger.LogInformation("ImportaÁ„o ignorada para arquivo previamente importado!");
+                logger.LogInformation("Importa√ß√£o ignorada para arquivo previamente importado!");
                 return Task.CompletedTask;
             }
 
@@ -133,7 +141,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 logger.LogError(ex, ex.Message);
 
 #if !DEBUG
-                //Excluir o arquivo para tentar importar novamente na proxima execuÁ„o
+                //Excluir o arquivo para tentar importar novamente na proxima exce√ß√£o
                 if(File.Exists(caminhoArquivo))
                     File.Delete(caminhoArquivo);
 #endif
@@ -175,7 +183,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         if (importacaoIncremental && File.Exists(caminhoArquivo))
         {
-            var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            var arquivoDB = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
             if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
             {
                 logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
@@ -200,13 +208,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
 
         string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-        var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+        var arquivoChecksum = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
         if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
         {
             arquivoChecksum.Verificacao = DateTime.UtcNow;
-            connection.Update(arquivoChecksum);
 
-            logger.LogDebug("Arquivo '{CaminhoArquivo}' È identico ao j· existente.", caminhoArquivo);
+            logger.LogDebug("Arquivo '{CaminhoArquivo}' √© identico ao j√° existente.", caminhoArquivo);
 
             if (File.Exists(caminhoArquivoTmp))
                 File.Delete(caminhoArquivoTmp);
@@ -216,13 +223,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         if (arquivoChecksum == null)
         {
-            logger.LogDebug("Arquivo '{CaminhoArquivo}' È novo.", caminhoArquivo);
+            logger.LogDebug("Arquivo '{CaminhoArquivo}' √© novo.", caminhoArquivo);
 
-            connection.Insert(new ArquivoChecksum()
+            dbContext.ArquivoChecksums.Add(new ArquivoChecksum()
             {
                 Nome = caminhoArquivoDb,
                 Checksum = checksum,
-                TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length,
                 Criacao = DateTime.UtcNow,
                 Atualizacao = DateTime.UtcNow,
                 Verificacao = DateTime.UtcNow
@@ -235,15 +242,16 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
 
                 arquivoChecksum.Checksum = checksum;
-                arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+                arquivoChecksum.TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length;
 
             }
 
             arquivoChecksum.Atualizacao = DateTime.UtcNow;
             arquivoChecksum.Verificacao = DateTime.UtcNow;
-            connection.Update(arquivoChecksum);
+
         }
 
+        dbContext.SaveChanges();
         File.Move(caminhoArquivoTmp, caminhoArquivo, true);
         return true;
     }
@@ -257,23 +265,28 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public void ImportarDespesas(string file, int ano)
     {
+        if (connection.State != ConnectionState.Open)
+        {
+            connection.Open();
+        }
+
         LimpaDespesaTemporaria();
 
         itensProcessadosAno = 0;
         valorTotalProcessadoAno = 0;
         var totalColunas = ColunasCEAP.Length;
-        var lstHash = new Dictionary<string, UInt64>();
+        var lstHash = new Dictionary<string, int>();
 
-        using (var transaction = connection.BeginTransaction())
+        //using (var transaction = dbContext.Database.BeginTransaction())
         {
-            var sql = $"select id, hash from cf_despesa where ano={ano} and hash IS NOT NULL";
-            IEnumerable<dynamic> lstHashDB = connection.Query(sql, transaction: transaction);
+            var sql = $"select id, hash FROM camara.cf_despesa where ano={ano} and hash IS NOT NULL";
+            IEnumerable<dynamic> lstHashDB = connection.Query(sql);
 
             foreach (IDictionary<string, object> dReader in lstHashDB)
             {
                 var hex = Convert.ToHexString((byte[])dReader["hash"]);
                 if (!lstHash.ContainsKey(hex))
-                    lstHash.Add(hex, (UInt64)dReader["id"]);
+                    lstHash.Add(hex, (int)dReader["id"]);
                 else
                     logger.LogError("Hash {HASH} esta duplicada na base de dados.", hex);
             }
@@ -299,7 +312,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     {
                         if (csv[i] != ColunasCEAP[i])
                         {
-                            throw new Exception("MudanÁa de integraÁ„o detectada para o C‚mara Federal");
+                            throw new Exception("Mudan√ßa de integra√ßao detectada para o C√¢mara Federal");
                         }
                     }
                 }
@@ -308,10 +321,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 {
                     var idxColuna = 0;
                     var despesaTemp = new DeputadoFederalDespesaTemp();
-                    despesaTemp.Nome = csv.GetField(idxColuna++);
+                    despesaTemp.NomeParlamentar = csv.GetField(idxColuna++);
                     despesaTemp.Cpf = Utils.RemoveCaracteresNaoNumericos(csv.GetField(idxColuna++)).NullIfEmpty();
                     despesaTemp.IdDeputado = csv.GetField<long?>(idxColuna++);
-                    despesaTemp.CarteiraParlamentar = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.NumeroCarteiraParlamentar = csv.GetField<int?>(idxColuna++);
                     despesaTemp.Legislatura = csv.GetField<int?>(idxColuna++);
                     despesaTemp.SiglaUF = csv.GetField(idxColuna++).Replace("NA", string.Empty).NullIfEmpty();
                     despesaTemp.SiglaPartido = csv.GetField(idxColuna++).NullIfEmpty();
@@ -325,7 +338,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     despesaTemp.Numero = csv.GetField(idxColuna++);
                     despesaTemp.TipoDocumento = csv.GetField<int?>(idxColuna++) ?? 0;
                     despesaTemp.DataEmissao = csv.GetField<DateOnly?>(idxColuna++); ;
-                    despesaTemp.ValorDocumento = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
+                    try
+                    {
+                        despesaTemp.ValorDocumento = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
+                    }
+                    catch (Exception)
+                    { }
                     despesaTemp.ValorGlosa = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
                     despesaTemp.ValorLiquido = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
                     despesaTemp.Mes = csv.GetField<short>(idxColuna++);
@@ -334,12 +352,15 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     despesaTemp.Passageiro = csv.GetField(idxColuna++).NullIfEmpty();
                     despesaTemp.Trecho = csv.GetField(idxColuna++).NullIfEmpty();
                     despesaTemp.Lote = csv.GetField<int?>(idxColuna++);
-                    despesaTemp.NumeroRessarcimento = csv.GetField<int?>(idxColuna++);
+                    despesaTemp.Ressarcimento = csv.GetField<int?>(idxColuna++);
                     despesaTemp.DataPagamentoRestituicao = csv.GetField<DateOnly?>(idxColuna++);
-                    despesaTemp.ValorRestituicao = csv.GetField<decimal?>(idxColuna++);
+                    despesaTemp.Restituicao = csv.GetField<decimal?>(idxColuna++);
                     despesaTemp.NumeroDeputadoID = csv.GetField<int?>(idxColuna++);
                     despesaTemp.IdDocumento = csv.GetField(idxColuna++);
                     despesaTemp.UrlDocumento = csv.GetField(idxColuna++);
+
+                    if (despesaTemp.ValorDocumento == null)
+                        despesaTemp.ValorDocumento = despesaTemp.ValorLiquido + despesaTemp.ValorGlosa;
 
                     if (despesaTemp.UrlDocumento.Contains("/documentos/publ"))
                         despesaTemp.UrlDocumento = "1"; // Ex: https://www.camara.leg.br/cota-parlamentar/documentos/publ/3453/2022/7342370.pdf
@@ -348,7 +369,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     else
                     {
                         if (!string.IsNullOrEmpty(despesaTemp.UrlDocumento))
-                            logger.LogError("Documento '{Valor}' n„o reconhecido!", despesaTemp.UrlDocumento);
+                            logger.LogError("Documento '{Valor}' n√£o reconhecido!", despesaTemp.UrlDocumento);
 
                         despesaTemp.UrlDocumento = "0";
                     }
@@ -369,108 +390,26 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     }
 
                     if (despesaTemp.DataEmissao == null)
-                        despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes, 1);
+                        despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, 1);
 
-                    if (despesaTemp.CnpjCpf == "00000000000010")
+
+                    if (despesaTemp.CnpjCpf.StartsWith("000000000000"))
                     {
-                        if (despesaTemp.Fornecedor.Contains("ALOFT", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("ALOF", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "ALOFT MONTEVIDEO HOTEL";
-                        else if (despesaTemp.Fornecedor.Contains("ARCOS DOURADOS URUGUAY", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "ARCOS DOURADOS URUGUAY S.A.";
-                        else if (despesaTemp.Fornecedor.Contains("Canva", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "Canva Pty. Ltd.";
-                        else if (despesaTemp.Fornecedor.Contains("Cap Cut", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("CapCut", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "CapCut - Bytedance Pte. Ltd.";
-                        else if (despesaTemp.Fornecedor.Contains("Dropbox", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "Dropbox International Unlimited Company";
-                        else if (despesaTemp.Fornecedor.Contains("ELFOGON", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "EL FOGON";
-                        else if (despesaTemp.Fornecedor.Contains("Flickr", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "Flickr, Inc.";
-                        else if (despesaTemp.Fornecedor.Contains("HOTELES CONTEPORANEOS", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "HOTELES CONTEPORANEOS S.A.";
-                        else if (despesaTemp.Fornecedor.Contains("LAS LIEBRES", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "LAS LIEBRES RESTAURANTE";
-                        else if (despesaTemp.Fornecedor.Contains("La Cabrera", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "La Cabrera Shopping del Sol";
-                        else if (despesaTemp.Fornecedor.Contains("NOTION LABS", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "NOTION LABS, INC";
-                        else if (despesaTemp.Fornecedor.Contains("Onen AI", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor == "Open I" || despesaTemp.Fornecedor == "OpenAI")
-                            despesaTemp.Fornecedor = "OpenAI, LLC";
-                        else if (despesaTemp.Fornecedor.Contains("Streamyard", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "Streamyard, Inc.";
-                        else if (despesaTemp.Fornecedor.Contains("Ese Lugar", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "Restaurant Ese Lugar de Gastronomia Casera S.A";
-                        else if (despesaTemp.Fornecedor.Contains("MONDAY", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.Fornecedor = "#MONDAY.COM";
-
-                        if (despesaTemp.Fornecedor.Contains("A&T Turismo", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "36187060000102"; // A&T Turismo Ltda.
-                        else if (despesaTemp.Fornecedor.Contains("Gol linhas a", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "07575651000159";
-                        else if (despesaTemp.Fornecedor.Contains("Latam", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "33937681000178";
-                        else if (despesaTemp.Fornecedor.Contains("Orleans viagens e Turismo", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "21331404000138";
-                        else if (despesaTemp.Fornecedor.Contains("TAM linhas a", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor == "TAM")
-                            despesaTemp.CnpjCpf = "02012862000160";
-                        else if (despesaTemp.Fornecedor.Contains("TAP AIR PORTUGAL", StringComparison.InvariantCultureIgnoreCase) ||
-                            despesaTemp.Fornecedor.Contains("TAP PORTUGAL", StringComparison.InvariantCultureIgnoreCase) ||
-                            despesaTemp.Fornecedor.Contains("Transportes AÈreos Portugueses", StringComparison.InvariantCultureIgnoreCase) ||
-                            despesaTemp.Fornecedor == "TAP")
-
-                            despesaTemp.CnpjCpf = "33136896000190";
-                        else if (despesaTemp.Fornecedor.Contains("Booking", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "10625931000139";
-                        else if (despesaTemp.Fornecedor.Contains("Ally Viagens Tour LTDA", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "52410850000161";
-                        else if (despesaTemp.Fornecedor.Contains("Google", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "06947284000104";
-                        else if (despesaTemp.Fornecedor.Contains("Zoom", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "14913293000102";
-                        else if (despesaTemp.Fornecedor.Contains("Uber", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "17895646000187";
-                        else if (despesaTemp.Fornecedor.Contains("Adobe", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("Adfobe", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "02999520000185";
-                        else if (despesaTemp.Fornecedor.Contains("Twitter", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor == "X Premium")
-                            despesaTemp.CnpjCpf = "16954565000148";
-                        else if (despesaTemp.Fornecedor.Contains("AUTO POSTO CINCO ESTRELAS LTDA", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "03667416000156";
-                        else if (despesaTemp.Fornecedor.Contains("EMIRATES", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "07892051000114";
-                        else if (despesaTemp.Fornecedor.Contains("MIX TRAVEL", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "07394234000100";
-                        else if (despesaTemp.Fornecedor.Contains("AUTO POSTO SAMAMBAIA LTDA", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "50313275000153";
-                        else if (despesaTemp.Fornecedor.Contains("CASCOL", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "00306597000105";
-                        else if (despesaTemp.Fornecedor.Contains("BARAO TURISMOS EIRELI - ME", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "21448278000104";
-                        else if (despesaTemp.Fornecedor.Contains("QATAR AIRWAYS", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "08734301000150";
-                        else if (despesaTemp.Fornecedor.Contains("AMERICAN AIR LINES", StringComparison.InvariantCultureIgnoreCase) || despesaTemp.Fornecedor.Contains("AMERICAN AIRLINES", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "36212637000199";
-                        else if (despesaTemp.Fornecedor.Contains("AUTO POSTO ITAMOGI", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "01342267000120";
-                        else if (despesaTemp.Fornecedor.Contains("AR VIAGENS E TURISMO", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "17046688000143";
-                        else if (despesaTemp.Fornecedor.Contains("AEROLINEAS ARGENTINAS", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "33605239000144";
-                        else if (despesaTemp.Fornecedor.Contains("HOTEL VIALE CATARATAS", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "07960611000120";
-                        else if (despesaTemp.Fornecedor.Contains("AZUL Linhas", StringComparison.InvariantCultureIgnoreCase))
-                            despesaTemp.CnpjCpf = "09296295000160";
-
-                        else
+                        if (despesaTemp.CnpjCpf != "00000000000001" // CELULAR FUNCIONAL
+                            && despesaTemp.CnpjCpf != "00000000000002" // LINHA DIRETA
+                            && despesaTemp.CnpjCpf != "00000000000003" // IM√ìVEL FUNCIONAL
+                            && despesaTemp.CnpjCpf != "00000000000006" // RAMAL
+                            && despesaTemp.CnpjCpf != "00000000000007" // CORREIOS - SEDEX CONVENCIONAL
+                            && despesaTemp.CnpjCpf != "00000000000008" // PED√ÅGIO
+                            && despesaTemp.CnpjCpf != "00000000000009" // TAXI
+                            )
                         {
-                            logger.LogWarning("Empresa '{NomeEmpresa}' sem CPNJ.", despesaTemp.Fornecedor);
+                            if (despesaTemp.CnpjCpf != "00000000000010") // Empresa internacional gen√©rica
+                                logger.LogWarning("Validar CPNJ '{CnpjCpf} - {NomeEmpresa}'.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
+
                             despesaTemp.CnpjCpf = null;
                         }
-                    }
-                    else if (despesaTemp.CnpjCpf.StartsWith("000000000"))
-                    {
-                        if (despesaTemp.CnpjCpf != "00000000000001" && despesaTemp.CnpjCpf != "00000000000002" /*Linha Direta*/ && despesaTemp.CnpjCpf != "00000000000006")
-                            logger.LogWarning("Validar CPNJ '{CnpjCpf} - {NomeEmpresa}'.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
+
                     }
                     else if (despesaTemp.CnpjCpf.Length == 14 && !ImportacaoFornecedor.validarCNPJ(despesaTemp.CnpjCpf))
                     {
@@ -478,13 +417,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     }
 
                     // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
-                    // Para armazenamento na base de dados a hash È gerado com o valor, para que mudanÁas no total provoquem uma atualizaÁ„o.
+                    // Para armazenamento na base de dados a hash √© gerado com o valor, para que mudan√ßas no total provoquem uma atualiza√ß√£o.
                     var options = new JsonSerializerOptions
                     {
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
                         TypeInfoResolver = new DefaultJsonTypeInfoResolver
                         {
-                            Modifiers = { IgnoreNegativeValues }
+                            Modifiers = { IgnoreNegativeValues },
                         }
                     };
 
@@ -493,16 +432,19 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                     despesasTemp.Add(despesaTemp);
                     itensProcessadosAno++;
-                    valorTotalProcessadoAno += despesaTemp.ValorLiquido;
+                    valorTotalProcessadoAno += despesaTemp.ValorLiquido ?? 0;
                 }
             }
 
             if (itensProcessadosAno > 0)
                 InsereDespesasTemp(despesasTemp, lstHash);
 
-            foreach (var id in lstHash.Values)
+            var deletar = lstHash.Values.Select(x => (long)x).ToList();
+            if (deletar.Any())
             {
-                connection.Execute("delete from cf_despesa where id=@id", new { id });
+                dbContext.DeputadoFederalDespesaTemps
+                    .Where(u => deletar.Contains(u.Id))
+                    .ExecuteDelete();
             }
 
             if (itensProcessadosAno > 0)
@@ -511,6 +453,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             }
 
             ValidaImportacao(ano);
+
+            //dbContext.SaveChanges();
+            //dbContext.Database.CommitTransaction();
+
+            dbContext.ChangeTracker.Clear();
         }
 
 
@@ -529,7 +476,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         }
     }
 
-    private void InsereDespesasTemp(List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, UInt64> lstHash)
+    private void InsereDespesasTemp(List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, int> lstHash)
     {
         JsonSerializerOptions options = new()
         {
@@ -538,18 +485,19 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         List<IGrouping<string, DeputadoFederalDespesaTemp>> results = despesasTemp.GroupBy(x => Convert.ToHexString(x.Hash)).ToList();
         itensProcessadosAno = results.Count();
-        valorTotalProcessadoAno = results.Sum(x => x.Sum(x => x.ValorLiquido));
+        valorTotalProcessadoAno = results.Sum(x => x.Sum(x => x.ValorLiquido ?? 0));
 
         logger.LogInformation("Processando {Itens} despesas agrupadas em {Unicos} unicas com valor total de {ValorTotal}.", despesasTemp.Count(), itensProcessadosAno, valorTotalProcessadoAno);
 
         var despesaInserida = 0;
+        var despesasParaInserir = new List<DeputadoFederalDespesaTemp>();
         foreach (var despesaGroup in results)
         {
             DeputadoFederalDespesaTemp despesa = despesaGroup.FirstOrDefault();
             despesa.ValorDocumento = despesaGroup.Sum(x => x.ValorDocumento);
             despesa.ValorGlosa = despesaGroup.Sum(x => x.ValorGlosa);
             despesa.ValorLiquido = despesaGroup.Sum(x => x.ValorLiquido);
-            despesa.ValorRestituicao = despesaGroup.Sum(x => x.ValorRestituicao);
+            despesa.Restituicao = despesaGroup.Sum(x => x.Restituicao);
 
             var str = JsonSerializer.Serialize(despesa, options);
             var hash = Utils.SHA1Hash(str);
@@ -558,9 +506,18 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             if (lstHash.Remove(key)) continue;
 
             despesa.Hash = hash;
-            connection.Insert(despesa);
+
+            despesasParaInserir.Add(despesa);
             despesaInserida++;
         }
+
+        var bulkService = new BulkInsertService<DeputadoFederalDespesaTemp>();
+        bulkService.BulkInsertNoTracking(dbContext, despesasParaInserir);
+
+        //var uploader = new NpgsqlBulkUploader(dbContext);
+        //uploader.Insert(despesasParaInserir);
+
+        //dbContext.BulkInsert(despesasParaInserir);
 
         if (despesaInserida > 0)
             logger.LogInformation("{Itens} despesas inseridas na tabela temporaria.", despesaInserida);
@@ -594,13 +551,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public virtual void ValidaImportacao(int ano)
     {
-        logger.LogDebug("Validar importaÁ„o");
+        logger.LogDebug("Validar importa√ß√£o");
 
         var sql = @$"
     select 
         count(1) as itens, 
         coalesce(sum(valor_liquido), 0) as valor_total 
-    from cf_despesa d 
+    FROM camara.cf_despesa d 
     where d.ano = {ano}";
 
         int itensTotalFinal = default;
@@ -619,40 +576,39 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 itensProcessadosAno, valorTotalProcessadoAno, itensTotalFinal, somaTotalFinal);
 
         var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
-    select count(1) from ops_tmp.cf_despesa_temp where idDeputado not in (select id from cf_deputado);");
+    select count(1) from temp.cf_despesa_temp where id_deputado not in (select id FROM camara.cf_deputado);");
 
         if (despesasSemParlamentar > 0)
-            logger.LogError("H· deputados n„o identificados!");
+            logger.LogError("H√° deputados n√£o identificados!");
     }
 
     private void CorrigeDespesas()
     {
         connection.Execute(@"
-    		UPDATE ops_tmp.cf_despesa_temp SET numero = NULL WHERE numero = 'S/N' OR numero = '';
-    		UPDATE ops_tmp.cf_despesa_temp SET numeroDeputadoID = NULL WHERE numeroDeputadoID = '';
-    		UPDATE ops_tmp.cf_despesa_temp SET cnpjCPF = NULL WHERE cnpjCPF = '';
-    		UPDATE ops_tmp.cf_despesa_temp SET fornecedor = 'CORREIOS' WHERE cnpjCPF is null and fornecedor LIKE 'CORREIOS%';
-    		UPDATE ops_tmp.cf_despesa_temp SET cnpjCPF = '07501394000100' WHERE cnpjCPF is null and fornecedor LIKE 'POSTO GABBI CENTRO SUL LTDA%';
+UPDATE temp.cf_despesa_temp SET numero = NULL WHERE numero = 'S/N' OR numero = '';
+UPDATE temp.cf_despesa_temp SET numero_deputado_id = NULL WHERE numero_deputado_id = 0;
+UPDATE temp.cf_despesa_temp SET cnpj_cpf = NULL WHERE cnpj_cpf = '';
 
-            UPDATE ops_tmp.cf_despesa_temp SET siglaUF = NULL WHERE siglaUF = 'NA';
-            UPDATE ops_tmp.cf_despesa_temp SET numeroEspecificacaoSubCota = NULL WHERE numeroEspecificacaoSubCota = 0;
-            UPDATE ops_tmp.cf_despesa_temp SET lote = NULL WHERE lote = 0;
-            UPDATE ops_tmp.cf_despesa_temp SET ressarcimento = NULL WHERE ressarcimento = 0;
-            UPDATE ops_tmp.cf_despesa_temp SET idDocumento = NULL WHERE idDocumento = 0;
-            UPDATE ops_tmp.cf_despesa_temp SET parcela = NULL WHERE parcela = 0;
-            UPDATE ops_tmp.cf_despesa_temp SET siglaPartido = 'PP' WHERE siglaPartido = 'PP**';
-            UPDATE ops_tmp.cf_despesa_temp SET siglaPartido = null WHERE siglaPartido = 'NA';
+UPDATE temp.cf_despesa_temp SET sigla_uf = NULL WHERE sigla_uf = 'NA';
+UPDATE temp.cf_despesa_temp SET numero_especificacao_sub_cota = NULL WHERE numero_especificacao_sub_cota = 0;
+UPDATE temp.cf_despesa_temp SET lote = NULL WHERE lote = 0;
+UPDATE temp.cf_despesa_temp SET ressarcimento = NULL WHERE ressarcimento = 0;
+UPDATE temp.cf_despesa_temp SET id_documento = NULL WHERE id_documento = '0';
+UPDATE temp.cf_despesa_temp SET parcela = NULL WHERE parcela = 0;
+UPDATE temp.cf_despesa_temp SET sigla_partido = 'PP' WHERE sigla_partido = 'PP**';
+UPDATE temp.cf_despesa_temp SET sigla_partido = null WHERE sigla_partido = 'NA';
     	");
     }
 
     public void InsereDeputadoFaltante()
     {
-        // Atualiza os deputados j· existentes quando efetuarem os primeiros gastos com a cota
+        // Atualiza os deputados j√° existentes quando efetuarem os primeiros gastos com a cota
         var affected = connection.Execute(@"
-            UPDATE cf_deputado d
-            inner join ops_tmp.cf_despesa_temp dt on d.id = dt.idDeputado
-            set d.id_deputado = dt.numeroDeputadoID
-            where d.id_deputado is null;
+UPDATE camara.cf_deputado d
+SET id_deputado = dt.numero_deputado_id
+FROM temp.cf_despesa_temp dt
+WHERE d.id = dt.id_deputado
+AND d.id_deputado IS NULL;
         ");
 
         if (affected > 0)
@@ -663,18 +619,18 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             logger.LogInformation("{Itens} parlamentares atualizados!", affected);
         }
 
-        // Insere um novo deputado ou lideranÁa
+        // Insere um novo deputado ou lideran√ßa
         affected = connection.Execute(@"
-            INSERT INTO cf_deputado (id, id_deputado, nome_parlamentar, cpf)
-            SELECT idDeputado, numeroDeputadoID, nomeParlamentar, max(cpf)
-            FROM ops_tmp.cf_despesa_temp
-            WHERE numeroDeputadoID  not in (
-            	SELECT id_deputado 
-    			FROM cf_deputado
-            	WHERE id_deputado IS NOT null
-            )
-    		AND numeroDeputadoID IS NOT null
-    		GROUP BY idDeputado, numeroDeputadoID, nomeParlamentar;;
+INSERT INTO camara.cf_deputado (id, id_deputado, nome_parlamentar, cpf)
+SELECT id_deputado, numero_deputado_id, nome_parlamentar, max(cpf)
+FROM temp.cf_despesa_temp
+WHERE numero_deputado_id  not in (
+   	SELECT id_deputado 
+ 			FROM camara.cf_deputado
+   	WHERE id_deputado IS NOT null
+)
+AND numero_deputado_id IS NOT null
+GROUP BY id_deputado, numero_deputado_id, nome_parlamentar;
         ");
 
         //DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
@@ -693,7 +649,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var affected = connection.Execute(@"
             INSERT INTO pessoa (nome)
             SELECT DISTINCT passageiro
-            FROM ops_tmp.cf_despesa_temp
+            FROM temp.cf_despesa_temp
             WHERE coalesce(passageiro, '') <> ''
             AND passageiro not in (
                 SELECT nome FROM pessoa
@@ -713,7 +669,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var affected = connection.Execute(@"
             INSERT INTO trecho_viagem (descricao)
             SELECT DISTINCT trecho
-            FROM ops_tmp.cf_despesa_temp
+            FROM temp.cf_despesa_temp
             WHERE coalesce(trecho, '') <> ''
             AND trecho not in (
             	SELECT descricao FROM trecho_viagem
@@ -732,10 +688,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     {
         var affected = connection.Execute(@"
             INSERT INTO cf_despesa_tipo (id, descricao)
-            select distinct numeroSubCota, descricao
-            from ops_tmp.cf_despesa_temp
-            where numeroSubCota  not in (
-            	select id from cf_despesa_tipo
+            select distinct numero_sub_cota, descricao
+            from temp.cf_despesa_temp
+            where numero_sub_cota  not in (
+            	select id FROM camara.cf_despesa_tipo
             );
         ");
 
@@ -751,17 +707,17 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     {
         var affected = connection.Execute(@"
             INSERT INTO cf_especificacao_tipo (id_cf_despesa_tipo, id_cf_especificacao, descricao)
-            select distinct numeroSubCota, numeroEspecificacaoSubCota, descricaoEspecificacao
-            from ops_tmp.cf_despesa_temp dt
-            left join cf_especificacao_tipo tp on tp.id_cf_despesa_tipo = dt.numeroSubCota 
-                and tp.id_cf_especificacao = dt.numeroEspecificacaoSubCota
-            where numeroEspecificacaoSubCota <> 0
+            select distinct numero_sub_cota, numero_especificacao_sub_cota, ""descricaoEspecificacao""
+            from temp.cf_despesa_temp dt
+            left join cf_especificacao_tipo tp on tp.id_cf_despesa_tipo = dt.numero_sub_cota
+                and tp.id_cf_especificacao = dt.numero_especificacao_sub_cota
+            where numero_especificacao_sub_cota <> 0
             AND tp.descricao = null;
         ");
 
         if (affected > 0)
         {
-            logger.LogInformation("{Itens} tipo especificaÁ„o incluidos!", affected);
+            logger.LogInformation("{Itens} tipo especifica√ß√£o incluidos!", affected);
         }
 
         return string.Empty;
@@ -770,22 +726,20 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereMandatoFaltante()
     {
         var affected = connection.Execute(@"
-            SET SQL_BIG_SELECTS=1;
-
-    		UPDATE cf_mandato m 
-            INNER JOIN ( 
-    	        select distinct 
-    	        numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
-    	        from ops_tmp.cf_despesa_temp
-            ) dt ON m.id_cf_deputado = dt.numeroDeputadoID 
-    	        AND m.id_legislatura = dt.codigoLegislatura 
-            left join estado e on e.sigla = dt.siglaUF
-            left join partido p on p.sigla = dt.siglaPartido
-            SET m.id_carteira_parlamantar = numeroCarteiraParlamentar
-            where dt.codigoLegislatura <> 0
-            AND m.id_carteira_parlamantar IS NULL;
-
-            SET SQL_BIG_SELECTS=0;
+UPDATE camara.cf_mandato m
+SET id_carteira_parlamantar = dt.numero_carteira_parlamentar
+FROM (
+    SELECT DISTINCT 
+        numero_deputado_id, legislatura, numero_carteira_parlamentar, codigo_legislatura, sigla_uf, sigla_partido
+    FROM temp.cf_despesa_temp
+) dt
+INNER JOIN camara.cf_deputado d ON d.id_deputado = dt.numero_deputado_id
+LEFT JOIN estado e ON e.sigla = dt.sigla_uf
+LEFT JOIN partido p ON p.sigla = dt.sigla_partido
+WHERE m.id_cf_deputado = d.id
+AND m.id_legislatura = dt.codigo_legislatura
+AND dt.codigo_legislatura <> 0
+AND m.id_carteira_parlamantar IS NULL;
     	");
 
         if (affected > 0)
@@ -794,24 +748,20 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         }
 
         affected = connection.Execute(@"
-            SET SQL_BIG_SELECTS=1;
-
-    		INSERT INTO cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
-    		select distinct dt.numeroDeputadoID, codigoLegislatura, numeroCarteiraParlamentar, e.id, p.id 
-    		from ( 
-    			select distinct 
-    			numeroDeputadoID, legislatura, numeroCarteiraParlamentar, codigoLegislatura, siglaUF, siglaPartido
-    			from ops_tmp.cf_despesa_temp
-    		) dt
-    		left join estado e on e.sigla = dt.siglaUF
-    		left join partido p on p.sigla = dt.siglaPartido
-    		left join cf_mandato m on m.id_cf_deputado = dt.numeroDeputadoID 
-    			AND m.id_legislatura = dt.codigoLegislatura 
-    			-- AND m.id_carteira_parlamantar = numeroCarteiraParlamentar
-    		where dt.codigoLegislatura <> 0
-    		AND m.id is null;
-
-            SET SQL_BIG_SELECTS=0;
+INSERT INTO camara.cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
+SELECT DISTINCT d.id, dt.codigo_legislatura, dt.numero_carteira_parlamentar, e.id, p.id 
+FROM ( 
+    SELECT DISTINCT 
+        numero_deputado_id, legislatura, numero_carteira_parlamentar, codigo_legislatura, sigla_uf, sigla_partido
+    FROM temp.cf_despesa_temp
+) dt
+join camara.cf_deputado d on d.id_deputado = dt.numero_deputado_id
+LEFT JOIN estado e ON e.sigla = dt.sigla_uf
+LEFT JOIN partido p ON p.sigla = dt.sigla_partido
+LEFT JOIN camara.cf_mandato m ON m.id_cf_deputado = d.id
+    AND m.id_legislatura = dt.codigo_legislatura 
+WHERE dt.codigo_legislatura <> 0
+AND m.id IS NULL;
     	");
 
         if (affected > 0)
@@ -825,12 +775,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     private string InsereLegislaturaFaltante()
     {
         var affected = connection.Execute(@"
-    		INSERT INTO cf_legislatura (id, ano)
-    		select distinct codigoLegislatura, legislatura
-    		from ops_tmp.cf_despesa_temp dt
-    		where codigoLegislatura <> 0
-    		AND codigoLegislatura  not in (
-    			select id from cf_legislatura
+    		INSERT INTO camara.cf_legislatura (id, ano)
+    		select distinct codigo_legislatura, legislatura
+    		from temp.cf_despesa_temp dt
+    		where codigo_legislatura <> 0
+    		AND codigo_legislatura  not in (
+    			select id FROM camara.cf_legislatura
     		);
     	");
 
@@ -844,140 +794,209 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public void InsereFornecedorFaltante()
     {
+        ResolverFornecedor();
+
         var affected = connection.Execute(@"
-            SET SQL_BIG_SELECTS=1;
-
-    		INSERT INTO fornecedor (nome, cnpj_cpf)
-    		select MAX(dt.fornecedor), dt.cnpjCPF
-    		from ops_tmp.cf_despesa_temp dt
-    		left join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
-    		where dt.cnpjCPF is not null
-    		and f.id is null
-    		GROUP BY dt.cnpjCPF;
-
-    		INSERT INTO fornecedor (nome, cnpj_cpf)
-    		select DISTINCT dt.fornecedor, dt.cnpjCPF
-    		from ops_tmp.cf_despesa_temp dt
-    		left join fornecedor f on f.nome = dt.fornecedor
-    		where dt.cnpjCPF is null
-    		and f.id is null;
-
-            SET SQL_BIG_SELECTS=0;
+    		INSERT INTO fornecedor.fornecedor (nome, cnpj_cpf)
+    		select MAX(dt.fornecedor), dt.cnpj_cpf
+    		from temp.cf_despesa_temp dt
+    		where dt.id_fornecedor is null
+            and dt.cnpj_cpf is not null
+    		GROUP BY dt.cnpj_cpf;
     	");
 
         if (affected > 0)
+            ResolverFornecedorPreExistente();
+
+
+        List<string> despesasSemFornecedor = dbContext.DeputadoFederalDespesaTemps
+            .Where(x => x.IdFornecedor == null)
+            .Select(x => x.Fornecedor)
+            .Distinct()
+            .ToList();
+
+        if (despesasSemFornecedor.Any())
         {
+            dbContext.ChangeTracker.Clear();
+
+            foreach (var nomeFornecedor in despesasSemFornecedor)
+            {
+                var fornecedor = new Infraestrutura.Entities.Fornecedores.Fornecedor()
+                {
+                    Nome = nomeFornecedor
+                };
+                dbContext.Fornecedores.Add(fornecedor);
+                dbContext.SaveChanges();
+
+
+                dbContext.FornecedorDeParas.Add(new FornecedorDePara()
+                {
+                    NomeFornecedor = nomeFornecedor,
+                    IdFornecedorIncorreto = fornecedor.Id
+                });
+
+                dbContext.DeputadoFederalDespesaTemps
+                    .Where(x => x.IdFornecedor == null && x.Fornecedor == nomeFornecedor)
+                    .ExecuteUpdate(setters => setters.SetProperty(x => x.IdFornecedor, fornecedor.Id));
+            }
+
+            dbContext.SaveChanges();
+            dbContext.ChangeTracker.Clear();
+            affected += despesasSemFornecedor.Count();
+
+            ResolverFornecedorPreExistente();
+        }
+        if (affected > 0)
+        {
+            ResolverFornecedor();
             logger.LogInformation("{Itens} fornecedores incluidos!", affected);
         }
+    }
+
+    private void ResolverFornecedor()
+    {
+        ResolverFornecedorPreExistente();
+        ResolverFornecedorDepara();
+    }
+
+    private void ResolverFornecedorPreExistente()
+    {
+        connection.Execute(@$"
+-- Por CNPJ para fornecedor pr√©-existente
+UPDATE temp.cf_despesa_temp dt
+set id_fornecedor = f.id
+FROM fornecedor.fornecedor f 
+WHERE dt.id_fornecedor IS NULL
+AND f.cnpj_cpf = dt.cnpj_cpf;
+");
+    }
+
+    private void ResolverFornecedorDepara()
+    {
+        connection.Execute(@$"
+-- Por Nome exato e CPNJ
+UPDATE temp.cf_despesa_temp dt
+set id_fornecedor = f.id_fornecedor_correto
+FROM temp.fornecedor_de_para f 
+WHERE dt.id_fornecedor IS NULL
+AND f.cnpj_incorreto = dt.cnpj_cpf
+AND f.nome ILIKE dt.fornecedor;
+
+-- Por CNPJ (Pode ser parcial ou invalido)
+UPDATE temp.cf_despesa_temp dt
+set id_fornecedor = f.id_fornecedor_correto
+FROM temp.fornecedor_de_para f 
+WHERE dt.id_fornecedor IS NULL
+AND f.cnpj_incorreto = dt.cnpj_cpf;
+
+-- Por Nome exato (accent-insensitive matching)
+UPDATE temp.cf_despesa_temp dt
+set id_fornecedor = f.id_fornecedor_correto, cnpj_cpf = COALESCE(dt.cnpj_cpf, f.cnpj_correto)
+FROM temp.fornecedor_de_para f 
+WHERE dt.id_fornecedor IS NULL
+AND (lower(f.nome)) = (lower(dt.fornecedor));
+");
     }
 
     public void InsereDespesaFinal(int ano)
     {
         var affected = connection.Execute(@$"
-            SET SQL_BIG_SELECTS=1;
-            ALTER TABLE cf_despesa DISABLE KEYS;
-
-            INSERT INTO cf_despesa (
-    	        ano,
-    	        mes,
-    	        id_documento,
-    	        id_cf_deputado,
-    	        id_cf_legislatura,
-    	        id_cf_mandato,
-    	        id_cf_despesa_tipo,
-    	        id_cf_especificacao,
-    	        id_fornecedor,
-    	        id_passageiro,
-    	        numero_documento,
-    	        tipo_documento,
-    	        data_emissao,
-    	        valor_documento,
-    	        valor_glosa,
-    	        valor_liquido,
-    	        valor_restituicao,
-    	        id_trecho_viagem,
-                tipo_link,
-                hash
-            )
-            SELECT 
-    	        dt.ano,
-    	        dt.mes,
-    	        dt.idDocumento,
-    	        d.id,
-    	        dt.codigoLegislatura,
-    	        m.id,
-    	        numeroSubCota,
-    	        numeroEspecificacaoSubCota,
-    	        f.id,
-    	        p.id,
-    	        numero,
-    	        tipoDocumento,
-    	        dataEmissao,
-    	        valorDocumento,
-    	        valorGlosa,
-    	        valorLiquido,
-    	        restituicao,
-    	        tv.id,
-                coalesce(urlDocumento, 0),
-                dt.hash
-            from ops_tmp.cf_despesa_temp dt
-            LEFT JOIN cf_deputado d on d.id_deputado = dt.numeroDeputadoID
-            LEFT JOIN pessoa p on p.nome = dt.passageiro
-            LEFT JOIN trecho_viagem tv on tv.descricao = dt.trecho
-            LEFT join fornecedor f on f.cnpj_cpf = dt.cnpjCPF
-    	        or (f.cnpj_cpf is null and dt.cnpjCPF is null and f.nome like dt.fornecedor)
-            left join cf_mandato m on m.id_cf_deputado = d.id
-    	        and m.id_legislatura = dt.codigoLegislatura 
-    	        and m.id_carteira_parlamantar = numeroCarteiraParlamentar;
-
-            ALTER TABLE cf_despesa ENABLE KEYS;
-            SET SQL_BIG_SELECTS=0;
+INSERT INTO camara.cf_despesa (
+    ano,
+    mes,
+    id_documento,
+    id_cf_deputado,
+    id_cf_legislatura,
+    id_cf_mandato,
+    id_cf_despesa_tipo,
+    id_cf_especificacao,
+    id_fornecedor,
+    id_passageiro,
+    numero_documento,
+    tipo_documento,
+    data_emissao,
+    valor_documento,
+    valor_glosa,
+    valor_liquido,
+    valor_restituicao,
+    id_trecho_viagem,
+    tipo_link,
+    hash
+)
+SELECT 
+    dt.ano,
+    dt.mes,
+    CAST( dt.id_documento as INT4),
+    d.id,
+    dt.codigo_legislatura,
+    m.id,
+    numero_sub_cota,
+    numero_especificacao_sub_cota,
+    dt.id_fornecedor,
+    p.id,
+    numero,
+    CAST(tipo_documento as SMALLINT),
+    data_emissao,
+    valor_documento,
+    valor_glosa,
+    valor_liquido,
+    restituicao,
+    tv.id,
+    CAST(coalesce(url_documento, '0') as SMALLINT),
+    dt.hash
+from temp.cf_despesa_temp dt
+LEFT JOIN camara.cf_deputado d on d.id_deputado = dt.numero_deputado_id
+LEFT JOIN pessoa p on p.nome = dt.passageiro
+LEFT JOIN trecho_viagem tv on tv.descricao = dt.trecho
+left join camara.cf_mandato m on m.id_cf_deputado = d.id
+    and m.id_legislatura = dt.codigo_legislatura
+    and m.id_carteira_parlamantar = numero_carteira_parlamentar;
     	", 3600);
 
-        var totalTemp = connection.ExecuteScalar<int>("select count(1) from ops_tmp.cf_despesa_temp");
+        var totalTemp = connection.ExecuteScalar<int>("select count(1) from temp.cf_despesa_temp");
         if (affected != totalTemp)
-            logger.LogWarning("{Itens} despesas incluidas. H· {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
+            logger.LogWarning("{Itens} despesas incluidas. H√° {Qtd} despesas que foram ignoradas!", affected, totalTemp - affected);
         else if (affected > 0)
             logger.LogInformation("{Itens} despesas incluidas!", affected);
     }
 
     private void InsereDespesaLegislatura()
     {
-        var Legislaturas = connection.Query<int>("SELECT DISTINCT codigoLegislatura FROM ops_tmp.cf_despesa_temp");
-        if (!Legislaturas.Any())
-        {
-            Legislaturas = new List<int>() { legislaturaAtual - 2, legislaturaAtual - 1, legislaturaAtual };
-        }
-        ;
+        //  var Legislaturas = connection.Query<int>(@"SELECT DISTINCT codigo_legislatura FROM temp.cf_despesa_temp");
+        //  if (!Legislaturas.Any())
+        //  {
+        //      Legislaturas = new List<int>() { legislaturaAtual - 2, legislaturaAtual - 1, legislaturaAtual };
+        //  }
+        //  ;
 
-        foreach (var legislatura in Legislaturas)
-        {
-            connection.Execute(@$"
-                TRUNCATE TABLE cf_despesa_{legislatura};
+        //  foreach (var legislatura in Legislaturas)
+        //  {
+        //      connection.Execute(@$"
+        //          TRUNCATE TABLE cf_despesa_{legislatura};
 
-                INSERT INTO cf_despesa_{legislatura} 
-                    (id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, ano_mes, data_emissao, valor_liquido)
-                SELECT 
-                     id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, concat(ano, LPAD(mes, 2, '0')), data_emissao, valor_liquido 
-                FROM cf_despesa
-                WHERE id_cf_legislatura = {legislatura};
-    		", 3600);
-        }
+        //          INSERT INTO cf_despesa_{legislatura} 
+        //              (id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, ano_mes, data_emissao, valor_liquido)
+        //          SELECT 
+        //               id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, concat(ano, LPAD(mes, 2, '0')), data_emissao, valor_liquido 
+        //          FROM camara.cf_despesa
+        //          WHERE id_cf_legislatura = {legislatura};
+        //", 3600);
+        //  }
     }
 
     public void LimpaDespesaTemporaria()
     {
-        connection.Execute(@"truncate table ops_tmp.cf_despesa_temp;");
+        connection.Execute(@"truncate table temp.cf_despesa_temp;");
     }
 
-    #endregion ImportaÁ„o Dados CEAP CSV
+    #endregion Importa√ßao Dados CEAP CSV
 
 
     #region Processar Resumo CEAP
 
     public void AtualizaParlamentarValoresCEAP()
     {
-        var dt = connection.Query("select id from cf_deputado where processado != 2");
+        var dt = connection.Query("select id FROM camara.cf_deputado where processado != 2");
         object valor_total_ceap;
 
         foreach (var dr in dt)
@@ -985,7 +1004,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             try
             {
                 var obj = new { id_cf_deputado = Convert.ToInt32(dr.id) };
-                valor_total_ceap = connection.ExecuteScalar("select sum(valor_liquido) from cf_despesa where id_cf_deputado=@id_cf_deputado;", obj);
+                valor_total_ceap = connection.ExecuteScalar("select sum(valor_liquido) FROM camara.cf_despesa where id_cf_deputado=@id_cf_deputado;", obj);
                 if (Convert.IsDBNull(valor_total_ceap)) valor_total_ceap = 0;
                 else if (valor_total_ceap == null || (decimal)valor_total_ceap < 0) valor_total_ceap = 0;
 
@@ -1005,8 +1024,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     }
 
     /// <summary>
-    /// Atualiza indicador 'Campeıes de gastos',
-    /// Os 4 deputados que mais gastaram com a CEAP desde o Ìnicio do mandato 55 (02/2015)
+    /// Atualiza indicador 'Campe√µes de gastos',
+    /// Os 4 deputados que mais gastaram com a CEAP desde o √≠nicio do mandato 55 (02/2015)
     /// </summary>
     public void AtualizaCampeoesGastos()
     {
@@ -1037,7 +1056,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     				insert into cf_despesa_resumo_mensal
     				(ano, mes, valor) (
     					select ano, mes, sum(valor_liquido)
-    					from cf_despesa
+    					FROM camara.cf_despesa
     					group by ano, mes
     				);";
 
@@ -1047,8 +1066,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     #endregion Processar Resumo CEAP
 
 
-    //    #region ImportaÁ„o RemuneraÁ„o
-    //    // N„o atualizado
+    //    #region Importa√ß√£o Remunera√ß√£o
+    //    // N√£o atualizado
     //    public void ConsultaRemuneracao(int ano, int mes)
     //    {
     //        var meses = new string[] { "janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro" };
@@ -1102,25 +1121,25 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        int AnoIngresso = indice++;
     //        int RemuneracaoFixa = indice++;
     //        int VantagensdeNaturezaPessoal = indice++;
-    //        int FunÁaoCargoComissao = indice++;
+    //        int Fun√ßaoCargoComissao = indice++;
     //        int GratificacaoNatalina = indice++;
     //        int Ferias = indice++;
     //        int OutrasRemuneracoesEventuaisProvisorias = indice++;
     //        int AbonodePermanencia = indice++;
     //        int RedutorConstitucional = indice++;
-    //        int ConstribuicaoPrevidenci·ria = indice++;
+    //        int ConstribuicaoPrevidenci√°ria = indice++;
     //        int ImpostodeRenda = indice++;
     //        int RemuneracaoAposDescontosObrigatorios = indice++;
     //        int Diarias = indice++;
     //        int Auxilios = indice++;
-    //        int VantagensIndenizatÛrias = indice++;
+    //        int VantagensIndenizat√≥rias = indice++;
 
     //        //int linhaAtual = 0;
 
     //        using (var banco = new AppDb())
     //        {
     //            //var lstHash = new List<string>();
-    //            //using (var dReader = banco.ExecuteReader("select hash from sf_despesa where ano=" + ano))
+    //            //using (var dReader = banco.ExecuteReader("select hash FROM senado.sf_despesa where ano=" + ano))
     //            //{
     //            //    while (dReader.Read())
     //            //    {
@@ -1135,7 +1154,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //            //    }
     //            //}
 
-    //            //using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
+    //            //using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens FROM senado.sf_despesa where ano=" + ano))
     //            //{
     //            //    if (dReader.Read())
     //            //    {
@@ -1158,10 +1177,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                        {
     //                            if (
     //                                    (csv[CargoIndividualizadodoServidor] != "Cargo Individualizado do Servidor") ||
-    //                                    (csv[VantagensIndenizatÛrias].Trim() != "Vantagens IndenizatÛrias")
+    //                                    (csv[VantagensIndenizat√≥rias].Trim() != "Vantagens Indenizat√≥rias")
     //                                )
     //                            {
-    //                                throw new Exception("MudanÁa de integraÁ„o detectada para o CamaraFederal Federal");
+    //                                throw new Exception("Mudan√ßa de integra√ß√£o detectada para o CamaraFederal Federal");
     //                            }
 
     //                            // Pular linha de titulo
@@ -1208,7 +1227,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
 
     //                        banco.ExecuteNonQuery(
-    //                            @"INSERT INTO ops_tmp.cf_remuneracao_temp (
+    //                            @"INSERT INTO temp.cf_remuneracao_temp (
     //								id, ano_mes, cargo,grupo_funcional,tipo_folha,admissao,
     //                                remun_basica ,vant_pessoais ,func_comissionada ,grat_natalina ,ferias ,outras_eventuais ,abono_permanencia ,
     //                                reversao_teto_const ,imposto_renda ,previdencia ,rem_liquida ,diarias ,auxilios ,vant_indenizatorias
@@ -1228,7 +1247,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //            //if (lstHash.Count == 0 && linhaAtual == 0)
     //            //{
-    //            //    sb.AppendFormat("<p>N„o h· novos itens para importar! #2</p>");
+    //            //    sb.AppendFormat("<p>N√£o h√° novos itens para importar! #2</p>");
     //            //    return sb.ToString();
     //            //}
 
@@ -1236,7 +1255,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //            //{
     //            //    foreach (var hash in lstHash)
     //            //    {
-    //            //        banco.ExecuteNonQuery(string.Format("delete from sf_despesa where hash = '{0}'", hash));
+    //            //        banco.ExecuteNonQuery(string.Format("delete FROM senado.sf_despesa where hash = '{0}'", hash));
     //            //    }
 
 
@@ -1256,7 +1275,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //        //using (var banco = new AppDb())
     //        //{
-    //        //    using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens from sf_despesa where ano=" + ano))
+    //        //    using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens FROM senado.sf_despesa where ano=" + ano))
     //        //    {
     //        //        if (dReader.Read())
     //        //        {
@@ -1264,7 +1283,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        //        }
     //        //    }
 
-    //        //    sb.AppendFormat("<p>Resumo atualizaÁ„o: {0}</p>", sResumoValores);
+    //        //    sb.AppendFormat("<p>Resumo atualiza√ß√£o: {0}</p>", sResumoValores);
     //        //}
 
     //        return sb.ToString();
@@ -1273,7 +1292,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //private void LimpaRemuneracaoTemporaria(AppDb banco)
     //{
     //    var affected = banco.Execute(@"
-    //				truncate table ops_tmp.cf_remuneracao_temp;
+    //				truncate table temp.cf_remuneracao_temp;
     //			");
     //}
 
@@ -1281,7 +1300,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     {
         // var sqlDeputados = @"
         // SELECT DISTINCT cd.id as id_cf_deputado
-        // FROM cf_deputado cd 
+        // FROM camara.cf_deputado cd 
         // JOIN cf_funcionario_contratacao c ON c.id_cf_deputado = cd.id AND c.periodo_ate IS NULL
         // -- WHERE id_legislatura = 57
         // -- and cd.id >= 141428
@@ -1297,11 +1316,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             var sqlDeputados = @"
     SELECT cd.id as id_cf_deputado, nome_parlamentar, cd.situacao -- DISTINCT
-    FROM cf_deputado cd 
+    FROM camara.cf_deputado cd 
     -- JOIN cf_mandato m ON m.id_cf_deputado = cd.id
     -- WHERE id_legislatura = 57                                
     WHERE cd.processado = 0
-    -- where cd.situacao = 'ExercÌcio'
+    -- where cd.situacao = 'Exerc√≠cio'
     -- order by cd.id desc
     ";
             var dcDeputado = connection.Query<Dictionary<string, object>>(sqlDeputados).ToList();
@@ -1365,7 +1384,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                 {
                                     using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
                                     {
-                                        await ColetaSalarioDeputado( context, idDeputado, ano);
+                                        await ColetaSalarioDeputado(context, idDeputado, ano);
 
                                         address = $"https://www.camara.leg.br/deputados/{idDeputado}?ano={ano}";
                                         document = await context.OpenAsyncAutoRetry(address);
@@ -1378,7 +1397,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                         var lstInfo = document.QuerySelectorAll(".recursos-beneficios-deputado-container .beneficio");
                                         if (!lstInfo.Any())
                                         {
-                                            logger.LogError("Nenhuma informaÁ„o de beneficio: {address}", address);
+                                            logger.LogError("Nenhuma informa√ß√£o de beneficio: {address}", address);
                                             continue;
                                         }
 
@@ -1390,11 +1409,6 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                             var mes = Array.IndexOf(meses, colunas[0].TextContent) + 1;
                                             var valor = Convert.ToDecimal(colunas[1].TextContent, cultureInfoBR);
                                             var percentual = Convert.ToDecimal(colunas[2].TextContent.Replace("%", ""), cultureInfoUS);
-
-
-
-
-
 
                                             connection.Execute("insert ignore into cf_deputado_verba_gabinete (id_cf_deputado, ano, mes, valor, percentual) values (@id_cf_deputado, @ano, @mes, @valor, @percentual);");
                                         }
@@ -1409,11 +1423,6 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                             decimal? percentual = null;
                                             if (!string.IsNullOrEmpty(colunas[2].TextContent.Replace("%", "")))
                                                 percentual = Convert.ToDecimal(colunas[2].TextContent.Replace("%", ""), cultureInfoUS);
-
-
-
-
-
 
                                             connection.Execute("insert ignore into cf_deputado_cota_parlamentar (id_cf_deputado, ano, mes, valor, percentual) values (@id_cf_deputado, @ano, @mes, @valor, @percentual);");
                                         }
@@ -1433,14 +1442,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                                             if ((ano == DateTime.Today.Year))
                                                                 qtdSecretarios = Convert.ToInt32(valor.Split(' ')[0]);
 
-                                                            await ColetaPessoalGabinete( context, idDeputado, ano);
+                                                            await ColetaPessoalGabinete(context, idDeputado, ano);
                                                         }
                                                         break;
-                                                    case "Sal·rio mensal bruto":
+                                                    case "Sal√°rio mensal bruto":
                                                         // Nada: Deve Consultar por ano
                                                         break;
-                                                    case "ImÛvel funcional":
-                                                        if (!valor.StartsWith("N„o fez") && !valor.StartsWith("N„o faz") && !valor.StartsWith("N„o h· dado"))
+                                                    case "Im√≥vel funcional":
+                                                        if (!valor.StartsWith("N√£o fez") && !valor.StartsWith("N√£o faz") && !valor.StartsWith("N√£o h√° dado"))
                                                         {
                                                             var lstImovelFuncional = valor.Split("\n");
                                                             foreach (var item in lstImovelFuncional)
@@ -1465,20 +1474,20 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                                                             }
                                                         }
                                                         break;
-                                                    case "AuxÌlio-moradia":
-                                                        if (valor != "N„o recebe o auxÌlio")
+                                                    case "Aux√≠lio-moradia":
+                                                        if (valor != "N√£o recebe o aux√≠lio")
                                                         {
-                                                            await ColetaAuxilioMoradia( context, idDeputado, ano);
+                                                            await ColetaAuxilioMoradia(context, idDeputado, ano);
                                                         }
                                                         break;
-                                                    case "Viagens em miss„o oficial":
+                                                    case "Viagens em miss√£o oficial":
                                                         if (valor != "0")
                                                         {
-                                                            await ColetaMissaoOficial( context, idDeputado, ano);
+                                                            await ColetaMissaoOficial(context, idDeputado, ano);
                                                         }
                                                         break;
-                                                    case "Passaporte diplom·tico":
-                                                        if (valor != "N„o possui")
+                                                    case "Passaporte diplom√°tico":
+                                                        if (valor != "N√£o possui")
                                                         {
                                                             possuiPassaporteDiplimatico = true;
                                                         }
@@ -1499,13 +1508,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                             }
                             else
                             {
-                                processado = 2; // N„o coletar novamente
+                                processado = 2; // N√£o coletar novamente
                             }
                         }
                     }
                     catch (BusinessException)
                     {
-                        //processado = 2; // N„o coletar novamente
+                        //processado = 2; // N√£o coletar novamente
                         processado = 3; // Verificar
                     }
                     catch (Exception ex)
@@ -1562,16 +1571,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 var valor = Convert.ToDecimal(colunas[1].TextContent.Trim(), cultureInfo);
                 var link = (colunas[1].FirstElementChild as IHtmlAnchorElement).Href; // todo?
 
-
-
-
-
                 //connection.Execute("insert ignore into cf_deputado_salario (id_cf_deputado, ano, mes, valor) values (@id_cf_deputado, @ano, @mes, @valor);");
 
-                // N„o considera gratificaÁ„o natalina e outros adicionais
-                var salario = new DeputadoFederalRemuneracao()
+                // N√£o considera gratifica√ß√£o natalina e outros adicionais
+                var salario = new DeputadoRemuneracao()
                 {
-                    IdDeputado = (uint)idDeputado,
+                    IdDeputado = (int)idDeputado,
                     Ano = (short)ano,
                     Mes = mes,
                     Valor = valor
@@ -1579,10 +1584,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                 try
                 {
-                    lock (padlock)
-                        connection.Insert(salario);
-
-                    logger.LogDebug("Inserida remuneraÁ„o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, idDeputado);
+                    dbContext.DeputadoRemuneracoes.Add(salario);
+                    logger.LogDebug("Inserida remunera√ß√£o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, idDeputado);
                 }
                 catch (Exception ex)
                 {
@@ -1592,9 +1595,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         logger.LogWarning("Registro duplicado ignorado: {@Salario}", salario);
                 }
 
-                await ColetaSalarioDeputadoDetalhado( context, idDeputado, ano, mes);
+                await ColetaSalarioDeputadoDetalhado(context, idDeputado, ano, mes);
             }
         }
+
+        dbContext.SaveChanges();
     }
 
     private async Task ColetaSalarioDeputadoDetalhado(IBrowsingContext context, int idDeputado, int ano, short mes)
@@ -1620,7 +1625,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             using (logger.BeginScope(new Dictionary<string, object> { ["Folha"] = titulo }))
             {
-                if (titulo.Split("ñ")[0].Trim() != $"{mes:00}{ano}")
+                if (titulo.Split("ÔøΩ")[0].Trim() != $"{mes:00}{ano}") // todo:
                 {
                     throw new NotImplementedException("Algo esta errado!");
                 }
@@ -1630,7 +1635,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                 var cabecalho = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item");
                 var categoriaFuncional = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Categoria funcional"))?.TextContent.Split(":")[1].Trim();
-                var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercÌcio"))?.TextContent.Split(":")[1].Trim();
+                var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercÔøΩcio"))?.TextContent.Split(":")[1].Trim();
                 var cargo = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Cargo"))?.TextContent.Split(":")[1].Trim();
 
                 var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
@@ -1647,7 +1652,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 }
 
                 byte tipo = 0;
-                switch (titulo.Split("ñ")[1].Trim())
+                switch (titulo.Split("ÔøΩ")[1].Trim()) // TODO
                 {
                     case "FOLHA NORMAL":
                         tipo = 1;
@@ -1658,10 +1663,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     case "FOLHA COMPLEMENTAR ESPECIAL":
                         tipo = 3;
                         break;
-                    case "FOLHA DE ADIANTAMENTO GRATIFICA«√O NATALINA":
+                    case "FOLHA DE ADIANTAMENTO GRATIFICA√á√ÉO NATALINA":
                         tipo = 4;
                         break;
-                    case "FOLHA DE GRATIFICA«√O NATALINA":
+                    case "FOLHA DE GRATIFICA√á√ÉO NATALINA":
                         tipo = 5;
                         break;
                     default:
@@ -1690,9 +1695,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 try
                 {
                     lock (padlock)
-                        connection.Insert(folha);
+                        dbContext.DeputadoFederalRemuneracaoDetalhes.Add(folha);
 
-                    logger.LogDebug("Inserida remuneraÁ„o Detalhada de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, titulo);
+                    logger.LogDebug("Inserida remunera√ß√£o Detalhada de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano, titulo);
                 }
                 catch (Exception ex)
                 {
@@ -1703,6 +1708,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 }
             }
         }
+
+        dbContext.SaveChanges();
     }
 
     private async Task ColetaPessoalGabinete(IBrowsingContext context, int idDeputado, int ano)
@@ -1747,7 +1754,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 var link = (colunas[4].FirstElementChild as IHtmlAnchorElement).Href; // todo?
                 var chave = link.Replace("https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/", "");
 
-                var funcionario = new DeputadoFederalFuncionarioTemp()
+                var funcionario = new CamaraFederalDeputadoFuncionarioTemp()
                 {
                     IdDeputado = idDeputado,
                     Chave = chave,
@@ -1758,10 +1765,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     PeriodoAte = dataFinal,
                 };
 
-                lock (padlock)
-                    connection.Insert(funcionario);
+                dbContext.CamaraEstadualDeputadoFuncionarioTemps.Add(funcionario);
             }
         }
+
+        dbContext.SaveChanges();
     }
 
     //    //    private async Task ColetaPessoalGabinete(IBrowsingContext context, int idDeputado, int ano)
@@ -1794,7 +1802,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //    //                DateTime? dataInicial = Convert.ToDateTime(periodoPartes[1]);
     //    //                DateTime? dataFinal = periodoPartes.Length == 4 ? Convert.ToDateTime(periodoPartes[3]) : null;
 
-    //    //                var sqlSelectSecretario = "select id from cf_funcionario where chave = @chave";
+    //    //                var sqlSelectSecretario = "select id FROM camara.cf_funcionario where chave = @chave";
 
     //    //                var objId = ExecuteScalar(sqlSelectSecretario);
     //    //                if (objId is not null)
@@ -1817,7 +1825,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //    //                var sqlInsertSecretarioContratacao = @"
     //    //insert IGNORE into cf_funcionario_contratacao (id_cf_funcionario, id_cf_deputado, id_cf_funcionario_grupo_funcional, id_cf_funcionario_nivel, periodo_de, periodo_ate) 
-    //    //values (@id_cf_funcionario, @id_cf_deputado, (select id from cf_funcionario_grupo_funcional where nome like @grupo), (select id from cf_funcionario_nivel where nome like @nivel), @periodo_de, @periodo_ate)
+    //    //values (@id_cf_funcionario, @id_cf_deputado, (select id FROM camara.cf_funcionario_grupo_funcional where nome ILIKE @grupo), (select id FROM camara.cf_funcionario_nivel where nome ILIKE @nivel), @periodo_de, @periodo_ate)
     //    //-- ON DUPLICATE KEY UPDATE periodo_ate = @periodo_ate";
 
 
@@ -1908,57 +1916,57 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     }
 
     private Dictionary<string, string> colunasBanco = new Dictionary<string, string>();
-    public void DefineColunasRemuneracaoSecretarios()
-    {
-        colunasBanco = new Dictionary<string, string>();
-        // 1 - RemuneraÁ„o B·sica
-        colunasBanco.Add("a - RemuneraÁ„o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
-        colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
-        // 2 - RemuneraÁ„o Eventual/ProvisÛria
-        colunasBanco.Add("a - FunÁ„o ou Cargo em Comiss„o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
-        colunasBanco.Add("b - GratificaÁ„o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
-        colunasBanco.Add("c - FÈrias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
-        colunasBanco.Add("d - Outras RemuneraÁıes Eventuais/ProvisÛrias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
-        // 3 - Abono PermanÍncia
-        colunasBanco.Add("a - Abono PermanÍncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
-        // 4 - Descontos ObrigatÛrios(-)
-        colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
-        colunasBanco.Add("b - ContribuiÁ„o Previdenci·ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
-        colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
-        // 5 - RemuneraÁ„o apÛs Descontos ObrigatÛrios
-        colunasBanco.Add("a - RemuneraÁ„o apÛs Descontos ObrigatÛrios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
-        // 6 - Outros
-        colunasBanco.Add("a - Di·rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
-        colunasBanco.Add("b - AuxÌlios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
-        colunasBanco.Add("c - Vantagens IndenizatÛrias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
-    }
+    //public void DefineColunasRemuneracaoSecretarios()
+    //{
+    //    colunasBanco = new Dictionary<string, string>();
+    //    // 1 - Remunera√ß√£o B√°sica
+    //    colunasBanco.Add("a - Remunera√ß√£o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
+    //    colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
+    //    // 2 - Remunera√ß√£o Eventual/Provis√≥ria
+    //    colunasBanco.Add("a - Fun√ß√£o ou Cargo em Comiss√£o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
+    //    colunasBanco.Add("b - Gratifica√ß√£o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
+    //    colunasBanco.Add("c - F√©rias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
+    //    colunasBanco.Add("d - Outras Remunera√ß√µes Eventuais/Provis√≥rias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
+    //    // 3 - Abono Perman√™ncia
+    //    colunasBanco.Add("a - Abono Perman√™ncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
+    //    // 4 - Descontos Obrigat√≥rios(-)
+    //    colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
+    //    colunasBanco.Add("b - Contribui√ß√£o Previdenci√°ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
+    //    colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
+    //    // 5 - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios
+    //    colunasBanco.Add("a - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
+    //    // 6 - Outros
+    //    colunasBanco.Add("a - Di√°rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
+    //    colunasBanco.Add("b - Aux√≠lios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
+    //    colunasBanco.Add("c - Vantagens Indenizat√≥rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
+    //}
 
     //    public void ColetaRemuneracaoSecretarios()
     //    {
-    //        // 1 - RemuneraÁ„o B·sica
-    //        colunasBanco.Add("a - RemuneraÁ„o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
+    //        // 1 - Remunera√ß√£o B√°sica
+    //        colunasBanco.Add("a - Remunera√ß√£o Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
     //        colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
-    //        // 2 - RemuneraÁ„o Eventual/ProvisÛria
-    //        colunasBanco.Add("a - FunÁ„o ou Cargo em Comiss„o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
-    //        colunasBanco.Add("b - GratificaÁ„o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
-    //        colunasBanco.Add("c - FÈrias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
-    //        colunasBanco.Add("d - Outras RemuneraÁıes Eventuais/ProvisÛrias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
-    //        // 3 - Abono PermanÍncia
-    //        colunasBanco.Add("a - Abono PermanÍncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
-    //        // 4 - Descontos ObrigatÛrios(-)
+    //        // 2 - Remunera√ß√£o Eventual/Provis√≥ria
+    //        colunasBanco.Add("a - Fun√ß√£o ou Cargo em Comiss√£o", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
+    //        colunasBanco.Add("b - Gratifica√ß√£o Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
+    //        colunasBanco.Add("c - F√©rias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
+    //        colunasBanco.Add("d - Outras Remunera√ß√µes Eventuais/Provis√≥rias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
+    //        // 3 - Abono Perman√™ncia
+    //        colunasBanco.Add("a - Abono Perman√™ncia", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
+    //        // 4 - Descontos Obrigat√≥rios(-)
     //        colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
-    //        colunasBanco.Add("b - ContribuiÁ„o Previdenci·ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
+    //        colunasBanco.Add("b - Contribui√ß√£o Previdenci√°ria", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
     //        colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
-    //        // 5 - RemuneraÁ„o apÛs Descontos ObrigatÛrios
-    //        colunasBanco.Add("a - RemuneraÁ„o apÛs Descontos ObrigatÛrios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
+    //        // 5 - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios
+    //        colunasBanco.Add("a - Remunera√ß√£o ap√≥s Descontos Obrigat√≥rios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
     //        // 6 - Outros
-    //        colunasBanco.Add("a - Di·rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
-    //        colunasBanco.Add("b - AuxÌlios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
-    //        colunasBanco.Add("c - Vantagens IndenizatÛrias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
+    //        colunasBanco.Add("a - Di√°rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
+    //        colunasBanco.Add("b - Aux√≠lios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
+    //        colunasBanco.Add("c - Vantagens Indenizat√≥rias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
 
     //        var sqlDeputados = @"
     //SELECT f.id as id_cf_funcionario, f.chave 
-    //FROM cf_funcionario f
+    //FROM camara.cf_funcionario f
     //WHERE f.processado = 0
     //order BY f.id
     //";
@@ -1989,7 +1997,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        {
     //            if (secretario is null) continue;
 
-    //            logger.LogDebug("Inciando coleta da remuneraÁ„o para os funcionario {IdFuncionario}", secretario["id_cf_funcionario"]);
+    //            logger.LogDebug("Inciando coleta da remunera√ß√£o para os funcionario {IdFuncionario}", secretario["id_cf_funcionario"]);
     //            await ConsultarRemuneracaoSecretario(colunasBanco, secretario, context);
     //        }
     //    }
@@ -2015,7 +2023,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                IEnumerable<DeputadoFederalFuncionarioContratacao> contratacoes;
     //                lock (padlock)
     //                {
-    //                    var sqlUltimaRemuneracao = @"SELECT MAX(referencia) FROM cf_funcionario_remuneracao WHERE id_cf_funcionario = @id_cf_funcionario";
+    //                    var sqlUltimaRemuneracao = @"SELECT MAX(referencia) FROM camara.cf_funcionario_remuneracao WHERE id_cf_funcionario = @id_cf_funcionario";
     //                    var objUltimaRemuneracaoColetada = connection.ExecuteScalar(sqlUltimaRemuneracao, new { id_cf_funcionario = idFuncionario });
     //                    dtUltimaRemuneracaoColetada = !Convert.IsDBNull(objUltimaRemuneracaoColetada) ? Convert.ToDateTime(objUltimaRemuneracaoColetada) : DateTime.MinValue;
 
@@ -2051,7 +2059,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                    {
     //                        if (document.QuerySelector(".remuneracao-funcionario") != null)
     //                        {
-    //                            logger.LogError("RemuneraÁ„o indisponÌvel! Mensagem: {MensagemErro}", document.QuerySelector(".remuneracao-funcionario").TextContent.Trim());
+    //                            logger.LogError("Remunera√ß√£o indispon√≠vel! Mensagem: {MensagemErro}", document.QuerySelector(".remuneracao-funcionario").TextContent.Trim());
     //                            MarcarComoProcessado(idFuncionario);
     //                        }
 
@@ -2136,13 +2144,13 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                if (elMesSelecionadoNoCalendario.IsHidden || elMesSelecionadoNoCalendario.OuterHtml.Contains("display: none;") || mes > mesSelecionado)
     //                                {
     //                                    logger.LogDebug(
-    //                                        "N„o h· remuneraÁ„o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #1",
+    //                                        "N√£o h√° remunera√ß√£o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #1",
     //                                        elMesSelecionadoNoCalendario.TextContent.Trim().Split(" ")[1], mes, ano.Text);
     //                                    continue;
     //                                }
     //                                if (new DateTime(Convert.ToInt32(ano.InnerHtml), mes, 1) <= dtUltimaRemuneracaoColetada)
     //                                {
-    //                                    logger.LogDebug("RemuneraÁ„o j· coletada para {MesRemuneracao}/{AnoRemuneracao}", mes, ano.Text);
+    //                                    logger.LogDebug("Remunera√ß√£o ja coletada para {MesRemuneracao}/{AnoRemuneracao}", mes, ano.Text);
     //                                    continue;
     //                                }
 
@@ -2159,10 +2167,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                }
 
     //                                var dadosIndisponiveis = document.QuerySelectorAll(".remuneracao-funcionario");
-    //                                if (dadosIndisponiveis.Any() && dadosIndisponiveis[0].TextContent.Trim() == "Ainda n„o h· dados disponÌveis.")
+    //                                if (dadosIndisponiveis.Any() && dadosIndisponiveis[0].TextContent.Trim() == "Ainda n√£o h√° dados dispon√≠veis.")
     //                                {
     //                                    logger.LogDebug(
-    //                                        "N„o h· remuneraÁ„o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #2",
+    //                                        "N√£o h√° remunera√ß√£o para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #2",
     //                                        elMesSelecionadoNoCalendario.TextContent.Trim().Split(" ")[1], mes, ano.Text);
     //                                    continue;
     //                                }
@@ -2181,7 +2189,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //                                    using (logger.BeginScope(new Dictionary<string, object> { ["Folha"] = titulo }))
     //                                    {
-    //                                        if (titulo.Split("ñ")[0].Trim() != $"{mes:00}{ano.Text}")
+    //                                        if (titulo.Split("Perman√™ncia")[0].Trim() != $"{mes:00}{ano.Text}")
     //                                        {
     //                                            throw new NotImplementedException("Algo esta errado!");
     //                                        }
@@ -2191,9 +2199,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //                                        var cabecalho = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item");
     //                                        var categoriaFuncional = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Categoria funcional"))?.TextContent.Split(":")[1].Trim();
-    //                                        var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercÌcio"))?.TextContent.Split(":")[1].Trim();
+    //                                        var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exerc√≠cio"))?.TextContent.Split(":")[1].Trim();
     //                                        var cargo = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Cargo"))?.TextContent.Split(":")[1].Trim();
-    //                                        var nivel = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("FunÁ„o/cargo em comiss„o"))?.TextContent.Split(":")[1].Trim();
+    //                                        var nivel = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Fun√ß√£o/cargo em comiss√£o"))?.TextContent.Split(":")[1].Trim();
 
     //                                        var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
     //                                        foreach (var linha in linhas)
@@ -2209,7 +2217,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                        }
 
     //                                        byte tipo = 0;
-    //                                        switch (titulo.Split("ñ")[1].Trim())
+    //                                        switch (titulo.Split("ÔøΩ")[1].Trim())
     //                                        {
     //                                            case "FOLHA NORMAL":
     //                                                tipo = 1;
@@ -2220,10 +2228,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                            case "FOLHA COMPLEMENTAR ESPECIAL":
     //                                                tipo = 3;
     //                                                break;
-    //                                            case "FOLHA DE ADIANTAMENTO GRATIFICA«√O NATALINA":
+    //                                            case "FOLHA DE ADIANTAMENTO GRATIFICA√á√ÉO NATALINA":
     //                                                tipo = 4;
     //                                                break;
-    //                                            case "FOLHA DE GRATIFICA«√O NATALINA":
+    //                                            case "FOLHA DE GRATIFICA√á√ÉO NATALINA":
     //                                                tipo = 5;
     //                                                break;
     //                                            default:
@@ -2265,26 +2273,26 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                            {
     //                                                lock (padlock)
     //                                                {
-    //                                                    contratacao.IdCargo = connection.QuerySingleOrDefault<byte?>("SELECT id FROM cf_funcionario_cargo WHERE nome like @nome", new { nome = cargo });
+    //                                                    contratacao.IdCargo = connection.QuerySingleOrDefault<byte?>("SELECT id FROM camara.cf_funcionario_cargo WHERE nome ILIKE @nome", new { nome = cargo });
 
     //                                                    if (contratacao.IdGrupoFuncional == null && !string.IsNullOrEmpty(categoriaFuncional))
-    //                                                        contratacao.IdGrupoFuncional = connection.QuerySingleOrDefault<byte?>("SELECT id FROM cf_funcionario_grupo_funcional WHERE nome like @nome", new { nome = categoriaFuncional });
+    //                                                        contratacao.IdGrupoFuncional = connection.QuerySingleOrDefault<byte?>("SELECT id FROM camara.cf_funcionario_grupo_funcional WHERE nome ILIKE @nome", new { nome = categoriaFuncional });
 
     //                                                    if (contratacao.IdNivel == null && !string.IsNullOrEmpty(nivel))
-    //                                                        contratacao.IdNivel = connection.QuerySingleOrDefault<byte?>("SELECT id FROM cf_funcionario_nivel WHERE nome like @nome", new { nome = nivel });
+    //                                                        contratacao.IdNivel = connection.QuerySingleOrDefault<byte?>("SELECT id FROM camara.cf_funcionario_nivel WHERE nome ILIKE @nome", new { nome = nivel });
 
-    //                                                    connection.Update(contratacao);
+    //                                                    repositoryService.Update(contratacao);
     //                                                }
     //                                            }
     //                                        }
     //                                        else
     //                                        {
-    //                                            logger.LogWarning("N„o foi identificada a contrataÁ„o do funcionario {IdFuncionario} em {Mes}/{Ano}", idFuncionario, mes, ano.Text);
+    //                                            logger.LogWarning("N√£o foi identificada a contrata√ß√£o do funcionario {IdFuncionario} em {Mes}/{Ano}", idFuncionario, mes, ano.Text);
     //                                        }
 
     //                                        folhas.Add(folha);
 
-    //                                        logger.LogDebug("Inserida remuneraÁ„o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano.Text, titulo);
+    //                                        logger.LogDebug("Inserida remunera√ß√£o de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano.Text, titulo);
     //                                    }
     //                                }
     //                            }
@@ -2302,7 +2310,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                            {
     //                                try
     //                                {
-    //                                    connection.Insert(folha);
+    //                                    repositoryService.Insert(folha);
     //                                }
     //                                catch (Exception ex)
     //                                {
@@ -2394,7 +2402,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //                        if (categoria.StartsWith("Deputado")) categoria = "Deputado";
     //                        if (categoria.StartsWith("Ex-deputado")) categoria = "Ex-deputado";
-    //                        if (area == "ó") area = null;
+    //                        if (area == "ÔøΩ") area = null;
 
     //                        Console.WriteLine();
     //                        Console.WriteLine($"Funcionario: {nome}");
@@ -2414,12 +2422,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                        valoresDB += ", @cargo";
 
     //                                        break;
-    //                                    case "NÌvel":
+    //                                    case "N√≠vel":
     //                                        colunasDB += ", nivel";
     //                                        valoresDB += ", @nivel";
 
     //                                        break;
-    //                                    case "FunÁ„o comissionada":
+    //                                    case "Fun√ß√£o comissionada":
     //                                        colunasDB += ", funcao_comissionada";
     //                                        valoresDB += ", @funcao_comissionada";
 
@@ -2429,14 +2437,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //                                        valoresDB += ", @local_trabalho";
 
     //                                        break;
-    //                                    case "Data da designaÁ„o da funÁ„o":
+    //                                    case "Data da designa√ß√£o da fun√ß√£o":
     //                                        colunasDB += ", data_designacao_funcao";
     //                                        valoresDB += ", @data_designacao_funcao";
 
     //                                        break;
-    //                                    case "SituaÁ„o":
+    //                                    case "Situa√ß√£o":
     //                                    case "Categoria funcional":
-    //                                    case "¡rea de atuaÁ„o":
+    //                                    case "√°rea de atua√ß√£o":
     //                                        break;
     //                                    default:
     //                                        throw new NotImplementedException($"Vefificar beneficios do funcionario {nome}.");
@@ -2470,14 +2478,14 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     //            ExecuteNonQuery(@"
     //INSERT ignore INTO cf_funcionario(chave, nome)
-    //SELECT chave, nome FROM cf_funcionario_temp t");
+    //SELECT chave, nome FROM camara.cf_funcionario_temp t");
 
     //            ExecuteNonQuery(@"
     //INSERT INTO cf_funcionario_contratacao 
     //	(id_cf_deputado, id_cf_funcionario, id_cf_funcionario_grupo_funcional, id_cf_funcionario_cargo, id_cf_funcionario_nivel, id_cf_funcionario_funcao_comissionada, 
     //		id_cf_funcionario_area_atuacao, id_cf_funcionario_local_trabalho, id_cf_funcionario_situacao, periodo_de, periodo_ate)
     //SELECT NULL, f.id, gf.id, c.id, n.id, fc.id, aa.id, lt.id, s.id, t.data_designacao_funcao, null 
-    //FROM cf_funcionario_temp t
+    //FROM camara.cf_funcionario_temp t
     //JOIN cf_funcionario f ON f.chave = t.chave
     //LEFT JOIN cf_funcionario_grupo_funcional gf ON gf.nome = t.categoria_funcional
     //LEFT JOIN cf_funcionario_cargo c ON c.nome = t.cargo
@@ -2491,11 +2499,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     //        }
     //    }
 
-    //    #endregion ImportaÁ„o RemuneraÁ„o
+    //    #endregion Importa√ß√£o Remunera√ß√£o
 
     public void AtualizaParlamentarValores()
     {
-        var dt = connection.Query("select id from cf_deputado where processado != 2");
+        var dt = connection.Query("select id FROM camara.cf_deputado where processado != 2");
         object secretarios_ativos = 0;
         object valor_total_remuneracao;
         object valor_total_salario;
@@ -2506,12 +2514,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             try
             {
                 var obj = new { id_cf_deputado = Convert.ToInt32(dr.id) };
-                valor_total_salario = connection.ExecuteScalar("select sum(valor) from cf_deputado_remuneracao where id_cf_deputado=@id_cf_deputado;", obj);
-                valor_total_auxilio_moradia = connection.ExecuteScalar("select sum(valor) from cf_deputado_auxilio_moradia where id_cf_deputado=@id_cf_deputado;", obj);
-                valor_total_remuneracao = connection.ExecuteScalar("select sum(valor) from cf_deputado_verba_gabinete where id_cf_deputado=@id_cf_deputado;", obj);
+                valor_total_salario = connection.ExecuteScalar("select sum(valor) FROM camara.cf_deputado_remuneracao where id_cf_deputado=@id_cf_deputado;", obj);
+                valor_total_auxilio_moradia = connection.ExecuteScalar("select sum(valor) FROM camara.cf_deputado_auxilio_moradia where id_cf_deputado=@id_cf_deputado;", obj);
+                valor_total_remuneracao = connection.ExecuteScalar("select sum(valor) FROM camara.cf_deputado_verba_gabinete where id_cf_deputado=@id_cf_deputado;", obj);
 
                 if (Convert.IsDBNull(valor_total_remuneracao) || Convert.ToDecimal(valor_total_remuneracao) == 0)
-                    valor_total_remuneracao = connection.ExecuteScalar("select sum(valor_total) from cf_funcionario_remuneracao where id_cf_deputado=@id_cf_deputado;", obj);
+                    valor_total_remuneracao = connection.ExecuteScalar("select sum(valor_total) FROM camara.cf_funcionario_remuneracao where id_cf_deputado=@id_cf_deputado;", obj);
 
                 connection.Execute(@"
 update cf_deputado set 

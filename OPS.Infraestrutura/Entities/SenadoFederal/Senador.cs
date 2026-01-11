@@ -9,10 +9,10 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("codigo")]
-        public uint? Codigo { get; set; }
+        public int? Codigo { get; set; }
 
         [Column("nome")]
         [StringLength(255)]

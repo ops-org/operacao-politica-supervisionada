@@ -1,125 +1,212 @@
--- --------------------------------------------------------
--- Servidor:                     127.0.0.1
--- Versão do servidor:           8.0.40 - MySQL Community Server - GPL
--- OS do Servidor:               Win64
--- HeidiSQL Versão:              12.9.0.6999
--- --------------------------------------------------------
+/*
+ Navicat Premium Dump SQL
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+ Source Server         : Postgres WSL
+ Source Server Type    : PostgreSQL
+ Source Server Version : 160011 (160011)
+ Source Host           : 172.31.250.64:5432
+ Source Catalog        : ops
+ Source Schema         : public
 
--- Copiando estrutura para tabela ops.estado
-CREATE TABLE IF NOT EXISTS `estado` (
-  `id` tinyint unsigned NOT NULL COMMENT 'Código no IBGE',
-  `sigla` char(2) NOT NULL,
-  `nome` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `regiao` varchar(30) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `sigla` (`sigla`),
-  UNIQUE KEY `nome` (`nome`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='https://ibge.gov.br/explica/codigos-dos-municipios.php';
+ Target Server Type    : PostgreSQL
+ Target Server Version : 160011 (160011)
+ File Encoding         : 65001
 
--- Exportação de dados foi desmarcado.
+ Date: 08/01/2026 13:56:28
+*/
 
--- Copiando estrutura para tabela ops.parametros
-CREATE TABLE IF NOT EXISTS `parametros` (
-  `cf_deputado_ultima_atualizacao` datetime DEFAULT NULL,
-  `sf_senador_ultima_atualizacao` datetime DEFAULT NULL,
-  `cf_deputado_presenca_ultima_atualizacao` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for estado
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."estado";
+CREATE TABLE "public"."estado" (
+  "id" int2 NOT NULL,
+  "sigla" char(2) COLLATE "pg_catalog"."default" NOT NULL,
+  "nome" varchar(30) COLLATE "pg_catalog"."default" NOT NULL,
+  "regiao" varchar(30) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
+COMMENT ON COLUMN "public"."estado"."id" IS 'Código no IBGE';
+COMMENT ON TABLE "public"."estado" IS 'https://ibge.gov.br/explica/codigos-dos-municipios.php';
 
--- Copiando estrutura para tabela ops.partido
-CREATE TABLE IF NOT EXISTS `partido` (
-  `id` tinyint unsigned NOT NULL,
-  `legenda` tinyint unsigned DEFAULT NULL,
-  `sigla` varchar(20) NOT NULL,
-  `nome` varchar(100) DEFAULT NULL,
-  `imagem` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `sigla` (`sigla`),
-  UNIQUE KEY `nome` (`nome`),
-  KEY `legenda` (`legenda`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Table structure for importacao
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."importacao";
+CREATE TABLE "public"."importacao" (
+  "id" int2 NOT NULL,
+  "chave" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
+  "url" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "info" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "parlamentar_inicio" timestamp(6),
+  "parlamentar_fim" timestamp(6),
+  "despesas_inicio" timestamp(6),
+  "despesas_fim" timestamp(6),
+  "primeira_despesa" date,
+  "ultima_despesa" date,
+  "id_estado" int2
+)
+;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for partido
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."partido";
+CREATE TABLE "public"."partido" (
+  "id" int2 NOT NULL,
+  "legenda" int2,
+  "sigla" varchar(20) COLLATE "pg_catalog"."default" NOT NULL,
+  "nome" varchar(100) COLLATE "pg_catalog"."default",
+  "imagem" varchar(100) COLLATE "pg_catalog"."default"
+)
+;
 
--- Copiando estrutura para tabela ops.partido_historico
-CREATE TABLE IF NOT EXISTS `partido_historico` (
-  `id` tinyint NOT NULL AUTO_INCREMENT,
-  `legenda` tinyint DEFAULT NULL,
-  `sigla` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `sede` char(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `fundacao` date DEFAULT NULL COMMENT 'Fundação',
-  `registro_solicitacao` date DEFAULT NULL COMMENT 'Solitação de habilitação ou registro',
-  `registro_provisorio` date DEFAULT NULL COMMENT 'Registro provisório',
-  `registro_definitivo` date DEFAULT NULL COMMENT 'Registro definitivo',
-  `extincao` date DEFAULT NULL COMMENT 'Extinção',
-  `motivo` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='https://www.partidosdobrasil.com/';
+-- ----------------------------
+-- Table structure for partido_historico
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."partido_historico";
+CREATE TABLE "public"."partido_historico" (
+  "id" int2 NOT NULL,
+  "legenda" int2,
+  "sigla" varchar(20) COLLATE "pg_catalog"."default",
+  "nome" varchar(100) COLLATE "pg_catalog"."default",
+  "sede" char(2) COLLATE "pg_catalog"."default",
+  "fundacao" date,
+  "registro_solicitacao" date,
+  "registro_provisorio" date,
+  "registro_definitivo" date,
+  "extincao" date,
+  "motivo" varchar(500) COLLATE "pg_catalog"."default"
+)
+;
+COMMENT ON COLUMN "public"."partido_historico"."fundacao" IS 'Fundação';
+COMMENT ON COLUMN "public"."partido_historico"."registro_solicitacao" IS 'Solitação de habilitação ou registro';
+COMMENT ON COLUMN "public"."partido_historico"."registro_provisorio" IS 'Registro provisório';
+COMMENT ON COLUMN "public"."partido_historico"."registro_definitivo" IS 'Registro definitivo';
+COMMENT ON COLUMN "public"."partido_historico"."extincao" IS 'Extinção';
+COMMENT ON TABLE "public"."partido_historico" IS 'https://www.partidosdobrasil.com/';
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for pessoa
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."pessoa";
+CREATE TABLE "public"."pessoa" (
+  "id" int8 NOT NULL,
+  "cpf" varchar(15) COLLATE "pg_catalog"."default",
+  "nome" varchar(100) COLLATE "pg_catalog"."default"
+)
+;
 
--- Copiando estrutura para tabela ops.pessoa
-CREATE TABLE IF NOT EXISTS `pessoa` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `cpf` varchar(15) DEFAULT NULL,
-  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=57345 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Table structure for pessoa_new
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."pessoa_new";
+CREATE TABLE "public"."pessoa_new" (
+  "id" int8 NOT NULL,
+  "cpf" varchar(15) COLLATE "pg_catalog"."default" NOT NULL,
+  "cpf_parcial" varchar(6) COLLATE "pg_catalog"."default",
+  "nome" varchar(100) COLLATE "pg_catalog"."default",
+  "data_nascimento" date,
+  "id_nacionalidade" int2,
+  "id_estado_nascimento" int4,
+  "municipio_nascimento" varchar(100) COLLATE "pg_catalog"."default",
+  "id_genero" int2,
+  "id_etnia" int2,
+  "id_estado_civil" int2,
+  "id_grau_instrucao" int2,
+  "id_ocupacao" int4
+)
+;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Table structure for profissao
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."profissao";
+CREATE TABLE "public"."profissao" (
+  "id" int4 NOT NULL,
+  "descricao" varchar(100) COLLATE "pg_catalog"."default"
+)
+;
 
--- Copiando estrutura para tabela ops.pessoa_new
-CREATE TABLE IF NOT EXISTS `pessoa_new` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `cpf` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `cpf_parcial` varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `data_nascimento` date DEFAULT NULL,
-  `id_nacionalidade` tinyint unsigned DEFAULT NULL,
-  `id_estado_nascimento` mediumint unsigned DEFAULT NULL,
-  `municipio_nascimento` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `id_genero` tinyint unsigned DEFAULT NULL,
-  `id_etnia` tinyint unsigned DEFAULT NULL,
-  `id_estado_civil` tinyint unsigned DEFAULT NULL,
-  `id_grau_instrucao` tinyint unsigned DEFAULT NULL,
-  `id_ocupacao` mediumint unsigned DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `cpf` (`cpf`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Table structure for trecho_viagem
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."trecho_viagem";
+CREATE TABLE "public"."trecho_viagem" (
+  "id" int4 NOT NULL,
+  "descricao" varchar(200) COLLATE "pg_catalog"."default" NOT NULL
+)
+;
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Indexes structure for table estado
+-- ----------------------------
+CREATE UNIQUE INDEX "sigla" ON "public"."estado" USING btree (
+  "sigla" COLLATE "pg_catalog"."default" "pg_catalog"."bpchar_ops" ASC NULLS LAST
+);
 
--- Copiando estrutura para tabela ops.profissao
-CREATE TABLE IF NOT EXISTS `profissao` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `descricao` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=89 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Primary Key structure for table estado
+-- ----------------------------
+ALTER TABLE "public"."estado" ADD CONSTRAINT "estado_pkey" PRIMARY KEY ("id");
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Indexes structure for table partido
+-- ----------------------------
+CREATE INDEX "legenda" ON "public"."partido" USING btree (
+  "legenda" "pg_catalog"."int2_ops" ASC NULLS LAST
+);
 
--- Copiando estrutura para tabela ops.trecho_viagem
-CREATE TABLE IF NOT EXISTS `trecho_viagem` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `descricao` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31538 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- ----------------------------
+-- Primary Key structure for table partido
+-- ----------------------------
+ALTER TABLE "public"."partido" ADD CONSTRAINT "partido_pkey" PRIMARY KEY ("id");
 
--- Exportação de dados foi desmarcado.
+-- ----------------------------
+-- Primary Key structure for table partido_historico
+-- ----------------------------
+ALTER TABLE "public"."partido_historico" ADD CONSTRAINT "partido_historico_pkey" PRIMARY KEY ("id");
 
-/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
-/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
-/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+-- ----------------------------
+-- Primary Key structure for table pessoa
+-- ----------------------------
+ALTER TABLE "public"."pessoa" ADD CONSTRAINT "pessoa_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table pessoa_new
+-- ----------------------------
+CREATE UNIQUE INDEX "cpf" ON "public"."pessoa_new" USING btree (
+  "cpf" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
+-- Primary Key structure for table pessoa_new
+-- ----------------------------
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "pessoa_new_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table profissao
+-- ----------------------------
+ALTER TABLE "public"."profissao" ADD CONSTRAINT "profissao_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table trecho_viagem
+-- ----------------------------
+ALTER TABLE "public"."trecho_viagem" ADD CONSTRAINT "trecho_viagem_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Foreign Keys structure for table importacao
+-- ----------------------------
+ALTER TABLE "public"."importacao" ADD CONSTRAINT "importacao_id_estado_fkey" FOREIGN KEY ("id_estado") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Keys structure for table pessoa_new
+-- ----------------------------
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_estado_civil" FOREIGN KEY ("id_estado_civil") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_estado_nascimento" FOREIGN KEY ("id_estado_nascimento") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_etnia" FOREIGN KEY ("id_etnia") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_genero" FOREIGN KEY ("id_genero") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_grau_instrucao" FOREIGN KEY ("id_grau_instrucao") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_nacionalidade" FOREIGN KEY ("id_nacionalidade") REFERENCES "public"."estado" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."pessoa_new" ADD CONSTRAINT "fk_pessoa_new_ocupacao" FOREIGN KEY ("id_ocupacao") REFERENCES "public"."profissao" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

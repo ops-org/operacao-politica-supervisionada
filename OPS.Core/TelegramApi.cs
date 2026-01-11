@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using System.Threading;
-using OPS.Core.Entity;
+using OPS.Core.DTO;
 using RestSharp;
 
 namespace OPS.Core

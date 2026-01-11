@@ -1,8 +1,6 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using AngleSharp;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Assembleias.Estados.Para.Entities;

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
-using System.Linq;
-using System.Reflection;
 using Dapper;
 
 namespace OPS.Importador.Utilities;
@@ -23,13 +20,13 @@ public class NpgsqlDateTimeHandler : SqlMapper.ITypeHandler
         {
             if (value is DateTime)
                 return value;
-            
+
             if (destType == typeof(DateTime))
             {
                 if (DateTime.TryParse(value.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
                     return parsed;
             }
-            
+
             return Convert.ChangeType(value, destType, CultureInfo.InvariantCulture);
         }
         catch

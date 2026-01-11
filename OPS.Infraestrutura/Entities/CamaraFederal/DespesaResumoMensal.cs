@@ -8,15 +8,15 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id_cf_deputado")]
-        public uint IdDeputado { get; set; }
+        public int IdDeputado { get; set; }
 
         [Key]
         [Column("ano")]
-        public ushort Ano { get; set; }
+        public short Ano { get; set; }
 
         [Key]
         [Column("mes")]
-        public ushort Mes { get; set; }
+        public short Mes { get; set; }
 
         [Column("valor_total", TypeName = "decimal(10,2)")]
         public decimal? ValorTotal { get; set; }

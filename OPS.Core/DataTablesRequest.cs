@@ -35,7 +35,6 @@ namespace OPS.Core
     public class DataTablesRequest
     {
         public Dictionary<string, object> Filters { get; set; }
-        public int Draw { get; set; }
         public int Length { get; set; }
         public int Start { get; set; }
         public List<Order> Order { get; set; }

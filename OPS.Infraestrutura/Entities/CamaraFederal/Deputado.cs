@@ -9,10 +9,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_deputado")]
-        public uint? IdDeputado { get; set; }
+        public int? IdDeputado { get; set; }
 
         [Column("id_partido")]
         public byte IdPartido { get; set; }
@@ -21,7 +21,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public byte? IdEstado { get; set; }
 
         [Column("id_cf_gabinete")]
-        public ushort? IdGabinete { get; set; }
+        public short? IdGabinete { get; set; }
 
         [Column("cpf")]
         [StringLength(15)]

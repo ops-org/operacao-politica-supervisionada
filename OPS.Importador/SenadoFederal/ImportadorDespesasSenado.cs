@@ -1,28 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using CsvHelper;
 using Dapper;
-using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
-using OPS.Core.Entity;
+using Npgsql;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.SenadoFederal;
-using OPS.Infraestrutura.Factories;
-using RestSharp;
 
 namespace OPS.Importador.SenadoFederal
 {
@@ -35,7 +23,7 @@ namespace OPS.Importador.SenadoFederal
     {
         protected readonly ILogger<ImportadorDespesasSenado> logger;
         protected readonly IDbConnection connection;
-        protected readonly AppDbContextFactory dbContextFactory;
+        protected readonly AppDbContext dbContext;
 
         public string rootPath { get; init; }
         public string tempPath { get; init; }
@@ -50,7 +38,7 @@ namespace OPS.Importador.SenadoFederal
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
             connection = serviceProvider.GetService<IDbConnection>();
-            dbContextFactory = serviceProvider.GetService<AppDbContextFactory>();
+            dbContext = serviceProvider.GetService<AppDbContext>();
 
             var configuration = serviceProvider.GetService<IConfiguration>();
             rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -116,7 +104,7 @@ namespace OPS.Importador.SenadoFederal
 
             if (importacaoIncremental && File.Exists(caminhoArquivo))
             {
-                var arquivoDB = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+                var arquivoDB = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
                 if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
                 {
                     logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
@@ -141,11 +129,10 @@ namespace OPS.Importador.SenadoFederal
             httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
 
             string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-            var arquivoChecksum = connection.GetList<ArquivoChecksum>(new { nome = caminhoArquivoDb }).FirstOrDefault();
+            var arquivoChecksum = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
             if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
             {
                 arquivoChecksum.Verificacao = DateTime.UtcNow;
-                connection.Update(arquivoChecksum);
 
                 logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
 
@@ -159,11 +146,11 @@ namespace OPS.Importador.SenadoFederal
             {
                 logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
 
-                connection.Insert(new ArquivoChecksum()
+                dbContext.ArquivoChecksums.Add(new ArquivoChecksum()
                 {
                     Nome = caminhoArquivoDb,
                     Checksum = checksum,
-                    TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length,
+                    TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length,
                     Criacao = DateTime.UtcNow,
                     Atualizacao = DateTime.UtcNow,
                     Verificacao = DateTime.UtcNow
@@ -176,15 +163,15 @@ namespace OPS.Importador.SenadoFederal
                     logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
 
                     arquivoChecksum.Checksum = checksum;
-                    arquivoChecksum.TamanhoBytes = (uint)new FileInfo(caminhoArquivoTmp).Length;
+                    arquivoChecksum.TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length;
 
                 }
 
                 arquivoChecksum.Atualizacao = DateTime.UtcNow;
                 arquivoChecksum.Verificacao = DateTime.UtcNow;
-                connection.Update(arquivoChecksum);
             }
 
+            dbContext.SaveChanges();
             File.Move(caminhoArquivoTmp, caminhoArquivo, true);
             return true;
         }
@@ -211,17 +198,17 @@ namespace OPS.Importador.SenadoFederal
             int VALOR_REEMBOLSADO = indice++;
             int COD_DOCUMENTO = indice++;
 
-            using (var context = dbContextFactory.CreateDbContext())
+            //using (var context = dbContextFactory.CreateDbContext())
             {
                 if (gerarHash)
                 {
                     int hashIgnorado = 0;
-                    using (var connection = context.Database.GetDbConnection())
+                    using (var connection = dbContext.Database.GetDbConnection())
                     {
                         await connection.OpenAsync();
                         using (var command = connection.CreateCommand())
                         {
-                            command.CommandText = $"select id, hash from sf_despesa where ano={ano} and hash IS NOT NULL";
+                            command.CommandText = $"select id, hash FROM senado.sf_despesa where ano={ano} and hash IS NOT NULL";
                             using (var dReader = await command.ExecuteReaderAsync())
                                 while (await dReader.ReadAsync())
                                 {
@@ -239,7 +226,7 @@ namespace OPS.Importador.SenadoFederal
                         logger.LogWarning("{Total} Hashes Duplicados", hashIgnorado);
                 }
 
-                await LimpaDespesaTemporaria(context);
+                await LimpaDespesaTemporaria(dbContext);
 
                 using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
                 {
@@ -311,11 +298,11 @@ namespace OPS.Importador.SenadoFederal
                                 continue;
                             }
                         }
-                        
+
                         var allParameters = parameters.Concat(new[] { new NpgsqlParameter("hash", hash) }).ToArray();
 
-                        await context.Database.ExecuteSqlRawAsync(
-                            @"INSERT INTO ops_tmp.sf_despesa_temp (
+                        await dbContext.Database.ExecuteSqlRawAsync(
+                            @"INSERT INTO temp.sf_despesa_temp (
 						ano, mes, senador, tipo_despesa, cnpj_cpf, fornecedor, documento, data, detalhamento, valor_reembolsado, cod_documento, hash
 					) VALUES (
 						@ano, @mes, @senador, @tipo_despesa, @cnpj_cpf, @fornecedor, @documento, @data, @detalhamento, @valor_reembolsado, @cod_documento, @hash
@@ -324,7 +311,7 @@ namespace OPS.Importador.SenadoFederal
                         if (linhasInserida++ == 10000)
                         {
                             logger.LogInformation("Processando lote {Lote}", ++lote);
-                            await ProcessarDespesasTemp(context, ano);
+                            await ProcessarDespesasTemp(dbContext, ano);
                             linhasInserida = 0;
                         }
                     }
@@ -334,7 +321,7 @@ namespace OPS.Importador.SenadoFederal
                 {
                     foreach (var id in dc.Values)
                     {
-                        await context.Database.ExecuteSqlRawAsync("delete from sf_despesa where id=@id", new NpgsqlParameter("id", id));
+                        await dbContext.Database.ExecuteSqlRawAsync("delete FROM senado.sf_despesa where id=@id", new NpgsqlParameter("id", id));
                     }
 
                     logger.LogInformation("Removendo {Total} despesas", dc.Values.Count);
@@ -343,16 +330,16 @@ namespace OPS.Importador.SenadoFederal
                 if (linhasInserida > 0)
                 {
                     logger.LogInformation("Processando lote {Lote}", ++lote);
-                    await ProcessarDespesasTemp(context, ano);
+                    await ProcessarDespesasTemp(dbContext, ano);
                 }
 
-                await ValidaImportacao(context, ano);
+                await ValidaImportacao(dbContext, ano);
 
                 if (ano == DateTime.Now.Year)
                 {
-                    await AtualizaParlamentarValores(context);
-                    await AtualizaCampeoesGastos(context);
-                    await AtualizaResumoMensal(context);
+                    await AtualizaParlamentarValores(dbContext);
+                    await AtualizaCampeoesGastos(dbContext);
+                    await AtualizaResumoMensal(dbContext);
                 }
             }
         }
@@ -372,7 +359,7 @@ namespace OPS.Importador.SenadoFederal
 
             var totalFinal = context.Database.GetDbConnection().ExecuteScalar<int>($@"
 select count(1) 
-from sf_despesa d 
+FROM senado.sf_despesa d 
 where d.ano_mes between {ano}01 and {ano}12");
 
             if (linhasProcessadasAno != totalFinal)
@@ -380,7 +367,7 @@ where d.ano_mes between {ano}01 and {ano}12");
                     linhasProcessadasAno, totalFinal);
 
             var despesasSemParlamentar = context.Database.GetDbConnection().ExecuteScalar<int>(@"
-select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) from sf_senador)");
+select count(1) from temp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) FROM senado.sf_senador)");
 
             if (despesasSemParlamentar > 0)
                 logger.LogError("Há deputados não identificados!");
@@ -389,28 +376,28 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
         private async Task CorrigeDespesas(AppDbContext context)
         {
             await context.Database.ExecuteSqlRawAsync(@"
-			UPDATE ops_tmp.sf_despesa_temp 
+			UPDATE temp.sf_despesa_temp 
 			SET tipo_despesa = 'Aquisição de material de consumo para uso no escritório político' 
-			WHERE tipo_despesa LIKE 'Aquisição de material de consumo para uso no escritório político%';
+			WHERE tipo_despesa ILIKE 'Aquisição de material de consumo para uso no escritório político%';
 
-			UPDATE ops_tmp.sf_despesa_temp 
+			UPDATE temp.sf_despesa_temp 
 			SET tipo_despesa = 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços' 
-			WHERE tipo_despesa LIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';
+			WHERE tipo_despesa ILIKE 'Contratação de consultorias, assessorias, pesquisas, trabalhos técnicos e outros serviços%';
 
-			UPDATE ops_tmp.sf_despesa_temp
+			UPDATE temp.sf_despesa_temp
 			SET tipo_despesa = '<Não especificado>'
 			WHERE tipo_despesa = '';
 		");
-		}
+        }
 
         //private string InsereSenadorFaltante()
         //{
-        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) from sf_senador);");
+        //    //object total = banco.ExecuteScalar(@"select count(1) from temp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) FROM senado.sf_senador);");
         //    //if (Convert.ToInt32(total) > 0)
         //    //{
         //    //	CarregaSenadoresAtuais();
 
-        //    //object total = banco.ExecuteScalar(@"select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) from sf_senador);");
+        //    //object total = banco.ExecuteScalar(@"select count(1) from temp.sf_despesa_temp where senador  not in (select coalesce(nome_importacao, nome) FROM senado.sf_senador);");
         //    //if (Convert.ToInt32(total) > 0)
         //    //{
         //    //    throw new Exception("Existem despesas de senadores que não estão cadastrados!");
@@ -425,7 +412,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(@"
 			INSERT INTO fornecedor (nome, cnpj_cpf)
 			select MAX(dt.fornecedor), dt.cnpj_cpf
-			from ops_tmp.sf_despesa_temp dt
+			from temp.sf_despesa_temp dt
 			left join fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
 			where dt.cnpj_cpf is not null
 			and f.id is null
@@ -470,7 +457,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
 					d.detalhamento,
 					d.valor_reembolsado,
 					d.hash
-				FROM ops_tmp.sf_despesa_temp d
+				FROM temp.sf_despesa_temp d
 				inner join sf_senador p on coalesce(p.nome_importacao, p.nome) = d.senador
 				inner join sf_despesa_tipo dt on dt.descricao = d.tipo_despesa
 				inner join fornecedor f on f.cnpj_cpf = d.cnpj_cpf;
@@ -482,12 +469,12 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
             if (rowsAffected > 0)
                 logger.LogInformation("{Qtd} despesas cadastradas.", rowsAffected);
 
-            var totalTemp = context.Database.GetDbConnection().ExecuteScalar<int>("select count(1) from ops_tmp.sf_despesa_temp");
+            var totalTemp = context.Database.GetDbConnection().ExecuteScalar<int>("select count(1) from temp.sf_despesa_temp");
             if (rowsAffected != totalTemp)
                 logger.LogWarning("Há {Qtd} registros que não foram importados corretamente!", totalTemp - rowsAffected);
 
             //         banco.ExecuteNonQuery(@"
-            //	UPDATE ops_tmp.sf_despesa_temp t 
+            //	UPDATE temp.sf_despesa_temp t 
             //	inner join sf_senador p on coalesce(p.nome_importacao, p.nome) = t.senador
             //	inner join sf_despesa_tipo dt on dt.descricao = t.tipo_despesa
             //	inner join fornecedor f on f.cnpj_cpf = t.cnpj_cpf
@@ -519,7 +506,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
         private async Task LimpaDespesaTemporaria(AppDbContext context)
         {
             await context.Database.ExecuteSqlRawAsync(@"
-			truncate table ops_tmp.sf_despesa_temp;
+			truncate table temp.sf_despesa_temp;
 		");
         }
 
@@ -527,15 +514,15 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
         {
             await context.Database.ExecuteSqlRawAsync("UPDATE sf_senador SET valor_total_ceaps=0;");
 
-            var dt = context.Database.GetDbConnection().Query<int>("select id from sf_senador\n\t\t\t\t\tWHERE id IN (\n\t\t\t\t\tselect distinct id_sf_senador\n\t\t\t\t\tfrom sf_despesa\n\t\t\t\t)", new NpgsqlParameter("ano", DateTime.Now.Year));
-            
+            var dt = context.Database.GetDbConnection().Query<int>("select id FROM senado.sf_senador\n\t\t\t\t\tWHERE id IN (\n\t\t\t\t\tselect distinct id_sf_senador\n\t\t\t\t\tFROM senado.sf_despesa\n\t\t\t\t)", new NpgsqlParameter("ano", DateTime.Now.Year));
+
             foreach (var id in dt)
             {
-                var valor_total_ceaps = context.Database.GetDbConnection().ExecuteScalar<int>("select sum(valor) from sf_despesa where id_sf_senador=@id_sf_senador",
+                var valor_total_ceaps = context.Database.GetDbConnection().ExecuteScalar<int>("select sum(valor) FROM senado.sf_despesa where id_sf_senador=@id_sf_senador",
                     new NpgsqlParameter("id_sf_senador", id));
 
                 await context.Database.ExecuteSqlRawAsync(
-                    @"update sf_senador set \n\t\t\t\t\tvalor_total_ceaps=@valor_total_ceaps\n\t\t\t\t\twhere id=@id_sf_senador", 
+                    @"update sf_senador set \n\t\t\t\t\tvalor_total_ceaps=@valor_total_ceaps\n\t\t\t\t\twhere id=@id_sf_senador",
                     new NpgsqlParameter("valor_total_ceaps", valor_total_ceaps),
                     new NpgsqlParameter("id_sf_senador", id));
             }
@@ -571,7 +558,7 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
 \t\t\t\tinsert into sf_despesa_resumo_mensal
 \t\t\t\t(ano, mes, valor) (
 \t\t\t\t\tselect ano, mes, sum(valor)
-\t\t\t\t\tfrom sf_despesa
+\t\t\t\t\tFROM senado.sf_despesa
 \t\t\t\t\tgroup by ano, mes
 \t\t\t\t);";
 
@@ -580,14 +567,14 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
 
         public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
         {
-            var importacao = connection.GetList<Importacao>(new { chave = "Senado" }).FirstOrDefault();
+            var importacao = dbContext.Importacoes.FirstOrDefault(x => x.Chave == "Senado");
             if (importacao == null)
             {
                 importacao = new Importacao()
                 {
                     Chave = "Senado"
                 };
-                importacao.Id = (ushort)connection.Insert(importacao);
+                dbContext.Importacoes.Add(importacao);
             }
 
             if (dInicio != null)
@@ -600,18 +587,18 @@ select count(1) from ops_tmp.sf_despesa_temp where senador  not in (select coale
             {
                 importacao.DespesasFim = dFim.Value;
 
-                var sql = "select min(data_emissao) as primeira_despesa, max(data_emissao) as ultima_despesa from sf_despesa";
+                var sql = "select min(data_emissao) as primeira_despesa, max(data_emissao) as ultima_despesa from senado.sf_despesa";
                 using (var dReader = connection.ExecuteReader(sql))
                 {
                     if (dReader.Read())
                     {
-                        importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["primeira_despesa"]) : (DateTime?)null;
-                        importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? Convert.ToDateTime(dReader["ultima_despesa"]) : (DateTime?)null;
+                        importacao.PrimeiraDespesa = dReader["primeira_despesa"] != DBNull.Value ? DateOnly.Parse(dReader["primeira_despesa"].ToString()) : (DateOnly?)null;
+                        importacao.UltimaDespesa = dReader["ultima_despesa"] != DBNull.Value ? DateOnly.Parse(dReader["ultima_despesa"].ToString()) : (DateOnly?)null;
                     }
                 }
             }
 
-            connection.Update(importacao);
+            dbContext.SaveChanges();
         }
     }
 }

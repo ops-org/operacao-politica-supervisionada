@@ -12,7 +12,6 @@ public partial class AppDbContext
     public DbSet<FornecedorAtividade> FornecedorAtividades { get; set; }
     public DbSet<FornecedorAtividadeSecundaria> FornecedorAtividadesSecundarias { get; set; }
     public DbSet<FornecedorNaturezaJuridica> FornecedorNaturezaJuridicas { get; set; }
-    public DbSet<ForcecedorCnpjIncorreto> ForcecedorCnpjIncorretos { get; set; }
     public DbSet<FornecedorFaixaEtaria> FornecedorFaixaEtarias { get; set; }
     public DbSet<FornecedorSocioQualificacao> FornecedorSocioQualificacoes { get; set; }
 }
@@ -25,30 +24,44 @@ public static class FornecedorConfigurations
         modelBuilder.Entity<FornecedorInfo>(entity =>
         {
             entity.HasKey(e => e.IdFornecedor);
-            entity.HasOne(e => e.Fornecedor).WithOne(f => f.FornecedorInfo).HasForeignKey<FornecedorInfo>(e => e.IdFornecedor);
+            
+            // Temporarily remove navigation property configurations to prevent shadow properties
+            // Configure the relationship with FornecedorNaturezaJuridica
+            // entity.HasOne(e => e.FornecedorNaturezaJuridica)
+            //       .WithMany()
+            //       .HasForeignKey(e => e.IdFornecedorNaturezaJuridica);
+            
+            // Configure the relationship with FornecedorAtividade
+            // entity.HasOne(e => e.FornecedorAtividadePrincipal)
+            //       .WithMany()
+            //       .HasForeignKey(e => e.IdFornecedorAtividadePrincipal);
+            
             entity.ToTable("fornecedor_info", "fornecedor");
         });
     }
 
     public static void ConfigureFornecedorSocio(this ModelBuilder modelBuilder)
     {
-        // Configure FornecedorSocio
+        // Configure FornecedorSocio - minimal configuration to avoid complex relationships
         modelBuilder.Entity<FornecedorSocio>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.HasOne(e => e.Fornecedor).WithMany(f => f.FornecedorSocios).HasForeignKey(e => e.IdFornecedor);
             
-            // Configure relationship to FornecedorSocioQualificacao
-            entity.HasOne(e => e.FornecedorSocioQualificacao)
-                  .WithMany(q => q.FornecedorSocios)
-                  .HasForeignKey(e => e.IdFornecedorSocioQualificacao);
-            
-            // Configure relationship to FornecedorSocioRepresentanteQualificacao
-            entity.HasOne(e => e.FornecedorSocioRepresentanteQualificacao)
-                  .WithMany()
-                  .HasForeignKey(e => e.IdFornecedorSocioRepresentanteQualificacao);
-            
+            // Only configure the essential relationship to Fornecedor
+            //entity.HasOne(e => e.Fornecedor).WithMany(f => f.FornecedorSocios).HasForeignKey(e => e.IdFornecedor);
+
+            // Explicitly configure all properties to prevent shadow property creation
+            entity.Property(e => e.IdFornecedorFaixaEtaria).HasColumnName("id_fornecedor_faixa_etaria");
+            entity.Property(e => e.IdFornecedorSocioQualificacao).HasColumnName("id_fornecedor_socio_qualificacao");
+            entity.Property(e => e.IdFornecedorSocioRepresentanteQualificacao).HasColumnName("id_fornecedor_socio_representante_qualificacao");
+
+            // Ignore all navigation properties that might cause shadow properties
+            entity.Ignore("FornecedorSocioQualificacao");
+            entity.Ignore("FornecedorSocioRepresentanteQualificacao");
+            entity.Ignore("FornecedorFaixaEtariaId");
+            entity.Ignore("FornecedorFaixaEtariaId1");
+
             entity.ToTable("fornecedor_socio", "fornecedor");
         });
     }
@@ -65,16 +78,6 @@ public static class FornecedorConfigurations
         });
     }
 
-    public static void ConfigureFornecedorCnpjIncorreto(this ModelBuilder modelBuilder)
-    {
-        // Configure FornecedorCnpjIncorreto
-        modelBuilder.Entity<ForcecedorCnpjIncorreto>(entity =>
-        {
-            entity.HasKey(e => e.CnpjIncorreto);
-            entity.ToTable("fornecedor_cnpj_incorreto", "fornecedor");
-        });
-    }
-
     public static void ConfigureFornecedorFaixaEtaria(this ModelBuilder modelBuilder)
     {
         // Configure FornecedorFaixaEtaria
@@ -82,6 +85,7 @@ public static class FornecedorConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
+            
             entity.ToTable("fornecedor_faixa_etaria", "fornecedor");
         });
     }
@@ -93,6 +97,7 @@ public static class FornecedorConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
+            
             entity.ToTable("fornecedor_socio_qualificacao", "fornecedor");
         });
     }
@@ -102,12 +107,38 @@ public static class FornecedorConfigurations
         modelBuilder.ConfigureFornecedorInfo();
         modelBuilder.ConfigureFornecedorSocio();
         modelBuilder.ConfigureFornecedorAtividadeSecundaria();
-        modelBuilder.ConfigureFornecedorCnpjIncorreto();
         modelBuilder.ConfigureFornecedorFaixaEtaria();
         modelBuilder.ConfigureFornecedorSocioQualificacao();
-        
+
         // Configure remaining entities with schema
-        modelBuilder.Entity<Fornecedor>(entity => entity.ToTable("fornecedor", "fornecedor"));
+        modelBuilder.Entity<Fornecedor>(entity => 
+        {
+            entity.ToTable("fornecedor", "fornecedor");
+
+            //// Explicitly configure all properties to prevent shadow property creation
+            //entity.Property(e => e.Id).HasColumnName("id");
+            //entity.Property(e => e.CnpjCpf).HasColumnName("cnpj_cpf");
+            //entity.Property(e => e.Nome).HasColumnName("nome");
+            //entity.Property(e => e.Categoria).HasColumnName("categoria");
+            //entity.Property(e => e.Doador).HasColumnName("doador");
+            //entity.Property(e => e.Controle).HasColumnName("controle");
+            //entity.Property(e => e.Mensagem).HasColumnName("mensagem");
+
+            // Configure the FornecedorInfo relationship to prevent shadow properties
+            entity.HasOne(e => e.FornecedorInfo)
+                  .WithOne(f => f.Fornecedor)
+                  .HasForeignKey<FornecedorInfo>(f => f.IdFornecedor);
+
+            //// Ignore ALL potential shadow properties that EF might try to create
+            //entity.Ignore("FornecedorNaturezaJuridicaId");
+            //entity.Ignore("FornecedorNaturezaJuridicaId1");
+            //entity.Ignore("FornecedorNaturezaJuridicaId2");
+            //entity.Ignore("FornecedorAtividadePrincipalId");
+            //entity.Ignore("FornecedorAtividadePrincipalId1");
+            //entity.Ignore("FornecedorAtividadePrincipalId2");
+            //entity.Ignore("FornecedorInfoId");
+            //entity.Ignore("FornecedorInfoId1");
+        });
         modelBuilder.Entity<FornecedorAtividade>(entity => entity.ToTable("fornecedor_atividade", "fornecedor"));
         modelBuilder.Entity<FornecedorNaturezaJuridica>(entity => entity.ToTable("fornecedor_natureza_juridica", "fornecedor"));
     }

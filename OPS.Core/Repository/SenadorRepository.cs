@@ -137,7 +137,7 @@ namespace OPS.Core.Repository
 
                 if (!string.IsNullOrEmpty(request.NomeParlamentar))
                 {
-                    strSql.AppendLine("	AND (d.nome like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_completo like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
+                    strSql.AppendLine("	AND (d.nome ILIKE '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_completo ILIKE '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
                 }
 
                 strSql.AppendLine(@"
@@ -403,7 +403,7 @@ namespace OPS.Core.Repository
                     if (!string.IsNullOrEmpty(filtro.Busca))
                     {
                         var busca = Utils.MySqlEscape(filtro.Busca);
-                        strSql.AppendLine(@" AND (d.nome like '%" + busca + "%' or d.nome_completo like '%" + busca + "%') ");
+                        strSql.AppendLine(@" AND (d.nome ILIKE '%" + busca + "%' or d.nome_completo ILIKE '%" + busca + "%') ");
                     }
 
                     if ((filtro.Periodo ?? 0) > 0)
@@ -467,7 +467,7 @@ namespace OPS.Core.Repository
                     {
                         lstRetorno.Add(new DropDownDTO
                         {
-                            id = uint.Parse(reader["id"].ToString()),
+                            id = int.Parse(reader["id"].ToString()),
                             tokens = new[] { reader["nome_completo"].ToString() },
                             text = reader["nome"].ToString(),
                             helpText = $"{reader["sigla_partido"]} / {reader["sigla_estado"]}"
@@ -563,7 +563,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -627,7 +626,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -689,7 +687,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -757,7 +754,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -821,7 +817,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -900,7 +895,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -1315,7 +1309,6 @@ WHERE (1=1)
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno

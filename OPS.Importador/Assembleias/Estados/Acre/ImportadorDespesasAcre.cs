@@ -1,5 +1,4 @@
-﻿using System;
-using AngleSharp;
+﻿using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerator;
 using OPS.Importador.Assembleias.Despesa;

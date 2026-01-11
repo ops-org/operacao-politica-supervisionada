@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using AngleSharp;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -105,10 +101,10 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
     public override void AjustarDados()
     {
         connection.Execute(@"
-UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '11364583000156' WHERE cnpj_cpf = '11136458300015';
-UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '02421421000111' WHERE cnpj_cpf = '02421421001255';
-UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = '18376663000306';
-UPDATE ops_tmp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = '18376563000366';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '11364583000156' WHERE cnpj_cpf = '11136458300015';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '02421421000111' WHERE cnpj_cpf = '02421421001255';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = '18376663000306';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '18376563000306' WHERE cnpj_cpf = '18376563000366';
 
 ");
     }

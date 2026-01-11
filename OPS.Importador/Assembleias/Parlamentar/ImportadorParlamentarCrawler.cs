@@ -1,9 +1,6 @@
-﻿using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Importador.Utilities;
 
 namespace OPS.Importador.Assembleias.Parlamentar;

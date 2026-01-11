@@ -9,16 +9,16 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public ushort Id { get; set; }
+        public short Id { get; set; }
 
         [Column("id_cf_deputado")]
-        public uint IdDeputado { get; set; }
+        public int IdDeputado { get; set; }
 
         [Column("id_legislatura")]
         public byte? IdLegislatura { get; set; }
 
         [Column("id_carteira_parlamantar")]
-        public uint? IdCarteiraParlamantar { get; set; }
+        public int? IdCarteiraParlamantar { get; set; }
 
         [Column("id_estado")]
         public byte? IdEstado { get; set; }

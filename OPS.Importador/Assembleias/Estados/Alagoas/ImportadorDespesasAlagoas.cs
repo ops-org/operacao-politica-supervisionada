@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text;
-using System.Threading.Tasks;
 using AngleSharp;
 using Dapper;
 using iTextSharp.text.pdf;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -493,113 +487,113 @@ namespace OPS.Importador.Assembleias.Estados.Alagoas
         };
 
 
-        private void ImportarEmpenhosParaComparacao(IBrowsingContext context, int ano)
-        {
-            var i = 0;
-            var NomeFavorecido = i++;
-            var CNPJCPF = i++;
-            var Objeto = i++;
-            var TipoLicitacao = i++;
-            var NumeroEmpenho = i++;
-            var Data = i++;
-            var ValorEmpenhado = i++;
-            var ValorPago = i++;
+        //private void ImportarEmpenhosParaComparacao(IBrowsingContext context, int ano)
+        //{
+        //    var i = 0;
+        //    var NomeFavorecido = i++;
+        //    var CNPJCPF = i++;
+        //    var Objeto = i++;
+        //    var TipoLicitacao = i++;
+        //    var NumeroEmpenho = i++;
+        //    var Data = i++;
+        //    var ValorEmpenhado = i++;
+        //    var ValorPago = i++;
 
-            var document = context.OpenAsyncAutoRetry($"https://www.al.al.leg.br/transparencia/orcamento-e-financas/empenhos-e-pagamentos/{ano}").GetAwaiter().GetResult();
+        //    var document = context.OpenAsyncAutoRetry($"https://www.al.al.leg.br/transparencia/orcamento-e-financas/empenhos-e-pagamentos/{ano}").GetAwaiter().GetResult();
 
-            var meses = document.QuerySelectorAll("#content-core .headline a");
-            foreach (var mes in meses)
-            {
-                var urlEmpenhosDoMes = mes.Attributes["href"].Value;
+        //    var meses = document.QuerySelectorAll("#content-core .headline a");
+        //    foreach (var mes in meses)
+        //    {
+        //        var urlEmpenhosDoMes = mes.Attributes["href"].Value;
 
-                using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes.TextContent }))
-                {
-                    var competencia = new DateOnly(ano, ResolveMes(mes.TextContent), 1);
+        //        using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes.TextContent }))
+        //        {
+        //            var competencia = new DateOnly(ano, ResolveMes(mes.TextContent), 1);
 
-                    var subdocument = context.OpenAsyncAutoRetry(urlEmpenhosDoMes).GetAwaiter().GetResult();
-                    var empenhos = subdocument.QuerySelectorAll("#content-core .listing tbody tr");
+        //            var subdocument = context.OpenAsyncAutoRetry(urlEmpenhosDoMes).GetAwaiter().GetResult();
+        //            var empenhos = subdocument.QuerySelectorAll("#content-core .listing tbody tr");
 
-                    foreach (var empenho in empenhos)
-                    {
-                        var linhas = empenho.QuerySelectorAll("td");
+        //            foreach (var empenho in empenhos)
+        //            {
+        //                var linhas = empenho.QuerySelectorAll("td");
 
-                        var nome = linhas[NomeFavorecido].TextContent.Trim();
-                        if (string.IsNullOrEmpty(nome) || nome.StartsWith("MÊS") || nome == "Nome do Favorecido" || nome == "ASSEMBLEIA LEGISLATIVA ESTADUAL") continue;
-                        if (linhas[Objeto].TextContent.Trim() != "IDENIZAÇÃO DE DESPESA COM O GABINETE") continue;
-                        if (linhas[ValorEmpenhado].TextContent.Trim() == "0,00") continue;
+        //                var nome = linhas[NomeFavorecido].TextContent.Trim();
+        //                if (string.IsNullOrEmpty(nome) || nome.StartsWith("MÊS") || nome == "Nome do Favorecido" || nome == "ASSEMBLEIA LEGISLATIVA ESTADUAL") continue;
+        //                if (linhas[Objeto].TextContent.Trim() != "IDENIZAÇÃO DE DESPESA COM O GABINETE") continue;
+        //                if (linhas[ValorEmpenhado].TextContent.Trim() == "0,00") continue;
 
-                        var data = linhas[Data].TextContent.Trim().Replace(".20233", ".2023");
-                        if (data == "27.032.2023") data = "27/02/2023";
-                        else if (data == "2808/2023") data = "28/08/2023";
-                        else if (data == "72018/12") data = $"18/12/{ano}";
-                        else if (data.EndsWith("-abr")) data = $"{data.Replace("-abr", "/04")}/{ano}";
-                        else if (data.EndsWith("-mai")) data = $"{data.Replace("-mai", "/05")}/{ano}";
-                        else if (data.EndsWith("/ago")) data = $"{data.Replace("/ago", "/08")}/{ano}";
-                        else if (data.EndsWith("/set")) data = $"{data.Replace("/set", "/09")}/{ano}";
+        //                var data = linhas[Data].TextContent.Trim().Replace(".20233", ".2023");
+        //                if (data == "27.032.2023") data = "27/02/2023";
+        //                else if (data == "2808/2023") data = "28/08/2023";
+        //                else if (data == "72018/12") data = $"18/12/{ano}";
+        //                else if (data.EndsWith("-abr")) data = $"{data.Replace("-abr", "/04")}/{ano}";
+        //                else if (data.EndsWith("-mai")) data = $"{data.Replace("-mai", "/05")}/{ano}";
+        //                else if (data.EndsWith("/ago")) data = $"{data.Replace("/ago", "/08")}/{ano}";
+        //                else if (data.EndsWith("/set")) data = $"{data.Replace("/set", "/09")}/{ano}";
 
-                        var empenhoTemp = new DeputadoEstadualEmpenhoTemp();
-                        empenhoTemp.Competencia = competencia;
-                        empenhoTemp.NomeFavorecido = nome;
-                        empenhoTemp.CNPJCPF = linhas[CNPJCPF].TextContent.Trim();
-                        //empenhoTemp.Objeto = linhas[Objeto].TextContent;
-                        //empenhoTemp.TipoLicitacao = linhas[TipoLicitacao].TextContent;
-                        empenhoTemp.NumeroEmpenho = linhas[NumeroEmpenho].TextContent.Trim();
-                        empenhoTemp.Data = DateOnly.Parse(data, cultureInfo);
-                        empenhoTemp.ValorEmpenhado = Convert.ToDecimal(linhas[ValorEmpenhado].TextContent.Trim().Replace("39,24,83", "3924,83"), cultureInfo);
-                        empenhoTemp.ValorPago = Convert.ToDecimal(linhas[ValorPago].TextContent.Trim().Replace("39,24,83", "3924,83"), cultureInfo);
+        //                var empenhoTemp = new DeputadoEstadualEmpenhoTemp();
+        //                empenhoTemp.Competencia = competencia;
+        //                empenhoTemp.NomeFavorecido = nome;
+        //                empenhoTemp.CNPJCPF = linhas[CNPJCPF].TextContent.Trim();
+        //                //empenhoTemp.Objeto = linhas[Objeto].TextContent;
+        //                //empenhoTemp.TipoLicitacao = linhas[TipoLicitacao].TextContent;
+        //                empenhoTemp.NumeroEmpenho = linhas[NumeroEmpenho].TextContent.Trim();
+        //                empenhoTemp.Data = DateOnly.Parse(data, cultureInfo);
+        //                empenhoTemp.ValorEmpenhado = Convert.ToDecimal(linhas[ValorEmpenhado].TextContent.Trim().Replace("39,24,83", "3924,83"), cultureInfo);
+        //                empenhoTemp.ValorPago = Convert.ToDecimal(linhas[ValorPago].TextContent.Trim().Replace("39,24,83", "3924,83"), cultureInfo);
 
-                        connection.Insert(empenhoTemp);
-                    }
-                }
-            }
-        }
+        //                repositoryService.Insert(empenhoTemp);
+        //            }
+        //        }
+        //    }
+        //}
 
         public override void ValidaImportacao(int ano)
         {
             base.ValidaImportacao(ano);
 
             connection.Execute(@"
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = nome_favorecido WHERE nome_favorecido NOT LIKE '%DEPUTADO%';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'RONALDO MEDEIROS' WHERE nome_favorecido like 'AMANDA DA SILVA FERRAZ (DELEGATÁRIA DO DEPUTADO RONALDO MEDEIROS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'YVAN BELTRÃO' WHERE nome_favorecido like 'ANDERSON RONDINELLY LIRA PALMEIRA (DELEGATÁRIO DO DEPUTADO YVAN BELTRÃO)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'GALBA NOVAES' WHERE nome_favorecido like 'ANTONIO FARIAS DA SILVA JUNIOR (DELEGATÁRIO DO DEPUTADO GALBA NOVAES)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'GALBA NOVAES' WHERE nome_favorecido like 'ANTONIO FARIAS DA SILVA JUNIOR (DELEGATÁRIO DO DEPUTADO GALBA NOVAIS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ALEXANDRE AYRES' WHERE nome_favorecido like 'CAIO QUINTELLA JUCÁ DUARTE (DELEGATÁRIO DO DEPUTADO ALEXANDRE AYRES)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'DAVI MAIA' WHERE nome_favorecido like 'CLAUDIA MARQUES FREIRE (DELEGATÁRIA DO DEPUTADO DAVI MAIA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'GALBA NOVAES' WHERE nome_favorecido like 'DANIEL HENRIQUE NOVASI DE OLIVEIRA (DELEGATÁRIO DO DEPUTADO GALBA NOVAIS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'JAIR LIRA' WHERE nome_favorecido like 'DIEGO MELO FREITAS (DELEGATÁRIO DO DEPUTADO JAIR LIRA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'MESAQUE PADILHA' WHERE nome_favorecido like 'DOUGLAS DOS SANTOS SILVA (DELEGATÁRIO DO DEPUTADO MESAQUE PADILHA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANDRÉ LUIZ' WHERE nome_favorecido like 'FABIANO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO ANDRÉ LUIZ)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANDRÉ SILVA' WHERE nome_favorecido like 'FABIANO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO ANDRÉ SILVA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'HENRIQUE CHICAO' WHERE nome_favorecido like 'FABIANO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO HENRIQUE CHICAO)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANDRÉ SILVA' WHERE nome_favorecido like 'FABRICIO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO ANDRÉ SILVA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'DUDU RONALSA' WHERE nome_favorecido like 'FERNANDO PRIMOLA PEDROSA CARVALHO (DELEGATÁRIO DO DEPUTADO DUDU RONALSA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'Leonam Pinheiro Rodrigues' WHERE nome_favorecido like 'FÁBIO MALTA ALCANTARA RODRIGUES DE LIMA (DELEGATÁRIO DO DEPUTADO LEONAM PINHEIRO)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'GILVAN BARROS' WHERE nome_favorecido like 'GERÔNIMO BEZERRA (DELEGATÁRIO DO DEPUTADO GILVAN BARROS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'INÁCIO LOIOLA' WHERE nome_favorecido like 'HERMANN JOSÉ DE AMORIM VASCONCELOS (DELEGATÁRIO DO DEPUTADO INÁCIO LOIOLA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'BRUNO TOLEDO' WHERE nome_favorecido like 'IRIS DA SILVA GOUVEIA (DELEGATÁRIA DO DEPUTADO BRUNO TOLEDO)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANDRÉ SILVA' WHERE nome_favorecido like 'JOÃO GABRIEL GAIA GOMES (DELEGATARIO DO DEPUTADO ANDRÉ SILVA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'MARCELO VICTOR' WHERE nome_favorecido like 'KLAYDSON RYTHCHARDSON MARQUES SILVA (DELEGATÁRIO DO DEPUTADO MARCELO VICTOR)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'RICARDO PEREIRA' WHERE nome_favorecido like 'MANOEL ANGELINO DA SILVA (DELEGATÁRIO DO DEPUTADO RICARDO PEREIRA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'TARCIZO FREIRE' WHERE nome_favorecido like 'MICHAEL VIEIRA DANTAS (DELEGATÁRIO DO DEPUTADO TARCIZO FREIRE)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'MARCOS BARBOSA' WHERE nome_favorecido like 'SAULO DE TACIO FERNANDES GOMES DA COSTA (DELEGATÁRIO DO DEPUTADO MARCOS BARBOSA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'REMI CALHEIROS' WHERE nome_favorecido like 'SHIRLEY RIBEIRO MELO DE OLIVEIRA SILVA(DELEGATÁRIA DEPUTADO REMI CALHEIROS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'REMI CALHEIROS' WHERE nome_favorecido like 'FRANCISCO  JOSÉ DA SILVA (DELEGATÁRIO REMI CALHEIROS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'BRENO ALBUQUERQUE' WHERE nome_favorecido like 'SILVANA MARIA BARBOSA GOMES DE MELO (DELEGATÁRIA DO DEPUTADO BRENO ALBUQUERQUE)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'MARCELO VICTOR' WHERE nome_favorecido like 'THIAGO PIMENTEL LEITE TEIXEIRA (DELEGATÁRIO DO DEPUTADO MARCELO VICTOR)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'SÂMIA MASCARENHAS' WHERE nome_favorecido like 'ANA CLAUDIA BEZERRA(DELEGATÁRIA DA DEPUTADA SAMIA VASCONCELOS';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'SÂMIA MASCARENHAS' WHERE nome_favorecido like 'ANA CLAUDIA BEZERRA(DELEGATÁRIA DA DEPUTADA SÂMIA MASCARENHAS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'CIBELE MOURA' WHERE nome_favorecido like 'CHRISTIANO HENRIQUE NASCIMENTO FARIAS  (DELEGATÁRIO DO DEPUTADA CIBELE MOURA)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANGELA CANUTO' WHERE nome_favorecido like 'CLAUDIA KALINE DE FRAIAS LARGES TORRES (DELEGATÁRIA DO DEPUTADA ANGELA CANUTO)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANGELA GARROTE' WHERE nome_favorecido like 'ENIRALDO RIBEIRO BALBINO (DELEGATÁRIO DA DEPUTADA ANGELA GARROTE)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'FLAVIA CAVALCANTE' WHERE nome_favorecido like 'MIRELLA DE LIMA GOMES REGO (DELEGATÁRIA DA DEPUTADA (FLAVIA CAVALCANTE)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ROSE DAVINO' WHERE nome_favorecido like 'RALPH DA CRUZ ALBERMAZ (DELEGATÁRIO DA DEPUTADA ROSE DAVINO)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'FLAVIA CAVALCANTE' WHERE nome_favorecido like 'MIRELLA DE LIMA GOMES REGO (DELEGATÁRIA FLAVIA    CAVALCANTE';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANGELA GARROTE' WHERE nome_favorecido like 'RALPH DA CRUZ ALBERNAZ(DELEGATÁRIO ANGELA GARROTE)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ROSE DAVINO' WHERE nome_favorecido like 'RALPH DA CRUZ ALBERNAZ(DELEGATÁRIO ROSE DAVINO';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'GABRIELA GONÇALVES' WHERE nome_favorecido like 'VICTOR LIMA ALBUQUERQUE (DELEGATÁRIO GABRIELA GONÇALVES)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'REMI CALHEIROS' WHERE nome_favorecido like 'FRANCISCO  JOSÉ DA SILVA (DELEGATÁRIO REMI CALHEIROS)';
-UPDATE ops_tmp.cl_empenho_temp SET nome_deputado = 'ANTONIO RIBEIRO DE ALBUQUERQUE' where nome_deputado = 'ANTONIO  RIBEIRO DE ALBUQUERQUE';");
+UPDATE temp.cl_empenho_temp SET nome_deputado = nome_favorecido WHERE nome_favorecido NOT ILIKE '%DEPUTADO%';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'RONALDO MEDEIROS' WHERE nome_favorecido ILIKE 'AMANDA DA SILVA FERRAZ (DELEGATÁRIA DO DEPUTADO RONALDO MEDEIROS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'YVAN BELTRÃO' WHERE nome_favorecido ILIKE 'ANDERSON RONDINELLY LIRA PALMEIRA (DELEGATÁRIO DO DEPUTADO YVAN BELTRÃO)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'GALBA NOVAES' WHERE nome_favorecido ILIKE 'ANTONIO FARIAS DA SILVA JUNIOR (DELEGATÁRIO DO DEPUTADO GALBA NOVAES)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'GALBA NOVAES' WHERE nome_favorecido ILIKE 'ANTONIO FARIAS DA SILVA JUNIOR (DELEGATÁRIO DO DEPUTADO GALBA NOVAIS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ALEXANDRE AYRES' WHERE nome_favorecido ILIKE 'CAIO QUINTELLA JUCÁ DUARTE (DELEGATÁRIO DO DEPUTADO ALEXANDRE AYRES)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'DAVI MAIA' WHERE nome_favorecido ILIKE 'CLAUDIA MARQUES FREIRE (DELEGATÁRIA DO DEPUTADO DAVI MAIA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'GALBA NOVAES' WHERE nome_favorecido ILIKE 'DANIEL HENRIQUE NOVASI DE OLIVEIRA (DELEGATÁRIO DO DEPUTADO GALBA NOVAIS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'JAIR LIRA' WHERE nome_favorecido ILIKE 'DIEGO MELO FREITAS (DELEGATÁRIO DO DEPUTADO JAIR LIRA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'MESAQUE PADILHA' WHERE nome_favorecido ILIKE 'DOUGLAS DOS SANTOS SILVA (DELEGATÁRIO DO DEPUTADO MESAQUE PADILHA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANDRÉ LUIZ' WHERE nome_favorecido ILIKE 'FABIANO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO ANDRÉ LUIZ)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANDRÉ SILVA' WHERE nome_favorecido ILIKE 'FABIANO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO ANDRÉ SILVA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'HENRIQUE CHICAO' WHERE nome_favorecido ILIKE 'FABIANO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO HENRIQUE CHICAO)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANDRÉ SILVA' WHERE nome_favorecido ILIKE 'FABRICIO GOMES DE SOUZA (DELEGATÁRIO DO DEPUTADO ANDRÉ SILVA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'DUDU RONALSA' WHERE nome_favorecido ILIKE 'FERNANDO PRIMOLA PEDROSA CARVALHO (DELEGATÁRIO DO DEPUTADO DUDU RONALSA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'Leonam Pinheiro Rodrigues' WHERE nome_favorecido ILIKE 'FÁBIO MALTA ALCANTARA RODRIGUES DE LIMA (DELEGATÁRIO DO DEPUTADO LEONAM PINHEIRO)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'GILVAN BARROS' WHERE nome_favorecido ILIKE 'GERÔNIMO BEZERRA (DELEGATÁRIO DO DEPUTADO GILVAN BARROS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'INÁCIO LOIOLA' WHERE nome_favorecido ILIKE 'HERMANN JOSÉ DE AMORIM VASCONCELOS (DELEGATÁRIO DO DEPUTADO INÁCIO LOIOLA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'BRUNO TOLEDO' WHERE nome_favorecido ILIKE 'IRIS DA SILVA GOUVEIA (DELEGATÁRIA DO DEPUTADO BRUNO TOLEDO)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANDRÉ SILVA' WHERE nome_favorecido ILIKE 'JOÃO GABRIEL GAIA GOMES (DELEGATARIO DO DEPUTADO ANDRÉ SILVA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'MARCELO VICTOR' WHERE nome_favorecido ILIKE 'KLAYDSON RYTHCHARDSON MARQUES SILVA (DELEGATÁRIO DO DEPUTADO MARCELO VICTOR)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'RICARDO PEREIRA' WHERE nome_favorecido ILIKE 'MANOEL ANGELINO DA SILVA (DELEGATÁRIO DO DEPUTADO RICARDO PEREIRA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'TARCIZO FREIRE' WHERE nome_favorecido ILIKE 'MICHAEL VIEIRA DANTAS (DELEGATÁRIO DO DEPUTADO TARCIZO FREIRE)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'MARCOS BARBOSA' WHERE nome_favorecido ILIKE 'SAULO DE TACIO FERNANDES GOMES DA COSTA (DELEGATÁRIO DO DEPUTADO MARCOS BARBOSA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'REMI CALHEIROS' WHERE nome_favorecido ILIKE 'SHIRLEY RIBEIRO MELO DE OLIVEIRA SILVA(DELEGATÁRIA DEPUTADO REMI CALHEIROS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'REMI CALHEIROS' WHERE nome_favorecido ILIKE 'FRANCISCO  JOSÉ DA SILVA (DELEGATÁRIO REMI CALHEIROS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'BRENO ALBUQUERQUE' WHERE nome_favorecido ILIKE 'SILVANA MARIA BARBOSA GOMES DE MELO (DELEGATÁRIA DO DEPUTADO BRENO ALBUQUERQUE)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'MARCELO VICTOR' WHERE nome_favorecido ILIKE 'THIAGO PIMENTEL LEITE TEIXEIRA (DELEGATÁRIO DO DEPUTADO MARCELO VICTOR)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'SÂMIA MASCARENHAS' WHERE nome_favorecido ILIKE 'ANA CLAUDIA BEZERRA(DELEGATÁRIA DA DEPUTADA SAMIA VASCONCELOS';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'SÂMIA MASCARENHAS' WHERE nome_favorecido ILIKE 'ANA CLAUDIA BEZERRA(DELEGATÁRIA DA DEPUTADA SÂMIA MASCARENHAS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'CIBELE MOURA' WHERE nome_favorecido ILIKE 'CHRISTIANO HENRIQUE NASCIMENTO FARIAS  (DELEGATÁRIO DO DEPUTADA CIBELE MOURA)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANGELA CANUTO' WHERE nome_favorecido ILIKE 'CLAUDIA KALINE DE FRAIAS LARGES TORRES (DELEGATÁRIA DO DEPUTADA ANGELA CANUTO)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANGELA GARROTE' WHERE nome_favorecido ILIKE 'ENIRALDO RIBEIRO BALBINO (DELEGATÁRIO DA DEPUTADA ANGELA GARROTE)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'FLAVIA CAVALCANTE' WHERE nome_favorecido ILIKE 'MIRELLA DE LIMA GOMES REGO (DELEGATÁRIA DA DEPUTADA (FLAVIA CAVALCANTE)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ROSE DAVINO' WHERE nome_favorecido ILIKE 'RALPH DA CRUZ ALBERMAZ (DELEGATÁRIO DA DEPUTADA ROSE DAVINO)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'FLAVIA CAVALCANTE' WHERE nome_favorecido ILIKE 'MIRELLA DE LIMA GOMES REGO (DELEGATÁRIA FLAVIA    CAVALCANTE';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANGELA GARROTE' WHERE nome_favorecido ILIKE 'RALPH DA CRUZ ALBERNAZ(DELEGATÁRIO ANGELA GARROTE)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ROSE DAVINO' WHERE nome_favorecido ILIKE 'RALPH DA CRUZ ALBERNAZ(DELEGATÁRIO ROSE DAVINO';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'GABRIELA GONÇALVES' WHERE nome_favorecido ILIKE 'VICTOR LIMA ALBUQUERQUE (DELEGATÁRIO GABRIELA GONÇALVES)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'REMI CALHEIROS' WHERE nome_favorecido ILIKE 'FRANCISCO  JOSÉ DA SILVA (DELEGATÁRIO REMI CALHEIROS)';
+UPDATE temp.cl_empenho_temp SET nome_deputado = 'ANTONIO RIBEIRO DE ALBUQUERQUE' where nome_deputado = 'ANTONIO  RIBEIRO DE ALBUQUERQUE';");
 
 
         }

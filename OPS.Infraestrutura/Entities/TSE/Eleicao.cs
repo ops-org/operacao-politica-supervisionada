@@ -7,7 +7,7 @@ namespace OPS.Infraestrutura.Entities.TSE
     public class Eleicao
     {
         [Column("id")]
-        public uint? Id { get; set; }
+        public int? Id { get; set; }
 
         [Column("descricao")]
         [StringLength(50)]

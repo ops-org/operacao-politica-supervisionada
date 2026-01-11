@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Net;
-using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Estados.Roraima.Entities;
 using OPS.Importador.Assembleias.Parlamentar;
@@ -49,7 +44,7 @@ public class ImportadorParlamentarRoraima : ImportadorParlamentarRestApi
 
         foreach (var parlamentar in deputadosRR)
         {
-            DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew((uint)parlamentar.Id);
+            DeputadoEstadual deputado = GetDeputadoByMatriculaOrNew((int)parlamentar.Id);
 
             deputado.UrlPerfil = $"https://sapl.al.rr.leg.br/parlamentar/{parlamentar.Id}";
             deputado.NomeParlamentar = parlamentar.NomeParlamentar;
@@ -101,6 +96,6 @@ public class ImportadorParlamentarRoraima : ImportadorParlamentarRestApi
 
         var gabinete = perfil.FirstOrDefault(x => x.Key == "Número do Gabinete")?.Value;
         if (!string.IsNullOrEmpty(gabinete))
-            deputado.Gabinete = Convert.ToUInt16(gabinete);
+            deputado.Gabinete = Convert.ToInt16(gabinete);
     }
 }

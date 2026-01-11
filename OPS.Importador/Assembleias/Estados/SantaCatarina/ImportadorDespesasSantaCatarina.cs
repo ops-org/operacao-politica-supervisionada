@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
+﻿using System.Globalization;
 using System.Text;
 using CsvHelper;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using OPS.Core.Entity;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
@@ -114,7 +110,7 @@ namespace OPS.Importador.Assembleias.Estados.SantaCatarina
             connection.Execute(@"
         	        UPDATE cl_deputado dp SET
                         valor_total_ceap = coalesce((
-                            SELECT SUM(ds.valor_liquido) FROM cl_despesa ds WHERE ds.id_cl_deputado = dp.id
+                            SELECT SUM(ds.valor_liquido) FROM assembleias.cl_despesa ds WHERE ds.id_cl_deputado = dp.id
                         ), 0);");
         }
 
@@ -128,11 +124,11 @@ namespace OPS.Importador.Assembleias.Estados.SantaCatarina
         //        var affected = connection.Execute(@$"
         //INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
         //select distinct Nome, cpf, {idEstado}
-        //from ops_tmp.cl_despesa_temp
+        //from temp.cl_despesa_temp
         //where nome not in (
-        //    select nome_parlamentar from cl_deputado where id_estado =  {idEstado} 
+        //    select nome_parlamentar FROM assembleias.cl_deputado where id_estado =  {idEstado} 
         //    UNION all
-        //    select nome_civil from cl_deputado where id_estado =  {idEstado} 
+        //    select nome_civil FROM assembleias.cl_deputado where id_estado =  {idEstado} 
         //);
         //                ");
 
@@ -147,11 +143,11 @@ namespace OPS.Importador.Assembleias.Estados.SantaCatarina
             base.InsereDespesaFinal(ano);
 
             connection.Execute(@"
-UPDATE cl_despesa SET id_fornecedor = 89481, favorecido = null WHERE id_fornecedor IS NULL AND favorecido LIKE 'Brasil Telecom%';
-UPDATE cl_despesa SET id_fornecedor = 458, favorecido = null WHERE id_fornecedor IS NULL AND (favorecido LIKE 'Oi S%' OR favorecido LIKE 'Oi Fixo%' OR favorecido LIKE 'Oi');
-UPDATE cl_despesa SET id_fornecedor = 301, favorecido = null WHERE id_fornecedor IS NULL AND (favorecido LIKE 'Global Village Telecom%' OR favorecido LIKE 'GVT');
-UPDATE cl_despesa SET id_fornecedor = 8688, favorecido = null WHERE id_fornecedor IS NULL AND favorecido LIKE 'Claro';
-UPDATE cl_despesa SET id_fornecedor = 4163, favorecido = null WHERE id_fornecedor IS NULL AND favorecido LIKE 'NET';
+UPDATE cl_despesa SET id_fornecedor = 89481, favorecido = null WHERE id_fornecedor IS NULL AND favorecido ILIKE 'Brasil Telecom%';
+UPDATE cl_despesa SET id_fornecedor = 458, favorecido = null WHERE id_fornecedor IS NULL AND (favorecido ILIKE 'Oi S%' OR favorecido ILIKE 'Oi Fixo%' OR favorecido ILIKE 'Oi');
+UPDATE cl_despesa SET id_fornecedor = 301, favorecido = null WHERE id_fornecedor IS NULL AND (favorecido ILIKE 'Global Village Telecom%' OR favorecido ILIKE 'GVT');
+UPDATE cl_despesa SET id_fornecedor = 8688, favorecido = null WHERE id_fornecedor IS NULL AND favorecido ILIKE 'Claro';
+UPDATE cl_despesa SET id_fornecedor = 4163, favorecido = null WHERE id_fornecedor IS NULL AND favorecido ILIKE 'NET';
 UPDATE cl_despesa SET id_fornecedor = 19411 WHERE id_fornecedor IS NULL AND id_cl_despesa_especificacao = 21; -- Restaurante da AFALESC
 UPDATE cl_despesa SET id_fornecedor = 663 WHERE id_fornecedor IS NULL AND id_cl_despesa_especificacao IN(28, 58); -- Energia Elétrica ( Escritório de Apoio ) & Escritório de Apoio - Energia Elétrica
 UPDATE cl_despesa SET id_fornecedor = 1316 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao IN(24, 56); -- Água (Escritório de Apoio) & Escritório de Apoio - Água

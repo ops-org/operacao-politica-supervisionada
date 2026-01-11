@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id_cf_despesa_tipo")]
-        public ushort IdDespesaTipo { get; set; }
+        public short IdDespesaTipo { get; set; }
 
         [Key]
         [Column("id_cf_especificacao")]

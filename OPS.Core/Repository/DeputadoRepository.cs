@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTO;
 using OPS.Core.Enumerator;
 using OPS.Core.Utilities;
-using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.CamaraFederal;
 using AppDbContext = OPS.Infraestrutura.AppDbContext;
 
 namespace OPS.Core.Repository
@@ -166,15 +164,15 @@ namespace OPS.Core.Repository
                     if (await reader.ReadAsync())
                     {
                         string sTipoDocumento = "";
-                        switch (await reader.GetValueOrDefaultAsync<uint>(3))
+                        switch (await reader.GetValueOrDefaultAsync<int>(3))
                         {
                             case 0: sTipoDocumento = "Nota Fiscal"; break;
                             case 1: sTipoDocumento = "Recibo"; break;
                             case 2: case 3: sTipoDocumento = "Despesa no Exterior"; break;
                         }
                         string cnpjCpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(21));
-                        var ano = await reader.GetValueOrDefaultAsync<uint>(11);
-                        var mes = await reader.GetValueOrDefaultAsync<ushort>(12);
+                        var ano = await reader.GetValueOrDefaultAsync<int>(11);
+                        var mes = await reader.GetValueOrDefaultAsync<short>(12);
 
                         var result = new
                         {
@@ -249,7 +247,7 @@ namespace OPS.Core.Repository
                         lstRetorno.Add(new
                         {
                             id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                            id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+                            id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                             cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
                             sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(4),
@@ -302,7 +300,7 @@ namespace OPS.Core.Repository
                         lstRetorno.Add(new
                         {
                             id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                            id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+                            id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                             cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
                             sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(4),
@@ -586,7 +584,7 @@ namespace OPS.Core.Repository
 
                 if (!string.IsNullOrEmpty(request.NomeParlamentar))
                 {
-                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
+                    strSql.AppendLine("	AND (d.nome_parlamentar ILIKE '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_civil ILIKE '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
                 }
 
                 strSql.AppendLine(@"
@@ -641,7 +639,7 @@ namespace OPS.Core.Repository
                     if (!string.IsNullOrEmpty(filtro.Busca))
                     {
                         var busca = Utils.MySqlEscape(filtro.Busca);
-                        strSql.AppendLine(@" AND (d.nome_parlamentar like '%" + busca + "%' or d.nome_civil like '%" + busca + "%') ");
+                        strSql.AppendLine(@" AND (d.nome_parlamentar ILIKE '%" + busca + "%' or d.nome_civil ILIKE '%" + busca + "%') ");
                     }
 
                     if (filtro.Periodo > 50)
@@ -675,7 +673,7 @@ namespace OPS.Core.Repository
                     {
                         lstRetorno.Add(new DropDownDTO
                         {
-                            id = uint.Parse(reader["id"].ToString()),
+                            id = int.Parse(reader["id"].ToString()),
                             tokens = new[] { reader["nome_civil"].ToString() },
                             text = reader["nome_parlamentar"].ToString(),
                             helpText = $"{reader["sigla_partido"]} / {reader["sigla_estado"]}"
@@ -771,7 +769,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -835,7 +832,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -898,7 +894,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -967,7 +962,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -1031,7 +1025,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -1115,7 +1108,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -1247,7 +1239,7 @@ namespace OPS.Core.Repository
                     }
                     else if (Fornecedor.Length == 8) //CNPJ raiz
                     {
-                        sqlSelect.AppendLine("	AND l.id_fornecedor IN (select id from fornecedor where cnpj_cpf like '" + Utils.RemoveCaracteresNaoNumericos(Fornecedor) + "%')");
+                        sqlSelect.AppendLine("	AND l.id_fornecedor IN (select id from fornecedor where cnpj_cpf ILIKE '" + Utils.RemoveCaracteresNaoNumericos(Fornecedor) + "%')");
                     }
                     else
                     {
@@ -1277,7 +1269,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Documento") && !string.IsNullOrEmpty(request.Filters["Documento"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.numero_documento like '%" + Utils.MySqlEscape(request.Filters["Documento"].ToString()) + "' ");
+                sqlSelect.AppendLine("	AND l.numero_documento ILIKE '%" + Utils.MySqlEscape(request.Filters["Documento"].ToString()) + "' ");
             }
         }
 
@@ -1332,7 +1324,7 @@ namespace OPS.Core.Repository
                     if (!string.IsNullOrEmpty(filtro.Busca))
                     {
                         var busca = Utils.MySqlEscape(filtro.Busca);
-                        strSql.AppendLine(@" AND (s.nome like '%" + busca + "%') ");
+                        strSql.AppendLine(@" AND (s.nome ILIKE '%" + busca + "%') ");
                     }
 
                     strSql.AppendLine(@"
@@ -1397,7 +1389,7 @@ namespace OPS.Core.Repository
 
                 //if (!string.IsNullOrEmpty(request.NomeParlamentar))
                 //{
-                //    strSql.AppendFormat("and p.nome_parlamentar LIKE '%{0}%' ", Utils.MySqlEscape(request.NomeParlamentar));
+                //    strSql.AppendFormat("and p.nome_parlamentar ILIKE '%{0}%' ", Utils.MySqlEscape(request.NomeParlamentar));
                 //}
 
                 strSql.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, "p.nome_parlamentar"));
@@ -1426,7 +1418,6 @@ namespace OPS.Core.Repository
 
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -1510,7 +1501,6 @@ AND co.periodo_ate IS null
 
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -1569,7 +1559,6 @@ AND co.periodo_ate IS null
 
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -1837,7 +1826,6 @@ AND co.periodo_ate IS null
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -1925,7 +1913,6 @@ AND co.periodo_ate IS null
 
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = Convert.ToInt32(TotalCount),
                         recordsFiltered = Convert.ToInt32(TotalCount),
                         data = lstRetorno
@@ -2148,7 +2135,6 @@ WHERE (1=1)
                     int TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno

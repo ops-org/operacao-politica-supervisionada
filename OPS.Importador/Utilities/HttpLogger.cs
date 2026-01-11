@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Http.Logging;
+﻿using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace OPS.Importador.Utilities

@@ -8,34 +8,14 @@ namespace OPS.Infraestrutura.Entities.Comum
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
-
-        [Column("nome")]
-        [StringLength(255)]
-        public string Nome { get; set; } = null!;
+        public long Id { get; set; }
 
         [Column("cpf")]
-        [StringLength(20)]
+        [StringLength(15)]
         public string? Cpf { get; set; }
 
-        [Column("cnpj")]
-        [StringLength(20)]
-        public string? Cnpj { get; set; }
-
-        [Column("data_nascimento")]
-        public DateTime? DataNascimento { get; set; }
-
-        [Column("sexo")]
-        [StringLength(1)]
-        public string? Sexo { get; set; }
-
-        [Column("id_estado")]
-        public byte? IdEstado { get; set; }
-
-        [Column("id_municipio")]
-        public uint? IdMunicipio { get; set; }
-
-        // Navigation properties
-        public virtual Estado? Estado { get; set; }
+        [Column("nome")]
+        [StringLength(100)]
+        public string? Nome { get; set; }
     }
 }

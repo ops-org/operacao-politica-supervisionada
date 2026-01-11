@@ -20,7 +20,7 @@ namespace OPS.Core.Repository
 
         public async Task<dynamic> Consultar(int id)
         {
-            var deputado = await _context.Deputados
+            var deputado = await _context.DeputadosEstaduais
                 .Include(d => d.Partido)
                 .Include(d => d.Estado)
                 .FirstOrDefaultAsync(d => d.Id == id);
@@ -44,14 +44,14 @@ namespace OPS.Core.Repository
                 profissao = deputado.Profissao,
                 naturalidade = deputado.Naturalidade,
                 site = deputado.Site,
-                perfil = deputado.Perfil,
-                foto = deputado.Foto,
+                perfil = deputado.UrlPerfil,
+                foto = deputado.UrlFoto,
                 nascimento = Utils.NascimentoFormatado(deputado.Nascimento),
                 valor_total_ceap = deputado.ValorTotalCeap
             };
         }
 
-        public async Task<dynamic> MaioresFornecedores(uint id)
+        public async Task<dynamic> MaioresFornecedores(int id)
         {
             var maioresFornecedores = await _context.DespesasAssembleias
                 .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.ValorLiquido > 0)
@@ -79,7 +79,7 @@ namespace OPS.Core.Repository
             }).ToList();
         }
 
-        public async Task<dynamic> MaioresNotas(uint id)
+        public async Task<dynamic> MaioresNotas(int id)
         {
             var maioresNotas = await _context.DespesasAssembleias
                 .Where(d => d.IdDeputado == id && d.IdFornecedor.HasValue && d.ValorLiquido > 0)
@@ -150,15 +150,15 @@ namespace OPS.Core.Repository
                     if (await reader.ReadAsync())
                     {
                         string sTipoDocumento = "";
-                        switch (await reader.GetValueOrDefaultAsync<uint>(3))
+                        switch (await reader.GetValueOrDefaultAsync<int>(3))
                         {
                             case 0: sTipoDocumento = "Nota Fiscal"; break;
                             case 1: sTipoDocumento = "Recibo"; break;
                             case 2: case 3: sTipoDocumento = "Despesa no Exterior"; break;
                         }
                         string cnpjCpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(21));
-                        var ano = await reader.GetValueOrDefaultAsync<uint>(11);
-                        var mes = await reader.GetValueOrDefaultAsync<ushort>(12);
+                        var ano = await reader.GetValueOrDefaultAsync<int>(11);
+                        var mes = await reader.GetValueOrDefaultAsync<short>(12);
 
                         var result = new
                         {
@@ -231,7 +231,7 @@ namespace OPS.Core.Repository
                     lstRetorno.Add(new
                     {
                         id_cl_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                        id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+                        id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                         nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
                         sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
                         valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
@@ -280,7 +280,7 @@ namespace OPS.Core.Repository
                     lstRetorno.Add(new
                     {
                         id_cl_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                        id_fornecedor = await reader.GetValueOrDefaultAsync<uint>(1),
+                        id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                         nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
                         sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
                         valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
@@ -291,7 +291,7 @@ namespace OPS.Core.Repository
             }
         }
 
-        public async Task<dynamic> GastosPorAno(uint id)
+        public async Task<dynamic> GastosPorAno(int id)
         {
             // Note: Using DespesasAssembleias which has valor field instead of valor_liquido
             // and ano field needs to be derived from data_emissao or available in the entity
@@ -463,7 +463,7 @@ namespace OPS.Core.Repository
 
                 if (!string.IsNullOrEmpty(request.NomeParlamentar))
                 {
-                    strSql.AppendLine("	AND (d.nome_parlamentar like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_civil like '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
+                    strSql.AppendLine("	AND (d.nome_parlamentar ILIKE '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%' or d.nome_civil ILIKE '%" + Utils.MySqlEscape(request.NomeParlamentar) + "%')");
                 }
 
                 strSql.AppendLine(@"
@@ -515,7 +515,7 @@ namespace OPS.Core.Repository
                     if (!string.IsNullOrEmpty(filtro.Busca))
                     {
                         var busca = Utils.MySqlEscape(filtro.Busca);
-                        strSql.AppendLine(@" AND (d.nome_parlamentar like '%" + busca + "%' or d.nome_civil like '%" + busca + "%') ");
+                        strSql.AppendLine(@" AND (d.nome_parlamentar ILIKE '%" + busca + "%' or d.nome_civil ILIKE '%" + busca + "%') ");
                     }
 
                     //if (filtro.Periodo > 50)
@@ -646,7 +646,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -710,7 +709,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -773,7 +771,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -842,7 +839,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -906,7 +902,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -997,7 +992,6 @@ namespace OPS.Core.Repository
                     var TotalCount = reader.GetTotalRowsFound();
                     return new
                     {
-                        draw = request.Draw,
                         recordsTotal = TotalCount,
                         recordsFiltered = TotalCount,
                         data = lstRetorno
@@ -1073,7 +1067,7 @@ namespace OPS.Core.Repository
                     }
                     else if (Fornecedor.Length == 8) //CNPJ raiz
                     {
-                        sqlSelect.AppendLine("	AND l.id_fornecedor IN (select id from fornecedor where cnpj_cpf like '" + Utils.RemoveCaracteresNaoNumericos(Fornecedor) + "%')");
+                        sqlSelect.AppendLine("	AND l.id_fornecedor IN (select id from fornecedor where cnpj_cpf ILIKE '" + Utils.RemoveCaracteresNaoNumericos(Fornecedor) + "%')");
                     }
                     else
                     {
@@ -1103,7 +1097,7 @@ namespace OPS.Core.Repository
         {
             if (request.Filters.ContainsKey("Documento") && !string.IsNullOrEmpty(request.Filters["Documento"].ToString()))
             {
-                sqlSelect.AppendLine("	AND l.numero_documento like '%" + Utils.MySqlEscape(request.Filters["Documento"].ToString()) + "' ");
+                sqlSelect.AppendLine("	AND l.numero_documento ILIKE '%" + Utils.MySqlEscape(request.Filters["Documento"].ToString()) + "' ");
             }
         }
 

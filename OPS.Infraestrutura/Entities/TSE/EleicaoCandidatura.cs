@@ -8,13 +8,13 @@ namespace OPS.Infraestrutura.Entities.TSE
     public class EleicaoCandidatura
     {
         [Column("numero")]
-        public uint Numero { get; set; }
+        public int Numero { get; set; }
 
         [Column("cargo")]
         public byte Cargo { get; set; }
 
         [Column("ano")]
-        public uint Ano { get; set; }
+        public int Ano { get; set; }
 
         [Column("id_eleicao_candidato")]
         public int? IdEleicaoCandidato { get; set; }

@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Configuration;
 using System.Data;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using CsvHelper;
 using Dapper;
+using DDDN.OdtToHtml;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +14,10 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using OfficeOpenXml;
 using OPS.Core;
-using OPS.Core.Repository;
 using OPS.Core.Utilities;
 using OPS.Importador.Utilities;
-using OPS.Infraestrutura.Factories;
+using OPS.Infraestrutura;
+using OPS.Infraestrutura.Interceptors;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -107,8 +102,9 @@ namespace OPS.Importador
 
             services.AddScoped<Fornecedores.ImportacaoFornecedor>();
             services.AddScoped<HttpLogger>();
-            services.AddSingleton<AppDbContextFactory>(provider =>
-                new AppDbContextFactory(provider, configuration.GetConnectionString("AuditoriaContext")));
+            services.AddDbContext<AppDbContext>(options => options
+                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext")));
+
             //services.AddRedaction();
 
             services.AddHttpClient<HttpClient>("ResilientClient", config =>
@@ -196,6 +192,17 @@ namespace OPS.Importador
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>().AddSerilog(Log.Logger, true);
 
+            // Initialize database extensions (unaccent for PostgreSQL)
+            var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+            try
+            {
+                dbContext.InitializeDatabaseExtensions();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Could not initialize database extensions: {Message}", ex.Message);
+            }
+
             SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
             SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
@@ -213,19 +220,17 @@ namespace OPS.Importador
 
                 logger.LogInformation("Iniciando Importação");
 
+//                var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+//                    await dbContext.Database.ExecuteSqlRawAsync(@"
+//INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
+//SELECT id, nome_parlamentar, id_estado FROM assembleias.cl_deputado
+//WHERE nome_parlamentar IS NOT NULL
+//ON CONFLICT DO NOTHING;
 
-                var dbContextFactory = serviceProvider.GetRequiredService<AppDbContextFactory>();
-                using (var dbContext = dbContextFactory.CreateDbContext())
-                {
-                    await dbContext.Database.ExecuteSqlRawAsync(@"
-INSERT IGNORE INTO ops_tmp.cl_deputado_de_para (id, nome, id_estado)
-SELECT id, nome_parlamentar, id_estado FROM ops.cl_deputado
-WHERE nome_parlamentar IS NOT NULL;
-
-INSERT IGNORE INTO ops_tmp.cl_deputado_de_para (id, nome, id_estado)
-SELECT id, nome_civil, id_estado FROM ops.cl_deputado
-WHERE nome_civil IS NOT NULL;");
-                }
+//INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
+//SELECT id, nome_civil, id_estado FROM assembleias.cl_deputado
+//WHERE nome_civil IS NOT NULL
+//ON CONFLICT DO NOTHING;");
 
                 //var crawler = new SeleniumScraper(serviceProvider);
                 //crawler.BaixarArquivosParana(DateTime.Today.Year);
@@ -234,34 +239,34 @@ WHERE nome_civil IS NOT NULL;");
                 var types = new Type[]
                 {
                     typeof(SenadoFederal.Senado), // csv
-                    typeof(CamaraFederal.Camara), // csv
-                    //typeof(Assembleias.Estados.Acre.ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    typeof(Assembleias.Estados.Alagoas.ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    typeof(Assembleias.Estados.Amapa.ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
-                    typeof(Assembleias.Estados.Amazonas.ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
-                    typeof(Assembleias.Estados.Bahia.ImportacaoBahia), // crawler anual
-                    typeof(Assembleias.Estados.Ceara.ImportacaoCeara), // csv mensal
-                    typeof(Assembleias.Estados.DistritoFederal.ImportacaoDistritoFederal), // xlsx  (Apenas BR)
-                    typeof(Assembleias.Estados.EspiritoSanto.ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                    typeof(Assembleias.Estados.Goias.ImportacaoGoias), // crawler mensal/deputado
-                    typeof(Assembleias.Estados.Maranhao.ImportacaoMaranhao), // Valores mensais por categoria
-                    //typeof(Assembleias.Estados.MatoGrosso.ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    typeof(Assembleias.Estados.MatoGrossoDoSul.ImportacaoMatoGrossoDoSul), // crawler anual
-                    typeof(Assembleias.Estados.MinasGerais.ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
-                    typeof(Assembleias.Estados.Para.ImportacaoPara), // json api anual
-                    typeof(Assembleias.Estados.Paraiba.ImportacaoParaiba), // arquivo ods mensal/deputado
-                    typeof(Assembleias.Estados.Parana.ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
-                    typeof(Assembleias.Estados.Pernambuco.ImportacaoPernambuco), // json api mensal/deputado
-                    typeof(Assembleias.Estados.Piaui.ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium)
-                    typeof(Assembleias.Estados.RioDeJaneiro.ImportacaoRioDeJaneiro), // json api mensal/deputado
-                    typeof(Assembleias.Estados.RioGrandeDoNorte.ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
-                    typeof(Assembleias.Estados.RioGrandeDoSul.ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
-                    typeof(Assembleias.Estados.Rondonia.ImportacaoRondonia), // crawler mensal/deputado
-                    typeof(Assembleias.Estados.Roraima.ImportacaoRoraima), // crawler & odt mensal/deputado
-                    typeof(Assembleias.Estados.SantaCatarina.ImportacaoSantaCatarina), // csv anual
-                    typeof(Assembleias.Estados.SaoPaulo.ImportacaoSaoPaulo), // xml anual
-                    typeof(Assembleias.Estados.Sergipe.ImportacaoSergipe), // crawler & pdf mensal/deputado
-                    typeof(Assembleias.Estados.Tocantins.ImportacaoTocantins), // crawler & pdf mensal/deputado
+                    //typeof(CamaraFederal.Camara), // csv
+                    ////typeof(Assembleias.Estados.Acre.ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(Assembleias.Estados.Alagoas.ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
+                    //typeof(Assembleias.Estados.Amapa.ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Assembleias.Estados.Amazonas.ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Assembleias.Estados.Bahia.ImportacaoBahia), // crawler anual
+                    //typeof(Assembleias.Estados.Ceara.ImportacaoCeara), // csv mensal
+                    //typeof(Assembleias.Estados.DistritoFederal.ImportacaoDistritoFederal), // xlsx  (Apenas BR)
+                    //typeof(Assembleias.Estados.EspiritoSanto.ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    //typeof(Assembleias.Estados.Goias.ImportacaoGoias), // crawler mensal/deputado
+                    //typeof(Assembleias.Estados.Maranhao.ImportacaoMaranhao), // Valores mensais por categoria
+                    ////typeof(Assembleias.Estados.MatoGrosso.ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(Assembleias.Estados.MatoGrossoDoSul.ImportacaoMatoGrossoDoSul), // crawler anual
+                    //typeof(Assembleias.Estados.MinasGerais.ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
+                    //typeof(Assembleias.Estados.Para.ImportacaoPara), // json api anual
+                    //typeof(Assembleias.Estados.Paraiba.ImportacaoParaiba), // arquivo ods mensal/deputado
+                    //typeof(Assembleias.Estados.Parana.ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
+                    //typeof(Assembleias.Estados.Pernambuco.ImportacaoPernambuco), // json api mensal/deputado
+                    //typeof(Assembleias.Estados.Piaui.ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium)
+                    //typeof(Assembleias.Estados.RioDeJaneiro.ImportacaoRioDeJaneiro), // json api mensal/deputado
+                    //typeof(Assembleias.Estados.RioGrandeDoNorte.ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    //typeof(Assembleias.Estados.RioGrandeDoSul.ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                    //typeof(Assembleias.Estados.Rondonia.ImportacaoRondonia), // crawler mensal/deputado
+                    //typeof(Assembleias.Estados.Roraima.ImportacaoRoraima), // crawler & odt mensal/deputado
+                    //typeof(Assembleias.Estados.SantaCatarina.ImportacaoSantaCatarina), // csv anual
+                    //typeof(Assembleias.Estados.SaoPaulo.ImportacaoSaoPaulo), // xml anual
+                    //typeof(Assembleias.Estados.Sergipe.ImportacaoSergipe), // crawler & pdf mensal/deputado
+                    //typeof(Assembleias.Estados.Tocantins.ImportacaoTocantins), // crawler & pdf mensal/deputado
                 };
 
                 var tasks = new List<Task>();
@@ -340,77 +345,77 @@ WHERE nome_civil IS NOT NULL;");
             Console.ReadKey();
         }
 
-        private static void ImportarPartidos()
-        {
-            // (outra fonnte) https://legis.senado.leg.br/dadosabertos/senador/partidos
-            var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
+        //private static void ImportarPartidos()
+        //{
+        //    // (outra fonnte) https://legis.senado.leg.br/dadosabertos/senador/partidos
+        //    var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
 
-            var factory = new AppDbContextFactory(null, Padrao.ConnectionString);
-            using (var dbContext = factory.CreateDbContext())
-            {
-                using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
-                {
-                    using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
-                    {
-                        using (var client = new System.Net.Http.HttpClient())
-                        {
-                            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)");
+        //    var factory = new AppDbContext(null, Padrao.ConnectionString);
+        //    using (var dbContext = factory.CreateDbContext())
+        //    {
+        //        using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
+        //        {
+        //            using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
+        //            {
+        //                using (var client = new System.Net.Http.HttpClient())
+        //                {
+        //                    client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)");
 
-                            while (csv.Read())
-                            {
-                                if (csv[2] == "LOGO") continue;
+        //                    while (csv.Read())
+        //                    {
+        //                        if (csv[2] == "LOGO") continue;
 
-                                if (csv[2] != "")
-                                {
-                                    try
-                                    {
-                                        MatchCollection m1 = Regex.Matches(csv[2], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
-                                        if (m1.Count > 0)
-                                        {
-                                            var link = m1[0].Groups[1].Value;
+        //                        if (csv[2] != "")
+        //                        {
+        //                            try
+        //                            {
+        //                                MatchCollection m1 = Regex.Matches(csv[2], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
+        //                                if (m1.Count > 0)
+        //                                {
+        //                                    var link = m1[0].Groups[1].Value;
 
-                                            var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[3].ToLower() + ".png";
-                                            if (!File.Exists(arquivo))
-                                                client.DownloadFile(link, arquivo).Wait();
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                }
+        //                                    var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[3].ToLower() + ".png";
+        //                                    if (!File.Exists(arquivo))
+        //                                        client.DownloadFile(link, arquivo).Wait();
+        //                                }
+        //                            }
+        //                            catch (Exception ex)
+        //                            {
+        //                                Console.WriteLine(ex.Message);
+        //                            }
+        //                        }
 
-                                var parameters = new[]
-                                {
-                                    ("@legenda", csv[0] != "-" ? (object)csv[0] : null),
-                                    ("@sigla", csv[2] != "??" ? (object)csv[2] : null),
-                                    ("@nome", csv[3]),
-                                    ("@sede", csv[4] != "??" ? (object)csv[4] : null),
-                                    ("@fundacao", AjustarData(csv[5])),
-                                    ("@registro_solicitacao", AjustarData(csv[6])),
-                                    ("@registro_provisorio", AjustarData(csv[7])),
-                                    ("@registro_definitivo", AjustarData(csv[8])),
-                                    ("@extincao", AjustarData(csv[9])),
-                                    ("@motivo", csv[10])
-                                };
+        //                        var parameters = new[]
+        //                        {
+        //                            ("@legenda", csv[0] != "-" ? (object)csv[0] : null),
+        //                            ("@sigla", csv[2] != "??" ? (object)csv[2] : null),
+        //                            ("@nome", csv[3]),
+        //                            ("@sede", csv[4] != "??" ? (object)csv[4] : null),
+        //                            ("@fundacao", AjustarData(csv[5])),
+        //                            ("@registro_solicitacao", AjustarData(csv[6])),
+        //                            ("@registro_provisorio", AjustarData(csv[7])),
+        //                            ("@registro_definitivo", AjustarData(csv[8])),
+        //                            ("@extincao", AjustarData(csv[9])),
+        //                            ("@motivo", csv[10])
+        //                        };
 
-                                dbContext.Database.ExecuteSqlRaw(@"
-                                    INSERT INTO partido_todos (
-                                        legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
-                                    ) VALUES (
-                                        @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
-                                    )", parameters);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                        dbContext.Database.ExecuteSqlRaw(@"
+        //                            INSERT INTO partido_todos (
+        //                                legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
+        //                            ) VALUES (
+        //                                @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
+        //                            )", parameters);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         private static async Task BaixarNotas()
         {
             var sql = @"SELECT l.id, d.id_deputado, l.ano, l.id_documento
-FROM cf_despesa l
+FROM camara.cf_despesa l
 JOIN cf_deputado d ON d.id = l.id_cf_deputado
 WHERE l.ano >= 2023
 AND l.id_cf_despesa_tipo = 120
@@ -463,7 +468,7 @@ ORDER BY 1";
         {
             var sql = @"SELECT id, cnpj_cpf from fornecedor f
 WHERE LENGTH(f.cnpj_cpf) = 14
-AND f.cnpj_cpf LIKE '***%'";
+AND f.cnpj_cpf ILIKE '***%'";
 
             using (var connection = new NpgsqlConnection(Padrao.ConnectionString))
             {
@@ -474,7 +479,7 @@ AND f.cnpj_cpf LIKE '***%'";
                     try
                     {
                         var cnpjIncorreto = item.cnpj_cpf.ToString();
-                        var sqlFind = $@"SELECT id_fornecedor, cnpj from fornecedor_info WHERE cnpj LIKE '{cnpjIncorreto.Replace("*", "_")}'";
+                        var sqlFind = $@"SELECT id_fornecedor, cnpj from fornecedor_info WHERE cnpj ILIKE '{cnpjIncorreto.Replace("*", "_")}'";
                         var results1 = await connection.QueryAsync(sqlFind);
 
                         if (results1.Count() == 1)
@@ -498,7 +503,7 @@ UPDATE fornecedor SET
     valor_total_ceap_assembleias = NULL
 WHERE id = {idFornecodorIncorreto};
 
-UPDATE fornecedor_cnpj_incorreto SET 
+UPDATE fornecedor_de_para SET 
     id_fornecedor_correto = {idFornecodorCorreto},
     cnpj_correto = '{cnpjCorreto}'
 WHERE cnpj_incorreto = '{cnpjIncorreto}';

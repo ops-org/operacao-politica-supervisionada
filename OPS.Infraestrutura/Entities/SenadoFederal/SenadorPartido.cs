@@ -9,10 +9,10 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         [Key]
         [Column("id")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_sf_senador")]
-        public uint IdSenador { get; set; }
+        public int IdSenador { get; set; }
 
         [Column("id_partido")]
         public byte IdPartido { get; set; }
@@ -25,6 +25,6 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
 
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;
-        public virtual Entities.Comum.Partido Partido { get; set; } = null!;
+        //public virtual Entities.Comum.Partido Partido { get; set; } = null!;
     }
 }

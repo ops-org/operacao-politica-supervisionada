@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using OPS.Infraestrutura.Entities.Comum;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
@@ -9,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_vinculo")]
         public byte IdVinculo { get; set; }
@@ -27,16 +26,16 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public byte? IdSimboloFuncao { get; set; }
 
         [Column("id_lotacao")]
-        public ushort IdLotacao { get; set; }
+        public short IdLotacao { get; set; }
 
         [Column("id_tipo_folha")]
         public byte IdTipoFolha { get; set; }
 
         [Column("ano_mes")]
-        public uint AnoMes { get; set; }
+        public int AnoMes { get; set; }
 
         [Column("admissao")]
-        public ushort Admissao { get; set; }
+        public short Admissao { get; set; }
 
         [Column("remun_basica", TypeName = "decimal(10,2)")]
         public decimal? RemunBasica { get; set; }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
@@ -8,7 +9,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
     {
         [Key]
         [Column("id_fornecedor")]
-        public uint IdFornecedor { get; set; }
+        public int IdFornecedor { get; set; }
 
         [Column("cnpj")]
         [StringLength(14)]
@@ -34,9 +35,11 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public string? NomeFantasia { get; set; }
 
         [Column("id_fornecedor_atividade_principal")]
+        // [ForeignKey("FornecedorAtividadePrincipal")]
         public int? IdFornecedorAtividadePrincipal { get; set; }
 
         [Column("id_fornecedor_natureza_juridica")]
+        // [ForeignKey("FornecedorNaturezaJuridica")]
         public int? IdFornecedorNaturezaJuridica { get; set; }
 
         [Column("logradouro_tipo")]
@@ -163,5 +166,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
 
         // Navigation properties
         public virtual Fornecedor Fornecedor { get; set; } = null!;
+        // public virtual FornecedorNaturezaJuridica? FornecedorNaturezaJuridica { get; set; }
+        // public virtual FornecedorAtividade? FornecedorAtividadePrincipal { get; set; }
     }
 }

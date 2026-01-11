@@ -8,16 +8,16 @@ namespace OPS.Infraestrutura.Entities.TSE
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_eleicao_cargo")]
-        public uint? IdEleicaoCargo { get; set; }
+        public int? IdEleicaoCargo { get; set; }
 
         [Column("id_eleicao_candidadto")]
-        public uint? IdEleicaoCandidato { get; set; }
+        public int? IdEleicaoCandidato { get; set; }
 
         [Column("ano_eleicao", TypeName = "decimal(4,0)")]
-        public uint? AnoEleicao { get; set; }
+        public int? AnoEleicao { get; set; }
 
         [Column("num_documento")]
         [StringLength(50)]

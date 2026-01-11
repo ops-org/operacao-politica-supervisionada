@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         [Column("id_legislatura")]
         public byte IdLegislatura { get; set; }
@@ -27,13 +27,13 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string? Numero { get; set; }
 
         [Column("presencas")]
-        public ushort Presencas { get; set; }
+        public short Presencas { get; set; }
 
         [Column("ausencias")]
-        public ushort Ausencias { get; set; }
+        public short Ausencias { get; set; }
 
         [Column("ausencias_justificadas")]
-        public ushort AusenciasJustificadas { get; set; }
+        public short AusenciasJustificadas { get; set; }
 
         [Column("checksum")]
         [StringLength(100)]

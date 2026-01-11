@@ -8,26 +8,40 @@ namespace OPS.Infraestrutura.Entities.Comum
     {
         [Key]
         [Column("id")]
-        public uint Id { get; set; }
+        public short Id { get; set; }
 
-        [Column("id_partido")]
-        public byte IdPartido { get; set; }
+        [Column("legenda")]
+        public short? Legenda { get; set; }
 
         [Column("sigla")]
         [StringLength(20)]
-        public string Sigla { get; set; } = null!;
+        public string? Sigla { get; set; }
 
         [Column("nome")]
-        [StringLength(255)]
-        public string Nome { get; set; } = null!;
+        [StringLength(100)]
+        public string? Nome { get; set; }
 
-        [Column("data_inicio")]
-        public DateTime? DataInicio { get; set; }
+        [Column("sede")]
+        [StringLength(2)]
+        public string? Sede { get; set; }
 
-        [Column("data_fim")]
-        public DateTime? DataFim { get; set; }
+        [Column("fundacao")]
+        public DateOnly? Fundacao { get; set; }
 
-        // Navigation properties
-        public virtual Partido Partido { get; set; } = null!;
+        [Column("registro_solicitacao")]
+        public DateOnly? RegistroSolicitacao { get; set; }
+
+        [Column("registro_provisorio")]
+        public DateOnly? RegistroProvisorio { get; set; }
+
+        [Column("registro_definitivo")]
+        public DateOnly? RegistroDefinitivo { get; set; }
+
+        [Column("extincao")]
+        public DateOnly? Extincao { get; set; }
+
+        [Column("motivo")]
+        [StringLength(500)]
+        public string? Motivo { get; set; }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace OPS.Importador.SenadoFederal.Entities;
+﻿namespace OPS.Importador.SenadoFederal.Entities;
 
 public class Exercicio
 {

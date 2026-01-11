@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using OPS.Infraestrutura.Entities.CamaraFederal;
-using OPS.Infraestrutura.Entities.Comum;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 
 namespace OPS.Infraestrutura;
@@ -43,16 +41,16 @@ public static class SenadoFederalConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
-            
+
             // Configure foreign keys
             entity.HasOne(e => e.Partido)
                   .WithMany()
                   .HasForeignKey(e => e.IdPartido);
-                  
+
             entity.HasOne(e => e.Estado)
                   .WithMany()
                   .HasForeignKey(e => e.IdEstado);
-                  
+
             entity.HasOne(e => e.EstadoNaturalidade)
                   .WithMany()
                   .HasForeignKey(e => e.IdEstadoNaturalidade);
@@ -95,9 +93,15 @@ public static class SenadoFederalConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasOne(e => e.Senador).WithMany().HasForeignKey(e => e.IdSenador);
-            entity.HasOne(e => e.Mandato).WithMany(m => m.MandatoExercicios)
+
+            entity.HasOne(e => e.Mandato)
+                .WithMany(m => m.MandatoExercicios)
                 .HasForeignKey(e => new { e.IdMandato, e.IdSenador });
+
+            entity.HasOne(m => m.Senador)
+                .WithMany(s => s.MandatoExercicios)
+                .HasForeignKey(e => e.IdSenador);
+
             entity.HasOne(e => e.MotivoAfastamento).WithMany(m => m.MandatoExercicios).HasForeignKey(e => e.IdMotivoAfastamento);
             entity.ToTable("sf_mandato_exercicio", "senado");
         });
@@ -267,9 +271,9 @@ public static class SenadoFederalConfigurations
         modelBuilder.Entity<SenadorPartido>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasOne(e => e.Senador).WithMany().HasForeignKey(e => e.IdSenador);
-            entity.HasOne(e => e.Partido).WithMany().HasForeignKey(e => e.IdPartido);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasOne(e => e.Senador).WithMany(x => x.Partidos).HasForeignKey(e => e.IdSenador);
+            //entity.HasOne(e => e.Partido).WithMany().HasForeignKey(e => e.IdPartido);
             entity.ToTable("sf_senador_partido", "senado");
         });
     }
