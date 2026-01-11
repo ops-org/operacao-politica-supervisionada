@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OPS.Infraestrutura.Entities.Comum;
 using OPS.Infraestrutura.Entities.Temp;
 
 namespace OPS.Infraestrutura;
@@ -25,6 +26,8 @@ public partial class AppDbContext
 
     // Temp Tables - Fornecedor
     public DbSet<FornecedorDePara> FornecedorDeParas { get; set; }
+
+    public DbSet<PartidoDePara> PartidoDeParas { get; set; }
 
     // Temp Tables - Common
     public DbSet<ArquivoChecksum> ArquivoChecksums { get; set; }
@@ -97,7 +100,9 @@ public static class TempConfigurations
     {
         modelBuilder.Entity<SenadoDespesaTemp>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
             entity.Property(e => e.Hash).HasColumnType("bytea");
             entity.ToTable("sf_despesa_temp", "temp");
         });
@@ -187,6 +192,15 @@ public static class TempConfigurations
         });
     }
 
+    public static void ConfigurePartidoDePara(this ModelBuilder modelBuilder)
+    {
+        // Configure Partido
+        modelBuilder.Entity<PartidoDePara>(entity =>
+        {
+            entity.ToTable("partido_de_para", "temp");
+        });
+    }
+
     public static void ConfigureCamaraEstadualFuncionarioTemp(this ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CamaraEstadualFuncionarioTemp>(entity =>
@@ -262,6 +276,7 @@ public static class TempConfigurations
 
         // Fornecedor configurations
         modelBuilder.ConfigureFornecedorDeParaTemp();
+        modelBuilder.ConfigurePartidoDePara();
 
         // Common configurations
         modelBuilder.ConfigureArquivoChecksum();

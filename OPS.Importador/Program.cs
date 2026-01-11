@@ -1,12 +1,6 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using CsvHelper;
 using Dapper;
-using DDDN.OdtToHtml;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +11,6 @@ using OPS.Core;
 using OPS.Core.Utilities;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Interceptors;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -60,9 +53,9 @@ namespace OPS.Importador
             Log.Logger = loggerConfiguration.CreateLogger();
 
             var services = new ServiceCollection();
-            services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
+            //services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
+            //services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
 
             services.AddScoped<SenadoFederal.Senado>();
             services.AddScoped<CamaraFederal.Camara>();
@@ -103,7 +96,8 @@ namespace OPS.Importador
             services.AddScoped<Fornecedores.ImportacaoFornecedor>();
             services.AddScoped<HttpLogger>();
             services.AddDbContext<AppDbContext>(options => options
-                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext")));
+                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), 
+                   ServiceLifetime.Transient);
 
             //services.AddRedaction();
 
@@ -220,17 +214,17 @@ namespace OPS.Importador
 
                 logger.LogInformation("Iniciando Importação");
 
-//                var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-//                    await dbContext.Database.ExecuteSqlRawAsync(@"
-//INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-//SELECT id, nome_parlamentar, id_estado FROM assembleias.cl_deputado
-//WHERE nome_parlamentar IS NOT NULL
-//ON CONFLICT DO NOTHING;
+                //                var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+                //                    await dbContext.Database.ExecuteSqlRawAsync(@"
+                //INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
+                //SELECT id, nome_parlamentar, id_estado FROM assembleias.cl_deputado
+                //WHERE nome_parlamentar IS NOT NULL
+                //ON CONFLICT DO NOTHING;
 
-//INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-//SELECT id, nome_civil, id_estado FROM assembleias.cl_deputado
-//WHERE nome_civil IS NOT NULL
-//ON CONFLICT DO NOTHING;");
+                //INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
+                //SELECT id, nome_civil, id_estado FROM assembleias.cl_deputado
+                //WHERE nome_civil IS NOT NULL
+                //ON CONFLICT DO NOTHING;");
 
                 //var crawler = new SeleniumScraper(serviceProvider);
                 //crawler.BaixarArquivosParana(DateTime.Today.Year);
@@ -238,7 +232,7 @@ namespace OPS.Importador
 
                 var types = new Type[]
                 {
-                    typeof(SenadoFederal.Senado), // csv
+                    //typeof(SenadoFederal.Senado), // csv
                     //typeof(CamaraFederal.Camara), // csv
                     ////typeof(Assembleias.Estados.Acre.ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     //typeof(Assembleias.Estados.Alagoas.ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
@@ -263,7 +257,7 @@ namespace OPS.Importador
                     //typeof(Assembleias.Estados.RioGrandeDoSul.ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
                     //typeof(Assembleias.Estados.Rondonia.ImportacaoRondonia), // crawler mensal/deputado
                     //typeof(Assembleias.Estados.Roraima.ImportacaoRoraima), // crawler & odt mensal/deputado
-                    //typeof(Assembleias.Estados.SantaCatarina.ImportacaoSantaCatarina), // csv anual
+                    typeof(Assembleias.Estados.SantaCatarina.ImportacaoSantaCatarina), // csv anual
                     //typeof(Assembleias.Estados.SaoPaulo.ImportacaoSaoPaulo), // xml anual
                     //typeof(Assembleias.Estados.Sergipe.ImportacaoSergipe), // crawler & pdf mensal/deputado
                     //typeof(Assembleias.Estados.Tocantins.ImportacaoTocantins), // crawler & pdf mensal/deputado
@@ -280,7 +274,7 @@ namespace OPS.Importador
                             var watch = System.Diagnostics.Stopwatch.StartNew();
 
                             var importador = (Assembleias.Comum.ImportadorBase)serviceProvider.GetService(type);
-                            importador.ImportarCompleto();
+                            importador.ImportarCompleto().Wait();
 
                             watch.Stop();
                             logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}", type.Name, watch.Elapsed);

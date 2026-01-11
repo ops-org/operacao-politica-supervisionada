@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
+    [DebuggerDisplay("Id = {Id}, IdSenador = {IdSenador}, NomeCurso = {NomeCurso}, GrauInstrucao = {GrauInstrucao}, Local = {Local}")]
     [Table("sf_senador_historico_academico")]
     public class SenadorHistoricoAcademico
     {

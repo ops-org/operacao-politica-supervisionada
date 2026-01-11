@@ -63,11 +63,12 @@ public static class SenadoFederalConfigurations
         // Configure Despesa (Senado Federal - Composite Key)
         modelBuilder.Entity<DespesaSenado>(entity =>
         {
-            entity.HasKey(e => new { e.IdSenador, e.Id });
+            entity.HasKey(e => new { e.Id });
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
             entity.HasOne(e => e.Senador).WithMany(s => s.Despesas).HasForeignKey(e => e.IdSenador);
             entity.HasOne(e => e.DespesaTipo).WithMany(t => t.Despesas).HasForeignKey(e => e.IdDespesaTipo);
-            entity.HasOne(e => e.Fornecedor).WithMany().HasForeignKey(e => e.IdFornecedor);
+            //entity.HasOne(e => e.Fornecedor).WithMany(f => f.Despesas).HasForeignKey(e => e.IdFornecedor);
             entity.ToTable("sf_despesa", "senado");
         });
     }
@@ -79,9 +80,9 @@ public static class SenadoFederalConfigurations
         {
             entity.HasKey(e => new { e.Id, e.IdSenador });
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasOne(e => e.Senador).WithMany(s => s.Mandatos).HasForeignKey(e => e.IdSenador);
-            entity.HasOne(e => e.Estado).WithMany().HasForeignKey(e => e.IdEstado);
-            entity.HasOne(e => e.Partido).WithMany().HasForeignKey(e => e.IdPartido);
+            entity.HasOne(e => e.Senador).WithMany(e => e.Mandatos).HasForeignKey(e => e.IdSenador);
+            //entity.HasOne(e => e.Estado).WithMany(e => e.Mandatos).HasForeignKey(e => e.IdEstado);
+            //entity.HasOne(e => e.Partido).WithMany(e => e.Mandatos).HasForeignKey(e => e.IdPartido);
             entity.ToTable("sf_mandato", "senado");
         });
     }
@@ -113,8 +114,10 @@ public static class SenadoFederalConfigurations
         modelBuilder.Entity<MandatoLegislatura>(entity =>
         {
             entity.HasKey(e => new { e.IdMandato, e.IdLegislatura, e.IdSenador });
+
             entity.HasOne(e => e.Mandato).WithMany(m => m.MandatoLegislaturas)
                 .HasForeignKey(e => new { e.IdMandato, e.IdSenador });
+
             entity.HasOne(e => e.Legislatura).WithMany(l => l.MandatoLegislaturas).HasForeignKey(e => e.IdLegislatura);
             entity.ToTable("sf_mandato_legislatura", "senado");
         });
@@ -236,7 +239,9 @@ public static class SenadoFederalConfigurations
         // Configure SenadorHistoricoAcademico (Composite Key)
         modelBuilder.Entity<SenadorHistoricoAcademico>(entity =>
         {
-            entity.HasKey(e => e.Id);
+            entity.HasKey(e => new { e.Id });
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
             entity.HasOne(e => e.Senador).WithMany(s => s.HistoricoAcademico).HasForeignKey(e => e.IdSenador);
             entity.ToTable("sf_senador_historico_academico", "senado");
         });

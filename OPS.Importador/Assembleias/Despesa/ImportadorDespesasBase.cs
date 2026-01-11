@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ namespace OPS.Importador.Assembleias.Despesa
 
         public ILogger<ImportadorDespesasBase> logger { get; set; }
 
-        public IDbConnection connection { get; set; }
+        public IDbConnection connection { get { return dbContext.Database.GetDbConnection(); } }
 
         public AppDbContext dbContext { get; set; }
 
@@ -83,7 +84,6 @@ namespace OPS.Importador.Assembleias.Despesa
         public ImportadorDespesasBase(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasBase>>();
-            connection = serviceProvider.GetService<IDbConnection>();
             dbContext = serviceProvider.GetService<AppDbContext>();
 
             var configuration = serviceProvider.GetService<IConfiguration>();
@@ -311,7 +311,7 @@ WHERE id_estado = {idEstado};");
             {
                 connection.Execute($@"
 UPDATE temp.cl_despesa_temp temp
-JOIN cl_deputado d ON d.nome_importacao = temp.nome_civil
+JOIN assembleias.cl_deputado d ON d.nome_importacao = temp.nome_civil
 SET temp.nome_civil = d.nome_civil
 WHERE d.id_estado = {idEstado}
 AND temp.nome_civil is not null
@@ -321,7 +321,7 @@ AND temp.nome_civil is not null
             {
                 connection.Execute($@"
 UPDATE temp.cl_despesa_temp temp
-JOIN cl_deputado d ON d.nome_importacao = temp.nome
+JOIN assembleias.cl_deputado d ON d.nome_importacao = temp.nome
 SET temp.nome = d.nome_parlamentar
 WHERE d.id_estado = {idEstado}
 AND d.nome_parlamentar IS NOT null
@@ -509,7 +509,7 @@ WHERE cpf NOT IN (
 INSERT INTO fornecedor (nome, cnpj_cpf)
 select MAX(dt.empresa), dt.cnpj_cpf
 from temp.cl_despesa_temp dt
-left join fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
+left join fornecedor.fornecedor.fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
 where dt.cnpj_cpf is not null
 and f.id is null
 -- and LENGTH(dt.cnpj_cpf) <= 14
@@ -528,7 +528,7 @@ GROUP BY dt.cnpj_cpf;
             var affected = connection.Execute(@$"
 DELETE d
 FROM assembleias.cl_despesa d 
-join cl_deputado p on p.id = d.id_cl_deputado 
+join assembleias.cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
 and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
 			");
@@ -583,9 +583,9 @@ SELECT
     d.observacao,
     d.hash
 FROM temp.cl_despesa_temp d
-inner join cl_deputado p on id_estado = {idEstado} and {condicaoSql}
-left join cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
-LEFT join fornecedor f on f.cnpj_cpf = d.cnpj_cpf
+inner join assembleias.cl_deputado p on id_estado = {idEstado} and {condicaoSql}
+left join assembleias.cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
+LEFT join fornecedor.fornecedor f on f.cnpj_cpf = d.cnpj_cpf
 ORDER BY d.id;
 			";
 
@@ -629,7 +629,7 @@ WHERE d.id_cl_deputado IS NULL");
                 var ultimaDataEmissao = connection.ExecuteScalar<DateTime>($@"
 SELECT MAX(d.data_emissao) AS ultima_emissao
 FROM assembleias.cl_despesa d
-inner join cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}");
+inner join assembleias.cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}");
 
                 if (ultimaDataEmissao > DateTime.Today)
                     logger.LogWarning("Ultima data de emissão é uma data futura: {DataEmissao:dd/MM/yyyy}", ultimaDataEmissao);
@@ -652,7 +652,7 @@ select
     count(1) as itens, 
     coalesce(sum(valor_liquido), 0) as valor_total 
 FROM assembleias.cl_despesa d 
-join cl_deputado p on p.id = d.id_cl_deputado 
+join assembleias.cl_deputado p on p.id = d.id_cl_deputado 
 where p.id_estado = {idEstado}
 and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
@@ -711,11 +711,13 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             itensProcessadosAno = 0;
 
             lstHash = new Dictionary<string, int>();
-            var sql = $"select d.id, d.hash FROM assembleias.cl_despesa d join cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
+            var sql = $"select d.id, d.hash FROM assembleias.cl_despesa d join assembleias.cl_deputado p on d.id_cl_deputado = p.id where p.id_estado = {idEstado} and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
             IEnumerable<dynamic> lstHashDB = connection.Query(sql);
 
             foreach (IDictionary<string, object> dReader in lstHashDB)
             {
+                if (dReader["hash"] == null) continue;
+
                 var hex = Convert.ToHexString((byte[])dReader["hash"]);
                 if (!lstHash.ContainsKey(hex))
                     lstHash.Add(hex, (int)dReader["id"]);
@@ -983,7 +985,7 @@ select
     min(d.data_emissao) as primeira_despesa, 
     max(d.data_emissao) as ultima_despesa 
 FROM assembleias.cl_despesa d
-join cl_deputado p ON p.id = d.id_cl_deputado
+join assembleias.cl_deputado p ON p.id = d.id_cl_deputado
 where p.id_estado = @idEstado";
                 using (var dReader = connection.ExecuteReader(sql, new { idEstado }))
                 {
@@ -1017,7 +1019,7 @@ where p.id_estado = @idEstado";
     					order by valor_total desc 
     					limit 4
     				) l1 
-    				INNER JOIN cl_deputado d on d.id = l1.id_cl_deputado 
+    				INNER JOIN assembleias.cl_deputado d on d.id = l1.id_cl_deputado 
     				LEFT JOIN partido p on p.id = d.id_partido
     				LEFT JOIN estado e on e.id = d.id_estado;";
 

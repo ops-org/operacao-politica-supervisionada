@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
@@ -12,7 +13,6 @@ namespace OPS.Importador.Assembleias.Parlamentar
     public abstract class ImportadorParlamentarBase : IImportadorParlamentar
     {
         protected readonly ILogger<ImportadorParlamentarBase> logger;
-        protected readonly IDbConnection connection;
         protected readonly AppDbContext dbContext;
         protected ImportadorParlamentarConfig config;
 
@@ -27,7 +27,6 @@ namespace OPS.Importador.Assembleias.Parlamentar
         public ImportadorParlamentarBase(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorParlamentarBase>>();
-            connection = serviceProvider.GetService<IDbConnection>();
             dbContext = serviceProvider.GetService<AppDbContext>();
 
             httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
@@ -47,27 +46,27 @@ namespace OPS.Importador.Assembleias.Parlamentar
 
         public byte BuscarIdPartido(string partido)
         {
-            if (partido == "PATRI" || partido.Equals("PATRIOTAS", StringComparison.InvariantCultureIgnoreCase)) partido = "PATRIOTA";
-            else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
-            else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN" || partido == "PRB") partido = "REPUBLICANOS";
-            else if (partido == "PR") partido = "PL"; // Partido da República
-            else if (partido == "Podemos" || partido == "POD") partido = "PODE";
-            else if (partido == "UNIÃO BRASIL (UNIÃO)" || partido == "UB") partido = "UNIÃO";
-            else if (partido == "CIDA" || partido == "CDN" || partido == "PPS") partido = "CIDADANIA";
-            else if (partido == "PSDC") partido = "DC"; // Democracia Cristã
-            else if (partido == "PTR") partido = "PP"; // Progressistas
-            else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";
-            else if (partido.Contains("PROGRESSISTA") || partido == "Partido Progressista") partido = "PP"; // Progressistas
-            else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
-            else if (partido.Contains("PARTIDO VERDE")) partido = "PV";
-            else if (partido.Contains("PMN")) partido = "MOBILIZA";
-            else if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido)) partido = "S.PART.";
+            //if (partido == "PATRI" || partido.Equals("PATRIOTAS", StringComparison.InvariantCultureIgnoreCase)) partido = "PATRIOTA";
+            //else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
+            //else if (partido == "REPUB" || partido == "REP" || partido == "REPUBLICAN" || partido == "PRB") partido = "REPUBLICANOS";
+            //else if (partido == "PR") partido = "PL"; // Partido da República
+            //else if (partido == "Podemos" || partido == "POD") partido = "PODE";
+            //else if (partido == "UNIÃO BRASIL (UNIÃO)" || partido == "UB") partido = "UNIÃO";
+            //else if (partido == "CIDA" || partido == "CDN" || partido == "PPS") partido = "CIDADANIA";
+            //else if (partido == "PSDC") partido = "DC"; // Democracia Cristã
+            //else if (partido == "PTR") partido = "PP"; // Progressistas
+            //else if (partido.Equals("PC DO B", StringComparison.InvariantCultureIgnoreCase)) partido = "PCdoB";
+            //else if (partido.Contains("PROGRESSISTA") || partido == "Partido Progressista") partido = "PP"; // Progressistas
+            //else if (partido.Contains("SOLIDARIEDADE") || partido == "SDD") partido = "SD"; // Solidariedade
+            //else if (partido.Contains("PARTIDO VERDE")) partido = "PV";
+            //else if (partido.Contains("PMN")) partido = "MOBILIZA";
+            //else if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido)) partido = "S.PART.";
 
-            var IdPartido = dbContext.Partidos.FirstOrDefault(x => x.Sigla == partido)?.Id;
-            if (IdPartido == null)
+            byte idPartido = 0;
+            if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido))
             {
-                IdPartido = dbContext.Partidos.FirstOrDefault(x => x.Nome == partido)?.Id;
-                if (IdPartido == null)
+                idPartido = dbContext.PartidoDeParas.FirstOrDefault(x => x.SiglaNome.Equals(partido, StringComparison.CurrentCultureIgnoreCase))?.Id ?? 0;
+                if (idPartido == 0)
                 {
                     Log.Error("Partido '{Partido}' Inexistenete", partido);
                     //throw new Exception($"Partido '{partido}' Inexistenete");
@@ -75,7 +74,7 @@ namespace OPS.Importador.Assembleias.Parlamentar
                 }
             }
 
-            return IdPartido.Value;
+            return idPartido;
         }
 
         protected DeputadoEstadual GetDeputadoByNameOrNew(string nomeParlamentar)

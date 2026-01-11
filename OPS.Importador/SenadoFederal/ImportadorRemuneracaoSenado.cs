@@ -18,7 +18,7 @@ namespace OPS.Importador.SenadoFederal
     public class ImportadorRemuneracaoSenado : IImportadorRemuneracao
     {
         protected readonly ILogger<ImportadorDespesasSenado> logger;
-        protected readonly IDbConnection connection;
+
         protected readonly AppDbContext dbContext;
 
         public string rootPath { get; init; }
@@ -33,7 +33,6 @@ namespace OPS.Importador.SenadoFederal
         public ImportadorRemuneracaoSenado(IServiceProvider serviceProvider)
         {
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
-            connection = serviceProvider.GetService<IDbConnection>();
             dbContext = serviceProvider.GetService<AppDbContext>();
 
             var configuration = serviceProvider.GetService<IConfiguration>();

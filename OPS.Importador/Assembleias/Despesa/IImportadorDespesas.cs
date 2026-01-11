@@ -2,7 +2,7 @@
 {
     public interface IImportadorDespesas
     {
-        public Task Importar(int ano);
+        public void Importar(int ano);
 
         public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null);
     }

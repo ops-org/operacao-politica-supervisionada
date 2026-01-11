@@ -17,7 +17,6 @@ namespace OPS.Importador.CamaraFederal;
 public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 {
     protected readonly ILogger<ImportadorParlamentarCamaraFederal> logger;
-    protected readonly IDbConnection connection;
     protected readonly AppDbContext dbContext;
 
     public string rootPath { get; set; }
@@ -30,7 +29,6 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     public ImportadorParlamentarCamaraFederal(IServiceProvider serviceProvider)
     {
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarCamaraFederal>>();
-        connection = serviceProvider.GetService<IDbConnection>();
         dbContext = serviceProvider.GetService<AppDbContext>();
 
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();

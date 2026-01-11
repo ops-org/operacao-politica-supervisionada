@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +9,6 @@ using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.SenadoFederal.Entities;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.Fornecedores;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 using RestSharp;
 
@@ -26,17 +24,17 @@ public class SenatorLists
 public class ImportadorParlamentarSenado : IImportadorParlamentar
 {
     protected readonly ILogger<ImportadorParlamentarSenado> logger;
-    protected readonly IDbConnection connection;
     protected readonly AppDbContext dbContext;
     public string rootPath { get; init; }
     public string tempPath { get; init; }
 
     public HttpClient httpClient { get; }
 
+    public List<PartidoDePara> PartidoDeParas { get; init; }
+
     public ImportadorParlamentarSenado(IServiceProvider serviceProvider)
     {
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarSenado>>();
-        connection = serviceProvider.GetService<IDbConnection>();
         dbContext = serviceProvider.GetService<AppDbContext>();
 
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
@@ -44,6 +42,8 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         tempPath = configuration["AppSettings:SiteTempFolder"];
 
         httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
+
+        PartidoDeParas = dbContext.PartidoDeParas.ToList();
     }
 
     public Task Importar()
@@ -141,8 +141,6 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                     };
 
                     dbContext.Senadores.Add(novoSenador);
-                    dbContext.SaveChanges();
-
                     senatorLists.AllSenators.Add(Convert.ToInt32(parlamentar.CodigoParlamentar));
                 }
                 else
@@ -162,6 +160,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             }
         }
 
+        dbContext.SaveChanges();
         #endregion Importar senadores ativos
     }
 
@@ -235,6 +234,9 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             ProcessSenatorAcademicHistory(restClient, urlApiSenador, idSenador);
 
             ProcessSenatorMandates(restClient, urlApiSenador, idSenador, lstLegislatura, lstMotivoAfastamento, senatorLists);
+
+            dbContext.SaveChanges();
+            dbContext.ChangeTracker.Clear();
         }
     }
 
@@ -303,8 +305,6 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         senadorToUpdate.Email = identificacaoParlamentar.EmailParlamentar;
         senadorToUpdate.Site = identificacaoParlamentar.UrlPaginaParticular;
         senadorToUpdate.Ativo = senatorLists.ActiveSenators.Contains(Convert.ToInt32(identificacaoParlamentar.CodigoParlamentar)) ? "S" : "N";
-
-        dbContext.SaveChanges();
     }
 
     private void ProcessSenatorProfessions(int idSenador, List<Entities.Profissao> lstSenadorProfissao, Dictionary<string, int> lstProfissao)
@@ -319,23 +319,17 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                         Descricao = profissao.NomeProfissao
                     };
                     dbContext.Profissoes.Add(novaProfissao);
-                    dbContext.SaveChanges();
 
                     lstProfissao.Add(profissao.NomeProfissao, (int)novaProfissao.Id);
                 }
             }
 
-            // Add senator-profession relationship using EF Core
-            //using (var senadorProfissaoDbContext = dbContextFactory.CreateDbContext())
+            var senadorProfissao = new SenadorProfissao
             {
-                var senadorProfissao = new OPS.Infraestrutura.Entities.SenadoFederal.SenadorProfissao
-                {
-                    IdSenador = Convert.ToInt32(idSenador),
-                    IdProfissao = (int)lstProfissao[profissao.NomeProfissao]
-                };
-                dbContext.SenadoresProfissao.Add(senadorProfissao);
-                dbContext.SaveChanges();
-            }
+                IdSenador = Convert.ToInt32(idSenador),
+                IdProfissao = (int)lstProfissao[profissao.NomeProfissao]
+            };
+            dbContext.SenadoresProfissao.Add(senadorProfissao);
         }
     }
 
@@ -363,13 +357,21 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
             if (lstCursos != null)
             {
+                var cursosDoSenador = dbContext.SenadoresHistoricoAcademico.Where(x => x.IdSenador == idSenador).ToList();
+
                 foreach (var curso in lstCursos)
                 {
-                    dbContext.Database.ExecuteSqlRaw(@"
-                        INSERT INTO senado.sf_senador_historico_academico (id_sf_senador, nome_curso, grau_instrucao, estabelecimento, local) 
-                        values ({0}, {1}, {2}, {3}, {4})
-                        ON CONFLICT (id_sf_senador, nome_curso, grau_instrucao) DO NOTHING;",
-                        idSenador, curso.NomeCurso, curso.GrauInstrucao, curso.Estabelecimento, curso.Local);
+                    if (!cursosDoSenador.Any(x => x.NomeCurso == curso.NomeCurso && x.GrauInstrucao == curso.GrauInstrucao))
+                    {
+                        dbContext.SenadoresHistoricoAcademico.Add(new SenadorHistoricoAcademico
+                        {
+                            IdSenador = idSenador,
+                            NomeCurso = curso.NomeCurso,
+                            GrauInstrucao = curso.GrauInstrucao,
+                            Estabelecimento = curso.Estabelecimento,
+                            Local = curso.Local
+                        });
+                    }
                 }
             }
         }
@@ -409,7 +411,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         #region Mandato
         var exerceuMandato = mandato.Exercicios?.Exercicio?.Any() ?? false;
         var siglaPartido = mandato.Partidos?.Partido?.FirstOrDefault()?.Sigla;
-        int idPartido = 0;
+        byte idPartido = 0;
         if (!string.IsNullOrEmpty(siglaPartido))
         {
             siglaPartido = siglaPartido.Trim();
@@ -424,18 +426,29 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                     .FirstOrDefault(e => EF.Functions.ILike(e.Sigla, mandato.UfParlamentar));
 
         var idMandato = Convert.ToInt32(mandato.CodigoMandato);
-        dbContext.Database.ExecuteSqlInterpolated($@"
-            INSERT INTO senado.sf_mandato (
-                id, id_sf_senador, id_estado, id_partido, participacao, exerceu
-            ) VALUES (
-                {idMandato}, {idSenador}, {estado.Id}, {idPartido}, {mandato.DescricaoParticipacao}, {exerceuMandato}
-            )
-            ON CONFLICT (id, id_sf_senador) DO UPDATE SET
-                id_estado = EXCLUDED.id_estado,
-                id_partido = EXCLUDED.id_partido,
-                participacao = EXCLUDED.participacao,
-                exerceu = EXCLUDED.exerceu
-            WHERE EXCLUDED.id = {idMandato} and EXCLUDED.id_sf_senador = {idSenador}");
+
+        var mandatoDb = dbContext.MandatosSenado.FirstOrDefault(x => x.Id == idMandato && x.IdSenador == idSenador);
+        if (mandatoDb != null)
+        {
+            mandatoDb.IdEstado = estado.Id;
+            mandatoDb.IdPartido = idPartido;
+            mandatoDb.Participacao = mandato.DescricaoParticipacao;
+            mandatoDb.Exerceu = exerceuMandato;
+
+        }
+        else
+        {
+            dbContext.MandatosSenado.Add(new MandatoSenado
+            {
+                Id = idMandato,
+                IdSenador = idSenador,
+                IdEstado = estado.Id,
+                IdPartido = idPartido,
+                Participacao = mandato.DescricaoParticipacao,
+                Exerceu = exerceuMandato
+            });
+
+        }
 
         ProcessSuplentes(mandato, senatorLists);
 
@@ -452,28 +465,22 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
     {
         if (mandato.Partidos?.Partido == null) return;
 
+        var senadorPartidos = dbContext.SenadorPartidos.Where(p => p.IdSenador == idSenador).ToList();
+
         foreach (var partido in mandato.Partidos.Partido)
         {
             byte idPartido = 0;
-            if (!string.IsNullOrEmpty(partido.Sigla))
+            if (!string.IsNullOrEmpty(partido.Sigla) && partido.Sigla != "S/Partido")
             {
                 {
                     partido.Sigla = partido.Sigla.Trim();
                 }
                 // Find party in database
-                var partidoDb = dbContext.Partidos
-                    .FirstOrDefault(p => EF.Functions.ILike(p.Sigla, partido.Sigla));
+                var partidoDb = PartidoDeParas.FirstOrDefault(p => p.SiglaNome.Equals(partido.Sigla, StringComparison.CurrentCultureIgnoreCase));
 
                 if (partidoDb == null)
                 {
-                    // TODO: Remover se não gerar logs
-                    partidoDb = dbContext.Partidos
-                       .FirstOrDefault(p => EF.Functions.ILike(p.Nome, partido.Sigla));
-
-                    if (partidoDb != null)
-                    {
-                        logger.LogError("Partido localizado pelo nome: {Sigla}", partido.Sigla);
-                    }
+                    logger.LogError("Partido não localizado: {Sigla}", partido.Sigla);
                 }
 
                 idPartido = partidoDb?.Id ?? 0;
@@ -486,23 +493,29 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             if (!string.IsNullOrEmpty(partido.DataFiliacao) &&
                 DateTime.TryParse(partido.DataFiliacao, out DateTime filiacaoDate))
             {
-                filiacao = DateTime.SpecifyKind(filiacaoDate, DateTimeKind.Utc); ;
+                filiacao = new DateTime(filiacaoDate.Year, filiacaoDate.Month, filiacaoDate.Day, 0, 0, 0, DateTimeKind.Utc);
             }
 
             if (!string.IsNullOrEmpty(partido.DataDesfiliacao) &&
                 DateTime.TryParse(partido.DataDesfiliacao, out DateTime desfiliacaoDate))
             {
-                desfiliacao = DateTime.SpecifyKind(desfiliacaoDate, DateTimeKind.Utc);
+                desfiliacao = new DateTime(desfiliacaoDate.Year, desfiliacaoDate.Month, desfiliacaoDate.Day, 0, 0, 0, DateTimeKind.Utc);
             }
 
-            var senadorPartidoDb = dbContext.SenadorPartidos
-                .FirstOrDefault(p => p.IdSenador == idSenador && p.IdPartido == idPartido && p.Filiacao == filiacao);
+            //dbContext.Database.ExecuteSqlInterpolated($@"
+            //        INSERT INTO senado.sf_senador_partido (id_sf_senador, id_partido, filiacao, desfiliacao)
+            //        VALUES ({idSenador}, {idPartido}, {filiacao}, {desfiliacao})
+            //        ON CONFLICT (id_sf_senador, id_partido, filiacao) DO UPDATE SET
+            //            desfiliacao = EXCLUDED.desfiliacao
+            //        WHERE EXCLUDED.id_sf_senador = {idSenador} AND EXCLUDED.id_partido = {idPartido} AND EXCLUDED.filiacao = {filiacao}");
+
+            // TODO: FIX Npgsql.PostgresException (0x80004005): 23505: duplicate key value violates unique constraint "id_sf_senador_id_partido_filiacao" DETAIL: Key(id_sf_senador, id_partido, filiacao) = (5982, 1, 2023 - 06 - 21) already exists.
+            var senadorPartidoDb = senadorPartidos
+                .FirstOrDefault(p => p.IdPartido == idPartido && p.Filiacao == filiacao);
 
             if (senadorPartidoDb != null)
             {
                 senadorPartidoDb.Desfiliacao = desfiliacao;
-
-                dbContext.SaveChanges();
             }
             else
             {
@@ -513,14 +526,8 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                     Filiacao = filiacao,
                     Desfiliacao = desfiliacao
                 });
-
-                dbContext.SaveChanges();
-
             }
         }
-
-        //dbContext.SaveChanges();
-        dbContext.ChangeTracker.Clear();
     }
 
     private void ProcessSuplentes(Entities.Mandato mandato, SenatorLists senatorLists)
@@ -536,7 +543,10 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             {
                 senatorLists.AllSenators.Add(idSuplente);
                 senatorLists.NewSenators.Add(idSuplente);
-                dbContext.Database.ExecuteSqlRaw("INSERT INTO senado.sf_senador (id) VALUES ({0})", idSuplente);
+                dbContext.Senadores.Add(new Senador()
+                {
+                    Id = idSuplente,
+                });
             }
         }
     }
@@ -567,7 +577,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             var existeMandatoCadastrado = dbContext.MandatoLegislaturasSenado
                 .Any(x => x.IdMandato == idMandato && x.IdLegislatura == idLegislatura);
 
-            if(!existeMandatoCadastrado)
+            if (!existeMandatoCadastrado)
             {
                 dbContext.MandatoLegislaturasSenado.Add(new MandatoLegislatura
                 {
@@ -577,9 +587,6 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 });
             }
         }
-
-        dbContext.SaveChanges(); // TODO: Remove
-        dbContext.ChangeTracker.Clear();
     }
 
     private void ProcessExercicios(Entities.Mandato mandato, int idSenador, List<string> lstMotivoAfastamento)
@@ -622,12 +629,8 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                     Inicio = Convert.ToDateTime(exercicio.DataInicio),
                     Final = Convert.ToDateTime(exercicio.DataFim)
                 });
-                
             }
         }
-
-        dbContext.SaveChanges(); // TODO: Remove
-        dbContext.ChangeTracker.Clear();
     }
 
     public async Task DownloadFotos()

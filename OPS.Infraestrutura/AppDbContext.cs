@@ -1,3 +1,4 @@
+using Castle.Core.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ public partial class AppDbContext : DbContext
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
+        Database.ExecuteSqlRaw("SET max_stack_depth = '6MB'");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -24,9 +26,27 @@ public partial class AppDbContext : DbContext
                 .EnableDetailedErrors()
                 //.ConfigureWarnings(w => w.Ignore(RelationalEventId.CommandExecuted).Throw(RelationalEventId.MultipleCollectionIncludeWarning))
                 //.LogTo(_ => { }, LogLevel.None)
+                //.LogTo(
+                //    Console.WriteLine,
+                //    new[] { RelationalEventId.CommandExecuted },  // Only command execution
+                //    LogLevel.Information  // Only errors
+                //)
+                //.LogTo(
+                //    action: log =>
+                //    {
+                //        // Suppress specific errors
+                //        if (log.Contains("destructuring"))
+                //        {
+                //            return;  // Don't log
+                //        }
+
+                //        Console.WriteLine($"[EF Core] {log}");
+                //    },
+                //    filter: (eventId, level) => level >= LogLevel.Information
+                //)
                 .UseLazyLoadingProxies(false);
         }
-        
+
         // Ensure the interceptor is always present
         optionsBuilder.AddInterceptors(_dateTimeInterceptor);
     }

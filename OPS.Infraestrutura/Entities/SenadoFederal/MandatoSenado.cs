@@ -31,8 +31,8 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
 
         // Navigation properties
         public virtual Senador Senador { get; set; } = null!;
-        public virtual Estado? Estado { get; set; }
-        public virtual Entities.Comum.Partido? Partido { get; set; }
+        //public virtual Estado? Estado { get; set; }
+        //public virtual Entities.Comum.Partido? Partido { get; set; }
         public virtual ICollection<MandatoExercicio> MandatoExercicios { get; set; } = new List<MandatoExercicio>();
         public virtual ICollection<MandatoLegislatura> MandatoLegislaturas { get; set; } = new List<MandatoLegislatura>();
     }

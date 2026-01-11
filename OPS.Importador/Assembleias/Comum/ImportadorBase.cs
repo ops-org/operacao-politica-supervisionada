@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core;
@@ -27,16 +28,16 @@ namespace OPS.Importador.Assembleias.Comum
             importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
         }
 
-        public virtual void ImportarCompleto()
+        public virtual async Task ImportarCompleto()
         {
-            if (importadorParlamentar != null)
-            {
-                importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
-                ImportarPerfilParlamentar();
-                importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
+            //if (importadorParlamentar != null)
+            //{
+            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
+            //    ImportarPerfilParlamentar();
+            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
 
-                ImportarImagemParlamentar();
-            }
+            //    ImportarImagemParlamentar();
+            //}
 
             if (importadorDespesas != null)
             {
@@ -61,7 +62,7 @@ namespace OPS.Importador.Assembleias.Comum
                 //    //ImportarDespesasAnoAtual();
                 //}
 
-                for (int i = 2008; i < 2025; i++)
+                for (int i = 2023; i < 2025; i++)
                 {
                     ImportarDespesas(i);
                 }

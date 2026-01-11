@@ -48,20 +48,6 @@ public static class FornecedorConfigurations
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             
-            // Only configure the essential relationship to Fornecedor
-            //entity.HasOne(e => e.Fornecedor).WithMany(f => f.FornecedorSocios).HasForeignKey(e => e.IdFornecedor);
-
-            // Explicitly configure all properties to prevent shadow property creation
-            entity.Property(e => e.IdFornecedorFaixaEtaria).HasColumnName("id_fornecedor_faixa_etaria");
-            entity.Property(e => e.IdFornecedorSocioQualificacao).HasColumnName("id_fornecedor_socio_qualificacao");
-            entity.Property(e => e.IdFornecedorSocioRepresentanteQualificacao).HasColumnName("id_fornecedor_socio_representante_qualificacao");
-
-            // Ignore all navigation properties that might cause shadow properties
-            entity.Ignore("FornecedorSocioQualificacao");
-            entity.Ignore("FornecedorSocioRepresentanteQualificacao");
-            entity.Ignore("FornecedorFaixaEtariaId");
-            entity.Ignore("FornecedorFaixaEtariaId1");
-
             entity.ToTable("fornecedor_socio", "fornecedor");
         });
     }

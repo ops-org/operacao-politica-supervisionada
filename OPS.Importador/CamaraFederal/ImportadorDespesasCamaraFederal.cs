@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -13,23 +11,17 @@ using AngleSharp;
 using AngleSharp.Html.Dom;
 using CsvHelper;
 using Dapper;
-using DDDN.OdtToHtml;
-using EFCore.BulkExtensions;
 using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Npgsql.Bulk;
 using OPS.Core;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Despesa;
-using OPS.Importador.Assembleias.Estados.RioDeJaneiro.Entities;
 using OPS.Importador.Fornecedores;
 using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.CamaraFederal;
-using OPS.Infraestrutura.Entities.Fornecedores;
-using Polly;
 using RestSharp;
 
 namespace OPS.Importador.CamaraFederal;
@@ -37,7 +29,7 @@ namespace OPS.Importador.CamaraFederal;
 public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 {
     protected readonly ILogger<ImportadorDespesasCamaraFederal> logger;
-    protected readonly IDbConnection connection;
+    protected IDbConnection connection { get { return dbContext.Database.GetDbConnection(); } }
     protected readonly AppDbContext dbContext;
 
     public string rootPath { get; set; }
@@ -55,9 +47,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public ImportadorDespesasCamaraFederal(IServiceProvider serviceProvider)
     {
         logger = serviceProvider.GetService<ILogger<ImportadorDespesasCamaraFederal>>();
-        connection = serviceProvider.GetService<IDbConnection>();
         dbContext = serviceProvider.GetService<AppDbContext>();
-        connection = dbContext.Database.GetDbConnection();
 
         var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
         rootPath = configuration["AppSettings:SiteRootFolder"];
@@ -106,7 +96,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     #region Importação Dados CEAP CSV
 
-    public Task Importar(int ano)
+    public void Importar(int ano)
     {
         var anoAtual = DateTime.Today.Year;
         logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
@@ -122,7 +112,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado)
             {
                 logger.LogInformation("Importação ignorada para arquivo previamente importado!");
-                return Task.CompletedTask;
+                return;
             }
 
             try
@@ -148,8 +138,6 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             }
         }
-
-        return Task.CompletedTask;
     }
 
     protected void DescompactarArquivo(string caminhoArquivo)
@@ -169,7 +157,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
     {
         var downloadUrl = "https://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
-        var fullFileNameZip = tempPath + "/CF/Ano-" + ano + ".csv.zip";
+        var fullFileNameZip = Path.Combine(tempPath, "CamaraFederal/Ano-" + ano + ".csv.zip");
 
         Dictionary<string, string> arquivos = new();
         arquivos.Add(downloadUrl, fullFileNameZip);
@@ -423,7 +411,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
                         TypeInfoResolver = new DefaultJsonTypeInfoResolver
                         {
-                            Modifiers = { IgnoreNegativeValues },
+                            Modifiers = { IgnoreNumericValues },
                         }
                     };
 
@@ -523,7 +511,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             logger.LogInformation("{Itens} despesas inseridas na tabela temporaria.", despesaInserida);
     }
 
-    static void IgnoreNegativeValues(JsonTypeInfo typeInfo)
+    static void IgnoreNumericValues(JsonTypeInfo typeInfo)
     {
         foreach (JsonPropertyInfo propertyInfo in typeInfo.Properties)
         {

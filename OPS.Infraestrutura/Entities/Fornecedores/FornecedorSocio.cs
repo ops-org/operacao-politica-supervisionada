@@ -47,6 +47,6 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public byte? IdFornecedorSocioRepresentanteQualificacao { get; set; }
 
         // Navigation properties - only keep essential one to avoid complexity
-        public virtual Fornecedor Fornecedor { get; set; } = null!;
+        //public virtual Fornecedor Fornecedor { get; set; } = null!;
     }
 }

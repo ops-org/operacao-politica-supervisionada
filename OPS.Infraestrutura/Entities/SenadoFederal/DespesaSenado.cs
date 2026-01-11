@@ -8,12 +8,11 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     public class DespesaSenado
     {
         [Key]
+        [Column("id")]
+        public long Id { get; set; }
+
         [Column("id_sf_senador")]
         public int IdSenador { get; set; }
-
-        [Key]
-        [Column("id")]
-        public ulong Id { get; set; }
 
         [Column("id_sf_despesa_tipo")]
         public byte? IdDespesaTipo { get; set; }
@@ -35,7 +34,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public string? Documento { get; set; }
 
         [Column("data_emissao")]
-        public DateTime? DataEmissao { get; set; }
+        public DateOnly? DataEmissao { get; set; }
 
         [Column("detalhamento")]
         public string? Detalhamento { get; set; }

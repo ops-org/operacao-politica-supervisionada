@@ -8,7 +8,7 @@ namespace OPS.Importador.Assembleias.Despesa
         {
         }
 
-        public Task Importar(int ano)
+        public void Importar(int ano)
         {
             var anoAtual = DateTime.Today.Year;
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
@@ -28,7 +28,7 @@ namespace OPS.Importador.Assembleias.Despesa
                         if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado && arquivos.Count == 1 && config.Estado != Estado.Piaui)
                         {
                             logger.LogInformation("Importação ignorada para arquivo previamente importado!");
-                            return Task.CompletedTask;
+                            return;
                         }
 
                         try
@@ -52,8 +52,6 @@ namespace OPS.Importador.Assembleias.Despesa
 
                 ProcessarDespesas(ano);
             }
-
-            return Task.CompletedTask;
         }
 
         public abstract void ImportarDespesas(string caminhoArquivo, int ano);
