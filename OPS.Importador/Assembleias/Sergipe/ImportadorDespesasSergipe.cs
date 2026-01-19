@@ -1,0 +1,186 @@
+﻿using System.Globalization;
+using AngleSharp;
+using Microsoft.Extensions.Logging;
+using OPS.Core.Enumerators;
+using OPS.Importador.Comum.Despesa;
+using OPS.Importador.Comum.Utilities;
+using Tabula;
+using Tabula.Detectors;
+using Tabula.Extractors;
+using UglyToad.PdfPig;
+
+namespace OPS.Importador.Assembleias.Sergipe
+{
+    public class ImportadorDespesasSergipe : ImportadorDespesasRestApiAnual
+    {
+        private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+
+        public ImportadorDespesasSergipe(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+            config = new ImportadorCotaParlamentarBaseConfig()
+            {
+                BaseAddress = "https://al.se.leg.br/portal-da-transparencia/despesas/ressarcimento-dos-deputados/",
+                Estado = Estados.Sergipe,
+                ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
+            };
+        }
+
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        {
+            var today = DateTime.Today;
+            var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
+
+            var elementoAno = document
+                .QuerySelectorAll(".elementor-widget-wrap .elementor-widget-heading")
+                .FirstOrDefault(x => x.QuerySelector(".elementor-heading-title").TextContent == ano.ToString());
+
+            if (elementoAno is null)
+            {
+                logger.LogWarning("Dados do ano {Ano} ainda não disponivel", ano);
+                return;
+            }
+
+            var anoSelecionado = elementoAno.NextElementSibling;
+
+            var meses = anoSelecionado.QuerySelectorAll(".elementor-tabs-wrapper .elementor-tab-title");
+            foreach (var item in meses)
+            {
+                var mesExtenso = item.TextContent;
+                var competencia = new DateTime(ano, ResolveMes(mesExtenso), 1).AddMonths(-1);
+                if (competencia.AddMonths(1) > today) continue;
+
+                using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month }))
+                {
+                    var urlPdf = anoSelecionado.QuerySelector("#" + item.Attributes["aria-controls"].Value + " .wpdm-download-link")?.Attributes["data-downloadurl"]?.Value;
+                    if (string.IsNullOrEmpty(urlPdf))
+                    {
+                        var aviso = anoSelecionado.QuerySelector("#" + item.Attributes["aria-controls"].Value + " div[id^=content_wpdm_package_]").TextContent.Trim();
+                        logger.LogWarning("Despesas indisponiveis para {Mes:00}/{Ano}. Detalhes: {Detalhes}", competencia.Month, competencia.Year, aviso);
+                        continue;
+                    }
+
+                    // Coletar dados apenas a partir de 2023
+                    if (competencia.Year == 2022) continue;
+
+                    using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month, ["Url"] = urlPdf, ["Arquivo"] = $"CLSE-{ano}-{competencia.Month}.pdf" }))
+                    {
+                       await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf);
+                    }
+                }
+            }
+        }
+
+        private int ResolveMes(string mes) => mes switch
+        {
+            "Janeiro" => 1,
+            "Fevereiro" => 2,
+            "Março" => 3,
+            "Abril" => 4,
+            "Maio" => 5,
+            "Junho" => 6,
+            "Julho" => 7,
+            "Agosto" => 8,
+            "Setembro" => 9,
+            "Outubro" => 10,
+            "Novembro" => 11,
+            "Dezembro" => 12,
+            _ => throw new ArgumentOutOfRangeException(nameof(mes), $"Mês invalido: {mes}"),
+        };
+
+        private async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf)
+        {
+            var filename = $"{tempFolder}/CLSE-{ano}-{mes}.pdf";
+           await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado);
+
+            using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
+            {
+                // detect canditate table zones
+                SimpleNurminenDetectionAlgorithm detector = new SimpleNurminenDetectionAlgorithm();
+                IExtractionAlgorithm ea = new BasicExtractionAlgorithm();
+                //IExtractionAlgorithm ea = new SpreadsheetExtractionAlgorithm();
+
+                decimal valorTotalDeputado = 0;
+                string nomeParlamentar = "";
+                DateOnly competencia = DateOnly.FromDateTime(DateTime.MinValue);
+                var totalValidado = true;
+                var despesasIncluidas = 0;
+                for (var p = 1; p <= document.NumberOfPages; p++)
+                {
+                    PageArea page = ObjectExtractor.Extract(document, p);
+                    var regions = detector.Detect(page);
+                    IReadOnlyList<Table> tables = ea.Extract(page); // .GetArea(regions[0].BoundingBox) // take first candidate area
+
+                    foreach (var table in tables)
+                    {
+                        foreach (var row in table.Rows)
+                        {
+                            var numColunas = row.Count;
+                            var itemDescicaoTemp = row[0].GetText();
+                            var valorTemp = row[numColunas == 2 ? 1 : 2].GetText(); // Pode haver 3 colunas, quando isso ocorre o valor estão na última.
+
+                            if (itemDescicaoTemp.StartsWith("Deputado:"))
+                            {
+                                nomeParlamentar = itemDescicaoTemp.Split(":")[1].Trim();
+                                competencia = DateOnly.Parse(valorTemp.Split(":")[1].Trim(), cultureInfo);
+                                valorTotalDeputado = 0;
+
+                                if (competencia.Year == 2022) break;
+
+                                if (!totalValidado)
+                                    logger.LogError("Valor total não validado!");
+                                else
+                                    totalValidado = false;
+
+                                continue;
+                            }
+
+                            if (valorTemp.StartsWith("Total:"))
+                            {
+                                totalValidado = true;
+                                var valorTotalArquivo = Convert.ToDecimal(valorTemp.Split(":")[1].Replace("R$", "").Trim(), cultureInfo);
+                                ValidaValorTotal(filename, valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
+
+                                continue;
+                            }
+
+                            if (string.IsNullOrEmpty(itemDescicaoTemp) ||
+                                string.IsNullOrEmpty(valorTemp) ||
+                                valorTemp.StartsWith("Valor") ||
+                                valorTemp.StartsWith("Página")) continue;
+
+                            CamaraEstadualDespesaTemp despesaTemp = new CamaraEstadualDespesaTemp()
+                            {
+                                Nome = nomeParlamentar,
+                                Ano = (short)competencia.Year,
+                                Mes = (short)competencia.Month,
+                                DataEmissao = competencia,
+                                Valor = Convert.ToDecimal(valorTemp.Replace("R$", "").Trim(), cultureInfo),
+                                Origem = urlPdf
+                            };
+
+                            if (itemDescicaoTemp.Contains("-"))
+                                despesaTemp.TipoDespesa = itemDescicaoTemp.Split("-")[1].Trim();
+                            else
+                                despesaTemp.TipoDespesa = Core.Utilities.Utils.RemoveCaracteresNumericos(itemDescicaoTemp).Trim();
+
+                            //logger.LogWarning($"Inserindo Item {itemDescicaoTemp.Split("Art")[0]} com valor: {despesaTemp.Valor}!");
+                            valorTotalDeputado += despesaTemp.Valor;
+                            despesasIncluidas++;
+
+                            InserirDespesaTemp(despesaTemp);
+                        }
+                    }
+                }
+
+                if (!totalValidado)
+                    logger.LogError("Valor total não validado!");
+            }
+        }
+
+        public override void DefinirCompetencias(int ano)
+        {
+            competenciaInicial = $"{ano - 1}12";
+            competenciaFinal = $"{ano}11";
+        }
+    }
+}

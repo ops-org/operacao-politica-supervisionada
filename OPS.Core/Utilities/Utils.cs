@@ -12,11 +12,12 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using OPS.Core.DTOs;
 using RestSharp;
 
 namespace OPS.Core.Utilities
 {
-    public static class Utils
+    public static partial class Utils
     {
         public const string DefaultUserAgent = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)";
 
@@ -100,6 +101,7 @@ namespace OPS.Core.Utilities
 
         public static string FormatCnpjCpf(string value)
         {
+            if (string.IsNullOrEmpty(value)) return null;
             if (value.Length == 14) return FormatCNPJ(value);
             if (value.Length == 11) return FormatCPF(value);
             if (value.Length == 6) return FormatCPFParcial(value);
@@ -233,10 +235,10 @@ namespace OPS.Core.Utilities
 
         public static async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
         {
-            var lstTo = new List<To>();
+            var lstTo = new List<SendGridMessageTo>();
             foreach (MailAddress objEmailTo in lstEmailTo)
             {
-                lstTo.Add(new To()
+                lstTo.Add(new SendGridMessageTo()
                 {
                     email = objEmailTo.Address,
                     name = objEmailTo.DisplayName
@@ -245,21 +247,21 @@ namespace OPS.Core.Utilities
 
             var param = new SendGridMessage()
             {
-                personalizations = new List<Personalization>{
-                    new Personalization()
+                personalizations = new List<SendGridMessagePersonalization>{
+                    new SendGridMessagePersonalization()
                     {
                         to = lstTo,
                         subject = subject
                     }
                 },
-                content = new List<Content>(){
-                    new Content()
+                content = new List<SendGridMessageContent>(){
+                    new SendGridMessageContent()
                     {
                         type = htmlContent ? "text/html" : "text/plain",
                         value = body
                     }
                 },
-                from = new From()
+                from = new SendGridMessageFrom()
                 {
                     email = "envio@ops.net.br",
                     name = "[OPS] Operação Política Supervisionada"
@@ -268,7 +270,7 @@ namespace OPS.Core.Utilities
 
             if (ReplyTo != null)
             {
-                param.reply_to = new ReplyTo()
+                param.reply_to = new SendGridMessageReplyTo()
                 {
                     email = ReplyTo.Address,
                     name = ReplyTo.DisplayName
@@ -408,15 +410,42 @@ namespace OPS.Core.Utilities
             return EqualityComparer<T>.Default.Equals(left, right) ? null : left;
         }
 
+        private static DisplayAttribute DisplayCustomAtribute(this Enum enumValue)
+        {
+            try
+            {
+                return enumValue?.GetType()
+                        ?.GetMember(enumValue.ToString())
+                        ?.FirstOrDefault()
+                        ?.GetCustomAttribute<DisplayAttribute>();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public static string DisplayName(this Enum enumValue)
         {
             try
             {
-                return enumValue.GetType()
-                        .GetMember(enumValue.ToString())
-                        .First()
-                        .GetCustomAttribute<DisplayAttribute>()
-                        .GetName();
+                return enumValue
+                    .DisplayCustomAtribute()
+                    .GetName();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static string DisplayShortName(this Enum enumValue)
+        {
+            try
+            {
+                return enumValue
+                   .DisplayCustomAtribute()
+                   .GetShortName();
             }
             catch (Exception)
             {
@@ -497,41 +526,53 @@ namespace OPS.Core.Utilities
             return null;
         }
 
-        protected class SendGridMessage
+        public static string GetStateCode(string stateName)
         {
-            public List<Personalization> personalizations { get; set; }
-            public List<Content> content { get; set; }
-            public From from { get; set; }
-            public ReplyTo reply_to { get; set; }
-        }
-        protected class To
-        {
-            public string email { get; set; }
-            public string name { get; set; }
+            var state = stateName.Replace("Importacao", "", StringComparison.InvariantCultureIgnoreCase);
+
+            return state switch
+            {
+                "Acre" => "AC",
+                "Alagoas" => "AL",
+                "Amapa" => "AP",
+                "Amazonas" => "AM",
+                "Bahia" => "BA",
+                "Ceara" => "CE",
+                "DistritoFederal" => "DF",
+                "EspiritoSanto" => "ES",
+                "Goias" => "GO",
+                "Maranhao" => "MA",
+                "MatoGrosso" => "MT",
+                "MatoGrossoDoSul" => "MS",
+                "MinasGerais" => "MG",
+                "Para" => "PA",
+                "Paraiba" => "PB",
+                "Parana" => "PR",
+                "Pernambuco" => "PE",
+                "Piaui" => "PI",
+                "RioDeJaneiro" => "RJ",
+                "RioGrandeDoNorte" => "RN",
+                "RioGrandeDoSul" => "RS",
+                "Rondonia" => "RO",
+                "Roraima" => "RR",
+                "SantaCatarina" => "SC",
+                "SaoPaulo" => "SP",
+                "Sergipe" => "SE",
+                "Tocantins" => "TO",
+
+                "Senado" => "SF",
+                "Camara" => "CF",
+                _ => state,
+            };
+
+            //if(ano != null)
+            //    code += $" {ano.ToString().Substring(2, 2)}";
+
+            //if (mes != null)
+            //    code += $"-{mes.Value.ToString("D2")}";
+
+            //return code;
         }
 
-        protected class Personalization
-        {
-            public List<To> to { get; set; }
-            public string subject { get; set; }
-        }
-
-        protected class Content
-        {
-            public string type { get; set; }
-            public string value { get; set; }
-        }
-
-        protected class From
-        {
-            public string email { get; set; }
-            public string name { get; set; }
-        }
-
-        protected class ReplyTo
-        {
-            public string email { get; set; }
-            public string name { get; set; }
-        }
     }
 }

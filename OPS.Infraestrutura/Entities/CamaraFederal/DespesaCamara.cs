@@ -11,6 +11,9 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         [Column("id")]
         public ulong Id { get; set; }
 
+        [Column("ano_mes")]
+        public int AnoMes { get; set; }
+
         [Column("ano")]
         public short Ano { get; set; }
 

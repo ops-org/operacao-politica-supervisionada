@@ -6,10 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias.Despesa;
-using OPS.Importador.Utilities;
+using OPS.Importador.Comum;
+using OPS.Importador.Comum.Despesa;
+using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 
@@ -18,28 +20,19 @@ namespace OPS.Importador.SenadoFederal
     public class ImportadorRemuneracaoSenado : IImportadorRemuneracao
     {
         protected readonly ILogger<ImportadorDespesasSenado> logger;
-
+        protected readonly AppSettings appSettings;
+        protected readonly FileManager fileManager;
         protected readonly AppDbContext dbContext;
-
-        public string rootPath { get; init; }
-        public string tempPath { get; init; }
+        protected readonly HttpClient httpClient;
 
         private int linhasProcessadasAno { get; set; }
 
-        public bool importacaoIncremental { get; init; }
-
-        public HttpClient httpClient { get; }
-
         public ImportadorRemuneracaoSenado(IServiceProvider serviceProvider)
         {
-            logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
+            appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value; 
             dbContext = serviceProvider.GetService<AppDbContext>();
-
-            var configuration = serviceProvider.GetService<IConfiguration>();
-            rootPath = configuration["AppSettings:SiteRootFolder"];
-            tempPath = configuration["AppSettings:SiteTempFolder"];
-            importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
-
+            fileManager = serviceProvider.GetService<FileManager>();
+            logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();
             httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
         }
 
@@ -48,16 +41,16 @@ namespace OPS.Importador.SenadoFederal
         /// </summary>
         /// <param name="ano"></param>
         /// <param name="mes"></param>
-        public void ImportarRemuneracao(int ano, int mes)
+        public async Task ImportarRemuneracao(int ano, int mes)
         {
             var anomes = Convert.ToInt32($"{ano:0000}{mes:00}");
             var urlOrigem = string.Format("https://www.senado.leg.br/transparencia/LAI/secrh/SF_ConsultaRemuneracaoServidoresParlamentares_{0}.csv", anomes);
-            var caminhoArquivo = System.IO.Path.Combine(tempPath, "SF-RM-" + anomes + ".csv");
+            var caminhoArquivo = Path.Combine(appSettings.TempFolder, "Senado", $"SF-RM-{anomes}.csv");
 
             try
             {
-                var novoArquivoBaixado = BaixarArquivo(urlOrigem, caminhoArquivo);
-                if (importacaoIncremental && !novoArquivoBaixado)
+                var novoArquivoBaixado = await fileManager.BaixarArquivo(dbContext, urlOrigem, caminhoArquivo, null);
+                if (!appSettings.ForceImport && !novoArquivoBaixado)
                 {
                     logger.LogInformation("Importação ignorada para arquivo previamente importado!");
                     return;
@@ -68,9 +61,7 @@ namespace OPS.Importador.SenadoFederal
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-
-                if (File.Exists(caminhoArquivo))
-                    File.Delete(caminhoArquivo);
+                fileManager.MoverArquivoComErro(caminhoArquivo);
             }
         }
 
@@ -325,85 +316,6 @@ namespace OPS.Importador.SenadoFederal
                     WHERE r.ano_mes = @ano_mes
 			    ", anoMesParam);
             }
-        }
-
-        // Duplicated in ImportadorDespesasSenado.cs - consider refactoring to a shared utility class
-        protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
-        {
-            var caminhoArquivoDb = caminhoArquivo.Replace(tempPath, "");
-
-            if (importacaoIncremental && File.Exists(caminhoArquivo))
-            {
-                var arquivoDB = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
-                if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
-                {
-                    logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
-                    return false;
-                }
-            }
-
-            logger.LogDebug("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
-
-            string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
-            if (!Directory.Exists(diretorio))
-                Directory.CreateDirectory(diretorio);
-
-            var fileExt = Path.GetExtension(caminhoArquivo);
-            var caminhoArquivoTmp = caminhoArquivo.Replace(fileExt, $"_tmp{fileExt}");
-            if (File.Exists(caminhoArquivoTmp))
-                File.Delete(caminhoArquivoTmp);
-
-            //if (config.Estado != Estado.DistritoFederal)
-            //    httpClientResilient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
-            //else
-            httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
-
-            string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-            var arquivoChecksum = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
-            if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
-            {
-                arquivoChecksum.Verificacao = DateTime.UtcNow;
-
-                logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
-
-                if (File.Exists(caminhoArquivoTmp))
-                    File.Delete(caminhoArquivoTmp);
-
-                return false;
-            }
-
-            if (arquivoChecksum == null)
-            {
-                logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
-
-                dbContext.ArquivoChecksums.Add(new ArquivoChecksum()
-                {
-                    Nome = caminhoArquivoDb,
-                    Checksum = checksum,
-                    TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length,
-                    Criacao = DateTime.UtcNow,
-                    Atualizacao = DateTime.UtcNow,
-                    Verificacao = DateTime.UtcNow
-                });
-            }
-            else
-            {
-                if (arquivoChecksum.Checksum != checksum)
-                {
-                    logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
-
-                    arquivoChecksum.Checksum = checksum;
-                    arquivoChecksum.TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length;
-
-                }
-
-                arquivoChecksum.Atualizacao = DateTime.UtcNow;
-                arquivoChecksum.Verificacao = DateTime.UtcNow;
-            }
-
-            dbContext.SaveChanges();
-            File.Move(caminhoArquivoTmp, caminhoArquivo, true);
-            return true;
         }
     }
 }

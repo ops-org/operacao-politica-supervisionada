@@ -10,7 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
-using OPS.Core.Repository;
+using OPS.Core.Repositories;
+using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Interceptors;
 
@@ -28,7 +29,7 @@ namespace OPS.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            Core.Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
+            Padrao.ConnectionString = Configuration.GetConnectionString("AuditoriaContext");
             //new ParametrosRepository().CarregarPadroes();
 
             services.AddDbContext<AppDbContext>(options => options

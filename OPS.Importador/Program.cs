@@ -7,9 +7,36 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using OfficeOpenXml;
-using OPS.Core;
 using OPS.Core.Utilities;
-using OPS.Importador.Utilities;
+using OPS.Importador.Assembleias.Acre;
+using OPS.Importador.Assembleias.Alagoas;
+using OPS.Importador.Assembleias.Amapa;
+using OPS.Importador.Assembleias.Amazonas;
+using OPS.Importador.Assembleias.Bahia;
+using OPS.Importador.Assembleias.Ceara;
+using OPS.Importador.Assembleias.DistritoFederal;
+using OPS.Importador.Assembleias.EspiritoSanto;
+using OPS.Importador.Assembleias.Goias;
+using OPS.Importador.Assembleias.Maranhao;
+using OPS.Importador.Assembleias.MatoGrosso;
+using OPS.Importador.Assembleias.MatoGrossoDoSul;
+using OPS.Importador.Assembleias.MinasGerais;
+using OPS.Importador.Assembleias.Para;
+using OPS.Importador.Assembleias.Paraiba;
+using OPS.Importador.Assembleias.Parana;
+using OPS.Importador.Assembleias.Pernambuco;
+using OPS.Importador.Assembleias.Piaui;
+using OPS.Importador.Assembleias.RioDeJaneiro;
+using OPS.Importador.Assembleias.RioGrandeDoNorte;
+using OPS.Importador.Assembleias.RioGrandeDoSul;
+using OPS.Importador.Assembleias.Rondonia;
+using OPS.Importador.Assembleias.Roraima;
+using OPS.Importador.Assembleias.SantaCatarina;
+using OPS.Importador.Assembleias.SaoPaulo;
+using OPS.Importador.Assembleias.Sergipe;
+using OPS.Importador.Assembleias.Tocantins;
+using OPS.Importador.Comum;
+using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
 using Polly;
 using Polly.Extensions.Http;
@@ -23,8 +50,8 @@ namespace OPS.Importador
         {
             ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
 
-            SqlMapper.AddTypeHandler(typeof(DateTime), new NpgsqlDateTimeHandler());
-            SqlMapper.AddTypeHandler(typeof(DateTime?), new NpgsqlDateTimeHandler());
+            //SqlMapper.AddTypeHandler(typeof(DateTime), new NpgsqlDateTimeHandler());
+            //SqlMapper.AddTypeHandler(typeof(DateTime?), new NpgsqlDateTimeHandler());
 
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             Serilog.Debugging.SelfLog.Enable(Console.Error);
@@ -53,40 +80,38 @@ namespace OPS.Importador
             Log.Logger = loggerConfiguration.CreateLogger();
 
             var services = new ServiceCollection();
-            //services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Trace));
-            services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-            //services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(configuration["ConnectionStrings:AuditoriaContext"]));
+            services.AddOptions<AppSettings>().Bind(configuration.GetSection("AppSettings")); ;
 
             services.AddScoped<SenadoFederal.Senado>();
             services.AddScoped<CamaraFederal.Camara>();
 
-            services.AddScoped<Assembleias.Estados.Acre.ImportacaoAcre>();
-            services.AddScoped<Assembleias.Estados.Alagoas.ImportacaoAlagoas>();
-            services.AddScoped<Assembleias.Estados.Amapa.ImportacaoAmapa>();
-            services.AddScoped<Assembleias.Estados.Amazonas.ImportacaoAmazonas>();
-            services.AddScoped<Assembleias.Estados.Bahia.ImportacaoBahia>();
-            services.AddScoped<Assembleias.Estados.Ceara.ImportacaoCeara>();
-            services.AddScoped<Assembleias.Estados.DistritoFederal.ImportacaoDistritoFederal>();
-            services.AddScoped<Assembleias.Estados.EspiritoSanto.ImportacaoEspiritoSanto>();
-            services.AddScoped<Assembleias.Estados.Goias.ImportacaoGoias>();
-            services.AddScoped<Assembleias.Estados.Maranhao.ImportacaoMaranhao>();
-            services.AddScoped<Assembleias.Estados.MatoGrosso.ImportacaoMatoGrosso>();
-            services.AddScoped<Assembleias.Estados.MatoGrossoDoSul.ImportacaoMatoGrossoDoSul>();
-            services.AddScoped<Assembleias.Estados.MinasGerais.ImportacaoMinasGerais>();
-            services.AddScoped<Assembleias.Estados.Para.ImportacaoPara>();
-            services.AddScoped<Assembleias.Estados.Paraiba.ImportacaoParaiba>();
-            services.AddScoped<Assembleias.Estados.Parana.ImportacaoParana>();
-            services.AddScoped<Assembleias.Estados.Pernambuco.ImportacaoPernambuco>();
-            services.AddScoped<Assembleias.Estados.Piaui.ImportacaoPiaui>();
-            services.AddScoped<Assembleias.Estados.RioDeJaneiro.ImportacaoRioDeJaneiro>();
-            services.AddScoped<Assembleias.Estados.RioGrandeDoNorte.ImportacaoRioGrandeDoNorte>();
-            services.AddScoped<Assembleias.Estados.RioGrandeDoSul.ImportacaoRioGrandeDoSul>();
-            services.AddScoped<Assembleias.Estados.Rondonia.ImportacaoRondonia>();
-            services.AddScoped<Assembleias.Estados.Roraima.ImportacaoRoraima>();
-            services.AddScoped<Assembleias.Estados.SantaCatarina.ImportacaoSantaCatarina>();
-            services.AddScoped<Assembleias.Estados.SaoPaulo.ImportacaoSaoPaulo>();
-            services.AddScoped<Assembleias.Estados.Sergipe.ImportacaoSergipe>();
-            services.AddScoped<Assembleias.Estados.Tocantins.ImportacaoTocantins>();
+            services.AddScoped<ImportacaoAcre>();
+            services.AddScoped<ImportacaoAlagoas>();
+            services.AddScoped<ImportacaoAmapa>();
+            services.AddScoped<ImportacaoAmazonas>();
+            services.AddScoped<ImportacaoBahia>();
+            services.AddScoped<ImportacaoCeara>();
+            services.AddScoped<ImportacaoDistritoFederal>();
+            services.AddScoped<ImportacaoEspiritoSanto>();
+            services.AddScoped<ImportacaoGoias>();
+            services.AddScoped<ImportacaoMaranhao>();
+            services.AddScoped<ImportacaoMatoGrosso>();
+            services.AddScoped<ImportacaoMatoGrossoDoSul>();
+            services.AddScoped<ImportacaoMinasGerais>();
+            services.AddScoped<ImportacaoPara>();
+            services.AddScoped<ImportacaoParaiba>();
+            services.AddScoped<ImportacaoParana>();
+            services.AddScoped<ImportacaoPernambuco>();
+            services.AddScoped<ImportacaoPiaui>();
+            services.AddScoped<ImportacaoRioDeJaneiro>();
+            services.AddScoped<ImportacaoRioGrandeDoNorte>();
+            services.AddScoped<ImportacaoRioGrandeDoSul>();
+            services.AddScoped<ImportacaoRondonia>();
+            services.AddScoped<ImportacaoRoraima>();
+            services.AddScoped<ImportacaoSantaCatarina>();
+            services.AddScoped<ImportacaoSaoPaulo>();
+            services.AddScoped<ImportacaoSergipe>();
+            services.AddScoped<ImportacaoTocantins>();
 
             services.AddScoped<CamaraFederal.ImportadorDespesasCamaraFederal>();
             services.AddScoped<SenadoFederal.ImportadorDespesasSenado>();
@@ -94,9 +119,10 @@ namespace OPS.Importador
             //services.AddScoped<Presidencia>();
 
             services.AddScoped<Fornecedores.ImportacaoFornecedor>();
+            services.AddScoped<FileManager>();
             services.AddScoped<HttpLogger>();
             services.AddDbContext<AppDbContext>(options => options
-                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), 
+                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)),
                    ServiceLifetime.Transient);
 
             //services.AddRedaction();
@@ -170,32 +196,21 @@ namespace OPS.Importador
                     {
                         AllowAutoRedirect = true,
                     };
-                });
+                })
+                .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
+                //.AddExtendedHttpClientLogging(options =>
+                //{
+                //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
+                //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
+                //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
 
-            //.AddExtendedHttpClientLogging(options =>
-            //{
-            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
-            //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
-            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
-
-            //    options.LogBody = true;
-            //    ////options.LogContentHeaders = true;
-            //    //options.LogRequestStart = true;
-            //});
+                //    options.LogBody = true;
+                //    ////options.LogContentHeaders = true;
+                //    //options.LogRequestStart = true;
+                //});
 
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>().AddSerilog(Log.Logger, true);
-
-            // Initialize database extensions (unaccent for PostgreSQL)
-            var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-            try
-            {
-                dbContext.InitializeDatabaseExtensions();
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("Could not initialize database extensions: {Message}", ex.Message);
-            }
 
             SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
             SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
@@ -210,57 +225,63 @@ namespace OPS.Importador
                 // new ParametrosRepository().CarregarPadroes();
 
                 var logger = serviceProvider.GetService<ILogger<Program>>();
-                DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger, configuration).GetSqlResiliencePolicies());
+                DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger).GetSqlResiliencePolicies());
 
                 logger.LogInformation("Iniciando Importação");
 
                 //                var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-                //                    await dbContext.Database.ExecuteSqlRawAsync(@"
+                //                await dbContext.Database.ExecuteSqlRawAsync(@"
                 //INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                //SELECT id, nome_parlamentar, id_estado FROM assembleias.cl_deputado
-                //WHERE nome_parlamentar IS NOT NULL
+                //SELECT d.id, d.nome_parlamentar, d.id_estado 
+                //FROM assembleias.cl_deputado d
+                //LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_parlamentar AND dp.id_estado = d.id_estado
+                //WHERE dp.id IS NULL
+                //AND d.nome_civil IS NOT NULL
                 //ON CONFLICT DO NOTHING;
 
                 //INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                //SELECT id, nome_civil, id_estado FROM assembleias.cl_deputado
-                //WHERE nome_civil IS NOT NULL
+                //SELECT d.id, d.nome_civil, d.id_estado 
+                //FROM assembleias.cl_deputado d
+                //LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_civil AND dp.id_estado = d.id_estado
+                //WHERE dp.id IS NULL
+                //AND d.nome_civil IS NOT NULL
                 //ON CONFLICT DO NOTHING;");
 
                 //var crawler = new SeleniumScraper(serviceProvider);
-                //crawler.BaixarArquivosParana(DateTime.Today.Year);
+                //crawler.BaixarArquivosParana();
                 //crawler.BaixarArquivosPiaui();
 
                 var types = new Type[]
                 {
                     //typeof(SenadoFederal.Senado), // csv
-                    //typeof(CamaraFederal.Camara), // csv
-                    ////typeof(Assembleias.Estados.Acre.ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    //typeof(Assembleias.Estados.Alagoas.ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
-                    //typeof(Assembleias.Estados.Amapa.ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
-                    //typeof(Assembleias.Estados.Amazonas.ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
-                    //typeof(Assembleias.Estados.Bahia.ImportacaoBahia), // crawler anual
-                    //typeof(Assembleias.Estados.Ceara.ImportacaoCeara), // csv mensal
-                    //typeof(Assembleias.Estados.DistritoFederal.ImportacaoDistritoFederal), // xlsx  (Apenas BR)
-                    //typeof(Assembleias.Estados.EspiritoSanto.ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                    //typeof(Assembleias.Estados.Goias.ImportacaoGoias), // crawler mensal/deputado
-                    //typeof(Assembleias.Estados.Maranhao.ImportacaoMaranhao), // Valores mensais por categoria
-                    ////typeof(Assembleias.Estados.MatoGrosso.ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                    //typeof(Assembleias.Estados.MatoGrossoDoSul.ImportacaoMatoGrossoDoSul), // crawler anual
-                    //typeof(Assembleias.Estados.MinasGerais.ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
-                    //typeof(Assembleias.Estados.Para.ImportacaoPara), // json api anual
-                    //typeof(Assembleias.Estados.Paraiba.ImportacaoParaiba), // arquivo ods mensal/deputado
-                    //typeof(Assembleias.Estados.Parana.ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
-                    //typeof(Assembleias.Estados.Pernambuco.ImportacaoPernambuco), // json api mensal/deputado
-                    //typeof(Assembleias.Estados.Piaui.ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium)
-                    //typeof(Assembleias.Estados.RioDeJaneiro.ImportacaoRioDeJaneiro), // json api mensal/deputado
-                    //typeof(Assembleias.Estados.RioGrandeDoNorte.ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
-                    //typeof(Assembleias.Estados.RioGrandeDoSul.ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
-                    //typeof(Assembleias.Estados.Rondonia.ImportacaoRondonia), // crawler mensal/deputado
-                    //typeof(Assembleias.Estados.Roraima.ImportacaoRoraima), // crawler & odt mensal/deputado
-                    typeof(Assembleias.Estados.SantaCatarina.ImportacaoSantaCatarina), // csv anual
-                    //typeof(Assembleias.Estados.SaoPaulo.ImportacaoSaoPaulo), // xml anual
-                    //typeof(Assembleias.Estados.Sergipe.ImportacaoSergipe), // crawler & pdf mensal/deputado
-                    //typeof(Assembleias.Estados.Tocantins.ImportacaoTocantins), // crawler & pdf mensal/deputado
+                    typeof(CamaraFederal.Camara), // csv
+                    //typeof(ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
+                    //typeof(ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
+                    //typeof(ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
+                    //typeof(ImportacaoBahia), // crawler anual
+                    //typeof(ImportacaoCeara), // csv mensal
+                    //typeof(ImportacaoDistritoFederal), // xlsx  (Apenas BR)
+                    //typeof(ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                    //typeof(ImportacaoGoias), // crawler mensal/deputado
+                    //typeof(ImportacaoMaranhao), // Valores mensais por categoria
+                    ////typeof(ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(ImportacaoMatoGrossoDoSul), // crawler anual
+                    //typeof(ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
+                    //typeof(ImportacaoPara), // json api anual
+                    //typeof(ImportacaoParaiba), // arquivo ods mensal/deputado
+                    //typeof(ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
+                    //typeof(ImportacaoPernambuco), // json api mensal/deputado
+                    //typeof(ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium)
+                    //typeof(ImportacaoRioDeJaneiro), // json api mensal/deputado
+                    //typeof(ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
+                    //typeof(ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                    //typeof(ImportacaoRondonia), // crawler mensal/deputado
+                    //typeof(ImportacaoRoraima), // crawler & odt mensal/deputado
+                    //typeof(ImportacaoSantaCatarina), // csv anual
+                    //typeof(ImportacaoSaoPaulo), // xml anual
+                    //typeof(ImportacaoSergipe), // crawler & pdf mensal/deputado
+                    //typeof(ImportacaoTocantins), // crawler & pdf mensal/deputado
                 };
 
                 var tasks = new List<Task>();
@@ -268,12 +289,13 @@ namespace OPS.Importador
                 {
                     tasks.Add(Task.Factory.StartNew(() =>
                     {
-
-                        using (logger.BeginScope(new Dictionary<string, object> { ["Estado"] = type.Name, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
+                        var estado = type.Name.Replace("Importador", "");
+                        using (logger.BeginScope(new Dictionary<string, object> { ["Code"] = Utils.GetStateCode(estado), ["Estado"] = estado, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
                         {
+                            logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
                             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                            var importador = (Assembleias.Comum.ImportadorBase)serviceProvider.GetService(type);
+                            var importador = (ImportadorBase)serviceProvider.GetService(type);
                             importador.ImportarCompleto().Wait();
 
                             watch.Stop();
@@ -338,6 +360,8 @@ namespace OPS.Importador
             Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
             Console.ReadKey();
         }
+
+       
 
         //private static void ImportarPartidos()
         //{

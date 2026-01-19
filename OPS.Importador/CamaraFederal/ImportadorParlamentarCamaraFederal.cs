@@ -3,11 +3,13 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias.Parlamentar;
 using OPS.Importador.CamaraFederal.Entities;
-using OPS.Importador.Utilities;
+using OPS.Importador.Comum;
+using OPS.Importador.Comum.Parlamentar;
+using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.CamaraFederal;
 using RestSharp;
@@ -17,24 +19,17 @@ namespace OPS.Importador.CamaraFederal;
 public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 {
     protected readonly ILogger<ImportadorParlamentarCamaraFederal> logger;
+    protected readonly AppSettings appSettings;
     protected readonly AppDbContext dbContext;
 
-    public string rootPath { get; set; }
-    public string tempPath { get; set; }
-
-    private const short legislaturaAtual = 57;
-
-    public HttpClient httpClient { get; }
+    protected readonly HttpClient httpClient;
+    protected const short legislaturaAtual = 57;
 
     public ImportadorParlamentarCamaraFederal(IServiceProvider serviceProvider)
     {
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarCamaraFederal>>();
         dbContext = serviceProvider.GetService<AppDbContext>();
-
-        var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
-        rootPath = configuration["AppSettings:SiteRootFolder"];
-        tempPath = configuration["AppSettings:SiteTempFolder"];
-
+        appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
         httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("DefaultClient");
     }
 
@@ -275,7 +270,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     /// <param name="dirRaiz"></param>
     public async Task DownloadFotos()
     {
-        var sDeputadosImagesPath = System.IO.Path.Combine(rootPath, @"public\img\depfederal\");
+        var sDeputadosImagesPath = System.IO.Path.Combine(appSettings.SiteRootFolder, @"public\img\depfederal\");
 
         var httpClient = new HttpClient(new HttpClientHandler
         {

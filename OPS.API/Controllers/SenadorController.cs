@@ -3,9 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OPS.Core;
-using OPS.Core.DTO;
-using OPS.Core.Repository;
+using OPS.Core.DTOs;
+using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers
 {

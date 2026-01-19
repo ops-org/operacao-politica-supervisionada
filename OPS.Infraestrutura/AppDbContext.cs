@@ -13,7 +13,7 @@ public partial class AppDbContext : DbContext
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
-        Database.ExecuteSqlRaw("SET max_stack_depth = '6MB'");
+        //Database.ExecuteSqlRaw("SET max_stack_depth = '6MB'");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -56,7 +56,7 @@ public partial class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Register unaccent function for EF Core
-        modelBuilder.HasDbFunction(typeof(DbFunctions).GetMethod(nameof(DbFunctions.Unaccent)))
+        modelBuilder.HasDbFunction(typeof(PgFunctions).GetMethod(nameof(PgFunctions.Unaccent)))
             .HasName("unaccent");
 
         // Configure all entity contexts by area
@@ -68,27 +68,11 @@ public partial class AppDbContext : DbContext
         modelBuilder.ConfigureTSEEntities();
         modelBuilder.ConfigureTempEntities();
     }
-
-    /// <summary>
-    /// Initializes the database extensions required for the application.
-    /// This ensures that PostgreSQL extensions like 'unaccent' are available.
-    /// </summary>
-    public void InitializeDatabaseExtensions()
-    {
-        try
-        {
-            Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS unaccent;");
-        }
-        catch (Exception ex)
-        {
-            // Log but don't throw - extension may already exist or user may not have permissions
-            System.Diagnostics.Debug.WriteLine($"Warning: Could not create unaccent extension: {ex.Message}");
-        }
-    }
 }
 
-public static class DbFunctions
+public static class PgFunctions
 {
+    [DbFunction("unaccent", IsBuiltIn = true)]
     public static string Unaccent(string text)
     {
         throw new NotSupportedException("For EF Core queries only");

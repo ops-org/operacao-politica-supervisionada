@@ -10,13 +10,13 @@ namespace OPS.Importador.Fornecedores.ReceitaWS
         public bool? Optante { get; set; }
 
         [JsonPropertyName("data_opcao")]
-        public DateTime? DataOpcao { get; set; }
+        public string? DataOpcao { get; set; }
 
         [JsonPropertyName("data_exclusao")]
-        public DateTime? DataExclusao { get; set; }
+        public string? DataExclusao { get; set; }
 
         [JsonPropertyName("ultima_atualizacao")]
-        public DateTime? UltimaAtualizacao { get; set; }
+        public string? UltimaAtualizacao { get; set; }
     }
 
 

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
-namespace OPS.Infraestrutura.Entities.Comum
+namespace OPS.Infraestrutura.Entities.Temp
 {
     [DebuggerDisplay("Id = {Id}, SiglaNome = {SiglaNome}")]
     [Keyless]

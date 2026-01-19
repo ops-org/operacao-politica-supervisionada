@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using OPS.Core.DTO;
-using OPS.Core.Repository;
+using OPS.Core.DTOs;
+using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers
 {

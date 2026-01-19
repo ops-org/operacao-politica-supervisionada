@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
-using OPS.Core;
-using OPS.Core.DTO;
+using OPS.Core.DTOs;
 using OPS.Core.Utilities;
+using OPS.Importador.Comum;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.Fornecedores;
 
@@ -21,25 +22,23 @@ namespace OPS.Importador.Fornecedores
 
     public class ImportacaoFornecedor
     {
-        public ILogger<ImportacaoFornecedor> logger { get; private set; }
+        private readonly ILogger<ImportacaoFornecedor> logger;
+        private readonly AppSettings appSettings;
         private readonly AppDbContext dbContext;
-        public IConfiguration configuration { get; private set; }
-        public HttpClient httpClient { get; }
+        private readonly HttpClient httpClient;
 
-        public ImportacaoFornecedor(ILogger<ImportacaoFornecedor> logger, IConfiguration configuration, IServiceProvider serviceProvider, AppDbContext dbContext)
+        public ImportacaoFornecedor(ILogger<ImportacaoFornecedor> logger,IServiceProvider serviceProvider, AppDbContext dbContext)
         {
             this.logger = logger;
-            this.configuration = configuration;
             this.dbContext = dbContext;
 
+            appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
             httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
-
         }
 
         public async Task ConsultarDadosCNPJ(bool somenteNovos = true)
         {
-            var telegramApiToken = configuration["AppSettings:TelegramApiToken"];
-            var telegram = new TelegramApi(telegramApiToken);
+            var telegram = new TelegramApi(appSettings.TelegramApiToken);
             var telegraMessage = new TelegramMessage()
             {
                 ChatId = "-1001378778982", // OPS - Alertas
@@ -183,8 +182,8 @@ namespace OPS.Importador.Fornecedores
                     fornecedor.ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
                     fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8);
 
-                    await dbContext.FornecedorSocios.Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
-                    await dbContext.FornecedorAtividadesSecundarias.Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
+                    await dbContext.FornecedorSocios.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
+                    await dbContext.FornecedorAtividadesSecundarias.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
 
                     if (fornecedor.IdAtividadePrincipal > 0)
                         fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.IdAtividadePrincipal, fornecedor.AtividadePrincipal);
@@ -410,11 +409,11 @@ namespace OPS.Importador.Fornecedores
                         DataSituacaoEspecial = ParseDateString(fornecedorWs.DataSituacaoEspecial),
                         CapitalSocial = ParseDecimalString(fornecedorWs.CapitalSocial),
                         OpcaoPeloMEI = fornecedorWs.Simei?.Optante,
-                        DataOpcaoPeloMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataOpcao.ToString()),
-                        DataExclusaoMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataExclusao.ToString()),
+                        DataOpcaoPeloMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataOpcao),
+                        DataExclusaoMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataExclusao),
                         OpcaoPeloSimples = fornecedorWs.Simples?.Optante,
-                        DataOpcaoPeloSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataOpcao.ToString()),
-                        DataExclusaoSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataExclusao.ToString()),
+                        DataOpcaoPeloSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataOpcao),
+                        DataExclusaoSimples = fornecedorWs.Simples is null ? null : ParseDateString(fornecedorWs.Simples.DataExclusao),
                         NomeCidadeExterior = null,
                         Pais = null,
                         ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified)

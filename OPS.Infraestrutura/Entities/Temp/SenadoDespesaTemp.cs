@@ -9,10 +9,10 @@ public class SenadoDespesaTemp
     public int Id { get; set; }
 
     [Column("ano")]
-    public decimal? Ano { get; set; }
+    public int? Ano { get; set; }
 
     [Column("mes")]
-    public decimal? Mes { get; set; }
+    public int? Mes { get; set; }
 
     [Column("senador")]
     public string? Senador { get; set; }

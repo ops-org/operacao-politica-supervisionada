@@ -11,31 +11,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OPS.API", "OPS.API\OPS.API.
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "OPS.Site", "OPS.Site\OPS.Site.esproj", "{7E4446A1-772E-4D73-97F5-27D70FFBFD33}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.Core.Test", "OPS.Core.Test\OPS.Core.Test.csproj", "{D4694FB6-E728-48E0-925D-248EE42D4E9D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.Infraestrutura", "OPS.Infraestrutura\OPS.Infraestrutura.csproj", "{5B447A54-81E3-4901-BE55-A7EC77E352ED}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{ACD6F3C6-6175-474A-ACBD-B6653266ADB1}"
 	ProjectSection(SolutionItems) = preProject
-		.dockerignore = .dockerignore
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
-		Docs\BD\Schemas\AssembleiasLegislativas.sql = Docs\BD\Schemas\AssembleiasLegislativas.sql
-		Docs\BD\Schemas\CamaraFederal.sql = Docs\BD\Schemas\CamaraFederal.sql
 		CNAME = CNAME
-		Docs\BD\Schemas\Comum.sql = Docs\BD\Schemas\Comum.sql
 		CONTRIBUTING.md = CONTRIBUTING.md
-		docker-compose.dcproj = docker-compose.dcproj
-		docker-compose.override.yml = docker-compose.override.yml
-		docker-compose.yml = docker-compose.yml
-		Docs\BD\Schemas\Fornecedor.sql = Docs\BD\Schemas\Fornecedor.sql
-		launchSettings.json = launchSettings.json
 		LICENCE = LICENCE
 		README.md = README.md
-		Docs\BD\Schemas\SenadoFederal.sql = Docs\BD\Schemas\SenadoFederal.sql
 		stylecop.json = stylecop.json
-		Docs\BD\Schemas\Temp.sql = Docs\BD\Schemas\Temp.sql
-		Docs\BD\Schemas\TribunalSuperiorEleitoral.sql = Docs\BD\Schemas\TribunalSuperiorEleitoral.sql
 	EndProjectSection
 EndProject
 Global
@@ -59,10 +45,6 @@ Global
 		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E4446A1-772E-4D73-97F5-27D70FFBFD33}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D4694FB6-E728-48E0-925D-248EE42D4E9D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B447A54-81E3-4901-BE55-A7EC77E352ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5B447A54-81E3-4901-BE55-A7EC77E352ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B447A54-81E3-4901-BE55-A7EC77E352ED}.Release|Any CPU.ActiveCfg = Release|Any CPU

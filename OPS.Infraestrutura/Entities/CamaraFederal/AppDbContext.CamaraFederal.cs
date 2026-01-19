@@ -86,8 +86,8 @@ public static class CamaraFederalConfigurations
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.HasOne(e => e.Deputado).WithMany(d => d.Mandatos).HasForeignKey(e => e.IdDeputado);
             entity.HasOne(e => e.Legislatura).WithMany(l => l.Mandatos).HasForeignKey(e => e.IdLegislatura);
-            entity.HasOne(e => e.Estado); //.WithMany(e => e.MandatosCamaraFederal).HasForeignKey(e => e.IdEstado);
-            entity.HasOne(e => e.Partido); //.WithMany(p => p.Mandatos).HasForeignKey(e => e.IdPartido);
+            //entity.HasOne(e => e.Estado); //.WithMany(e => e.MandatosCamaraFederal).HasForeignKey(e => e.IdEstado);
+            //entity.HasOne(e => e.Partido); //.WithMany(p => p.Mandatos).HasForeignKey(e => e.IdPartido);
             entity.HasIndex(e => new { e.IdDeputado, e.IdLegislatura }).IsUnique();
             entity.ToTable("cf_mandato", "camara");
         });

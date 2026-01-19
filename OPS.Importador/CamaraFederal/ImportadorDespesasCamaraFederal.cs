@@ -15,11 +15,13 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
+using Microsoft.Extensions.Options;
+using OPS.Core.Exceptions;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias.Despesa;
+using OPS.Importador.Comum;
+using OPS.Importador.Comum.Despesa;
+using OPS.Importador.Comum.Utilities;
 using OPS.Importador.Fornecedores;
-using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.CamaraFederal;
 using RestSharp;
@@ -29,13 +31,12 @@ namespace OPS.Importador.CamaraFederal;
 public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 {
     protected readonly ILogger<ImportadorDespesasCamaraFederal> logger;
+    protected readonly AppSettings appSettings;
+    protected readonly FileManager fileManager;
+
     protected IDbConnection connection { get { return dbContext.Database.GetDbConnection(); } }
     protected readonly AppDbContext dbContext;
 
-    public string rootPath { get; set; }
-    public string tempPath { get; set; }
-
-    private bool importacaoIncremental { get; init; }
     private int itensProcessadosAno { get; set; }
     private decimal valorTotalProcessadoAno { get; set; }
 
@@ -46,15 +47,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     public ImportadorDespesasCamaraFederal(IServiceProvider serviceProvider)
     {
-        logger = serviceProvider.GetService<ILogger<ImportadorDespesasCamaraFederal>>();
-        dbContext = serviceProvider.GetService<AppDbContext>();
-
-        var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
-        rootPath = configuration["AppSettings:SiteRootFolder"];
-        tempPath = configuration["AppSettings:SiteTempFolder"];
-        importacaoIncremental = Convert.ToBoolean(configuration["AppSettings:ImportacaoDespesas:Incremental"] ?? "false");
-
-        httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
+        appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+        dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+        fileManager = serviceProvider.GetRequiredService<FileManager>();
+        logger = serviceProvider.GetRequiredService<ILogger<ImportadorDespesasCamaraFederal>>();
+        httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("ResilientClient");
     }
 
     public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)
@@ -96,20 +93,19 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     #region Importação Dados CEAP CSV
 
-    public void Importar(int ano)
+    public async Task Importar(int ano)
     {
-        var anoAtual = DateTime.Today.Year;
         logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
 
         Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
 
         foreach (var arquivo in arquivos)
         {
-            var _urlOrigem = arquivo.Key;
+            var urlOrigem = arquivo.Key;
             var caminhoArquivo = arquivo.Value;
 
-            bool novoArquivoBaixado = BaixarArquivo(_urlOrigem, caminhoArquivo);
-            if (anoAtual != ano && importacaoIncremental && !novoArquivoBaixado)
+            bool novoArquivoBaixado = await fileManager.BaixarArquivo(dbContext, urlOrigem, caminhoArquivo, null);
+            if (!appSettings.ForceImport && !novoArquivoBaixado)
             {
                 logger.LogInformation("Importação ignorada para arquivo previamente importado!");
                 return;
@@ -127,15 +123,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             }
             catch (Exception ex)
             {
-
                 logger.LogError(ex, ex.Message);
-
-#if !DEBUG
-                //Excluir o arquivo para tentar importar novamente na proxima exceção
-                if(File.Exists(caminhoArquivo))
-                    File.Delete(caminhoArquivo);
-#endif
-
+                fileManager.MoverArquivoComErro(caminhoArquivo);
             }
         }
     }
@@ -157,91 +146,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
     public Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
     {
         var downloadUrl = "https://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
-        var fullFileNameZip = Path.Combine(tempPath, "CamaraFederal/Ano-" + ano + ".csv.zip");
+        var fullFileNameZip = Path.Combine(appSettings.TempFolder, "CamaraFederal", $"Ano-{ano}.csv.zip");
 
         Dictionary<string, string> arquivos = new();
         arquivos.Add(downloadUrl, fullFileNameZip);
 
         return arquivos;
-    }
-
-    protected bool BaixarArquivo(string urlOrigem, string caminhoArquivo)
-    {
-        var caminhoArquivoDb = caminhoArquivo.Replace(tempPath, "");
-
-        if (importacaoIncremental && File.Exists(caminhoArquivo))
-        {
-            var arquivoDB = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
-            if (arquivoDB != null && arquivoDB.Verificacao > DateTime.UtcNow.AddDays(-7))
-            {
-                logger.LogWarning("Ignorando arquivo verificado recentemente '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
-                return false;
-            }
-        }
-
-        logger.LogDebug("Baixando arquivo '{CaminhoArquivo}' a partir de '{UrlOrigem}'", caminhoArquivo, urlOrigem);
-
-        string diretorio = new FileInfo(caminhoArquivo).Directory.ToString();
-        if (!Directory.Exists(diretorio))
-            Directory.CreateDirectory(diretorio);
-
-        var fileExt = Path.GetExtension(caminhoArquivo);
-        var caminhoArquivoTmp = caminhoArquivo.Replace(fileExt, $"_tmp{fileExt}");
-        if (File.Exists(caminhoArquivoTmp))
-            File.Delete(caminhoArquivoTmp);
-
-        //if (config.Estado != Estado.DistritoFederal)
-        //    httpClientResilient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
-        //else
-        httpClient.DownloadFile(urlOrigem, caminhoArquivoTmp).Wait();
-
-        string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);
-        var arquivoChecksum = dbContext.ArquivoChecksums.FirstOrDefault(x => x.Nome == caminhoArquivoDb);
-        if (arquivoChecksum != null && arquivoChecksum.Checksum == checksum && File.Exists(caminhoArquivo))
-        {
-            arquivoChecksum.Verificacao = DateTime.UtcNow;
-
-            logger.LogDebug("Arquivo '{CaminhoArquivo}' é identico ao já existente.", caminhoArquivo);
-
-            if (File.Exists(caminhoArquivoTmp))
-                File.Delete(caminhoArquivoTmp);
-
-            return false;
-        }
-
-        if (arquivoChecksum == null)
-        {
-            logger.LogDebug("Arquivo '{CaminhoArquivo}' é novo.", caminhoArquivo);
-
-            dbContext.ArquivoChecksums.Add(new ArquivoChecksum()
-            {
-                Nome = caminhoArquivoDb,
-                Checksum = checksum,
-                TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length,
-                Criacao = DateTime.UtcNow,
-                Atualizacao = DateTime.UtcNow,
-                Verificacao = DateTime.UtcNow
-            });
-        }
-        else
-        {
-            if (arquivoChecksum.Checksum != checksum)
-            {
-                logger.LogDebug("Arquivo '{CaminhoArquivo}' foi atualizado.", caminhoArquivo);
-
-                arquivoChecksum.Checksum = checksum;
-                arquivoChecksum.TamanhoBytes = (int)new FileInfo(caminhoArquivoTmp).Length;
-
-            }
-
-            arquivoChecksum.Atualizacao = DateTime.UtcNow;
-            arquivoChecksum.Verificacao = DateTime.UtcNow;
-
-        }
-
-        dbContext.SaveChanges();
-        File.Move(caminhoArquivoTmp, caminhoArquivo, true);
-        return true;
     }
 
     private readonly string[] ColunasCEAP = {
@@ -379,6 +289,37 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                     if (despesaTemp.DataEmissao == null)
                         despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, 1);
+                    else
+                    {
+                        // Copy from ImportadorDespesasBase.InserirDespesaTemp
+                        var endMonthDate = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 1).AddMonths(1).AddDays(-1);
+
+                        if (despesaTemp.DataEmissao?.Year != despesaTemp.Ano && despesaTemp.DataEmissao?.AddMonths(3).Year != despesaTemp.Ano)
+                        {
+                            // Validar ano com 3 meses de tolerancia.
+                            //logger.LogWarning("Despesa com ano incorreto: {@Despesa}", despesaTemp);
+
+                            var dt = despesaTemp.DataEmissao!.Value;
+                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
+                            despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, Math.Min(dt.Day, monthLastDay));
+                        }
+                        else if (despesaTemp.DataEmissao > endMonthDate)
+                        {
+                            // Validar despesa com data futura.
+                            //logger.LogWarning("Despesa com data incorreta/futura: {@Despesa}", despesaTemp);
+
+                            var dt = despesaTemp.DataEmissao!.Value;
+                            // Tentamos trocar apenas o ano.
+                            despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, dt.Day);
+
+                            // Caso a data permaneça invalida, alteramos também o mês, se possivel.
+                            if (despesaTemp.DataEmissao > endMonthDate && despesaTemp.Mes.HasValue)
+                            {
+                                var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
+                                despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, Math.Min(dt.Day, monthLastDay));
+                            }
+                        }
+                    }
 
 
                     if (despesaTemp.CnpjCpf.StartsWith("000000000000"))
@@ -427,10 +368,11 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             if (itensProcessadosAno > 0)
                 InsereDespesasTemp(despesasTemp, lstHash);
 
-            var deletar = lstHash.Values.Select(x => (long)x).ToList();
-            if (deletar.Any())
+            if (lstHash.Any())
             {
+                var deletar = lstHash.Values.Select(x => (long)x).ToList();
                 dbContext.DeputadoFederalDespesaTemps
+                    .AsNoTracking()
                     .Where(u => deletar.Contains(u.Id))
                     .ExecuteDelete();
             }
@@ -735,6 +677,7 @@ AND m.id_carteira_parlamantar IS NULL;
             logger.LogInformation("{Itens} mandatos atualizados!", affected);
         }
 
+        // TODO: Parlamentar pode ter mais de um partido por mandato, isso se reflete na CEAP
         affected = connection.Execute(@"
 INSERT INTO camara.cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
 SELECT DISTINCT d.id, dt.codigo_legislatura, dt.numero_carteira_parlamentar, e.id, p.id 
@@ -749,7 +692,8 @@ LEFT JOIN partido p ON p.sigla = dt.sigla_partido
 LEFT JOIN camara.cf_mandato m ON m.id_cf_deputado = d.id
     AND m.id_legislatura = dt.codigo_legislatura 
 WHERE dt.codigo_legislatura <> 0
-AND m.id IS NULL;
+AND m.id IS NULL
+ON CONFLICT DO NOTHING
     	");
 
         if (affected > 0)
@@ -909,6 +853,7 @@ INSERT INTO camara.cf_despesa (
     valor_restituicao,
     id_trecho_viagem,
     tipo_link,
+    ano_mes,
     hash
 )
 SELECT 
@@ -931,6 +876,7 @@ SELECT
     restituicao,
     tv.id,
     CAST(coalesce(url_documento, '0') as SMALLINT),
+    concat(ano::text, mes::text)::INT8,
     dt.hash
 from temp.cf_despesa_temp dt
 LEFT JOIN camara.cf_deputado d on d.id_deputado = dt.numero_deputado_id
@@ -1078,7 +1024,7 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
     //        else
     //            urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-de-{0}-csv", ano, meses[mes - 1]);
 
-    //        var caminhoArquivo = System.IO.Path.Combine(tempPath, $"CF/RM{ano}{mes:00}.csv");
+    //        var caminhoArquivo = System.IO.Path.Combine(appSettings.TempFolder, $"CF/RM{ano}{mes:00}.csv");
 
     //        try
     //        {

@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias.Parlamentar;
+using OPS.Importador.Comum;
+using OPS.Importador.Comum.Parlamentar;
+using OPS.Importador.Comum.Utilities;
 using OPS.Importador.SenadoFederal.Entities;
-using OPS.Importador.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 using RestSharp;
@@ -24,11 +26,9 @@ public class SenatorLists
 public class ImportadorParlamentarSenado : IImportadorParlamentar
 {
     protected readonly ILogger<ImportadorParlamentarSenado> logger;
+    protected readonly AppSettings appSettings;
     protected readonly AppDbContext dbContext;
-    public string rootPath { get; init; }
-    public string tempPath { get; init; }
-
-    public HttpClient httpClient { get; }
+    protected readonly HttpClient httpClient;
 
     public List<PartidoDePara> PartidoDeParas { get; init; }
 
@@ -37,10 +37,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         logger = serviceProvider.GetService<ILogger<ImportadorParlamentarSenado>>();
         dbContext = serviceProvider.GetService<AppDbContext>();
 
-        var configuration = serviceProvider.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
-        rootPath = configuration["AppSettings:SiteRootFolder"];
-        tempPath = configuration["AppSettings:SiteTempFolder"];
-
+        appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
         httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
 
         PartidoDeParas = dbContext.PartidoDeParas.ToList();
@@ -635,7 +632,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
     public async Task DownloadFotos()
     {
-        var sSenadoressImagesPath = System.IO.Path.Combine(rootPath, @"public\img\senador\");
+        var sSenadoressImagesPath = System.IO.Path.Combine(appSettings.SiteRootFolder, @"public\img\senador\");
 
         {
             var activeSenators = dbContext.Senadores

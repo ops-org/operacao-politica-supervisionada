@@ -44,7 +44,7 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
         public string? NomeImportacao { get; set; }
 
         [Column("nascimento")]
-        public DateOnly? Nascimento { get; set; } // TODO: Verificar se DateOnly é suportado
+        public DateOnly? Nascimento { get; set; }
 
         [Column("sexo")]
         [StringLength(2)]

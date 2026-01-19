@@ -22,7 +22,8 @@ public static class AssembleiasLegislativasConfigurations
         modelBuilder.Entity<DeputadoEstadual>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
             entity.HasOne(e => e.Partido).WithMany(p => p.DeputadosEstaduais).HasForeignKey(e => e.IdPartido);
             entity.HasOne(e => e.Estado).WithMany(e => e.DeputadosEstaduais).HasForeignKey(e => e.IdEstado);
             entity.ToTable("cl_deputado", "assembleias");

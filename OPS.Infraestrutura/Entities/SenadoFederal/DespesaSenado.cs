@@ -20,7 +20,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         [Column("id_fornecedor")]
         public int? IdFornecedor { get; set; }
 
-        [Column("ano_mes", TypeName = "decimal(6,0)")]
+        [Column("ano_mes")]
         public int? AnoMes { get; set; }
 
         [Column("ano")]

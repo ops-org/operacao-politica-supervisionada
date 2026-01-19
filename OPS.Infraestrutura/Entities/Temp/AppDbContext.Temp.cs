@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using OPS.Infraestrutura.Entities.Comum;
 using OPS.Infraestrutura.Entities.Temp;
 
 namespace OPS.Infraestrutura;
@@ -9,7 +8,6 @@ public partial class AppDbContext
     // Temp Tables - Camara Federal
     public DbSet<DeputadoFederalDespesaTemp> DeputadoFederalDespesaTemps { get; set; }
     public DbSet<CamaraEstadualDespesa> CamaraEstadualDespesas { get; set; }
-    //public DbSet<CamaraEstadualDespesaResumoTemp> CamaraEstadualDespesaResumoTemps { get; set; } // TODO: Delete on database
     public DbSet<CamaraEstadualDespesaTipo> CamaraEstadualDespesaTipos { get; set; }
 
     // Temp Tables - Senado Federal
@@ -34,7 +32,6 @@ public partial class AppDbContext
     public DbSet<DeputadoEstadualDepara> DeputadoEstadualDeparas { get; set; }
     public DbSet<CamaraEstadualDespesaTemp> CamaraEstadualDespesaTemps { get; set; }
     public DbSet<CamaraEstadualFuncionarioTemp> CamaraEstadualFuncionarioTemps { get; set; }
-    //public DbSet<CamaraEstadualMandatoTemp> CamaraEstadualMandatoTemps { get; set; } // TODO: Delete on database
     public DbSet<CamaraEstadualRemuneracaoTemp> CamaraEstadualRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualSecretarioRemuneracaoTemp> CamaraEstadualSecretarioRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualEmpenhoTemp> CamaraEstadualEmpenhoTemps { get; set; }
@@ -69,7 +66,8 @@ public static class TempConfigurations
         modelBuilder.Entity<CamaraEstadualDespesaTemp>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
             entity.Property(e => e.Hash).HasColumnType("bytea");
             entity.ToTable("cl_despesa_temp", "temp");
         });

@@ -1,4 +1,4 @@
-﻿using OPS.Importador.Assembleias.Comum;
+﻿using OPS.Importador.Comum;
 
 namespace OPS.Importador.SenadoFederal
 {

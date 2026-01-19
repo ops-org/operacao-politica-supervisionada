@@ -36,8 +36,8 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;
         public virtual LegislaturaCamara? Legislatura { get; set; }
-        public virtual Estado? Estado { get; set; }
-        public virtual Partido? Partido { get; set; }
+        //public virtual Estado? Estado { get; set; }
+        //public virtual Partido? Partido { get; set; }
         public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
     }
 }

@@ -9,10 +9,4 @@
     </JavaScriptTestFramework>
     <BuildCommand>npm run serve</BuildCommand>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="..\.dockerignore">
-      <DependentUpon>$(DockerDefaultDockerfile)</DependentUpon>
-      <Link>.dockerignore</Link>
-    </None>
-  </ItemGroup>
 </Project>

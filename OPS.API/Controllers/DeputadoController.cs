@@ -2,9 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OPS.Core;
-using OPS.Core.DTO;
-using OPS.Core.Repository;
+using OPS.Core.DTOs;
+using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers
 {
@@ -197,7 +196,7 @@ namespace OPS.API.Controllers
         }
 
         [HttpPost]
-        [Route("Remuneracao")]
+        [Route("")]
         public async Task<dynamic> Remuneracao(DataTablesRequest request)
         {
             return await _deputadoRepository.Remuneracao(request);
