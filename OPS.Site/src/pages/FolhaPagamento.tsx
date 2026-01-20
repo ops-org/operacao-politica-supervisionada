@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { ErrorMessage } from "@/components/ErrorMessage";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
@@ -25,7 +26,7 @@ const formatNameAcronym = (value: string, acronym: string): string => {
 }
 
 const generateAnos = () => {
-    const currentYear = new Date().getFullYear();
+    const currentYear = new Date().getFullYear()-1; // TODO: Remove -1
     const anos = [];
     for (let year = currentYear; year >= 2012; year--) {
         anos.push({ value: year.toString(), label: year.toString() });
@@ -347,27 +348,11 @@ export default function FolhaPagamento() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex flex-col bg-gray-50">
+            <div className="min-h-screen bg-background">
                 <Header />
-                <main className="flex-1 container mx-auto px-4 py-8">
-                    <div className="max-w-2xl mx-auto">
-                        <div className="relative overflow-hidden rounded-2xl bg-red-50 border border-red-200 shadow-lg">
-                            <div className="relative p-8 text-center">
-                                <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                    <span className="text-white text-2xl font-bold">!</span>
-                                </div>
-                                <h3 className="text-xl font-bold text-red-800 mb-2">Erro ao carregar dados</h3>
-                                <p className="text-red-600 mb-6">Por favor, tente novamente.</p>
-                                <Button
-                                    onClick={() => refetch()}
-                                    className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                >
-                                    Tentar novamente
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </main>
+                <ErrorMessage
+                    onRetry={() => refetch()}
+                />
                 <Footer />
             </div>
         );
@@ -384,46 +369,32 @@ export default function FolhaPagamento() {
                 <Header />
                 <main className="container mx-auto px-4 py-8">
                     <div className="space-y-6">
-                        <div className="relative overflow-hidden rounded-3xl bg-blue-600 p-8 text-white shadow-2xl">
-                            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                                <div className="space-y-3">
-                                    <h1 className="text-4xl sm:text-5xl font-bold text-white">
-                                        Remuneração no Senado
-                                    </h1>
-                                    <p className="text-lg text-blue-100 max-w-2xl">
-                                        Consulte e analise os dados de remuneração no Senado Federal com visualizações interativas e filtros avançados
-                                    </p>
-                                </div>
-                                <Button
-                                    onClick={() => setShowFilters(!showFilters)}
-                                    variant={showFilters ? "secondary" : "outline"}
-                                    className={`flex-shrink-0 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${showFilters
-                                            ? "bg-white text-blue-600 hover:bg-blue-50 shadow-lg"
-                                            : "bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 hover:shadow-lg"
-                                        }`}
-                                    size="lg"
-                                >
-                                    <Search className="h-5 w-5 mr-2" />
-                                    {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
-                                </Button>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-foreground mb-2">Remuneração no Senado</h1>
+                                <p className="text-muted-foreground">Consulte e analise os dados de remuneração no Senado Federal com visualizações interativas e filtros avançados</p>
                             </div>
+                            <Button
+                                onClick={() => setShowFilters(!showFilters)}
+                                variant={showFilters ? "default" : "outline"}
+                                className="flex-shrink-0"
+                                size="lg"
+                            >
+                                <Search className="h-4 w-4 mr-2" />
+                                {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+                            </Button>
                         </div>
 
                         {filterSummary.length > 0 && (
-                            <div className="relative overflow-hidden rounded-2xl bg-blue-50 border border-blue-200 shadow-lg">
-                                <div className="relative p-6">
+                            <Card className="border-l-4 border-l-primary">
+                                <CardContent className="pt-6">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-3 w-3 bg-blue-500 rounded-full animate-pulse"></div>
-                                                <span className="text-sm font-semibold text-gray-800">Filtros aplicados:</span>
-                                            </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-2 w-2 bg-primary rounded-full"></div>
+                                            <span className="text-sm font-medium text-foreground">Filtros aplicados:</span>
                                             <div className="flex gap-2 flex-wrap">
                                                 {filterSummary.map((filter, index) => (
-                                                    <Badge
-                                                        key={index}
-                                                        className="text-xs px-3 py-1 bg-blue-500 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
-                                                    >
+                                                    <Badge key={index} variant="secondary" className="text-xs">
                                                         {filter}
                                                     </Badge>
                                                 ))}
@@ -433,19 +404,19 @@ export default function FolhaPagamento() {
                                             variant="ghost"
                                             size="sm"
                                             onClick={handleClearFilters}
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-300 hover:shadow-md"
+                                            className="text-muted-foreground hover:text-foreground"
                                         >
                                             <Trash className="h-4 w-4 mr-1" />
                                             Limpar
                                         </Button>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         )}
 
                         {showFilters && (
-                            <div className="relative overflow-hidden rounded-2xl bg-white border border-blue-200 shadow-xl">
-                                <div className="relative p-8">
+                            <Card className="border-0 shadow-lg">
+                                <CardContent className="p-6">
                                     <div className="space-y-6">
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                                             <div className="space-y-3">
@@ -454,7 +425,7 @@ export default function FolhaPagamento() {
                                                     Ano
                                                 </label>
                                                 <Select value={selectedFilters.ano} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, ano: value }))}>
-                                                    <SelectTrigger className="h-12 bg-white border border-blue-200 rounded-lg hover:bg-gray-50 transition-all duration-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                                    <SelectTrigger className="h-11">
                                                         <SelectValue placeholder="Selecione o ano" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -473,7 +444,7 @@ export default function FolhaPagamento() {
                                                     Mês
                                                 </label>
                                                 <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
-                                                    <SelectTrigger className="h-12 bg-white border border-blue-200 rounded-lg hover:bg-gray-50 transition-all duration-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                                    <SelectTrigger className="h-11">
                                                         <SelectValue placeholder="Selecione o mês" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -538,7 +509,6 @@ export default function FolhaPagamento() {
                                                 />
                                             </div>
 
-
                                             <div className="space-y-3">
                                                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     <div className="h-1 w-4 bg-primary rounded"></div>
@@ -551,337 +521,319 @@ export default function FolhaPagamento() {
                                                     onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, parlamentar: items }))}
                                                 />
                                             </div>
-
                                         </div>
 
-                                        <div className="flex gap-3 pt-4">
-                                            <Button
-                                                onClick={handleSearch}
-                                                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                                            >
-                                                <Search className="h-5 w-5 mr-2" />
-                                                Buscar
+                                        <div className="border-t pt-6">
+                                            <div className="space-y-4">
+                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                    <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    Agrupar por
+                                                </label>
+                                                <RadioGroup
+                                                    value={selectedFilters.agrupar}
+                                                    onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, agrupar: value }))}
+                                                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3"
+                                                >
+                                                    {agrupamentoOptions.map((option) => {
+                                                        const Icon = option.icon;
+                                                        return (
+                                                            <div className="relative" key={option.value}>
+                                                                <RadioGroupItem
+                                                                    value={option.value}
+                                                                    id={`agrupamento-${option.value}`}
+                                                                    className="peer sr-only"
+                                                                />
+                                                                <Label
+                                                                    htmlFor={`agrupamento-${option.value}`}
+                                                                    className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
+                                                                >
+                                                                    <Icon className="h-4 w-4 mb-1" />
+                                                                    <div className="text-xs font-medium text-center">{option.label}</div>
+                                                                </Label>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </RadioGroup>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-3 pt-4 border-t">
+                                            <Button onClick={handleSearch} size="lg" className="flex-1 sm:flex-none">
+                                                <Search className="h-4 w-4 mr-2" />
+                                                Pesquisar
                                             </Button>
-                                            <Button
-                                                variant="outline"
-                                                onClick={handleClearFilters}
-                                                className="bg-white border border-red-200 text-red-600 hover:bg-red-500 hover:text-white hover:shadow-md transition-all duration-300 font-medium rounded-xl"
-                                            >
-                                                <Trash className="h-5 w-5 mr-2" />
-                                                Limpar
+                                            <Button variant="outline" onClick={handleClearFilters} size="lg" className="flex-1 sm:flex-none">
+                                                <Trash className="h-4 w-4 mr-2" />
+                                                Limpar filtros
                                             </Button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         )}
 
-                        {/* Tabs for agrupamento */}
-                        <div className="relative overflow-hidden rounded-2xl bg-gray-50 border-0 shadow-xl">
-                            <div className="relative flex flex-wrap gap-2 p-4 justify-center sm:justify-between">
-                                {agrupamentoOptions.map((option) => {
-                                    const Icon = option.icon;
-                                    const isActive = option.value === selectedFilters.agrupar;
-                                    return (
-                                        <Button
-                                            key={option.value}
-                                            variant={isActive ? "default" : "ghost"}
-                                            size="sm"
-                                            className={`transition-all duration-300 flex items-center gap-2 px-4 py-2 rounded-xl font-medium ${isActive
-                                                ? "shadow-lg bg-blue-500 text-white hover:bg-blue-600"
-                                                : "bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md border border-gray-200"
-                                                }`}
-                                            onClick={() => {
-                                                setSelectedFilters(prev => ({ ...prev, agrupar: option.value }));
-                                                setCurrentPage(1);
-                                                setSortField(null);
-                                                setSortOrder('desc');
-                                                delay(refetch);
-                                            }}
-                                        >
-                                            <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-blue-600"}`} />
-                                            <span className="whitespace-nowrap">{option.label}</span>
-                                        </Button>
-                                    );
-                                })}
+                    </div>
+
+                    {/* Table Section */}
+                    <div className="space-y-6 mt-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                {remuneracaoData.length > 0 && (
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        {formatNumber(apiData?.recordsTotal || 0)} resultado{apiData?.recordsTotal !== 1 ? 's' : ''} encontrado{apiData?.recordsTotal !== 1 ? 's' : ''}
+                                        {valorTotal > 0 && (
+                                            <> • Custo total: <span className="font-semibold text-primary">{formatCurrency(valorTotal)}</span></>
+                                        )}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Agrupando por</span>
+                                <span className="text-sm font-medium text-foreground">
+                                    {agrupamentoOptions.find(option => option.value === activeAgrupamento)?.label}
+                                </span>
                             </div>
                         </div>
 
-                        <div className="relative overflow-hidden rounded-2xl bg-white border border-blue-200 shadow-xl">
-                            <div className="relative p-8">
-                                <div className="space-y-6">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                        <div className="space-y-2">
-                                            <h2 className="text-2xl font-bold text-blue-600">Resultados</h2>
-                                            <p className="text-gray-600">
-                                                {remuneracaoData.length > 0 && (
-                                                    <>
-                                                        <span className="font-semibold text-blue-600">{formatNumber(apiData?.recordsTotal || 0)}</span> registros encontrados
-                                                        {valorTotal > 0 && (
-                                                            <> • <span className="font-semibold text-green-600">Custo total: {formatCurrency(valorTotal)}</span></>
+                        <Card className="border-0 shadow-lg overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <Table key={activeAgrupamento}>
+                                    <TableHeader className="bg-muted/50">
+                                        <TableRow>
+                                            {columns.map((column) => {
+                                                return (
+                                                    <TableHead
+                                                        key={column.key}
+                                                        className={`${column.align === 'right' ? 'text-right' : ''} ${column.sortable ? 'cursor-pointer hover:bg-muted/80 transition-colors' : ''} font-semibold text-foreground ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}
+                                                        onClick={() => column.sortable && handleSort(column.columnIndex)}
+                                                    >
+                                                        {column.label && (
+                                                            <div className={`flex items-center gap-2 ${column.align === 'right' ? 'justify-end' : ''}`}>
+                                                                {column.label}
+                                                                {column.sortable && <SortIcon field={column.columnIndex} />}
+                                                            </div>
                                                         )}
-                                                    </>
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-xl border border-blue-200">
-                                            <span className="text-sm font-medium text-gray-700">Agrupando por</span>
-                                            <span className="text-sm font-bold text-blue-600">
-                                                {agrupamentoOptions.find(option => option.value === activeAgrupamento)?.label}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-xl overflow-hidden border border-blue-200 shadow-lg bg-white">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow className="bg-blue-50 border-b border-blue-200">
+                                                    </TableHead>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {remuneracaoData.length > 0 ? (
+                                            remuneracaoData.map((row, index) => (
+                                                <TableRow key={index} className="hover:bg-muted/50 transition-colors">
                                                     {columns.map((column) => {
-                                                        return (
-                                                            <TableHead
-                                                                key={column.key}
-                                                                className={`${column.align === 'right' ? 'text-right' : ''} ${column.sortable ? 'cursor-pointer hover:bg-blue-100 transition-all duration-300' : ''} font-bold text-gray-800 ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}
-                                                                onClick={() => column.sortable && handleSort(column.columnIndex)}
-                                                            >
-                                                                {column.label && (
-                                                                    <div className={`flex items-center gap-2 ${column.align === 'right' ? 'justify-end' : ''}`}>
-                                                                        <span className="text-sm">{column.label}</span>
-                                                                        {column.sortable && <SortIcon field={column.columnIndex} />}
+                                                        if (column.key === 'acoes' && activeAgrupamento !== '6') {
+                                                            return (
+                                                                <TableCell key={column.key} className={`${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                    <div className="flex gap-2">
+                                                                        <Button
+                                                                            size="sm"
+                                                                            className="bg-primary hover:bg-primary/90 transition-colors hidden sm:flex"
+                                                                            onClick={() => openModal(row)}
+                                                                        >
+                                                                            Detalhar
+                                                                        </Button>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            className="sm:hidden hover:bg-primary hover:text-primary-foreground transition-colors"
+                                                                            onClick={() => openModal(row)}
+                                                                            title="Detalhar"
+                                                                        >
+                                                                            <Plus className="h-4 w-4" />
+                                                                        </Button>
                                                                     </div>
-                                                                )}
-                                                            </TableHead>
-                                                        );
-                                                    })}
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {remuneracaoData.length > 0 ? (
-                                                    remuneracaoData.map((row, index) => (
-                                                        <TableRow key={index} className="hover:bg-blue-50 transition-all duration-300 border-b border-gray-100">
-                                                            {columns.map((column) => {
-                                                                if (column.key === 'acoes' && activeAgrupamento !== '6') {
+                                                                </TableCell>
+                                                            );
+                                                        }
+
+                                                        let cellContent = row[column.key];
+
+                                                        if (cellContent) {
+                                                            if (column.key === 'categoria') {
+                                                                return (
+                                                                    <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                        {formatNameAcronym(cellContent, row.simbolo_funcao)}<br/>
+                                                                        <small>{formatNameAcronym(cellContent, row.referencia_cargo)}</small>
+                                                                    </TableCell>
+                                                                );
+                                                            } else if (column.key === 'valor_total') {
+                                                                if (selectedFilters.agrupar == "6") { // Sem agrupamento
                                                                     return (
-                                                                        <TableCell key={column.key} className={`${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
-                                                                            <div className="flex gap-2">
-                                                                                <Button
-                                                                                    size="sm"
-                                                                                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hidden sm:flex"
-                                                                                    onClick={() => openModal(row)}
-                                                                                >
-                                                                                    Detalhar
-                                                                                </Button>
-                                                                                <Button
-                                                                                    size="sm"
-                                                                                    variant="outline"
-                                                                                    className="sm:hidden bg-white border border-blue-200 hover:bg-blue-500 hover:text-white hover:shadow-md transition-all duration-300 rounded-lg"
-                                                                                    onClick={() => openModal(row)}
-                                                                                    title="Detalhar"
-                                                                                >
-                                                                                    <Plus className="h-4 w-4" />
-                                                                                </Button>
-                                                                            </div>
+                                                                        <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                            <Link
+                                                                                to={`./${row.id}`}
+                                                                                className="text-primary hover:text-primary/80 transition-colors font-bold font-mono"
+                                                                            >
+                                                                                R$ {cellContent}
+                                                                            </Link>
                                                                         </TableCell>
                                                                     );
                                                                 }
 
-                                                                let cellContent = row[column.key];
-
-                                                                if (cellContent) {
-                                                                    if (column.key === 'categoria') {
-                                                                        return (
-                                                                            <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
-                                                                                {formatNameAcronym(cellContent, row.simbolo_funcao)}<br/>
-                                                                                <small>{formatNameAcronym(cellContent, row.referencia_cargo)}</small>
-                                                                            </TableCell>
-                                                                        )
-                                                                        // if (column.key === 'categoria') {
-                                                                        //     cellContent = formatNameAcronym(cellContent, row.simbolo_funcao)
-                                                                        // } else if (column.key === 'cargo') {
-                                                                        //     cellContent =  formatNameAcronym(cellContent, row.referencia_cargo)
-                                                                    } else if (column.key === 'valor_total') {
-                                                                        if (selectedFilters.agrupar == "6") { // Sem agrupamento
-                                                                            return (
-                                                                                <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
-                                                                                    <Link
-                                                                                        to={`./${row.id}`}
-                                                                                        className="text-primary hover:text-primary/80 transition-colors font-bold font-mono"
-                                                                                    >
-                                                                                        R$ {cellContent}
-                                                                                    </Link>
-                                                                                </TableCell>
-                                                                            );
-                                                                        }
-
-                                                                        cellContent = `R$ ${cellContent}`;
-                                                                    } else if (column.key === 'descricao' && selectedFilters.agrupar == "7") { // Senador
-                                                                        return (
-                                                                            <TableCell key={column.key} className={`${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
-                                                                                <Link
-                                                                                    to={`/senador/${row.id}`}
-                                                                                    className="text-primary hover:text-primary/80 transition-colors font-medium"
-                                                                                >
-                                                                                    {cellContent}
-                                                                                </Link>
-                                                                            </TableCell>
-                                                                        );
-                                                                    }
-                                                                }
-
+                                                                cellContent = `R$ ${cellContent}`;
+                                                            } else if (column.key === 'descricao' && selectedFilters.agrupar == "7") { // Senador
                                                                 return (
-                                                                    <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
-                                                                        {cellContent}
+                                                                    <TableCell key={column.key} className={`${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                        <Link
+                                                                            to={`/senador/${row.id}`}
+                                                                            className="text-primary hover:text-primary/80 transition-colors font-medium"
+                                                                        >
+                                                                            {cellContent}
+                                                                        </Link>
                                                                     </TableCell>
                                                                 );
-                                                            })}
-                                                        </TableRow>
-                                                    ))
-                                                ) : (
-                                                    <TableRow>
-                                                        <TableCell colSpan={columns.length} className="text-center py-8">
-                                                            <div className="text-muted-foreground">
-                                                                {isLoading ? 'Carregando...' : 'Nenhum resultado encontrado'}
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
+                                                            }
+                                                        }
 
-                                    {remuneracaoData.length > 0 && (() => {
-                                        const totalPages = Math.ceil((apiData?.recordsTotal || 0) / itemsPerPage);
-                                        return totalPages > 1 && (
-                                            <div className="relative overflow-hidden rounded-xl bg-gray-50 border border-blue-200 shadow-lg">
-                                                <div className="relative p-6">
-                                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                                                        <div className="text-sm font-medium text-gray-700 bg-white px-4 py-2 rounded-lg border border-blue-200">
-                                                            Mostrando <span className="font-bold text-blue-600">{((currentPage - 1) * itemsPerPage) + 1}</span> a <span className="font-bold text-blue-600">{Math.min(currentPage * itemsPerPage, apiData?.recordsTotal || 0)}</span> de <span className="font-bold text-blue-600">{formatNumber(apiData?.recordsTotal || 0)}</span> resultados
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handlePageChange(1)}
-                                                                disabled={currentPage <= 1}
-                                                                className="h-9 px-4 rounded-lg bg-white border border-blue-200 hover:bg-blue-500 hover:text-white hover:shadow-md transition-all duration-300 font-medium"
-                                                            >
-                                                                Primeira
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handlePageChange(currentPage - 1)}
-                                                                disabled={currentPage <= 1}
-                                                                className="h-9 px-3 rounded-lg bg-white border border-blue-200 hover:bg-blue-500 hover:text-white hover:shadow-md transition-all duration-300"
-                                                            >
-                                                                <ChevronUpIcon className="w-4 h-4 rotate-270" />
-                                                            </Button>
-                                                            <div className="flex items-center gap-1 mx-3">
-                                                                {(() => {
-                                                                    const startPage = Math.max(1, currentPage - 3);
-                                                                    const endPage = Math.min(totalPages, currentPage + 3);
-                                                                    const pages = [];
-
-                                                                    for (let i = startPage; i <= endPage; i++) {
-                                                                        pages.push(i);
-                                                                    }
-
-                                                                    return pages.map((page) => (
-                                                                        <Button
-                                                                            key={page}
-                                                                            variant={currentPage === page ? "default" : "outline"}
-                                                                            size="sm"
-                                                                            onClick={() => handlePageChange(page)}
-                                                                            className={`min-w-9 h-9 rounded-lg font-semibold transition-all duration-300 ${currentPage === page
-                                                                                    ? "bg-blue-500 text-white shadow-lg"
-                                                                                    : "bg-white border border-blue-200 hover:bg-blue-500 hover:text-white hover:shadow-md"
-                                                                                }`}
-                                                                        >
-                                                                            {page}
-                                                                        </Button>
-                                                                    ));
-                                                                })()}
-                                                            </div>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handlePageChange(currentPage + 1)}
-                                                                disabled={currentPage >= totalPages}
-                                                                className="h-9 px-3 rounded-lg bg-white border border-blue-200 hover:bg-blue-500 hover:text-white hover:shadow-md transition-all duration-300"
-                                                            >
-                                                                <ChevronDownIcon className="w-4 h-4 rotate-90" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handlePageChange(totalPages)}
-                                                                disabled={currentPage >= totalPages}
-                                                                className="h-9 px-4 rounded-lg bg-white border border-blue-200 hover:bg-blue-500 hover:text-white hover:shadow-md transition-all duration-300 font-medium"
-                                                            >
-                                                                Última
-                                                            </Button>
-                                                        </div>
+                                                        return (
+                                                            <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                {cellContent}
+                                                            </TableCell>
+                                                        );
+                                                    })}
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={columns.length} className="text-center py-8">
+                                                    <div className="text-muted-foreground">
+                                                        {isLoading ? 'Carregando...' : 'Nenhum resultado encontrado'}
                                                     </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </div>
-                        </div>
+                        </Card>
+
+                        {remuneracaoData.length > 0 && (() => {
+                            const totalPages = Math.ceil((apiData?.recordsTotal || 0) / itemsPerPage);
+                            return totalPages > 1 && (
+                                <Card className="border-0 shadow-lg">
+                                    <CardContent className="p-4">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                            <div className="text-sm text-muted-foreground">
+                                                Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, apiData?.recordsTotal || 0)} de {formatNumber(apiData?.recordsTotal || 0)} resultados
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(1)}
+                                                    disabled={currentPage <= 1}
+                                                    className="h-8 px-3"
+                                                >
+                                                    Primeira
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(currentPage - 1)}
+                                                    disabled={currentPage <= 1}
+                                                    className="h-8 px-3"
+                                                >
+                                                    <ChevronUpIcon className="w-4 h-4 rotate-270" />
+                                                </Button>
+                                                <div className="flex items-center gap-1 mx-2">
+                                                    {(() => {
+                                                        const startPage = Math.max(1, currentPage - 3);
+                                                        const endPage = Math.min(totalPages, currentPage + 3);
+                                                        const pages = [];
+
+                                                        for (let i = startPage; i <= endPage; i++) {
+                                                            pages.push(i);
+                                                        }
+
+                                                        return pages.map((page) => (
+                                                            <Button
+                                                                key={page}
+                                                                variant={currentPage === page ? "default" : "outline"}
+                                                                size="sm"
+                                                                onClick={() => handlePageChange(page)}
+                                                                className={`min-w-8 h-8 ${currentPage === page ? "shadow-lg" : ""}`}
+                                                            >
+                                                                {page}
+                                                            </Button>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(currentPage + 1)}
+                                                    disabled={currentPage >= totalPages}
+                                                    className="h-8 px-3"
+                                                >
+                                                    <ChevronDownIcon className="w-4 h-4 rotate-90" />
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(totalPages)}
+                                                    disabled={currentPage >= totalPages}
+                                                    className="h-8 px-3"
+                                                >
+                                                    Última
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })()}
                     </div>
                 </main>
-            </div>
 
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="sm:max-w-[550px] border-0 shadow-2xl bg-white">
-                    <div className="relative">
-                        <DialogHeader className="pb-6 border-b border-blue-200">
-                            <DialogTitle className="text-2xl font-bold text-blue-600 flex items-center gap-3">
-                                <div className="h-2 w-6 bg-blue-500 rounded-full"></div>
+                {/* Modal */}
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogContent className="sm:max-w-[500px] border-0 shadow-xl">
+                        <DialogHeader className="pb-4 border-b">
+                            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+                                <div className="h-1 w-4 bg-primary rounded"></div>
                                 Agrupar por
                             </DialogTitle>
                         </DialogHeader>
-                        <div className="grid gap-3 py-6">
+                        <div className="grid gap-3 py-4">
                             {agrupamentoOptions.map((option) => {
                                 const Icon = option.icon;
-                                const isActive = option.value === selectedFilters.agrupar;
                                 return (
                                     <Button
                                         key={option.value}
-                                        variant={isActive ? "default" : "ghost"}
-                                        className={`justify-start h-auto p-4 text-left transition-all duration-300 rounded-xl ${isActive
-                                                ? "bg-blue-500 text-white shadow-lg"
-                                                : "bg-white border border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md"
+                                        variant={option.value === selectedFilters.agrupar ? "default" : "outline"}
+                                        className={`justify-start h-auto p-4 text-left transition-all ${option.value === selectedFilters.agrupar
+                                            ? "shadow-lg border-primary bg-primary/10"
+                                            : "hover:bg-muted/50 hover:border-primary/50"
                                             }`}
                                         onClick={() => handleAgrupamentoChange(option.value)}
                                     >
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-3">
-                                                <Icon className={`h-5 w-5 ${isActive ? "text-white" : "text-blue-600"}`} />
+                                                <Icon className={`h-5 w-5 ${option.value === selectedFilters.agrupar ? "text-primary" : "text-muted-foreground"}`} />
                                                 <div>
-                                                    <div className={`font-semibold ${isActive ? "text-white" : "text-gray-800"}`}>{option.label}</div>
-                                                    {isActive && (
-                                                        <div className="text-sm text-white/90 font-medium mt-1">
+                                                    <div className="font-medium text-foreground">{option.label}</div>
+                                                    {option.value === selectedFilters.agrupar && (
+                                                        <div className="text-sm text-primary font-medium mt-1">
                                                             ✓ Atualmente selecionado
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                            {isActive && (
-                                                <div className="h-3 w-3 bg-white rounded-full shadow-lg"></div>
+                                            {option.value === selectedFilters.agrupar && (
+                                                <div className="h-2 w-2 bg-primary rounded-full"></div>
                                             )}
                                         </div>
                                     </Button>
                                 );
                             })}
                         </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+                    </DialogContent>
+                </Dialog>
 
-            <Footer />
+                <Footer />
+            </div>
         </>
     );
 }

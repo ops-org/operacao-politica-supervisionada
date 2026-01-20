@@ -300,7 +300,7 @@ namespace OPS.Core.Repositories
                     {
                         lstRetorno.Add(new
                         {
-                            id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+                            id_cf_despesa = await reader.GetValueOrDefaultAsync<int>(0),
                             id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                             cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),

@@ -299,19 +299,19 @@ const FornecedorDetalhe = () => {
                                             <CardTitle className="text-base">Quadro de Sócios e Administradores - QSA</CardTitle>
                                         </CardHeader>
                                         <CardContent className="p-4">
-                                            <div className="max-h-[400px] overflow-auto">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>Nome/Nome Empresarial</TableHead>
-                                                            <TableHead>Qualificação</TableHead>
-                                                            <TableHead>Nome do Repres. Legal</TableHead>
-                                                            <TableHead>Qualif. Rep. Legal</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {quadro_societario.length > 0 ? (
-                                                            quadro_societario.map((socio, index) => (
+                                            {quadro_societario && quadro_societario.length > 0 ? (
+                                                <div className="max-h-[400px] overflow-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>Nome/Nome Empresarial</TableHead>
+                                                                <TableHead>Qualificação</TableHead>
+                                                                <TableHead>Nome do Repres. Legal</TableHead>
+                                                                <TableHead>Qualif. Rep. Legal</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {quadro_societario.map((socio, index) => (
                                                                 <TableRow key={index}>
                                                                     <TableCell className="font-medium">{socio.nome}</TableCell>
                                                                     <TableCell>{socio.qualificacao}</TableCell>
@@ -319,16 +319,13 @@ const FornecedorDetalhe = () => {
                                                                     <TableCell>{socio.qualificacao_representante_legal || "-"}</TableCell>
                                                                 </TableRow>
                                                             ))
-                                                        ) : (
-                                                            <TableRow>
-                                                                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                                                                    A natureza jurídica não permite o preenchimento do QSA
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )}
-                                                    </TableBody>
-                                                </Table>
-                                            </div>
+                                                            }
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            ) : (
+                                                <p className="text-center text-gray-500">A natureza jurídica não permite o preenchimento do QSA</p>
+                                            )}
                                         </CardContent>
                                     </Card>
                                 </div>

@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { ErrorMessage } from "@/components/ErrorMessage";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 import { FornecedorSearchModal } from "@/components/FornecedorSearchModal";
-import { ChevronUpIcon, ChevronDownIcon, Search, Trash, Plus, Calendar, AlertTriangle, Clock, Zap } from "lucide-react";
+import { ChevronUpIcon, ChevronDownIcon, Search, Trash, Plus, Calendar, AlertTriangle, Clock, Zap, Users, Building2, Briefcase, FolderOpen, Link2, User, FileText } from "lucide-react";
 import { fetchParliamentMembers, fetchEstados, fetchPartidos, fetchTiposDespesa, fetchDespesasCotaParlamentar, DropDownOptions, TipoDespesa, Filters, SortOrder, DespesaCotaParlamentar } from "@/lib/api";
 import { delay } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,12 +31,12 @@ const legislaturas = [
 ];
 
 const agrupamentoOptions = [
-  { value: "1", label: "Parlamentar / Liderança" },
-  { value: "2", label: "Despesa" },
-  { value: "3", label: "Fornecedor" },
-  { value: "4", label: "Partido" },
-  { value: "5", label: "Estado" },
-  { value: "6", label: "Recibo" }
+  { value: "1", label: "Parlamentar / Liderança", icon: Users },
+  { value: "2", label: "Despesa", icon: FolderOpen },
+  { value: "3", label: "Fornecedor", icon: Building2 },
+  { value: "4", label: "Partido", icon: Briefcase },
+  { value: "5", label: "Estado", icon: Link2 },
+  { value: "6", label: "Recibo", icon: FileText }
 ];
 
 const formatCurrency = (value: number): string => {
@@ -391,15 +392,12 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
 
   if (error) {
     return (
-      <div className="rounded-md border p-8">
-        <div className="text-center text-destructive">
-          Erro ao carregar dados. Por favor, tente novamente.
-        </div>
-        <div className="text-center mt-4">
-          <Button onClick={() => refetch()} variant="outline">
-            Tentar novamente
-          </Button>
-        </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <ErrorMessage
+          onRetry={() => refetch()}
+        />
+        <Footer />
       </div>
     );
   }
@@ -586,95 +584,25 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
                         onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, agrupamento: value }))}
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3"
                       >
-                        <div className="relative">
-                          <RadioGroupItem
-                            value="1"
-                            id="agrupamento-1"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="agrupamento-1"
-                            className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
-                          >
-                            <div className="text-sm font-medium text-center">Parlamentar</div>
-                            <div className="text-xs text-muted-foreground">Liderança</div>
-                          </Label>
-                        </div>
-
-                        <div className="relative">
-                          <RadioGroupItem
-                            value="2"
-                            id="agrupamento-2"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="agrupamento-2"
-                            className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
-                          >
-                            <div className="text-sm font-medium text-center">Despesa</div>
-                            <div className="text-xs text-muted-foreground">Categoria</div>
-                          </Label>
-                        </div>
-
-                        <div className="relative">
-                          <RadioGroupItem
-                            value="3"
-                            id="agrupamento-3"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="agrupamento-3"
-                            className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
-                          >
-                            <div className="text-sm font-medium text-center">Fornecedor</div>
-                            <div className="text-xs text-muted-foreground">Empresa</div>
-                          </Label>
-                        </div>
-
-                        <div className="relative">
-                          <RadioGroupItem
-                            value="4"
-                            id="agrupamento-4"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="agrupamento-4"
-                            className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
-                          >
-                            <div className="text-sm font-medium text-center">Partido</div>
-                            <div className="text-xs text-muted-foreground">Parlamentar</div>
-                          </Label>
-                        </div>
-
-                        <div className="relative">
-                          <RadioGroupItem
-                            value="5"
-                            id="agrupamento-5"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="agrupamento-5"
-                            className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
-                          >
-                            <div className="text-sm font-medium text-center">Estado</div>
-                            <div className="text-xs text-muted-foreground">Parlamentar</div>
-                          </Label>
-                        </div>
-
-                        <div className="relative">
-                          <RadioGroupItem
-                            value="6"
-                            id="agrupamento-6"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="agrupamento-6"
-                            className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
-                          >
-                            <div className="text-sm font-medium text-center">Recibo</div>
-                            <div className="text-xs text-muted-foreground">Documento</div>
-                          </Label>
-                        </div>
+                        {agrupamentoOptions.map((option) => {
+                          const Icon = option.icon;
+                          return (
+                            <div className="relative" key={option.value}>
+                              <RadioGroupItem
+                                value={option.value}
+                                id={`agrupamento-${option.value}`}
+                                className="peer sr-only"
+                              />
+                              <Label
+                                htmlFor={`agrupamento-${option.value}`}
+                                className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
+                              >
+                                <Icon className="h-4 w-4 mb-1" />
+                                <div className="text-sm font-medium text-center">{option.label}</div>
+                              </Label>
+                            </div>
+                          );
+                        })}
                       </RadioGroup>
                     </div>
                   </div>
@@ -775,7 +703,7 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
                           if (column.key === 'valor_total' || column.key === 'valor_liquido') {
                             return (
                               <TableCell key={column.key} className={`text-right`}>
-                                {parlamentar.id_despesa ? (
+                                {parlamentar.id_despesa && type == 'deputado-federal' ? (
                                   <Link
                                     to={`./${parlamentar.id_despesa}`}
                                     className="text-primary hover:text-primary/80 transition-colors font-bold font-mono"
@@ -931,31 +859,37 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
                 </DialogTitle>
               </DialogHeader>
               <div className="grid gap-3 py-4">
-                {agrupamentoOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={option.value === selectedFilters.agrupamento ? "default" : "outline"}
-                    className={`justify-start h-auto p-4 text-left transition-all ${option.value === selectedFilters.agrupamento
-                      ? "shadow-lg border-primary bg-primary/10"
-                      : "hover:bg-muted/50 hover:border-primary/50"
-                      }`}
-                    onClick={() => handleAgrupamentoChange(option.value)}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div>
-                        <div className="font-medium text-foreground">{option.label}</div>
-                        {option.value === selectedFilters.agrupamento && (
-                          <div className="text-sm text-primary font-medium mt-1">
-                            ✓ Atualmente selecionado
+                {agrupamentoOptions.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <Button
+                      key={option.value}
+                      variant={option.value === selectedFilters.agrupamento ? "default" : "outline"}
+                      className={`justify-start h-auto p-4 text-left transition-all ${option.value === selectedFilters.agrupamento
+                        ? "shadow-lg border-primary bg-primary/10"
+                        : "hover:bg-muted/50 hover:border-primary/50"
+                        }`}
+                      onClick={() => handleAgrupamentoChange(option.value)}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3">
+                          <Icon className={`h-5 w-5 ${option.value === selectedFilters.agrupamento ? "text-primary" : "text-muted-foreground"}`} />
+                          <div>
+                            <div className="font-medium text-foreground">{option.label}</div>
+                            {option.value === selectedFilters.agrupamento && (
+                              <div className="text-sm text-primary font-medium mt-1">
+                                ✓ Atualmente selecionado
+                              </div>
+                            )}
                           </div>
+                        </div>
+                        {option.value === selectedFilters.agrupamento && (
+                          <div className="h-2 w-2 bg-primary rounded-full"></div>
                         )}
                       </div>
-                      {option.value === selectedFilters.agrupamento && (
-                        <div className="h-2 w-2 bg-primary rounded-full"></div>
-                      )}
-                    </div>
-                  </Button>
-                ))}
+                    </Button>
+                  );
+                })}
               </div>
             </DialogContent>
           </Dialog>
