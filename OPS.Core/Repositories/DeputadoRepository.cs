@@ -247,7 +247,7 @@ namespace OPS.Core.Repositories
                     {
                         lstRetorno.Add(new
                         {
-                            id_cf_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
+                            id_cf_despesa = await reader.GetValueOrDefaultAsync<int>(0),
                             id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                             cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
@@ -634,8 +634,8 @@ namespace OPS.Core.Repositories
                 if (filtro != null && string.IsNullOrEmpty(filtro.Ids))
                 {
                     strSql.AppendLine(@"
-                        LEFT JOIN camara.cf_mandato m on m.id_cf_deputado = d.id_deputado
-                        WHERE d.id_deputado IS NOT NULL ");
+                        LEFT JOIN camara.cf_mandato m on m.id_cf_deputado = d.id
+                        WHERE d.id IS NOT NULL ");
 
                     if (!string.IsNullOrEmpty(filtro.Busca))
                     {
@@ -1981,22 +1981,22 @@ AND co.periodo_ate IS null
             {
                 case AgrupamentoRemuneracaoCamara.GrupoFuncional:
                     strSelectFiels = "gf.id, gf.nome";
-                    sqlGroupBy = "GROUP BY co.id_cf_funcionario_grupo_funcional";
+                    sqlGroupBy = "GROUP BY gf.id, gf.nome";
 
                     break;
                 case AgrupamentoRemuneracaoCamara.Cargo:
                     strSelectFiels = "ca.id, ca.nome";
-                    sqlGroupBy = "GROUP BY co.id_cf_funcionario_cargo";
+                    sqlGroupBy = "GROUP BY ca.id, ca.nome";
 
                     break;
                 case AgrupamentoRemuneracaoCamara.Deputado:
                     strSelectFiels = "d.id, d.nome_parlamentar as nome";
-                    sqlGroupBy = "GROUP BY co.id_cf_deputado";
+                    sqlGroupBy = "GROUP BY d.id, d.nome_parlamentar";
 
                     break;
                 case AgrupamentoRemuneracaoCamara.Funcionario:
                     strSelectFiels = "s.id, s.nome";
-                    sqlGroupBy = "GROUP BY co.id_cf_funcionario";
+                    sqlGroupBy = "GROUP BY s.id, s.nome";
 
                     break;
                 case AgrupamentoRemuneracaoCamara.Ano:

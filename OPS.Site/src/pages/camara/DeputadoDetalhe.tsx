@@ -544,7 +544,7 @@ const DeputadoFederalDetalhe = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <Link
-                              to={`/deputado-federal/documento/${row.id_cf_despesa}`}
+                              to={`/deputado-federal/ceap/${row.id_cf_despesa}`}
                               className="text-primary hover:underline font-bold font-mono"
                             >
                               R$&nbsp;{row.valor_liquido}

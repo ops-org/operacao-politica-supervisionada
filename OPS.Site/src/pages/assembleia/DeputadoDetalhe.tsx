@@ -152,7 +152,7 @@ const DeputadoEstadualDetalhe = () => {
                                         <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
                                             <p className="text-sm text-white/80">Custo Total Acumulado</p>
                                             <p className="text-3xl font-bold text-white">
-                                                R$ {deputado.valor_total_ceap}
+                                                R$ {deputado.valor_total}
                                             </p>
                                             <p className="text-xs text-white/70">
                                                 * CEAP + Diarias

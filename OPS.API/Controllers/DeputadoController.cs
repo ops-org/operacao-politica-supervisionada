@@ -196,7 +196,7 @@ namespace OPS.API.Controllers
         }
 
         [HttpPost]
-        [Route("")]
+        [Route("Remuneracao")]
         public async Task<dynamic> Remuneracao(DataTablesRequest request)
         {
             return await _deputadoRepository.Remuneracao(request);

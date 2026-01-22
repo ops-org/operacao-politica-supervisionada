@@ -10,7 +10,7 @@ export const Footer = () => {
               OPS
             </div>
             <span className="text-sm text-muted-foreground">
-              OPS - Operação Política Supervisionada
+              Operação Política Supervisionada
             </span>
           </div>
 

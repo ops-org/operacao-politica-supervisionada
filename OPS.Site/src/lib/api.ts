@@ -510,7 +510,7 @@ export const fetchDespesasCotaParlamentar = async (
     if (type === 'senador') {
       parsedData = parsedData.map(d => ({
         ...d,
-        id_parlamentar: d.id_senador,
+        id_parlamentar: d.id_sf_senador,
         id_despesa: d.id_sf_despesa,
         id_despesa_tipo: d.id_sf_despesa_tipo,
         valor_liquido: d.valor_total // TODO: Rename on API (Sem Agrupamento)
@@ -537,7 +537,7 @@ export interface DeputadoEstadual {
   perfil?: string;
   site?: string;
   foto?: string;
-  valor_total_ceap: string; // TODO: Rename on API
+  valor_total: string;
 }
 
 export interface GastoPorAno {

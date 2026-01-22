@@ -48,7 +48,7 @@ namespace OPS.Core.Repositories
                 perfil = deputado.UrlPerfil,
                 foto = deputado.UrlFoto,
                 nascimento = Utils.NascimentoFormatado(deputado.Nascimento),
-                valor_total_ceap = deputado.ValorTotalCeap
+                valor_total = Utils.FormataValor(deputado.ValorTotalCeap)
             };
         }
 
@@ -852,7 +852,7 @@ namespace OPS.Core.Repositories
         {
             // using (AppDb banco = new AppDb())
             {
-                    var sqlSelect = new StringBuilder();
+                var sqlSelect = new StringBuilder();
                 sqlSelect.AppendLine(@"
 						SELECT 
 						 coalesce(e.id, 99) AS id_estado
