@@ -8,11 +8,11 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
     {
         [Key]
         [Column("ano")]
-        public long Ano { get; set; }
+        public short Ano { get; set; }
 
         [Key]
         [Column("mes")]
-        public long Mes { get; set; }
+        public short Mes { get; set; }
 
         [Column("valor", TypeName = "decimal(10,2)")]
         public decimal? Valor { get; set; }

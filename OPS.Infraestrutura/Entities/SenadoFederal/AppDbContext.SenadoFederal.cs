@@ -24,13 +24,12 @@ public partial class AppDbContext
     public DbSet<Lotacao> Lotacoes { get; set; }
     public DbSet<TipoFolha> TipoFolhas { get; set; }
     public DbSet<SecretarioSenado> Secretarios { get; set; }
-    public DbSet<SecretarioCompleto> SecretariosCompletos { get; set; }
     public DbSet<SenadorCampeaoGasto> SenadoresCampeaoGasto { get; set; }
     public DbSet<SenadorHistoricoAcademico> SenadoresHistoricoAcademico { get; set; }
     public DbSet<SenadorProfissao> SenadoresProfissao { get; set; }
     public DbSet<SenadorPartido> SenadorPartidos { get; set; }
-
     public DbSet<SenadorVerbaGabinete> SenadorVerbasGabinete { get; set; }
+    public DbSet<Situacao> Situacoes { get; set; }
 }
 
 public static class SenadoFederalConfigurations
@@ -63,7 +62,7 @@ public static class SenadoFederalConfigurations
         // Configure Despesa (Senado Federal - Composite Key)
         modelBuilder.Entity<DespesaSenado>(entity =>
         {
-            entity.HasKey(e => new { e.Id });
+            entity.HasKey(e => new { e.IdSenador, e.Id });
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
             entity.HasOne(e => e.Senador).WithMany(s => s.Despesas).HasForeignKey(e => e.IdSenador);
@@ -157,14 +156,14 @@ public static class SenadoFederalConfigurations
         modelBuilder.Entity<Cargo>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("sf_cargo", "senado");
         });
 
         modelBuilder.Entity<Categoria>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("sf_categoria", "senado");
         });
 
@@ -178,7 +177,7 @@ public static class SenadoFederalConfigurations
         modelBuilder.Entity<Funcao>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("sf_funcao", "senado");
         });
 
@@ -192,7 +191,7 @@ public static class SenadoFederalConfigurations
         modelBuilder.Entity<Lotacao>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.HasOne(e => e.Senador).WithMany(s => s.Lotacoes).HasForeignKey(e => e.IdSenador);
             entity.ToTable("sf_lotacao", "senado");
         });
@@ -207,22 +206,29 @@ public static class SenadoFederalConfigurations
         modelBuilder.Entity<ReferenciaCargo>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("sf_referencia_cargo", "senado");
         });
 
         modelBuilder.Entity<TipoFolha>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("sf_tipo_folha", "senado");
         });
 
         modelBuilder.Entity<Vinculo>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("sf_vinculo", "senado");
+        });
+
+        modelBuilder.Entity<Situacao>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.ToTable("sf_situacao", "senado");
         });
     }
 
@@ -260,17 +266,17 @@ public static class SenadoFederalConfigurations
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasOne(e => e.Senador).WithMany(s => s.Secretarios).HasForeignKey(e => e.IdSenador);
+            entity.HasOne(e => e.Funcao).WithMany().HasForeignKey(e => e.IdFuncao);
+            entity.HasOne(e => e.Cargo).WithMany().HasForeignKey(e => e.IdCargo);
+            entity.HasOne(e => e.Vinculo).WithMany(v => v.Secretarios).HasForeignKey(e => e.IdVinculo);
+            entity.HasOne(e => e.Categoria).WithMany().HasForeignKey(e => e.IdCategoria);
+            entity.HasOne(e => e.ReferenciaCargo).WithMany().HasForeignKey(e => e.IdReferenciaCargo);
+            entity.HasOne(e => e.Especialidade).WithMany().HasForeignKey(e => e.IdEspecialidade);
+            entity.HasOne(e => e.Lotacao).WithMany().HasForeignKey(e => e.IdLotacao);
+            entity.HasOne(e => e.Situacao).WithMany(s => s.Secretarios).HasForeignKey(e => e.IdSfSituacao);
             entity.ToTable("sf_secretario", "senado");
         });
 
-        // Configure SecretarioCompleto (view-like entity)
-        modelBuilder.Entity<SecretarioCompleto>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasOne(e => e.Senador).WithMany().HasForeignKey(e => e.IdSenador);
-            entity.ToTable("sf_secretario_completo", "senado");
-        });
 
         // Configure SenadorPartido
         modelBuilder.Entity<SenadorPartido>(entity =>

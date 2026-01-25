@@ -85,7 +85,7 @@ namespace OPS.Importador.Fornecedores.ReceitaWS
         public string DataSituacaoEspecial { get; set; }
 
         [JsonPropertyName("capital_social")]
-        public string CapitalSocial { get; set; }
+        public decimal CapitalSocial { get; set; }
 
         [JsonPropertyName("qsa")]
         public List<Qsa> Qsa { get; set; }

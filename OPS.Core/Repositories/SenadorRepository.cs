@@ -166,7 +166,7 @@ namespace OPS.Core.Repositories
 
                             valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
                             valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
-                        }); ;
+                        });
                     }
                 }
                 return lstRetorno;

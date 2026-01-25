@@ -19,7 +19,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string? Predio { get; set; }
 
         [Column("andar")]
-        public byte? Andar { get; set; }
+        public short? Andar { get; set; }
 
         [Column("sala")]
         [StringLength(50)]

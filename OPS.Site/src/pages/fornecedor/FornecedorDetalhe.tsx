@@ -2,10 +2,13 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ErrorState } from "@/components/ErrorState";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { FornecedorDetalheSkeleton } from "@/components/FornecedorDetalheSkeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, ExternalLink, Building2, MapPin, Phone, Mail, Calendar, DollarSign, Briefcase, Users, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, Building2, MapPin, Phone, Mail, Calendar, DollarSign, Briefcase, Users, TrendingUp, RefreshCw, FileBadge, Copy, ShieldX, ShieldCheck, CircleUserRound, Building, Earth, CakeSlice, ClipboardList, Drama, MapPinned } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -16,16 +19,7 @@ import {
 } from "@/components/ui/table";
 import { fetchFornecedorDetalhe, fetchRecebimentosPorAno, fetchMaioresGastos, FornecedorDetalheResponse, QuadroSocietario, RecebimentosPorAno, MaiorGasto } from "@/lib/api";
 import { AnnualSummaryChart } from "@/components/AnnualSummaryChart";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { formatBrazilianPhone } from "@/lib/utils";
-
-const formatCurrency = (value: string): string => {
-    const numericValue = parseFloat(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
-    return numericValue.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    });
-};
 
 const FornecedorDetalhe = () => {
     const { id } = useParams();
@@ -66,19 +60,17 @@ const FornecedorDetalhe = () => {
     {/* Full-screen loading overlay */ }
     <LoadingOverlay isLoading={loading} content="Carregando informações do fornecedor..." />
 
-    if (error || !data) {
+    if (error) {
         return (
-            <div className="min-h-screen bg-background">
-                <Header />
-                <main className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-center h-64">
-                        {error && <p className="text-destructive">{error || "Fornecedor não encontrado"}</p>}
-                        {!data && <p className="text-muted-foreground">Carregando dados do fornecedor...</p>}
-                    </div>
-                </main>
-                <Footer />
-            </div>
+            <ErrorState
+                title="Erro ao carregar fornecedor"
+                message={error || "Não foi possível encontrar as informações deste fornecedor. Verifique se o ID está correto ou tente novamente mais tarde."}
+            />
         );
+    }
+
+    if (!data) {
+        return <FornecedorDetalheSkeleton />;
     }
 
     const { fornecedor, quadro_societario } = data;
@@ -120,40 +112,69 @@ const FornecedorDetalhe = () => {
                                     </div>
 
                                     {/* Main Info Section */}
-                                    <div className="flex-1 text-center md:text-left space-y-3">
-                                        <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
-                                            <h2 className="text-2xl font-bold">
-                                                {fornecedor.nome}
-                                            </h2>
-                                            {fornecedor.nome_fantasia && (
-                                                <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                                                    {fornecedor.nome_fantasia}
-                                                </Badge>
-                                            )}
-                                        </div>
+                                    <div className="flex-1 space-y-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-2">
+                                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                                    {fornecedor.nome_fantasia || fornecedor.nome}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                                        onClick={() => navigator.clipboard.writeText(fornecedor.nome_fantasia || fornecedor.nome)}
+                                                    >
+                                                        <Copy className="w-3 h-3" />
+                                                    </Button>
+                                                </h2>
 
-                                        <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
-                                            <Badge
-                                                variant="secondary"
-                                                className="bg-white/20 text-white border-white/30"
-                                            >
-                                                {fornecedor.cnpj_cpf}
-                                            </Badge>
-                                            {fornecedor.tipo && <Badge
-                                                variant="secondary"
-                                                className="bg-white/20 text-white border-white/30"
-                                                title={fornecedor.tipo}
-                                            >
-                                                {fornecedor.tipo}
-                                            </Badge>}
-                                            {fornecedor.situacao_cadastral && <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                                                {fornecedor.situacao_cadastral}
-                                            </Badge>}
-                                        </div>
+                                                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                                    {fornecedor.cnpj_cpf}
+                                                    {fornecedor.tipo && <Badge
+                                                        variant="secondary"
+                                                        className="bg-white/20 text-white border-white/30"
+                                                        title={fornecedor.tipo}
+                                                    >
+                                                        {fornecedor.tipo}
+                                                    </Badge>}
+                                                </div>
 
-                                        {fornecedor.obtido_em && <p className="text-white/90 text-sm">
-                                            Informações atualizadas em {fornecedor.obtido_em}
-                                        </p>}
+                                                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                                    {/* Status Badge */}
+                                                    <div className="flex items-center gap-1.5 text-sm">
+                                                        {fornecedor.situacao_cadastral === "BAIXADA" ? (
+                                                            <>
+                                                                <ShieldX className="w-4 h-4 text-red-300" />
+                                                                <span className="text-red-300">{fornecedor.situacao_cadastral}</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ShieldCheck className="w-4 h-4 text-green-300" />
+                                                                <span className="text-green-300">{fornecedor.situacao_cadastral}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Operation Period */}
+                                                    <div className="flex items-center gap-1.5 text-sm text-white/80">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M8 2v4"></path>
+                                                            <path d="M16 2v4"></path>
+                                                            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                                                            <path d="M3 10h18"></path>
+                                                        </svg>
+                                                        <span>
+                                                            {fornecedor.data_de_abertura} {fornecedor.situacao_cadastral === "BAIXADA" && (" - " + fornecedor.data_da_situacao_cadastral)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {fornecedor.nome_fantasia && fornecedor.nome_fantasia !== fornecedor.nome && (
+                                                    <p className="text-white/90">{fornecedor.nome}</p>
+                                                )}
+                                            </div>
+
+
+                                        </div>
                                     </div>
 
                                     {/* Total Recebimentos Display */}
@@ -169,36 +190,134 @@ const FornecedorDetalhe = () => {
                             </div>
                         </div>
 
-                        {/* Contact Info Bar */}
-                        {fornecedor.categoria == "PJ" && <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">Abertura:</span>
-                                    <span>{fornecedor.data_de_abertura}</span>
+                        {/* Detailed Info Section */}
+                        <div className="p-6">
+                            <div className="space-y-4">
+                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Informações da Empresa</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+                                    {/* Legal Nature */}
+                                    <div className="flex items-center gap-1.5">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381"></path>
+                                            <path d="m16 16 6-6"></path>
+                                            <path d="m21.5 10.5-8-8"></path>
+                                            <path d="m8 8 6-6"></path>
+                                            <path d="m8.5 7.5 8 8"></path>
+                                        </svg>
+                                        <span>{fornecedor.natureza_juridica}</span>
+                                    </div>
+
+                                    {/* Capital Social */}
+                                    <div className="flex items-center gap-1.5">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 5v4"></path>
+                                            <rect x="7" y="9" width="4" height="6" rx="1"></rect>
+                                            <path d="M9 15v2"></path>
+                                            <path d="M17 3v2"></path>
+                                            <rect x="15" y="5" width="4" height="8" rx="1"></rect>
+                                            <path d="M17 13v3"></path>
+                                            <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                                        </svg>
+                                        <span>Capital Social: R$ {fornecedor.capital_social}</span>
+                                    </div>
+
+                                    {/* Email */}
+                                    {fornecedor.endereco_eletronico && (
+                                        <div className="flex items-center gap-1.5">
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
+                                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                            </svg>
+                                            <span className="break-all">{fornecedor.endereco_eletronico}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0"
+                                                onClick={() => navigator.clipboard.writeText(fornecedor.endereco_eletronico)}
+                                            >
+                                                <Copy className="w-2 h-2" />
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {/* Phone */}
+                                    {fornecedor.telefone && (
+                                        <div className="flex items-center gap-1.5">
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path>
+                                            </svg>
+                                            <span>{formatBrazilianPhone(fornecedor.telefone)}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0"
+                                                onClick={() => navigator.clipboard.writeText(formatBrazilianPhone(fornecedor.telefone))}
+                                            >
+                                                <Copy className="w-2 h-2" />
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {/* Address */}
+                                    <div className="flex items-center gap-1.5 lg:col-span-2">
+                                        <MapPin className="w-3.5 h-3.5" />
+                                        <div className="flex items-center gap-2">
+                                            <span>{enderecoCompleto}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0"
+                                                onClick={() => navigator.clipboard.writeText(enderecoCompleto)}
+                                            >
+                                                <Copy className="w-2 h-2" />
+                                            </Button>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0"
+                                                title="Google Maps"
+                                                onClick={() => {
+                                                    window.open(`https://maps.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}`, '_blank');
+                                                }}
+                                            >
+                                                <MapPinned className="h-2 w-2" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 md:col-span-2">
-                                    <MapPin className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">Endereço:</span>
-                                    <span>{enderecoCompleto}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">Capital Social:</span>
-                                    <span>{formatCurrency(fornecedor.capital_social)}</span>
-                                </div>
-                                {fornecedor.telefone && <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">Telefone:</span>
-                                    <span>{formatBrazilianPhone(fornecedor.telefone)}</span>
-                                </div>}
-                                {fornecedor.endereco_eletronico && <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">E-mail:</span>
-                                    <span>{fornecedor.endereco_eletronico}</span>
-                                </div>}
                             </div>
-                        </div>}
+                        </div>
+
+                        {/* Footer with Update Info */}
+                        <div className="flex flex-col justify-between gap-4 rounded-b-md border-t bg-background px-6 sm:flex-row sm:items-center py-3">
+                            <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                                <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M18 6 7 17l-5-5"></path>
+                                    <path d="m22 10-7.5 7.5L13 16"></path>
+                                </svg>
+                                <span>
+                                    Atualizado em {fornecedor.obtido_em} via
+                                    <a
+                                        href={
+                                            fornecedor.origem === "Receita Federal"
+                                                ? "https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/cnpjreva_solicitacao.asp"
+                                                : fornecedor.origem === "Receita WS"
+                                                    ? "https://www.receitaws.com.br/"
+                                                    : fornecedor.origem === "Minha Receita"
+                                                        ? "https://minhareceita.org/"
+                                                        : "#"
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-secondary underline-offset-4 hover:underline hover:text-primary p-0 cursor-pointer ml-1 inline-flex items-center gap-1"
+                                    >
+                                        {fornecedor.origem}
+                                        <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
                     </Card>
 
                     {/* Detailed Information */}
@@ -207,7 +326,7 @@ const FornecedorDetalhe = () => {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Briefcase className="h-5 w-5 text-primary" />
-                                    <CardTitle className="text-lg">Mais Informações</CardTitle>
+                                    <CardTitle className="text-lg">Informações Detalhadas</CardTitle>
                                 </div>
                                 <Button
                                     variant="outline"
@@ -231,103 +350,131 @@ const FornecedorDetalhe = () => {
                         </CardHeader>
                         {showDetailedInfo && (
                             <CardContent className="p-6">
-                                <div className="space-y-8">
-                                    {/* Economic Activities */}
-                                    <div className="grid gap-8 lg:grid-cols-2">
-                                        <Card className="shadow-sm border">
-                                            <CardHeader className="bg-gray-50 border-b">
-                                                <CardTitle className="text-base">Atividade Econômica Principal (CNAE)</CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="p-4">
-                                                <p className="text-sm">{fornecedor.atividade_principal}</p>
-                                            </CardContent>
-                                        </Card>
+                                <div className="space-y-6">
+                                    {/* Two Column Layout */}
+                                    <div className="grid gap-6 lg:grid-cols-2">
 
-                                        <Card className="shadow-sm border">
-                                            <CardHeader className="bg-gray-50 border-b">
-                                                <CardTitle className="text-base">Natureza Jurídica</CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="p-4">
-                                                <p className="text-sm">{fornecedor.natureza_juridica}</p>
-                                            </CardContent>
-                                        </Card>
-
-                                        <Card className="shadow-sm border">
-                                            <CardHeader className="bg-gray-50 border-b">
-                                                <CardTitle className="text-base">Atividades Econômicas Secundárias</CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="p-4">
-                                                <div className="space-y-1">
-                                                    {fornecedor.atividade_secundaria.length > 0 ? (
-                                                        fornecedor.atividade_secundaria.map((atividade, index) => (
-                                                            <p key={index} className="text-sm">{atividade}</p>
-                                                        ))
-                                                    ) : (
-                                                        <p className="text-sm text-muted-foreground">Nenhuma atividade secundária informada</p>
-                                                    )}
+                                        {/* Quadro Societário */}
+                                        {quadro_societario && quadro_societario.length > 0 && (
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-px bg-border flex-1"></div>
+                                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide whitespace-nowrap">Sócios e Administradores</h4>
+                                                    <div className="h-px bg-border flex-1"></div>
                                                 </div>
-                                            </CardContent>
-                                        </Card>
 
-                                        <Card className="shadow-sm border">
-                                            <CardHeader className="bg-gray-50 border-b">
-                                                <CardTitle className="text-base">Informações Adicionais</CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="p-4">
-                                                <div className="space-y-2 text-sm">
-                                                    <p><strong>Data da situação cadastral:</strong> {fornecedor.data_da_situacao_cadastral}</p>
-                                                    {fornecedor.motivo_situacao_cadastral && (
-                                                        <p><strong>Motivo Situação Cadastral:</strong> {fornecedor.motivo_situacao_cadastral}</p>
-                                                    )}
-                                                    {fornecedor.situacao_especial && (
-                                                        <p><strong>Situação Especial:</strong> {fornecedor.situacao_especial}</p>
-                                                    )}
-                                                    {fornecedor.data_situacao_especial && (
-                                                        <p><strong>Data Situação Especial:</strong> {fornecedor.data_situacao_especial}</p>
-                                                    )}
-                                                    {fornecedor.ente_federativo_responsavel && (
-                                                        <p><strong>Ente Federativo Responsável:</strong> {fornecedor.ente_federativo_responsavel}</p>
-                                                    )}
+                                                <div className="space-y-2">
+                                                    {quadro_societario.map((socio, index) => (
+                                                        <div key={index} className="border-l-2 border-muted pl-4 py-2">
+                                                            <div className="flex items-center">
+                                                                <Link
+                                                                    to={`/busca?q=${encodeURIComponent(socio.nome)}`}
+                                                                    className="text-sm font-medium hover:underline"
+                                                                >
+                                                                    {socio.nome}
+                                                                </Link>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 w-6 p-0 hover:bg-muted"
+                                                                    onClick={() => navigator.clipboard.writeText(socio.nome)}
+                                                                >
+                                                                    <Copy className="w-3 h-3 text-muted-foreground" />
+                                                                </Button>
+                                                            </div>
+                                                            <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mt-1">
+                                                                <span>{socio.qualificacao}</span>
+                                                                <span className="text-muted-foreground/50">•</span>
+                                                                <span>{socio.data_entrada_sociedade}</span>
+                                                                <span className="text-muted-foreground/50">•</span>
+                                                                <span>{socio.cnpj_cpf}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            </CardContent>
-                                        </Card>
+                                            </div>
+                                        )}
+
+                                        {/* Economic Activities */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-px bg-border flex-1"></div>
+                                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide whitespace-nowrap">Atividades Econômicas</h4>
+                                                <div className="h-px bg-border flex-1"></div>
+                                            </div>
+
+                                            <div className="grid gap-4">
+                                                {/* Primary Activity */}
+                                                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                                        <span className="font-medium text-sm text-primary">Atividade Principal</span>
+                                                    </div>
+                                                    <p className="text-sm text-foreground">{fornecedor.atividade_principal}</p>
+                                                </div>
+
+                                                {/* Secondary Activities */}
+                                                {fornecedor.atividade_secundaria.length > 0 && (
+                                                    <div className="bg-muted/30 border border-muted rounded-lg p-4">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                                                            <span className="font-medium text-sm text-muted-foreground">Atividades Secundárias</span>
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {fornecedor.atividade_secundaria.length}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {fornecedor.atividade_secundaria.map((atividade, index) => (
+                                                                <div key={index} className="flex items-start gap-2">
+                                                                    <div className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0"></div>
+                                                                    <p className="text-sm text-muted-foreground">{atividade}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Additional Information */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-px bg-border flex-1"></div>
+                                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide whitespace-nowrap">Informações Cadastrais</h4>
+                                                <div className="h-px bg-border flex-1"></div>
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-4 text-sm">
+                                                <div>
+                                                    <span className="font-medium">Situação Cadastral:</span>
+                                                    <p className="text-muted-foreground">{fornecedor.data_da_situacao_cadastral}</p>
+                                                </div>
+                                                {fornecedor.motivo_situacao_cadastral && (
+                                                    <div>
+                                                        <span className="font-medium">Motivo:</span>
+                                                        <p className="text-muted-foreground">{fornecedor.motivo_situacao_cadastral}</p>
+                                                    </div>
+                                                )}
+                                                {fornecedor.situacao_especial && (
+                                                    <div>
+                                                        <span className="font-medium">Situação Especial:</span>
+                                                        <p className="text-muted-foreground">{fornecedor.situacao_especial}</p>
+                                                    </div>
+                                                )}
+                                                {fornecedor.data_situacao_especial && (
+                                                    <div>
+                                                        <span className="font-medium">Data Situação Especial:</span>
+                                                        <p className="text-muted-foreground">{fornecedor.data_situacao_especial}</p>
+                                                    </div>
+                                                )}
+                                                {fornecedor.ente_federativo_responsavel && (
+                                                    <div className="md:col-span-2">
+                                                        <span className="font-medium">Ente Federativo Responsável:</span>
+                                                        <p className="text-muted-foreground">{fornecedor.ente_federativo_responsavel}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    {/* Quadro Societário */}
-                                    <Card className="shadow-sm border">
-                                        <CardHeader className="bg-gray-50 border-b">
-                                            <CardTitle className="text-base">Quadro de Sócios e Administradores - QSA</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-4">
-                                            {quadro_societario && quadro_societario.length > 0 ? (
-                                                <div className="max-h-[400px] overflow-auto">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                <TableHead>Nome/Nome Empresarial</TableHead>
-                                                                <TableHead>Qualificação</TableHead>
-                                                                <TableHead>Nome do Repres. Legal</TableHead>
-                                                                <TableHead>Qualif. Rep. Legal</TableHead>
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {quadro_societario.map((socio, index) => (
-                                                                <TableRow key={index}>
-                                                                    <TableCell className="font-medium">{socio.nome}</TableCell>
-                                                                    <TableCell>{socio.qualificacao}</TableCell>
-                                                                    <TableCell>{socio.nome_representante_legal || "-"}</TableCell>
-                                                                    <TableCell>{socio.qualificacao_representante_legal || "-"}</TableCell>
-                                                                </TableRow>
-                                                            ))
-                                                            }
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
-                                            ) : (
-                                                <p className="text-center text-gray-500">A natureza jurídica não permite o preenchimento do QSA</p>
-                                            )}
-                                        </CardContent>
-                                    </Card>
                                 </div>
                             </CardContent>
                         )}
@@ -349,7 +496,7 @@ const FornecedorDetalhe = () => {
                                         data={recebimentosPorAno.categories.map((year, index) => ({
                                             year: year.toString(),
                                             value: Math.round(recebimentosPorAno.series[index] || 0)
-                                        })).reverse()}
+                                        }))}
                                     />
                                 </CardContent>
                             </Card>
@@ -413,9 +560,9 @@ const FornecedorDetalhe = () => {
                         )}
                     </div>
                 </div>
-            </main>
+            </main >
             <Footer />
-        </div>
+        </div >
     );
 };
 

@@ -68,7 +68,6 @@ public class ImportadorParlamentarRoraima : ImportadorParlamentarRestApi
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
         }
-        ;
 
         ColetarDadosPerfil(deputado, document);
     }

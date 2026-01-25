@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
-    [Table("fornecedor_socio")]
+    [Table("fornecedor_socio", Schema = "fornecedor")]
     public class FornecedorSocio
     {
         [Key]
@@ -30,10 +30,10 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public DateTime? DataEntradaSociedade { get; set; }
 
         [Column("id_fornecedor_faixa_etaria")]
-        public byte? IdFornecedorFaixaEtaria { get; set; }
+        public short? IdFornecedorFaixaEtaria { get; set; }
 
         [Column("id_fornecedor_socio_qualificacao")]
-        public byte? IdFornecedorSocioQualificacao { get; set; }
+        public short? IdFornecedorSocioQualificacao { get; set; }
 
         [Column("nome_representante")]
         [StringLength(255)]
@@ -44,9 +44,12 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public string? CpfRepresentante { get; set; }
 
         [Column("id_fornecedor_socio_representante_qualificacao")]
-        public byte? IdFornecedorSocioRepresentanteQualificacao { get; set; }
+        public short? IdFornecedorSocioRepresentanteQualificacao { get; set; }
 
-        // Navigation properties - only keep essential one to avoid complexity
-        //public virtual Fornecedor Fornecedor { get; set; } = null!;
+        // Navigation properties - removed FornecedorFaixaEtaria to prevent shadow property
+        public virtual Fornecedor Fornecedor { get; set; } = null!;
+        public virtual FornecedorFaixaEtaria? FornecedorFaixaEtaria { get; set; }
+        public virtual FornecedorSocioQualificacao? FornecedorSocioQualificacao { get; set; }
+        public virtual FornecedorSocioQualificacao? FornecedorSocioRepresentanteQualificacao { get; set; }
     }
 }

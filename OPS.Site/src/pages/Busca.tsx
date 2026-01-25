@@ -60,6 +60,7 @@ interface Fornecedor {
     nome_fantasia: string;
     nome: string;
     estado: string;
+    valor_total_ceap: string;
 }
 
 interface BuscaResponse {
@@ -575,11 +576,11 @@ const Busca = () => {
                                                             to={`/fornecedor/${fornecedor.id_fornecedor}`}
                                                             className={`block p-6 hover:bg-gradient-to-r hover:from-green-50/50 hover:to-transparent transition-all duration-200 ${index === 0 ? 'border-t' : ''}`}
                                                         >
-                                                            <div className="flex items-start gap-4">
+                                                            <div className="flex items-center gap-4">
                                                                 <div className="flex-shrink-0 p-3 bg-green-100 rounded-lg">
                                                                     <Building2 className="w-6 h-6 text-green-600" />
                                                                 </div>
-                                                                <div className="flex-1 space-y-2">
+                                                                <div className="flex-1">
                                                                     <div className="flex items-center gap-3">
                                                                         <p className="font-mono text-sm font-semibold text-green-600">
                                                                             {fornecedor.cnpj}
@@ -596,6 +597,19 @@ const Busca = () => {
                                                                         <p className="text-sm text-muted-foreground">
                                                                             {fornecedor.nome}
                                                                         </p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-shrink-0 text-center flex flex-col justify-center min-w-[120px]">
+                                                                    {fornecedor.valor_total_ceap && (
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex items-center gap-1 justify-center">
+                                                                                <DollarSign className="h-3 w-3 text-green-600" />
+                                                                                <span className="text-xs text-muted-foreground">ValorTotal CEAP</span>
+                                                                            </div>
+                                                                            <p className="font-bold text-lg text-green-700">
+                                                                                R$ {fornecedor.valor_total_ceap}
+                                                                            </p>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                                 <div className="flex-shrink-0">
@@ -957,6 +971,19 @@ const Busca = () => {
                                                                         <p className="text-sm text-muted-foreground">
                                                                             {fornecedor.nome}
                                                                         </p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-shrink-0 text-center flex flex-col justify-center min-w-[120px]">
+                                                                    {fornecedor.valor_total_ceap && (
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex items-center gap-1 justify-center">
+                                                                                <DollarSign className="h-3 w-3 text-green-600" />
+                                                                                <span className="text-xs text-muted-foreground">Total CEAP</span>
+                                                                            </div>
+                                                                            <p className="font-bold text-sm text-green-700">
+                                                                                R$ {fornecedor.valor_total_ceap}
+                                                                            </p>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                                 <div className="flex-shrink-0">

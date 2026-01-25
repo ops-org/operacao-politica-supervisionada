@@ -876,7 +876,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         return deputado ?? new DeputadoEstadual()
         {
-            IdEstado = (byte)idEstado,
+            IdEstado = (short)idEstado,
             NomeParlamentar = nomeParlamentar
         };
     }
@@ -889,7 +889,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         return deputado ?? new DeputadoEstadual()
         {
-            IdEstado = (byte)idEstado,
+            IdEstado = (short)idEstado,
             Matricula = matricula
         };
     }

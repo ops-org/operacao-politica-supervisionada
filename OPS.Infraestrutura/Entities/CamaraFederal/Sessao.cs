@@ -11,7 +11,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public int Id { get; set; }
 
         [Column("id_legislatura")]
-        public byte IdLegislatura { get; set; }
+        public short IdLegislatura { get; set; }
 
         [Column("data")]
         public DateTime Data { get; set; }
@@ -20,7 +20,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public DateTime Inicio { get; set; }
 
         [Column("tipo")]
-        public byte Tipo { get; set; }
+        public short Tipo { get; set; }
 
         [Column("numero")]
         [StringLength(45)]

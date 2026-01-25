@@ -57,7 +57,6 @@ namespace OPS.Importador.Assembleias.Piaui
             {
                 Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
             }
-            ;
 
             var perfil = document.QuerySelector("#content");
 

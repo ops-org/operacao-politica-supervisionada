@@ -43,11 +43,13 @@ const App = () => (
           <Route path="/deputado-federal/:id" element={<DeputadoFederalDetalhe />} />
           <Route path="/deputado-federal/ceap" element={<CotaParlamentar key="deputado-federal" type="deputado-federal" />} />
           <Route path="/deputado-federal/ceap/:id" element={<DeputadoDespesaDocumentoDetalhe />} />
+          <Route path="/deputado-federal/folha-pagamento" element={<FolhaPagamento key="deputado-federal" type="deputado-federal" />} />
+          {/* <Route path="/deputado-federal/folha-pagamento/:id" element={<FolhaPagamentoDetalhes key="deputado-federal" />} /> */}
 
           <Route path="/senador" element={<ParlamentareLista key="senador" type="senador" />} />
           <Route path="/senador/:id" element={<SenadorDetalhe />} />
           <Route path="/senador/ceap" element={<CotaParlamentar key="senador" type="senador" />} />
-          <Route path="/senador/folha-pagamento" element={<FolhaPagamento key="senador" />} />
+          <Route path="/senador/folha-pagamento" element={<FolhaPagamento key="senador" type="senador" />} />
           <Route path="/senador/folha-pagamento/:id" element={<FolhaPagamentoDetalhes key="senador" />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

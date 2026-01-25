@@ -35,13 +35,15 @@ namespace OPS.Importador.Fornecedores.MinhaReceita
         [JsonPropertyName("nome_fantasia")]
         public string NomeFantasia { get; set; }
 
-        [Column("id_fornecedor_atividade_principal")]
         [JsonPropertyName("cnae_fiscal")]
-        public int IdAtividadePrincipal { get; set; }
+        public int CodigoAtividadePrincipal { get; set; }
+
+        [Column("id_fornecedor_atividade_principal")]
+        public short IdAtividadePrincipal { get; set; }
 
         [Column("id_fornecedor_natureza_juridica")]
         [JsonPropertyName("codigo_natureza_juridica")]
-        public int IdNaturezaJuridica { get; set; }
+        public short IdNaturezaJuridica { get; set; }
 
         [Column("logradouro_tipo")]
         [JsonPropertyName("descricao_tipo_de_logradouro")]
@@ -189,5 +191,8 @@ namespace OPS.Importador.Fornecedores.MinhaReceita
         [NotMapped]
         [JsonPropertyName("natureza_juridica")]
         public string NaturezaJuridica { get; set; }
+
+
+        public string Origem { get; set; }
     }
 }

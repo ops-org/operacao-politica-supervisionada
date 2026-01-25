@@ -12,7 +12,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
 
         [Key]
         [Column("id_cf_especificacao")]
-        public byte IdEspecificacao { get; set; }
+        public short IdEspecificacao { get; set; }
 
         [Column("descricao")]
         [StringLength(100)]

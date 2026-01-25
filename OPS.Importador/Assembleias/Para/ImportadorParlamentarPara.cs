@@ -35,7 +35,6 @@ namespace OPS.Importador.Assembleias.Para
             {
                 Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
             }
-            ;
 
             var scriptParlamentares = document.QuerySelector(config.SeletorListaParlamentares).ToHtml();
             string pattern = @"'(\d+)'";
@@ -57,7 +56,7 @@ namespace OPS.Importador.Assembleias.Para
                     logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
                     continue;
                 }
-                ;
+
                 ColetarDadosPerfil(deputado, subDocument);
 
                 InsertOrUpdate(deputado);

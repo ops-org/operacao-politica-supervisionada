@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Compression;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -107,7 +108,15 @@ namespace OPS.API
             // https://github.com/KevinDockx/HttpCacheHeaders
             services.AddHttpCacheHeaders();
             //services.AddMvc().AddNewtonsoftJson();
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Use PascalCase for property names (null = no transformation, keeps original casing)
+                    //options.JsonSerializerOptions.PropertyNamingPolicy = null;
+
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                });
+
             services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
 
             // Add Swagger services

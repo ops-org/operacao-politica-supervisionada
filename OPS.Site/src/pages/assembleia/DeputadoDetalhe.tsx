@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LoadingOverlay } from '@/components/LoadingOverlay';
 import {
     Table,
     TableBody,
@@ -26,6 +25,9 @@ import {
 import { ExternalLink, Phone, Mail, Users, TrendingUp, Calendar, MapPin, Briefcase, User, DollarSign, Building2 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { DeputadoEstadualDetalheSkeleton } from '@/components/DeputadoEstadualDetalheSkeleton';
 
 const DeputadoEstadualDetalhe = () => {
     const { id } = useParams<{ id: string }>();
@@ -61,20 +63,19 @@ const DeputadoEstadualDetalhe = () => {
         fetchData();
     }, [id]);
 
-    {/* Full-screen loading overlay */ }
-    if (loading || !deputado) {
+    <LoadingOverlay isLoading={loading} content="Carregando informações do parlamentar..." />
+
+    if (error) {
         return (
-            <div className="min-h-screen bg-background">
-                <Header />
-                <main className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-center h-64">
-                        {error && <p className="text-destructive">{error || "Parlamentar não encontrado"}</p>}
-                        {!deputado && <p className="text-muted-foreground">Carregando dados do parlamentar...</p>}
-                    </div>
-                </main>
-                <Footer />
-            </div>
+            <ErrorState
+                title="Erro ao carregar deputado estadual"
+                message={error || "Não foi possível encontrar as informações deste deputado estadual. Verifique se o ID está correto ou tente novamente mais tarde."}
+            />
         );
+    }
+
+    if (!deputado) {
+        return <DeputadoEstadualDetalheSkeleton />;
     }
 
     const chartData = gastosPorAno?.categories.map((category, index) => ({

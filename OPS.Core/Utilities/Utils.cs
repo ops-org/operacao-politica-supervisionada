@@ -146,7 +146,7 @@ namespace OPS.Core.Utilities
 
         public static string FormatCPF(string cpf)
         {
-            return FormatCPFParcial(cpf.Substring(4, 6));
+            return FormatCPFParcial(cpf.Substring(3, 6));
         }
 
         /// <summary>

@@ -32,7 +32,6 @@ public partial class AppDbContext
     public DbSet<DeputadoAuxilioMoradia> DeputadoAuxilioMoradias { get; set; }
     public DbSet<DeputadoCampeaoGasto> DeputadoCampeaoGastosCamara { get; set; }
     public DbSet<DeputadoCotaParlamentar> DeputadoCotaParlamentares { get; set; }
-    public DbSet<DeputadoGabinete> DeputadoGabinetes { get; set; }
     public DbSet<DeputadoImovelFuncional> DeputadoImoveisFuncionais { get; set; }
     public DbSet<DeputadoMissaoOficial> DeputadoMissoesOficiais { get; set; }
     public DbSet<DeputadoRemuneracao> DeputadoRemuneracoes { get; set; }
@@ -156,7 +155,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<Sessao>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("cf_sessao", "camara");
         });
     }
@@ -167,7 +166,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<SecretarioCamara>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("cf_secretario", "camara");
         });
     }
@@ -178,7 +177,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<Funcionario>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("cf_funcionario", "camara");
         });
     }
@@ -189,7 +188,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<FuncionarioContratacao>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("cf_funcionario_contratacao", "camara");
         });
     }
@@ -277,7 +276,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<FuncionarioRemuneracao>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("cf_funcionario_remuneracao", "camara");
         });
     }
@@ -320,17 +319,6 @@ public static class CamaraFederalConfigurations
         {
             entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
             entity.ToTable("cf_deputado_cota_parlamentar", "camara");
-        });
-    }
-
-    public static void ConfigureDeputadoGabinete(this ModelBuilder modelBuilder)
-    {
-        // Configure DeputadoGabinete
-        modelBuilder.Entity<DeputadoGabinete>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.ToTable("cf_deputado_gabinete", "camara");
         });
     }
 
@@ -422,7 +410,6 @@ public static class CamaraFederalConfigurations
         modelBuilder.ConfigureDeputadoAuxilioMoradia();
         modelBuilder.ConfigureDeputadoCampeaoGasto();
         modelBuilder.ConfigureDeputadoCotaParlamentar();
-        modelBuilder.ConfigureDeputadoGabinete();
         modelBuilder.ConfigureDeputadoImovelFuncional();
         modelBuilder.ConfigureDeputadoMissaoOficial();
         modelBuilder.ConfigureDeputadoRemuneracao();

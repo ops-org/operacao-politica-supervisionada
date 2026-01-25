@@ -145,7 +145,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                                         Id = Convert.ToInt16(gabinete.sala),
                                         Nome = gabinete.nome,
                                         Predio = gabinete.predio,
-                                        Andar = (byte)Convert.ToInt16(gabinete.andar),
+                                        Andar = Convert.ToInt16(gabinete.andar),
                                         Sala = gabinete.sala,
                                         Telefone = gabinete.telefone,
                                     };
@@ -160,7 +160,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                                     gabineteDb.Nome = gabinete.nome;
                                     gabineteDb.Predio = gabinete.predio;
-                                    gabineteDb.Andar = (byte)Convert.ToInt16(gabinete.andar);
+                                    gabineteDb.Andar = Convert.ToInt16(gabinete.andar);
                                     gabineteDb.Telefone = gabinete.telefone;
                                     gabineteDb.Sala = gabinete.sala;
 
@@ -236,13 +236,13 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
                         if (deputadoDetalhes.ultimoStatus.idLegislatura == leg)
                         {
-                            var possuiMandatosNaLagislatura = dbContext.MandatosCamaraFederal.Any(x => x.IdDeputado == deputado.id && x.IdLegislatura == leg);
-                            if (!possuiMandatosNaLagislatura)
+                            var possuiMandatosNaLegislatura = dbContext.MandatosCamaraFederal.Any(x => x.IdDeputado == deputado.id && x.IdLegislatura == leg);
+                            if (!possuiMandatosNaLegislatura)
                             {
                                 var mandato = new MandatoCamara()
                                 {
                                     IdDeputado = deputado.id,
-                                    IdLegislatura = (byte)leg,
+                                    IdLegislatura = (short)leg,
                                     IdEstado = idEstado,
                                     IdPartido = idPartido,
                                     Condicao = deputadoDetalhes.ultimoStatus.condicaoEleitoral

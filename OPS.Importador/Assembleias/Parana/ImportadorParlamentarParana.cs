@@ -42,7 +42,7 @@ namespace OPS.Importador.Assembleias.Parana
                 deputado = new DeputadoEstadual()
                 {
                     NomeParlamentar = nomeParlamentar,
-                    IdEstado = (byte)config.Estado.GetHashCode()
+                    IdEstado = (short)config.Estado.GetHashCode()
                 };
             }
 

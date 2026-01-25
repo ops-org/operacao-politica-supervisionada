@@ -46,7 +46,7 @@ namespace OPS.Importador
 {
     internal class Program
     {
-        public static async Task Main(string[] args)
+        public static Task Main(string[] args)
         {
             ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
 
@@ -80,7 +80,7 @@ namespace OPS.Importador
             Log.Logger = loggerConfiguration.CreateLogger();
 
             var services = new ServiceCollection();
-            services.AddOptions<AppSettings>().Bind(configuration.GetSection("AppSettings")); ;
+            services.AddOptions<AppSettings>().Bind(configuration.GetSection("AppSettings"));
 
             services.AddScoped<SenadoFederal.Senado>();
             services.AddScoped<CamaraFederal.Camara>();
@@ -254,8 +254,8 @@ namespace OPS.Importador
                 var types = new Type[]
                 {
                     //typeof(SenadoFederal.Senado), // csv
-                    typeof(CamaraFederal.Camara), // csv
-                    //typeof(ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                    //typeof(CamaraFederal.Camara), // csv
+                    ////typeof(ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                     //typeof(ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
                     //typeof(ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
                     //typeof(ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
@@ -336,8 +336,8 @@ namespace OPS.Importador
                 //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
 
                 var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
-                objFornecedor.ConsultarDadosCNPJ().Wait();
-                //objFornecedor.ConsultarDadosCNPJ(somenteNovos: false).Wait();
+                //objFornecedor.ConsultarDadosCNPJ().Wait();
+                objFornecedor.ConsultarDadosCNPJ(somenteNovos: false).Wait();
             }
             catch (Exception ex)
             {
@@ -359,6 +359,7 @@ namespace OPS.Importador
 
             Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
             Console.ReadKey();
+            return Task.CompletedTask;
         }
 
        

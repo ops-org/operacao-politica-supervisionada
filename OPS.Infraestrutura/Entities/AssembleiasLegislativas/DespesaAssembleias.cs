@@ -15,16 +15,16 @@ public class DespesaAssembleias
     public int IdDeputado { get; set; }
 
     [Column("id_cl_despesa_tipo")]
-    public byte? IdDespesaTipo { get; set; }
+    public short? IdDespesaTipo { get; set; }
 
     [Column("id_cl_despesa_especificacao")]
-    public int? IdDespesaEspecificacao { get; set; }
+    public short? IdDespesaEspecificacao { get; set; }
 
     [Column("id_fornecedor")]
     public int? IdFornecedor { get; set; }
 
     [Column("data_emissao")]
-    public DateTime? DataEmissao { get; set; }
+    public DateOnly? DataEmissao { get; set; }
 
     [Column("ano_mes")]
     public int? AnoMes { get; set; }

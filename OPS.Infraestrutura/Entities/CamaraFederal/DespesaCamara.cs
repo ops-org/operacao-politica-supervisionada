@@ -18,10 +18,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public short Ano { get; set; }
 
         [Column("mes")]
-        public byte Mes { get; set; }
+        public short Mes { get; set; }
 
         [Column("id_cf_legislatura")]
-        public byte IdLegislatura { get; set; }
+        public short IdLegislatura { get; set; }
 
         [Column("id_cf_deputado")]
         public int IdDeputado { get; set; }
@@ -33,13 +33,13 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public short IdDespesaTipo { get; set; }
 
         [Column("id_cf_especificacao")]
-        public byte? IdEspecificacao { get; set; }
+        public short? IdEspecificacao { get; set; }
 
         [Column("id_fornecedor")]
         public int IdFornecedor { get; set; }
 
         [Column("id_documento")]
-        public ulong? IdDocumento { get; set; }
+        public int? IdDocumento { get; set; }
 
         [Column("id_passageiro")]
         public int? IdPassageiro { get; set; }
@@ -63,10 +63,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public decimal? ValorRestituicao { get; set; }
 
         [Column("tipo_documento")]
-        public byte TipoDocumento { get; set; }
+        public short TipoDocumento { get; set; }
 
         [Column("tipo_link")]
-        public byte TipoLink { get; set; }
+        public short TipoLink { get; set; }
 
         [Column("numero_documento")]
         [StringLength(100)]

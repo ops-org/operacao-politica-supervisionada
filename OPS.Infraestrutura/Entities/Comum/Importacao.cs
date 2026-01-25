@@ -41,7 +41,7 @@ namespace OPS.Infraestrutura.Entities.Comum
         public DateOnly? UltimaDespesa { get; set; }
 
         [Column("id_estado")]
-        public byte? IdEstado { get; set; }
+        public short? IdEstado { get; set; }
 
         // Navigation properties
         public virtual Estado? Estado { get; set; }

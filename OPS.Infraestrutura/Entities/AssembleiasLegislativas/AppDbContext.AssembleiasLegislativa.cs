@@ -50,7 +50,8 @@ public static class AssembleiasLegislativasConfigurations
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.HasOne(e => e.Deputado).WithMany(d => d.Despesas).HasForeignKey(e => e.IdDeputado);
             entity.HasOne(e => e.DespesaTipo).WithMany(t => t.Despesas).HasForeignKey(e => e.IdDespesaTipo);
-            //entity.HasOne(e => e.Fornecedor).WithMany(f => f.DespesasAssembleias).HasForeignKey(e => e.IdFornecedor);
+            entity.HasOne(e => e.DespesaEspecificacao).WithMany(es => es.Despesas).HasForeignKey(e => e.IdDespesaEspecificacao);
+            entity.HasOne(e => e.Fornecedor).WithMany(f => f.DespesasAssembleias).HasForeignKey(e => e.IdFornecedor);
             entity.ToTable("cl_despesa", "assembleias");
         });
     }
@@ -61,7 +62,7 @@ public static class AssembleiasLegislativasConfigurations
         modelBuilder.Entity<DespesaEspecificacaoAssembleias>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.HasOne(e => e.DespesaTipo).WithMany(t => t.DespesaEspecificacoes).HasForeignKey(e => e.IdDespesaTipo);
             entity.ToTable("cl_despesa_especificacao", "assembleias");
         });
@@ -83,7 +84,7 @@ public static class AssembleiasLegislativasConfigurations
         modelBuilder.Entity<DespesaTipoAssembleias>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("cl_despesa_tipo", "assembleias");
         });
     }
@@ -97,6 +98,5 @@ public static class AssembleiasLegislativasConfigurations
         modelBuilder.ConfigureDespesaEspecificacaoDeputadoEstadual();
         modelBuilder.ConfigureDespesaResumoMensalDeputadoEstadual();
         modelBuilder.ConfigureDespesaTipoDeputadoEstadual();
-        modelBuilder.ConfigureDeputadoEstadualDePara();
     }
 }

@@ -58,7 +58,6 @@ namespace OPS.Importador.Assembleias.Paraiba
             {
                 Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
             }
-            ;
 
             var perfil = document.QuerySelector("#content");
 

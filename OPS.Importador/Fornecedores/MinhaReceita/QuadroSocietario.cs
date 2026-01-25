@@ -33,7 +33,7 @@ namespace OPS.Importador.Fornecedores.MinhaReceita
         [Column("id_fornecedor_faixa_etaria")]
         [JsonPropertyName("codigo_faixa_etaria")]
         //[JsonPropertyName("faixa_etaria")]
-        public byte IdFaixaEtaria { get; set; }
+        public short IdFaixaEtaria { get; set; }
 
         [Column("id_fornecedor_socio_qualificacao")]
         [JsonPropertyName("codigo_qualificacao_socio")]

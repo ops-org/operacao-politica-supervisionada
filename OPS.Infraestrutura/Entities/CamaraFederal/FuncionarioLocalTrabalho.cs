@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public byte Id { get; set; }
+        public short Id { get; set; }
 
         [Column("nome")]
         [StringLength(50)]

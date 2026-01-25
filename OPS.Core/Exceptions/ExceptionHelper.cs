@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace OPS.Core.Exceptions;
 public static class ExceptionHelper
@@ -12,7 +13,7 @@ public static class ExceptionHelper
             sb.AppendLine("EXCEPTION INFORMATION");
             sb.AppendLine();
             sb.Append("Date: ");
-            sb.AppendLine(DateTime.Now.ToString());
+            sb.AppendLine(DateTime.Now.ToString(CultureInfo.InvariantCulture));
             sb.Append(new StackTraceHelper().ExpandStackTrace(e));
 
             return sb.ToString();

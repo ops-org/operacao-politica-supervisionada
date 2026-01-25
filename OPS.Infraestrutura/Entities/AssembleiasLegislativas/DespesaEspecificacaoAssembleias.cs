@@ -8,10 +8,10 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
     {
         [Key]
         [Column("id")]
-        public int Id { get; set; }
+        public short Id { get; set; }
 
         [Column("id_cl_despesa_tipo")]
-        public byte IdDespesaTipo { get; set; }
+        public short? IdDespesaTipo { get; set; }
 
         [Column("descricao")]
         [StringLength(400)]

@@ -16,11 +16,11 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public int IdSenador { get; set; }
 
         [Column("id_estado")]
-        public byte? IdEstado { get; set; }
+        public short? IdEstado { get; set; }
 
         // Partido no início do mandato
         [Column("id_partido")]
-        public byte? IdPartido { get; set; }
+        public short? IdPartido { get; set; }
 
         [Column("participacao")]
         [StringLength(50)]

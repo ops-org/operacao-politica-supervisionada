@@ -26,26 +26,26 @@ namespace OPS.Infraestrutura.Entities.Comum
         public DateOnly? DataNascimento { get; set; }
 
         [Column("id_nacionalidade")]
-        public byte? IdNacionalidade { get; set; }
+        public short? IdNacionalidade { get; set; }
 
         [Column("id_estado_nascimento")]
-        public byte? IdEstadoNascimento { get; set; }
+        public short? IdEstadoNascimento { get; set; }
 
         [Column("municipio_nascimento")]
         [StringLength(100)]
         public string? MunicipioNascimento { get; set; }
 
         [Column("id_genero")]
-        public byte? IdGenero { get; set; }
+        public short? IdGenero { get; set; }
 
         [Column("id_etnia")]
-        public byte? IdEtnia { get; set; }
+        public short? IdEtnia { get; set; }
 
         [Column("id_estado_civil")]
-        public byte? IdEstadoCivil { get; set; }
+        public short? IdEstadoCivil { get; set; }
 
         [Column("id_grau_instrucao")]
-        public byte? IdGrauInstrucao { get; set; }
+        public short? IdGrauInstrucao { get; set; }
 
         [Column("id_ocupacao")]
         public int? IdOcupacao { get; set; }

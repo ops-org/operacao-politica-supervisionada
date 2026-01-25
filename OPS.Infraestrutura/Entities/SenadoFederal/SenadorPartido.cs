@@ -17,7 +17,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public int IdSenador { get; set; }
 
         [Column("id_partido")]
-        public byte IdPartido { get; set; }
+        public short IdPartido { get; set; }
 
         [Column("filiacao")]
         public DateTime? Filiacao { get; set; }

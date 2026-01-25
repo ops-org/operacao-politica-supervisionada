@@ -30,7 +30,6 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
         }
-        ;
 
         var parlamentares = document.QuerySelectorAll(config.SeletorListaParlamentares);
         foreach (var parlamentar in parlamentares)
@@ -47,7 +46,7 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
                     logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
                     continue;
                 }
-                ;
+                
                 ColetarDadosPerfil(deputado, subDocument);
             }
 

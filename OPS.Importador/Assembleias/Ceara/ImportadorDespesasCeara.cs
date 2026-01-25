@@ -45,11 +45,11 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
 
             var linkDetalhes = colunas.ElementAt(1).QuerySelector("a").Attributes["onclick"].Text();
 
-            int srcIndex = linkDetalhes.IndexOf(".src='");
+            int srcIndex = linkDetalhes.IndexOf(".src='", StringComparison.Ordinal);
             if (srcIndex != -1)
             {
                 int startIndex = srcIndex + 6; // Length of ".src='"
-                int endIndex = linkDetalhes.IndexOf("'", startIndex);
+                int endIndex = linkDetalhes.IndexOf("'", startIndex, StringComparison.Ordinal);
 
                 linkDetalhes = linkDetalhes.Substring(startIndex, endIndex - startIndex);
             }

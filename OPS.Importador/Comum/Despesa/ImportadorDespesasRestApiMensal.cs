@@ -10,7 +10,7 @@ namespace OPS.Importador.Comum.Despesa
         {
         }
 
-        public async Task Importar(int ano)
+        public Task Importar(int ano)
         {
             CarregarDespesaArquivoHistorico(ano);
 
@@ -54,6 +54,8 @@ namespace OPS.Importador.Comum.Despesa
 
                 ProcessarDespesas(ano);
             }
+
+            return Task.CompletedTask;
         }
 
         public abstract Task ImportarDespesas(IBrowsingContext context, int ano, int mes);

@@ -644,7 +644,10 @@ namespace OPS.Core.Repositories
                     }
 
                     if (filtro.Periodo > 50)
-                        strSql.AppendLine($" AND (d.id < 100 OR m.id_legislatura = {filtro.Periodo.ToString()})");
+                    {
+                        var legislaturas = filtro.Periodo > 100 ? string.Join(",", Utils.ObterNumerosLegislatura(filtro.Periodo.Value)) : filtro.Periodo.ToString();
+                        strSql.AppendLine($" AND (d.id < 100 OR m.id_legislatura IN({legislaturas}))");
+                    }
 
                     strSql.AppendLine(@" ORDER BY d.nome_parlamentar");
 
@@ -1574,15 +1577,15 @@ AND co.periodo_ate IS null
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT 
-						year(s.data) as ano
+						EXTRACT(YEAR FROM s.data) as ano
 						, sum(IF(sp.presente = 1, 1, 0)) as presenca
 						, sum(IF(sp.presente = 0 and sp.justificativa = '', 1, 0)) as ausencia
 						, sum(IF(sp.presente = 0 and sp.justificativa <> '', 1, 0)) as ausencia_justificada
 					FROM camara.cf_sessao_presenca sp
 					inner JOIN camara.cf_sessao s on s.id = sp.id_cf_sessao
 					where sp.id_cf_deputado = @id
-					group by sp.id_cf_deputado, year(s.data)
-					order by year(s.data)
+					group by sp.id_cf_deputado, EXTRACT(YEAR FROM s.data)
+					order by EXTRACT(YEAR FROM s.data)
 				");
 
                 var categories = new List<dynamic>();
@@ -2000,8 +2003,8 @@ AND co.periodo_ate IS null
 
                     break;
                 case AgrupamentoRemuneracaoCamara.Ano:
-                    strSelectFiels = "YEAR(r.referencia) as id, YEAR(r.referencia) as nome";
-                    sqlGroupBy = "GROUP BY YEAR(r.referencia)";
+                    strSelectFiels = "EXTRACT(YEAR FROM r.referencia) as id, EXTRACT(YEAR FROM r.referencia) as nome";
+                    sqlGroupBy = "GROUP BY EXTRACT(YEAR FROM r.referencia)";
 
                     break;
                 case AgrupamentoRemuneracaoCamara.AnoMes:
@@ -2038,7 +2041,7 @@ AND co.periodo_ate IS null
             }
             else if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
             {
-                sqlWhere.AppendLine("	AND YEAR(r.referencia) BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + " AND " + Convert.ToInt32(request.Filters["an"].ToString()) + " ");
+                sqlWhere.AppendLine("	AND EXTRACT(YEAR FROM r.referencia) BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + " AND " + Convert.ToInt32(request.Filters["an"].ToString()) + " ");
             }
 
             if (eAgrupamento == AgrupamentoRemuneracaoCamara.Deputado)
@@ -2085,7 +2088,7 @@ JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
 JOIN camara.cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
 LEFT JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
 LEFT JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
-LEFT JOIN camara.cf_funcionario_tipo_folha tf on tf.id = r.tipo
+LEFT JOIN camara.cf_funcionario_tipo_folha tf on tf.id = r.id_cf_funcionario_tipo_folha
 LEFT JOIN camara.cf_deputado d ON d.id = co.id_cf_deputado
 WHERE (1=1) 
 ");
@@ -2185,7 +2188,7 @@ LEFT JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
 JOIN camara.cf_funcionario_remuneracao r ON co.id = r.id_cf_funcionario_contratacao
 LEFT JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
 JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
-JOIN camara.cf_funcionario_tipo_folha tf on tf.id = r.tipo
+JOIN camara.cf_funcionario_tipo_folha tf on tf.id = r.id_cf_funcionario_tipo_folha
 LEFT JOIN camara.cf_deputado d ON d.id = co.id_cf_deputado
 WHERE r.id = @id
 ");

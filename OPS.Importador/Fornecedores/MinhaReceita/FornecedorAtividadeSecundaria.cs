@@ -11,6 +11,6 @@ namespace OPS.Importador.Fornecedores.MinhaReceita
 
         //[Key, Required]
         [Column("id_fornecedor_atividade")]
-        public int IdAtividade { get; set; }
+        public short IdAtividade { get; set; }
     }
 }

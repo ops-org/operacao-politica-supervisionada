@@ -3,79 +3,55 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
-    [Table("sf_secretario")]
+    [Table("sf_secretario", Schema = "senado")]
     public class SecretarioSenado
     {
-        [Key]
         [Column("id")]
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
-        [Column("id_sf_senador")]
-        public int IdSenador { get; set; }
+        [Column("id_senador")]
+        public int? IdSenador { get; set; }
 
         [Column("nome")]
-        [StringLength(100)]
+        [StringLength(255)]
         public string? Nome { get; set; }
 
-        [Column("periodo")]
-        [StringLength(100)]
-        public string? Periodo { get; set; }
-
-        [Column("cargo")]
-        [StringLength(45)]
-        public string? Cargo { get; set; }
-
-        [Column("valor_bruto", TypeName = "decimal(10,2)")]
-        public decimal? ValorBruto { get; set; }
-
-        [Column("valor_liquido", TypeName = "decimal(10,2)")]
-        public decimal? ValorLiquido { get; set; }
-
-        [Column("valor_outros", TypeName = "decimal(10,2)")]
-        public decimal? ValorOutros { get; set; }
-
-        [Column("link")]
-        [StringLength(255)]
-        public string? Link { get; set; }
-
-        [Column("referencia")]
-        [StringLength(255)]
-        public string? Referencia { get; set; }
-
-        [Column("em_exercicio")]
-        public bool? EmExercicio { get; set; }
-
-        [Column("ano_mes")]
-        public int? AnoMes { get; set; }
-
-        [Column("admissao")]
-        public int? Admissao { get; set; }
-
-        [Column("situacao")]
-        public int? Situacao { get; set; }
-
         [Column("id_funcao")]
-        public int? IdFuncao { get; set; }
+        public short? IdFuncao { get; set; }
 
-        [Column("id_categoria")]
-        public int? IdCategoria { get; set; }
-
-        [Column("id_referencia_cargo")]
-        public int? IdReferenciaCargo { get; set; }
-
-        [Column("id_especialidade")]
-        public int? IdEspecialidade { get; set; }
-
-        [Column("id_lotacao")]
-        public int? IdLotacao { get; set; }
-
-        [Column("id_tipo_folha")]
-        public int? IdTipoFolha { get; set; }
+        [Column("id_cargo")]
+        public short? IdCargo { get; set; }
 
         [Column("id_vinculo")]
-        public int? IdVinculo { get; set; }
+        public short? IdVinculo { get; set; }
+
+        [Column("id_categoria")]
+        public short? IdCategoria { get; set; }
+
+        [Column("id_referencia_cargo")]
+        public short? IdReferenciaCargo { get; set; }
+
+        [Column("id_especialidade")]
+        public short? IdEspecialidade { get; set; }
+
+        [Column("id_lotacao")]
+        public short? IdLotacao { get; set; }
+
+        [Column("admissao")]
+        public short? Admissao { get; set; }
+
+        [Column("id_sf_situacao")]
+        public short? IdSfSituacao { get; set; }
 
         // Navigation properties
-        public virtual Senador Senador { get; set; } = null!;
+        public virtual Senador? Senador { get; set; }
+        public virtual Funcao? Funcao { get; set; }
+        public virtual Cargo? Cargo { get; set; }
+        public virtual Vinculo? Vinculo { get; set; }
+        public virtual Categoria? Categoria { get; set; }
+        public virtual ReferenciaCargo? ReferenciaCargo { get; set; }
+        public virtual Cargo? Especialidade { get; set; }
+        public virtual Lotacao? Lotacao { get; set; }
+        public virtual Situacao? Situacao { get; set; }
     }
 }

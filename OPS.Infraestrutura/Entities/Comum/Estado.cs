@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.Comum
     {
         [Key]
         [Column("id")]
-        public byte Id { get; set; }
+        public short Id { get; set; }
 
         [Column("sigla")]
         [StringLength(2)]

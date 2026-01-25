@@ -17,25 +17,25 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public int IdFuncionario { get; set; }
 
         [Column("id_cf_funcionario_grupo_funcional")]
-        public byte? IdFuncionarioGrupoFuncional { get; set; }
+        public short? IdFuncionarioGrupoFuncional { get; set; }
 
         [Column("id_cf_funcionario_cargo")]
-        public byte? IdFuncionarioCargo { get; set; }
+        public short? IdFuncionarioCargo { get; set; }
 
         [Column("id_cf_funcionario_nivel")]
-        public byte? IdFuncionarioNivel { get; set; }
+        public short? IdFuncionarioNivel { get; set; }
 
         [Column("id_cf_funcionario_funcao_comissionada")]
         public short? IdFuncionarioFuncaoComissionada { get; set; }
 
         [Column("id_cf_funcionario_area_atuacao")]
-        public byte? IdFuncionarioAreaAtuacao { get; set; }
+        public short? IdFuncionarioAreaAtuacao { get; set; }
 
         [Column("id_cf_funcionario_local_trabalho")]
-        public byte? IdFuncionarioLocalTrabalho { get; set; }
+        public short? IdFuncionarioLocalTrabalho { get; set; }
 
         [Column("id_cf_funcionario_situacao")]
-        public byte? IdFuncionarioSituacao { get; set; }
+        public short? IdFuncionarioSituacao { get; set; }
 
         [Column("periodo_de")]
         public DateTime? PeriodoDe { get; set; }

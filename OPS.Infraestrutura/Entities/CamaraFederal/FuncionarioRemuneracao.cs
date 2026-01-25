@@ -23,7 +23,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public DateTime Referencia { get; set; }
 
         [Column("tipo")]
-        public byte? Tipo { get; set; }
+        public short? Tipo { get; set; }
 
         [Column("remuneracao_fixa", TypeName = "decimal(10,2)")]
         public decimal? RemuneracaoFixa { get; set; }

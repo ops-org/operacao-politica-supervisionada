@@ -23,7 +23,7 @@ namespace OPS.Importador.Assembleias.Piaui
             };
         }
 
-        public override async Task Importar(int ano)
+        public override Task Importar(int ano)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
@@ -66,6 +66,8 @@ namespace OPS.Importador.Assembleias.Piaui
 
                 ProcessarDespesas(ano);
             }
+
+            return Task.CompletedTask;
         }
 
         public override void DefinirCompetencias(int ano)

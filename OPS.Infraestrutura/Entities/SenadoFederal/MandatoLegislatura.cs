@@ -12,7 +12,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
 
         [Key]
         [Column("id_sf_legislatura")]
-        public byte IdLegislatura { get; set; }
+        public short IdLegislatura { get; set; }
 
         [Column("id_sf_senador")]
         public int IdSenador { get; set; }

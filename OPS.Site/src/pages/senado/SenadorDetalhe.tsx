@@ -2,10 +2,12 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ErrorState } from "@/components/ErrorState";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { SenadorDetalheSkeleton } from "@/components/SenadorDetalheSkeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
 import {
   Table,
   TableBody,
@@ -71,21 +73,19 @@ const SenadorDetalhe = () => {
   }, [id]);
 
   {/* Full-screen loading overlay */ }
-  <LoadingOverlay isLoading={loading || !senador} content="Carregando informações do parlamentar..." />
+  <LoadingOverlay isLoading={loading} content="Carregando informações do parlamentar..." />
 
-  if (error || !senador) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            {error && <p className="text-destructive">{error || "Parlamentar não encontrado"}</p>}
-            {!senador && <p className="text-muted-foreground">Carregando dados do parlamentar...</p>}
-          </div>
-        </main>
-        <Footer />
-      </div>
+      <ErrorState
+        title="Erro ao carregar senador"
+        message={error || "Não foi possível encontrar as informações deste senador. Verifique se o ID está correto ou tente novamente mais tarde."}
+      />
     );
+  }
+
+  if (!senador) {
+    return <SenadorDetalheSkeleton />;
   }
 
   const fotoUrl = `https://static.ops.org.br/senador/${senador.id_sf_senador}_240x300.jpg`;

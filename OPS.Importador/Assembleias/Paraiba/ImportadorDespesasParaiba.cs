@@ -219,15 +219,17 @@ UPDATE temp.cl_despesa_temp SET cnpj_cpf = CONCAT('***', cnpj_cpf, '**') WHERE L
 UPDATE temp.cl_despesa_temp SET cnpj_cpf = CONCAT('***', cnpj_cpf, '***') WHERE LENGTH(cnpj_cpf) = 8;
 
 INSERT INTO temp.fornecedor_de_para (cnpj_incorreto, nome)
-SELECT distinct cnpj_cpf, empresa 
+SELECT distinct cnpj_cpf, unaccent(lower(empresa))
 FROM temp.cl_despesa_temp dt
-LEFT JOIN temp.fornecedor_de_para fp on fp.nome ilike dt.empresa
-where fp.cnpj_incorreto is null and fp.nome is null;
+LEFT JOIN temp.fornecedor_de_para fp on unaccent(lower(fp.nome)) = unaccent(lower(dt.empresa))
+WHERE fp.cnpj_incorreto is null 
+AND fp.nome is null;
 
 UPDATE temp.fornecedor_de_para d
 SET cnpj_correto = f.cnpj
 FROM fornecedor.fornecedor_info f 
-WHERE f.nome = d.nome AND f.cnpj ILIKE REPLACE(d.cnpj_incorreto, '*', '_')
+WHERE unaccent(lower(f.nome)) = unaccent(lower(d.nome)) 
+AND f.cnpj ILIKE REPLACE(d.cnpj_incorreto, '*', '_')
 AND f.tipo = 'MATRIZ'
 AND d.cnpj_correto IS NULL;
 

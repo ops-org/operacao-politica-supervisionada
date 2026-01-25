@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
     {
         [Key]
         [Column("id")]
-        public byte Id { get; set; }
+        public short Id { get; set; }
 
         [Column("descricao")]
         [StringLength(150)]

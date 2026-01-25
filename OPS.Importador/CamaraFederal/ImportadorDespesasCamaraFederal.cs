@@ -173,7 +173,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         itensProcessadosAno = 0;
         valorTotalProcessadoAno = 0;
         var totalColunas = ColunasCEAP.Length;
-        var lstHash = new Dictionary<string, int>();
+        var lstHash = new Dictionary<string, long>();
 
         //using (var transaction = dbContext.Database.BeginTransaction())
         {
@@ -184,7 +184,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             {
                 var hex = Convert.ToHexString((byte[])dReader["hash"]);
                 if (!lstHash.ContainsKey(hex))
-                    lstHash.Add(hex, (int)dReader["id"]);
+                    lstHash.Add(hex, (long)dReader["id"]);
                 else
                     logger.LogError("Hash {HASH} esta duplicada na base de dados.", hex);
             }
@@ -235,13 +235,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                     despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(csv.GetField(idxColuna++));
                     despesaTemp.Numero = csv.GetField(idxColuna++);
                     despesaTemp.TipoDocumento = csv.GetField<int?>(idxColuna++) ?? 0;
-                    despesaTemp.DataEmissao = csv.GetField<DateOnly?>(idxColuna++); ;
-                    try
-                    {
-                        despesaTemp.ValorDocumento = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
-                    }
-                    catch (Exception)
-                    { }
+                    despesaTemp.DataEmissao = csv.GetField<DateOnly?>(idxColuna++);
+
+                    var valorDocumento = csv.GetField(idxColuna++);
+                    if (!string.IsNullOrEmpty(valorDocumento))
+                        despesaTemp.ValorDocumento = Convert.ToDecimal(valorDocumento, cultureInfo);
+
                     despesaTemp.ValorGlosa = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
                     despesaTemp.ValorLiquido = Convert.ToDecimal(csv.GetField(idxColuna++), cultureInfo);
                     despesaTemp.Mes = csv.GetField<short>(idxColuna++);
@@ -300,7 +299,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                             //logger.LogWarning("Despesa com ano incorreto: {@Despesa}", despesaTemp);
 
                             var dt = despesaTemp.DataEmissao!.Value;
-                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
+                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, dt.Month);
                             despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, Math.Min(dt.Day, monthLastDay));
                         }
                         else if (despesaTemp.DataEmissao > endMonthDate)
@@ -401,12 +400,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             AtualizaParlamentarValoresCEAP();
             AtualizaCampeoesGastos();
             AtualizaResumoMensal();
-
-            connection.Execute(@"UPDATE parametros SET cf_deputado_ultima_atualizacao=NOW();");
         }
     }
 
-    private void InsereDespesasTemp(List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, int> lstHash)
+    private void InsereDespesasTemp(List<DeputadoFederalDespesaTemp> despesasTemp, Dictionary<string, long> lstHash)
     {
         JsonSerializerOptions options = new()
         {
@@ -742,9 +739,11 @@ ON CONFLICT DO NOTHING
 
 
         List<string> despesasSemFornecedor = dbContext.DeputadoFederalDespesaTemps
+            .AsNoTracking()
             .Where(x => x.IdFornecedor == null)
             .Select(x => x.Fornecedor)
-            .Distinct()
+            .AsEnumerable()
+            .DistinctBy(x => x.ToLower())
             .ToList();
 
         if (despesasSemFornecedor.Any())
@@ -808,25 +807,25 @@ AND f.cnpj_cpf = dt.cnpj_cpf;
         connection.Execute(@$"
 -- Por Nome exato e CPNJ
 UPDATE temp.cf_despesa_temp dt
-set id_fornecedor = f.id_fornecedor_correto
+set id_fornecedor = COALESCE(f.id_fornecedor_correto, f.id_fornecedor_incorreto)
 FROM temp.fornecedor_de_para f 
 WHERE dt.id_fornecedor IS NULL
 AND f.cnpj_incorreto = dt.cnpj_cpf
-AND f.nome ILIKE dt.fornecedor;
+AND unaccent(lower(f.nome)) = unaccent(lower(dt.fornecedor));
 
 -- Por CNPJ (Pode ser parcial ou invalido)
 UPDATE temp.cf_despesa_temp dt
-set id_fornecedor = f.id_fornecedor_correto
+set id_fornecedor = COALESCE(f.id_fornecedor_correto, f.id_fornecedor_incorreto)
 FROM temp.fornecedor_de_para f 
 WHERE dt.id_fornecedor IS NULL
 AND f.cnpj_incorreto = dt.cnpj_cpf;
 
 -- Por Nome exato (accent-insensitive matching)
 UPDATE temp.cf_despesa_temp dt
-set id_fornecedor = f.id_fornecedor_correto, cnpj_cpf = COALESCE(dt.cnpj_cpf, f.cnpj_correto)
+set id_fornecedor = COALESCE(f.id_fornecedor_correto, f.id_fornecedor_incorreto), cnpj_cpf = COALESCE(dt.cnpj_cpf, f.cnpj_correto)
 FROM temp.fornecedor_de_para f 
 WHERE dt.id_fornecedor IS NULL
-AND (lower(f.nome)) = (lower(dt.fornecedor));
+AND unaccent(lower(f.nome)) = unaccent(lower(dt.fornecedor));
 ");
     }
 
@@ -1559,7 +1558,7 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
 
             using (logger.BeginScope(new Dictionary<string, object> { ["Folha"] = titulo }))
             {
-                if (titulo.Split("�")[0].Trim() != $"{mes:00}{ano}") // todo:
+                if (titulo.Split("-")[0].Trim() != $"{mes:00}{ano}") // todo:
                 {
                     throw new NotImplementedException("Algo esta errado!");
                 }
@@ -1569,7 +1568,7 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
 
                 var cabecalho = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item");
                 var categoriaFuncional = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Categoria funcional"))?.TextContent.Split(":")[1].Trim();
-                var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exerc�cio"))?.TextContent.Split(":")[1].Trim();
+                var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercício"))?.TextContent.Split(":")[1].Trim();
                 var cargo = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Cargo"))?.TextContent.Split(":")[1].Trim();
 
                 var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
@@ -1585,8 +1584,8 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
                     propInfo.SetValue(folha, valor, null);
                 }
 
-                byte tipo = 0;
-                switch (titulo.Split("�")[1].Trim()) // TODO
+                short tipo = 0;
+                switch (titulo.Split("-")[1].Trim()) // TODO
                 {
                     case "FOLHA NORMAL":
                         tipo = 1;
@@ -2151,7 +2150,7 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
     //                                        }
 
     //                                        byte tipo = 0;
-    //                                        switch (titulo.Split("�")[1].Trim())
+    //                                        switch (titulo.Split("-")[1].Trim())
     //                                        {
     //                                            case "FOLHA NORMAL":
     //                                                tipo = 1;
@@ -2207,13 +2206,13 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
     //                                            {
     //                                                lock (padlock)
     //                                                {
-    //                                                    contratacao.IdCargo = connection.QuerySingleOrDefault<byte?>("SELECT id FROM camara.cf_funcionario_cargo WHERE nome ILIKE @nome", new { nome = cargo });
+    //                                                    contratacao.IdCargo = connection.QuerySingleOrDefault<short?>("SELECT id FROM camara.cf_funcionario_cargo WHERE nome ILIKE @nome", new { nome = cargo });
 
     //                                                    if (contratacao.IdGrupoFuncional == null && !string.IsNullOrEmpty(categoriaFuncional))
-    //                                                        contratacao.IdGrupoFuncional = connection.QuerySingleOrDefault<byte?>("SELECT id FROM camara.cf_funcionario_grupo_funcional WHERE nome ILIKE @nome", new { nome = categoriaFuncional });
+    //                                                        contratacao.IdGrupoFuncional = connection.QuerySingleOrDefault<short?>("SELECT id FROM camara.cf_funcionario_grupo_funcional WHERE nome ILIKE @nome", new { nome = categoriaFuncional });
 
     //                                                    if (contratacao.IdNivel == null && !string.IsNullOrEmpty(nivel))
-    //                                                        contratacao.IdNivel = connection.QuerySingleOrDefault<byte?>("SELECT id FROM camara.cf_funcionario_nivel WHERE nome ILIKE @nome", new { nome = nivel });
+    //                                                        contratacao.IdNivel = connection.QuerySingleOrDefault<short?>("SELECT id FROM camara.cf_funcionario_nivel WHERE nome ILIKE @nome", new { nome = nivel });
 
     //                                                    repositoryService.Update(contratacao);
     //                                                }
@@ -2336,7 +2335,7 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
 
     //                        if (categoria.StartsWith("Deputado")) categoria = "Deputado";
     //                        if (categoria.StartsWith("Ex-deputado")) categoria = "Ex-deputado";
-    //                        if (area == "�") area = null;
+    //                        if (area == "-") area = null;
 
     //                        Console.WriteLine();
     //                        Console.WriteLine($"Funcionario: {nome}");

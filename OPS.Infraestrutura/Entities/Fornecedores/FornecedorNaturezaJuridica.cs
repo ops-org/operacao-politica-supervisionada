@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
     {
         [Key]
         [Column("id")]
-        public int Id { get; set; }
+        public short Id { get; set; }
 
         [Column("codigo")]
         [StringLength(10)]
@@ -19,6 +19,6 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public string Descricao { get; set; } = null!;
 
         // Navigation properties
-        //public virtual ICollection<Fornecedor> Fornecedores { get; set; } = new List<Fornecedor>();
+        public virtual ICollection<FornecedorInfo> FornecedorInfos { get; set; } = new List<FornecedorInfo>();
     }
 }

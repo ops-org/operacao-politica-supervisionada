@@ -206,14 +206,8 @@ public class ImportadorDespesasSenado : IImportadorDespesas
                             logger.LogError("Data da despesa muito diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
                                linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
 
-                            try
-                            {
-                                despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes.Value, despesaTemp.Data.Value.Day);
-                            }
-                            catch (ArgumentOutOfRangeException ex)
-                            {
-                                despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes.Value, DateTime.DaysInMonth(despesaTemp.Ano.Value, despesaTemp.Mes.Value));
-                            }
+                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano.Value, despesaTemp.Mes.Value);
+                            despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes.Value, Math.Min(despesaTemp.Data.Value.Day, monthLastDay));
                         }
                         else
                         {

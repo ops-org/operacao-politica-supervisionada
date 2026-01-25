@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace OPS.Core.Utilities
 {
@@ -14,7 +15,7 @@ namespace OPS.Core.Utilities
 
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString());
+            writer.WriteStringValue(value.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

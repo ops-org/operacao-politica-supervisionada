@@ -56,7 +56,7 @@ public static class TempConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Hash).HasColumnType("bytea").IsRequired(false); ;
+            entity.Property(e => e.Hash).HasColumnType("bytea").IsRequired(false);
             entity.ToTable("cf_despesa_temp", "temp");
         });
     }

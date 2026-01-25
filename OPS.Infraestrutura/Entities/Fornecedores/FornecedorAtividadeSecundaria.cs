@@ -12,7 +12,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
 
         [Key]
         [Column("id_fornecedor_atividade")]
-        public int IdAtividade { get; set; }
+        public short IdAtividade { get; set; }
 
         // Navigation properties
         public virtual Fornecedor Fornecedor { get; set; } = null!;

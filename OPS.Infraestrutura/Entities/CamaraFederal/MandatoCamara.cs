@@ -15,16 +15,16 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public int IdDeputado { get; set; }
 
         [Column("id_legislatura")]
-        public byte? IdLegislatura { get; set; }
+        public short? IdLegislatura { get; set; }
 
         [Column("id_carteira_parlamantar")]
         public int? IdCarteiraParlamantar { get; set; }
 
         [Column("id_estado")]
-        public byte? IdEstado { get; set; }
+        public short? IdEstado { get; set; }
 
         [Column("id_partido")]
-        public byte? IdPartido { get; set; }
+        public short? IdPartido { get; set; }
 
         [Column("condicao")]
         [StringLength(10)]

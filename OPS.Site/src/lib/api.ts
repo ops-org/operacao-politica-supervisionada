@@ -232,6 +232,7 @@ export interface FornecedorDetalhe {
   telefone: string;
   telefone2: string;
   ente_federativo_responsavel: string;
+  origem: string;
   obtido_em: string;
   capital_social: string;
   doador: number;
@@ -240,9 +241,14 @@ export interface FornecedorDetalhe {
 
 export interface QuadroSocietario {
   nome: string;
+  cnpj_cpf: string;
+  pais_origem: string | null;
+  data_entrada_sociedade: string;
+  faixa_etaria: string;
   qualificacao: string;
-  nome_representante_legal: string;
-  qualificacao_representante_legal: string;
+  nome_representante: string;
+  cpf_representante: string | null;
+  qualificacao_representante: string;
 }
 
 export interface FornecedorDetalheResponse {
@@ -652,7 +658,8 @@ export const fetchRemuneracao = async (
   limit: number,
   sortField: number | null,
   sortOrder: 'asc' | 'desc',
-  filters: any
+  filters: any,
+  type?: "deputado-federal" | "senador"
 ): Promise<RemuneracaoApiResponse> => {
   const order = sortField !== null ? [{
     column: sortField,
@@ -674,7 +681,10 @@ export const fetchRemuneracao = async (
     }
   });
 
-  const result = await apiClient.post<any>("/senador/remuneracao", payload);
+  // Determine endpoint based on type
+  const endpoint = type === "deputado-federal" ? "/deputado/remuneracao" : "/senador/remuneracao";
+  
+  const result = await apiClient.post<any>(endpoint, payload);
   return result;
 };
 
@@ -696,6 +706,14 @@ export const fetchCargos = async (): Promise<DropDownOptions[]> => {
 
 export const fetchLotacoes = async (): Promise<DropDownOptions[]> => {
   return await apiClient.get<DropDownOptions[]>("/senador/lotacao");
+};
+
+export const fetchGruposFuncionais = async (): Promise<DropDownOptions[]> => {
+  return await apiClient.get<DropDownOptions[]>("/deputado/grupofuncional");
+};
+
+export const fetchFuncionarios = async (ano: string): Promise<DropDownOptions[]> => {
+  return await apiClient.post<DropDownOptions[]>("/deputado/funcionariopesquisa", { ano });
 };
 
 export interface ImportacaoData {

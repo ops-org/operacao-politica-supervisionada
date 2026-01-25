@@ -15,10 +15,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public int? IdDeputado { get; set; }
 
         [Column("id_partido")]
-        public byte IdPartido { get; set; }
+        public short IdPartido { get; set; }
 
         [Column("id_estado")]
-        public byte? IdEstado { get; set; }
+        public short? IdEstado { get; set; }
 
         [Column("id_cf_gabinete")]
         public short? IdGabinete { get; set; }
@@ -54,7 +54,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public DateTime? Falecimento { get; set; }
 
         [Column("id_estado_nascimento")]
-        public byte? IdEstadoNascimento { get; set; }
+        public short? IdEstadoNascimento { get; set; }
 
         [Column("municipio")]
         [StringLength(500)]
@@ -84,13 +84,13 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public bool PassaporteDiplomatico { get; set; }
 
         [Column("processado")]
-        public sbyte Processado { get; set; }
+        public bool Processado { get; set; }
 
         [Column("valor_total_ceap", TypeName = "decimal(16,2)")]
         public decimal ValorTotalCeap { get; set; }
 
         [Column("secretarios_ativos")]
-        public byte? SecretariosAtivos { get; set; }
+        public short? SecretariosAtivos { get; set; }
 
         [Column("valor_mensal_secretarios", TypeName = "decimal(16,2)")]
         public decimal ValorMensalSecretarios { get; set; }
@@ -115,5 +115,13 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual ICollection<SecretarioCamara> Secretarios { get; set; } = new List<SecretarioCamara>();
         public virtual ICollection<FuncionarioContratacao> FuncionarioContratacoes { get; set; } = new List<FuncionarioContratacao>();
         public virtual ICollection<FuncionarioRemuneracao> FuncionarioRemuneracoes { get; set; } = new List<FuncionarioRemuneracao>();
+        public virtual ICollection<DeputadoAuxilioMoradia> DeputadoAuxilioMoradias { get; set; } = new List<DeputadoAuxilioMoradia>();
+        public virtual ICollection<DeputadoCampeaoGasto> DeputadoCampeaoGastos { get; set; } = new List<DeputadoCampeaoGasto>();
+        public virtual ICollection<DeputadoCotaParlamentar> DeputadoCotaParlamentares { get; set; } = new List<DeputadoCotaParlamentar>();
+        public virtual ICollection<DeputadoImovelFuncional> DeputadoImoveisFuncionais { get; set; } = new List<DeputadoImovelFuncional>();
+        public virtual ICollection<DeputadoMissaoOficial> DeputadoMissoesOficiais { get; set; } = new List<DeputadoMissaoOficial>();
+        public virtual ICollection<DeputadoRemuneracao> DeputadoRemuneracoes { get; set; } = new List<DeputadoRemuneracao>();
+        public virtual ICollection<DeputadoVerbaGabinete> DeputadoVerbasGabinete { get; set; } = new List<DeputadoVerbaGabinete>();
+        public virtual ICollection<SecretarioHistorico> SecretarioHistoricos { get; set; } = new List<SecretarioHistorico>();
     }
 }

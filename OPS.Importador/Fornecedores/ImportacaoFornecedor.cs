@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,13 +28,18 @@ namespace OPS.Importador.Fornecedores
         private readonly AppDbContext dbContext;
         private readonly HttpClient httpClient;
 
-        public ImportacaoFornecedor(ILogger<ImportacaoFornecedor> logger,IServiceProvider serviceProvider, AppDbContext dbContext)
+        private readonly JsonSerializerOptions jsonSerializerOptions;
+
+        public ImportacaoFornecedor(ILogger<ImportacaoFornecedor> logger, IServiceProvider serviceProvider, AppDbContext dbContext)
         {
             this.logger = logger;
             this.dbContext = dbContext;
 
             appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
             httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
+
+            jsonSerializerOptions = new JsonSerializerOptions();
+            jsonSerializerOptions.Converters.Add(new CultureSpecificDecimalConverter(CultureInfo.GetCultureInfo("en-US")));
         }
 
         public async Task ConsultarDadosCNPJ(bool somenteNovos = true)
@@ -103,19 +109,34 @@ namespace OPS.Importador.Fornecedores
             }
             else // Atualizar dados antigos
             {
-                var cutoffDate = DateTime.UtcNow.AddDays(-30);
+                //var cutoffDate = DateTime.UtcNow.AddDays(-30);
+                //return await dbContext.Fornecedores.FromSqlInterpolated(
+                //    $@"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
+                //    from fornecedor.fornecedor f
+                //    left join fornecedor.fornecedor_info fi on f.id = fi.id_fornecedor
+                //    where char_length(f.cnpj_cpf) = 14
+                //    and obtido_em < {cutoffDate}
+                //    and fi.situacao_cadastral = 'ATIVA'
+                //    order by fi.id_fornecedor asc")
+                //    .Select(f => new FornecedorQueryResult
+                //    {
+                //        CnpjCpf = f.CnpjCpf,
+                //        Id = (int)f.Id,
+                //        Nome = f.Nome
+                //    })
+                //    .ToListAsync();
+
                 return await dbContext.Fornecedores.FromSqlInterpolated(
-                    $@"select cnpj_cpf, f.id, fi.id_fornecedor, f.nome
+                    $@"select f.cnpj_cpf, f.id, f.nome
                     from fornecedor.fornecedor f
-                    left join fornecedor.fornecedor_info fi on f.id = fi.id_fornecedor
-                    where char_length(f.cnpj_cpf) = 14
-                    and obtido_em < {cutoffDate}
-                    and fi.situacao_cadastral = 'ATIVA'
-                    order by fi.id_fornecedor asc")
+                    where categoria = 'PJ'
+                    and f.id >= 58718    
+                    and (f.valor_total_ceap_camara + f.valor_total_ceap_senado + f.valor_total_ceap_assembleias) > 0
+                    order by f.id asc")
                     .Select(f => new FornecedorQueryResult
                     {
                         CnpjCpf = f.CnpjCpf,
-                        Id = (int)f.Id,
+                        Id = f.Id,
                         Nome = f.Nome
                     })
                     .ToListAsync();
@@ -150,7 +171,8 @@ namespace OPS.Importador.Fornecedores
                     if (response.IsSuccessStatusCode)
                     {
                         string responseString = await response.Content.ReadAsStringAsync();
-                        fornecedor = JsonSerializer.Deserialize<MinhaReceita.FornecedorInfo>(responseString);
+                        fornecedor = JsonSerializer.Deserialize<MinhaReceita.FornecedorInfo>(responseString, jsonSerializerOptions);
+                        fornecedor.Origem = "Minha Receita";
                     }
                     else
                     {
@@ -162,6 +184,7 @@ namespace OPS.Importador.Fornecedores
                         else
                         {
                             fornecedor = await ConsultaCnpjReceitaWs(item.CnpjCpf);
+                            fornecedor.Origem = "Receita WS";
                         }
                     }
                 }
@@ -185,8 +208,8 @@ namespace OPS.Importador.Fornecedores
                     await dbContext.FornecedorSocios.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
                     await dbContext.FornecedorAtividadesSecundarias.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
 
-                    if (fornecedor.IdAtividadePrincipal > 0)
-                        fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.IdAtividadePrincipal, fornecedor.AtividadePrincipal);
+                    if (fornecedor.CodigoAtividadePrincipal > 0)
+                        fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.CodigoAtividadePrincipal, fornecedor.AtividadePrincipal);
 
                     if (fornecedor.IdNaturezaJuridica > 0)
                         fornecedor.IdNaturezaJuridica = await LocalizaInsereNaturezaJuridica(lstNaturezaJuridica, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
@@ -244,6 +267,11 @@ namespace OPS.Importador.Fornecedores
                     fornecedorInfo.ObtidoEm = fornecedor.ObtidoEm;
                     fornecedorInfo.NomePais = fornecedor.Pais;
 
+                    // Controle da fonte dos dados
+                    fornecedorInfo.Origem = fornecedor.Origem;
+
+                    await dbContext.SaveChangesAsync();
+
                     dbContext.Fornecedores.Where(x => x.Id == fornecedor.Id)
                         .ExecuteUpdate(x => x.SetProperty(y => y.Nome, fornecedor.RazaoSocial).SetProperty(y => y.Categoria, "PJ"));
 
@@ -282,8 +310,8 @@ namespace OPS.Importador.Fornecedores
                                 PaisOrigem = qsa.PaisOrigem,
                                 NomeRepresentante = qsa.NomeRepresentante,
                                 CpfRepresentante = qsa.CpfRepresentante,
-                                IdFornecedorSocioQualificacao = qsa.IdSocioQualificacao > 0 ? (byte?)qsa.IdSocioQualificacao : null,
-                                IdFornecedorSocioRepresentanteQualificacao = qsa.IdSocioRepresentanteQualificacao > 0 ? (byte?)qsa.IdSocioRepresentanteQualificacao : null,
+                                IdFornecedorSocioQualificacao = qsa.IdSocioQualificacao > 0 ? (short?)qsa.IdSocioQualificacao : null,
+                                IdFornecedorSocioRepresentanteQualificacao = qsa.IdSocioRepresentanteQualificacao > 0 ? (short?)qsa.IdSocioRepresentanteQualificacao : null,
                                 IdFornecedorFaixaEtaria = qsa.IdFaixaEtaria,
                                 DataEntradaSociedade = !string.IsNullOrEmpty(qsa.DataEntradaSociedade) ? DateTime.Parse(qsa.DataEntradaSociedade).Date : null
                             };
@@ -309,8 +337,9 @@ namespace OPS.Importador.Fornecedores
                                 SELECT MAX(d.data_emissao) as data FROM assembleias.cl_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
                             ) tmp";
                         var ultimaNota = await command.ExecuteScalarAsync() as DateOnly?;
+                        var cutoffDate = new DateOnly(2023, 1, 1); // Inicio Legislatura // DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
 
-                        if (ultimaNota != null && fornecedor.DataSituacaoEspecial.HasValue && ultimaNota > DateOnly.FromDateTime(fornecedor.DataSituacaoEspecial.Value))
+                        if (ultimaNota != null && ultimaNota >= cutoffDate && fornecedor.DataSituacaoEspecial.HasValue && ultimaNota > DateOnly.FromDateTime(fornecedor.DataSituacaoEspecial.Value))
                         {
                             logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
 
@@ -347,7 +376,7 @@ namespace OPS.Importador.Fornecedores
                 if (response.IsSuccessStatusCode)
                 {
                     string responseString = await response.Content.ReadAsStringAsync();
-                    var fornecedorWs = JsonSerializer.Deserialize<ReceitaWS.FornecedorReceitaWs>(responseString);
+                    var fornecedorWs = JsonSerializer.Deserialize<ReceitaWS.FornecedorReceitaWs>(responseString, jsonSerializerOptions);
 
                     if (fornecedorWs == null || fornecedorWs.Status == "ERROR")
                         return null;
@@ -362,26 +391,34 @@ namespace OPS.Importador.Fornecedores
                         return null;
                     }
 
-                    static decimal ParseDecimalString(string s)
-                    {
-                        if (string.IsNullOrWhiteSpace(s)) return 0m;
-                        // remove currency symbols and trim
-                        s = s.Replace("R$", "").Replace("\u00A0", "").Trim();
-                        // try pt-BR then invariant
-                        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, new System.Globalization.CultureInfo("pt-BR"), out var d)) return d;
-                        if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d)) return d;
-                        // keep digits and punctuation
-                        var filtered = new string(s.Where(c => char.IsDigit(c) || c == ',' || c == '.').ToArray());
-                        if (decimal.TryParse(filtered, System.Globalization.NumberStyles.Any, new System.Globalization.CultureInfo("pt-BR"), out d)) return d;
-                        if (decimal.TryParse(filtered, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d)) return d;
-                        return 0m;
-                    }
+                    //static decimal ParseDecimalString(string s)
+                    //{
+                    //    if (string.IsNullOrWhiteSpace(s)) return 0m;
+                    //    // remove currency symbols and trim
+                    //    s = s.Replace("R$", "").Replace("\u00A0", "").Trim();
+                    //    // try pt-BR then invariant
+                    //    if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, new System.Globalization.CultureInfo("pt-BR"), out var d)) return d;
+                    //    if (decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d)) return d;
+                    //    // keep digits and punctuation
+                    //    var filtered = new string(s.Where(c => char.IsDigit(c) || c == ',' || c == '.').ToArray());
+                    //    if (decimal.TryParse(filtered, System.Globalization.NumberStyles.Any, new System.Globalization.CultureInfo("pt-BR"), out d)) return d;
+                    //    if (decimal.TryParse(filtered, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d)) return d;
+                    //    return 0m;
+                    //}
 
-                    static int ParseCodeToInt(string code)
+                    static int ParseCodeToInt32(string code)
                     {
                         if (string.IsNullOrEmpty(code)) return 0;
                         var digits = new string(code.Where(char.IsDigit).ToArray());
                         if (int.TryParse(digits, out var v)) return v;
+                        return 0;
+                    }
+
+                    static short ParseCodeToInt16(string code)
+                    {
+                        if (string.IsNullOrEmpty(code)) return 0;
+                        var digits = new string(code.Where(char.IsDigit).ToArray());
+                        if (Int16.TryParse(digits, out var v)) return v;
                         return 0;
                     }
 
@@ -407,7 +444,7 @@ namespace OPS.Importador.Fornecedores
                         MotivoSituacaoCadastral = fornecedorWs.MotivoSituacao,
                         SituacaoEspecial = fornecedorWs.SituacaoEspecial,
                         DataSituacaoEspecial = ParseDateString(fornecedorWs.DataSituacaoEspecial),
-                        CapitalSocial = ParseDecimalString(fornecedorWs.CapitalSocial),
+                        CapitalSocial = fornecedorWs.CapitalSocial,
                         OpcaoPeloMEI = fornecedorWs.Simei?.Optante,
                         DataOpcaoPeloMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataOpcao),
                         DataExclusaoMEI = fornecedorWs.Simei is null ? null : ParseDateString(fornecedorWs.Simei.DataExclusao),
@@ -422,7 +459,7 @@ namespace OPS.Importador.Fornecedores
                     // Atividade Principal
                     if (fornecedorWs.AtividadePrincipal != null && fornecedorWs.AtividadePrincipal.Count > 0)
                     {
-                        info.IdAtividadePrincipal = ParseCodeToInt(fornecedorWs.AtividadePrincipal[0].Code);
+                        info.CodigoAtividadePrincipal = ParseCodeToInt32(fornecedorWs.AtividadePrincipal[0].Code);
                         info.AtividadePrincipal = fornecedorWs.AtividadePrincipal[0].Text;
                     }
 
@@ -431,7 +468,7 @@ namespace OPS.Importador.Fornecedores
                     {
                         info.CnaesSecundarios = fornecedorWs.AtividadesSecundarias.Select(a => new MinhaReceita.FornecedorAtividade
                         {
-                            Id = ParseCodeToInt(a.Code),
+                            Id = ParseCodeToInt32(a.Code),
                             Codigo = a.Code,
                             Descricao = a.Text
                         }).ToList();
@@ -439,7 +476,7 @@ namespace OPS.Importador.Fornecedores
 
                     // Natureza juridica
                     info.NaturezaJuridica = fornecedorWs.NaturezaJuridica;
-                    info.IdNaturezaJuridica = ParseCodeToInt(fornecedorWs.NaturezaJuridica);
+                    info.IdNaturezaJuridica = ParseCodeToInt16(fornecedorWs.NaturezaJuridica);
 
                     // QSA
                     if (fornecedorWs.Qsa != null)
@@ -495,7 +532,7 @@ namespace OPS.Importador.Fornecedores
                 logger.LogInformation("Controle Fornecedor: {Controle} - {CnpjCpf} - {Mensagem}", controle, cnpj_cpf, mensagem);
         }
 
-        private async Task<int> LocalizaInsereAtividade(List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
+        private async Task<short> LocalizaInsereAtividade(List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
         {
             var codigoFormatado = codigo.ToString(@"00\.00-0-00");
             var item = lstFornecedoresAtividade.FirstOrDefault(x => x.Codigo == codigoFormatado);
@@ -507,18 +544,17 @@ namespace OPS.Importador.Fornecedores
                     Descricao = descricao
                 };
                 dbContext.FornecedorAtividades.Add(atividade);
-                //await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
 
                 lstFornecedoresAtividade.Add(atividade);
 
-                // Don't save here - let the main transaction handle it
                 return atividade.Id;
             }
 
             return item.Id;
         }
 
-        private async Task<int> LocalizaInsereNaturezaJuridica(List<FornecedorNaturezaJuridica> lstNaturezaJuridica, string codigo, string descricao)
+        private async Task<short> LocalizaInsereNaturezaJuridica(List<FornecedorNaturezaJuridica> lstNaturezaJuridica, string codigo, string descricao)
         {
             var item = lstNaturezaJuridica.FirstOrDefault(x => x.Codigo == codigo);
             if (item == null)

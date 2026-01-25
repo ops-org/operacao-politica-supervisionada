@@ -45,7 +45,7 @@ namespace OPS.Importador.Comum.Parlamentar
             return Task.CompletedTask;
         }
 
-        public byte BuscarIdPartido(string partido)
+        public short BuscarIdPartido(string siglaNomePartido)
         {
             //if (partido == "PATRI" || partido.Equals("PATRIOTAS", StringComparison.InvariantCultureIgnoreCase)) partido = "PATRIOTA";
             //else if (partido == "PTC") partido = "AGIR"; // https://agir36.com.br/sobre-o-partido/
@@ -63,19 +63,18 @@ namespace OPS.Importador.Comum.Parlamentar
             //else if (partido.Contains("PMN")) partido = "MOBILIZA";
             //else if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido)) partido = "S.PART.";
 
-            byte idPartido = 0;
-            if (partido.Contains("Não possui filiação") || string.IsNullOrEmpty(partido))
-            {
-                idPartido = dbContext.PartidoDeParas.FirstOrDefault(x => x.SiglaNome.Equals(partido, StringComparison.CurrentCultureIgnoreCase))?.Id ?? 0;
-                if (idPartido == 0)
-                {
-                    Log.Error("Partido '{Partido}' Inexistenete", partido);
-                    //throw new Exception($"Partido '{partido}' Inexistenete");
-                    return 0; //  S.PART.
-                }
-            }
+            if (siglaNomePartido.Contains("Não possui filiação") || string.IsNullOrEmpty(siglaNomePartido))
+                return 0; // S.PART.
 
-            return idPartido;
+            var partido = dbContext.PartidoDeParas
+                .AsNoTracking()
+                .FirstOrDefault(x => EF.Functions.ILike(x.SiglaNome, $"%{siglaNomePartido}%"));
+
+            if (partido != null)
+                return partido.Id;
+
+            logger.LogError("Partido '{Partido}' Inexistenete", siglaNomePartido);
+            return 0; //  S.PART.
         }
 
         protected DeputadoEstadual GetDeputadoByNameOrNew(string nomeParlamentar)
@@ -89,7 +88,7 @@ namespace OPS.Importador.Comum.Parlamentar
             {
                 return new DeputadoEstadual()
                 {
-                    IdEstado = (byte)config.Estado,
+                    IdEstado = (short)config.Estado,
                     NomeParlamentar = nomeParlamentar
                 };
             }
@@ -145,7 +144,7 @@ namespace OPS.Importador.Comum.Parlamentar
 
             return new DeputadoEstadual()
             {
-                IdEstado = (byte)config.Estado,
+                IdEstado = (short)config.Estado,
                 Matricula = matricula
             };
         }

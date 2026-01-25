@@ -34,17 +34,17 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public string? Naturalidade { get; set; }
 
         [Column("id_estado_naturalidade")]
-        public byte? IdEstadoNaturalidade { get; set; }
+        public short? IdEstadoNaturalidade { get; set; }
 
         [Column("profissao")]
         [StringLength(100)]
         public string? Profissao { get; set; }
 
         [Column("id_partido")]
-        public byte IdPartido { get; set; }
+        public short IdPartido { get; set; }
 
         [Column("id_estado")]
-        public byte? IdEstado { get; set; }
+        public short? IdEstado { get; set; }
 
         [Column("email")]
         [StringLength(100)]
@@ -77,7 +77,6 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<MandatoExercicio> MandatoExercicios { get; set; } = new List<MandatoExercicio>();
         public virtual ICollection<Lotacao> Lotacoes { get; set; } = new List<Lotacao>();
         public virtual ICollection<SecretarioSenado> Secretarios { get; set; } = new List<SecretarioSenado>();
-        public virtual ICollection<SecretarioCompleto> SecretariosCompletos { get; set; } = new List<SecretarioCompleto>();
         public virtual SenadorCampeaoGasto? CampeaoGasto { get; set; }
         public virtual ICollection<SenadorHistoricoAcademico> HistoricoAcademico { get; set; } = new List<SenadorHistoricoAcademico>();
         public virtual ICollection<SenadorProfissao> Profissoes { get; set; } = new List<SenadorProfissao>();

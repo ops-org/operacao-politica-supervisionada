@@ -15,8 +15,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
-import { ChevronUpIcon, ChevronDownIcon, Search, Trash, Building2, Users, Calendar, Plus, Briefcase, User, FolderOpen, Link2, DollarSign, FileText } from "lucide-react";
-import { apiClient, fetchRemuneracao, fetchVinculos, fetchCategorias, fetchCargos, fetchLotacoes, RemuneracaoData, RemuneracaoApiResponse, DropDownOptions } from "@/lib/api";
+import { ChevronUpIcon, ChevronDownIcon, Search, Trash, Building2, Users, Calendar, Plus, Briefcase, User, FolderOpen, Link2, DollarSign, FileText, UserCheck } from "lucide-react";
+import { apiClient, fetchRemuneracao, fetchVinculos, fetchCategorias, fetchCargos, fetchLotacoes, fetchParliamentMembers, fetchGruposFuncionais, fetchFuncionarios, RemuneracaoData, RemuneracaoApiResponse, DropDownOptions, ParliamentSearchRequest } from "@/lib/api";
 import { delay } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -25,9 +25,28 @@ const formatNameAcronym = (value: string, acronym: string): string => {
     return String(`${value} (${acronym})`);
 }
 
+const typeConfigs = {
+    "deputado-federal": {
+        title: "Remuneração - Câmara dos Deputados",
+        subtitle: "Consulte e analise os dados de remuneração dos deputados federais",
+        apiType: "deputado",
+        detailRoute: "/deputado-federal",
+        imageBaseUrl: "//static.ops.org.br/deputado",
+        defaultAno: (new Date().getFullYear() - 1).toString()
+    },
+    "senador": {
+        title: "Remuneração no Senado",
+        subtitle: "Consulte e analise os dados de remuneração no Senado Federal com visualizações interativas e filtros avançados",
+        apiType: "senador",
+        detailRoute: "/senador",
+        imageBaseUrl: "//static.ops.org.br/senador",
+        defaultAno: (new Date().getFullYear() - 1).toString()
+    }
+} as const;
+
 const generateAnos = () => {
     const currentYear = new Date().getFullYear()-1; // TODO: Remove -1
-    const anos = [];
+    const anos = [{ value: null, label: "Selecione" }];
     for (let year = currentYear; year >= 2012; year--) {
         anos.push({ value: year.toString(), label: year.toString() });
     }
@@ -51,15 +70,28 @@ const meses = [
     { value: "12", label: "Dezembro" },
 ];
 
-const agrupamentoOptions = [
-    { value: "1", label: "Lotação", icon: Building2 },
-    { value: "2", label: "Cargo", icon: Briefcase },
-    { value: "3", label: "Categoria", icon: FolderOpen },
-    { value: "4", label: "Vinculo", icon: Link2 },
-    { value: "7", label: "Senador(a)", icon: User },
-    { value: "5", label: "Ano", icon: Calendar },
-    { value: "6", label: "Folha de pagamento", icon: FileText },
-];
+const getAgrupamentoOptions = (type?: "deputado-federal" | "senador") => {
+    if (type === "deputado-federal") {
+        return [
+            { value: "1", label: "Grupo Funcional", icon: Users },
+            { value: "3", label: "Deputado(a)", icon: User },
+            { value: "4", label: "Funcionário(a)", icon: UserCheck },
+            { value: "5", label: "Ano", icon: Calendar },
+            { value: "6", label: "Não Agrupar", icon: FileText }
+        ];
+    }
+    
+    // Senador options
+    return [
+        { value: "1", label: "Lotação", icon: Building2 },
+        { value: "2", label: "Cargo", icon: Briefcase },
+        { value: "3", label: "Categoria", icon: FolderOpen },
+        { value: "4", label: "Vinculo", icon: Link2 },
+        { value: "7", label: "Senador(a)", icon: User },
+        { value: "5", label: "Ano", icon: Calendar },
+        { value: "6", label: "Folha de pagamento", icon: FileText }
+    ];
+};
 
 const formatCurrency = (value: number): string => {
     return 'R$ ' + value.toLocaleString("pt-BR", {
@@ -84,7 +116,34 @@ interface ColumnConfig {
     hideOnSmallScreen?: boolean;
 }
 
-const getColumnConfigs = (agrupamento: string): ColumnConfig[] => {
+const getColumnConfigs = (agrupamento: string, type?: "deputado-federal" | "senador"): ColumnConfig[] => {
+    if (type === "deputado-federal") {
+        switch (agrupamento) {
+            case "1": // Grupo Funcional
+            case "3": // Deputado
+            case "4": // Funcionário
+            case "5": // Ano
+                return [
+                    { key: "acoes", label: "", sortable: false, columnIndex: 0 },
+                    { key: "descricao", label: agrupamento === "1" ? "Grupo Funcional" : agrupamento === "3" ? "Deputado(a)" : agrupamento === "4" ? "Funcionário(a)" : "Ano", sortable: true, columnIndex: 1 },
+                    { key: "quantidade", label: "Flh(s). Pgto.", sortable: true, align: 'right', columnIndex: 2 },
+                    { key: "valor_total", label: "Custo Total", sortable: true, align: 'right', columnIndex: 3 }
+                ];
+            case "6": // Não agrupar (detalhes)
+                return [
+                    { key: "deputado", label: "Deputado", sortable: true, columnIndex: 0 },
+                    { key: "funcionario", label: "Funcionário", sortable: true, columnIndex: 1 },
+                    { key: "ano_mes", label: "Ano/Mês", sortable: true, columnIndex: 2 },
+                    { key: "valor_bruto", label: "Valor Bruto", sortable: true, align: 'right', columnIndex: 3 },
+                    { key: "valor_outros", label: "Vantagens", sortable: true, align: 'right', columnIndex: 4 },
+                    { key: "valor_total", label: "Custo Total", sortable: true, align: 'right', columnIndex: 5 }
+                ];
+            default:
+                return getColumnConfigs("1", type);
+        }
+    }
+
+    // Senador configurations (existing logic)
     switch (agrupamento) {
         case "1": // Lotação
         case "2": // Cargo  
@@ -102,29 +161,31 @@ const getColumnConfigs = (agrupamento: string): ColumnConfig[] => {
             return [
                 { key: "vinculo", label: "Vinculo", sortable: true, columnIndex: 0 },
                 { key: "categoria", label: "Categoria/Cargo", sortable: true, columnIndex: 1 },
-                // { key: "cargo", label: "Cargo", sortable: true, columnIndex: 2 },
                 { key: "lotacao", label: "Lotação", sortable: true, columnIndex: 3 },
                 { key: "tipo_folha", label: "Folha", sortable: true, columnIndex: 4 },
                 { key: "ano_mes", label: "Ano/Mês", sortable: true, columnIndex: 5 },
                 { key: "valor_total", label: "Custo Total", sortable: true, align: 'right', columnIndex: 6 }
             ];
         default:
-            return getColumnConfigs("7");
+            return getColumnConfigs("7", type);
     }
 };
 
-export default function FolhaPagamento() {
+export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "senador" }) {
+    const config = type ? typeConfigs[type] : typeConfigs["senador"];
     const [showFilters, setShowFilters] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const [selectedFilters, setSelectedFilters] = useState({
-        ano: anos[0].value,
+        ano: config.defaultAno,
         mes: "",
         vinculo: [] as string[],
         categoria: [] as string[],
         cargo: [] as string[],
         lotacao: [] as string[],
         parlamentar: [] as string[],
-        agrupar: "7"
+        grupo_funcional: [] as string[],
+        funcionario: [] as string[],
+        agrupar: type === "deputado-federal" ? "1" : "7"
     });
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -135,7 +196,8 @@ export default function FolhaPagamento() {
     const [activeAgrupamento, setActiveAgrupamento] = useState("7");
     const itemsPerPage = 50;
 
-    const columns = getColumnConfigs(activeAgrupamento);
+    const columns = getColumnConfigs(activeAgrupamento, type);
+    const agrupamentoOptions = getAgrupamentoOptions(type);
 
     const getApiFilters = () => ({
         ag: selectedFilters.agrupar,
@@ -145,7 +207,9 @@ export default function FolhaPagamento() {
         ct: selectedFilters.categoria.join(","),
         cr: selectedFilters.cargo.join(","),
         lt: selectedFilters.lotacao.join(","),
-        sn: selectedFilters.parlamentar.join(","),
+        df: selectedFilters.parlamentar.join(","),
+        gf: selectedFilters.grupo_funcional.join(","),
+        sc: selectedFilters.funcionario.join(",")
     });
 
     useEffect(() => {
@@ -175,7 +239,7 @@ export default function FolhaPagamento() {
 
     const { data: apiData, isRefetching: isLoading, error, refetch } = useQuery({
         queryKey: ['remuneracao-data'],
-        queryFn: () => fetchRemuneracao(currentPage, itemsPerPage, sortField, sortOrder, getApiFilters()),
+        queryFn: () => fetchRemuneracao(currentPage, itemsPerPage, sortField, sortOrder, getApiFilters(), type),
         staleTime: 0,
         enabled: false
     });
@@ -207,22 +271,40 @@ export default function FolhaPagamento() {
 
         const updatedFilters = { ...selectedFilters, agrupar: newAgrupamento };
 
-        switch (selectedFilters.agrupar) {
-            case "1": // Lotação
-                updatedFilters.lotacao = [selectedRow.id?.toString() || ""];
-                break;
-            case "2": // Cargo
-                updatedFilters.cargo = [selectedRow.id?.toString() || ""];
-                break;
-            case "3": // Categoria
-                updatedFilters.categoria = [selectedRow.id?.toString() || ""];
-                break;
-            case "4": // Vinculo
-                updatedFilters.vinculo = [selectedRow.id?.toString() || ""];
-                break;
-            case "7": // Senador
-                updatedFilters.parlamentar = [selectedRow.id?.toString() || ""];
-                break;
+        if (type === "deputado-federal") {
+            switch (selectedFilters.agrupar) {
+                case "1": // Grupo Funcional
+                    updatedFilters.grupo_funcional = [selectedRow.id?.toString() || ""];
+                    break;
+                case "3": // Deputado
+                    updatedFilters.parlamentar = [selectedRow.id?.toString() || ""];
+                    break;
+                case "4": // Funcionário
+                    updatedFilters.funcionario = [selectedRow.id?.toString() || ""];
+                    break;
+                case "5": // Ano
+                    updatedFilters.ano = selectedRow.descricao || "";
+                    break;
+            }
+        } else {
+            // Senador logic (existing)
+            switch (selectedFilters.agrupar) {
+                case "1": // Lotação
+                    updatedFilters.lotacao = [selectedRow.id?.toString() || ""];
+                    break;
+                case "2": // Cargo
+                    updatedFilters.cargo = [selectedRow.id?.toString() || ""];
+                    break;
+                case "3": // Categoria
+                    updatedFilters.categoria = [selectedRow.id?.toString() || ""];
+                    break;
+                case "4": // Vinculo
+                    updatedFilters.vinculo = [selectedRow.id?.toString() || ""];
+                    break;
+                case "7": // Senador
+                    updatedFilters.parlamentar = [selectedRow.id?.toString() || ""];
+                    break;
+            }
         }
 
         setSelectedFilters(updatedFilters);
@@ -275,7 +357,9 @@ export default function FolhaPagamento() {
             cargo: [],
             lotacao: [],
             parlamentar: [],
-            agrupar: "7"
+            grupo_funcional: [],
+            funcionario: [],
+            agrupar: type === "deputado-federal" ? "1" : "7"
         });
 
         setSearchParams({});
@@ -286,35 +370,55 @@ export default function FolhaPagamento() {
         delay(refetch);
     };
 
-    // API queries for filter components
+    // Only show filter options for deputado-federal type
+    const { data: gruposFuncionaisData = [] } = useQuery({
+        queryKey: ["grupos-funcionais"],
+        queryFn: () => fetchGruposFuncionais(),
+        staleTime: 60 * 60 * 1000,
+        enabled: type === "deputado-federal"
+    });
+
+    const { data: funcionariosData = [] } = useQuery({
+        queryKey: ["funcionarios", selectedFilters.ano, selectedFilters.mes],
+        queryFn: () => fetchFuncionarios(selectedFilters.ano),
+        staleTime: 10 * 60 * 1000,
+        enabled: type === "deputado-federal" && !!selectedFilters.ano
+    });
+
+    // Only show filter options for senador type
     const { data: vinculosData = [] } = useQuery({
         queryKey: ["vinculos"],
         queryFn: () => fetchVinculos(),
         staleTime: 60 * 60 * 1000,
+        enabled: type === "senador"
     });
 
     const { data: categoriasData = [] } = useQuery({
         queryKey: ["categorias"],
         queryFn: () => fetchCategorias(),
         staleTime: 60 * 60 * 1000,
+        enabled: type === "senador"
     });
 
     const { data: cargosData = [] } = useQuery({
         queryKey: ["cargos"],
         queryFn: () => fetchCargos(),
         staleTime: 60 * 60 * 1000,
+        enabled: type === "senador"
     });
 
     const { data: lotacoesData = [] } = useQuery({
         queryKey: ["lotacoes"],
         queryFn: () => fetchLotacoes(),
         staleTime: 60 * 60 * 1000,
+        enabled: type === "senador"
     });
 
     const { data: parlamentaresData = [] } = useQuery({
-        queryKey: ["parlamentares", selectedFilters.ano, selectedFilters.mes],
-        queryFn: () => apiClient.post<DropDownOptions[]>("/senador/pesquisa", { ano: parseInt(selectedFilters.ano ?? "0"), mes: parseInt(selectedFilters.mes ?? "0") }),
+        queryKey: ["parlamentares", type, selectedFilters.ano, selectedFilters.mes],
+        queryFn: () => fetchParliamentMembers(type, "", selectedFilters.ano),
         staleTime: 10 * 60 * 1000,
+        enabled: !!type
     });
 
     const getFilterSummary = () => {
@@ -339,7 +443,7 @@ export default function FolhaPagamento() {
             filters.push(`${selectedFilters.lotacao.length} lotação(ões)`);
 
         if (selectedFilters.parlamentar.length > 0)
-            filters.push(`${selectedFilters.parlamentar.length} senador(es)`);
+            filters.push(`${selectedFilters.parlamentar.length} ${type === "deputado-federal" ? "deputado(s)" : "senador(es)"}`);
 
         return filters;
     };
@@ -371,8 +475,8 @@ export default function FolhaPagamento() {
                     <div className="space-y-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-foreground mb-2">Remuneração no Senado</h1>
-                                <p className="text-muted-foreground">Consulte e analise os dados de remuneração no Senado Federal com visualizações interativas e filtros avançados</p>
+                                <h1 className="text-3xl font-bold text-foreground mb-2">{config.title}</h1>
+                                <p className="text-muted-foreground">{config.subtitle}</p>
                             </div>
                             <Button
                                 onClick={() => setShowFilters(!showFilters)}
@@ -438,90 +542,145 @@ export default function FolhaPagamento() {
                                                 </Select>
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
-                                                    Mês
-                                                </label>
-                                                <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
-                                                    <SelectTrigger className="h-11">
-                                                        <SelectValue placeholder="Selecione o mês" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {meses.map((mes) => (
-                                                            <SelectItem key={mes.value} value={mes.value}>
-                                                                {mes.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                            {type === "deputado-federal" && (
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Mês
+                                                    </label>
+                                                    <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
+                                                        <SelectTrigger className="h-11">
+                                                            <SelectValue placeholder="Selecione o mês" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {meses.map((mes) => (
+                                                                <SelectItem key={mes.value} value={mes.value}>
+                                                                    {mes.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            )}
 
                                             <div className="space-y-3">
                                                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     <div className="h-1 w-4 bg-primary rounded"></div>
-                                                    Vínculo
-                                                </label>
-                                                <MultiSelectDropdown
-                                                    items={vinculosData}
-                                                    placeholder="Selecione vínculos"
-                                                    selectedItems={selectedFilters.vinculo}
-                                                    onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, vinculo: items }))}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
-                                                    Categoria
-                                                </label>
-                                                <MultiSelectDropdown
-                                                    items={categoriasData}
-                                                    placeholder="Selecione categorias"
-                                                    selectedItems={selectedFilters.categoria}
-                                                    onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, categoria: items }))}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
-                                                    Cargo
-                                                </label>
-                                                <MultiSelectDropdown
-                                                    items={cargosData}
-                                                    placeholder="Selecione cargos"
-                                                    selectedItems={selectedFilters.cargo}
-                                                    onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, cargo: items }))}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
-                                                    Lotação
-                                                </label>
-                                                <MultiSelectDropdown
-                                                    items={lotacoesData}
-                                                    placeholder="Selecione lotações"
-                                                    selectedItems={selectedFilters.lotacao}
-                                                    onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, lotacao: items }))}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
-                                                    Senador(a)
+                                                    {type === "deputado-federal" ? "Deputado(a)" : "Senador(a)"}
                                                 </label>
                                                 <MultiSelectDropdown
                                                     items={parlamentaresData}
-                                                    placeholder="Selecione senadores"
+                                                    placeholder={`Selecione ${type === "deputado-federal" ? "deputados" : "senadores"}`}
                                                     selectedItems={selectedFilters.parlamentar}
                                                     onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, parlamentar: items }))}
                                                 />
                                             </div>
                                         </div>
+
+                                        {type === "deputado-federal" && (
+                                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Grupo Funcional
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        items={gruposFuncionaisData}
+                                                        placeholder="Selecione grupos funcionais"
+                                                        selectedItems={selectedFilters.grupo_funcional}
+                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, grupo_funcional: items }))}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Funcionário(a)
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        items={funcionariosData}
+                                                        placeholder="Selecione funcionários"
+                                                        selectedItems={selectedFilters.funcionario}
+                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, funcionario: items }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {type === "senador" && (
+                                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Mês
+                                                    </label>
+                                                    <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
+                                                        <SelectTrigger className="h-11">
+                                                            <SelectValue placeholder="Selecione o mês" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {meses.map((mes) => (
+                                                                <SelectItem key={mes.value} value={mes.value}>
+                                                                    {mes.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Vínculo
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        items={vinculosData}
+                                                        placeholder="Selecione vínculos"
+                                                        selectedItems={selectedFilters.vinculo}
+                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, vinculo: items }))}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Categoria
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        items={categoriasData}
+                                                        placeholder="Selecione categorias"
+                                                        selectedItems={selectedFilters.categoria}
+                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, categoria: items }))}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Cargo
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        items={cargosData}
+                                                        placeholder="Selecione cargos"
+                                                        selectedItems={selectedFilters.cargo}
+                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, cargo: items }))}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                        Lotação
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        items={lotacoesData}
+                                                        placeholder="Selecione lotações"
+                                                        selectedItems={selectedFilters.lotacao}
+                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, lotacao: items }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="border-t pt-6">
                                             <div className="space-y-4">
@@ -532,7 +691,7 @@ export default function FolhaPagamento() {
                                                 <RadioGroup
                                                     value={selectedFilters.agrupar}
                                                     onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, agrupar: value }))}
-                                                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3"
+                                                    className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3`}
                                                 >
                                                     {agrupamentoOptions.map((option) => {
                                                         const Icon = option.icon;

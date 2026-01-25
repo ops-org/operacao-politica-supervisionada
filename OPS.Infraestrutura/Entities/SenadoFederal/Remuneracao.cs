@@ -11,25 +11,25 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public int Id { get; set; }
 
         [Column("id_vinculo")]
-        public byte IdVinculo { get; set; }
+        public short IdVinculo { get; set; }
 
         [Column("id_categoria")]
-        public byte IdCategoria { get; set; }
+        public short IdCategoria { get; set; }
 
         [Column("id_cargo")]
-        public byte? IdCargo { get; set; }
+        public short? IdCargo { get; set; }
 
         [Column("id_referencia_cargo")]
-        public byte? IdReferenciaCargo { get; set; }
+        public short? IdReferenciaCargo { get; set; }
 
         [Column("id_simbolo_funcao")]
-        public byte? IdSimboloFuncao { get; set; }
+        public short? IdSimboloFuncao { get; set; }
 
         [Column("id_lotacao")]
         public short IdLotacao { get; set; }
 
         [Column("id_tipo_folha")]
-        public byte IdTipoFolha { get; set; }
+        public short IdTipoFolha { get; set; }
 
         [Column("ano_mes")]
         public int AnoMes { get; set; }

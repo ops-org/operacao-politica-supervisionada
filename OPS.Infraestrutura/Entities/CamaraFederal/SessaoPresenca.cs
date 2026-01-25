@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     {
         [Key]
         [Column("id")]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [Column("id_cf_sessao")]
         public int IdSessao { get; set; }
@@ -17,16 +17,14 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public int IdDeputado { get; set; }
 
         [Column("presente")]
-        [StringLength(1)]
-        public string Presente { get; set; } = null!;
+        public bool Presente { get; set; }
 
         [Column("justificativa")]
         [StringLength(100)]
         public string? Justificativa { get; set; }
 
         [Column("presenca_externa")]
-        [StringLength(1)]
-        public string PresencaExterna { get; set; } = null!;
+        public bool PresencaExterna { get; set; }
 
         // Navigation properties
         public virtual Sessao Sessao { get; set; } = null!;

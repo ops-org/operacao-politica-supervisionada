@@ -18,10 +18,10 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
         public int? Gabinete { get; set; }
 
         [Column("id_partido")]
-        public byte IdPartido { get; set; }
+        public short IdPartido { get; set; }
 
         [Column("id_estado")]
-        public byte IdEstado { get; set; }
+        public short IdEstado { get; set; }
 
         [Column("cpf")]
         [StringLength(11)]

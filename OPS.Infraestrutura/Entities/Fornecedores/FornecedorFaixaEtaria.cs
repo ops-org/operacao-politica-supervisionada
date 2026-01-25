@@ -3,24 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
-    [Table("fornecedor_faixa_etaria")]
+    [Table("fornecedor_faixa_etaria", Schema = "fornecedor")]
     public class FornecedorFaixaEtaria
     {
         [Key]
         [Column("id")]
-        public byte Id { get; set; }
+        public short Id { get; set; }
 
-        [Column("descricao")]
+        [Column("nome")]
         [StringLength(50)]
-        public string Descricao { get; set; } = null!;
+        public string? Nome { get; set; }
 
-        [Column("idade_minima")]
-        public byte? IdadeMinima { get; set; }
-
-        [Column("idade_maxima")]
-        public byte? IdadeMaxima { get; set; }
-
-        // Navigation properties - removed to prevent shadow property creation
-        // public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
+        // Navigation properties
+        public virtual ICollection<FornecedorSocio> FornecedorSocios { get; set; } = new List<FornecedorSocio>();
     }
 }

@@ -57,7 +57,6 @@ namespace OPS.Importador.Assembleias.Acre
             {
                 Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
             }
-            ;
 
             var perfil = document.QuerySelector("#content");
 

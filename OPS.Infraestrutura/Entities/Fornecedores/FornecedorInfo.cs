@@ -35,12 +35,10 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public string? NomeFantasia { get; set; }
 
         [Column("id_fornecedor_atividade_principal")]
-        // [ForeignKey("FornecedorAtividadePrincipal")]
-        public int? IdFornecedorAtividadePrincipal { get; set; }
+        public short? IdFornecedorAtividadePrincipal { get; set; }
 
         [Column("id_fornecedor_natureza_juridica")]
-        // [ForeignKey("FornecedorNaturezaJuridica")]
-        public int? IdFornecedorNaturezaJuridica { get; set; }
+        public short? IdFornecedorNaturezaJuridica { get; set; }
 
         [Column("logradouro_tipo")]
         [StringLength(20)]
@@ -112,7 +110,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         [Column("data_situacao_especial")]
         public DateTime? DataSituacaoEspecial { get; set; }
 
-        [Column("capital_social", TypeName = "decimal(65,2)")]
+        [Column("capital_social", TypeName = "decimal(20,2)")]
         public decimal? CapitalSocial { get; set; }
 
         [Column("porte")]
@@ -152,9 +150,9 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         [Column("obtido_em")]
         public DateTime? ObtidoEm { get; set; }
 
-        [Column("ip_colaborador")]
+        [Column("origem")]
         [StringLength(15)]
-        public string? IpColaborador { get; set; }
+        public string? Origem { get; set; }
 
         [Column("pais")]
         [StringLength(15)]
@@ -166,7 +164,7 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
 
         // Navigation properties
         public virtual Fornecedor Fornecedor { get; set; } = null!;
-        // public virtual FornecedorNaturezaJuridica? FornecedorNaturezaJuridica { get; set; }
-        // public virtual FornecedorAtividade? FornecedorAtividadePrincipal { get; set; }
+        public virtual FornecedorNaturezaJuridica? FornecedorNaturezaJuridica { get; set; }
+        public virtual FornecedorAtividade? FornecedorAtividadePrincipal { get; set; }
     }
 }

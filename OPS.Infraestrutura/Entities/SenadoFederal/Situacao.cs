@@ -3,18 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
-    [Table("sf_referencia_cargo")]
-    public class ReferenciaCargo
+    [Table("sf_situacao", Schema = "senado")]
+    public class Situacao
     {
         [Key]
         [Column("id")]
         public short Id { get; set; }
 
         [Column("descricao")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string Descricao { get; set; } = null!;
 
         // Navigation properties
-        public virtual ICollection<Remuneracao> Remuneracoes { get; set; } = new List<Remuneracao>();
+        public virtual ICollection<SecretarioSenado> Secretarios { get; set; } = new List<SecretarioSenado>();
     }
 }

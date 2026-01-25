@@ -11,7 +11,7 @@ namespace OPS.Infraestrutura.Entities.TSE
         public int Numero { get; set; }
 
         [Column("cargo")]
-        public byte Cargo { get; set; }
+        public short Cargo { get; set; }
 
         [Column("ano")]
         public int Ano { get; set; }

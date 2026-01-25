@@ -4,10 +4,9 @@ using OPS.Infraestrutura.Entities.Fornecedores;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
-    [Table("sf_despesa")]
+    [Table("sf_despesa", Schema = "senado")]
     public class DespesaSenado
     {
-        [Key]
         [Column("id")]
         public long Id { get; set; }
 
@@ -15,7 +14,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public int IdSenador { get; set; }
 
         [Column("id_sf_despesa_tipo")]
-        public byte? IdDespesaTipo { get; set; }
+        public short? IdDespesaTipo { get; set; }
 
         [Column("id_fornecedor")]
         public int? IdFornecedor { get; set; }

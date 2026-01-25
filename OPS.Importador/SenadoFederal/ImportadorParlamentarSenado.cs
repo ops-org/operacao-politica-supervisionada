@@ -408,7 +408,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         #region Mandato
         var exerceuMandato = mandato.Exercicios?.Exercicio?.Any() ?? false;
         var siglaPartido = mandato.Partidos?.Partido?.FirstOrDefault()?.Sigla;
-        byte idPartido = 0;
+        short idPartido = 0;
         if (!string.IsNullOrEmpty(siglaPartido))
         {
             siglaPartido = siglaPartido.Trim();
@@ -466,7 +466,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
         foreach (var partido in mandato.Partidos.Partido)
         {
-            byte idPartido = 0;
+            short idPartido = 0;
             if (!string.IsNullOrEmpty(partido.Sigla) && partido.Sigla != "S/Partido")
             {
                 {
@@ -560,7 +560,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
             {
                 dbContext.LegislaturasSenado.Add(new LegislaturaSenado
                 {
-                    Id = (byte)Convert.ToInt16(legislatura.NumeroLegislatura),
+                    Id = Convert.ToInt16(legislatura.NumeroLegislatura),
                     Inicio = Convert.ToDateTime(legislatura.DataInicio),
                     Final = Convert.ToDateTime(legislatura.DataFim)
                 });
@@ -579,7 +579,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
                 dbContext.MandatoLegislaturasSenado.Add(new MandatoLegislatura
                 {
                     IdMandato = idMandato,
-                    IdLegislatura = (byte)idLegislatura,
+                    IdLegislatura = (short)idLegislatura,
                     IdSenador = idSenador
                 });
             }
@@ -682,7 +682,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         var request = new RestRequest($"https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/{legislatura}.json?v=4");
         request.AddHeader("Accept", "application/json");
 
-        var parlamentares = restClient.Get<ParlamentarLegislatura>(request);
+        var parlamentares = await restClient.GetAsync<ParlamentarLegislatura>(request);
     }
 
     public void AtualizarDatasImportacaoParlamentar(DateTime? pInicio = null, DateTime? pFim = null)

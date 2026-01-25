@@ -8,7 +8,7 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
     {
         [Key]
         [Column("id")]
-        public byte Id { get; set; }
+        public short Id { get; set; }
 
         [Column("inicio")]
         public DateTime Inicio { get; set; }
