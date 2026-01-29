@@ -23,12 +23,15 @@ namespace OPS.Infraestrutura.Entities.Temp
 
         [Column("nome_civil")]
         public string? NomeCivil { get; set; }
-       
+
         //[NotMapped, JsonIgnore]
         //public string? Partido { get; set; }
 
-        [Column("empresa")]
-        public string? Empresa { get; set; }
+        [Column("id_fornecedor")]
+        public int? IdFornecedor { get; set; }
+
+        [Column("fornecedor")]
+        public string? NomeFornecedor { get; set; }
 
         [Column("cnpj_cpf")]
         public string? CnpjCpf { get; set; }

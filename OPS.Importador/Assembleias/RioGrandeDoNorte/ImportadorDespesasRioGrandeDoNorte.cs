@@ -194,7 +194,7 @@ namespace OPS.Importador.Assembleias.RioGrandeDoNorte
                         }
 
                         despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(match.Groups[3].Value);
-                        despesaTemp.Empresa = match.Groups[4].Value;
+                        despesaTemp.NomeFornecedor = match.Groups[4].Value;
 
                         despesaTemp.Valor = Convert.ToDecimal(match.Groups[5].Value, cultureInfo);
 

@@ -320,7 +320,7 @@ export const fetchSenadoResumoAnual = async (): Promise<AnnualSummary> => {
 };
 
 export interface DocumentoDetalhe {
-  id_cf_despesa: number;
+  id_despesa: number;
   id_documento: number;
   numero_documento: string;
   tipo_documento: string;
@@ -334,9 +334,10 @@ export interface DocumentoDetalhe {
   ano: number;
   mes: number;
   competencia: string;
-  id_cf_despesa_tipo: number;
+  id_despesa_tipo: number;
   descricao_despesa: string;
-  id_cf_deputado: number;
+  descricao_despesa_especificacao: string;
+  id_parlamentar: number;
   id_deputado: number;
   nome_parlamentar: string;
   sigla_estado: string;
@@ -344,17 +345,19 @@ export interface DocumentoDetalhe {
   id_fornecedor: number;
   cnpj_cpf: string;
   nome_fornecedor: string;
+  favorecido: string;
+  observacao: string;
   link: number;
   url_documento?: string;
   url_documento_nfe?: string;
   url_detalhes_documento?: string;
   url_demais_documentos_mes?: string;
   url_beneficiario?: string;
-  url_documentos_Deputado_beneficiario?: string;
+  url_documentos_beneficiario?: string;
 }
 
 export interface DocumentoDoDia {
-  id_cf_despesa: number;
+  id_despesa: number;
   id_fornecedor: number;
   cnpj_cpf: string;
   nome_fornecedor: string;
@@ -363,7 +366,7 @@ export interface DocumentoDoDia {
 }
 
 export interface DocumentoDaSubquota {
-  id_cf_despesa: number;
+  id_despesa: number;
   id_fornecedor: number;
   cnpj_cpf: string;
   nome_fornecedor: string;
@@ -371,16 +374,28 @@ export interface DocumentoDaSubquota {
   valor_liquido: string;
 }
 
-export const fetchDocumentoDetalhe = async (id: string): Promise<DocumentoDetalhe> => {
-  return await apiClient.get<DocumentoDetalhe>(`/api/deputado/documento/${id}`);
+export const fetchDocumentoDetalhe = async (
+  id: string,
+  type: "deputado-federal" | "deputado-estadual" | "senador" = "deputado-federal"
+): Promise<DocumentoDetalhe> => {
+  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
+  return await apiClient.get<DocumentoDetalhe>(`/api/${apiType}/documento/${id}`);
 };
 
-export const fetchDocumentosDoMesmoDia = async (id: string): Promise<DocumentoDoDia[]> => {
-  return await apiClient.get<DocumentoDoDia[]>(`/api/deputado/${id}/documentosdomesmodia`);
+export const fetchDocumentosDoMesmoDia = async (
+  id: string,
+  type: "deputado-federal" | "deputado-estadual" | "senador" = "deputado-federal"
+): Promise<DocumentoDoDia[]> => {
+  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
+  return await apiClient.get<DocumentoDoDia[]>(`/api/${apiType}/${id}/documentosdomesmodia`);
 };
 
-export const fetchDocumentosDaSubquotaMes = async (id: string): Promise<DocumentoDaSubquota[]> => {
-  return await apiClient.get<DocumentoDaSubquota[]>(`/api/deputado/${id}/documentosdasubcotames`);
+export const fetchDocumentosDaSubquotaMes = async (
+  id: string,
+  type: "deputado-federal" | "deputado-estadual" | "senador" = "deputado-federal"
+): Promise<DocumentoDaSubquota[]> => {
+  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
+  return await apiClient.get<DocumentoDaSubquota[]>(`/api/${apiType}/${id}/documentosdasubcotames`);
 };
 
 export interface TipoDespesa {
@@ -426,13 +441,9 @@ export interface DespesaCotaParlamentar {
 }
 
 export interface DespesaCotaParlamentarApiResponse {
+  records_total: number;
+  records_filtered: number;
   data: DespesaCotaParlamentar[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
 }
 
 export type SortOrder = 'asc' | 'desc';
@@ -483,13 +494,9 @@ export const fetchDespesasCotaParlamentar = async (
   const result = await apiClient.post<any>(endpoint, payload);
 
   return {
-    data: parseData(result) || [],
-    pagination: {
-      page: page,
-      limit: limit,
-      total: result.recordsTotal || 0,
-      totalPages: Math.ceil((result.recordsTotal || 0) / limit)
-    }
+    records_total: result.records_total || 0,
+    records_filtered: result.records_filtered || 0,
+    data: parseData(result) || []
   };
 
   function parseData(apiResult: any): DespesaCotaParlamentar[] {

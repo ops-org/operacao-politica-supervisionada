@@ -41,7 +41,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
         {
             var colunas = deputado.QuerySelectorAll("td");
             var nomeParlamentar = colunas.First().TextContent.Trim();
-            if (string.IsNullOrEmpty(nomeParlamentar)) continue;
+            //if (string.IsNullOrEmpty(nomeParlamentar)) continue;
 
             var linkDetalhes = colunas.ElementAt(1).QuerySelector("a").Attributes["onclick"].Text();
 
@@ -65,7 +65,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
                     Documento = colunasDespesa.ElementAt(0).TextContent,
                     Observacao = colunasDespesa.ElementAt(1).TextContent,
                     CnpjCpf = colunasDespesa.ElementAt(2).TextContent,
-                    Empresa = colunasDespesa.ElementAt(3).TextContent,
+                    NomeFornecedor = colunasDespesa.ElementAt(3).TextContent,
                     Valor = Convert.ToDecimal(colunasDespesa.ElementAt(4).TextContent, cultureInfo),
                     Ano = (short)ano,
                     Mes = (short)mes,
@@ -91,7 +91,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
         nome = nome.ToUpper() switch
         {
             "PLANO DE SAUDE" => string.Empty,
-            "225/03" => string.Empty, // TODO: Arquivo 2023-07
+            "225/03" => string.Empty, // TODO: Arquivo 2023-07 R$ 650, verificar
             _ => nome
         };
 

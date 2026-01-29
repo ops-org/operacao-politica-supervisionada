@@ -98,6 +98,13 @@ namespace OPS.Importador.Assembleias.SantaCatarina
                         Origem = caminhoArquivo,
                     };
 
+                    // Nome da empresa vem no favorecido para despesas que não sõa de diárias e passagens.
+                    if(despesaTemp.TipoVerba != "DIÁRIAS" && despesaTemp.TipoVerba != "PASSAGENS")
+                    {
+                        despesaTemp.NomeFornecedor = despesaTemp.Favorecido;
+                        despesaTemp.Favorecido = null;
+                    }
+
                     InserirDespesaTemp(despesaTemp);
                 }
 
@@ -115,46 +122,21 @@ namespace OPS.Importador.Assembleias.SantaCatarina
                         ), 0);");
         }
 
-        public override void InsereFornecedorFaltante()
+        public override void AjustarDados()
         {
-            // Faz nada.
-        }
-
-        //    public override void InsereDeputadoFaltante()
-        //    {
-        //        var affected = connection.Execute(@$"
-        //INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
-        //select distinct Nome, cpf, {idEstado}
-        //from temp.cl_despesa_temp
-        //where nome not in (
-        //    select nome_parlamentar FROM assembleias.cl_deputado where id_estado =  {idEstado} 
-        //    UNION all
-        //    select nome_civil FROM assembleias.cl_deputado where id_estado =  {idEstado} 
-        //);
-        //                ");
-
-        //        if (affected > 0)
-        //        {
-        //            logger.LogInformation("{Itens} parlamentares incluidos!", affected);
-        //        }
-        //    }
-
-        public override void InsereDespesaFinal(int ano)
-        {
-            base.InsereDespesaFinal(ano);
-
             connection.Execute(@"
-UPDATE assembleias.cl_despesa SET id_fornecedor = 89481, favorecido = null WHERE id_fornecedor IS NULL AND favorecido ILIKE 'Brasil Telecom%';
-UPDATE assembleias.cl_despesa SET id_fornecedor = 458, favorecido = null WHERE id_fornecedor IS NULL AND (favorecido ILIKE 'Oi S%' OR favorecido ILIKE 'Oi Fixo%' OR favorecido ILIKE 'Oi');
-UPDATE assembleias.cl_despesa SET id_fornecedor = 301, favorecido = null WHERE id_fornecedor IS NULL AND (favorecido ILIKE 'Global Village Telecom%' OR favorecido ILIKE 'GVT');
-UPDATE assembleias.cl_despesa SET id_fornecedor = 8688, favorecido = null WHERE id_fornecedor IS NULL AND favorecido ILIKE 'Claro';
-UPDATE assembleias.cl_despesa SET id_fornecedor = 4163, favorecido = null WHERE id_fornecedor IS NULL AND favorecido ILIKE 'NET';
-UPDATE assembleias.cl_despesa SET id_fornecedor = 19411 WHERE id_fornecedor IS NULL AND id_cl_despesa_especificacao = 21; -- Restaurante da AFALESC
-UPDATE assembleias.cl_despesa SET id_fornecedor = 663 WHERE id_fornecedor IS NULL AND id_cl_despesa_especificacao IN(28, 58); -- Energia Elétrica ( Escritório de Apoio ) & Escritório de Apoio - Energia Elétrica
-UPDATE assembleias.cl_despesa SET id_fornecedor = 1316 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao IN(24, 56); -- Água (Escritório de Apoio) & Escritório de Apoio - Água
-UPDATE assembleias.cl_despesa SET id_fornecedor = 1163 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao = 52; -- Assinatura de TV a Cabo
-UPDATE assembleias.cl_despesa SET id_fornecedor = 42634 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao = 6; -- Correspondência / Telegrama
-UPDATE assembleias.cl_despesa SET id_fornecedor = 47839 WHERE id_fornecedor IS NULL and id_cl_despesa_especificacao = 63; -- Locação de Veículo (Contrato)
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 89481 WHERE id_fornecedor IS NULL AND fornecedor ILIKE 'Brasil Telecom%';
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 458 WHERE id_fornecedor IS NULL AND (fornecedor ILIKE 'Oi S%' OR fornecedor ILIKE 'Oi Fixo%' OR fornecedor ILIKE 'Oi');
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 301 WHERE id_fornecedor IS NULL AND (fornecedor ILIKE 'Global Village Telecom%' OR fornecedor ILIKE 'GVT');
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 8688 WHERE id_fornecedor IS NULL AND fornecedor ILIKE 'Claro';
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 4163 WHERE id_fornecedor IS NULL AND fornecedor ILIKE 'NET';
+
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 19411 WHERE id_fornecedor IS NULL AND lower(unaccent(despesa_tipo)) =  lower(unaccent('Restaurante da AFALESC'));
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 663 WHERE id_fornecedor IS NULL AND (lower(unaccent(despesa_tipo)) = lower(unaccent('Energia Elétrica ( Escritório de Apoio )')) or lower(unaccent(despesa_tipo)) = lower(unaccent('Escritório de Apoio - Energia Elétrica')));
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 1316 WHERE id_fornecedor IS NULL and (lower(unaccent(despesa_tipo)) = lower(unaccent('Água (Escritório de Apoio)')) OR lower(unaccent(despesa_tipo)) = lower(unaccent('Escritório de Apoio - Água')));
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 1163 WHERE id_fornecedor IS NULL and lower(unaccent(despesa_tipo)) = lower(unaccent('Assinatura de TV a Cabo'));
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 42634 WHERE id_fornecedor IS NULL and lower(unaccent(despesa_tipo)) = lower(unaccent('Correspondência / Telegrama'));
+UPDATE temp.cl_despesa_temp SET id_fornecedor = 47839 WHERE id_fornecedor IS NULL and lower(unaccent(despesa_tipo)) = lower(unaccent('Locação de Veículo (Contrato)'));
 ");
         }
     }

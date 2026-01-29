@@ -33,15 +33,11 @@ namespace OPS.Importador.Comum.Utilities
 {
     public class ComputerVisionOcr
     {
-        // Add your Computer Vision key and endpoint
-        static string key = "52a29fecf4e44d428fd0f9cbb3d2f370";
-        static string endpoint = "https://ops-ocr.cognitiveservices.azure.com/";
-
         private readonly ComputerVisionClient client;
 
-        public ComputerVisionOcr()
+        public ComputerVisionOcr(AppSettings appSettings)
         {
-            client = new ComputerVisionClient(new ApiKeyServiceClientCredentials(key)) { Endpoint = endpoint };
+            client = new ComputerVisionClient(new ApiKeyServiceClientCredentials(appSettings.ComputerVisionOcrKey)) { Endpoint = appSettings.ComputerVisionOcrUrl };
         }
 
         public async Task<string> ReadFileLocal(string localFile)

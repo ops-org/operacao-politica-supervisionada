@@ -85,7 +85,7 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
                             Ano = (short)ano,
                             Mes = Convert.ToInt16(mesComDespesa.Mes),
                             CnpjCpf = Utils.RemoveCaracteresNaoNumericos(despesa.Cnpj),
-                            Empresa = despesa.Empresa,
+                            NomeFornecedor = despesa.Empresa,
                             Documento = documento.Docid,
                             Valor = Convert.ToDecimal(despesa.Valor, cultureInfo),
                             DataEmissao = DateOnly.Parse(despesa.Data, cultureInfo),

@@ -146,118 +146,118 @@ const Busca = () => {
     const showTabs = hasResults && totalResults > 0;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-            <Header />
-            <main className="container mx-auto px- py-8">
-                {/* Hero Section */}
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-                        <Search className="w-8 h-8 text-primary" />
-                    </div>
-                    <h1 className="text-4xl font-bold text-foreground mb-4">
-                        Busca por Parlamentar ou Fornecedor
-                    </h1>
-                    <p className="text-lg text-muted-foreground mx-auto">
-                        Encontre os deputados, senadores e empresas que interagem com o poder público
-                    </p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+            <Search className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            Busca por Parlamentar ou Fornecedor
+          </h1>
+          <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+            Encontre os deputados, senadores e empresas que interagem com o poder público
+          </p>
+        </div>
+
+        {/* Search Form */}
+        <Card className="mb-12 shadow-lg border-0 bg-card/80 backdrop-blur-sm">
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="flex gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar por deputado, senador ou empresa..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 text-lg border-2 focus:border-primary transition-colors"
+                  />
                 </div>
-
-                {/* Search Form */}
-                <Card className="mb-12 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                    <CardContent className="p-8">
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="flex gap-4">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                                    <Input
-                                        type="text"
-                                        placeholder="Buscar por deputado, senador ou empresa..."
-                                        value={query}
-                                        onChange={(e) => setQuery(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 text-lg border-2 focus:border-primary transition-colors"
-                                    />
-                                </div>
-                                <Button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all transform hover:scale-105 whitespace-nowrap"
-                                >
-                                    {loading ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Pesquisando...
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <Search className="w-5 h-5" />
-                                            Pesquisar
-                                        </div>
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* No Results Alert */}
-                {noResults && (
-                    <div className="text-center py-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full mb-4">
-                            <Search className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <Alert className="max-w-md mx-auto border-0 bg-muted/50">
-                            <AlertDescription className="text-center">
-                                Nenhum resultado encontrado para "{query}"
-                            </AlertDescription>
-                        </Alert>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all transform hover:scale-105 whitespace-nowrap"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Pesquisando...
                     </div>
-                )}
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Search className="w-5 h-5" />
+                      Pesquisar
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
-                {/* Results Tabs */}
-                {showTabs && (
-                    <div className="mb-8">
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1">
-                                <TabsTrigger
-                                    value="all"
-                                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                                >
-                                    <Search className="w-4 h-4" />
-                                    Todos ({totalResults})
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="senadores"
-                                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                                    disabled={results.senador.length === 0}
-                                >
-                                    <Users className="w-4 h-4" />
-                                    Senadores ({results.senador.length})
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="deputados"
-                                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                                    disabled={results.deputado_federal.length === 0}
-                                >
-                                    <Users className="w-4 h-4" />
-                                    Deputados Federais ({results.deputado_federal.length})
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="deputados-estaduais"
-                                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                                    disabled={results.deputado_estadual.length === 0}
-                                >
-                                    <Users className="w-4 h-4" />
-                                    Deputados Estaduais ({results.deputado_estadual.length})
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="empresas"
-                                    className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                                    disabled={results.fornecedor.length === 0}
-                                >
-                                    <Building2 className="w-4 h-4" />
-                                    Empresas ({results.fornecedor.length})
-                                </TabsTrigger>
-                            </TabsList>
+        {/* No Results Alert */}
+        {noResults && (
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full mb-4">
+              <Search className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <Alert className="max-w-md mx-auto border-0 bg-muted/50">
+              <AlertDescription className="text-center">
+                Nenhum resultado encontrado para "{query}"
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {/* Results Tabs */}
+        {showTabs && (
+          <div className="mb-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1">
+                <TabsTrigger
+                  value="all"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
+                  <Search className="w-4 h-4" />
+                  Todos ({totalResults})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="senadores"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  disabled={results.senador.length === 0}
+                >
+                  <Users className="w-4 h-4" />
+                  Senadores ({results.senador.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="deputados"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  disabled={results.deputado_federal.length === 0}
+                >
+                  <Users className="w-4 h-4" />
+                  Deputados Federais ({results.deputado_federal.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="deputados-estaduais"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  disabled={results.deputado_estadual.length === 0}
+                >
+                  <Users className="w-4 h-4" />
+                  Deputados Estaduais ({results.deputado_estadual.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="empresas"
+                  className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  disabled={results.fornecedor.length === 0}
+                >
+                  <Building2 className="w-4 h-4" />
+                  Empresas ({results.fornecedor.length})
+                </TabsTrigger>
+              </TabsList>
 
                             <TabsContent value="all" className="mt-8 space-y-12">
                                 {results.senador.length > 0 && (
@@ -279,7 +279,7 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                                                     >
                                                         {/* Card Header */}
                                                         <div className={`relative overflow-hidden ${senador.ativo
@@ -294,7 +294,7 @@ const Busca = () => {
                                                                         </h3>
                                                                         <p className="text-sm opacity-90 truncate">{senador.nome_civil}</p>
                                                                     </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
                                                                         {senador.situacao || 'Ativo'}
                                                                     </Badge>
                                                                 </div>
@@ -306,7 +306,7 @@ const Busca = () => {
                                                             <div className="flex gap-3">
                                                                 {/* Image */}
                                                                 <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                                                                         <AvatarImage
                                                                             src={`//static.ops.org.br/senador/${senador.id_sf_senador}_120x160.jpg`}
                                                                             alt={senador.nome_parlamentar}
@@ -378,7 +378,7 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                                                     >
                                                         {/* Card Header */}
                                                         <div className={`relative overflow-hidden ${deputado.ativo
@@ -393,7 +393,7 @@ const Busca = () => {
                                                                         </h3>
                                                                         <p className="text-sm opacity-90 truncate">{deputado.nome_civil}</p>
                                                                     </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
                                                                         {deputado.situacao || 'Ativo'}
                                                                     </Badge>
                                                                 </div>
@@ -405,7 +405,7 @@ const Busca = () => {
                                                             <div className="flex gap-3">
                                                                 {/* Image */}
                                                                 <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                                                                         <AvatarImage
                                                                             src={`//static.ops.org.br/depfederal/${deputado.id_cf_deputado}.jpg`}
                                                                             alt={deputado.nome_parlamentar}
@@ -477,7 +477,7 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                                                     >
                                                         {/* Card Header */}
                                                         <div className={`relative overflow-hidden ${deputado.ativo
@@ -504,7 +504,7 @@ const Busca = () => {
                                                             <div className="flex gap-3">
                                                                 {/* Image */}
                                                                 <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                                                                         <AvatarImage
                                                                             src={`//static.ops.org.br/depestadual/${deputado.id_cl_deputado}.jpg`}
                                                                             alt={deputado.nome_parlamentar}
@@ -567,7 +567,7 @@ const Busca = () => {
                                                 {results.fornecedor.length} empres{pluralize(results.fornecedor.length, 'a', 'as')} encontrad{pluralize(results.fornecedor.length, 'a', 'as')}
                                             </h2>
                                         </div>
-                                        <Card className="shadow-lg border-0 bg-white">
+                                        <Card className="shadow-lg border-0 bg-card">
                                             <CardContent className="p-0">
                                                 <div className="divide-y divide-border/50">
                                                     {results.fornecedor.map((fornecedor, index) => (
@@ -647,7 +647,7 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                                                     >
                                                         {/* Card Header */}
                                                         <div className={`relative overflow-hidden ${senador.ativo
@@ -662,7 +662,7 @@ const Busca = () => {
                                                                         </h3>
                                                                         <p className="text-sm opacity-90 truncate">{senador.nome_civil}</p>
                                                                     </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
                                                                         {senador.situacao || 'Ativo'}
                                                                     </Badge>
                                                                 </div>
@@ -674,7 +674,7 @@ const Busca = () => {
                                                             <div className="flex gap-3">
                                                                 {/* Image */}
                                                                 <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                                                                         <AvatarImage
                                                                             src={`//static.ops.org.br/senador/${senador.id_sf_senador}_120x160.jpg`}
                                                                             alt={senador.nome_parlamentar}
@@ -748,7 +748,7 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                                                     >
                                                         {/* Card Header */}
                                                         <div className={`relative overflow-hidden ${deputado.ativo
@@ -763,7 +763,7 @@ const Busca = () => {
                                                                         </h3>
                                                                         <p className="text-sm opacity-90 truncate">{deputado.nome_civil}</p>
                                                                     </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
                                                                         {deputado.situacao || 'Ativo'}
                                                                     </Badge>
                                                                 </div>
@@ -775,7 +775,7 @@ const Busca = () => {
                                                             <div className="flex gap-3">
                                                                 {/* Image */}
                                                                 <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                                                                         <AvatarImage
                                                                             src={`//static.ops.org.br/depfederal/${deputado.id_cf_deputado}.jpg`}
                                                                             alt={deputado.nome_parlamentar}
@@ -849,7 +849,7 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                                                     >
                                                         {/* Card Header */}
                                                         <div className={`relative overflow-hidden ${deputado.ativo
@@ -864,7 +864,7 @@ const Busca = () => {
                                                                         </h3>
                                                                         <p className="text-sm opacity-90 truncate">{deputado.nome_civil}</p>
                                                                     </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
                                                                         {deputado.situacao || 'Ativo'}
                                                                     </Badge>
                                                                 </div>
@@ -876,7 +876,7 @@ const Busca = () => {
                                                             <div className="flex gap-3">
                                                                 {/* Image */}
                                                                 <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                                                                         <AvatarImage
                                                                             src={`//static.ops.org.br/depestadual/${deputado.id_cl_deputado}.jpg`}
                                                                             alt={deputado.nome_parlamentar}
@@ -941,7 +941,7 @@ const Busca = () => {
                                                 {results.fornecedor.length} empres{pluralize(results.fornecedor.length, 'a', 'as')} encontrad{pluralize(results.fornecedor.length, 'a', 'as')}
                                             </h2>
                                         </div>
-                                        <Card className="shadow-lg border-0 bg-white">
+                                        <Card className="shadow-lg border-0 bg-card">
                                             <CardContent className="p-0">
                                                 <div className="divide-y divide-border/50">
                                                     {results.fornecedor.map((fornecedor, index) => (

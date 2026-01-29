@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -103,7 +104,7 @@ namespace OPS.Core.Repositories
             }).ToList();
         }
 
-        public async Task<dynamic> Documento(int id)
+        public async Task<DocumentoDetalheDTO> Documento(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -111,38 +112,31 @@ namespace OPS.Core.Repositories
 
                 strSql.AppendLine(@"
 					SELECT
-						l.id as id_cl_despesa
-						, l.id_documento
-						, l.numero_documento
-						, l.tipo_documento
-						, l.data_emissao
-						, l.valor_documento
-						, l.valor_glosa
-						, l.valor_liquido
-						, l.valor_restituicao
-						, ps.nome as nome_passageiro
-						, tv.descricao as trecho_viagem
-						, l.ano
-						, l.mes
-						, td.id as id_cl_despesa_tipo
-						, td.descricao as descricao_despesa
-						, d.id as id_cl_deputado
-						, d.id_deputado
-						, d.nome_parlamentar
-						, e.sigla as sigla_estado
-						, p.sigla as sigla_partido
-						, pj.id AS id_fornecedor
-						, pj.cnpj_cpf
-						, pj.nome AS nome_fornecedor
-                        , l.tipo_link
-					FROM assembleias.cl_despesa l
-					LEFT JOIN fornecedor.fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
-					LEFT JOIN assembleias.cl_deputado d ON d.id = l.id_cl_deputado
-					LEFT JOIN assembleias.cl_despesa_tipo td ON td.id = l.id_cl_despesa_tipo
-					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-	                LEFT JOIN trecho_viagem tv ON tv.id = l.id_trecho_viagem
-					LEFT JOIN pessoa ps ON ps.id = l.id_passageiro
+				        l.id as id_despesa
+				        , l.numero_documento
+				        , l.data_emissao
+				        , l.valor_liquido
+				        , l.ano_mes
+				        , td.id as id_despesa_tipo
+				        , td.descricao as descricao_despesa_tipo
+                        , te.descricao as descricao_despesa_especificacao
+				        , d.id as id_parlamentar
+				        , d.nome_parlamentar
+				        , e.id as id_estado
+				        , e.sigla as sigla_estado
+				        , p.sigla as sigla_partido
+				        , pj.id AS id_fornecedor
+				        , pj.cnpj_cpf
+				        , pj.nome AS nome_fornecedor
+                        , l.favorecido        
+                        , l.observacao
+                    FROM assembleias.cl_despesa l
+                    LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+                    LEFT JOIN assembleias.cl_deputado d ON d.id = l.id_cl_deputado
+                    LEFT JOIN assembleias.cl_despesa_tipo td ON td.id = l.id_cl_despesa_tipo
+                    LEFT JOIN assembleias.cl_despesa_especificacao te ON te.id = l.id_cl_despesa_especificacao
+                    LEFT JOIN partido p on p.id = d.id_partido
+                    LEFT JOIN estado e on e.id = d.id_estado
 					WHERE l.id = @id
 				 ");
 
@@ -150,47 +144,41 @@ namespace OPS.Core.Repositories
                 {
                     if (await reader.ReadAsync())
                     {
-                        string sTipoDocumento = "";
-                        switch (await reader.GetValueOrDefaultAsync<int>(3))
-                        {
-                            case 0: sTipoDocumento = "Nota Fiscal"; break;
-                            case 1: sTipoDocumento = "Recibo"; break;
-                            case 2: case 3: sTipoDocumento = "Despesa no Exterior"; break;
-                        }
-                        string cnpjCpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(21));
-                        var ano = await reader.GetValueOrDefaultAsync<int>(11);
-                        var mes = await reader.GetValueOrDefaultAsync<short>(12);
+                        string cnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString());
+                        var anoMes = reader["ano_mes"].ToString();
+                        var ano = Convert.ToInt16(anoMes.Substring(0, 4));
+                        var mes = Convert.ToInt16(anoMes.Substring(4));
+                        var idEstado = Convert.ToInt16(reader["id_estado"]);
 
-                        var result = new
+                        var documento = new DocumentoDetalheDTO
                         {
-                            id_cl_despesa = await reader.GetValueOrDefaultAsync<dynamic>(0),
-                            id_documento = await reader.GetValueOrDefaultAsync<dynamic>(1),
-                            numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
-                            tipo_documento = sTipoDocumento,
-                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<DateTime?>(4)),
-                            valor_documento = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(5)),
-                            valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
-                            valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
-                            valor_restituicao = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(8)),
-                            nome_passageiro = await reader.GetValueOrDefaultAsync<string>(9),
-                            trecho_viagem = await reader.GetValueOrDefaultAsync<string>(10),
-                            ano,
-                            mes,
-                            competencia = $"{mes:00}/{ano:0000}",
-                            id_cl_despesa_tipo = await reader.GetValueOrDefaultAsync<dynamic>(13),
-                            descricao_despesa = await reader.GetValueOrDefaultAsync<string>(14),
-                            id_cl_deputado = await reader.GetValueOrDefaultAsync<dynamic>(15),
-                            id_deputado = await reader.GetValueOrDefaultAsync<dynamic>(16),
-                            nome_parlamentar = await reader.GetValueOrDefaultAsync<string>(17),
-                            sigla_estado = await reader.GetValueOrDefaultAsync<string>(18),
-                            sigla_partido = await reader.GetValueOrDefaultAsync<string>(19),
-                            id_fornecedor = await reader.GetValueOrDefaultAsync<dynamic>(20),
-                            cnpj_cpf = cnpjCpf,
-                            nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(22),
-                            link = await reader.GetValueOrDefaultAsync<dynamic>(23)
+                            IdDespesa = reader["id_despesa"],
+                            NumeroDocumento = reader["numero_documento"].ToString(),
+                            DataEmissao = Utils.FormataData(reader["data_emissao"]),
+                            ValorLiquido = Utils.FormataValor(Convert.ToDecimal(reader["valor_liquido"])),
+                            Ano = ano,
+                            Mes = mes,
+                            Competencia = $"{mes:00}/{ano:0000}",
+                            IdDespesaTipo = reader["id_despesa_tipo"],
+                            DescricaoDespesa = reader["descricao_despesa_tipo"].ToString(),
+                            DescricaoDespesaEspecificacao = reader["descricao_despesa_especificacao"].ToString(),
+                            IdParlamentar = reader["id_parlamentar"],
+                            NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                            SiglaEstado = reader["sigla_estado"].ToString(),
+                            SiglaPartido = reader["sigla_partido"].ToString(),
+                            IdFornecedor = reader["id_fornecedor"],
+                            CnpjCpf = cnpjCpf,
+                            NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                            Favorecido = reader["favorecido"].ToString(),
+                            Observacao = reader["observacao"].ToString()
                         };
 
-                        return result;
+                        // TODO Implementar links das despesas
+                        if (idEstado == 0)
+                        {
+                        }
+
+                        return documento;
                     }
                 }
                 return null;
@@ -205,8 +193,9 @@ namespace OPS.Core.Repositories
 
                 strSql.AppendLine(@"
 					SELECT
-						l.id as id_cl_despesa
+						l.id as id_despesa
 						, pj.id as id_fornecedor
+						, pj.cnpj_cpf
 						, pj.nome as nome_fornecedor
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
@@ -231,11 +220,12 @@ namespace OPS.Core.Repositories
                 {
                     lstRetorno.Add(new
                     {
-                        id_cl_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                        id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
-                        nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
-                        sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
-                        valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
+                        IdDespesa = Convert.ToInt64(reader["id_despesa"]),
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                        NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                        SiglaEstadoFornecedor = reader["sigla_estado_fornecedor"].ToString(),
+                        ValorLiquido = Utils.FormataValor(reader["valor_liquido"])
                     });
                 }
 
@@ -251,20 +241,20 @@ namespace OPS.Core.Repositories
 
                 strSql.AppendLine(@"
 					SELECT
-						l.id as id_cl_despesa
+						l.id as id_despesa
 						, pj.id as id_fornecedor
+                        , pj.cnpj_cpf
 						, pj.nome as nome_fornecedor
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
 					FROM (
-						select id, id_cl_deputado, id_fornecedor, id_cl_despesa_tipo, ano, mes 
+						select id, id_cl_deputado, id_fornecedor, id_cl_despesa_tipo, ano_mes 
                         FROM assembleias.cl_despesa
 						where id = @id
 					) l1 
 					INNER JOIN assembleias.cl_despesa l on
 					l1.id_cl_deputado = l.id_cl_deputado and
-					l1.ano = l.ano and
-					l1.mes = l.mes and
+					l1.ano_mes = l.ano_mes and
 					l1.id_cl_despesa_tipo = l.id_cl_despesa_tipo and
 					l1.id <> l.id
 					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
@@ -280,11 +270,12 @@ namespace OPS.Core.Repositories
                 {
                     lstRetorno.Add(new
                     {
-                        id_cl_despesa = await reader.GetValueOrDefaultAsync<ulong>(0),
-                        id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
-                        nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(2),
-                        sigla_estado_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
-                        valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal>(4))
+                        IdDespesa = Convert.ToInt64(reader["id_despesa"]),
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                        NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                        SiglaEstadoFornecedor = reader["sigla_estado_fornecedor"].ToString(),
+                        ValorLiquido = Utils.FormataValor(reader["valor_liquido"])
                     });
                 }
 

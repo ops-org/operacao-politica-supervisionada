@@ -94,7 +94,7 @@ namespace OPS.API.Controllers
         }
 
         [HttpGet("Documento/{id:int}")]
-        public async Task<dynamic> Documento(int id)
+        public async Task<ActionResult<DocumentoDetalheDTO>> Documento(int id)
         {
             var result = await _deputadoRepository.Documento(id);
 

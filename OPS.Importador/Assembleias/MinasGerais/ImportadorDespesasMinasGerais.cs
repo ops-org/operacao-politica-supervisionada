@@ -84,7 +84,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
                             Nome = deputado.NomeParlamentar,
                             TipoDespesa = despesa.DescTipoDespesa,
                             CnpjCpf = despesa.CpfCnpj,
-                            Empresa = despesa.NomeEmitente,
+                            NomeFornecedor = despesa.NomeEmitente,
                             Valor = Convert.ToDecimal(despesa.ValorReembolsado, cultureInfo),
                             Origem = address
                         };

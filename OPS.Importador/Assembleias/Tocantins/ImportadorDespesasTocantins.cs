@@ -191,7 +191,7 @@ namespace OPS.Importador.Assembleias.Tocantins
                                 Mes = (short)mes,
                                 TipoDespesa = "Indenizações e Restituições",
                                 DataEmissao = new DateOnly(ano, mes, 1),
-                                Empresa = "Telefone",
+                                NomeFornecedor = "Telefone",
                                 Valor = Convert.ToDecimal(row[idxNumero].GetText(), cultureInfo),
                                 Origem = filename
                             };
@@ -215,7 +215,7 @@ namespace OPS.Importador.Assembleias.Tocantins
                                 TipoDespesa = "Indenizações e Restituições",
                                 Documento = "NDC-e/261305",
                                 DataEmissao = new DateOnly(2023, 3, 8),
-                                Empresa = "Auto Posto de Combustíveis Lago Sul Ltda",
+                                NomeFornecedor = "Auto Posto de Combustíveis Lago Sul Ltda",
                                 CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos("32.169.795/0001-52"),
                                 Valor = Convert.ToDecimal("200,00", cultureInfo),
                                 Origem = filename
@@ -283,7 +283,7 @@ namespace OPS.Importador.Assembleias.Tocantins
                                     TipoDespesa = "Indenizações e Restituições",
                                     Documento = Core.Utilities.Utils.RemoveCaracteresNumericos(row[idxTipo].GetText().Trim()) + "/" + row[idxNumero].GetText().Trim(),
                                     DataEmissao = AjustaData(row[idxData].GetText(), ano, mes),
-                                    Empresa = row[idxSaldo].GetText(),
+                                    NomeFornecedor = row[idxSaldo].GetText(),
                                     Origem = filename
                                 };
 
@@ -297,7 +297,7 @@ namespace OPS.Importador.Assembleias.Tocantins
                                         valor = cnpj.Substring(14);
                                     }
 
-                                    despesaTemp.Empresa = row[idxEmitente].GetText();
+                                    despesaTemp.NomeFornecedor = row[idxEmitente].GetText();
                                     despesaTemp.CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos(cpfCnpj);
                                     despesaTemp.Valor = Convert.ToDecimal(valor, cultureInfo);
                                 }
@@ -331,7 +331,7 @@ namespace OPS.Importador.Assembleias.Tocantins
                                 TipoDespesa = "Indenizações e Restituições",
                                 Documento = Core.Utilities.Utils.RemoveCaracteresNumericos(row[idxTipo].GetText().Trim()) + "/" + row[idxNumero].GetText().Trim(),
                                 DataEmissao = AjustaData(row[idxData].GetText(), ano, mes),
-                                Empresa = row[idxEmitente].GetText(),
+                                NomeFornecedor = row[idxEmitente].GetText(),
                                 CnpjCpf = Core.Utilities.Utils.RemoveCaracteresNaoNumericos(row[idxCnpj].GetText()),
                                 Valor = Convert.ToDecimal(row[idxValor].GetText(), cultureInfo),
                                 Origem = filename
@@ -485,6 +485,7 @@ namespace OPS.Importador.Assembleias.Tocantins
                 case "21/047/2025": data = "21/07/2025"; break;
                 case "15/0//2025": data = "15/08/2025"; break;
                 case "404/10/2025": data = "04/10/2025"; break;
+                case "14/112025": data = "14/11/2025"; break;
             }
 
             try

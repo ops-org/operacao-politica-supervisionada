@@ -339,9 +339,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         }
 
                     }
-                    else if (despesaTemp.CnpjCpf.Length == 14 && !ImportacaoFornecedor.validarCNPJ(despesaTemp.CnpjCpf))
+                    else if (!string.IsNullOrEmpty(despesaTemp.CnpjCpf) && !Utils.IsCpf(despesaTemp.CnpjCpf) && !Utils.IsCnpj(despesaTemp.CnpjCpf))
                     {
-                        logger.LogWarning("CPNJ '{CnpjCpf} - {NomeEmpresa}' Invalido.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
+                        logger.LogWarning("CNPJ/CPF inválido na despesa. Deputado: {Deputado}, CNPJ/CPF: {CnpjCpf} - {NomeEmpresa}",
+                           despesaTemp.NomeParlamentar, despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
                     }
 
                     // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.

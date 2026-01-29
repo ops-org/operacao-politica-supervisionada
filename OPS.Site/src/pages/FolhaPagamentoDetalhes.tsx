@@ -61,11 +61,24 @@ export default function FolhaPagamentoDetalhes() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
             <LoadingOverlay isLoading={isLoading} content="Carregando detalhes da remuneração..." />
 
             <Header />
             <main className="container mx-auto px-4 py-8">
+                {/* Hero Section */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                        <Calculator className="w-8 h-8 text-primary" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-foreground mb-4">
+                        Remuneração/Subsídio no Senado
+                    </h1>
+                    <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+                        Visualização completa dos dados de remuneração
+                    </p>
+                </div>
+
                 <div className="space-y-6">
                     {/* Header */}
                     <div className="text-center space-y-4">
@@ -83,9 +96,9 @@ export default function FolhaPagamentoDetalhes() {
                     {remuneracao && (
                         <>
                             {/* Basic Information */}
-                            <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <div className="bg-card border border-border shadow-sm overflow-hidden">
+                                <div className="bg-muted px-6 py-4 border-b border-border">
+                                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                                         <User className="h-5 w-5 text-blue-600" />
                                         Informações Funcionais
                                     </h3>
@@ -94,8 +107,8 @@ export default function FolhaPagamentoDetalhes() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {remuneracao.cargo && (
                                             <div>
-                                                <span className="text-sm text-gray-500">Cargo</span>
-                                                <p className="text-sm font-medium text-gray-900 mt-1">
+                                                <span className="text-sm text-muted-foreground">Cargo</span>
+                                                <p className="text-sm font-medium text-foreground mt-1">
                                                     {formatNameAcronym(remuneracao.cargo, remuneracao.referencia_cargo)}
                                                 </p>
                                             </div>
@@ -103,37 +116,37 @@ export default function FolhaPagamentoDetalhes() {
 
                                         {remuneracao.vinculo && (
                                             <div>
-                                                <span className="text-sm text-gray-500">Vínculo</span>
-                                                <p className="text-sm font-medium text-gray-900 mt-1">{remuneracao.vinculo}</p>
+                                                <span className="text-sm text-muted-foreground">Vínculo</span>
+                                                <p className="text-sm font-medium text-foreground mt-1">{remuneracao.vinculo}</p>
                                             </div>
                                         )}
 
                                         {remuneracao.lotacao && (
                                             <div>
-                                                <span className="text-sm text-gray-500">Lotação</span>
-                                                <p className="text-sm font-medium text-gray-900 mt-1">{remuneracao.lotacao}</p>
+                                                <span className="text-sm text-muted-foreground">Lotação</span>
+                                                <p className="text-sm font-medium text-foreground mt-1">{remuneracao.lotacao}</p>
                                             </div>
                                         )}
 
                                         {remuneracao.admissao && (
                                             <div>
-                                                <span className="text-sm text-gray-500">Admissão</span>
-                                                <p className="text-sm font-medium text-gray-900 mt-1">{remuneracao.admissao}</p>
+                                                <span className="text-sm text-muted-foreground">Admissão</span>
+                                                <p className="text-sm font-medium text-foreground mt-1">{remuneracao.admissao}</p>
                                             </div>
                                         )}
 
                                         {remuneracao.categoria && (
                                             <div>
-                                                <span className="text-sm text-gray-500">Categoria</span>
-                                                <p className="text-sm font-medium text-gray-900 mt-1">
+                                                <span className="text-sm text-muted-foreground">Categoria</span>
+                                                <p className="text-sm font-medium text-foreground mt-1">
                                                     {formatNameAcronym(remuneracao.categoria, remuneracao.simbolo_funcao)}
                                                 </p>
                                             </div>
                                         )}
 
                                         <div>
-                                            <span className="text-sm text-gray-500">Folha</span>
-                                            <p className="text-sm font-medium text-gray-900 mt-1">
+                                            <span className="text-sm text-muted-foreground">Folha</span>
+                                            <p className="text-sm font-medium text-foreground mt-1">
                                                 {remuneracao.tipo_folha} ({remuneracao.ano_mes})
                                             </p>
                                         </div>
@@ -142,10 +155,10 @@ export default function FolhaPagamentoDetalhes() {
                             </div>
 
                             {/* Remuneration Details */}
-                            <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div className="bg-card border border-border shadow-sm overflow-hidden">
+                                <div className="bg-muted px-6 py-4 border-b border-border">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                                             <DollarSign className="h-5 w-5 text-blue-600" />
                                             Dados de Remuneração
                                         </h3>
@@ -200,39 +213,39 @@ export default function FolhaPagamentoDetalhes() {
                                             <div className="border border-gray-200 overflow-hidden shadow-sm">
                                                 <table className="w-full">
                                                     <thead>
-                                                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                                                            <th className="text-left py-4 px-6 font-semibold text-gray-900">
+                                                        <tr className="bg-gradient-to-r from-muted to-muted/50 border-b border-border">
+                                                            <th className="text-left py-4 px-6 font-semibold text-foreground">
                                                                 <div className="flex items-center gap-2">
-                                                                    <FileText className="h-4 w-4 text-gray-600" />
+                                                                    <FileText className="h-4 w-4 text-muted-foreground" />
                                                                     Componente
                                                                 </div>
                                                             </th>
-                                                            <th className="text-right py-4 px-6 font-semibold text-gray-900">
+                                                            <th className="text-right py-4 px-6 font-semibold text-foreground">
                                                                 <div className="flex items-center justify-end gap-2">
-                                                                    <DollarSign className="h-4 w-4 text-gray-600" />
+                                                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                                                                     Valor (R$)
                                                                 </div>
                                                             </th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody className="divide-y divide-gray-200">
-                                                        <tr className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                                                    <tbody className="divide-y divide-border">
+                                                        <tr className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
                                                             <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-3">
-                                                                <div className="p-2 bg-blue-100">
+                                                                <div className="p-2 bg-primary/10">
                                                                     <FileText className="h-4 w-4 text-blue-600" />
                                                                 </div>
                                                                 <span>Remuneração Básica</span>
                                                             </td>
-                                                            <td className="text-right py-4 px-6 font-mono font-semibold text-blue-900">{formatValue(remuneracao.remun_basica)}</td>
+                                                            <td className="text-right py-4 px-6 font-mono font-semibold text-primary">{formatValue(remuneracao.remun_basica)}</td>
                                                         </tr>
-                                                        <tr className="hover:bg-purple-50/50 transition-colors">
+                                                        <tr className="hover:bg-muted/50 transition-colors">
                                                             <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-3">
-                                                                <div className="p-2 bg-purple-100">
+                                                                <div className="p-2 bg-secondary/20">
                                                                     <Shield className="h-4 w-4 text-purple-600" />
                                                                 </div>
                                                                 <span>Vantagens Pessoais</span>
                                                             </td>
-                                                            <td className="text-right py-4 px-6 font-mono font-semibold text-purple-900">{formatValue(remuneracao.vant_pessoais)}</td>
+                                                            <td className="text-right py-4 px-6 font-mono font-semibold text-secondary">{formatValue(remuneracao.vant_pessoais)}</td>
                                                         </tr>
                                                         <tr className="bg-gray-50/50">
                                                             <td className="py-4 px-6 font-semibold text-gray-700 flex items-center gap-3">

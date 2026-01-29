@@ -75,7 +75,7 @@ namespace OPS.Importador.Assembleias.Amazonas
                             Favorecido = dc["DEPUTADO"].ToTitleCase(), // Nome Civil
                             TipoDespesa = dc["DESCRIÇÃO DA VERBA"].ToTitleCase(),
                             CnpjCpf = Utils.RemoveCaracteresNaoNumericos(dc["CNPJ"]),
-                            Empresa = dc["NOME EMPRESARIAL"].ToTitleCase(),
+                            NomeFornecedor = dc["NOME EMPRESARIAL"].ToTitleCase(),
                             Documento = dc["IDENTIFICAÇÃO DO DOCUMENTO"],
                             Valor = Convert.ToDecimal(dc["VALOR LÍQUIDO"].Replace("R$ ", ""), cultureInfo),
                             DataEmissao = DateOnly.Parse(dc["EMISSÃO"], cultureInfo)

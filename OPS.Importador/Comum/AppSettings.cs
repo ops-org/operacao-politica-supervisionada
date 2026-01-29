@@ -23,6 +23,8 @@ namespace OPS.Importador.Comum
         public string TelegramApiToken { get; set; }
 
         public string ReceitaWsApiToken { get; set; }
+        public string ComputerVisionOcrUrl { get; set; }
+        public string ComputerVisionOcrKey { get; set; }
 
         public bool ReuseDownloadFile { get; set; } = true;
         

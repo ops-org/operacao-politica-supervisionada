@@ -70,7 +70,7 @@ namespace OPS.Importador.Assembleias.Bahia
                                 despesaTemp.TipoDespesa = colunasDetalhes[0].TextContent.Trim();
                                 despesaTemp.Documento = processo + "/" + colunasDetalhes[1].TextContent.Trim();
                                 despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(colunasDetalhes[2].TextContent.Trim());
-                                despesaTemp.Empresa = colunasDetalhes[3].TextContent.Trim();
+                                despesaTemp.NomeFornecedor = colunasDetalhes[3].TextContent.Trim();
                                 despesaTemp.Valor = Convert.ToDecimal(colunasDetalhes[4].TextContent.Replace("R$", "").Trim(), cultureInfo);
 
                                 if (colunasDetalhes[5].Children.Any())

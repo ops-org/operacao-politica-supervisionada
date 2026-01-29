@@ -203,8 +203,8 @@ public class ImportadorDespesasSenado : IImportadorDespesas
                         if (despesaTemp.Data > dataVigencia.AddDays(180) || despesaTemp.Data < dataVigencia.AddDays(-180))
                         {
                             // Diferença de mais de 180 dias (6 meses) entre a data de apresentação da nota (vigencia) e data do documento.
-                            logger.LogError("Data da despesa muito diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
-                               linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
+                            //logger.LogError("Data da despesa muito diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
+                            //   linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
 
                             var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano.Value, despesaTemp.Mes.Value);
                             despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes.Value, Math.Min(despesaTemp.Data.Value.Day, monthLastDay));
@@ -212,9 +212,15 @@ public class ImportadorDespesasSenado : IImportadorDespesas
                         else
                         {
                             // Diferença de mais de 90 dias (3 meses) entre a data de apresentação da nota (vigencia) e data do documento.
-                            logger.LogWarning("Data da despesa diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
-                               linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
+                            //logger.LogWarning("Data da despesa diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
+                            //   linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
                         }
+                    }
+
+                    if (!string.IsNullOrEmpty(despesaTemp.CnpjCpf) && !Utils.IsCpf(despesaTemp.CnpjCpf) && !Utils.IsCnpj(despesaTemp.CnpjCpf))
+                    {
+                        logger.LogWarning("CNPJ/CPF inválido na despesa. Linha {Linha}, Senador: {Senador}, CNPJ/CPF: {CnpjCpf} - {NomeEmpresa}",
+                           linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
                     }
 
                     var options = new JsonSerializerOptions

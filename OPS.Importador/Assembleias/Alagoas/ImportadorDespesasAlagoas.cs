@@ -3,13 +3,17 @@ using System.Text;
 using AngleSharp;
 using Dapper;
 using iTextSharp.text.pdf;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
+using OPS.Importador.Comum;
 using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
 using RestSharp;
 using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig.Graphics;
 using File = System.IO.File;
 using PdfDocument = UglyToad.PdfPig.PdfDocument;
 
@@ -30,7 +34,8 @@ namespace OPS.Importador.Assembleias.Alagoas
                 ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
             };
 
-            ocrService = new ComputerVisionOcr();
+            AppSettings appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            ocrService = new ComputerVisionOcr(appSettings);
         }
 
         public override async Task ImportarDespesas(IBrowsingContext context, int ano)

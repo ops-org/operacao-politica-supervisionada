@@ -121,7 +121,7 @@ namespace OPS.Importador.Assembleias.Paraiba
                     TipoVerba = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Item.GetHashCode()),
                     TipoDespesa = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.SubItem.GetHashCode()),
                     CnpjCpf = Utils.RemoveCaracteresNaoNumericos(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.CnpjCpf.GetHashCode())),
-                    Empresa = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Fornecedor.GetHashCode()),
+                    NomeFornecedor = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Fornecedor.GetHashCode()),
                     Documento = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()),
                     Observacao = OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Documento.GetHashCode()),
                     Valor = Convert.ToDecimal(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Valor.GetHashCode()), cultureInfo),
@@ -174,7 +174,7 @@ namespace OPS.Importador.Assembleias.Paraiba
                         TipoVerba = worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString(),
                         TipoDespesa = worksheet.Cells[linha, ColunasOds.SubItem.GetHashCode()].Value?.ToString(),
                         CnpjCpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[linha, ColunasOds.CnpjCpf.GetHashCode()].Value?.ToString()),
-                        Empresa = worksheet.Cells[linha, ColunasOds.Fornecedor.GetHashCode()].Value?.ToString(),
+                        NomeFornecedor = worksheet.Cells[linha, ColunasOds.Fornecedor.GetHashCode()].Value?.ToString(),
                         Documento = worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString(),
                         Observacao = worksheet.Cells[linha, ColunasOds.Documento.GetHashCode()].Value?.ToString(),
                         Valor = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo),
@@ -219,9 +219,9 @@ UPDATE temp.cl_despesa_temp SET cnpj_cpf = CONCAT('***', cnpj_cpf, '**') WHERE L
 UPDATE temp.cl_despesa_temp SET cnpj_cpf = CONCAT('***', cnpj_cpf, '***') WHERE LENGTH(cnpj_cpf) = 8;
 
 INSERT INTO temp.fornecedor_de_para (cnpj_incorreto, nome)
-SELECT distinct cnpj_cpf, unaccent(lower(empresa))
+SELECT distinct cnpj_cpf, unaccent(lower(fornecedor))
 FROM temp.cl_despesa_temp dt
-LEFT JOIN temp.fornecedor_de_para fp on unaccent(lower(fp.nome)) = unaccent(lower(dt.empresa))
+LEFT JOIN temp.fornecedor_de_para fp on unaccent(lower(fp.nome)) = unaccent(lower(dt.fornecedor))
 WHERE fp.cnpj_incorreto is null 
 AND fp.nome is null;
 
@@ -236,7 +236,7 @@ AND d.cnpj_correto IS NULL;
 UPDATE temp.cl_despesa_temp d
 SET cnpj_cpf = c.cnpj_correto
 FROM temp.fornecedor_de_para c 
-WHERE c.nome = d.empresa 
+WHERE c.nome = d.fornecedor 
 AND c.cnpj_incorreto = d.cnpj_cpf
 AND c.cnpj_correto IS NOT null;
 
@@ -245,7 +245,6 @@ SET cnpj_cpf = dp.cnpj_correto
 FROM temp.fornecedor_de_para dp
 WHERE dp.cnpj_incorreto = dt.cnpj_cpf
 AND dp.cnpj_correto IS NOT NULL;");
-
 
             var cnpjInvalidos = connection.ExecuteScalar<int>(@"select count(1) from temp.cl_despesa_temp where LENGTH(cnpj_cpf) != 11 AND LENGTH(cnpj_cpf) != 14");
             if (cnpjInvalidos > 0)

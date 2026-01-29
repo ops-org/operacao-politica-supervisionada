@@ -117,7 +117,7 @@ namespace OPS.Core.Repositories
             }).ToList();
         }
 
-        public async Task<dynamic> Documento(int id)
+        public async Task<DocumentoDetalheDTO> Documento(int id)
         {
             //using (AppDb banco = new AppDb())
             {
@@ -125,7 +125,7 @@ namespace OPS.Core.Repositories
 
                 strSql.AppendLine(@"
 					SELECT
-						l.id as id_cf_despesa
+						l.id as id_despesa
 						, l.id_documento
 						, l.numero_documento
 						, l.tipo_documento
@@ -138,9 +138,9 @@ namespace OPS.Core.Repositories
 						, tv.descricao as trecho_viagem
 						, l.ano
 						, l.mes
-						, td.id as id_cf_despesa_tipo
-						, td.descricao as descricao_despesa
-						, d.id as id_cf_deputado
+						, td.id as id_despesa_tipo
+						, td.descricao as descricao_despesa_tipo
+						, d.id as id_parlamentar
 						, d.id_deputado
 						, d.nome_parlamentar
 						, e.sigla as sigla_estado
@@ -165,46 +165,53 @@ namespace OPS.Core.Repositories
                     if (await reader.ReadAsync())
                     {
                         string sTipoDocumento = "";
-                        switch (await reader.GetValueOrDefaultAsync<int>(3))
+                        switch (Convert.ToInt32(reader["tipo_documento"]))
                         {
                             case 0: sTipoDocumento = "Nota Fiscal"; break;
                             case 1: sTipoDocumento = "Recibo"; break;
                             case 2: case 3: sTipoDocumento = "Despesa no Exterior"; break;
                         }
-                        string cnpjCpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(21));
-                        var ano = await reader.GetValueOrDefaultAsync<int>(11);
-                        var mes = await reader.GetValueOrDefaultAsync<short>(12);
+                        string cnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString());
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
 
-                        var result = new
+                        var documento = new DocumentoDetalheDTO
                         {
-                            id_cf_despesa = await reader.GetValueOrDefaultAsync<dynamic>(0),
-                            id_documento = await reader.GetValueOrDefaultAsync<dynamic>(1),
-                            numero_documento = await reader.GetValueOrDefaultAsync<string>(2),
-                            tipo_documento = sTipoDocumento,
-                            data_emissao = Utils.FormataData(await reader.GetValueOrDefaultAsync<DateTime?>(4)),
-                            valor_documento = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(5)),
-                            valor_glosa = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(6)),
-                            valor_liquido = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(7)),
-                            valor_restituicao = Utils.FormataValor(await reader.GetValueOrDefaultAsync<decimal?>(8)),
-                            nome_passageiro = await reader.GetValueOrDefaultAsync<string>(9),
-                            trecho_viagem = await reader.GetValueOrDefaultAsync<string>(10),
-                            ano,
-                            mes,
-                            competencia = $"{mes:00}/{ano:0000}",
-                            id_cf_despesa_tipo = await reader.GetValueOrDefaultAsync<dynamic>(13),
-                            descricao_despesa = await reader.GetValueOrDefaultAsync<string>(14),
-                            id_cf_deputado = await reader.GetValueOrDefaultAsync<dynamic>(15),
-                            id_deputado = await reader.GetValueOrDefaultAsync<dynamic>(16),
-                            nome_parlamentar = await reader.GetValueOrDefaultAsync<string>(17),
-                            sigla_estado = await reader.GetValueOrDefaultAsync<string>(18),
-                            sigla_partido = await reader.GetValueOrDefaultAsync<string>(19),
-                            id_fornecedor = await reader.GetValueOrDefaultAsync<dynamic>(20),
-                            cnpj_cpf = cnpjCpf,
-                            nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(22),
-                            link = await reader.GetValueOrDefaultAsync<dynamic>(23)
+                            IdDespesa = reader["id_cl_despesa"],
+                            IdDocumento = reader["id_documento"],
+                            NumeroDocumento = reader["numero_documento"].ToString(),
+                            TipoDocumento = sTipoDocumento,
+                            DataEmissao = Utils.FormataData(Convert.ToDateTime(reader["data_emissao"])),
+                            ValorDocumento = Utils.FormataValor(Convert.ToDecimal(reader["valor_documento"])),
+                            ValorGlosa = Utils.FormataValor(Convert.ToDecimal(reader["valor_glosa"])),
+                            ValorLiquido = Utils.FormataValor(Convert.ToDecimal(reader["valor_liquido"])),
+                            ValorRestituicao = Utils.FormataValor(Convert.ToDecimal(reader["valor_restituicao"])),
+                            NomePassageiro = reader["nome_passageiro"].ToString(), // TODO Mesclar com Favorecido
+                            TrechoViagem = reader["trecho_viagem"].ToString(), // TODO Mesclar com observacao
+                            Ano = ano,
+                            Mes = mes,
+                            Competencia = $"{mes:00}/{ano:0000}",
+                            IdDespesaTipo = reader["id_despesa_tipo"],
+                            DescricaoDespesa = reader["descricao_despesa_tipo"].ToString(),
+                            IdParlamentar = reader["id_parlamentar"],
+                            IdDeputado = reader["id_deputado"],
+                            NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                            SiglaEstado = reader["sigla_estado"].ToString(),
+                            SiglaPartido = reader["sigla_partido"].ToString(),
+                            IdFornecedor = reader["id_fornecedor"],
+                            CnpjCpf = cnpjCpf,
+                            NomeFornecedor = reader["nome_fornecedor"].ToString()
                         };
 
-                        return result;
+                        var urlCamara = "http://www.camara.leg.br/cota-parlamentar/";
+                        var tipoLink = Convert.ToInt32(reader["tipo_link"]);
+
+                        if (tipoLink == 2)// NF-e
+                            documento.Link = $"{urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal={documento.IdDocumento}";
+                        else if (tipoLink == 1)// Recibo
+                            documento.Link = $"{urlCamara}documentos/publ/{documento.IdDeputado}/{documento.Ano}/{documento.IdDocumento}.pdf";
+
+                        return documento;
                     }
                 }
                 return null;
@@ -247,7 +254,7 @@ namespace OPS.Core.Repositories
                     {
                         lstRetorno.Add(new
                         {
-                            id_cf_despesa = await reader.GetValueOrDefaultAsync<int>(0),
+                            id_despesa = await reader.GetValueOrDefaultAsync<int>(0),
                             id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                             cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),
@@ -300,7 +307,7 @@ namespace OPS.Core.Repositories
                     {
                         lstRetorno.Add(new
                         {
-                            id_cf_despesa = await reader.GetValueOrDefaultAsync<int>(0),
+                            id_despesa = await reader.GetValueOrDefaultAsync<int>(0),
                             id_fornecedor = await reader.GetValueOrDefaultAsync<int>(1),
                             cnpj_cpf = Utils.FormatCnpjCpf(await reader.GetValueOrDefaultAsync<string>(2)),
                             nome_fornecedor = await reader.GetValueOrDefaultAsync<string>(3),

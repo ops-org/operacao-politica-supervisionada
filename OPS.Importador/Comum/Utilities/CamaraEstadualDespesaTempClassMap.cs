@@ -14,7 +14,7 @@ public sealed class CamaraEstadualDespesaTempClassMap : ClassMap<CamaraEstadualD
         Map(m => m.Nome);
         Map(m => m.NomeCivil);
         //Map(m => m.Partido);
-        Map(m => m.Empresa);
+        Map(m => m.NomeFornecedor).Name("Empresa");
         Map(m => m.CnpjCpf);
         Map(m => m.DataEmissao).TypeConverter(new NullableDateOnlyConverter());
         Map(m => m.TipoVerba);

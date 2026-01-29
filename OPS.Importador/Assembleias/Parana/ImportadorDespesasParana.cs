@@ -119,7 +119,7 @@ namespace OPS.Importador.Assembleias.Parana
                                 Valor = (decimal)(itensDespesa.Valor - itensDespesa.ValorDevolucao),
                                 DataEmissao = DateOnly.FromDateTime(itensDespesa.Data),
                                 CnpjCpf = itensDespesa.Fornecedor?.Documento,
-                                Empresa = itensDespesa.Fornecedor?.Nome,
+                                NomeFornecedor = itensDespesa.Fornecedor?.Nome,
                                 Documento = $"{itensDespesa.NumeroDocumento} [{itensDespesa.Codigo}/{itensDespesa.Numero}]",
                                 Observacao = itensDespesa.Descricao,
                                 Origem = filename

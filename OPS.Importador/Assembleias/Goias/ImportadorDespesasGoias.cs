@@ -47,7 +47,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
                             Valor = Convert.ToDecimal(lancamento.Fornecedor.ValorIndenizado, cultureInfo),
                             DataEmissao = DateOnly.FromDateTime(lancamento.Fornecedor.Data),
                             CnpjCpf = Utils.RemoveCaracteresNaoNumericos(lancamento.Fornecedor.CnpjCpf),
-                            Empresa = lancamento.Fornecedor.Nome,
+                            NomeFornecedor = lancamento.Fornecedor.Nome,
                             Documento = lancamento.Fornecedor.Numero,
                             Origem = address
                         };

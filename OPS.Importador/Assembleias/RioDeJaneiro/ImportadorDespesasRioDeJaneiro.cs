@@ -84,7 +84,7 @@ namespace OPS.Importador.Assembleias.RioDeJaneiro
                             Valor = (decimal)despesa.ValueAbs,
                             DataEmissao = DateOnly.Parse(despesa.Date, cultureInfo),
                             CnpjCpf = Utils.RemoveCaracteresNaoNumericos(despesa.CpfCnpj),
-                            Empresa = despesa.Name,
+                            NomeFornecedor = despesa.Name,
                             Documento = despesa.Id.ToString(),
                             Observacao = $"Objeto: {despesa.Object};"
                         };

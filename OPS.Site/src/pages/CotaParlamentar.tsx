@@ -403,17 +403,22 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
   }
 
   const parlamentares = apiData?.data || [];
-  console.log(parlamentares);
-  const pagination = apiData?.pagination;
+  const totalRecords = apiData?.records_total || 0;
+  const totalPages = Math.ceil(totalRecords / itemsPerPage);
+  const pagination = {
+    page: currentPage,
+    limit: itemsPerPage,
+    total: totalRecords,
+    totalPages: totalPages
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       {/* Full-screen loading overlay */}
       <LoadingOverlay isLoading={isLoading} content="Carregando informações das despesas..." />
 
       <Header />
       <main className="container mx-auto px-4 py-8">
-
         {/* Filter Section */}
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -703,18 +708,12 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
                           if (column.key === 'valor_total' || column.key === 'valor_liquido') {
                             return (
                               <TableCell key={column.key} className={`text-right`}>
-                                {parlamentar.id_despesa && type == 'deputado-federal' ? (
-                                  <Link
-                                    to={`./${parlamentar.id_despesa}`}
-                                    className="text-primary hover:text-primary/80 transition-colors font-bold font-mono"
-                                  >
-                                    R$&nbsp;{cellContent}
-                                  </Link>
-                                ) : (
-                                  <span className="text-primary font-bold font-mono">
-                                    R$&nbsp;{cellContent}
-                                  </span>
-                                )}
+                                <Link
+                                  to={`./${parlamentar.id_despesa}`}
+                                  className="text-primary hover:text-primary/80 transition-colors font-bold font-mono"
+                                >
+                                  R$&nbsp;{cellContent}
+                                </Link>
                               </TableCell>
                             );
                           } else if (column.key === 'nome_parlamentar') {

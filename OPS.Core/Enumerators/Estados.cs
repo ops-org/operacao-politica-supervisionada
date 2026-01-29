@@ -2,7 +2,7 @@
 
 namespace OPS.Core.Enumerators
 {
-    public enum Estados : short
+    public enum Estados
     {
         [Display(Name = "Nenhum", ShortName = "NA")]
         Nenhum = 0,

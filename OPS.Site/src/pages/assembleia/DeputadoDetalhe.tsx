@@ -85,34 +85,34 @@ const DeputadoEstadualDetalhe = () => {
     })) || [];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
             <Header />
-            <main className="flex-1 container mx-auto px-4 py-8">
-                <div className="space-y-8">
-                    {/* Modern Header */}
-                    <div className="text-center space-y-4">
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <User className="h-8 w-8 text-primary" />
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                                Perfil do Deputado Estadual
-                            </h1>
-                        </div>
-                        <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                            Informações detalhadas sobre o parlamentar e seus gastos.
-                        </p>
+            <main className="container mx-auto px-4 py-8">
+                {/* Hero Section */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                        <User className="w-8 h-8 text-primary" />
                     </div>
+                    <h1 className="text-4xl font-bold text-foreground mb-4">
+                        Perfil do Deputado Estadual
+                    </h1>
+                    <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+                        Informações detalhadas sobre o parlamentar e seus gastos
+                    </p>
+                </div>
 
+                <div className="space-y-8">
                     {/* Profile Card with Modern Design */}
-                    <Card className="shadow-md border-0 bg-white overflow-hidden">
+                    <Card className="shadow-md border-0 bg-card overflow-hidden">
                         <div className="relative overflow-hidden bg-gradient-to-r from-primary to-primary/80 text-white">
                             <div className="p-6">
                                 <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
                                     {/* Avatar Section */}
                                     <div className="flex-shrink-0">
                                         <div className="relative">
-                                            <Avatar className="h-32 w-24 rounded-lg border-4 border-white/30">
+                                            <Avatar className="h-32 w-24 rounded-lg border-4 border-background/30">
                                                 <AvatarImage src={deputado.foto} alt={deputado.nome_parlamentar} />
-                                                <AvatarFallback className="rounded-lg text-2xl bg-white/20 text-white">
+                                                <AvatarFallback className="rounded-lg text-2xl bg-background/20 text-foreground">
                                                     {deputado.nome_parlamentar.split(" ").map(n => n[0]).join("")}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -136,10 +136,10 @@ const DeputadoEstadualDetalhe = () => {
                                         </div>
 
                                         <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
-                                            <Badge variant="secondary" className="font-semibold bg-white/20 text-white border-white/30" title={deputado.nome_partido}>
+                                            <Badge variant="secondary" className="font-semibold bg-background/20 text-foreground border-border/30" title={deputado.nome_partido}>
                                                 {deputado.sigla_partido}
                                             </Badge>
-                                            <Badge variant="outline" className="flex items-center gap-1 bg-white/20 text-white border-white/30" title={deputado.nome_estado}>
+                                            <Badge variant="outline" className="flex items-center gap-1 bg-background/20 text-foreground border-border/30" title={deputado.nome_estado}>
                                                 <MapPin className="w-3 h-3" />
                                                 {deputado.sigla_estado}
                                             </Badge>
@@ -150,7 +150,7 @@ const DeputadoEstadualDetalhe = () => {
 
                                     {/* Total Cost Display */}
                                     <div className="text-center md:text-right space-y-2">
-                                        <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+                                        <div className="bg-background/20 rounded-lg p-4 backdrop-blur-sm">
                                             <p className="text-sm text-white/80">Custo Total Acumulado</p>
                                             <p className="text-3xl font-bold text-white">
                                                 R$ {deputado.valor_total}
@@ -165,7 +165,7 @@ const DeputadoEstadualDetalhe = () => {
                         </div>
 
                         {/* Contact Info Bar */}
-                        <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+                        <div className="border-t border-border bg-muted px-6 py-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                                 {deputado.email && <div className="flex items-center gap-2">
                                     <Mail className="h-4 w-4 text-primary" />
@@ -199,8 +199,8 @@ const DeputadoEstadualDetalhe = () => {
 
                     <div className="grid gap-8 md:grid-cols-2 mb-8">
                         {/* Personal Information Card */}
-                        <Card className="shadow-md border-0 bg-white">
-                            <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+                        <Card className="shadow-md border-0 bg-card">
+                            <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
                                 <div className="flex items-center gap-2">
                                     <User className="h-5 w-5 text-primary" />
                                     <CardTitle className="text-lg">Informações Pessoais</CardTitle>
@@ -211,16 +211,16 @@ const DeputadoEstadualDetalhe = () => {
                                     <div className="flex items-start gap-2">
                                         <User className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                         <div>
-                                            <span className="font-medium text-gray-600">Nome Civil:</span>
-                                            <p className="text-gray-900">{deputado.nome_civil}</p>
+                                            <span className="font-medium text-muted-foreground">Nome Civil:</span>
+                                            <p className="text-foreground">{deputado.nome_civil}</p>
                                         </div>
                                     </div>
                                     {deputado.naturalidade && (
                                         <div className="flex items-start gap-2">
                                             <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <span className="font-medium text-gray-600">Naturalidade:</span>
-                                                <p className="text-gray-900">{deputado.naturalidade}</p>
+                                                <span className="font-medium text-muted-foreground">Naturalidade:</span>
+                                                <p className="text-foreground">{deputado.naturalidade}</p>
                                             </div>
                                         </div>
                                     )}
@@ -228,8 +228,8 @@ const DeputadoEstadualDetalhe = () => {
                                         <div className="flex items-start gap-2">
                                             <Calendar className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <span className="font-medium text-gray-600">Nascimento:</span>
-                                                <p className="text-gray-900">{deputado.nascimento}</p>
+                                                <span className="font-medium text-muted-foreground">Nascimento:</span>
+                                                <p className="text-foreground">{deputado.nascimento}</p>
                                             </div>
                                         </div>
                                     )}
@@ -237,23 +237,23 @@ const DeputadoEstadualDetalhe = () => {
                                         <div className="flex items-start gap-2">
                                             <Briefcase className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <span className="font-medium text-gray-600">Profissão:</span>
-                                                <p className="text-gray-900">{deputado.profissao}</p>
+                                                <span className="font-medium text-muted-foreground">Profissão:</span>
+                                                <p className="text-foreground">{deputado.profissao}</p>
                                             </div>
                                         </div>
                                     )}
                                     <div className="flex items-start gap-2">
                                         <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                         <div>
-                                            <span className="font-medium text-gray-600">Estado:</span>
-                                            <p className="text-gray-900">{deputado.nome_estado} ({deputado.sigla_estado})</p>
+                                            <span className="font-medium text-muted-foreground">Estado:</span>
+                                            <p className="text-foreground">{deputado.nome_estado} ({deputado.sigla_estado})</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Building2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                                         <div>
-                                            <span className="font-medium text-gray-600">Partido:</span>
-                                            <p className="text-gray-900">{deputado.nome_partido} ({deputado.sigla_partido})</p>
+                                            <span className="font-medium text-muted-foreground">Partido:</span>
+                                            <p className="text-foreground">{deputado.nome_partido} ({deputado.sigla_partido})</p>
                                         </div>
                                     </div>
 
@@ -264,8 +264,8 @@ const DeputadoEstadualDetalhe = () => {
 
                         {/* Annual Expenses Chart */}
                         {chartData.length > 0 && (
-                            <Card className="shadow-md border-0 bg-white">
-                                <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+                            <Card className="shadow-md border-0 bg-card">
+                                <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
                                     <div className="flex items-center gap-2">
                                         <TrendingUp className="h-5 w-5 text-primary" />
                                         <CardTitle className="text-lg">Gastos anuais com a cota parlamentar</CardTitle>
@@ -301,8 +301,8 @@ const DeputadoEstadualDetalhe = () => {
                     <div className="grid gap-8 lg:grid-cols-2">
                         {/* Principais Fornecedores */}
                         {maioresFornecedores.length > 0 && (
-                            <Card className="shadow-md border-0 bg-white">
-                                <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+                            <Card className="shadow-md border-0 bg-card">
+                                <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Building2 className="h-5 w-5 text-primary" />
@@ -326,7 +326,7 @@ const DeputadoEstadualDetalhe = () => {
                                         </TableHeader>
                                         <TableBody>
                                             {maioresFornecedores.map((row) => (
-                                                <TableRow key={`fornecedor-${row.id_fornecedor}`} className="hover:bg-gray-50 transition-colors">
+                                                <TableRow key={`fornecedor-${row.id_fornecedor}`} className="hover:bg-muted/50 transition-colors">
                                                     <TableCell>
                                                         <Link to={`/fornecedor/${row.id_fornecedor}`}
                                                             className="hover:text-primary transition-colors flex flex-col">
@@ -349,8 +349,8 @@ const DeputadoEstadualDetalhe = () => {
 
                         {/* Maiores Notas/Recibos */}
                         {maioresNotas.length > 0 && (
-                            <Card className="shadow-md border-0 bg-white">
-                                <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+                            <Card className="shadow-md border-0 bg-card">
+                                <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <DollarSign className="h-5 w-5 text-primary" />
@@ -374,7 +374,7 @@ const DeputadoEstadualDetalhe = () => {
                                         </TableHeader>
                                         <TableBody>
                                             {maioresNotas.map((row) => (
-                                                <TableRow key={`nota-${row.id_cl_despesa || row.nome_fornecedor}-${Math.random()}`} className="hover:bg-gray-50 transition-colors">
+                                                <TableRow key={`nota-${row.id_cl_despesa || row.nome_fornecedor}-${Math.random()}`} className="hover:bg-muted/50 transition-colors">
                                                     <TableCell>
                                                         <Link to={`/fornecedor/${row.id_fornecedor}`}
                                                             className="hover:text-primary transition-colors flex flex-col">
@@ -400,13 +400,13 @@ const DeputadoEstadualDetalhe = () => {
                         {/* Empty States */}
                         {maioresFornecedores.length === 0 && maioresNotas.length === 0 && (
                             <div className="lg:col-span-2">
-                                <Card className="shadow-md border-0 bg-white">
+                                <Card className="shadow-md border-0 bg-card">
                                     <CardContent className="p-12">
                                         <div className="flex flex-col items-center gap-4 text-center">
-                                            <Building2 className="h-16 w-16 text-gray-300" />
+                                            <Building2 className="h-16 w-16 text-muted-foreground/50" />
                                             <div>
-                                                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum dado disponível</h3>
-                                                <p className="text-gray-500 max-w-md">
+                                                <h3 className="text-lg font-medium text-foreground mb-2">Nenhum dado disponível</h3>
+                                                <p className="text-muted-foreground max-w-md">
                                                     Não foram encontrados registros de fornecedores ou notas para este parlamentar no período selecionado.
                                                 </p>
                                             </div>

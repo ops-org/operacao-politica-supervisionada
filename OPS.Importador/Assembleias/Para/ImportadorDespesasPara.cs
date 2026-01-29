@@ -65,7 +65,7 @@ namespace OPS.Importador.Assembleias.Para
                         DataEmissao = dataEmissao,
                         Ano = (short)dataEmissao.Year,
                         Mes = (short?)dataEmissao.Month,
-                        Valor = item.Value.Value
+                        Valor = decimal.Round(item.Value.Value, 2)
                     };
 
                     InserirDespesaTemp(despesaTemp);

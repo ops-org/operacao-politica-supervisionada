@@ -92,22 +92,23 @@ const SenadorDetalhe = () => {
   const paginaOfficialUrl = `http://www25.senado.leg.br/web/senadores/senador/-/perfil/${senador.id_sf_senador}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          {/* Modern Header */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <User className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                Perfil do Senador
-              </h1>
-            </div>
-            <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Informações detalhadas sobre o parlamentar e seus gastos.
-            </p>
+      <main className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+            <User className="w-8 h-8 text-primary" />
           </div>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            Perfil do Senador
+          </h1>
+          <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+            Informações detalhadas sobre o parlamentar e seus gastos
+          </p>
+        </div>
+
+        <div className="space-y-8">
 
           {/* Profile Card with Modern Design */}
           <Card className="shadow-md border-0 bg-white overflow-hidden">

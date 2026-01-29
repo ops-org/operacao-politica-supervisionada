@@ -79,7 +79,7 @@ namespace OPS.Importador.Assembleias.Amapa
 
                         var empresaParts = colunas[0].TextContent.Split(" - ");
                         despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(empresaParts[0].Trim());
-                        despesaTemp.Empresa = empresaParts[1].Trim();
+                        despesaTemp.NomeFornecedor = empresaParts[1].Trim();
 
                         despesaTemp.Documento = colunas[2].TextContent.Trim();
                         despesaTemp.Observacao = (colunas[2].QuerySelector("a") as IHtmlAnchorElement).Href;

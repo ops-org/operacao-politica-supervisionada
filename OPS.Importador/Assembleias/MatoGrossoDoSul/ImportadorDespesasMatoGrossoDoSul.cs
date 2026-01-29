@@ -153,7 +153,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
                                 despesaTemp.Mes = mesDespesa;
                                 despesaTemp.TipoDespesa = tipoDespesa;
                                 despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericos(detalhes[1].TextContent.Trim());
-                                despesaTemp.Empresa = detalhes[2].TextContent.Trim();
+                                despesaTemp.NomeFornecedor = detalhes[2].TextContent.Trim();
                                 despesaTemp.Documento = detalhes[3].TextContent.Trim();
                                 despesaTemp.DataEmissao = DateOnly.Parse(detalhes[4].TextContent.Trim(), cultureInfo);
                                 despesaTemp.Valor = Convert.ToDecimal(detalhes[5].TextContent.Replace("R$", "").Trim(), cultureInfo);
@@ -214,64 +214,5 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
 
             //}
         }
-    }
-
-    //    public override void InsereDeputadoFaltante()
-    //    {
-    //        int affected = connection.Execute(@$"
-    //INSERT INTO cl_deputado (nome_parlamentar, matricula, id_estado)
-    //select distinct Nome, cpf, {idEstado}
-    //from temp.cl_despesa_temp
-    //where nome not in (
-    //    select nome_parlamentar 
-    //    FROM assembleias.cl_deputado 
-    //    WHERE id_estado = {idEstado}
-    //);
-    //                ");
-
-    //        if (affected > 0)
-    //        {
-    //            logger.LogInformation("{Itens} parlamentares incluidos!", affected);
-    //        }
-    //    }
-
-    public override void InsereDespesaFinal(int ano)
-    {
-        var affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_despesa (
-	id_cl_deputado,
-    id_cl_despesa_tipo,
-    id_cl_despesa_especificacao,
-	id_fornecedor,
-	data_emissao,
-	ano_mes,
-	numero_documento,
-	valor_liquido,
-    favorecido,
-    hash
-)
-SELECT 
-	p.id AS id_cl_deputado,
-    dts.id_cl_despesa_tipo,
-    dts.id,
-    f.id AS id_fornecedor,
-    d.data_emissao,
-    cast(concat(d.ano, LPAD(d.mes::text, 2, '0')) AS INT) AS ano_mes,
-    d.documento AS numero_documento,
-    d.valor AS valor,
-    CASE WHEN f.id IS NULL THEN d.empresa else null END AS observacao,
-    d.hash
-FROM temp.cl_despesa_temp d
-inner join assembleias.cl_deputado p on id_estado = {idEstado} and p.nome_parlamentar ILIKE d.nome
-left join assembleias.cl_despesa_especificacao dts on dts.descricao = d.despesa_tipo
-LEFT join fornecedor.fornecedor f on f.cnpj_cpf = d.cnpj_cpf
-ORDER BY d.id;
-			");
-
-        if (affected > 0)
-        {
-            logger.LogInformation("{Itens} despesas incluidas!", affected);
-        }
-
     }
 }

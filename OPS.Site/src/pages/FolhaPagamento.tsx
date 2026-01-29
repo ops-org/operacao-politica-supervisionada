@@ -452,12 +452,26 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
 
     if (error) {
         return (
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
                 <Header />
-                <ErrorMessage
-                    onRetry={() => refetch()}
-                />
-                <Footer />
+                <main className="container mx-auto px-4 py-8">
+                    {/* Hero Section */}
+                    <div className="text-center mb-12">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                            <DollarSign className="w-8 h-8 text-primary" />
+                        </div>
+                        <h1 className="text-4xl font-bold text-foreground mb-4">
+                            {config.title}
+                        </h1>
+                        <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+                            {config.subtitle}
+                        </p>
+                    </div>
+                    <ErrorMessage
+                        onRetry={() => refetch()}
+                    />
+                    <Footer />
+                </main>
             </div>
         );
     }

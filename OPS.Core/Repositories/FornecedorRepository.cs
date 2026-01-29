@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OPS.Core.Repositories
 {
@@ -454,14 +455,14 @@ order by ano
         {
             var query = _context.Fornecedores.AsQueryable();
 
-            if (!string.IsNullOrEmpty(cnpj))
+            if (!string.IsNullOrEmpty(cnpj) && cnpj.Replace(".", "", StringComparison.Ordinal).Replace("/", "", StringComparison.Ordinal).Replace("-", "", StringComparison.Ordinal).All(char.IsDigit))
             {
                 cnpj = Utils.RemoveCaracteresNaoNumericos(cnpj);
 
                 if (cnpj.Length == 14 || cnpj.Length == 11)
                     query = query.Where(f => f.CnpjCpf == cnpj);
                 else
-                    query = query.Where(f => f.CnpjCpf.StartsWith(cnpj));
+                    query = query.Where(f => f.CnpjCpf.Contains(cnpj));
             }
             else
             {
@@ -500,9 +501,17 @@ order by ano
 
             if (!string.IsNullOrEmpty(value))
             {
-                strSql.AppendLine("	AND (unaccent(f.nome) ilike unaccent('%" + Utils.MySqlEscape(value) + "%') " +
-                    "or unaccent(fi.nome) ilike unaccent('%" + Utils.MySqlEscape(value) + "%') " +
-                    "or unaccent(fi.nome_fantasia) ilike unaccent('%" + Utils.MySqlEscape(value) + "%'))");
+                if (value.Replace(".", "", StringComparison.Ordinal).Replace("/", "", StringComparison.Ordinal).Replace("-", "", StringComparison.Ordinal).All(char.IsDigit))
+                {
+                    var cnpj = Utils.RemoveCaracteresNaoNumericos(value);
+                    strSql.AppendLine("	AND f.cnpj_cpf LIKE '%" + cnpj + "%'");
+                }
+                else
+                {
+                    strSql.AppendLine("	AND (unaccent(f.nome) ilike unaccent('%" + Utils.MySqlEscape(value) + "%') " +
+                        "or unaccent(fi.nome) ilike unaccent('%" + Utils.MySqlEscape(value) + "%') " +
+                        "or unaccent(fi.nome_fantasia) ilike unaccent('%" + Utils.MySqlEscape(value) + "%'))");
+                }
             }
 
             strSql.AppendLine(@"

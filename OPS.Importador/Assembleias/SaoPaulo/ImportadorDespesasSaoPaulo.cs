@@ -58,12 +58,12 @@ namespace OPS.Importador.Assembleias.SaoPaulo
                 var fornecedor = fileNode.SelectSingleNode("Fornecedor").InnerText.Trim();
                 var valor = fileNode.SelectSingleNode("Valor").InnerText.Trim();
 
-                var objCamaraEstadualDespesaTemp = new CamaraEstadualDespesaTemp()
+                var despesaTemp = new CamaraEstadualDespesaTemp()
                 {
                     Nome = deputado,
                     Ano = (short)ano,
                     Cpf = matricula,
-                    Empresa = fornecedor,
+                    NomeFornecedor = fornecedor,
                     CnpjCpf = cnpj,
                     TipoDespesa = tipoDespesa,
                     Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor, cultureInfo) : 0,
@@ -71,17 +71,16 @@ namespace OPS.Importador.Assembleias.SaoPaulo
                     Origem = caminhoArquivo
                 };
 
-                InserirDespesaTemp(objCamaraEstadualDespesaTemp);
-            }
-        }
 
-        public override void AjustarDados()
-        {
-            connection.Execute(@"
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000008' WHERE empresa = 'PEDÁGIO';
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000009' WHERE empresa = 'TAXI';
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '04645433000155' WHERE empresa = 'ACACIA PRANDI ZANIN';
-        ");
+                if (despesaTemp.CnpjCpf?.StartsWith("00000000000") ?? false)
+                {
+                    // Parece que o CNPJ é obrigatório, e com isso cadastram CNPJs iniciais para empresas internacionais.
+                    // Vamos 'zerar' o CNPJ para resolver a empresa apenas pelo nome.
+                    despesaTemp.CnpjCpf = null;
+                }
+
+                InserirDespesaTemp(despesaTemp);
+            }
         }
     }
 }

@@ -251,9 +251,21 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+              <Users className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-4xl font-bold text-foreground mb-4">
+              {config.title}
+            </h1>
+            <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+              {config.subtitle}
+            </p>
+          </div>
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -264,54 +276,45 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          {/* Modern Header with Type Selector */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Users className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                {config.title}
-              </h1>
+          {/* Header with Type Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">{config.title}</h1>
+              <p className="text-muted-foreground">{config.subtitle}</p>
+              <p className="text-sm text-muted-foreground mt-1">* Valores acumulados desde 2008 de todas as legislaturas</p>
             </div>
             
             {/* Type Selector */}
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex rounded-lg border p-1 bg-white shadow-sm">
-                <Button
-                  variant={parlamentarType === "deputado-federal" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setParlamentarType("deputado-federal")}
-                  className="px-4 py-2"
-                >
-                  Deputados Federais
-                </Button>
-                {/* <Button
-                  variant={parlamentarType === "deputado-estadual" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setParlamentarType("deputado-estadual")}
-                  className="px-4 py-2"
-                >
-                  Deputados Estaduais
-                </Button> */}
-                <Button
-                  variant={parlamentarType === "senador" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setParlamentarType("senador")}
-                  className="px-4 py-2"
-                >
-                  Senadores
-                </Button>
-              </div>
+            <div className="inline-flex rounded-lg border p-1 bg-card shadow-sm">
+              <Button
+                variant={parlamentarType === "deputado-federal" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setParlamentarType("deputado-federal")}
+                className="px-4 py-2"
+              >
+                Deputados Federais
+              </Button>
+              {/* <Button
+                variant={parlamentarType === "deputado-estadual" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setParlamentarType("deputado-estadual")}
+                className="px-4 py-2"
+              >
+                Deputados Estaduais
+              </Button> */}
+              <Button
+                variant={parlamentarType === "senador" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setParlamentarType("senador")}
+                className="px-4 py-2"
+              >
+                Senadores
+              </Button>
             </div>
-
-            <p className="text-muted-foreground mx-auto leading-relaxed">
-              {config.subtitle}
-              <br />
-              <span className="text-sm font-bold">* Valores acumulados desde 2008 de todas as legislaturas</span>
-            </p>
           </div>
 
           {/* Stats Cards */}
@@ -384,7 +387,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                     value={filters.periodo.toString()}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, periodo: parseInt(value) }))}
                   >
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger className="bg-card">
                       <SelectValue placeholder="Selecione a legislatura" />
                     </SelectTrigger>
                     <SelectContent>
@@ -455,7 +458,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                 className="block"
               >
                 <Card
-                  className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                  className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-card shadow-xs overflow-hidden cursor-pointer"
                 >
                 {/* Card Header */}
                 <div className={`relative overflow-hidden ${parlamentar.ativo
@@ -470,7 +473,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                         </h3>
                         <p className="text-sm opacity-90 truncate">{parlamentar.nome_civil}</p>
                       </div>
-                      <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                      <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
                         {parlamentar.situacao}
                       </Badge>
                     </div>
@@ -487,7 +490,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                           <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-xl" />
                         )}
                         {visibleImages.has(getParlamentarImageKey(parlamentar, index)) && (
-                          <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+                          <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
                             <AvatarImage
                               src={`${config.imageBaseUrl}/${getParlamentarId(parlamentar)}.jpg`}
                               alt={parlamentar.nome_parlamentar}

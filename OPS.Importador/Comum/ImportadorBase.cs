@@ -36,37 +36,37 @@ namespace OPS.Importador.Comum
             //    //ImportarImagemParlamentar();
             //}
 
-            //if (importadorDespesas != null)
-            //{
-            //    importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
+            if (importadorDespesas != null)
+            {
+                importadorDespesas.AtualizarDatasImportacaoDespesas(dInicio: DateTime.UtcNow);
 
-            //    if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
-            //    {
-            //        // Dados por mandato
-            //        await ImportarDespesas(2023); // TODO: Primeiro ano do mandato
-            //    }
-            //    else
-            //    {
-            //        //if (!(importadorDespesas is ImportadorDespesasAmazonas
-            //        //    || importadorDespesas is ImportadorDespesasBahia
-            //        //    || importadorDespesas is ImportadorDespesasCeara
-            //        //    || importadorDespesas is ImportadorDespesasMaranhao
-            //        //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
-            //        //{
-            //        //   await ImportarDespesas(DateTime.Now.Year - 2);
-            //        //await ImportarDespesasAnoAnterior();
-            //        //}
+                if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
+                {
+                    // Dados por mandato
+                    await ImportarDespesas(2023); // TODO: Primeiro ano do mandato
+                }
+                else
+                {
+                    //if (!(importadorDespesas is ImportadorDespesasAmazonas
+                    //    || importadorDespesas is ImportadorDespesasBahia
+                    //    || importadorDespesas is ImportadorDespesasCeara
+                    //    || importadorDespesas is ImportadorDespesasMaranhao
+                    //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
+                    //{
+                    //   await ImportarDespesas(DateTime.Now.Year - 2);
+                    //await ImportarDespesasAnoAnterior();
+                    //}
 
-            //        //await ImportarDespesasAnoAtual();
+                    //await ImportarDespesasAnoAtual();
 
-            for (int ano = 2025; ano <= 2025; ano++)
-                await ImportarDespesas(ano);
+                    for (int ano = 2025; ano <= 2025; ano++)
+                        await ImportarDespesas(ano);
 
-            //        await ImportarDespesas(2025);
-            //    }
+                    //await ImportarDespesas(2025);
+                }
 
-            //    importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
-            //}
+                importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
+            }
 
             //ImportarRemuneracao();
         }

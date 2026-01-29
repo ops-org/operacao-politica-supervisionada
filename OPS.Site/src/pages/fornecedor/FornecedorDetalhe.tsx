@@ -8,7 +8,7 @@ import { FornecedorDetalheSkeleton } from "@/components/FornecedorDetalheSkeleto
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, ExternalLink, Building2, MapPin, Phone, Mail, Calendar, DollarSign, Briefcase, Users, TrendingUp, RefreshCw, FileBadge, Copy, ShieldX, ShieldCheck, CircleUserRound, Building, Earth, CakeSlice, ClipboardList, Drama, MapPinned } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, Building2, MapPin, Phone, Mail, Calendar, DollarSign, Briefcase, Users, TrendingUp, RefreshCw, FileBadge, Copy, ShieldX, ShieldCheck, CircleUserRound, Building, Earth, CakeSlice, ClipboardList, Drama, MapPinned, AlertTriangle } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -20,6 +20,7 @@ import {
 import { fetchFornecedorDetalhe, fetchRecebimentosPorAno, fetchMaioresGastos, FornecedorDetalheResponse, QuadroSocietario, RecebimentosPorAno, MaiorGasto } from "@/lib/api";
 import { AnnualSummaryChart } from "@/components/AnnualSummaryChart";
 import { formatBrazilianPhone } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const FornecedorDetalhe = () => {
     const { id } = useParams();
@@ -77,25 +78,25 @@ const FornecedorDetalhe = () => {
     const enderecoCompleto = `${fornecedor.logradouro}, ${fornecedor.numero}${fornecedor.complemento ? ' - ' + fornecedor.complemento : ''}, ${fornecedor.cep} - ${fornecedor.bairro}, ${fornecedor.cidade}, ${fornecedor.estado}`;
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
             <Header />
             <main className="container mx-auto px-4 py-8">
-                <div className="space-y-8">
-                    {/* Modern Header */}
-                    <div className="text-center space-y-4">
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <Building2 className="h-8 w-8 text-primary" />
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                                Perfil do Fornecedor
-                            </h1>
-                        </div>
-                        <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                            Informações detalhadas sobre o fornecedor, seus recebimentos e atividades comerciais.
-                        </p>
+                {/* Hero Section */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                        <Building2 className="w-8 h-8 text-primary" />
                     </div>
+                    <h1 className="text-4xl font-bold text-foreground mb-4">
+                        Perfil do Fornecedor
+                    </h1>
+                    <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
+                        Informações detalhadas sobre o fornecedor, seus recebimentos e atividades comerciais
+                    </p>
+                </div>
 
+                <div className="space-y-8">
                     {/* Profile Card with Modern Design */}
-                    <Card className="shadow-md border-0 bg-white overflow-hidden">
+                    <Card className="shadow-md border-0 bg-card overflow-hidden">
                         <div className={`relative overflow-hidden ${fornecedor.situacao_cadastral === 'ATIVA'
                             ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
                             : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
@@ -105,7 +106,7 @@ const FornecedorDetalhe = () => {
                                     {/* Icon Section */}
                                     <div className="flex-shrink-0">
                                         <div className="relative">
-                                            <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border-4 border-white/30">
+                                            <div className="w-24 h-24 rounded-full bg-background/20 flex items-center justify-center backdrop-blur-sm border-4 border-border/30">
                                                 <Building2 className="h-12 w-12 text-white" />
                                             </div>
                                         </div>
@@ -120,7 +121,7 @@ const FornecedorDetalhe = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                                        className="h-6 w-6 p-0 text-foreground/80 hover:text-foreground hover:bg-background/20"
                                                         onClick={() => navigator.clipboard.writeText(fornecedor.nome_fantasia || fornecedor.nome)}
                                                     >
                                                         <Copy className="w-3 h-3" />
@@ -131,17 +132,17 @@ const FornecedorDetalhe = () => {
                                                     {fornecedor.cnpj_cpf}
                                                     {fornecedor.tipo && <Badge
                                                         variant="secondary"
-                                                        className="bg-white/20 text-white border-white/30"
+                                                        className="bg-background/20 text-foreground border-border/30"
                                                         title={fornecedor.tipo}
                                                     >
                                                         {fornecedor.tipo}
                                                     </Badge>}
                                                 </div>
 
-                                                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                                {fornecedor.categoria == "PJ" && <div className="flex flex-wrap gap-x-4 gap-y-2">
                                                     {/* Status Badge */}
                                                     <div className="flex items-center gap-1.5 text-sm">
-                                                        {fornecedor.situacao_cadastral === "BAIXADA" ? (
+                                                        {fornecedor.situacao_cadastral !== "ATIVA" ? (
                                                             <>
                                                                 <ShieldX className="w-4 h-4 text-red-300" />
                                                                 <span className="text-red-300">{fornecedor.situacao_cadastral}</span>
@@ -163,10 +164,10 @@ const FornecedorDetalhe = () => {
                                                             <path d="M3 10h18"></path>
                                                         </svg>
                                                         <span>
-                                                            {fornecedor.data_de_abertura} {fornecedor.situacao_cadastral === "BAIXADA" && (" - " + fornecedor.data_da_situacao_cadastral)}
+                                                            {fornecedor.data_de_abertura} {fornecedor.situacao_cadastral !== "ATIVA" && (" - " + fornecedor.data_da_situacao_cadastral)}
                                                         </span>
                                                     </div>
-                                                </div>
+                                                </div>}
 
                                                 {fornecedor.nome_fantasia && fornecedor.nome_fantasia !== fornecedor.nome && (
                                                     <p className="text-white/90">{fornecedor.nome}</p>
@@ -179,7 +180,7 @@ const FornecedorDetalhe = () => {
 
                                     {/* Total Recebimentos Display */}
                                     <div className="text-center md:text-right space-y-2">
-                                        <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+                                        <div className="bg-background/20 rounded-lg p-4 backdrop-blur-sm">
                                             <p className="text-sm text-white/80">Total Recebido</p>
                                             <p className="text-3xl font-bold text-white">
                                                 R$ {recebimentosPorAno?.series?.reduce((a, b) => a + b, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0"}
@@ -191,9 +192,8 @@ const FornecedorDetalhe = () => {
                         </div>
 
                         {/* Detailed Info Section */}
-                        <div className="p-6">
+                        {fornecedor.categoria == "PJ" && <div className="p-6">
                             <div className="space-y-4">
-                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Informações da Empresa</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
                                     {/* Legal Nature */}
                                     <div className="flex items-center gap-1.5">
@@ -259,7 +259,7 @@ const FornecedorDetalhe = () => {
                                     )}
 
                                     {/* Address */}
-                                    <div className="flex items-center gap-1.5 lg:col-span-2">
+                                    <div className="flex items-center gap-1.5 lg:col-span-4">
                                         <MapPin className="w-3.5 h-3.5" />
                                         <div className="flex items-center gap-2">
                                             <span>{enderecoCompleto}</span>
@@ -287,10 +287,10 @@ const FornecedorDetalhe = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>}
 
                         {/* Footer with Update Info */}
-                        <div className="flex flex-col justify-between gap-4 rounded-b-md border-t bg-background px-6 sm:flex-row sm:items-center py-3">
+                        {fornecedor.obtido_em && <div className="flex flex-col justify-between gap-4 rounded-b-md border-t bg-background px-6 sm:flex-row sm:items-center py-3">
                             <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                                 <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path d="M18 6 7 17l-5-5"></path>
@@ -317,11 +317,16 @@ const FornecedorDetalhe = () => {
                                     </a>
                                 </span>
                             </div>
-                        </div>
+                        </div>}
                     </Card>
 
+                    {/* {!fornecedor.categoria &&  <Alert variant="warning" className="mt-4">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>Este fornecedor foi cadastrado incorretamente ou incompleto devido a LGPD.</AlertDescription>
+                    </Alert>} */}
+
                     {/* Detailed Information */}
-                    {fornecedor.categoria == "PJ" && <Card className="shadow-md border-0 bg-white">
+                    {fornecedor.categoria == "PJ" && <Card className="shadow-md border-0 bg-card">
                         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -484,7 +489,7 @@ const FornecedorDetalhe = () => {
                     <div className="grid gap-8 lg:grid-cols-2">
                         {/* Annual Receipts Chart */}
                         {recebimentosPorAno && (
-                            <Card className="shadow-md border-0 bg-white">
+                            <Card className="shadow-md border-0 bg-card">
                                 <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
                                     <div className="flex items-center gap-2">
                                         <TrendingUp className="h-5 w-5 text-primary" />
@@ -504,7 +509,7 @@ const FornecedorDetalhe = () => {
 
                         {/* Top Parliamentarians Table */}
                         {maioresGastos.length > 0 && (
-                            <Card className="shadow-md border-0 bg-white">
+                            <Card className="shadow-md border-0 bg-card">
                                 <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">

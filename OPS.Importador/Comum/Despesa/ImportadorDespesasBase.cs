@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -14,13 +15,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using OpenQA.Selenium;
+using OpenQA.Selenium.BiDi.Input;
 using OPS.Core;
+using OPS.Core.DTOs;
 using OPS.Core.Enumerators;
 using OPS.Core.Exceptions;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
+using OPS.Infraestrutura.Entities.Fornecedores;
 using RestSharp;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OPS.Importador.Comum.Despesa;
 
@@ -193,7 +199,7 @@ public abstract class ImportadorDespesasBase
         item.Nome = item.Nome.NullIfEmpty();
         item.NomeCivil = item.NomeCivil.NullIfEmpty();
         item.CnpjCpf = item.CnpjCpf.NullIfEmpty();
-        item.Empresa = item.Empresa.NullIfEmpty();
+        item.NomeFornecedor = item.NomeFornecedor.NullIfEmpty();
         item.TipoVerba = item.TipoVerba.NullIfEmpty();
         item.TipoDespesa = item.TipoDespesa.NullIfEmpty();
         item.Documento = item.Documento.NullIfEmpty();
@@ -394,6 +400,21 @@ WHERE id_estado = {idEstado};");
 
     private void AjustarDadosGlobais()
     {
+        // CNPJ Especiais da Câmara Federal
+        // 00000000000001 - CELULAR FUNCIONAL
+        // 00000000000002 - LINHA DIRETA
+        // 00000000000003 - IMÓVEL FUNCIONAL
+        // 00000000000006 - RAMAL
+        // 00000000000007 - CORREIOS - SEDEX CONVENCIONAL
+        // 00000000000008 - PEDÁGIO
+        // 00000000000009 - TAXI
+        connection.Execute(@"
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000001' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'telefonia'; -- CELULAR FUNCIONAL
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000007' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'correios%'; -- CORREIOS - SEDEX CONVENCIONAL
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000008' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'pedagio'; -- 00000000000008
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000009' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'taxi'; -- 00000000000009
+        ");
+
         // Substituir nome importação pelo utilizado na importação. Dessa forma podemos ter 2 nomes validos e padronizamos a importação de validação.
         if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
         {
@@ -430,6 +451,51 @@ AND dp.cnpj_correto IS NOT NULL
         }
     }
 
+    private void ResolverFornecedor()
+    {
+        ResolverFornecedorPreExistente();
+        ResolverFornecedorDepara();
+    }
+
+    private void ResolverFornecedorPreExistente()
+    {
+        connection.Execute(@$"
+-- Por CNPJ para fornecedor pré-existente
+UPDATE temp.cl_despesa_temp dt
+set id_fornecedor = f.id
+FROM fornecedor.fornecedor f 
+WHERE dt.id_fornecedor IS NULL
+AND f.cnpj_cpf = dt.cnpj_cpf;
+");
+    }
+
+    private void ResolverFornecedorDepara()
+    {
+        connection.Execute(@$"
+-- Por Nome exato e CPNJ
+UPDATE temp.cl_despesa_temp dt
+set id_fornecedor = COALESCE(f.id_fornecedor_correto, f.id_fornecedor_incorreto)
+FROM temp.fornecedor_de_para f 
+WHERE dt.id_fornecedor IS NULL
+AND f.cnpj_incorreto = dt.cnpj_cpf
+AND unaccent(lower(f.nome)) = unaccent(lower(dt.fornecedor));
+
+-- Por CNPJ (Pode ser parcial ou invalido)
+UPDATE temp.cl_despesa_temp dt
+set id_fornecedor = COALESCE(f.id_fornecedor_correto, f.id_fornecedor_incorreto)
+FROM temp.fornecedor_de_para f 
+WHERE dt.id_fornecedor IS NULL
+AND f.cnpj_incorreto = dt.cnpj_cpf;
+
+-- Por Nome exato (accent-insensitive matching)
+UPDATE temp.cl_despesa_temp dt
+set id_fornecedor = COALESCE(f.id_fornecedor_correto, f.id_fornecedor_incorreto), cnpj_cpf = COALESCE(dt.cnpj_cpf, f.cnpj_correto)
+FROM temp.fornecedor_de_para f 
+WHERE dt.id_fornecedor IS NULL
+AND unaccent(lower(f.nome)) = unaccent(lower(dt.fornecedor));
+");
+    }
+
     public virtual void AjustarDados()
     { }
 
@@ -442,8 +508,8 @@ INSERT INTO assembleias.cl_despesa_especificacao (descricao)
 select distinct despesa_tipo
 from temp.cl_despesa_temp
 where despesa_tipo is not null
-and despesa_tipo not in (
-    select descricao FROM assembleias.cl_despesa_especificacao
+and lower(unaccent(despesa_tipo)) not in (
+    select lower(unaccent(descricao)) FROM assembleias.cl_despesa_especificacao
 )
 ORDER BY despesa_tipo;
                 ");
@@ -611,22 +677,72 @@ WHERE cpf NOT IN (
     {
         logger.LogDebug("Inserir fornecedor faltante");
 
+        ResolverFornecedor();
+
         var affected = connection.Execute(@"
-INSERT INTO fornecedor.fornecedor (nome, cnpj_cpf)
-select MAX(dt.empresa), dt.cnpj_cpf
-from temp.cl_despesa_temp dt
-left join fornecedor.fornecedor f on f.cnpj_cpf = dt.cnpj_cpf
-where dt.cnpj_cpf is not null
-and f.id is null
--- and LENGTH(dt.cnpj_cpf) <= 14
-GROUP BY dt.cnpj_cpf;
-			    ");
+    		INSERT INTO fornecedor.fornecedor (nome, cnpj_cpf)
+    		select MAX(dt.fornecedor), dt.cnpj_cpf
+    		from temp.cl_despesa_temp dt
+    		where dt.id_fornecedor is null
+            and dt.cnpj_cpf is not null
+    		GROUP BY dt.cnpj_cpf;
+    	");
 
         if (affected > 0)
+            ResolverFornecedorPreExistente();
+
+
+        List<string> despesasSemFornecedor = dbContext.CamaraEstadualDespesaTemps
+            .AsNoTracking()
+            .Where(x => x.IdFornecedor == null && x.NomeFornecedor != null)
+            .Select(x => x.NomeFornecedor)
+            .AsEnumerable()
+            .DistinctBy(x => x.ToLower())
+            .ToList();
+
+        if (despesasSemFornecedor.Any())
         {
+            dbContext.ChangeTracker.Clear();
+
+            foreach (var nomeFornecedor in despesasSemFornecedor)
+            {
+                var fornecedor = new Infraestrutura.Entities.Fornecedores.Fornecedor()
+                {
+                    Nome = nomeFornecedor
+                };
+                dbContext.Fornecedores.Add(fornecedor);
+                dbContext.SaveChanges();
+
+
+                dbContext.FornecedorDeParas.Add(new FornecedorDePara()
+                {
+                    NomeFornecedor = nomeFornecedor,
+                    IdFornecedorIncorreto = fornecedor.Id
+                });
+
+                dbContext.DeputadoFederalDespesaTemps
+                    .Where(x => x.IdFornecedor == null && x.Fornecedor == nomeFornecedor)
+                    .ExecuteUpdate(setters => setters.SetProperty(x => x.IdFornecedor, fornecedor.Id));
+            }
+
+            dbContext.SaveChanges();
+            dbContext.ChangeTracker.Clear();
+            affected += despesasSemFornecedor.Count();
+
+            ResolverFornecedorPreExistente();
+        }
+        if (affected > 0)
+        {
+            ResolverFornecedor();
             logger.LogInformation("{Itens} fornecedores incluidos!", affected);
         }
 
+        var sql = $@"update temp.cl_despesa_temp set id_fornecedor = 82624 where id_fornecedor is NULL and fornecedor is NULL";
+        affected = connection.Execute(sql);
+        if (affected > 0)
+        {
+            logger.LogWarning("{Itens} despesas com fornecedores não identificados ajustados para <Não Informado>!", affected);
+        }
     }
 
     public void RemoveDespesas(int ano)
@@ -679,19 +795,17 @@ SELECT
 	p.id AS id_cl_deputado,
     dts.id_cl_despesa_tipo,
     dts.id,
-    f.id AS id_fornecedor,
+    d.id_fornecedor,
     d.data_emissao,
-    CAST(CONCAT(COALESCE(d.ano::text, EXTRACT(YEAR FROM d.data_emissao)::text), 
-           LPAD(COALESCE(d.mes::text, EXTRACT(MONTH FROM d.data_emissao)::text), 2, '0')) AS INT) AS ano_mes,
+    cast(concat(d.ano, LPAD(d.mes::text, 2, '0')) AS INT) AS ano_mes,
     d.documento AS numero_documento,
     d.valor AS valor,
-    CASE WHEN f.id IS NULL THEN d.empresa else null END AS favorecido,
-    d.observacao,
+    d.favorecido,
+    COALESCE(d.observacao, CASE WHEN d.cnpj_cpf IS NULL AND d.fornecedor IS NOT NULL THEN CONCAT('Fornecedor Original: ', d.fornecedor) else null END) AS observacao,
     d.hash
 FROM temp.cl_despesa_temp d
 inner join assembleias.cl_deputado p on id_estado = {idEstado} and {condicaoSql}
-left join assembleias.cl_despesa_especificacao dts on dts.descricao ILIKE d.despesa_tipo
-LEFT join fornecedor.fornecedor f on f.cnpj_cpf = d.cnpj_cpf
+left join assembleias.cl_despesa_especificacao dts on lower(unaccent(dts.descricao)) = lower(unaccent(d.despesa_tipo))
 ORDER BY d.id
 ON CONFLICT DO NOTHING;
 			"; // TODO: Remover ON CONFLICT DO NOTHING
@@ -721,13 +835,13 @@ ON CONFLICT DO NOTHING;
                 "Diferença: [Itens: {LinhasDiferenca}; Valor: R$ {ValorTotalDiferenca:#,###.00}]",
                 itensProcessadosAno, valorTotalProcessadoAno, itensTotalFinal, somaTotalFinal, itensProcessadosAno - itensTotalFinal, valorTotalProcessadoAno - somaTotalFinal);
 
-            var despesasSemParlamentar = connection.ExecuteScalar<int>(@$"
-SELECT COUNT(1)
+            var despesasSemParlamentar = connection.ExecuteScalar<string>(@$"
+SELECT STRING_AGG(DISTINCT d.nome, ', ')
 FROM temp.cl_despesa_temp d
 WHERE d.id_cl_deputado IS NULL");
 
-            if (despesasSemParlamentar > 0)
-                logger.LogError("Há deputados não identificados!");
+            if (!string.IsNullOrEmpty(despesasSemParlamentar))
+                logger.LogError("Há deputados não identificados! {ListaParlamentar}", despesasSemParlamentar);
         }
         else
         {

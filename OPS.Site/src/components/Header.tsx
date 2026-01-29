@@ -1,4 +1,4 @@
-import { Search, Menu, X } from "lucide-react";
+import { Search, Menu, X, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +38,7 @@ export const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2" title="Operação Política Supervisionada">
           <div className="flex h-18 w-18 items-center justify-center rounded-full font-bold text-lg">
-            <img src="//static.ops.org.br/logo_ops.png" width="64" height="40" alt="OPS"></img>
+            <img src="//static.ops.org.br/logo.png" width="64" height="40" alt="OPS"></img>
           </div>
           {/* <span className="hidden font-semibold text-foreground sm:inline-block">
             Operação Política Supervisionada
@@ -125,6 +127,21 @@ export const Header = () => {
               onKeyDown={handleKeyDown}
             />
           </form>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="h-9 w-9"
+            title={theme === 'light' ? 'Mudar para tema escuro' : 'Mudar para tema claro'}
+          >
+            {theme === 'light' ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
+          </Button>
+          
           <Button
             variant="ghost"
             size="icon"

@@ -106,7 +106,7 @@ export const TopSpendersSection = () => {
     <section className="py-12">
       <div className="container mx-auto px-4">
         <h2 className="mb-2 text-2xl font-bold text-foreground">
-          Campeões de gastos
+          Campeões de gastos na legislatura atual <span className="font-normal text-muted-foreground">(Desde fevereiro de 2023)</span>
         </h2>
         <p className="mb-8 text-muted-foreground">
           Os Parlamentares que mais gastaram dinheiro público da verba indenizatória da atual legislatura
@@ -114,7 +114,7 @@ export const TopSpendersSection = () => {
 
         <div className="mb-10">
           <h3 className="mb-4 text-lg font-semibold text-foreground">
-            Senadores <span className="font-normal text-muted-foreground">(Desde fevereiro de 2023)</span>
+            Senadores 
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {data.senadores.map((senador) => (
@@ -125,7 +125,7 @@ export const TopSpendersSection = () => {
 
         <div className="mb-10">
           <h3 className="mb-4 text-lg font-semibold text-foreground">
-            Deputados Federais <span className="font-normal text-muted-foreground">(Desde fevereiro de 2023)</span>
+            Deputados Federais 
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {data.deputadosFederais.map((deputado) => (
@@ -136,7 +136,7 @@ export const TopSpendersSection = () => {
 
         <div>
           <h3 className="mb-4 text-lg font-semibold text-foreground">
-            Deputados Estaduais <span className="font-normal text-muted-foreground"></span>
+            Deputados Estaduais
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {data.deputadosEstaduais.length > 0 ? (

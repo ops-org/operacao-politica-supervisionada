@@ -235,7 +235,7 @@ namespace OPS.Importador.Assembleias.DistritoFederal
                             Ano = (short)ano,
                             Cpf = !string.IsNullOrEmpty(csv[CPF_DEPUTADO]) ? Utils.RemoveCaracteresNaoNumericos(csv[CPF_DEPUTADO]) : "",
                             Nome = csv[NOME_DEPUTADO].Replace("Deputado", "").Replace("Deputada", "").ToTitleCase(),
-                            Empresa = csv[NOME_FORNECEDOR].Trim().Replace("NÃO INFORMADO", "").Replace("DOCUMENTO DANIFICADO", "").Replace("não consta documento", "").Trim(),
+                            NomeFornecedor = csv[NOME_FORNECEDOR].Trim().Replace("NÃO INFORMADO", "").Replace("DOCUMENTO DANIFICADO", "").Replace("não consta documento", "").Trim(),
                             Documento = csv[DOCUMENTO],
                             Origem = filename
                         };
@@ -379,7 +379,7 @@ namespace OPS.Importador.Assembleias.DistritoFederal
                             Ano = (short)ano,
                             Cpf = !string.IsNullOrEmpty(worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString()) ? Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[i, CPF_PARLAMENTAR].Value.ToString()) : "",
                             Nome = worksheet.Cells[i, NOME_PARLAMENTAR].Value.ToString().Replace("Deputado", "").Replace("Deputada", "").Trim().ToTitleCase(),
-                            Empresa = worksheet.Cells[i, NOME_PRESTADOR].Value.ToString().Trim().Replace("NÃO INFORMADO", "").Replace("NR_COMPROVANTE DANIFICADO", "").Replace("não consta NR_COMPROVANTE", "").Trim(),
+                            NomeFornecedor = worksheet.Cells[i, NOME_PRESTADOR].Value.ToString().Trim().Replace("NÃO INFORMADO", "").Replace("NR_COMPROVANTE DANIFICADO", "").Replace("não consta NR_COMPROVANTE", "").Trim(),
                             Documento = worksheet.Cells[i, NR_COMPROVANTE].Value?.ToString(),
                             Origem = filename
                         };

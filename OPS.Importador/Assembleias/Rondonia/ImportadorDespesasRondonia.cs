@@ -168,22 +168,22 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                         {
                             Match matchPrestador = maches[0];
                             despesaTemp.CnpjCpf = Utils.RemoveCaracteresNaoNumericosExetoAsterisco(matchPrestador.Groups["cnpj"].Value);
-                            despesaTemp.Empresa = matchPrestador.Groups["prestador"].Value.Trim();
+                            despesaTemp.NomeFornecedor = matchPrestador.Groups["prestador"].Value.Trim();
                         }
                         else if (linhaPartes[0].Contains("COPIADORA RORIZ LTDA 22. 882.427/0001-01"))
                         {
                             despesaTemp.CnpjCpf = "22882427000101"; // 22.882.427/0001-01
-                            despesaTemp.Empresa = "COPIADORA RORIZ LTDA";
+                            despesaTemp.NomeFornecedor = "COPIADORA RORIZ LTDA";
                         }
                         else if (linhaPartes[0].Contains("A.S. DE ALMEIDA ALINHAMENTOS 03770600/0001-27"))
                         {
                             despesaTemp.CnpjCpf = "03770600000127";  // 03.770.600/0001-27
-                            despesaTemp.Empresa = "A.S. DE ALMEIDA ALINHAMENTOS";
+                            despesaTemp.NomeFornecedor = "A.S. DE ALMEIDA ALINHAMENTOS";
                         }
                         else if (linhaPartes[0].Contains("ARNALDO GUIMARAES NETO 704.514.94849"))
                         {
                             despesaTemp.CnpjCpf = "70451494849";  // 704.514.948-49
-                            despesaTemp.Empresa = "ARNALDO GUIMARAES NETO";
+                            despesaTemp.NomeFornecedor = "ARNALDO GUIMARAES NETO";
                         }
                         else
                         {
