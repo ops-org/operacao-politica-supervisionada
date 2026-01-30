@@ -34,7 +34,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-md shadow-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2" title="Operação Política Supervisionada">
           <div className="flex h-18 w-18 items-center justify-center rounded-full font-bold text-lg">
@@ -127,21 +127,25 @@ export const Header = () => {
               onKeyDown={handleKeyDown}
             />
           </form>
-          
+
+
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="h-9 w-9"
+            className="h-9 w-9 bg-gradient-to-br from-primary/20 to-accent/20 hover:from-primary/30 hover:to-accent/30 transition-all duration-300"
             title={theme === 'light' ? 'Mudar para tema escuro' : 'Mudar para tema claro'}
           >
-            {theme === 'light' ? (
-              <Moon className="h-4 w-4" />
-            ) : (
-              <Sun className="h-4 w-4" />
-            )}
+            <div className="transition-transform duration-500 ease-in-out" style={{ transform: theme === 'dark' ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+              {theme === 'light' ? (
+                <Moon className="h-4 w-4 text-primary" />
+              ) : (
+                <Sun className="h-4 w-4 text-accent" />
+              )}
+            </div>
           </Button>
-          
+
+
           <Button
             variant="ghost"
             size="icon"
@@ -155,7 +159,7 @@ export const Header = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-card">
+        <div className="md:hidden border-t border-border/40 bg-gradient-to-br from-card/95 to-muted/95 backdrop-blur-lg">
           <nav className="container mx-auto px-4 py-4 space-y-2">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground mb-2">Câmara</p>

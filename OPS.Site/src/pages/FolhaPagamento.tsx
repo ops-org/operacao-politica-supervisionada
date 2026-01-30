@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -45,7 +46,7 @@ const typeConfigs = {
 } as const;
 
 const generateAnos = () => {
-    const currentYear = new Date().getFullYear()-1; // TODO: Remove -1
+    const currentYear = new Date().getFullYear() - 1; // TODO: Remove -1
     const anos = [{ value: null, label: "Selecione" }];
     for (let year = currentYear; year >= 2012; year--) {
         anos.push({ value: year.toString(), label: year.toString() });
@@ -80,7 +81,7 @@ const getAgrupamentoOptions = (type?: "deputado-federal" | "senador") => {
             { value: "6", label: "Não Agrupar", icon: FileText }
         ];
     }
-    
+
     // Senador options
     return [
         { value: "1", label: "Lotação", icon: Building2 },
@@ -173,6 +174,7 @@ const getColumnConfigs = (agrupamento: string, type?: "deputado-federal" | "sena
 
 export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "senador" }) {
     const config = type ? typeConfigs[type] : typeConfigs["senador"];
+    usePageTitle(config.title);
     const [showFilters, setShowFilters] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const [selectedFilters, setSelectedFilters] = useState({
@@ -452,20 +454,19 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+            <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
                 <Header />
                 <main className="container mx-auto px-4 py-8">
-                    {/* Hero Section */}
-                    <div className="text-center mb-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-                            <DollarSign className="w-8 h-8 text-primary" />
+                    {/* Custom Header Layout */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                                {config.title}
+                            </h1>
+                            <p className="text-muted-foreground text-lg">
+                                {config.subtitle}
+                            </p>
                         </div>
-                        <h1 className="text-4xl font-bold text-foreground mb-4">
-                            {config.title}
-                        </h1>
-                        <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
-                            {config.subtitle}
-                        </p>
                     </div>
                     <ErrorMessage
                         onRetry={() => refetch()}
@@ -481,7 +482,7 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
 
     return (
         <>
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
                 <LoadingOverlay isLoading={isLoading} content="Carregando informações da remuneração..." />
 
                 <Header />
@@ -489,8 +490,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                     <div className="space-y-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-foreground mb-2">{config.title}</h1>
-                                <p className="text-muted-foreground">{config.subtitle}</p>
+                                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">{config.title}</h1>
+                                <p className="text-muted-foreground text-lg">{config.subtitle}</p>
                             </div>
                             <Button
                                 onClick={() => setShowFilters(!showFilters)}
@@ -504,15 +505,15 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                         </div>
 
                         {filterSummary.length > 0 && (
-                            <Card className="border-l-4 border-l-primary">
+                            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm border-l-4 border-l-primary overflow-hidden">
                                 <CardContent className="pt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-2 w-2 bg-primary rounded-full"></div>
-                                            <span className="text-sm font-medium text-foreground">Filtros aplicados:</span>
+                                            <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>
+                                            <span className="text-sm font-bold text-foreground">Filtros aplicados:</span>
                                             <div className="flex gap-2 flex-wrap">
                                                 {filterSummary.map((filter, index) => (
-                                                    <Badge key={index} variant="secondary" className="text-xs">
+                                                    <Badge key={index} variant="secondary" className="text-xs font-semibold">
                                                         {filter}
                                                     </Badge>
                                                 ))}
@@ -522,7 +523,7 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                             variant="ghost"
                                             size="sm"
                                             onClick={handleClearFilters}
-                                            className="text-muted-foreground hover:text-foreground"
+                                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                                         >
                                             <Trash className="h-4 w-4 mr-1" />
                                             Limpar
@@ -533,17 +534,17 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                         )}
 
                         {showFilters && (
-                            <Card className="border-0 shadow-lg">
+                            <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
                                 <CardContent className="p-6">
                                     <div className="space-y-6">
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                                             <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
+                                                <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                    <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">01</div>
                                                     Ano
                                                 </label>
                                                 <Select value={selectedFilters.ano} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, ano: value }))}>
-                                                    <SelectTrigger className="h-11">
+                                                    <SelectTrigger className="h-11 bg-background/50 border-muted">
                                                         <SelectValue placeholder="Selecione o ano" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -558,12 +559,12 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
 
                                             {type === "deputado-federal" && (
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">02</div>
                                                         Mês
                                                     </label>
                                                     <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
-                                                        <SelectTrigger className="h-11">
+                                                        <SelectTrigger className="h-11 bg-background/50 border-muted">
                                                             <SelectValue placeholder="Selecione o mês" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -578,8 +579,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                             )}
 
                                             <div className="space-y-3">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
+                                                <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                    <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">03</div>
                                                     {type === "deputado-federal" ? "Deputado(a)" : "Senador(a)"}
                                                 </label>
                                                 <MultiSelectDropdown
@@ -594,8 +595,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                         {type === "deputado-federal" && (
                                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">04</div>
                                                         Grupo Funcional
                                                     </label>
                                                     <MultiSelectDropdown
@@ -607,8 +608,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">05</div>
                                                         Funcionário(a)
                                                     </label>
                                                     <MultiSelectDropdown
@@ -624,12 +625,12 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                         {type === "senador" && (
                                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">02</div>
                                                         Mês
                                                     </label>
                                                     <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
-                                                        <SelectTrigger className="h-11">
+                                                        <SelectTrigger className="h-11 bg-background/50 border-muted">
                                                             <SelectValue placeholder="Selecione o mês" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -643,8 +644,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">04</div>
                                                         Vínculo
                                                     </label>
                                                     <MultiSelectDropdown
@@ -656,8 +657,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">05</div>
                                                         Categoria
                                                     </label>
                                                     <MultiSelectDropdown
@@ -669,8 +670,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">06</div>
                                                         Cargo
                                                     </label>
                                                     <MultiSelectDropdown
@@ -682,8 +683,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 </div>
 
                                                 <div className="space-y-3">
-                                                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                        <div className="h-1 w-4 bg-primary rounded"></div>
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">07</div>
                                                         Lotação
                                                     </label>
                                                     <MultiSelectDropdown
@@ -696,10 +697,10 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                             </div>
                                         )}
 
-                                        <div className="border-t pt-6">
+                                        <div className="border-t border-muted/50 pt-6">
                                             <div className="space-y-4">
-                                                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    <div className="h-1 w-4 bg-primary rounded"></div>
+                                                <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                    <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">08</div>
                                                     Agrupar por
                                                 </label>
                                                 <RadioGroup
@@ -709,6 +710,7 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 >
                                                     {agrupamentoOptions.map((option) => {
                                                         const Icon = option.icon;
+                                                        const isSelected = selectedFilters.agrupar === option.value;
                                                         return (
                                                             <div className="relative" key={option.value}>
                                                                 <RadioGroupItem
@@ -718,10 +720,13 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                                 />
                                                                 <Label
                                                                     htmlFor={`agrupamento-${option.value}`}
-                                                                    className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary cursor-pointer transition-all duration-200"
+                                                                    className={`flex flex-col items-center justify-center rounded-xl border-2 p-3 cursor-pointer transition-all duration-300 ${isSelected
+                                                                            ? "border-primary bg-primary/10 text-primary shadow-inner"
+                                                                            : "border-muted bg-background/50 hover:bg-accent hover:border-accent-foreground/30 text-muted-foreground"
+                                                                        }`}
                                                                 >
-                                                                    <Icon className="h-4 w-4 mb-1" />
-                                                                    <div className="text-xs font-medium text-center">{option.label}</div>
+                                                                    <Icon className={`h-5 w-5 mb-1.5 transition-transform duration-300 ${isSelected ? "scale-110" : ""}`} />
+                                                                    <div className="text-xs font-bold uppercase tracking-tight text-center">{option.label}</div>
                                                                 </Label>
                                                             </div>
                                                         );
@@ -730,14 +735,14 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-3 pt-4 border-t">
-                                            <Button onClick={handleSearch} size="lg" className="flex-1 sm:flex-none">
-                                                <Search className="h-4 w-4 mr-2" />
-                                                Pesquisar
+                                        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-muted/50">
+                                            <Button onClick={handleSearch} size="lg" className="flex-1 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
+                                                <Search className="h-5 w-5 mr-2" />
+                                                Pesquisar agora
                                             </Button>
-                                            <Button variant="outline" onClick={handleClearFilters} size="lg" className="flex-1 sm:flex-none">
-                                                <Trash className="h-4 w-4 mr-2" />
-                                                Limpar filtros
+                                            <Button variant="outline" onClick={handleClearFilters} size="lg" className="flex-1 sm:flex-none border-muted hover:bg-accent transition-colors">
+                                                <Trash className="h-5 w-5 mr-2" />
+                                                Limpar todos
                                             </Button>
                                         </div>
                                     </div>
@@ -768,22 +773,22 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                             </div>
                         </div>
 
-                        <Card className="border-0 shadow-lg overflow-hidden">
+                        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
                             <div className="overflow-x-auto">
                                 <Table key={activeAgrupamento}>
-                                    <TableHeader className="bg-muted/50">
-                                        <TableRow>
+                                    <TableHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
+                                        <TableRow className="hover:bg-transparent">
                                             {columns.map((column) => {
                                                 return (
                                                     <TableHead
                                                         key={column.key}
-                                                        className={`${column.align === 'right' ? 'text-right' : ''} ${column.sortable ? 'cursor-pointer hover:bg-muted/80 transition-colors' : ''} font-semibold text-foreground ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}
-                                                        onClick={() => column.sortable && handleSort(column.columnIndex)}
+                                                        className={`${column.align === 'right' ? 'text-right' : ''} ${column.sortable ? 'cursor-pointer hover:bg-muted/80 transition-colors' : ''} py-4 px-6 text-xs font-bold uppercase tracking-wider text-foreground border-b-2 border-primary/10 ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}
+                                                        onClick={() => column.sortable && handleSort(column.columnIndex || 0)}
                                                     >
                                                         {column.label && (
                                                             <div className={`flex items-center gap-2 ${column.align === 'right' ? 'justify-end' : ''}`}>
                                                                 {column.label}
-                                                                {column.sortable && <SortIcon field={column.columnIndex} />}
+                                                                {column.sortable && <SortIcon field={column.columnIndex || 0} />}
                                                             </div>
                                                         )}
                                                     </TableHead>
@@ -794,11 +799,11 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                     <TableBody>
                                         {remuneracaoData.length > 0 ? (
                                             remuneracaoData.map((row, index) => (
-                                                <TableRow key={index} className="hover:bg-muted/50 transition-colors">
+                                                <TableRow key={index} className="hover:bg-muted/30 transition-colors border-b last:border-0">
                                                     {columns.map((column) => {
                                                         if (column.key === 'acoes' && activeAgrupamento !== '6') {
                                                             return (
-                                                                <TableCell key={column.key} className={`${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                <TableCell key={column.key} className={`py-4 px-6 ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
                                                                     <div className="flex gap-2">
                                                                         <Button
                                                                             size="sm"
@@ -826,15 +831,15 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                         if (cellContent) {
                                                             if (column.key === 'categoria') {
                                                                 return (
-                                                                    <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
-                                                                        {formatNameAcronym(cellContent, row.simbolo_funcao)}<br/>
-                                                                        <small>{formatNameAcronym(cellContent, row.referencia_cargo)}</small>
+                                                                    <TableCell key={column.key} className={`py-4 px-6 ${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                        {formatNameAcronym(cellContent, row.simbolo_funcao)}<br />
+                                                                        <small className="text-muted-foreground">{formatNameAcronym(cellContent, row.referencia_cargo)}</small>
                                                                     </TableCell>
                                                                 );
                                                             } else if (column.key === 'valor_total') {
                                                                 if (selectedFilters.agrupar == "6") { // Sem agrupamento
                                                                     return (
-                                                                        <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                        <TableCell key={column.key} className={`py-4 px-6 ${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
                                                                             <Link
                                                                                 to={`./${row.id}`}
                                                                                 className="text-primary hover:text-primary/80 transition-colors font-bold font-mono"
@@ -848,10 +853,10 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                                 cellContent = `R$ ${cellContent}`;
                                                             } else if (column.key === 'descricao' && selectedFilters.agrupar == "7") { // Senador
                                                                 return (
-                                                                    <TableCell key={column.key} className={`${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                                    <TableCell key={column.key} className={`py-4 px-6 ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
                                                                         <Link
-                                                                            to={`/senador/${row.id}`}
-                                                                            className="text-primary hover:text-primary/80 transition-colors font-medium"
+                                                                            to={`${config.detailRoute}/${row.id}`}
+                                                                            className="text-primary hover:text-primary/80 transition-colors font-medium decoration-primary/30 hover:underline"
                                                                         >
                                                                             {cellContent}
                                                                         </Link>
@@ -861,7 +866,7 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                         }
 
                                                         return (
-                                                            <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
+                                                            <TableCell key={column.key} className={`${column.align === 'right' ? 'text-right whitespace-nowrap font-mono' : ''} font-medium py-4 px-6 ${column.hideOnSmallScreen ? 'hidden sm:table-cell' : ''}`}>
                                                                 {cellContent}
                                                             </TableCell>
                                                         );

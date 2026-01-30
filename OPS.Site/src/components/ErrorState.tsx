@@ -18,11 +18,11 @@ export const ErrorState = ({
     showRetryButton = false
 }: ErrorStateProps) => {
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
             <Header />
             <main className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-center min-h-[400px] px-4">
-                    <Card className="max-w-md w-full border-0 shadow-lg">
+                    <Card className="max-w-md w-full border-0 shadow-lg bg-card/80 backdrop-blur-sm">
                         <CardContent className="p-8 text-center space-y-6">
                             <div className="flex justify-center">
                                 <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">

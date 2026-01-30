@@ -265,6 +265,177 @@ namespace OPS.Core.Repositories
             }
         }
 
+        public async Task<DocumentoDetalheDTO> Documento(int id)
+        {
+            // using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+
+                strSql.AppendLine(@"
+					SELECT
+                        l.id as id_despesa
+                        , l.data_emissao
+                        , l.valor as valor_liquido
+                        , l.ano_mes
+                        , td.id as id_despesa_tipo
+                        , td.descricao as descricao_despesa_tipo
+                        , d.id as id_parlamentar
+                        , d.nome as nome_parlamentar
+                        , e.id as id_estado
+                        , e.sigla as sigla_estado
+                        , p.sigla as sigla_partido
+                        , pj.id AS id_fornecedor
+                        , pj.cnpj_cpf
+                        , pj.nome AS nome_fornecedor
+                    FROM senado.sf_despesa l
+                    LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+                    LEFT JOIN senado.sf_senador d ON d.id = l.id_sf_senador
+                    LEFT JOIN senado.sf_despesa_tipo td ON td.id = l.id_sf_despesa_tipo
+                    LEFT JOIN partido p on p.id = d.id_partido
+                    LEFT JOIN estado e on e.id = d.id_estado
+					WHERE l.id = @id
+				 ");
+
+                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        string cnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString());
+                        var anoMes = reader["ano_mes"].ToString();
+                        var ano = Convert.ToInt16(anoMes.Substring(0, 4));
+                        var mes = Convert.ToInt16(anoMes.Substring(4));
+                        var idEstado = Convert.ToInt16(reader["id_estado"]);
+
+                        var documento = new DocumentoDetalheDTO
+                        {
+                            IdDespesa = reader["id_despesa"],
+                            DataEmissao = Utils.FormataData(reader["data_emissao"]),
+                            ValorLiquido = Utils.FormataValor(Convert.ToDecimal(reader["valor_liquido"])),
+                            Ano = ano,
+                            Mes = mes,
+                            Competencia = $"{mes:00}/{ano:0000}",
+                            IdDespesaTipo = reader["id_despesa_tipo"],
+                            DescricaoDespesa = reader["descricao_despesa_tipo"].ToString(),
+                            IdParlamentar = reader["id_parlamentar"],
+                            NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                            SiglaEstado = reader["sigla_estado"].ToString(),
+                            SiglaPartido = reader["sigla_partido"].ToString(),
+                            IdFornecedor = reader["id_fornecedor"],
+                            CnpjCpf = cnpjCpf,
+                            NomeFornecedor = reader["nome_fornecedor"].ToString()
+                        };
+
+                        // TODO Implementar links das despesas
+                        if (idEstado == 0)
+                        {
+                        }
+
+                        return documento;
+                    }
+                }
+                return null;
+            }
+        }
+
+        public async Task<dynamic> DocumentosDoMesmoDia(int id)
+        {
+            // using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+
+                strSql.AppendLine(@"
+                    SELECT
+                        l.id as id_despesa
+                        , pj.id as id_fornecedor
+                        , pj.cnpj_cpf
+                        , pj.nome as nome_fornecedor
+                        , pji.estado as sigla_estado_fornecedor
+                        , l.valor as valor_liquido
+                    FROM (
+                        select id, id_sf_senador, id_fornecedor, data_emissao 
+                        FROM senado.sf_despesa
+                        where id = @id
+                    ) l1 
+                    INNER JOIN senado.sf_despesa l on
+                        l1.id_sf_senador = l.id_sf_senador and
+                        l1.data_emissao = l.data_emissao and
+                        l1.id <> l.id
+                    LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+                    LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
+                    order by l.valor desc
+                    limit 50
+				 ");
+
+                var lstRetorno = new List<dynamic>();
+
+                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
+                while (await reader.ReadAsync())
+                {
+                    lstRetorno.Add(new
+                    {
+                        IdDespesa = Convert.ToInt64(reader["id_despesa"]),
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                        NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                        SiglaEstadoFornecedor = reader["sigla_estado_fornecedor"].ToString(),
+                        ValorLiquido = Utils.FormataValor(reader["valor_liquido"])
+                    });
+                }
+
+                return lstRetorno;
+            }
+        }
+
+        public async Task<dynamic> DocumentosDaSubcotaMes(int id)
+        {
+            // using (AppDb banco = new AppDb())
+            {
+                var strSql = new StringBuilder();
+
+                strSql.AppendLine(@"
+					SELECT
+						l.id as id_despesa
+						, pj.id as id_fornecedor
+                        , pj.cnpj_cpf
+						, pj.nome as nome_fornecedor
+						, pji.estado as sigla_estado_fornecedor
+						, l.valor as valor_liquido
+					FROM (
+						select id, id_sf_senador, id_fornecedor, id_sf_despesa_tipo, ano_mes 
+                        FROM senado.sf_despesa
+						where id = @id
+					) l1 
+					INNER JOIN senado.sf_despesa l on
+					    l1.id_sf_senador = l.id_sf_senador and
+					    l1.ano_mes = l.ano_mes and
+					    l1.id_sf_despesa_tipo = l.id_sf_despesa_tipo and
+					    l1.id <> l.id
+					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
+					LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
+					order by l.valor desc
+					limit 50
+				 ");
+
+                var lstRetorno = new List<dynamic>();
+
+                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
+                while (await reader.ReadAsync())
+                {
+                    lstRetorno.Add(new
+                    {
+                        IdDespesa = Convert.ToInt64(reader["id_despesa"]),
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                        NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                        SiglaEstadoFornecedor = reader["sigla_estado_fornecedor"].ToString(),
+                        ValorLiquido = Utils.FormataValor(reader["valor_liquido"])
+                    });
+                }
+
+                return lstRetorno;
+            }
+        }
+
         public async Task<dynamic> GastosPorAno(int id)
         {
             // using (AppDb banco = new AppDb())

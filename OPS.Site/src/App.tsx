@@ -22,6 +22,8 @@ import DeputadoDespesaDocumentoDetalhe from "./pages/DocumentoDetalhe";
 
 import SenadorDetalhe from "./pages/senado/SenadorDetalhe";
 
+import { ScrollToTop } from "@/components/ScrollToTop";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -31,6 +33,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/busca" element={<Busca />} />
@@ -40,7 +43,7 @@ const App = () => (
             <Route path="/deputado-estadual" element={<ParlamentareLista key="deputado-estadual" type="deputado-estadual" />} />
             <Route path="/deputado-estadual/:id" element={<DeputadoEstadualDetalhe />} />
             <Route path="/deputado-estadual/ceap" element={<CotaParlamentar key="deputado-estadual" type="deputado-estadual" />} />
-<Route path="/deputado-estadual/ceap/:id" element={<DeputadoDespesaDocumentoDetalhe key="deputado-estadual" type="deputado-estadual" />} />
+            <Route path="/deputado-estadual/ceap/:id" element={<DeputadoDespesaDocumentoDetalhe key="deputado-estadual" type="deputado-estadual" />} />
 
             <Route path="/deputado-federal" element={<ParlamentareLista key="deputado-federal" type="deputado-federal" />} />
             <Route path="/deputado-federal/:id" element={<DeputadoFederalDetalhe />} />

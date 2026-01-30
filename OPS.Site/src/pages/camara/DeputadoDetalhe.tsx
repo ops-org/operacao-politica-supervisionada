@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ErrorState } from "@/components/ErrorState";
@@ -20,12 +21,13 @@ import {
 import { apiClient } from "@/lib/api";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { formatCurrency, formatValue } from "@/lib/utils";
-import { ExternalLink, Phone, Mail, Users, TrendingUp, Calendar, MapPin, Briefcase, User, DollarSign, Building2 } from "lucide-react";
+import { ExternalLink, Phone, Mail, Users, TrendingUp, Calendar, MapPin, Briefcase, User, DollarSign, Building2, ArrowRight } from "lucide-react";
 import { fetchDeputadoDetalhe, fetchMaioresFornecedores, fetchCustoAnual, DeputadoDetalhe as DeputadoDetalheType, Fornecedor, CustoAnual } from "@/lib/api";
 
 const DeputadoFederalDetalhe = () => {
   const { id } = useParams();
   const [deputado, setDeputado] = useState<DeputadoDetalheType | null>(null);
+  usePageTitle(deputado ? deputado.nome_parlamentar : "Deputado Federal");
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [custoAnual, setCustoAnual] = useState<CustoAnual[]>([]);
   const [maioresNotas, setMaioresNotas] = useState<any[]>([]);
@@ -88,88 +90,99 @@ const DeputadoFederalDetalhe = () => {
   const paginaOfficialUrl = `https://www.camara.leg.br/deputados/${deputado.id_cf_deputado}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-            <User className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Perfil do Deputado Federal
-          </h1>
-          <p className="text-lg text-muted-foreground mx-auto max-w-2xl">
-            Informações detalhadas sobre o parlamentar e seus gastos
-          </p>
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+          <Link to="/deputado-federal" className="hover:text-foreground transition-colors">
+            Deputados Federais
+          </Link>
+          <ArrowRight className="h-4 w-4" />
+          <span className="text-foreground">Perfil do Deputado Federal</span>
         </div>
 
         <div className="space-y-8">
           {/* Profile Card with Modern Design */}
-          <Card className="shadow-md border-0 bg-card overflow-hidden">
+          <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300 border-t-4 border-t-primary">
             <div className={`relative overflow-hidden ${deputado.situacao === 'Exercício'
-              ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white"
-              : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
+              ? "bg-gradient-to-r from-primary/10 to-accent/5"
+              : "bg-gradient-to-r from-slate-500/10 to-transparent"
               }`}>
-              <div className="p-6">
-                <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+              {/* Animated geometric shapes for premium feel */}
+              <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute bottom-[-50%] left-[-10%] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+
+              <div className="p-8 relative z-10">
+                <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                   {/* Avatar Section */}
                   <div className="flex-shrink-0">
-                    <div className="relative">
-                      <Avatar className="h-32 w-24 rounded-lg border-4 border-background/30">
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                      <Avatar className={`h-40 w-32 rounded-2xl border-2 border-background shadow-2xl transition-all duration-500 group-hover:scale-105 ${deputado.situacao !== 'Exercício' ? "grayscale opacity-80" : ""}`}>
                         <AvatarImage src={fotoUrl} alt={deputado.nome_parlamentar} />
-                        <AvatarFallback className="rounded-lg text-2xl bg-background/20 text-foreground">
-                          {deputado.nome_parlamentar.split(" ").map(n => n[0]).join("")}
+                        <AvatarFallback className="rounded-2xl text-3xl font-black bg-muted text-muted-foreground uppercase">
+                          {deputado.nome_parlamentar.split(" ").filter(n => n.length > 2).slice(0, 2).map(n => n[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
                     </div>
                   </div>
 
                   {/* Main Info Section */}
-                  <div className="flex-1 text-center md:text-left space-y-3">
-                    <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
-                      <h2 className="text-2xl font-bold">
-                        <a
-                          title="Clique para visitar a Página Oficial do parlamentar na Câmara Federal"
-                          href={paginaOfficialUrl}
-                          target="_blank"
-                          className="transition-colors inline-flex items-center gap-1"
-                        >
-                          {deputado.nome_parlamentar}
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </h2>
-                    </div>
+                  <div className="flex-1 text-center md:text-left space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
+                        <h2 className="text-4xl font-black text-foreground tracking-tight">
+                          <a
+                            title="Clique para visitar a Página Oficial do parlamentar na Câmara Federal"
+                            href={paginaOfficialUrl}
+                            target="_blank"
+                            className="hover:text-primary transition-colors inline-flex items-center gap-2 group"
+                          >
+                            {deputado.nome_parlamentar}
+                            <ExternalLink className="h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        </h2>
+                      </div>
 
-                    <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
-                      <Badge variant="secondary" className="font-semibold bg-background/20 text-foreground border-border/30" title={deputado.nome_partido}>
-                        {deputado.sigla_partido}
-                      </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1 bg-background/20 text-foreground border-border/30" title={deputado.nome_estado}>
-                        <MapPin className="w-3 h-3" />
-                        {deputado.sigla_estado}
-                      </Badge>
-                      <span>-</span>
-                      <Badge variant="secondary" className="bg-background/20 text-foreground border-border/30" title="Condição">
-                        {deputado.condicao}
-                      </Badge>
-                      <Badge variant="secondary" className="bg-background/20 text-foreground border-border/30" title="Situação">
-                        {deputado.situacao}
-                      </Badge>
-                    </div>
+                      <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
+                        <Badge className="font-black bg-primary/10 text-primary border-primary/20 uppercase tracking-widest text-[10px] px-3 py-1" title={deputado.nome_partido}>
+                          {deputado.sigla_partido}
+                        </Badge>
+                        <Badge variant="outline" className="flex items-center gap-1.5 bg-background/50 backdrop-blur-sm border-muted-foreground/20 font-bold text-[10px] uppercase tracking-widest px-3 py-1" title={deputado.nome_estado}>
+                          <MapPin className="w-3 h-3 text-primary" />
+                          {deputado.sigla_estado}
+                        </Badge>
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground border-muted-foreground/20 font-bold text-[10px] uppercase tracking-widest px-3 py-1" title="Condição">
+                          {deputado.condicao}
+                        </Badge>
+                        {deputado.situacao === 'Exercício' ? (
+                          <Badge className="bg-green-500/10 text-green-600 border-green-500/20 font-bold text-[10px] uppercase tracking-widest px-3 py-1">
+                            {deputado.situacao}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-muted text-muted-foreground border-muted-foreground/20 font-bold text-[10px] uppercase tracking-widest px-3 py-1">
+                            {deputado.situacao}
+                          </Badge>
+                        )}
+                      </div>
 
-                    <p className="text-white/90">{deputado.nome_civil}</p>
+                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest opacity-80">{deputado.nome_civil}</p>
+                    </div>
                   </div>
 
                   {/* Total Cost Display */}
-                  <div className="text-center md:text-right space-y-2">
-                    <div className="bg-background/20 rounded-lg p-4 backdrop-blur-sm">
-                      <p className="text-sm text-white/80">Custo Total Acumulado</p>
-                      <p className="text-3xl font-bold text-white font-mono">
+                  <div className="text-center md:text-right space-y-2 lg:min-w-[280px]">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 shadow-xl shadow-primary/20 text-white transform hover:scale-105 transition-transform duration-300">
+                      <div className="flex items-center justify-center md:justify-end gap-2 mb-1 opacity-90">
+                        <TrendingUp className="h-4 w-4" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">Custo Total Acumulado</p>
+                      </div>
+                      <p className="text-4xl font-black font-mono tracking-tighter">
                         R$ {deputado.valor_total}
                       </p>
-                      <p className="text-xs text-white/70">
-                        * CEAP + Verba Gabinete + Salário + Auxílios
+                      <p className="text-[9px] font-medium text-white/70 uppercase tracking-tight mt-1">
+                        CEAP • GABINETE • SALÁRIO • AUXÍLIOS
                       </p>
                     </div>
                   </div>
@@ -178,82 +191,105 @@ const DeputadoFederalDetalhe = () => {
             </div>
 
             {/* Contact Info Bar */}
-            {deputado.situacao == "Ativo" &&
-              <div className="border-t border-border bg-muted px-2 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Email:</span>
-                    <a href={`mailto:${deputado.email}`} className="text-primary hover:underline">
-                      {deputado.email}
-                    </a>
+            {deputado.situacao == "Exercício" &&
+              <div className="border-t border-border/50 bg-muted/20 px-8 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-[11px] font-bold uppercase tracking-wider">
+                  <div className="flex items-center gap-3 group">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-muted-foreground font-black">Email oficial</span>
+                      <a href={`mailto:${deputado.email}`} className="text-foreground hover:text-primary transition-colors lowercase font-medium">
+                        {deputado.email}
+                      </a>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Telefone:</span>
-                    <span>{deputado.telefone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Gabinete:</span>
-                    <span>Sala {deputado.sala} - Anexo {deputado.predio}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Secretários Ativos:</span>
-                    <span>{deputado.secretarios_ativos}</span>
-                  </div>
+                  {deputado.telefone && <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-muted-foreground font-black">Telefone</span>
+                      <span className="text-foreground">{deputado.telefone}</span>
+                    </div>
+                  </div>}
+                  {deputado.sala && <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                      <MapPin className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-muted-foreground font-black">Gabinete</span>
+                      <span className="text-foreground">SALA {deputado.sala} • ANEXO {deputado.predio}</span>
+                    </div>
+                  </div>}
+                  {deputado.secretarios_ativos && <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-muted-foreground font-black">Secretários ativos</span>
+                      <span className="text-foreground">{deputado.secretarios_ativos}</span>
+                    </div>
+                  </div>}
                 </div>
               </div>
-               }
+            }
           </Card>
 
-          {/* Modern Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <Card className="shadow-lg border-0 bg-blue-500/5 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-600">Cota Parlamentar</p>
-                    <p className="text-lg font-bold text-blue-900">R$ {deputado.valor_total_ceap}</p>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Cota Parlamentar</p>
+                    <p className="text-2xl font-black text-blue-900 font-mono tracking-tighter">R$ {deputado.valor_total_ceap}</p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-blue-500" />
+                  <div className="p-3 bg-blue-500/10 text-blue-600 rounded-2xl shadow-inner border border-blue-500/10 group-hover:scale-110 transition-transform">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+            <Card className="shadow-lg border-0 bg-orange-500/5 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-orange-600">Verba de Gabinete</p>
-                    <p className="text-lg font-bold text-orange-900">R$ {deputado.valor_total_remuneracao}</p>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Verba de Gabinete</p>
+                    <p className="text-2xl font-black text-orange-900 font-mono tracking-tighter">R$ {deputado.valor_total_remuneracao}</p>
                   </div>
-                  <Building2 className="h-8 w-8 text-orange-500" />
+                  <div className="p-3 bg-orange-500/10 text-orange-600 rounded-2xl shadow-inner border border-orange-500/10 group-hover:scale-110 transition-transform">
+                    <Building2 className="h-6 w-6" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <Card className="shadow-lg border-0 bg-purple-500/5 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-600">Salário Bruto</p>
-                    <p className="text-lg font-bold text-purple-900">R$ {deputado.valor_total_salario}</p>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Salário Bruto</p>
+                    <p className="text-2xl font-black text-purple-900 font-mono tracking-tighter">R$ {deputado.valor_total_salario}</p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-purple-500" />
+                  <div className="p-3 bg-purple-500/10 text-purple-600 rounded-2xl shadow-inner border border-purple-500/10 group-hover:scale-110 transition-transform">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <Card className="shadow-lg border-0 bg-emerald-500/5 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-600">Auxílio Moradia</p>
-                    <p className="text-lg font-bold text-green-900">R$ {deputado.valor_total_auxilio_moradia}</p>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Auxílio Moradia</p>
+                    <p className="text-2xl font-black text-emerald-900 font-mono tracking-tighter">R$ {deputado.valor_total_auxilio_moradia}</p>
                   </div>
-                  <Users className="h-8 w-8 text-green-500" />
+                  <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl shadow-inner border border-emerald-500/10 group-hover:scale-110 transition-transform">
+                    <Users className="h-6 w-6" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -261,11 +297,13 @@ const DeputadoFederalDetalhe = () => {
 
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Personal Information Card */}
-            <Card className="shadow-md border-0 bg-card">
-              <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-lg">Informações Pessoais</CardTitle>
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Informações Pessoais</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
@@ -355,46 +393,54 @@ const DeputadoFederalDetalhe = () => {
             {/* Charts and Tables */}
 
             {/* Annual Chart */}
-            <Card className="shadow-md border-0 bg-card">
-              <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <CardTitle className="text-lg">Custos por Ano</CardTitle>
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Custos por Ano</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={custoAnual}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="ano" type="category" tick={{ fill: '#6b7280' }} />
-                    <YAxis type="number" tickFormatter={formatValue} tick={{ fill: '#6b7280' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="ano" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis type="number" tickFormatter={formatValue} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip
                       formatter={(value: number, name: string) => [formatCurrency(value), name]}
                       labelFormatter={(label) => `Ano: ${label}`}
-                      contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      }}
+                      cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
                     />
-                    <Bar dataKey="verba_gabinete" stackId="a" fill="#f97316" radius={[0, 0, 0, 0]} name="Verba de Gabinete" />
-                    <Bar dataKey="cota_parlamentar" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} name="Cota Parlamentar" />
-                    <Bar dataKey="salario_patronal" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} name="Salário Bruto" />
-                    <Bar dataKey="auxilio_moradia" stackId="a" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="Auxílio Moradia" />
+                    <Bar dataKey="verba_gabinete" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Verba de Gabinete" className="transition-all duration-300 hover:opacity-80" />
+                    <Bar dataKey="cota_parlamentar" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} name="Cota Parlamentar" className="transition-all duration-300 hover:opacity-80" />
+                    <Bar dataKey="salario_patronal" stackId="a" fill="hsl(var(--chart-4))" radius={[0, 0, 0, 0]} name="Salário Bruto" className="transition-all duration-300 hover:opacity-80" />
+                    <Bar dataKey="auxilio_moradia" stackId="a" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Auxílio Moradia" className="transition-all duration-300 hover:opacity-80" />
                   </BarChart>
                 </ResponsiveContainer>
-                <div className="flex justify-center gap-6 mt-4 text-xs flex-wrap">
+                <div className="flex justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f97316' }}></div>
-                    <span>Verba de Gabinete</span>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
+                    <span className="text-muted-foreground">Verba de Gabinete</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-                    <span>Cota Parlamentar</span>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
+                    <span className="text-muted-foreground">Cota Parlamentar</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#10b981' }}></div>
-                    <span>Salário Bruto</span>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }}></div>
+                    <span className="text-muted-foreground">Salário Bruto</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
-                    <span>Auxílio Moradia</span>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-5))' }}></div>
+                    <span className="text-muted-foreground">Auxílio Moradia</span>
                   </div>
                 </div>
               </CardContent>
@@ -403,54 +449,58 @@ const DeputadoFederalDetalhe = () => {
 
           <div className="grid gap-8 lg:grid-cols-2 mb-8">
             {/* Principais Fornecedores */}
-            <Card className="shadow-md border-0 bg-card">
-              <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-orange-600" />
-                    <CardTitle className="text-lg">Principais Fornecedores (CEAP)</CardTitle>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
+                      <Building2 className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">Principais Fornecedores (CEAP)</CardTitle>
                   </div>
                   <Link
                     to={`/deputado-federal/ceap?IdParlamentar=${deputado.id_cf_deputado}&Periodo=57&Agrupamento=3`}
-                    className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors shadow-xs"
+                    className="px-3 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg active:scale-95"
                   >
                     Lista completa
                   </Link>
                 </div>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-0">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fornecedor</TableHead>
-                      <TableHead className="text-right">Valor Total</TableHead>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">Fornecedor</TableHead>
+                      <TableHead className="text-right py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">Valor Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {fornecedores.length > 0 ? (
                       fornecedores.map((row) => (
-                        <TableRow key={row.id_fornecedor} className="hover:bg-gray-50 transition-colors">
-                          <TableCell className="font-medium py-3">
+                        <TableRow key={row.id_fornecedor} className="hover:bg-muted/30 transition-all duration-300 border-b last:border-0 group">
+                          <TableCell className="py-4 px-6">
                             <Link
                               to={`/fornecedor/${row.id_fornecedor}`}
-                              className="hover:text-primary transition-colors flex flex-col">
+                              className="font-bold text-primary hover:text-primary/80 transition-colors flex flex-col">
                               {row.nome_fornecedor}
-                              <span className="font-mono text-xs text-muted-foreground">
+                              <span className="font-mono text-[10px] font-black text-muted-foreground uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-opacity">
                                 {row.cnpj_cpf}
                               </span>
                             </Link>
                           </TableCell>
-                          <TableCell className="text-right text-primary py-3 font-bold font-mono">
+                          <TableCell className="text-right py-4 px-6 font-black font-mono text-foreground group-hover:text-primary transition-colors">
                             R$&nbsp;{row.valor_total}
                           </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
-                          <div className="flex flex-col items-center gap-2">
-                            <Building2 className="h-8 w-8 text-gray-400" />
-                            <span>Nenhum fornecedor encontrado</span>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground py-12">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="p-4 bg-muted/50 rounded-full">
+                              <Building2 className="h-8 w-8 text-muted-foreground/30" />
+                            </div>
+                            <span className="text-sm font-medium uppercase tracking-widest opacity-50">Nenhum fornecedor encontrado</span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -506,46 +556,48 @@ const DeputadoFederalDetalhe = () => {
           </Card> */}
 
             {/* Maiores Notas/Recibos */}
-            <Card className="shadow-md border-0 bg-card">
-              <CardHeader className="bg-gradient-to-r from-muted to-muted/50 border-b">
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-purple-600" />
-                    <CardTitle className="text-lg">Maiores Notas/Recibos</CardTitle>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
+                      <DollarSign className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">Maiores Notas/Recibos</CardTitle>
                   </div>
                   <Link
                     to={`/deputado-federal/ceap?IdParlamentar=${deputado.id_cf_deputado}&Periodo=57&Agrupamento=6`}
-                    className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors shadow-xs"
+                    className="px-3 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg active:scale-95"
                   >
                     Lista completa
                   </Link>
                 </div>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-0">
                 {maioresNotas?.length > 0 && (
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead style={{ width: '80%' }}>Fornecedor</TableHead>
-                        <TableHead style={{ width: '20%' }} className="text-right">Valor</TableHead>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b" style={{ width: '80%' }}>Fornecedor</TableHead>
+                        <TableHead className="text-right py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b" style={{ width: '20%' }}>Valor</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {maioresNotas.map((row) => (
-                        <TableRow key={row.id_cf_despesa} className="hover:bg-gray-50 transition-colors">
-                          <TableCell>
+                        <TableRow key={row.id_cf_despesa} className="hover:bg-muted/30 transition-all duration-300 border-b last:border-0 group">
+                          <TableCell className="py-4 px-6">
                             <Link to={`/fornecedor/${row.id_fornecedor}`}
-                              className="hover:text-primary transition-colors flex flex-col">
+                              className="font-bold text-primary hover:text-primary/80 transition-colors flex flex-col">
                               {row.nome_fornecedor}
-                              <span className="font-mono text-xs text-muted-foreground">
+                              <span className="font-mono text-[10px] font-black text-muted-foreground uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-opacity">
                                 {row.cnpj_cpf}
                               </span>
                             </Link>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right py-4 px-6">
                             <Link
                               to={`/deputado-federal/ceap/${row.id_cf_despesa}`}
-                              className="text-primary hover:underline font-bold font-mono"
+                              className="text-foreground hover:text-primary transition-colors font-black font-mono"
                             >
                               R$&nbsp;{row.valor_liquido}
                             </Link>
@@ -556,10 +608,12 @@ const DeputadoFederalDetalhe = () => {
                   </Table>
                 )}
                 {maioresNotas?.length === 0 && (
-                  <div className="text-center text-muted-foreground py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <DollarSign className="h-8 w-8 text-gray-400" />
-                      <span>Nenhuma nota/recibo encontrado</span>
+                  <div className="text-center text-muted-foreground py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-4 bg-muted/50 rounded-full">
+                        <DollarSign className="h-8 w-8 text-muted-foreground/30" />
+                      </div>
+                      <span className="text-sm font-medium uppercase tracking-widest opacity-50">Nenhuma nota/recibo encontrado</span>
                     </div>
                   </div>
                 )}

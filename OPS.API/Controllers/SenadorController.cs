@@ -62,6 +62,33 @@ namespace OPS.API.Controllers
             return await _senadorRepository.TipoDespesa();
         }
 
+        [HttpGet("Documento/{id:int}")]
+        public async Task<ActionResult<DocumentoDetalheDTO>> Documento(int id)
+        {
+            var result = await _senadorRepository.Documento(id);
+
+            if (result != null)
+                return Ok(result);
+            else
+                return NotFound();
+        }
+
+        [HttpGet("{id:int}/DocumentosDoMesmoDia")]
+        public async Task<dynamic> DocumentosDoMesmoDia(int id)
+        {
+            var result = await _senadorRepository.DocumentosDoMesmoDia(id);
+
+            return Ok(result);
+        }
+
+        [HttpGet("{id:int}/DocumentosDaSubcotaMes")]
+        public async Task<dynamic> DocumentosDaSubcotaMes(int id)
+        {
+            var result = await _senadorRepository.DocumentosDaSubcotaMes(id);
+
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("{id:int}/GastosPorAno")]
         public async Task<dynamic> GastosPorAno(int id)

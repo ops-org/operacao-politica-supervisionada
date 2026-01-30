@@ -253,10 +253,10 @@ namespace OPS.Core.Repositories
 						where id = @id
 					) l1 
 					INNER JOIN assembleias.cl_despesa l on
-					l1.id_cl_deputado = l.id_cl_deputado and
-					l1.ano_mes = l.ano_mes and
-					l1.id_cl_despesa_tipo = l.id_cl_despesa_tipo and
-					l1.id <> l.id
+					    l1.id_cl_deputado = l.id_cl_deputado and
+					    l1.ano_mes = l.ano_mes and
+					    l1.id_cl_despesa_tipo = l.id_cl_despesa_tipo and
+					    l1.id <> l.id
 					LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
 					LEFT JOIN fornecedor.fornecedor_info pji ON pji.id_fornecedor = pj.id
 					order by l.valor_liquido desc

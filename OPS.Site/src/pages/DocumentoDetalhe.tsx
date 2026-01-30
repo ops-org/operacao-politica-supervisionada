@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,7 @@ interface DocumentoDetalheProps {
 
 const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "deputado-federal" }) => {
     const { id } = useParams();
+    usePageTitle("Detalhes do Documento");
     const [documento, setDocumento] = useState<DocumentoDetalhe | null>(null);
     const [documentosDia, setDocumentosDia] = useState<DocumentoDoDia[]>([]);
     const [documentosSubquota, setDocumentosSubquota] = useState<DocumentoDaSubquota[]>([]);
@@ -128,7 +130,7 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
     const showTrechoViagem = documento.trecho_viagem;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
             <Header />
             <main className="container mx-auto px-4 py-8">
                 {/* Breadcrumb */}
@@ -158,20 +160,21 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                     {/* Main Document Details */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Document Header Card */}
-                        <Card className="border-0 shadow-lg">
-                            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-b">
+                        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden border-t-4 border-t-primary">
+                            <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="flex items-center gap-3 text-xl">
-                                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                                            <Receipt className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
+                                            <Receipt className="h-6 w-6 text-primary" />
                                         </div>
                                         <div>
-                                            <div className="font-semibold">Recibo #{documento.numero_documento || documento.id_documento}</div>
-                                            <div className="text-sm font-normal text-muted-foreground">Detalhes completos do documento</div>
+                                            <CardTitle className="text-2xl font-bold">Recibo #{documento.numero_documento || documento.id_documento}</CardTitle>
+                                            <CardDescription className="font-medium text-muted-foreground/80">Detalhes completos do documento fiscal</CardDescription>
                                         </div>
-                                    </CardTitle>
+                                    </div>
                                     <div className="text-right">
-                                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                        <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Valor Total</div>
+                                        <div className="text-3xl font-black text-primary font-mono whitespace-nowrap">
                                             {formatCurrency(parseFloat(documento.valor_liquido.replace('.', '').replace(',', '.')))}
                                         </div>
                                     </div>
@@ -225,10 +228,10 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                             <label className="text-sm font-medium text-muted-foreground">Partido/UF</label>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <Badge variant="secondary" className="font-medium">
+                                                    <Badge variant="secondary" className="font-medium text-[10px] px-2.5 py-0.5">
                                                         {documento.sigla_partido}
                                                     </Badge>
-                                                    <Badge variant="outline" className="font-medium">
+                                                    <Badge variant="outline" className="font-medium text-[10px] px-2.5 py-0.5">
                                                         {documento.sigla_estado}
                                                     </Badge>
                                                 </div>
@@ -435,41 +438,43 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                             {/* Related Documents - Side by Side */}
                             <div className="grid gap-6 lg:grid-cols-2">
                                 {/* Documents from the same day */}
-                                <Card className="border-0 shadow-lg">
-                                    <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-b">
-                                        <CardTitle className="flex items-center gap-2 text-lg">
-                                            <Calendar className="h-5 w-5 text-purple-600 dark:text-purple-300" />
-                                            Notas/Recibos do Dia
-                                        </CardTitle>
-                                        <CardDescription className="text-sm">
-                                            Do parlamentar no mesmo dia do recibo principal
-                                        </CardDescription>
+                                <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
+                                    <CardHeader className="bg-gradient-to-r from-purple-500/10 to-transparent border-b">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl shadow-inner border border-purple-200">
+                                                <Calendar className="h-5 w-5 text-purple-600" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-lg font-bold">Notas/Recibos do Dia</CardTitle>
+                                                <CardDescription className="text-xs">Do parlamentar no mesmo dia</CardDescription>
+                                            </div>
+                                        </div>
                                     </CardHeader>
-                                    <CardContent className="p-4">
+                                    <CardContent className="p-0">
                                         {documentosDia.length > 0 ? (
                                             <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Fornecedor</TableHead>
-                                                        <TableHead>UF</TableHead>
-                                                        <TableHead className="text-right">Valor</TableHead>
+                                                <TableHeader className="bg-muted/30">
+                                                    <TableRow className="hover:bg-transparent">
+                                                        <TableHead className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">Fornecedor</TableHead>
+                                                        <TableHead className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">UF</TableHead>
+                                                        <TableHead className="text-right py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">Valor</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     {documentosDia.map((row) => (
-                                                        <TableRow key={row.id_despesa}>
-                                                            <TableCell className="font-medium">
-                                                                <Link to={`/fornecedor/${row.id_fornecedor}`} className="hover:text-primary transition-colors flex flex-col">
+                                                        <TableRow key={row.id_despesa} className="hover:bg-muted/30 transition-colors border-b last:border-0">
+                                                            <TableCell className="py-4 px-6 font-medium">
+                                                                <Link to={`/fornecedor/${row.id_fornecedor}`} className="text-primary hover:text-primary/80 transition-colors flex flex-col">
                                                                     {row.nome_fornecedor}
                                                                     <span className="font-mono text-xs text-muted-foreground">
                                                                         {row.cnpj_cpf}
                                                                     </span>
                                                                 </Link>
                                                             </TableCell>
-                                                            <TableCell>
+                                                            <TableCell className="py-4 px-6">
                                                                 {row.sigla_estado_fornecedor}
                                                             </TableCell>
-                                                            <TableCell className="text-right">
+                                                            <TableCell className="text-right py-4 px-6">
                                                                 <Link to={`/${type}/ceap/${row.id_despesa}`} className="text-primary hover:underline font-bold font-mono">
                                                                     R$&nbsp;{row.valor_liquido}
                                                                 </Link>
@@ -488,38 +493,40 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                 </Card>
 
                                 {/* Documents from the subquota in the same month */}
-                                <Card className="border-0 shadow-lg">
-                                    <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-b">
-                                        <CardTitle className="flex items-center gap-2 text-lg">
-                                            <Receipt className="h-5 w-5 text-green-600 dark:text-green-300" />
-                                            Notas/Recibos da Subcota
-                                        </CardTitle>
-                                        <CardDescription className="text-sm">
-                                            Do mesmo período de competência
-                                        </CardDescription>
+                                <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
+                                    <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent border-b">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl shadow-inner border border-primary/10">
+                                                <Receipt className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-lg font-bold">Notas/Recibos da Subcota</CardTitle>
+                                                <CardDescription className="text-xs">Competência: {documento.competencia}</CardDescription>
+                                            </div>
+                                        </div>
                                     </CardHeader>
-                                    <CardContent className="p-4">
+                                    <CardContent className="p-0">
                                         {documentosSubquota.length > 0 ? (
                                             <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Fornecedor</TableHead>
-                                                        <TableHead className="text-right">Valor</TableHead>
+                                                <TableHeader className="bg-muted/30">
+                                                    <TableRow className="hover:bg-transparent">
+                                                        <TableHead className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">Fornecedor</TableHead>
+                                                        <TableHead className="text-right py-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b">Valor</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     {documentosSubquota.map((row) => (
-                                                        <TableRow key={row.id_despesa}>
-                                                            <TableCell className="font-medium">
-                                                                <Link to={`/fornecedor/${row.id_fornecedor}`} className="hover:text-primary transition-colors flex flex-col">
+                                                        <TableRow key={row.id_despesa} className="hover:bg-muted/30 transition-colors border-b last:border-0">
+                                                            <TableCell className="py-4 px-6 font-medium">
+                                                                <Link to={`/fornecedor/${row.id_fornecedor}`} className="text-primary hover:text-primary/80 transition-colors flex flex-col">
                                                                     {row.nome_fornecedor}
                                                                     <span className="font-mono text-xs text-muted-foreground">
                                                                         {row.cnpj_cpf}
                                                                     </span>
                                                                 </Link>
                                                             </TableCell>
-                                                            <TableCell className="text-right">
-                                                                <Link to={`/${type}/ceap/${row.id_despesa}`} className="hover:text-primary transition-colors">
+                                                            <TableCell className="text-right py-4 px-6">
+                                                                <Link to={`/${type}/ceap/${row.id_despesa}`} className="text-primary hover:text-primary/80 font-bold font-mono">
                                                                     {formatCurrency(parseFloat(row.valor_liquido.replace('.', '').replace(',', '.')))}
                                                                 </Link>
                                                             </TableCell>

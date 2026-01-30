@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
@@ -195,91 +195,107 @@ const SenadorLista = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Modern Header */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Users className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
                 Senadores
               </h1>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Lista dos senadores, seus respectivos gastos com a cota parlamentar (CEAPS) e com Folha de pagamento (Própria e de seus secretários).
+                <br />
+                <span className="text-sm font-bold">* Valores acumulados de todas as legislaturas.</span>
+              </p>
             </div>
-            <p className="text-muted-foreground mx-auto leading-relaxed">
-              Lista dos senadores, seus respectivos gastos com a cota parlamentar (CEAPS) e com Folha de pagamento (Própria e de seus secretários).
-              <br />
-              <span className="text-sm font-bold">* Valores acumulados de todas as legislaturas.</span>
-            </p>
           </div>
 
           {/* Stats Cards */}
-          {senadores.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-600">Total de Senadores</p>
-                      <p className="text-2xl font-bold text-blue-900">{stats.totalSenadores}</p>
-                    </div>
-                    <Users className="h-8 w-8 text-blue-500" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="p-6 relative">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-blue-600/80 uppercase tracking-wider mb-1">Total de Senadores</p>
+                    <p className="text-3xl font-black text-blue-900 font-mono tracking-tighter">{stats.totalSenadores}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl shadow-inner border border-blue-200/50">
+                    <Users className="h-7 w-7 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-600">Senadores Ativos</p>
-                      <p className="text-2xl font-bold text-green-900">{stats.ativos}</p>
-                    </div>
-                    <TrendingUp className="h-8 w-8 text-green-500" />
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="p-6 relative">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-green-600/80 uppercase tracking-wider mb-1">Senadores Ativos</p>
+                    <p className="text-3xl font-black text-green-900 font-mono tracking-tighter">{stats.ativos}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-4 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl shadow-inner border border-green-200/50">
+                    <TrendingUp className="h-7 w-7 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-purple-600">Cota Parlamentar</p>
-                      <p className="text-lg font-bold text-purple-900">{formatCurrency(stats.totalCeap.toString())}</p>
-                    </div>
-                    <DollarSign className="h-8 w-8 text-purple-500" />
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="p-6 relative">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-purple-600/80 uppercase tracking-wider mb-1">Cota Parlamentar</p>
+                    <p className="text-2xl font-black text-purple-900 font-mono tracking-tighter">{formatCurrency(stats.totalCeap.toString())}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-4 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl shadow-inner border border-purple-200/50">
+                    <DollarSign className="h-7 w-7 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-orange-600">Folha de pagamento</p>
-                      <p className="text-lg font-bold text-orange-900">{formatCurrency(stats.totalRemuneracao.toString())}</p>
-                    </div>
-                    <Building2 className="h-8 w-8 text-orange-500" />
+            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="p-6 relative">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-orange-600/80 uppercase tracking-wider mb-1">Folha de pagamento</p>
+                    <p className="text-2xl font-black text-orange-900 font-mono tracking-tighter">{formatCurrency(stats.totalRemuneracao.toString())}</p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  <div className="p-4 bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl shadow-inner border border-orange-200/50">
+                    <Building2 className="h-7 w-7 text-orange-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Modern Filters */}
-          <Card className="shadow-md border-0">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Search className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Filtros de Busca</h2>
+          <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
+                  <Search className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Filtros de Busca</CardTitle>
+                  <CardDescription className="font-medium">Refine a lista por legislatura, estado ou partido</CardDescription>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary" />
                     Legislatura
                   </label>
                   <Select
                     value={filters.periodo.toString()}
                     onValueChange={(value) => setFilters(prev => ({ ...prev, periodo: parseInt(value) }))}
                   >
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger className="h-11 bg-background/50 border-muted">
                       <SelectValue placeholder="Selecione a legislatura" />
                     </SelectTrigger>
                     <SelectContent>
@@ -292,9 +308,9 @@ const SenadorLista = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
                     Estado
                   </label>
                   <MultiSelectDropdown
@@ -305,9 +321,9 @@ const SenadorLista = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4" />
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
                     Partido
                   </label>
                   <MultiSelectDropdown
@@ -319,22 +335,24 @@ const SenadorLista = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t border-muted/50">
                 <Button
                   onClick={pesquisar}
                   disabled={searching}
-                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-xs"
+                  size="lg"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <Search className="h-4 w-4 mr-2" />
-                  {searching ? "Pesquisando..." : "Pesquisar"}
+                  <Search className="h-5 w-5 mr-2" />
+                  {searching ? "Pesquisando..." : "Pesquisar agora"}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={limparFiltros}
-                  className="border-gray-300 hover:bg-gray-50"
+                  size="lg"
+                  className="flex-1 sm:flex-none border-muted hover:bg-accent transition-colors"
                 >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Limpar filtros
+                  <RotateCcw className="h-5 w-5 mr-2" />
+                  Limpar todos
                 </Button>
               </div>
             </CardContent>
@@ -350,87 +368,106 @@ const SenadorLista = () => {
                 className="block"
               >
                 <Card
-                  className="group hover:shadow-md transition-all duration-300 hover:scale-105 border-0 bg-white shadow-xs overflow-hidden cursor-pointer"
+                  className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer flex flex-col h-full"
                 >
-                {/* Card Header */}
-                <div className={`relative overflow-hidden ${senador.ativo
-                  ? "bg-gradient-to-r from-primary to-primary/80 text-white"
-                  : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
-                  }`}>
-                  <div className="block p-4 hover:bg-black/10 transition-colors">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg leading-tight truncate">
+                  {/* Card Header with Gradient Overlay */}
+                  <div className="relative h-24 overflow-hidden">
+                    <div className={`absolute inset-0 z-0 ${senador.ativo
+                      ? "bg-gradient-to-br from-primary via-primary/80 to-accent"
+                      : "bg-gradient-to-r from-slate-500/20 to-slate-500/5"
+                      }`} />
+
+                    {/* Animated geometric shapes for premium feel */}
+                    <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors duration-500" />
+                    <div className="absolute bottom-[-50%] left-[-10%] w-40 h-40 bg-black/10 rounded-full blur-2xl" />
+
+                    <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                      <div className="flex justify-between items-start gap-2">
+                        <Badge className={`${senador.ativo ? "bg-white/20 text-white border-white/30" : "bg-slate-200/50 text-slate-700 border-slate-300/50"} px-2 py-0.5 text-[10px] font-black uppercase tracking-widest backdrop-blur-md`}>
+                          {senador.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                        <div className={`h-2 w-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] ${senador.ativo ? "bg-green-400 animate-pulse" : "bg-slate-300"}`} />
+                      </div>
+                      <div className="truncate">
+                        <h3 className={`font-black text-lg leading-tight truncate group-hover:translate-x-1 transition-transform duration-300 ${senador.ativo ? "text-white" : "text-slate-700"}`}>
                           {senador.nome_parlamentar}
                         </h3>
-                        <p className="text-sm opacity-90 truncate">{senador.nome_civil}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
-                        {senador.situacao}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Body */}
-                <CardContent className="p-4">
-                  <div className="flex gap-3">
-                    {/* Image with Lazy Loading */}
-                    <div className="flex-shrink-0">
-                      <div className="relative" data-image-id={`${senador.id_sf_senador}-${index}`}>
-                        {!visibleImages.has(`${senador.id_sf_senador}-${index}`) && (
-                          <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-xl" />
-                        )}
-                        {visibleImages.has(`${senador.id_sf_senador}-${index}`) && (
-                          <Avatar className="h-32 w-24 rounded-xl border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
-                            <AvatarImage
-                              src={`//static.ops.org.br/senador/${senador.id_sf_senador}.jpg`}
-                              alt={senador.nome_parlamentar}
-                            />
-                            <AvatarFallback className="rounded-xl text-xl font-semibold bg-gradient-to-br from-primary/20 to-primary/10">
-                              {senador.nome_parlamentar.split(" ").map(n => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Info Section */}
-                    <div className="flex-1 min-w-0 space-y-3">
-                      {/* Party and State */}
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <Badge variant="secondary" className="font-semibold" title={senador.nome_partido}>
-                          {senador.sigla_partido}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1" title={senador.nome_estado}>
-                          <MapPin className="w-3 h-3" />
-                          {senador.sigla_estado}
-                        </Badge>
-                      </div>
-
-                      {/* Financial Info */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-purple-600" />
-                          <span className="text-xs text-muted-foreground">Cota Parlamentar</span>
-                        </div>
-                        <p className="font-bold text-sm text-purple-700">
-                          {formatCurrency(senador.valor_total_ceaps)}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1">
-                          <Building2 className="h-3 w-3 text-orange-600" />
-                          <span className="text-xs text-muted-foreground">Folha de pagamento</span>
-                        </div>
-                        <p className="font-bold text-sm text-orange-700">
-                          {formatCurrency(senador.valor_total_remuneracao)}
-                        </p>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Card Body */}
+                  <CardContent className="p-0 relative flex-1 flex flex-col">
+                    <div className="px-5 py-4 space-y-4 flex-1">
+                      <div className="flex gap-4 items-start">
+                        {/* Avatar Column */}
+                        <div className="flex-shrink-0 -mt-10 relative z-20">
+                          <div data-image-id={`${senador.id_sf_senador}-${index}`}>
+                            {visibleImages.has(`${senador.id_sf_senador}-${index}`) && (
+                              <Avatar className={`h-28 w-20 rounded-xl border-4 border-card shadow-xl group-hover:scale-110 transition-all duration-500 ring-1 ring-black/5 ${!senador.ativo ? "grayscale opacity-80" : ""}`}>
+                                <AvatarImage
+                                  src={`//static.ops.org.br/senador/${senador.id_sf_senador}.jpg`}
+                                  alt={senador.nome_parlamentar}
+                                />
+                                <AvatarFallback className="rounded-xl text-xl font-black bg-muted text-muted-foreground">
+                                  {senador.nome_parlamentar.split(" ").map(n => n[0]).join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            {!visibleImages.has(`${senador.id_sf_senador}-${index}`) && (
+                              <div className="h-28 w-20 rounded-xl bg-muted animate-pulse" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Text Group */}
+                        <div className="flex-1 min-w-0 pt-1">
+                          <p className="text-xs font-bold text-muted-foreground truncate uppercase tracking-tight mb-3" title={senador.nome_civil}>
+                            {senador.nome_civil}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary" className="font-black text-[10px] px-2.5 py-0.5 bg-primary/10 text-primary border-primary/20" title={senador.nome_partido}>
+                              {senador.sigla_partido}
+                            </Badge>
+                            <Badge variant="outline" className="font-black text-[10px] px-2.5 py-0.5 flex items-center gap-1 border-muted-foreground/30 bg-muted/30" title={senador.nome_estado}>
+                              <MapPin className="w-2.5 h-2.5" />
+                              {senador.sigla_estado}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Financial Info Grid - Premium Style */}
+                      <div className="grid grid-cols-1 gap-3 pt-2">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/5 to-purple-500/10 border border-purple-500/10 hover:border-purple-500/30 transition-colors">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-600/80">Cota Parlamentar</span>
+                            <DollarSign className="h-3 w-3 text-purple-500" />
+                          </div>
+                          <p className="font-black text-sm text-purple-900 font-mono">
+                            {formatCurrency(senador.valor_total_ceaps)}
+                          </p>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/5 to-orange-500/10 border border-orange-500/10 hover:border-orange-500/30 transition-colors">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-orange-600/80">Folha de pagamento</span>
+                            <Building2 className="h-3 w-3 text-orange-500" />
+                          </div>
+                          <p className="font-black text-sm text-orange-900 font-mono">
+                            {formatCurrency(senador.valor_total_remuneracao)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hover Footer Action */}
+                    <div className="px-5 py-3 bg-muted/30 border-t border-muted/50 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      Ver Perfil Completo
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>
