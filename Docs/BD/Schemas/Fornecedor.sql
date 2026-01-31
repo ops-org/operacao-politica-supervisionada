@@ -7,19 +7,19 @@ CREATE TABLE IF NOT EXISTS fornecedor.fornecedor
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     cnpj_cpf character varying(15) COLLATE pg_catalog."default",
     nome character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    categoria character(2) COLLATE pg_catalog."default",
+    categoria character varying(20) COLLATE pg_catalog."default",
     doador boolean NOT NULL DEFAULT false,
     controle smallint,
     mensagem character varying(8000) COLLATE pg_catalog."default",
-    valor_total_ceap_camara numeric(16, 2),
-    valor_total_ceap_senado numeric(16, 2),
-    valor_total_ceap_assembleias numeric(16, 2),
+    valor_total_ceap_camara numeric(16, 2) NOT NULL DEFAULT 0,
+    valor_total_ceap_senado numeric(16, 2) NOT NULL DEFAULT 0,
+    valor_total_ceap_assembleias numeric(16, 2) NOT NULL DEFAULT 0,
     CONSTRAINT fornecedor_pkey PRIMARY KEY (id),
     CONSTRAINT fornecedor_cnpj_cpf_key UNIQUE (cnpj_cpf)
 );
 
 COMMENT ON COLUMN fornecedor.fornecedor.categoria
-    IS 'Pessoa Fisica ou Pessoa Juridica';
+    IS 'Pessoa Fisica / Pessoa Juridica / Interno Câmara / INternacional';
 
 CREATE TABLE IF NOT EXISTS fornecedor.fornecedor_atividade
 (
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS fornecedor.fornecedor_info
     codigo_municipio_ibge character varying(50) COLLATE pg_catalog."default",
     nome_cidade_no_exterior character varying(100) COLLATE pg_catalog."default",
     obtido_em date,
-    ip_colaborador character varying(15) COLLATE pg_catalog."default",
+    origem character varying(15) COLLATE pg_catalog."default",
     pais character varying(15) COLLATE pg_catalog."default",
     nome_pais character varying(100) COLLATE pg_catalog."default",
     opcao_pelo_mei boolean,
@@ -131,7 +131,7 @@ ALTER TABLE IF EXISTS fornecedor.fornecedor_atividade_secundaria
 
 ALTER TABLE IF EXISTS fornecedor.fornecedor_atividade_secundaria
     ADD CONSTRAINT fk_fornecedor_atividade_secundaria_fornecedor FOREIGN KEY (id_fornecedor)
-    REFERENCES fornecedor.fornecedor (id) MATCH SIMPLE
+    REFERENCES fornecedor.fornecedor_info (id_fornecedor) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
 
@@ -172,7 +172,7 @@ ALTER TABLE IF EXISTS fornecedor.fornecedor_socio
 
 ALTER TABLE IF EXISTS fornecedor.fornecedor_socio
     ADD CONSTRAINT fk_fornecedor_socio_fornecedor FOREIGN KEY (id_fornecedor)
-    REFERENCES fornecedor.fornecedor (id) MATCH SIMPLE
+    REFERENCES fornecedor.fornecedor_info (id_fornecedor) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
 CREATE INDEX IF NOT EXISTS id_fornecedor

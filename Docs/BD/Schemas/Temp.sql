@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS temp.cl_despesa_temp
     nome character varying(255) COLLATE pg_catalog."default",
     nome_civil character varying(255) COLLATE pg_catalog."default",
     cpf character varying(50) COLLATE pg_catalog."default",
-    empresa character varying(255) COLLATE pg_catalog."default",
+    fornecedor character varying(255) COLLATE pg_catalog."default",
     cnpj_cpf character varying(20) COLLATE pg_catalog."default",
     data_emissao date,
     tipo_verba character varying(100) COLLATE pg_catalog."default",
@@ -251,6 +251,7 @@ CREATE TABLE IF NOT EXISTS temp.cl_despesa_temp
     mes smallint,
     favorecido character varying(200) COLLATE pg_catalog."default",
     hash bytea,
+    id_fornecedor integer,
     CONSTRAINT cl_despesa_temp_pkey PRIMARY KEY (id)
 );
 
@@ -591,46 +592,5 @@ CREATE TABLE IF NOT EXISTS temp.tse_receita_doador_originario
     "DT_RECEITA" text COLLATE pg_catalog."default",
     "DS_RECEITA" text COLLATE pg_catalog."default",
     "VR_RECEITA" text COLLATE pg_catalog."default"
-);
-
-CREATE TABLE IF NOT EXISTS temp.x_cl_despesa_bkp
-(
-    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    id_cl_deputado bigint NOT NULL,
-    id_cl_despesa_tipo bigint,
-    id_cl_despesa_especificacao bigint,
-    id_fornecedor bigint,
-    data_emissao date,
-    ano_mes integer,
-    numero_documento character varying(50) COLLATE pg_catalog."default",
-    valor_liquido numeric(10, 2) NOT NULL,
-    favorecido character varying(200) COLLATE pg_catalog."default",
-    observacao character varying(8000) COLLATE pg_catalog."default",
-    hash bytea,
-    CONSTRAINT cl_despesa_copy1_pkey PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS temp.x_cl_despesa_especificacao
-(
-    id integer NOT NULL,
-    id_cl_despesa_tipo integer,
-    descricao character varying(200) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT cl_despesa_especificacao_pkey PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS temp.x_cl_despesa_resumo_temp
-(
-    id_deputado bigint,
-    ano integer,
-    mes integer,
-    valor numeric(10, 2),
-    valor_ajustado numeric(10, 2)
-);
-
-CREATE TABLE IF NOT EXISTS temp.x_fornecedor_correcao
-(
-    cnpj_cpf character varying(15) COLLATE pg_catalog."default",
-    nome character varying(255) COLLATE pg_catalog."default",
-    cnpj_cpf_correto character(15) COLLATE pg_catalog."default"
 );
 END;

@@ -121,8 +121,8 @@ CREATE TABLE IF NOT EXISTS camara.cf_deputado_verba_gabinete
 
 CREATE TABLE IF NOT EXISTS camara.cf_despesa
 (
-    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    ano integer NOT NULL,
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    ano smallint NOT NULL,
     mes smallint NOT NULL,
     id_cf_legislatura smallint NOT NULL,
     id_cf_deputado integer NOT NULL,
