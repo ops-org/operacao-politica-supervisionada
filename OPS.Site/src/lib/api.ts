@@ -17,10 +17,11 @@ class ApiError extends Error {
 }
 
 const getApiBaseUrl = (): string => {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  if (supabaseUrl) {
-    return `${supabaseUrl}/functions/v1/api-proxy`;
+  // In production (GitHub Pages), use direct API calls
+  if (import.meta.env.PROD) {
+    return 'https://api.ops.org.br';
   }
+  
   // Fallback for local development
   return '/api';
 };
