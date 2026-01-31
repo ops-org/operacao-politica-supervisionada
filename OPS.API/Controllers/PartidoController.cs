@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using OPS.Core.Repository;
+using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers
 {

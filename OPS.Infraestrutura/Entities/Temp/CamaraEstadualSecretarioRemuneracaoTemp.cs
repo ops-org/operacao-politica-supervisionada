@@ -1,0 +1,66 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace OPS.Infraestrutura.Entities.Temp
+{
+    public class CamaraEstadualSecretarioRemuneracaoTemp
+    {
+        [Key]
+        [Column("id_cf_secretario")]
+        public string IdCfSecretario { get; set; } = null!;
+
+        [Column("referencia")]
+        public string? Referencia { get; set; }
+
+        [Column("descricao")]
+        public string? Descricao { get; set; }
+
+        [Column("remuneracao_fixa")]
+        public decimal? RemuneracaoFixa { get; set; }
+
+        [Column("vantagens_natureza_pessoal")]
+        public decimal? VantagensNaturezaPessoal { get; set; }
+
+        [Column("funcao_ou_cargo_em_comissao")]
+        public decimal? FuncaoOuCargoEmComissao { get; set; }
+
+        [Column("gratificacao_natalina")]
+        public decimal? GratificacaoNatalina { get; set; }
+
+        [Column("ferias")]
+        public decimal? Ferias { get; set; }
+
+        [Column("outras_remuneracoes")]
+        public decimal? OutrasRemuneracoes { get; set; }
+
+        [Column("valor_bruto")]
+        public decimal? ValorBruto { get; set; }
+
+        [Column("abono_permanencia")]
+        public decimal? AbonoPermanencia { get; set; }
+
+        [Column("redutor_constitucional")]
+        public decimal? RedutorConstitucional { get; set; }
+
+        [Column("contribuicao_previdenciaria")]
+        public decimal? ContribuicaoPrevidenciaria { get; set; }
+
+        [Column("imposto_renda")]
+        public decimal? ImpostoRenda { get; set; }
+
+        [Column("valor_liquido")]
+        public decimal? ValorLiquido { get; set; }
+
+        [Column("valor_diarias")]
+        public decimal? ValorDiarias { get; set; }
+
+        [Column("valor_auxilios")]
+        public decimal? ValorAuxilios { get; set; }
+
+        [Column("valor_vantagens")]
+        public decimal? ValorVantagens { get; set; }
+
+        [Column("valor_outros")]
+        public decimal? ValorOutros { get; set; }
+    }
+}

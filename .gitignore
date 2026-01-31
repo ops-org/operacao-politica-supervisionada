@@ -32,3 +32,8 @@ appsettings.*.json
 /OPS.Site/static/temp
 /OPS.Site/public/img/depfederal
 /OPS.Site/public/img/senador
+.idea/.idea.OPS/.idea/.gitignore
+.idea/.idea.OPS/.idea/.name
+.idea/.idea.OPS/.idea/encodings.xml
+.idea/.idea.OPS/.idea/indexLayout.xml
+.idea/.idea.OPS/.idea/vcs.xml

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OPS.Core.Repository;
+using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers
 {
@@ -17,21 +17,20 @@ namespace OPS.API.Controllers
         public IConfiguration Configuration { get; }
         public FornecedorRepository dao { get; }
 
-        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env)
+        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env, FornecedorRepository fornecedorRepository)
         {
             Environment = env;
             Configuration = configuration;
-
-            dao = new FornecedorRepository();
+            dao = fornecedorRepository;
         }
 
         [HttpGet]
         [Route("{id:int}")]
         //[IgnoreCacheOutput]
-        public dynamic Consulta(int id)
+        public async Task<dynamic> Consulta(int id)
         {
-            var _fornecedor = dao.Consulta(id);
-            var _quadro_societario = dao.QuadroSocietario(id);
+            var _fornecedor = await dao.Consulta(id);
+            var _quadro_societario = await dao.QuadroSocietario(id);
 
             return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
 
@@ -71,9 +70,9 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("{id:int}/MaioresGastos")]
-        public dynamic MaioresGastos(int id)
+        public async Task<dynamic> MaioresGastos(int id)
         {
-            return dao.MaioresGastos(id);
+            return await dao.MaioresGastos(id);
         }
 
         private const string urlBaseReceitaFederal = "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/";

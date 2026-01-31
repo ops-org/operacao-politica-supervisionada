@@ -11,7 +11,7 @@ namespace OPS.Core.Utilities
         {
             using (var stream = await client.GetStreamAsync(url))
             {
-                using (var fileStream = new FileStream(FileName, FileMode.CreateNew))
+                using (var fileStream = new FileStream(FileName, FileMode.Create))
                 {
                     await stream.CopyToAsync(fileStream);
                 }

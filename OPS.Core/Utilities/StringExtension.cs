@@ -1,10 +1,12 @@
-﻿namespace OPS.Core.Utilities
+﻿using System;
+
+namespace OPS.Core.Utilities
 {
     public static class StringExtension
     {
         public static string ReplaceFirst(this string text, string search, string replace)
         {
-            int pos = text.IndexOf(search);
+            int pos = text.IndexOf(search, StringComparison.Ordinal);
             if (pos < 0)
             {
                 return text;
@@ -14,7 +16,7 @@
 
         public static string ReplaceLast(this string text, string search, string replace)
         {
-            int pos = text.LastIndexOf(search);
+            int pos = text.LastIndexOf(search, StringComparison.Ordinal);
             if (pos < 0)
             {
                 return text;

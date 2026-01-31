@@ -12,11 +12,12 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using OPS.Core.DTOs;
 using RestSharp;
 
 namespace OPS.Core.Utilities
 {
-    public static class Utils
+    public static partial class Utils
     {
         public const string DefaultUserAgent = "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)";
 
@@ -100,6 +101,7 @@ namespace OPS.Core.Utilities
 
         public static string FormatCnpjCpf(string value)
         {
+            if (string.IsNullOrEmpty(value)) return null;
             if (value.Length == 14) return FormatCNPJ(value);
             if (value.Length == 11) return FormatCPF(value);
             if (value.Length == 6) return FormatCPFParcial(value);
@@ -109,51 +111,54 @@ namespace OPS.Core.Utilities
         /// <summary>
         /// Formatar uma string CNPJ
         /// </summary>
-        /// <param name="CNPJ">string CNPJ sem formatacao</param>
+        /// <param name="cnpj">string CNPJ sem formatacao</param>
         /// <returns>string CNPJ formatada</returns>
         /// <example>Recebe '99999999999999' Devolve '99.999.999/9999-99'</example>
 
-        public static string FormatCNPJ(string CNPJ)
+        public static string FormatCNPJ(string cnpj)
         {
+            if(string.IsNullOrEmpty(cnpj)) return null;
+
             try
             {
-                return Convert.ToUInt64(CNPJ).ToString(@"00\.000\.000\/0000\-00");
+                // Anonimized data
+                return $"{cnpj.Substring(0, 2)}.{cnpj.Substring(2, 3)}.{cnpj.Substring(5, 3)}/{cnpj.Substring(8, 4)}-{cnpj.Substring(12, 2)}";
+
             }
             catch (Exception)
             {
-                return CNPJ;
+                return cnpj;
             }
-
         }
 
         /// <summary>
         /// Formatar uma string CPF
         /// </summary>
-        /// <param name="CPF">string CPF sem formatacao</param>
+        /// <param name="cpf">string CPF sem formatacao</param>
         /// <returns>string CPF formatada</returns>
         /// <example>Recebe '99999999999' Devolve '999.999.999-99'</example>
 
-        public static string FormatCPF(string CPF)
+        public static string FormatCPF(string cpf)
         {
-            return FormatCPFParcial(CPF.Substring(4, 6));
+            return FormatCPFParcial(cpf.Substring(3, 6));
         }
 
         /// <summary>
         /// Formatar uma string CPF
         /// </summary>
-        /// <param name="CPF">string CPF sem formatacao</param>
+        /// <param name="cpf">string CPF sem formatacao</param>
         /// <returns>string CPF formatada</returns>
         /// <example>Recebe '99999999999' Devolve '999.999.999-99'</example>
 
-        public static string FormatCPFParcial(string CPF)
+        public static string FormatCPFParcial(string cpf)
         {
             try
             {
-                return Convert.ToUInt64(CPF).ToString(@"***\.000\.000\-**");
+                return Convert.ToUInt64(cpf).ToString(@"***\.000\.000\-**");
             }
             catch (Exception)
             {
-                return CPF;
+                return cpf;
             }
         }
 
@@ -167,6 +172,17 @@ namespace OPS.Core.Utilities
         public static string RemoveCaracteresNaoNumericos(string str)
         {
             return Regex.Replace(str ?? "", @"[^\d]", "");
+        }
+
+        public static string RemoveCaracteresNaoNumericosExetoAsterisco(string str)
+        {
+            var value = Regex.Replace(str ?? "", @"[^\d*]", "");
+
+            // Correção para CPF com mascara de Rondonia
+            if (value.StartsWith("***", StringComparison.InvariantCultureIgnoreCase) && value.EndsWith("***", StringComparison.InvariantCultureIgnoreCase) && value.Length == 12)
+                return value.Substring(0, 11);
+
+            return value;
         }
 
         public static string RemoveCaracteresNumericos(string str)
@@ -213,10 +229,10 @@ namespace OPS.Core.Utilities
 
         public static async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
         {
-            var lstTo = new List<To>();
+            var lstTo = new List<SendGridMessageTo>();
             foreach (MailAddress objEmailTo in lstEmailTo)
             {
-                lstTo.Add(new To()
+                lstTo.Add(new SendGridMessageTo()
                 {
                     email = objEmailTo.Address,
                     name = objEmailTo.DisplayName
@@ -225,21 +241,21 @@ namespace OPS.Core.Utilities
 
             var param = new SendGridMessage()
             {
-                personalizations = new List<Personalization>{
-                    new Personalization()
+                personalizations = new List<SendGridMessagePersonalization>{
+                    new SendGridMessagePersonalization()
                     {
                         to = lstTo,
                         subject = subject
                     }
                 },
-                content = new List<Content>(){
-                    new Content()
+                content = new List<SendGridMessageContent>(){
+                    new SendGridMessageContent()
                     {
                         type = htmlContent ? "text/html" : "text/plain",
                         value = body
                     }
                 },
-                from = new From()
+                from = new SendGridMessageFrom()
                 {
                     email = "envio@ops.net.br",
                     name = "[OPS] Operação Política Supervisionada"
@@ -248,7 +264,7 @@ namespace OPS.Core.Utilities
 
             if (ReplyTo != null)
             {
-                param.reply_to = new ReplyTo()
+                param.reply_to = new SendGridMessageReplyTo()
                 {
                     email = ReplyTo.Address,
                     name = ReplyTo.DisplayName
@@ -367,6 +383,14 @@ namespace OPS.Core.Utilities
             return null;
         }
 
+        public static DateTime? ToDate(this string value)
+        {
+            if (!string.IsNullOrEmpty(value?.Trim()))
+                return Convert.ToDateTime(value);
+
+            return null;
+        }
+
         public static T NullIfEmpty<T>(this T value) where T : class
         {
             if (!string.IsNullOrEmpty(value?.ToString().Trim()))
@@ -380,15 +404,42 @@ namespace OPS.Core.Utilities
             return EqualityComparer<T>.Default.Equals(left, right) ? null : left;
         }
 
+        private static DisplayAttribute DisplayCustomAtribute(this Enum enumValue)
+        {
+            try
+            {
+                return enumValue?.GetType()
+                        ?.GetMember(enumValue.ToString())
+                        ?.FirstOrDefault()
+                        ?.GetCustomAttribute<DisplayAttribute>();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public static string DisplayName(this Enum enumValue)
         {
             try
             {
-                return enumValue.GetType()
-                        .GetMember(enumValue.ToString())
-                        .First()
-                        .GetCustomAttribute<DisplayAttribute>()
-                        .GetName();
+                return enumValue
+                    .DisplayCustomAtribute()
+                    .GetName();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static string DisplayShortName(this Enum enumValue)
+        {
+            try
+            {
+                return enumValue
+                   .DisplayCustomAtribute()
+                   .GetShortName();
             }
             catch (Exception)
             {
@@ -469,41 +520,182 @@ namespace OPS.Core.Utilities
             return null;
         }
 
-        protected class SendGridMessage
+        public static string GetStateCode(string stateName)
         {
-            public List<Personalization> personalizations { get; set; }
-            public List<Content> content { get; set; }
-            public From from { get; set; }
-            public ReplyTo reply_to { get; set; }
-        }
-        protected class To
-        {
-            public string email { get; set; }
-            public string name { get; set; }
+            var state = stateName.Replace("Importacao", "", StringComparison.InvariantCultureIgnoreCase);
+
+            return state switch
+            {
+                "Acre" => "AC",
+                "Alagoas" => "AL",
+                "Amapa" => "AP",
+                "Amazonas" => "AM",
+                "Bahia" => "BA",
+                "Ceara" => "CE",
+                "DistritoFederal" => "DF",
+                "EspiritoSanto" => "ES",
+                "Goias" => "GO",
+                "Maranhao" => "MA",
+                "MatoGrosso" => "MT",
+                "MatoGrossoDoSul" => "MS",
+                "MinasGerais" => "MG",
+                "Para" => "PA",
+                "Paraiba" => "PB",
+                "Parana" => "PR",
+                "Pernambuco" => "PE",
+                "Piaui" => "PI",
+                "RioDeJaneiro" => "RJ",
+                "RioGrandeDoNorte" => "RN",
+                "RioGrandeDoSul" => "RS",
+                "Rondonia" => "RO",
+                "Roraima" => "RR",
+                "SantaCatarina" => "SC",
+                "SaoPaulo" => "SP",
+                "Sergipe" => "SE",
+                "Tocantins" => "TO",
+
+                "Senado" => "SF",
+                "Camara" => "CF",
+                _ => state,
+            };
+
+            //if(ano != null)
+            //    code += $" {ano.ToString().Substring(2, 2)}";
+
+            //if (mes != null)
+            //    code += $"-{mes.Value.ToString("D2")}";
+
+            //return code;
         }
 
-        protected class Personalization
+        public static bool ValidaCNPJ(string cnpj)
         {
-            public List<To> to { get; set; }
-            public string subject { get; set; }
+            int[] mt1 = new int[12] { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int[] mt2 = new int[13] { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int soma; int resto; string digito; string TempCNPJ;
+
+            cnpj = cnpj.Trim();
+            cnpj = cnpj.Replace(".", "").Replace("-", "").Replace("/", "");
+
+            if (cnpj.Length != 14)
+                return false;
+
+            if (cnpj == "00000000000000" || cnpj == "11111111111111" ||
+             cnpj == "22222222222222" || cnpj == "33333333333333" ||
+             cnpj == "44444444444444" || cnpj == "55555555555555" ||
+             cnpj == "66666666666666" || cnpj == "77777777777777" ||
+             cnpj == "88888888888888" || cnpj == "99999999999999")
+                return false;
+
+            TempCNPJ = cnpj.Substring(0, 12);
+            soma = 0;
+
+            for (int i = 0; i < 12; i++)
+                soma += int.Parse(TempCNPJ[i].ToString()) * mt1[i];
+
+            resto = (soma % 11);
+            if (resto < 2)
+                resto = 0;
+            else
+                resto = 11 - resto;
+
+            digito = resto.ToString();
+
+            TempCNPJ = TempCNPJ + digito;
+            soma = 0;
+            for (int i = 0; i < 13; i++)
+                soma += int.Parse(TempCNPJ[i].ToString()) * mt2[i];
+
+            resto = (soma % 11);
+            if (resto < 2)
+                resto = 0;
+            else
+                resto = 11 - resto;
+
+            digito = digito + resto.ToString();
+
+            return cnpj.EndsWith(digito);
         }
 
-        protected class Content
+        public static bool IsCpf(string cpf)
         {
-            public string type { get; set; }
-            public string value { get; set; }
+            int[] multiplicador1 = new int[9] { 10, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int[] multiplicador2 = new int[10] { 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
+
+            cpf = cpf.Trim().Replace(".", "").Replace("-", "");
+            if (cpf.Length != 11)
+                return false;
+
+            for (int j = 0; j < 10; j++)
+                if (j.ToString().PadLeft(11, char.Parse(j.ToString())) == cpf)
+                    return false;
+
+            string tempCpf = cpf.Substring(0, 9);
+            int soma = 0;
+
+            for (int i = 0; i < 9; i++)
+                soma += int.Parse(tempCpf[i].ToString()) * multiplicador1[i];
+
+            int resto = soma % 11;
+            if (resto < 2)
+                resto = 0;
+            else
+                resto = 11 - resto;
+
+            string digito = resto.ToString();
+            tempCpf = tempCpf + digito;
+            soma = 0;
+            for (int i = 0; i < 10; i++)
+                soma += int.Parse(tempCpf[i].ToString()) * multiplicador2[i];
+
+            resto = soma % 11;
+            if (resto < 2)
+                resto = 0;
+            else
+                resto = 11 - resto;
+
+            digito = digito + resto.ToString();
+
+            return cpf.EndsWith(digito);
         }
 
-        protected class From
+        public static bool IsCnpj(string cnpj)
         {
-            public string email { get; set; }
-            public string name { get; set; }
+            int[] multiplicador1 = new int[12] { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+            int[] multiplicador2 = new int[13] { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+
+            cnpj = cnpj.Trim().Replace(".", "").Replace("-", "").Replace("/", "");
+            if (cnpj.Length != 14)
+                return false;
+
+            string tempCnpj = cnpj.Substring(0, 12);
+            int soma = 0;
+
+            for (int i = 0; i < 12; i++)
+                soma += int.Parse(tempCnpj[i].ToString()) * multiplicador1[i];
+
+            int resto = (soma % 11);
+            if (resto < 2)
+                resto = 0;
+            else
+                resto = 11 - resto;
+
+            string digito = resto.ToString();
+            tempCnpj = tempCnpj + digito;
+            soma = 0;
+            for (int i = 0; i < 13; i++)
+                soma += int.Parse(tempCnpj[i].ToString()) * multiplicador2[i];
+
+            resto = (soma % 11);
+            if (resto < 2)
+                resto = 0;
+            else
+                resto = 11 - resto;
+
+            digito = digito + resto.ToString();
+
+            return cnpj.EndsWith(digito);
         }
 
-        protected class ReplyTo
-        {
-            public string email { get; set; }
-            public string name { get; set; }
-        }
     }
 }
