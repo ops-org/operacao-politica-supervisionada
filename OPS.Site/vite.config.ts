@@ -6,24 +6,25 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
+    // allowedHosts: [""],
     host: "::",
     port: 8080,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5200',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
     // proxy: {
     //   '/api': {
-    //     target: 'https://api.ops.org.br',
+    //     target: 'http://localhost:5200',
     //     changeOrigin: true,
-    //     secure: true,
+    //     secure: false,
     //     rewrite: (path) => path.replace(/^\/api/, '')
     //   }
     // }
+    proxy: {
+      '/api': {
+        target: 'https://api.ops.org.br',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
   plugins: [
     react(),
