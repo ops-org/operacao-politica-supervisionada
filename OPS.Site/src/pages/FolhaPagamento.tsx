@@ -19,7 +19,6 @@ import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 import { ChevronUpIcon, ChevronDownIcon, Search, Trash, Building2, Users, Calendar, Plus, Briefcase, User, FolderOpen, Link2, DollarSign, FileText, UserCheck } from "lucide-react";
 import { apiClient, fetchRemuneracao, fetchVinculos, fetchCategorias, fetchCargos, fetchLotacoes, fetchParliamentMembers, fetchGruposFuncionais, fetchFuncionarios, RemuneracaoData, RemuneracaoApiResponse, DropDownOptions, ParliamentSearchRequest } from "@/lib/api";
 import { delay } from "@/lib/utils";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formatNameAcronym = (value: string, acronym: string): string => {
     if (!acronym) return value;
@@ -78,7 +77,7 @@ const getAgrupamentoOptions = (type?: "deputado-federal" | "senador") => {
             { value: "3", label: "Deputado(a)", icon: User },
             { value: "4", label: "Funcionário(a)", icon: UserCheck },
             { value: "5", label: "Ano", icon: Calendar },
-            { value: "6", label: "Não Agrupar", icon: FileText }
+            { value: "6", label: "Folha de pagamento", icon: FileText }
         ];
     }
 
@@ -537,27 +536,27 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                             <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm overflow-hidden">
                                 <CardContent className="p-6">
                                     <div className="space-y-6">
-                                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                    <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">01</div>
-                                                    Ano
-                                                </label>
-                                                <Select value={selectedFilters.ano} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, ano: value }))}>
-                                                    <SelectTrigger className="h-11 bg-background/50 border-muted">
-                                                        <SelectValue placeholder="Selecione o ano" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {anos.map((ano) => (
-                                                            <SelectItem key={ano.value} value={ano.value}>
-                                                                {ano.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                            <div className="grid gap-6 md:grid-cols-2">
+                                                <div className="space-y-3">
+                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">01</div>
+                                                        Ano
+                                                    </label>
+                                                    <Select value={selectedFilters.ano} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, ano: value }))}>
+                                                        <SelectTrigger className="h-11 bg-background/50 border-muted">
+                                                            <SelectValue placeholder="Selecione o ano" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {anos.map((ano) => (
+                                                                <SelectItem key={ano.value} value={ano.value}>
+                                                                    {ano.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
 
-                                            {type === "deputado-federal" && (
                                                 <div className="space-y-3">
                                                     <label className="text-sm font-bold text-foreground flex items-center gap-2">
                                                         <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">02</div>
@@ -576,7 +575,7 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                            )}
+                                            </div>
 
                                             <div className="space-y-3">
                                                 <label className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -590,112 +589,93 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                     onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, parlamentar: items }))}
                                                 />
                                             </div>
+
+                                            {type === "deputado-federal" && (
+                                                <>
+                                                    <div className="space-y-3">
+                                                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                            <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">04</div>
+                                                            Grupo Funcional
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            items={gruposFuncionaisData}
+                                                            placeholder="Selecione grupos funcionais"
+                                                            selectedItems={selectedFilters.grupo_funcional}
+                                                            onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, grupo_funcional: items }))}
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                            <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">05</div>
+                                                            Funcionário(a)
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            items={funcionariosData}
+                                                            placeholder="Selecione funcionários"
+                                                            selectedItems={selectedFilters.funcionario}
+                                                            onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, funcionario: items }))}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {type === "senador" && (
+                                                <>
+                                                    <div className="space-y-3">
+                                                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                            <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">04</div>
+                                                            Vínculo
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            items={vinculosData}
+                                                            placeholder="Selecione vínculos"
+                                                            selectedItems={selectedFilters.vinculo}
+                                                            onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, vinculo: items }))}
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                            <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">05</div>
+                                                            Categoria
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            items={categoriasData}
+                                                            placeholder="Selecione categorias"
+                                                            selectedItems={selectedFilters.categoria}
+                                                            onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, categoria: items }))}
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                            <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">06</div>
+                                                            Cargo
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            items={cargosData}
+                                                            placeholder="Selecione cargos"
+                                                            selectedItems={selectedFilters.cargo}
+                                                            onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, cargo: items }))}
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                                            <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">07</div>
+                                                            Lotação
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            items={lotacoesData}
+                                                            placeholder="Selecione lotações"
+                                                            selectedItems={selectedFilters.lotacao}
+                                                            onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, lotacao: items }))}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
-
-                                        {type === "deputado-federal" && (
-                                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">04</div>
-                                                        Grupo Funcional
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        items={gruposFuncionaisData}
-                                                        placeholder="Selecione grupos funcionais"
-                                                        selectedItems={selectedFilters.grupo_funcional}
-                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, grupo_funcional: items }))}
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">05</div>
-                                                        Funcionário(a)
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        items={funcionariosData}
-                                                        placeholder="Selecione funcionários"
-                                                        selectedItems={selectedFilters.funcionario}
-                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, funcionario: items }))}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {type === "senador" && (
-                                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">02</div>
-                                                        Mês
-                                                    </label>
-                                                    <Select value={selectedFilters.mes} onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, mes: value }))}>
-                                                        <SelectTrigger className="h-11 bg-background/50 border-muted">
-                                                            <SelectValue placeholder="Selecione o mês" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {meses.map((mes) => (
-                                                                <SelectItem key={mes.value} value={mes.value}>
-                                                                    {mes.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">04</div>
-                                                        Vínculo
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        items={vinculosData}
-                                                        placeholder="Selecione vínculos"
-                                                        selectedItems={selectedFilters.vinculo}
-                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, vinculo: items }))}
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">05</div>
-                                                        Categoria
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        items={categoriasData}
-                                                        placeholder="Selecione categorias"
-                                                        selectedItems={selectedFilters.categoria}
-                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, categoria: items }))}
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">06</div>
-                                                        Cargo
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        items={cargosData}
-                                                        placeholder="Selecione cargos"
-                                                        selectedItems={selectedFilters.cargo}
-                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, cargo: items }))}
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                                        <div className="p-1 px-2 bg-primary/10 rounded text-primary text-[10px] font-bold uppercase tracking-wider">07</div>
-                                                        Lotação
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        items={lotacoesData}
-                                                        placeholder="Selecione lotações"
-                                                        selectedItems={selectedFilters.lotacao}
-                                                        onSelectionChange={(items) => setSelectedFilters(prev => ({ ...prev, lotacao: items }))}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
 
                                         <div className="border-t border-muted/50 pt-6">
                                             <div className="space-y-4">
@@ -706,11 +686,13 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                 <RadioGroup
                                                     value={selectedFilters.agrupar}
                                                     onValueChange={(value) => setSelectedFilters(prev => ({ ...prev, agrupar: value }))}
-                                                    className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3`}
+                                                    className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-${agrupamentoOptions.length} gap-3`}
                                                 >
                                                     {agrupamentoOptions.map((option) => {
                                                         const Icon = option.icon;
                                                         const isSelected = selectedFilters.agrupar === option.value;
+
+                                                        console.log(agrupamentoOptions.length);
                                                         return (
                                                             <div className="relative" key={option.value}>
                                                                 <RadioGroupItem
@@ -721,8 +703,8 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                                 <Label
                                                                     htmlFor={`agrupamento-${option.value}`}
                                                                     className={`flex flex-col items-center justify-center rounded-xl border-2 p-3 cursor-pointer transition-all duration-300 ${isSelected
-                                                                            ? "border-primary bg-primary/10 text-primary shadow-inner"
-                                                                            : "border-muted bg-background/50 hover:bg-accent hover:border-accent-foreground/30 text-muted-foreground"
+                                                                        ? "border-primary bg-primary/10 text-primary shadow-inner"
+                                                                        : "border-muted bg-background/50 hover:bg-accent hover:border-accent-foreground/30 text-muted-foreground"
                                                                         }`}
                                                                 >
                                                                     <Icon className={`h-5 w-5 mb-1.5 transition-transform duration-300 ${isSelected ? "scale-110" : ""}`} />

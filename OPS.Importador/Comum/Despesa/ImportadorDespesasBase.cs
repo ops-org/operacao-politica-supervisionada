@@ -148,6 +148,8 @@ public abstract class ImportadorDespesasBase
                 {
                     AtualizaValorTotal();
                 }
+
+                AtualizaCampeoesGastos();
             }
 
             logger.LogInformation("Finalizando processamento na base de dados!");
@@ -391,9 +393,11 @@ public abstract class ImportadorDespesasBase
         logger.LogDebug("Atualizando valores totais");
 
         connection.Execute(@$"
-UPDATE cl_deputado dp 
+UPDATE assembleias.cl_deputado dp 
 SET valor_total_ceap = coalesce((
-        SELECT SUM(ds.valor_liquido) FROM assembleias.cl_despesa ds WHERE ds.id_cl_deputado = dp.id
+        SELECT SUM(ds.valor_liquido) 
+        FROM assembleias.cl_despesa ds 
+        WHERE ds.id_cl_deputado = dp.id
     ), 0)
 WHERE id_estado = {idEstado};");
     }
@@ -409,10 +413,10 @@ WHERE id_estado = {idEstado};");
         // 00000000000008 - PEDÁGIO
         // 00000000000009 - TAXI
         connection.Execute(@"
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000001' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'telefonia'; -- CELULAR FUNCIONAL
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000007' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'correios%'; -- CORREIOS - SEDEX CONVENCIONAL
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000008' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'pedagio'; -- 00000000000008
-UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000009' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'taxi'; -- 00000000000009
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000001' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'telefonia';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000007' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'correios%';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000008' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'pedagio';
+UPDATE temp.cl_despesa_temp SET cnpj_cpf = '00000000000009' WHERE cnpj_cpf is null and unaccent(fornecedor) ilike 'taxi';
         ");
 
         // Substituir nome importação pelo utilizado na importação. Dessa forma podemos ter 2 nomes validos e padronizamos a importação de validação.
@@ -851,10 +855,10 @@ WHERE d.id_cl_deputado IS NULL");
 
         if (ano == DateTime.UtcNow.Year)
         {
-            var ultimaDataEmissao = connection.ExecuteScalar<DateTime>($@"
+            var ultimaDataEmissao = connection.ExecuteScalar<DateOnly>($@"
 SELECT MAX(d.data_emissao) AS ultima_emissao
 FROM assembleias.cl_despesa d
-join assembleias.cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}");
+join assembleias.cl_deputado p ON p.id = d.id_cl_deputado AND p.id_estado = {idEstado}").ToDateTime(TimeOnly.MinValue);
 
             if (ultimaDataEmissao > DateTime.Today)
                 logger.LogWarning("Ultima data de emissão é uma data futura: {DataEmissao:dd/MM/yyyy}", ultimaDataEmissao);
@@ -1268,39 +1272,35 @@ where p.id_estado = @idEstado";
     /// </summary>
     public void AtualizaCampeoesGastos()
     {
-        var strSql =
-            @"truncate table cl_deputado_campeao_gasto;
-    				insert into assembleias.cl_deputado_campeao_gasto
-    				SELECT l1.id_cl_deputado, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
-    				FROM (
-    					SELECT 
-    						l.id_cl_deputado,
-    						sum(l.valor_liquido) as valor_total
-    					FROM  cl_despesa l
-    					GROUP BY l.id_cl_deputado
-    					order by valor_total desc 
-    					limit 4
-    				) l1 
-    				INNER JOIN assembleias.cl_deputado d on d.id = l1.id_cl_deputado 
-    				LEFT JOIN partido p on p.id = d.id_partido
-    				LEFT JOIN estado e on e.id = d.id_estado;";
+        connection.Execute(@"
+TRUNCATE TABLE assembleias.cl_deputado_campeao_gasto;
 
-        connection.Execute(strSql);
+INSERT INTO assembleias.cl_deputado_campeao_gasto
+SELECT l1.id_cl_deputado, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
+FROM (
+    SELECT 
+    	l.id_cl_deputado,
+    	sum(l.valor_liquido) as valor_total
+    FROM  assembleias.cl_despesa l
+    GROUP BY l.id_cl_deputado
+    order by valor_total desc 
+    limit 4
+) l1 
+INNER JOIN assembleias.cl_deputado d on d.id = l1.id_cl_deputado 
+LEFT JOIN partido p on p.id = d.id_partido
+LEFT JOIN estado e on e.id = d.id_estado");
     }
 
-    public void AtualizaResumoMensal()
-    {
-        var strSql =
-            @"truncate table cl_despesa_resumo_mensal;
-    				insert into assembleias.cl_despesa_resumo_mensal
-    				(ano, mes, valor) (
-    					select ano, mes, sum(valor_liquido)
-    					FROM assembleias.cl_despesa
-    					group by ano, mes
-    				);";
-
-        connection.Execute(strSql);
-    }
+//    public void AtualizaResumoMensal()
+//    {
+//        connection.Execute(@"
+//TRUNCATE TABLE assembleias.cl_despesa_resumo_mensal;
+//INSERT INTO assembleias.cl_despesa_resumo_mensal (ano, mes, valor)
+//SELECT ano, mes, sum(valor_liquido)
+//FROM assembleias.cl_despesa
+//GROUP BY ano, mes
+//");
+//    }
 }
 
 public class ImportadorCotaParlamentarBaseConfig

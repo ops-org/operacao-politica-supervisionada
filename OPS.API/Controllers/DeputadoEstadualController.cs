@@ -7,6 +7,7 @@ namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Route("deputado-estadual")]
     // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoEstadualController : Controller
     {
@@ -107,6 +108,13 @@ namespace OPS.API.Controllers
         public async Task<dynamic> ResumoAnual()
         {
             return await _deputadoEstadualRepository.ResumoAnual();
+        }
+
+        [HttpGet]
+        [Route("{id:int}/CustoAnual")]
+        public async Task<dynamic> CustoAnual(int id)
+        {
+            return await _deputadoEstadualRepository.CustoAnual(id);
         }
     }
 }

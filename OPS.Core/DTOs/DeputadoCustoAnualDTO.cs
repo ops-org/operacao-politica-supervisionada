@@ -7,5 +7,7 @@
         public decimal verba_gabinete { get; set; }
         public decimal salario_patronal { get; set; }
         public decimal auxilio_moradia { get; set; }
+        public decimal auxilio_saude { get; set; }
+        public decimal diarias { get; set; }
     }
 }

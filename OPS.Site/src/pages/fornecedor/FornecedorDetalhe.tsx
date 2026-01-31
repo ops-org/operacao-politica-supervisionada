@@ -144,7 +144,7 @@ const FornecedorDetalhe = () => {
                                                     {fornecedor.tipo}
                                                 </Badge>}
                                                 {/* Status Badge */}
-                                                <div className="flex items-center gap-1.5 ml-2">
+                                                {fornecedor.situacao_cadastral && <div className="flex items-center gap-1.5 ml-2">
                                                     {fornecedor.situacao_cadastral === "ATIVA" ? (
                                                         <Badge className="bg-green-500/10 text-green-600 border-green-500/20 px-3 py-1 flex items-center gap-1">
                                                             <ShieldCheck className="w-3.5 h-3.5" />
@@ -156,10 +156,10 @@ const FornecedorDetalhe = () => {
                                                             {fornecedor.situacao_cadastral}
                                                         </Badge>
                                                     )}
-                                                </div>
+                                                </div>}
                                             </div>
 
-                                            <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium pt-2">
+                                            {fornecedor.data_de_abertura && <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium pt-2">
                                                 {/* Operation Period */}
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="w-4 h-4 text-primary/70" />
@@ -170,7 +170,7 @@ const FornecedorDetalhe = () => {
                                                         )}
                                                     </span>
                                                 </div>
-                                            </div>
+                                            </div>}
 
                                             {fornecedor.nome_fantasia && fornecedor.nome_fantasia !== fornecedor.nome && (
                                                 <p className="text-sm text-muted-foreground italic mt-2">Razão Social: {fornecedor.nome}</p>

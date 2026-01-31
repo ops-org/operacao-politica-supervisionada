@@ -9,6 +9,7 @@ namespace OPS.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Route("deputado-federal")]
     // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
     public class DeputadoController : Controller
     {

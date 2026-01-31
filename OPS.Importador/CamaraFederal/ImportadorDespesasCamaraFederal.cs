@@ -30,6 +30,7 @@ namespace OPS.Importador.CamaraFederal;
 
 public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 {
+    const string LEGISLATURA_ANO_MES = "202302";
     protected readonly ILogger<ImportadorDespesasCamaraFederal> logger;
     protected readonly AppSettings appSettings;
     protected readonly FileManager fileManager;
@@ -396,8 +397,6 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
         if (ano == DateTime.Now.Year && (itensProcessadosAno > 0 || lstHash.Count > 0))
         {
-            InsereDespesaLegislatura();
-
             AtualizaParlamentarValoresCEAP();
             AtualizaCampeoesGastos();
             AtualizaResumoMensal();
@@ -876,7 +875,7 @@ SELECT
     restituicao,
     tv.id,
     CAST(coalesce(url_documento, '0') as SMALLINT),
-    concat(ano::text, mes::text)::INT8,
+    concat(ano::text, LPAD(mes::text, 2, '0'))::INT8,
     dt.hash
 from temp.cf_despesa_temp dt
 LEFT JOIN camara.cf_deputado d on d.id_deputado = dt.numero_deputado_id
@@ -930,30 +929,27 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
 
     public void AtualizaParlamentarValoresCEAP()
     {
-        var dt = connection.Query("select id FROM camara.cf_deputado where processado != 2");
-        object valor_total_ceap;
-
-        foreach (var dr in dt)
+        try
         {
-            try
-            {
-                var obj = new { id_cf_deputado = Convert.ToInt32(dr.id) };
-                valor_total_ceap = connection.ExecuteScalar("select sum(valor_liquido) FROM camara.cf_despesa where id_cf_deputado=@id_cf_deputado;", obj);
-                if (Convert.IsDBNull(valor_total_ceap)) valor_total_ceap = 0;
-                else if (valor_total_ceap == null || (decimal)valor_total_ceap < 0) valor_total_ceap = 0;
-
-                connection.Execute(@"update cf_deputado set valor_total_ceap = @valor_total_ceap where id=@id_cf_deputado", new
-                {
-                    valor_total_ceap = valor_total_ceap,
-                    id_cf_deputado = dr.id
-                }
-                );
-            }
-            catch (Exception ex)
-            {
-                if (!ex.GetBaseException().Message.Contains("Out of range"))
-                    throw;
-            }
+            // TODO: Considerar apenas deputados que exerceram mandato
+            connection.Execute(@"
+UPDATE camara.cf_deputado d 
+SET valor_total_ceap = COALESCE(subquery.total_valor, 0)
+FROM (
+    SELECT des.id_cf_deputado, 
+           CASE 
+               WHEN SUM(des.valor_liquido) < 0 THEN 0
+               ELSE SUM(des.valor_liquido)
+           END as total_valor
+    FROM camara.cf_despesa des
+    GROUP BY des.id_cf_deputado
+) subquery
+WHERE d.id = subquery.id_cf_deputado");
+        }
+        catch (Exception ex)
+        {
+            if (!ex.GetBaseException().Message.Contains("Out of range"))
+                throw;
         }
     }
 
@@ -963,38 +959,35 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
     /// </summary>
     public void AtualizaCampeoesGastos()
     {
-        var strSql =
-            @"truncate table cf_deputado_campeao_gasto;
-    				insert into cf_deputado_campeao_gasto
-    				SELECT l1.id_cf_deputado, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
-    				FROM (
-    					SELECT 
-    						l.id_cf_deputado,
-    						sum(l.valor_liquido) as valor_total
-    					FROM  cf_despesa_57 l
-    					GROUP BY l.id_cf_deputado
-    					order by valor_total desc 
-    					limit 4
-    				) l1 
-    				INNER JOIN cf_deputado d on d.id = l1.id_cf_deputado 
-    				LEFT JOIN partido p on p.id = d.id_partido
-    				LEFT JOIN estado e on e.id = d.id_estado;";
+        connection.Execute($@"
+TRUNCATE TABLE camara.cf_deputado_campeao_gasto;
 
-        connection.Execute(strSql);
+INSERT INTO camara.cf_deputado_campeao_gasto
+SELECT l1.id_cf_deputado, d.nome_parlamentar, l1.valor_total, p.sigla, e.sigla
+FROM (
+    SELECT 
+        l.id_cf_deputado,
+        sum(l.valor_liquido) as valor_total
+    FROM camara.cf_despesa l
+    WHERE l.ano_mes >= {LEGISLATURA_ANO_MES} 
+    GROUP BY l.id_cf_deputado
+    ORDER BY valor_total desc 
+    limit 4
+) l1 
+INNER JOIN camara.cf_deputado d on d.id = l1.id_cf_deputado 
+LEFT JOIN partido p on p.id = d.id_partido
+LEFT JOIN estado e on e.id = d.id_estado");
     }
 
     public void AtualizaResumoMensal()
     {
-        var strSql =
-            @"truncate table cf_despesa_resumo_mensal;
-    				insert into cf_despesa_resumo_mensal
-    				(ano, mes, valor) (
-    					select ano, mes, sum(valor_liquido)
-    					FROM camara.cf_despesa
-    					group by ano, mes
-    				);";
+        connection.Execute(@"
+TRUNCATE TABLE camara.cf_despesa_resumo_mensal;
 
-        connection.Execute(strSql);
+INSERT INTO camara.cf_despesa_resumo_mensal (ano, mes, valor) 
+SELECT ano, mes, sum(valor_liquido)
+FROM camara.cf_despesa
+GROUP BY ano, mes");
     }
 
     #endregion Processar Resumo CEAP

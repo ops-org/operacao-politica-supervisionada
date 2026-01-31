@@ -74,7 +74,7 @@ export const apiClient = {
 export interface DropDownOptions {
   id: string;
   text: string;
-  helpText: string;
+  help_text: string;
   image: string;
   tokens: string[];
 }
@@ -181,10 +181,16 @@ export interface CustoAnual {
   verba_gabinete: string;
   salario_patronal: string;
   auxilio_moradia: string;
+  auxilio_saude: string;
+  diarias: string;
 }
 
-export const fetchCustoAnual = async (id: string): Promise<CustoAnual[]> => {
-  return await apiClient.get<CustoAnual[]>(`/api/deputado/${id}/CustoAnual`);
+export const fetchCustoAnual = async (
+  id: string,
+  type: "deputado-federal" | "deputado-estadual" | "senador"): Promise<CustoAnual[]> => {
+
+  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
+  return await apiClient.get<CustoAnual[]>(`/api/${apiType}/${id}/CustoAnual`);
 };
 
 export interface TopSpender {
@@ -535,7 +541,7 @@ export const fetchDespesasCotaParlamentar = async (
 };
 
 export interface DeputadoEstadual {
-  id: number;
+  id_cl_deputado: number;
   nome_parlamentar: string;
   nome_civil: string;
   sigla_partido: string;
@@ -690,7 +696,7 @@ export const fetchRemuneracao = async (
 
   // Determine endpoint based on type
   const endpoint = type === "deputado-federal" ? "/deputado/remuneracao" : "/senador/remuneracao";
-  
+
   const result = await apiClient.post<any>(endpoint, payload);
   return result;
 };

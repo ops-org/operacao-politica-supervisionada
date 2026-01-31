@@ -51,6 +51,7 @@ export const StackedAnnualChart = ({ data }: StackedAnnualChartProps) => {
             border: '1px solid hsl(var(--border))',
             borderRadius: '12px',
             boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+            textAlign: 'right',
           }}
           cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
         />

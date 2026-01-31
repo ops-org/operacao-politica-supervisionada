@@ -59,10 +59,10 @@ namespace OPS.Importador.Comum
 
                     //await ImportarDespesasAnoAtual();
 
-                    for (int ano = 2023; ano <= 2024; ano++)
-                        await ImportarDespesas(ano);
+                    //for (int ano = 2023; ano <= 2026; ano++)
+                    //    await ImportarDespesas(ano);
 
-                    //await ImportarDespesas(2025);
+                    await ImportarDespesas(2026);
                 }
 
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);

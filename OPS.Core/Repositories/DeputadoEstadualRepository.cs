@@ -345,6 +345,101 @@ namespace OPS.Core.Repositories
             //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
         }
 
+        public async Task<List<DeputadoCustoAnualDTO>> CustoAnual(int id)
+        {
+            var result = new List<DeputadoCustoAnualDTO>();
+            //using (AppDb banco = new AppDb())
+            {
+                var strSql = @"
+					SELECT d.ano_mes/100 as ano , SUM(d.valor_liquido) AS valor_total
+                    FROM assembleias.cl_despesa d
+                    join assembleias.cl_despesa_tipo t on t.id = d.id_cl_despesa_tipo
+                    WHERE d.id_cl_deputado = @id
+                    and t.id NOT IN(10, 11)
+                    group by d.ano_mes/100
+				";
+
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var dto = new DeputadoCustoAnualDTO
+                        {
+                            ano = Convert.ToInt32(reader["ano"]),
+                            cota_parlamentar = Convert.ToDecimal(reader["valor_total"])
+                        };
+                        result.Add(dto);
+                    }
+                }
+
+                strSql = @"
+					SELECT d.ano_mes/100 as ano , SUM(d.valor_liquido) AS valor_total
+                    FROM assembleias.cl_despesa d
+                    join assembleias.cl_despesa_tipo t on t.id = d.id_cl_despesa_tipo
+                    WHERE d.id_cl_deputado = @id
+                    and t.id = 11
+                    group by d.ano_mes/100
+				";
+
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var dto = result.FirstOrDefault(x => x.ano == ano);
+
+                        if (dto != null)
+                        {
+                            dto.auxilio_saude = Convert.ToDecimal(reader["valor_total"]);
+                        }
+                        else
+                        {
+                            dto = new DeputadoCustoAnualDTO
+                            {
+                                ano = ano,
+                                auxilio_saude = Convert.ToDecimal(reader["valor_total"])
+                            };
+                            result.Add(dto);
+                        }
+                    }
+                }
+
+                strSql = @"
+					SELECT d.ano_mes/100 as ano , SUM(d.valor_liquido) AS valor_total
+                    FROM assembleias.cl_despesa d
+                    join assembleias.cl_despesa_tipo t on t.id = d.id_cl_despesa_tipo
+                    WHERE d.id_cl_deputado = @id
+                    and t.id = 10
+                    group by d.ano_mes/100
+				";
+
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var dto = result.FirstOrDefault(x => x.ano == ano);
+
+                        if (dto != null)
+                        {
+                            dto.diarias = Convert.ToDecimal(reader["valor_total"]);
+                        }
+                        else
+                        {
+                            dto = new DeputadoCustoAnualDTO
+                            {
+                                ano = ano,
+                                diarias = Convert.ToDecimal(reader["valor_total"])
+                            };
+                            result.Add(dto);
+                        }
+                    }
+                }
+            }
+
+            return result.OrderBy(x => x.ano).ToList();
+        }
+
         public async Task<dynamic> ResumoMensal()
         {
             var resumoMensal = await _context.DespesaResumosMensais

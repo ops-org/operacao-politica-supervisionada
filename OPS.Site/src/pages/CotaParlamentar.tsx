@@ -211,7 +211,7 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
     }
   }, [searchParams]);
 
-  const { data: apiData, isRefetching: isLoading, error, refetch } = useQuery({
+  const { data: apiData, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['parlamentar-data'], // Static key to prevent automatic refetching
     queryFn: () => fetchDespesasCotaParlamentar(type, currentPage, itemsPerPage, sortField, sortOrder, getApiFilters()),
     staleTime: 0, // Disable caching to ensure immediate refetch
@@ -430,7 +430,7 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
       {/* Full-screen loading overlay */}
-      <LoadingOverlay isLoading={isLoading} content="Carregando informações das despesas..." />
+      <LoadingOverlay isLoading={isLoading || isFetching} content="Carregando informações das despesas..." />
 
       <Header />
       <main className="container mx-auto px-4 py-8">

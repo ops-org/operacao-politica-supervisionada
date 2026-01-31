@@ -26,6 +26,7 @@ namespace OPS.Importador.SenadoFederal;
 /// </summary>
 public class ImportadorDespesasSenado : IImportadorDespesas
 {
+    const string LEGISLATURA_ANO_MES = "202302";
     protected readonly ILogger<ImportadorDespesasSenado> logger;
     protected readonly AppSettings appSettings;
     protected readonly FileManager fileManager;
@@ -384,60 +385,45 @@ public class ImportadorDespesasSenado : IImportadorDespesas
 
     public void AtualizaParlamentarValores()
     {
-        dbContext.Database.ExecuteSqlRaw("UPDATE sf_senador SET valor_total_ceaps=0;");
-
-        var dt = dbContext.Database.GetDbConnection().Query<int>(@"
-select id FROM senado.sf_senador
-WHERE id IN (
-    select distinct id_sf_senador
-    FROM senado.sf_despesa
-)", new NpgsqlParameter("ano", DateTime.Now.Year));
-
-        foreach (var id in dt)
-        {
-            var valor_total_ceaps = dbContext.Database.GetDbConnection().ExecuteScalar<int>(
-                "select sum(valor) FROM senado.sf_despesa where id_sf_senador=@id_sf_senador",
-                new NpgsqlParameter("id_sf_senador", id));
-
-            dbContext.Database.ExecuteSqlRaw(
-                @"update sf_senador set valor_total_ceaps=@valor_total_ceaps where id=@id_sf_senador",
-                new NpgsqlParameter("valor_total_ceaps", valor_total_ceaps),
-                new NpgsqlParameter("id_sf_senador", id));
-        }
+        dbContext.Database.ExecuteSqlRaw(@"
+UPDATE senado.sf_senador s 
+SET valor_total_ceaps = COALESCE(subquery.total_valor, 0)
+FROM (
+    SELECT d.id_sf_senador, SUM(d.valor) as total_valor
+    FROM senado.sf_despesa d
+    GROUP BY d.id_sf_senador
+) subquery
+WHERE s.id = subquery.id_sf_senador");
     }
 
     public void AtualizaCampeoesGastos()
     {
-        var strSql = @"
-TRUNCATE TABLE sf_senador_campeao_gasto;
-INSERT INTO sf_senador_campeao_gasto
+        dbContext.Database.ExecuteSqlRaw($@"
+TRUNCATE TABLE senado.sf_senador_campeao_gasto;
+INSERT INTO senado.sf_senador_campeao_gasto
 SELECT l1.id_sf_senador, d.nome, l1.valor_total, p.sigla, e.sigla
 FROM (
     SELECT l.id_sf_senador, SUM(l.valor) as valor_total
-    FROM  sf_despesa l
-    WHERE l.ano_mes >= 202302 
+    FROM senado.sf_despesa l
+    WHERE l.ano_mes >= {LEGISLATURA_ANO_MES} 
     GROUP BY l.id_sf_senador
     ORDER BY valor_total desc 
     LIMIT 4
 ) l1 
-JOIN sf_senador d on d.id = l1.id_sf_senador
+JOIN senado.sf_senador d on d.id = l1.id_sf_senador
 LEFT JOIN partido p on p.id = d.id_partido
-LEFT JOIN estado e on e.id = d.id_estado;";
-
-        dbContext.Database.ExecuteSqlRaw(strSql);
+LEFT JOIN estado e on e.id = d.id_estado");
     }
 
     public void AtualizaResumoMensal()
     {
-        var strSql = @"
-TRUNCATE TABLE sf_despesa_resumo_mensal;
+        dbContext.Database.ExecuteSqlRaw(@"
+TRUNCATE TABLE senado.sf_despesa_resumo_mensal;
 
-INSERT INTO sf_despesa_resumo_mensal (ano, mes, valor)
+INSERT INTO senado.sf_despesa_resumo_mensal (ano, mes, valor)
 SELECT ano, mes, sum(valor)
 FROM senado.sf_despesa
-GROUP BY ano, mes";
-
-        dbContext.Database.ExecuteSqlRaw(strSql);
+GROUP BY ano, mes");
     }
 
     public void AtualizarDatasImportacaoDespesas(DateTime? dInicio = null, DateTime? dFim = null)

@@ -15,12 +15,8 @@ import FolhaPagamentoDetalhes from "./pages/FolhaPagamentoDetalhes";
 import ParlamentareLista from "./pages/ParlamentareLista";
 import FornecedorDetalhe from "./pages/fornecedor/FornecedorDetalhe";
 
-import DeputadoEstadualDetalhe from "./pages/assembleia/DeputadoDetalhe";
-
-import DeputadoFederalDetalhe from "./pages/camara/DeputadoDetalhe";
+import ParlamentarDetalhe from "./pages/ParlamentarDetalhe";
 import DeputadoDespesaDocumentoDetalhe from "./pages/DocumentoDetalhe";
-
-import SenadorDetalhe from "./pages/senado/SenadorDetalhe";
 
 import { ScrollToTop } from "@/components/ScrollToTop";
 
@@ -41,19 +37,19 @@ const App = () => (
             <Route path="/fornecedor/:id" element={<FornecedorDetalhe />} />
 
             <Route path="/deputado-estadual" element={<ParlamentareLista key="deputado-estadual" type="deputado-estadual" />} />
-            <Route path="/deputado-estadual/:id" element={<DeputadoEstadualDetalhe />} />
+            <Route path="/deputado-estadual/:id" element={<ParlamentarDetalhe type="deputado-estadual" />} />
             <Route path="/deputado-estadual/ceap" element={<CotaParlamentar key="deputado-estadual" type="deputado-estadual" />} />
             <Route path="/deputado-estadual/ceap/:id" element={<DeputadoDespesaDocumentoDetalhe key="deputado-estadual" type="deputado-estadual" />} />
 
             <Route path="/deputado-federal" element={<ParlamentareLista key="deputado-federal" type="deputado-federal" />} />
-            <Route path="/deputado-federal/:id" element={<DeputadoFederalDetalhe />} />
+            <Route path="/deputado-federal/:id" element={<ParlamentarDetalhe type="deputado-federal" />} />
             <Route path="/deputado-federal/ceap" element={<CotaParlamentar key="deputado-federal" type="deputado-federal" />} />
             <Route path="/deputado-federal/ceap/:id" element={<DeputadoDespesaDocumentoDetalhe key="deputado-federal" type="deputado-federal" />} />
             <Route path="/deputado-federal/folha-pagamento" element={<FolhaPagamento key="deputado-federal" type="deputado-federal" />} />
             {/* <Route path="/deputado-federal/folha-pagamento/:id" element={<FolhaPagamentoDetalhes key="deputado-federal" />} /> */}
 
             <Route path="/senador" element={<ParlamentareLista key="senador" type="senador" />} />
-            <Route path="/senador/:id" element={<SenadorDetalhe />} />
+            <Route path="/senador/:id" element={<ParlamentarDetalhe type="senador" />} />
             <Route path="/senador/ceap" element={<CotaParlamentar key="senador" type="senador" />} />
             <Route path="/senador/ceap/:id" element={<DeputadoDespesaDocumentoDetalhe key="senador" type="senador" />} />
             <Route path="/senador/folha-pagamento" element={<FolhaPagamento key="senador" type="senador" />} />

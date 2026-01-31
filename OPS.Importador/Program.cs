@@ -262,58 +262,58 @@ namespace OPS.Importador
                 //    }
                 //}
 
-                    //                await dbContext.Database.ExecuteSqlRawAsync(@"
-                    //INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                    //SELECT d.id, d.nome_parlamentar, d.id_estado 
-                    //FROM assembleias.cl_deputado d
-                    //LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_parlamentar AND dp.id_estado = d.id_estado
-                    //WHERE dp.id IS NULL
-                    //AND d.nome_civil IS NOT NULL
-                    //ON CONFLICT DO NOTHING;
+                dbContext.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
+                    SELECT d.id, d.nome_parlamentar, d.id_estado 
+                    FROM assembleias.cl_deputado d
+                    LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_parlamentar AND dp.id_estado = d.id_estado
+                    WHERE dp.id IS NULL
+                    AND d.nome_civil IS NOT NULL
+                    ON CONFLICT DO NOTHING;
 
-                    //INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                    //SELECT d.id, d.nome_civil, d.id_estado 
-                    //FROM assembleias.cl_deputado d
-                    //LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_civil AND dp.id_estado = d.id_estado
-                    //WHERE dp.id IS NULL
-                    //AND d.nome_civil IS NOT NULL
-                    //ON CONFLICT DO NOTHING;");
+                    INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
+                    SELECT d.id, d.nome_civil, d.id_estado 
+                    FROM assembleias.cl_deputado d
+                    LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_civil AND dp.id_estado = d.id_estado
+                    WHERE dp.id IS NULL
+                    AND d.nome_civil IS NOT NULL
+                    ON CONFLICT DO NOTHING;").GetAwaiter().GetResult();
 
-                    //var crawler = new SeleniumScraper(serviceProvider);
-                    //crawler.BaixarArquivosParana();
-                    //crawler.BaixarArquivosPiaui();
+                var crawler = new SeleniumScraper(serviceProvider);
+                crawler.BaixarArquivosParana();
+                crawler.BaixarArquivosPiaui();
 
-                    var types = new Type[]
+                var types = new Type[]
                     {
-                        //typeof(SenadoFederal.Senado), // csv
-                        //typeof(CamaraFederal.Camara), // csv
-                        ////typeof(ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
-                        //typeof(ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
-                        //typeof(ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
-                        //typeof(ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
-                        //typeof(ImportacaoBahia), // crawler anual
-                        //typeof(ImportacaoCeara), // crawler mensal
+                        typeof(SenadoFederal.Senado), // csv
+                        typeof(CamaraFederal.Camara), // csv
+                        //typeof(ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                        typeof(ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
+                        typeof(ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
+                        typeof(ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
+                        typeof(ImportacaoBahia), // crawler anual
+                        typeof(ImportacaoCeara), // crawler mensal
                         //typeof(ImportacaoDistritoFederal), // xlsx  (Apenas BR)
-                        //typeof(ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
-                        //typeof(ImportacaoGoias), // crawler mensal/deputado
-                        //typeof(ImportacaoMaranhao), // Valores mensais por categoria
-                        ////typeof(ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
+                        typeof(ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                        typeof(ImportacaoGoias), // crawler mensal/deputado
+                        typeof(ImportacaoMaranhao), // Valores mensais por categoria
+                        //typeof(ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                         typeof(ImportacaoMatoGrossoDoSul), // crawler anual
-                        //typeof(ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
-                        //typeof(ImportacaoPara), // json api anual
-                        //typeof(ImportacaoParaiba), // arquivo ods mensal/deputado
-                        //typeof(ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
-                        //typeof(ImportacaoPernambuco), // json api mensal/deputado
-                        //typeof(ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium) TODO: Buscar empresa/cnpj do PDF com crawler e OCR
-                        //typeof(ImportacaoRioDeJaneiro), // json api mensal/deputado
-                        //typeof(ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
-                        //typeof(ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
-                        //typeof(ImportacaoRondonia), // crawler mensal/deputado
-                        //typeof(ImportacaoRoraima), // crawler & odt mensal/deputado
-                        //typeof(ImportacaoSantaCatarina), // csv anual
-                        //typeof(ImportacaoSaoPaulo), // xml anual
-                        //typeof(ImportacaoSergipe), // crawler & pdf mensal/deputado
-                        //typeof(ImportacaoTocantins), // crawler & pdf mensal/deputado
+                        typeof(ImportacaoMinasGerais), // xml api mensal/deputado (Apenas BR) 
+                        typeof(ImportacaoPara), // json api anual
+                        typeof(ImportacaoParaiba), // arquivo ods mensal/deputado
+                        typeof(ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
+                        typeof(ImportacaoPernambuco), // json api mensal/deputado
+                        typeof(ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium) TODO: Buscar empresa/cnpj do PDF com crawler e OCR
+                        typeof(ImportacaoRioDeJaneiro), // json api mensal/deputado
+                        typeof(ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
+                        typeof(ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
+                        typeof(ImportacaoRondonia), // crawler mensal/deputado
+                        typeof(ImportacaoRoraima), // crawler & odt mensal/deputado
+                        typeof(ImportacaoSantaCatarina), // csv anual
+                        typeof(ImportacaoSaoPaulo), // xml anual
+                        typeof(ImportacaoSergipe), // crawler & pdf mensal/deputado
+                        typeof(ImportacaoTocantins), // crawler & pdf mensal/deputado
                     };
 
                     var tasks = new List<Task>();

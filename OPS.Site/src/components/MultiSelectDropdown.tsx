@@ -10,7 +10,7 @@ interface MultiSelectDropdownProps {
     id: number | string; 
     text: string;
     image?: string;
-    helpText?: string;
+    help_text?: string;
   }>;
   placeholder?: string;
   selectedItems?: string[];
@@ -45,7 +45,7 @@ export const MultiSelectDropdown = ({
     
     return items.filter(item => {
       const textNormalized = normalizeText(item.text);
-      const helpTextNormalized = item.helpText ? normalizeText(item.helpText) : '';
+      const helpTextNormalized = item.help_text ? normalizeText(item.help_text) : '';
       
       return textNormalized.includes(searchNormalized) || 
              helpTextNormalized.includes(searchNormalized);
@@ -143,9 +143,9 @@ export const MultiSelectDropdown = ({
                         {item.text}
                       </label>
                     </div>
-                    {item.helpText && (
+                    {item.help_text && (
                       <p className="text-xs text-muted-foreground leading-relaxed text-right ml-4">
-                        {item.helpText}
+                        {item.help_text}
                       </p>
                     )}
                   </div>

@@ -59,9 +59,9 @@ export const Header = () => {
               <DropdownMenuItem asChild>
                 <Link to="/deputado-federal/ceap">Cota parlamentar (CEAP)</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              {/* <DropdownMenuItem asChild>
                 <Link to="/deputado-federal/folha-pagamento">Folha de Pagamento</Link>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               {/* <DropdownMenuItem asChild>
                 <Link to="/deputado-federal/frequencia">Frequência (descontinuada)</Link>
               </DropdownMenuItem> */}

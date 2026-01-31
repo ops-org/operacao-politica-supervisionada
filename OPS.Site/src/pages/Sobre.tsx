@@ -36,7 +36,7 @@ const Sobre = () => {
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-6">
             Conheça a Operação Política Supervisionada
           </h1>
-          <p className="text-xl text-muted-foreground mx-auto max-w-3xl leading-relaxed">
+          <p className="text-xl text-muted-foreground mx-auto leading-relaxed">
             Fiscalização detalhada de gastos públicos com transparência, responsabilidade e tecnologia cívica.
           </p>
         </div>
