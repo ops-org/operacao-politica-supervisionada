@@ -64,31 +64,10 @@ namespace OPS.API
                 options.AddPolicy("CorsPolicy",
                 builder =>
                 {
-#if DEBUG
                     builder
                         .AllowAnyOrigin()
                         .WithHeaders(HeaderNames.ContentType, HeaderNames.Origin, HeaderNames.AccessControlAllowOrigin, "x-custom-header", "accept")
                         .WithMethods("POST", "GET", "OPTIONS");
-#else
-                    builder
-                        .WithOrigins("http://www.ops.net.br", "https://www.ops.net.br", "http://ops.net.br", "https://ops.net.br")
-                        .WithOrigins("http://www.ops.org.br", "https://www.ops.org.br", "http://ops.org.br", "https://ops.org.br")
-                        // Support https://*.domain.com
-                        //.SetIsOriginAllowedToAllowWildcardSubdomains()
-
-                        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
-                        // https://stackoverflow.com/questions/24687313/what-exactly-does-the-access-control-allow-credentials-header-do
-                        // JWT is not a cookie solution, disable it without allow credential
-                        // .AllowCredentials()
-                        //.DisallowCredentials()
-
-                        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
-                        // Without it will popup error: Request header field content-type is not allowed by Access-Control-Allow-Headers in preflight response
-                        .WithHeaders(HeaderNames.ContentType, HeaderNames.Origin, HeaderNames.AccessControlAllowOrigin, "x-custom-header", "accept")
-                        // Web Verbs like GET, POST, default enabled
-                        .WithMethods("POST", "GET", "OPTIONS");
-#endif
-
                 });
             });
 
