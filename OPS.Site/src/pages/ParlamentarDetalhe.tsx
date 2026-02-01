@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { smoothScrollToElement, getHeaderHeight } from "@/lib/scroll";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ErrorState } from "@/components/ErrorState";
@@ -76,6 +77,9 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
     const [maioresNotas, setMaioresNotas] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const valueSummaryRef = useRef<HTMLDivElement>(null);
+    const fornecedoresRef = useRef<HTMLDivElement>(null);
+    const custosAnoRef = useRef<HTMLDivElement>(null);
 
     usePageTitle(data ? data.nome_parlamentar : "Parlamentar");
 
@@ -132,10 +136,9 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                     setChartData(cust);
                     setMaioresNotas(notas);
                 } else if (type === "senador") {
-                    const [sen, gstAnu, gstPes, notas, forn] = await Promise.all([
+                    const [sen, custos, notas, forn] = await Promise.all([
                         fetchSenadorDetalhe(id),
-                        apiClient.get<any>(`/senador/${id}/GastosPorAno`),
-                        apiClient.get<any>(`/senador/${id}/GastosComPessoalPorAno`),
+                        fetchCustoAnual(id, type),
                         apiClient.get<any[]>(`/senador/${id}/MaioresNotas`),
                         apiClient.get<any[]>(`/senador/${id}/MaioresFornecedores`)
                     ]);
@@ -161,21 +164,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                     });
                     setFornecedores(forn);
                     setMaioresNotas(notas);
-
-                    const allYears = new Set([
-                        ...(gstAnu?.categories || []),
-                        ...(gstPes?.categories || [])
-                    ]);
-                    const mergedChart = Array.from(allYears).map(year => {
-                        const ceapsIndex = gstAnu?.categories?.indexOf(year);
-                        const pessoalIndex = gstPes?.categories?.indexOf(year);
-                        return {
-                            ano: year.toString(),
-                            cota_parlamentar: ceapsIndex !== undefined && ceapsIndex >= 0 ? (gstAnu?.series?.[ceapsIndex] || 0) : 0,
-                            verba_gabinete: pessoalIndex !== undefined && pessoalIndex >= 0 ? (gstPes?.series?.[pessoalIndex] || 0) : 0
-                        };
-                    }).sort((a, b) => a.ano.localeCompare(b.ano));
-                    setChartData(mergedChart);
+                    setChartData(custos);
                 } else if (type === "deputado-estadual") {
                     const [res, custos] = await Promise.all([
                         fetchDeputadoEstadualData(id),
@@ -216,6 +205,25 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
 
         loadData();
     }, [id, type]);
+
+    const scrollToValueSummary = () => {
+        if (!isState)
+            smoothScrollToElement(valueSummaryRef, getHeaderHeight());
+        else
+            smoothScrollToElement(custosAnoRef, getHeaderHeight());
+    };
+
+    const scrollToFornecedores = () => {
+        smoothScrollToElement(fornecedoresRef, getHeaderHeight());
+    };
+
+    const scrollToCustosAno = () => {
+        smoothScrollToElement(custosAnoRef, getHeaderHeight());
+    };
+
+    const folhaPagamentoUrl = data ? (type === "deputado-federal" ?
+        `/deputado-federal/folha-pagamento?IdParlamentar=${data.id}` :
+        `/senador/folha-pagamento?IdParlamentar=${data.id}`) : '#';
 
     if (loading) {
         return <ParlamentarDetalheSkeleton type={type} />;
@@ -318,7 +326,11 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
 
                                     {/* Total Cost Display */}
                                     <div className="text-center md:text-right space-y-2 lg:min-w-[280px]">
-                                        <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 shadow-xl shadow-primary/20 text-white transform hover:scale-105 transition-transform duration-300">
+                                        <button
+                                            onClick={scrollToValueSummary}
+                                            className="block w-full bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 shadow-xl shadow-primary/20 text-white transform hover:scale-105 transition-all duration-300 group"
+                                            title="Clique para ver detalhes dos valores"
+                                        >
                                             <div className="flex items-center justify-center md:justify-end gap-2 mb-1 opacity-90">
                                                 <TrendingUp className="h-4 w-4" />
                                                 <p className="text-[10px] font-black uppercase tracking-widest">Custo Total Acumulado</p>
@@ -329,7 +341,11 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                             <p className="text-[9px] font-medium text-white/70 uppercase tracking-tight mt-1">
                                                 {isFederal ? "CEAP • GABINETE • SALÁRIO • AUXÍLIOS" : isSenator ? "CEAPS • VERBA GABINETE" : "CEAP • DIÁRIAS • SAÚDE"}
                                             </p>
-                                        </div>
+                                            <div className="flex items-center justify-center md:justify-end gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span className="text-[8px] font-medium">Ver detalhes</span>
+                                                <ArrowRight className="h-3 w-3" />
+                                            </div>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -405,9 +421,13 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
 
                     {/* Value Summary Cards (only for Federal and Senator) */}
                     {!isState && (
-                        <div className={`grid grid-cols-1 md:grid-cols-2 ${isFederal ? "lg:grid-cols-4" : ""} gap-6`}>
+                        <div ref={valueSummaryRef} className={`grid grid-cols-1 md:grid-cols-2 ${isFederal ? "lg:grid-cols-4" : ""} gap-6`}>
                             <Card className="shadow-lg border-0 bg-blue-500/5 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                                <CardContent className="p-6">
+                                <button
+                                    onClick={scrollToFornecedores}
+                                    className="w-full p-6 text-left hover:bg-blue-500/10 transition-colors rounded-2xl"
+                                    title="Clique para ver principais fornecedores"
+                                >
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">
@@ -419,11 +439,19 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                             <DollarSign className="h-6 w-6" />
                                         </div>
                                     </div>
-                                </CardContent>
+                                    <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-[8px] font-medium text-blue-600">Ver fornecedores</span>
+                                        <ArrowRight className="h-3 w-3 text-blue-600" />
+                                    </div>
+                                </button>
                             </Card>
 
                             <Card className="shadow-lg border-0 bg-orange-500/5 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                                <CardContent className="p-6">
+                                <button
+                                    onClick={scrollToCustosAno}
+                                    className="w-full p-6 text-left hover:bg-orange-500/10 transition-colors rounded-2xl"
+                                    title="Clique para ver custos por ano"
+                                >
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Verba de Gabinete</p>
@@ -433,7 +461,11 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                             <Building2 className="h-6 w-6" />
                                         </div>
                                     </div>
-                                </CardContent>
+                                    <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-[8px] font-medium text-orange-600">Ver custos por ano</span>
+                                        <ArrowRight className="h-3 w-3 text-orange-600" />
+                                    </div>
+                                </button>
                             </Card>
 
                             {isFederal && (
@@ -442,7 +474,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <CardContent className="p-6">
                                             <div className="flex items-center justify-between">
                                                 <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Salário Bruto</p>
+                                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Custos Salariais</p>
                                                     <p className="text-2xl font-black text-purple-900 font-mono tracking-tighter">R$ {data.valor_total_salario}</p>
                                                 </div>
                                                 <div className="p-3 bg-purple-500/10 text-purple-600 rounded-2xl shadow-inner border border-purple-500/10 group-hover:scale-110 transition-transform">
@@ -579,7 +611,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                         </Card>
 
                         {/* Annual Chart */}
-                        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                        <Card ref={custosAnoRef} className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                             <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl shadow-inner border border-primary/10">
@@ -612,42 +644,67 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <Bar dataKey="cota_parlamentar" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} name="Cota Parlamentar" className="transition-all duration-300 hover:opacity-80" />
                                         {isFederal && (
                                             <>
-                                                <Bar dataKey="salario_patronal" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Salário Bruto" className="transition-all duration-300 hover:opacity-80" />
+                                                <Bar dataKey="salario_patronal" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Custos Salariais" className="transition-all duration-300 hover:opacity-80" />
                                                 <Bar dataKey="auxilio_moradia" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Auxílio Moradia" className="transition-all duration-300 hover:opacity-80" />
                                             </>
                                         )}
                                         {isState && (
                                             <>
-                                                <Bar dataKey="auxilio_saude" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Auxílio Saúde" className="transition-all duration-300 hover:opacity-80" />
-                                                <Bar dataKey="diarias" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Diárias" className="transition-all duration-300 hover:opacity-80" />
+                                                <Bar dataKey="auxilio_saude" stackId="a" fill="hsl(var(--chart-5))" radius={[0, 0, 0, 0]} name="Auxílio Saúde" className="transition-all duration-300 hover:opacity-80" />
+                                                <Bar dataKey="diarias" stackId="a" fill="hsl(var(--chart-6))" radius={[4, 4, 0, 0]} name="Diárias" className="transition-all duration-300 hover:opacity-80" />
                                             </>
                                         )}
                                     </BarChart>
                                 </ResponsiveContainer>
-                                {(isFederal || isSenator) && (
-                                    <div className="flex justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest flex-wrap">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
-                                            <span className="text-muted-foreground">Verba de Gabinete</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
-                                            <span className="text-muted-foreground">Cota Parlamentar</span>
-                                        </div>
-                                        {isFederal && (
-                                            <>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }}></div>
-                                                    <span className="text-muted-foreground">Salário Bruto</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-5))' }}></div>
-                                                    <span className="text-muted-foreground">Auxílio Moradia</span>
-                                                </div>
-                                            </>
-                                        )}
+
+                                <div className="flex justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest flex-wrap">
+                                    {(isFederal || isSenator) && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
+                                                <span className="text-muted-foreground">Verba de Gabinete</span>
+                                            </div>
+                                            {/* <Link
+                                            to={folhaPagamentoUrl}
+                                            className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
+                                            title="Clique para ver detalhes da folha de pagamento"
+                                        >
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
+                                            <span className="text-muted-foreground group-hover:text-primary">Verba de Gabinete</span>
+                                            <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </Link> */}
+                                        </>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
+                                        <span className="text-muted-foreground">Cota Parlamentar</span>
                                     </div>
-                                )}
+                                    {isFederal && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
+                                                <span className="text-muted-foreground">Custos Salariais</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }}></div>
+                                                <span className="text-muted-foreground">Auxílio Moradia</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    {isState && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-5))' }}></div>
+                                                <span className="text-muted-foreground">Diárias</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-6))' }}></div>
+                                                <span className="text-muted-foreground">Auxílio Saúde</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
                             </CardContent>
                         </Card>
                     </div>
@@ -663,7 +720,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
 
                     <div className="grid gap-8 lg:grid-cols-2 mb-8">
                         {/* Principais Fornecedores */}
-                        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300">
+                        <Card ref={fornecedoresRef} className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300">
                             <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">

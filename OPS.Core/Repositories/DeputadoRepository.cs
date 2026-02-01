@@ -177,11 +177,11 @@ namespace OPS.Core.Repositories
 
                         var documento = new DocumentoDetalheDTO
                         {
-                            IdDespesa = reader["id_cl_despesa"],
+                            IdDespesa = reader["id_despesa"],
                             IdDocumento = reader["id_documento"],
                             NumeroDocumento = reader["numero_documento"].ToString(),
                             TipoDocumento = sTipoDocumento,
-                            DataEmissao = Utils.FormataData(Convert.ToDateTime(reader["data_emissao"])),
+                            DataEmissao = Utils.FormataData(Convert.ToDateTime(reader["data_emissao"].ToString())),
                             ValorDocumento = Utils.FormataValor(Convert.ToDecimal(reader["valor_documento"])),
                             ValorGlosa = Utils.FormataValor(Convert.ToDecimal(reader["valor_glosa"])),
                             ValorLiquido = Utils.FormataValor(Convert.ToDecimal(reader["valor_liquido"])),
@@ -207,9 +207,12 @@ namespace OPS.Core.Repositories
                         var tipoLink = Convert.ToInt32(reader["tipo_link"]);
 
                         if (tipoLink == 2)// NF-e
-                            documento.Link = $"{urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal={documento.IdDocumento}";
+                            documento.UrlDocumento = $"{urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal={documento.IdDocumento}";
                         else if (tipoLink == 1)// Recibo
-                            documento.Link = $"{urlCamara}documentos/publ/{documento.IdDeputado}/{documento.Ano}/{documento.IdDocumento}.pdf";
+                            documento.UrlDocumento = $"{urlCamara}documentos/publ/{documento.IdDeputado}/{documento.Ano}/{documento.IdDocumento}.pdf";
+
+                        documento.UrlDemaisDocumentosMes = $"{urlCamara}sumarizado?nuDeputadoId=${documento.IdParlamentar}&dataInicio=${documento.Competencia}&dataFim=${documento.Competencia}&despesa=${documento.IdDespesaTipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=";
+                        documento.UrlDetalhesDocumento = $"{urlCamara}documento?nuDeputadoId=${documento.IdParlamentar}&numMes=${documento.Mes}&numAno=${documento.Ano}&despesa=${documento.IdDespesaTipo}&cnpjFornecedor=${documento.CnpjCpf}&idDocumento=${documento.NumeroDocumento}";
 
                         return documento;
                     }
@@ -400,9 +403,9 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<List<DeputadoCustoAnualDTO>> CustoAnual(int id)
+        public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
         {
-            var result = new List<DeputadoCustoAnualDTO>();
+            var result = new List<ParlamentarCustoAnualDTO>();
             //using (AppDb banco = new AppDb())
             {
                 var strSql = @"
@@ -416,10 +419,10 @@ namespace OPS.Core.Repositories
                 {
                     while (await reader.ReadAsync())
                     {
-                        var dto = new DeputadoCustoAnualDTO
+                        var dto = new ParlamentarCustoAnualDTO
                         {
-                            ano = Convert.ToInt32(reader["ano"]),
-                            cota_parlamentar = Convert.ToDecimal(reader["valor_total"])
+                            Ano = Convert.ToInt32(reader["ano"]),
+                            CotaParlamentar = Convert.ToDecimal(reader["valor_total"])
                         };
                         result.Add(dto);
                     }
@@ -437,18 +440,18 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
-                        var dto = result.FirstOrDefault(x => x.ano == ano);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.verba_gabinete = Convert.ToDecimal(reader["valor_total"]);
+                            dto.VerbaGabinete = Convert.ToDecimal(reader["valor_total"]);
                         }
                         else
                         {
-                            dto = new DeputadoCustoAnualDTO
+                            dto = new ParlamentarCustoAnualDTO
                             {
-                                ano = ano,
-                                verba_gabinete = Convert.ToDecimal(reader["valor_total"])
+                                Ano = ano,
+                                VerbaGabinete = Convert.ToDecimal(reader["valor_total"])
                             };
                             result.Add(dto);
                         }
@@ -467,18 +470,18 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
-                        var dto = result.FirstOrDefault(x => x.ano == ano);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.salario_patronal = Convert.ToDecimal(reader["valor_total"]);
+                            dto.SalarioPatronal = Convert.ToDecimal(reader["valor_total"]);
                         }
                         else
                         {
-                            dto = new DeputadoCustoAnualDTO
+                            dto = new ParlamentarCustoAnualDTO
                             {
-                                ano = ano,
-                                salario_patronal = Convert.ToDecimal(reader["valor_total"])
+                                Ano = ano,
+                                SalarioPatronal = Convert.ToDecimal(reader["valor_total"])
                             };
                             result.Add(dto);
                         }
@@ -497,25 +500,25 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
-                        var dto = result.FirstOrDefault(x => x.ano == ano);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.auxilio_moradia = Convert.ToDecimal(reader["valor_total"]);
+                            dto.AuxilioMoradia = Convert.ToDecimal(reader["valor_total"]);
                         }
                         else
                         {
-                            dto = new DeputadoCustoAnualDTO
+                            dto = new ParlamentarCustoAnualDTO
                             {
-                                ano = ano,
-                                auxilio_moradia = Convert.ToDecimal(reader["valor_total"])
+                                Ano = ano,
+                                AuxilioMoradia = Convert.ToDecimal(reader["valor_total"])
                             };
                             result.Add(dto);
                         }
                     }
                 }
             }
-            return result.OrderBy(x => x.ano).ToList();
+            return result.OrderBy(x => x.Ano).ToList();
         }
 
         public async Task<dynamic> GastosComPessoalPorAno(int id)

@@ -161,6 +161,19 @@ export const Header = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-border/40 bg-gradient-to-br from-card/95 to-muted/95 backdrop-blur-lg">
           <nav className="container mx-auto px-4 py-4 space-y-2">
+            {/* Search in Mobile Menu */}
+            <form onSubmit={handleSearch} className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Digite para buscar"
+                className="w-full pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            </form>
+
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground mb-2">Câmara</p>
               <Link

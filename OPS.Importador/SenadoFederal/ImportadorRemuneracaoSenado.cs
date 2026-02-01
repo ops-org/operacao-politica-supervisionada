@@ -302,19 +302,25 @@ namespace OPS.Importador.SenadoFederal
                 }
 
                 // Update senator total remuneration
-                var anoMesParam = new NpgsqlParameter("@ano_mes", anomes);
                 dbContext.Database.ExecuteSqlRaw(@"
-                    UPDATE sf_senador s
-                    JOIN sf_lotacao l ON l.id_senador = s.id
-                    JOIN sf_remuneracao r ON l.id = r.id_lotacao
-                    SET valor_total_remuneracao = (
-	                        SELECT SUM(custo_total) AS total
-	                        FROM senado.sf_remuneracao r
-	                        JOIN sf_lotacao l ON l.id = r.id_lotacao
-	                        where l.id_senador = s.id
-	                    )
-                    WHERE r.ano_mes = @ano_mes
-			    ", anoMesParam);
+UPDATE senado.sf_senador s
+SET valor_total_remuneracao = COALESCE((
+     SELECT SUM(custo_total) AS total
+     FROM senado.sf_remuneracao r
+     JOIN senado.sf_lotacao l ON l.id = r.id_lotacao
+     where l.id_senador = s.id
+ ), 0);
+
+TRUNCATE TABLE senado.sf_senador_verba_gabinete;
+
+INSERT INTO senado.sf_senador_verba_gabinete (id_sf_senador, ano, mes, valor)
+SELECT l.id_senador, SUBSTRING(ano_mes::TEXT, 1, 4)::INTEGER, SUBSTRING(ano_mes::TEXT, 5, 2)::INTEGER, SUM(r.custo_total)
+FROM senado.sf_remuneracao r
+JOIN senado.sf_lotacao l ON l.id = r.id_lotacao
+WHERE l.id_senador IS NOT NULL
+group by l.id_senador, SUBSTRING(ano_mes::TEXT, 1, 4)::INTEGER, SUBSTRING(ano_mes::TEXT, 5, 2)::INTEGER
+
+			    ");
             }
         }
     }

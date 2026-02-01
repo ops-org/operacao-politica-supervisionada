@@ -29,8 +29,11 @@ namespace OPS.Core.DTOs
         public dynamic IdFornecedor { get; set; }
         public string CnpjCpf { get; set; }
         public string NomeFornecedor { get; set; }
-        public string Link { get; set; }
         public string Favorecido { get; set; }
         public string Observacao { get; set; }
+
+        public string UrlDocumento { get; set; }
+        public string UrlDemaisDocumentosMes { get; set; }
+        public string UrlDetalhesDocumento { get; set; }
     }
 }

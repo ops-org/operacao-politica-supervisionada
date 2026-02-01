@@ -633,11 +633,11 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-muted/50">
-                    <Button onClick={handleSearch} size="lg" className="flex-1 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
+                    <Button onClick={handleSearch} size="lg" className="p-3 flex-1 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
                       <Search className="h-5 w-5 mr-2" />
                       Pesquisar agora
                     </Button>
-                    <Button variant="outline" onClick={handleClearFilters} size="lg" className="flex-1 sm:flex-none border-muted hover:bg-accent transition-colors">
+                    <Button variant="outline" onClick={handleClearFilters} size="lg" className="p-3 flex-1 sm:flex-none border-muted hover:bg-accent transition-colors">
                       <Trash className="h-5 w-5 mr-2" />
                       Limpar todos
                     </Button>

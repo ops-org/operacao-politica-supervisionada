@@ -76,7 +76,7 @@ export const MultiSelectDropdown = ({
     <Popover>
       <PopoverTrigger asChild>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" className="flex-1 justify-between">
+          <Button variant="outline" className="p-3 flex-1 justify-between">
             <span className="truncate">{getDisplayText()}</span>
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>

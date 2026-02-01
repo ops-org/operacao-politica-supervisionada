@@ -90,7 +90,7 @@ const Index = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid gap-8 md:grid-cols-3 mt-6">
+        <div className="grid gap-8 md:grid-cols-3 mt-6 hidden lg:grid">
           <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group overflow-hidden border-t-4 border-t-blue-500/20 hover:border-t-blue-500">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors" />
             <CardContent className="p-8 text-center relative z-10">

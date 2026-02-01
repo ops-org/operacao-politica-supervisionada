@@ -471,7 +471,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                   className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer"
                 >
                   {/* Card Header with Status Gradient */}
-                  <div className={`relative overflow-hidden h-24 ${parlamentar.ativo
+                  <div className={`relative overflow-hidden h-20 ${parlamentar.ativo
                     ? "bg-gradient-to-r from-primary/10 to-accent/5 group-hover:from-primary/20"
                     : "bg-gradient-to-r from-slate-500/10 to-transparent"
                     }`}>

@@ -165,33 +165,35 @@ const Busca = () => {
 
                 {/* Search Form */}
                 <Card className="mb-12 shadow-lg border-0 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-8">
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="flex gap-4">
+                    <CardContent className="p-4 sm:p-8">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                                    <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
                                     <Input
                                         type="text"
                                         placeholder="Buscar por deputado, senador ou empresa..."
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 text-lg border-2 focus:border-primary transition-colors"
+                                        className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-base sm:text-lg border-2 focus:border-primary transition-colors"
                                     />
                                 </div>
                                 <Button
                                     type="submit"
                                     disabled={loading}
-                                    className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all transform hover:scale-105 whitespace-nowrap"
+                                    className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all transform hover:scale-105 whitespace-nowrap"
                                 >
                                     {loading ? (
                                         <div className="flex items-center gap-2">
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Pesquisando...
+                                            <span className="hidden sm:inline">Pesquisando...</span>
+                                            <span className="sm:hidden">Buscando...</span>
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
-                                            <Search className="w-5 h-5" />
-                                            Pesquisar
+                                            <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            <span className="hidden sm:inline">Pesquisar</span>
+                                            <span className="sm:hidden">Buscar</span>
                                         </div>
                                     )}
                                 </Button>
@@ -288,7 +290,7 @@ const Busca = () => {
                                                         className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer h-full"
                                                     >
                                                         {/* Card Header with Status Gradient */}
-                                                        <div className={`relative overflow-hidden h-24 ${senador.ativo
+                                                        <div className={`relative overflow-hidden h-20 ${senador.ativo
                                                             ? "bg-gradient-to-r from-primary/10 to-accent/5 group-hover:from-primary/20"
                                                             : "bg-gradient-to-r from-slate-500/10 to-transparent"
                                                             }`}>
@@ -351,7 +353,7 @@ const Busca = () => {
                                                                         </p>
                                                                     </div>
                                                                     <div className="space-y-1 text-right">
-                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Remuneração</p>
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Verba de Gabinete</p>
                                                                         <p className="font-black text-sm text-orange-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
                                                                             R$ {senador.valor_total_remuneracao}
                                                                         </p>
@@ -388,7 +390,7 @@ const Busca = () => {
                                                         className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer h-full"
                                                     >
                                                         {/* Card Header with Status Gradient */}
-                                                        <div className={`relative overflow-hidden h-24 ${deputado.ativo
+                                                        <div className={`relative overflow-hidden h-20 ${deputado.ativo
                                                             ? "bg-gradient-to-r from-blue-600/10 to-blue-500/5 group-hover:from-blue-600/20"
                                                             : "bg-gradient-to-r from-slate-500/10 to-transparent"
                                                             }`}>
@@ -451,7 +453,7 @@ const Busca = () => {
                                                                         </p>
                                                                     </div>
                                                                     <div className="space-y-1 text-right">
-                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Remuneração</p>
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Verba de Gabinete</p>
                                                                         <p className="font-black text-sm text-orange-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
                                                                             R$ {deputado.valor_total_remuneracao}
                                                                         </p>
@@ -473,7 +475,7 @@ const Busca = () => {
                                                 <Users className="w-5 h-5 text-purple-600" />
                                             </div>
                                             <h2 className="text-2xl font-bold text-foreground">
-                                                {results.deputado_estadual.length} deputado{pluralize(results.deputado_estadual.length, '', 's')} estadua{pluralize(results.deputado_estadual.length, 'l', 'is')} encontrado{pluralize(results.deputado_estadual.length, '', 's')}
+                                                {results.deputado_estadual.length} deputado{pluralize(results.deputado_estadual.length, '', 's')} estadua{pluralize(results.deputado_estadual.length, 'l', 'ais')} encontrado{pluralize(results.deputado_estadual.length, '', 's')}
                                             </h2>
                                         </div>
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -488,7 +490,7 @@ const Busca = () => {
                                                         className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer h-full"
                                                     >
                                                         {/* Card Header with Status Gradient */}
-                                                        <div className={`relative overflow-hidden h-24 ${deputado.ativo
+                                                        <div className={`relative overflow-hidden h-20 ${deputado.ativo
                                                             ? "bg-gradient-to-r from-purple-600/10 to-purple-500/5 group-hover:from-purple-600/20"
                                                             : "bg-gradient-to-r from-slate-500/10 to-transparent"
                                                             }`}>
@@ -656,73 +658,74 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer h-full"
                                                     >
-                                                        {/* Card Header */}
-                                                        <div className={`relative overflow-hidden ${senador.ativo
-                                                            ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white"
-                                                            : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
+                                                        {/* Card Header with Status Gradient */}
+                                                        <div className={`relative overflow-hidden h-20 ${senador.ativo
+                                                            ? "bg-gradient-to-r from-primary/10 to-accent/5 group-hover:from-primary/20"
+                                                            : "bg-gradient-to-r from-slate-500/10 to-transparent"
                                                             }`}>
-                                                            <div className="block p-4 hover:bg-black/10 transition-colors">
-                                                                <div className="flex justify-between items-start gap-2">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-bold text-lg leading-tight truncate">
-                                                                            {senador.nome_parlamentar}
-                                                                        </h3>
-                                                                        <p className="text-sm opacity-90 truncate">{senador.nome_civil}</p>
-                                                                    </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
-                                                                        {senador.situacao || 'Ativo'}
-                                                                    </Badge>
-                                                                </div>
+                                                            <div className="absolute top-0 right-0 p-4 z-20">
+                                                                <Badge className={`${senador.ativo ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-muted text-muted-foreground border-muted-foreground/20"} font-black text-[9px] uppercase tracking-widest px-2 py-0.5 backdrop-blur-md border`}>
+                                                                    {senador.ativo ? "Ativo" : "Inativo"}
+                                                                </Badge>
                                                             </div>
+                                                            {/* Decorative shape */}
+                                                            <div className="absolute -top-12 -left-12 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
                                                         </div>
 
                                                         {/* Card Body */}
-                                                        <CardContent className="p-4">
-                                                            <div className="flex gap-3">
-                                                                {/* Image */}
-                                                                <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
-                                                                        <AvatarImage
-                                                                            src={`//static.ops.org.br/senador/${senador.id_sf_senador}_120x160.jpg`}
-                                                                            alt={senador.nome_parlamentar}
-                                                                        />
-                                                                        <AvatarFallback className="rounded-xl text-xl font-semibold bg-gradient-to-br from-primary/20 to-primary/10">
-                                                                            {senador.nome_parlamentar.split(" ").map(n => n[0]).join("")}
-                                                                        </AvatarFallback>
-                                                                    </Avatar>
-                                                                </div>
-
-                                                                {/* Info Section */}
-                                                                <div className="flex-1 min-w-0 space-y-3">
-                                                                    {/* Party and State */}
-                                                                    <div className="flex items-center gap-1 flex-wrap">
-                                                                        <Badge variant="secondary" className="font-semibold text-[10px] px-2.5 py-0.5" title={senador.nome_partido}>
-                                                                            {senador.sigla_partido}
-                                                                        </Badge>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 text-[10px] px-2.5 py-0.5" title={senador.nome_estado}>
-                                                                            <MapPin className="w-3 h-3" />
-                                                                            {senador.sigla_estado}
-                                                                        </Badge>
+                                                        <CardContent className="p-0 -mt-12 relative z-10">
+                                                            <div className="px-5 pb-6">
+                                                                <div className="flex gap-4">
+                                                                    {/* Image */}
+                                                                    <div className="flex-shrink-0">
+                                                                        <div className="relative">
+                                                                            <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+                                                                            <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!senador.ativo ? "grayscale opacity-80" : ""}`}>
+                                                                                <AvatarImage
+                                                                                    src={`//static.ops.org.br/senador/${senador.id_sf_senador}_120x160.jpg`}
+                                                                                    alt={senador.nome_parlamentar}
+                                                                                />
+                                                                                <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
+                                                                                    {senador.nome_parlamentar.split(" ").filter(n => n.length > 2).slice(0, 2).map(n => n[0]).join("")}
+                                                                                </AvatarFallback>
+                                                                            </Avatar>
+                                                                        </div>
                                                                     </div>
 
-                                                                    {/* Financial Info */}
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <DollarSign className="h-3 w-3 text-purple-600" />
-                                                                            <span className="text-xs text-muted-foreground">Cota Parlamentar</span>
+                                                                    {/* Info Section */}
+                                                                    <div className="flex-1 min-w-0 pt-14 space-y-4">
+                                                                        <div>
+                                                                            <h3 className="font-black text-lg leading-tight text-foreground group-hover:text-primary transition-colors truncate tracking-tight">
+                                                                                {senador.nome_parlamentar}
+                                                                            </h3>
+                                                                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest opacity-80 truncate">{senador.nome_civil}</p>
                                                                         </div>
-                                                                        <p className="font-bold text-sm text-purple-700">
+
+                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                            <Badge className="font-black bg-primary/5 text-primary border-primary/10 text-[10px] uppercase tracking-tighter px-2.5 py-0.5" title={senador.nome_partido}>
+                                                                                {senador.sigla_partido}
+                                                                            </Badge>
+                                                                            <Badge variant="outline" className="flex items-center gap-1 font-bold border-muted-foreground/20 text-[10px] uppercase tracking-tighter px-2.5 py-0.5" title={senador.nome_estado}>
+                                                                                <MapPin className="w-2.5 h-2.5" />
+                                                                                {senador.sigla_estado}
+                                                                            </Badge>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Financial Info Grid */}
+                                                                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border/50">
+                                                                    <div className="space-y-1">
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Cota Parlamentar</p>
+                                                                        <p className="font-black text-sm text-purple-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-left">
                                                                             R$ {senador.valor_total_ceaps}
                                                                         </p>
                                                                     </div>
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Building2 className="h-3 w-3 text-orange-600" />
-                                                                            <span className="text-xs text-muted-foreground">Folha de pagamento</span>
-                                                                        </div>
-                                                                        <p className="font-bold text-sm text-orange-700">
+                                                                    <div className="space-y-1 text-right">
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Verba de Gabinete</p>
+                                                                        <p className="font-black text-sm text-orange-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
                                                                             R$ {senador.valor_total_remuneracao}
                                                                         </p>
                                                                     </div>
@@ -745,7 +748,7 @@ const Busca = () => {
                                                 <Users className="w-5 h-5 text-blue-600" />
                                             </div>
                                             <h2 className="text-2xl font-bold text-foreground">
-                                                {results.deputado_federal.length} deputado{pluralize(results.deputado_federal.length, '', 's')} federal{pluralize(results.deputado_federal.length, '', 'is')} encontrado{pluralize(results.deputado_federal.length, '', 's')}
+                                                {results.deputado_federal.length} deputado{pluralize(results.deputado_federal.length, '', 's')} federal{pluralize(results.deputado_federal.length, '', 'ais')} encontrado{pluralize(results.deputado_federal.length, '', 's')}
                                             </h2>
                                         </div>
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -757,73 +760,74 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer h-full"
                                                     >
-                                                        {/* Card Header */}
-                                                        <div className={`relative overflow-hidden ${deputado.ativo
-                                                            ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white"
-                                                            : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
+                                                        {/* Card Header with Status Gradient */}
+                                                        <div className={`relative overflow-hidden h-20 ${deputado.ativo
+                                                            ? "bg-gradient-to-r from-blue-600/10 to-blue-500/5 group-hover:from-blue-600/20"
+                                                            : "bg-gradient-to-r from-slate-500/10 to-transparent"
                                                             }`}>
-                                                            <div className="block p-4 hover:bg-black/10 transition-colors">
-                                                                <div className="flex justify-between items-start gap-2">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-bold text-lg leading-tight truncate">
-                                                                            {deputado.nome_parlamentar}
-                                                                        </h3>
-                                                                        <p className="text-sm opacity-90 truncate">{deputado.nome_civil}</p>
-                                                                    </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
-                                                                        {deputado.situacao || 'Ativo'}
-                                                                    </Badge>
-                                                                </div>
+                                                            <div className="absolute top-0 right-0 p-4 z-20">
+                                                                <Badge className={`${deputado.ativo ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-muted text-muted-foreground border-muted-foreground/20"} font-black text-[9px] uppercase tracking-widest px-2 py-0.5 backdrop-blur-md border`}>
+                                                                    {deputado.ativo ? "Ativo" : "Inativo"}
+                                                                </Badge>
                                                             </div>
+                                                            {/* Decorative shape */}
+                                                            <div className="absolute -top-12 -left-12 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
                                                         </div>
 
                                                         {/* Card Body */}
-                                                        <CardContent className="p-4">
-                                                            <div className="flex gap-3">
-                                                                {/* Image */}
-                                                                <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
-                                                                        <AvatarImage
-                                                                            src={`//static.ops.org.br/depfederal/${deputado.id_cf_deputado}.jpg`}
-                                                                            alt={deputado.nome_parlamentar}
-                                                                        />
-                                                                        <AvatarFallback className="rounded-xl text-xl font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/10">
-                                                                            {deputado.nome_parlamentar.split(" ").map(n => n[0]).join("")}
-                                                                        </AvatarFallback>
-                                                                    </Avatar>
-                                                                </div>
-
-                                                                {/* Info Section */}
-                                                                <div className="flex-1 min-w-0 space-y-3">
-                                                                    {/* Party and State */}
-                                                                    <div className="flex items-center gap-1 flex-wrap">
-                                                                        <Badge variant="secondary" className="font-semibold bg-blue-100 text-blue-800 text-[10px] px-2.5 py-0.5" title={deputado.nome_partido}>
-                                                                            {deputado.sigla_partido}
-                                                                        </Badge>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 border-blue-200 text-blue-600 text-[10px] px-2.5 py-0.5" title={deputado.nome_estado}>
-                                                                            <MapPin className="w-3 h-3" />
-                                                                            {deputado.sigla_estado}
-                                                                        </Badge>
+                                                        <CardContent className="p-0 -mt-12 relative z-10">
+                                                            <div className="px-5 pb-6">
+                                                                <div className="flex gap-4">
+                                                                    {/* Image */}
+                                                                    <div className="flex-shrink-0">
+                                                                        <div className="relative">
+                                                                            <div className="absolute -inset-1 bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+                                                                            <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!deputado.ativo ? "grayscale opacity-80" : ""}`}>
+                                                                                <AvatarImage
+                                                                                    src={`//static.ops.org.br/depfederal/${deputado.id_cf_deputado}.jpg`}
+                                                                                    alt={deputado.nome_parlamentar}
+                                                                                />
+                                                                                <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
+                                                                                    {deputado.nome_parlamentar.split(" ").filter(n => n.length > 2).slice(0, 2).map(n => n[0]).join("")}
+                                                                                </AvatarFallback>
+                                                                            </Avatar>
+                                                                        </div>
                                                                     </div>
 
-                                                                    {/* Financial Info */}
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <DollarSign className="h-3 w-3 text-purple-600" />
-                                                                            <span className="text-xs text-muted-foreground">Cota Parlamentar</span>
+                                                                    {/* Info Section */}
+                                                                    <div className="flex-1 min-w-0 pt-14 space-y-4">
+                                                                        <div>
+                                                                            <h3 className="font-black text-lg leading-tight text-foreground group-hover:text-primary transition-colors truncate tracking-tight">
+                                                                                {deputado.nome_parlamentar}
+                                                                            </h3>
+                                                                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest opacity-80 truncate">{deputado.nome_civil}</p>
                                                                         </div>
-                                                                        <p className="font-bold text-sm text-purple-700">
+
+                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                            <Badge className="font-black bg-blue-500/5 text-blue-600 border-blue-500/10 text-[10px] uppercase tracking-tighter px-2.5 py-0.5" title={deputado.nome_partido}>
+                                                                                {deputado.sigla_partido}
+                                                                            </Badge>
+                                                                            <Badge variant="outline" className="flex items-center gap-1 font-bold border-muted-foreground/20 text-[10px] uppercase tracking-tighter px-2.5 py-0.5" title={deputado.nome_estado}>
+                                                                                <MapPin className="w-2.5 h-2.5" />
+                                                                                {deputado.sigla_estado}
+                                                                            </Badge>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Financial Info Grid */}
+                                                                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border/50">
+                                                                    <div className="space-y-1">
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Cota Parlamentar</p>
+                                                                        <p className="font-black text-sm text-purple-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-left">
                                                                             R$ {deputado.valor_total_ceap}
                                                                         </p>
                                                                     </div>
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Building2 className="h-3 w-3 text-orange-600" />
-                                                                            <span className="text-xs text-muted-foreground">Verba de Gabinete</span>
-                                                                        </div>
-                                                                        <p className="font-bold text-sm text-orange-700">
+                                                                    <div className="space-y-1 text-right">
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Verba de Gabinete</p>
+                                                                        <p className="font-black text-sm text-orange-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
                                                                             R$ {deputado.valor_total_remuneracao}
                                                                         </p>
                                                                     </div>
@@ -846,7 +850,7 @@ const Busca = () => {
                                                 <Users className="w-5 h-5 text-purple-600" />
                                             </div>
                                             <h2 className="text-2xl font-bold text-foreground">
-                                                {results.deputado_estadual.length} deputado{pluralize(results.deputado_estadual.length, '', 's')} estadual{pluralize(results.deputado_estadual.length, '', 'is')} encontrado{pluralize(results.deputado_estadual.length, '', 's')}
+                                                {results.deputado_estadual.length} deputado{pluralize(results.deputado_estadual.length, '', 's')} estadua{pluralize(results.deputado_estadual.length, 'l', 'ais')} encontrado{pluralize(results.deputado_estadual.length, '', 's')}
                                             </h2>
                                         </div>
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -858,76 +862,77 @@ const Busca = () => {
                                                     className="block"
                                                 >
                                                     <Card
-                                                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer"
+                                                        className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm shadow-lg overflow-hidden cursor-pointer h-full"
                                                     >
-                                                        {/* Card Header */}
-                                                        <div className={`relative overflow-hidden ${deputado.ativo
-                                                            ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
-                                                            : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
+                                                        {/* Card Header with Status Gradient */}
+                                                        <div className={`relative overflow-hidden h-20 ${deputado.ativo
+                                                            ? "bg-gradient-to-r from-purple-600/10 to-purple-500/5 group-hover:from-purple-600/20"
+                                                            : "bg-gradient-to-r from-slate-500/10 to-transparent"
                                                             }`}>
-                                                            <div className="block p-4 hover:bg-black/10 transition-colors">
-                                                                <div className="flex justify-between items-start gap-2">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-bold text-lg leading-tight truncate">
-                                                                            {deputado.nome_parlamentar}
-                                                                        </h3>
-                                                                        <p className="text-sm opacity-90 truncate">{deputado.nome_civil}</p>
-                                                                    </div>
-                                                                    <Badge variant="secondary" className="text-xs bg-background/20 text-foreground border-border/30">
-                                                                        {deputado.situacao || 'Ativo'}
-                                                                    </Badge>
-                                                                </div>
-                                                            </div>
+                                                            {/* <div className="absolute top-0 right-0 p-4 z-20">
+                                                                <Badge className={`${deputado.ativo ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-muted text-muted-foreground border-muted-foreground/20"} font-black text-[9px] uppercase tracking-widest px-2 py-0.5 backdrop-blur-md border`}>
+                                                                    {deputado.ativo ? "Ativo" : "Inativo"}
+                                                                </Badge>
+                                                            </div> */}
+                                                            {/* Decorative shape */}
+                                                            <div className="absolute -top-12 -left-12 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
                                                         </div>
 
                                                         {/* Card Body */}
-                                                        <CardContent className="p-4">
-                                                            <div className="flex gap-3">
-                                                                {/* Image */}
-                                                                <div className="flex-shrink-0">
-                                                                    <Avatar className="h-32 w-24 rounded-xl border-4 border-background shadow-lg group-hover:scale-105 transition-transform">
-                                                                        <AvatarImage
-                                                                            src={`//static.ops.org.br/depestadual/${deputado.id_cl_deputado}.jpg`}
-                                                                            alt={deputado.nome_parlamentar}
-                                                                        />
-                                                                        <AvatarFallback className="rounded-xl text-xl font-semibold bg-gradient-to-br from-purple-500/20 to-purple-500/10">
-                                                                            {deputado.nome_parlamentar.split(" ").map(n => n[0]).join("")}
-                                                                        </AvatarFallback>
-                                                                    </Avatar>
-                                                                </div>
-
-                                                                {/* Info Section */}
-                                                                <div className="flex-1 min-w-0 space-y-3">
-                                                                    {/* Party and State */}
-                                                                    <div className="flex items-center gap-1 flex-wrap">
-                                                                        <Badge variant="secondary" className="font-semibold bg-purple-100 text-purple-800 text-[10px] px-2.5 py-0.5" title={deputado.nome_partido}>
-                                                                            {deputado.sigla_partido}
-                                                                        </Badge>
-                                                                        <Badge variant="outline" className="flex items-center gap-1 border-purple-200 text-purple-600 text-[10px] px-2.5 py-0.5" title={deputado.nome_estado}>
-                                                                            <MapPin className="w-3 h-3" />
-                                                                            {deputado.sigla_estado}
-                                                                        </Badge>
+                                                        <CardContent className="p-0 -mt-12 relative z-10">
+                                                            <div className="px-5 pb-6">
+                                                                <div className="flex gap-4">
+                                                                    {/* Image */}
+                                                                    <div className="flex-shrink-0">
+                                                                        <div className="relative">
+                                                                            <div className="absolute -inset-1 bg-gradient-to-br from-purple-600 to-purple-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+                                                                            <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!deputado.ativo ? "grayscale opacity-80" : ""}`}>
+                                                                                <AvatarImage
+                                                                                    src={`//static.ops.org.br/depestadual/${deputado.id_cl_deputado}.jpg`}
+                                                                                    alt={deputado.nome_parlamentar}
+                                                                                />
+                                                                                <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
+                                                                                    {deputado.nome_parlamentar.split(" ").filter(n => n.length > 2).slice(0, 2).map(n => n[0]).join("")}
+                                                                                </AvatarFallback>
+                                                                            </Avatar>
+                                                                        </div>
                                                                     </div>
 
-                                                                    {/* Financial Info */}
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <DollarSign className="h-3 w-3 text-purple-600" />
-                                                                            <span className="text-xs text-muted-foreground">Cota Parlamentar</span>
+                                                                    {/* Info Section */}
+                                                                    <div className="flex-1 min-w-0 pt-14 space-y-4">
+                                                                        <div>
+                                                                            <h3 className="font-black text-lg leading-tight text-foreground group-hover:text-primary transition-colors truncate tracking-tight">
+                                                                                {deputado.nome_parlamentar}
+                                                                            </h3>
+                                                                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest opacity-80 truncate">{deputado.nome_civil}</p>
                                                                         </div>
-                                                                        <p className="font-bold text-sm text-purple-700">
+
+                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                            <Badge className="font-black bg-purple-500/5 text-purple-600 border-purple-500/10 text-[10px] uppercase tracking-tighter px-2.5 py-0.5" title={deputado.nome_partido}>
+                                                                                {deputado.sigla_partido}
+                                                                            </Badge>
+                                                                            <Badge variant="outline" className="flex items-center gap-1 font-bold border-muted-foreground/20 text-[10px] uppercase tracking-tighter px-2.5 py-0.5" title={deputado.nome_estado}>
+                                                                                <MapPin className="w-2.5 h-2.5" />
+                                                                                {deputado.sigla_estado}
+                                                                            </Badge>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Financial Info Grid */}
+                                                                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border/50">
+                                                                    <div className="space-y-1">
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Cota Parlamentar</p>
+                                                                        <p className="font-black text-sm text-purple-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-left">
                                                                             R$ {deputado.valor_total_ceap}
                                                                         </p>
                                                                     </div>
-                                                                    <div className="space-y-1">
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Building2 className="h-3 w-3 text-orange-600" />
-                                                                            <span className="text-xs text-muted-foreground">Verba de Gabinete</span>
-                                                                        </div>
-                                                                        <p className="font-bold text-sm text-orange-700">
+                                                                    {/* <div className="space-y-1 text-right">
+                                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">Verba Gabinete</p>
+                                                                        <p className="font-black text-sm text-orange-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
                                                                             R$ {deputado.valor_total_verba_gabinete}
                                                                         </p>
-                                                                    </div>
+                                                                    </div> */}
                                                                 </div>
                                                             </div>
                                                         </CardContent>

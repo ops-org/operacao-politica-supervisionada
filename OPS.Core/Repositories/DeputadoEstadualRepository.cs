@@ -174,8 +174,10 @@ namespace OPS.Core.Repositories
                         };
 
                         // TODO Implementar links das despesas
-                        if (idEstado == 0)
+                        if (documento.Observacao.StartsWith("http", StringComparison.Ordinal))
                         {
+                            documento.UrlDocumento = documento.Observacao;
+                            documento.Observacao = null;
                         }
 
                         return documento;
@@ -345,9 +347,9 @@ namespace OPS.Core.Repositories
             //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
         }
 
-        public async Task<List<DeputadoCustoAnualDTO>> CustoAnual(int id)
+        public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
         {
-            var result = new List<DeputadoCustoAnualDTO>();
+            var result = new List<ParlamentarCustoAnualDTO>();
             //using (AppDb banco = new AppDb())
             {
                 var strSql = @"
@@ -363,10 +365,10 @@ namespace OPS.Core.Repositories
                 {
                     while (await reader.ReadAsync())
                     {
-                        var dto = new DeputadoCustoAnualDTO
+                        var dto = new ParlamentarCustoAnualDTO
                         {
-                            ano = Convert.ToInt32(reader["ano"]),
-                            cota_parlamentar = Convert.ToDecimal(reader["valor_total"])
+                            Ano = Convert.ToInt32(reader["ano"]),
+                            CotaParlamentar = Convert.ToDecimal(reader["valor_total"])
                         };
                         result.Add(dto);
                     }
@@ -386,18 +388,18 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
-                        var dto = result.FirstOrDefault(x => x.ano == ano);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.auxilio_saude = Convert.ToDecimal(reader["valor_total"]);
+                            dto.AuxilioSaude = Convert.ToDecimal(reader["valor_total"]);
                         }
                         else
                         {
-                            dto = new DeputadoCustoAnualDTO
+                            dto = new ParlamentarCustoAnualDTO
                             {
-                                ano = ano,
-                                auxilio_saude = Convert.ToDecimal(reader["valor_total"])
+                                Ano = ano,
+                                AuxilioSaude = Convert.ToDecimal(reader["valor_total"])
                             };
                             result.Add(dto);
                         }
@@ -418,18 +420,18 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
-                        var dto = result.FirstOrDefault(x => x.ano == ano);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.diarias = Convert.ToDecimal(reader["valor_total"]);
+                            dto.Diarias = Convert.ToDecimal(reader["valor_total"]);
                         }
                         else
                         {
-                            dto = new DeputadoCustoAnualDTO
+                            dto = new ParlamentarCustoAnualDTO
                             {
-                                ano = ano,
-                                diarias = Convert.ToDecimal(reader["valor_total"])
+                                Ano = ano,
+                                Diarias = Convert.ToDecimal(reader["valor_total"])
                             };
                             result.Add(dto);
                         }
@@ -437,7 +439,7 @@ namespace OPS.Core.Repositories
                 }
             }
 
-            return result.OrderBy(x => x.ano).ToList();
+            return result.OrderBy(x => x.Ano).ToList();
         }
 
         public async Task<dynamic> ResumoMensal()

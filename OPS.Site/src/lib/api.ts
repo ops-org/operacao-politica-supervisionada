@@ -345,7 +345,6 @@ export interface DocumentoDetalhe {
   descricao_despesa: string;
   descricao_despesa_especificacao: string;
   id_parlamentar: number;
-  id_deputado: number;
   nome_parlamentar: string;
   sigla_estado: string;
   sigla_partido: string;
@@ -359,7 +358,6 @@ export interface DocumentoDetalhe {
   url_documento_nfe?: string;
   url_detalhes_documento?: string;
   url_demais_documentos_mes?: string;
-  url_beneficiario?: string;
   url_documentos_beneficiario?: string;
 }
 

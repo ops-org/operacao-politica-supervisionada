@@ -56,25 +56,8 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                     fetchDocumentosDaSubquotaMes(id, type)
                 ]);
 
-                // // Process URLs like in Vue.js
-                // const urlCamara = 'http://www.camara.leg.br/cota-parlamentar/';
-                // const processedDoc = { ...documentoData };
-
-                // // Handle different field names based on type
-                // const idDeputado = (processedDoc as any).id_deputado;
-                // const idDespesaTipo = (processedDoc as any).id_despesa_tipo;
-                // const idDespesa = (processedDoc as any).id_despesa;
-
-                // if (processedDoc.link === 2) { // NF-e
-                //     processedDoc.url_documento = `${urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal=${processedDoc.id_documento}`;
-                // } else if (processedDoc.link === 1) {
-                //     processedDoc.url_documento = `${urlCamara}documentos/publ/${idDeputado}/${processedDoc.ano}/${processedDoc.id_documento}.pdf`;
-                // }
-
-                // processedDoc.url_demais_documentos_mes = `${urlCamara}sumarizado?nuDeputadoId=${idDeputado}&dataInicio=${processedDoc.competencia}&dataFim=${processedDoc.competencia}&despesa=${idDespesaTipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=`;
-                // processedDoc.url_detalhes_documento = `${urlCamara}documento?nuDeputadoId=${idDeputado}&numMes=${processedDoc.mes}&numAno=${processedDoc.ano}&despesa=${idDespesaTipo}&cnpjFornecedor=${processedDoc.cnpj_cpf}&idDocumento=${processedDoc.numero_documento}`;
-                // processedDoc.url_beneficiario = `/fornecedor/${processedDoc.id_fornecedor}`;
-                // processedDoc.url_documentos_Deputado_beneficiario = `/${type}/ceap?IdParlamentar=${idDeputado}&Fornecedor=${processedDoc.id_fornecedor}&Periodo=57&Agrupamento=6`;
+                documentoData.url_documentos_beneficiario =
+                    `/${type}/ceap?IdParlamentar=${documentoData.id_parlamentar}&Fornecedor=${documentoData.id_fornecedor}&Periodo=57&Agrupamento=6`;
 
                 setDocumento(documentoData);
                 setDocumentosDia(documentosDiaData);
@@ -123,9 +106,13 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
         );
     }
 
-    const showValorDespesa = documento.valor_restituicao || documento.valor_glosa;
-    const showGlosa = documento.valor_glosa;
-    const showRestituicao = documento.valor_restituicao;
+    const showValorDespesa =
+        ((documento.valor_restituicao && documento.valor_restituicao != "0,00") ||
+            (documento.valor_glosa && documento.valor_glosa != "0,00")) &&
+        (documento.valor_liquido != documento.valor_restituicao);
+
+    const showGlosa = documento.valor_glosa && documento.valor_glosa != "0,00";
+    const showRestituicao = documento.valor_restituicao && documento.valor_restituicao != "0,00";
     const showPassageiro = documento.nome_passageiro;
     const showTrechoViagem = documento.trecho_viagem;
 
@@ -169,10 +156,10 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                         </div>
                                         <div>
                                             <CardTitle className="text-2xl font-bold">Recibo #{documento.numero_documento || documento.id_documento}</CardTitle>
-                                            <CardDescription className="font-medium text-muted-foreground/80">Detalhes completos do documento fiscal</CardDescription>
+                                            <CardDescription className="font-medium text-muted-foreground/80">Detalhes do documento fiscal</CardDescription>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-right hidden md:block">
                                         <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Valor Total</div>
                                         <div className="text-3xl font-black text-primary font-mono whitespace-nowrap">
                                             {formatCurrency(parseFloat(documento.valor_liquido.replace('.', '').replace(',', '.')))}
@@ -191,7 +178,7 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                         <div className="space-y-1">
                                             <label className="text-sm font-medium text-muted-foreground">Nome</label>
                                             <div>
-                                                <Link to={documento.url_beneficiario || `/fornecedor/${documento.id_fornecedor}`} className="text-primary hover:underline inline-flex items-center gap-2 font-medium">
+                                                <Link to={`/fornecedor/${documento.id_fornecedor}`} className="text-primary hover:underline inline-flex items-center gap-2 font-medium">
                                                     {documento.nome_fornecedor} <ExternalLink className="h-3 w-3" />
                                                 </Link>
                                             </div>
@@ -199,7 +186,7 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                         {documento.cnpj_cpf && <div className="space-y-1">
                                             <label className="text-sm font-medium text-muted-foreground">CNPJ/CPF</label>
                                             <div>
-                                                <Link to={documento.url_beneficiario || `/fornecedor/${documento.id_fornecedor}`} className="text-primary hover:underline inline-flex items-center gap-2 font-mono text-sm">
+                                                <Link to={`/fornecedor/${documento.id_fornecedor}`} className="text-primary hover:underline inline-flex items-center gap-2 font-mono text-sm">
                                                     {documento.cnpj_cpf} <ExternalLink className="h-3 w-3" />
                                                 </Link>
                                             </div>
@@ -377,42 +364,39 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                 {/* Action Buttons */}
                                 <div className="space-y-3">
                                     <div className="flex flex-col sm:flex-row gap-3">
-                                        <Button asChild className="flex-1" size="lg">
-                                            <Link to={documento.url_documentos_beneficiario || `/${type}/${documento.id_parlamentar}`} className="flex items-center gap-2">
-                                                <FileText className="h-4 w-4" />
-                                                Ver todas as notas do parlamentar para o fornecedor
+                                        <Button asChild className="p-2 sm:p-3 flex-1 text-xs sm:text-sm" size="sm">
+                                            <Link to={documento.url_documentos_beneficiario || `/${type}/${documento.id_parlamentar}`} className="flex items-center gap-1 sm:gap-2">
+                                                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                <span className="hidden sm:inline">Ver todas as notas do parlamentar para o fornecedor</span>
+                                                <span className="sm:hidden">Notas do parlamentar</span>
                                             </Link>
                                         </Button>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                        {documento.id_documento && (
-                                            <>
-                                                {documento.url_documento && (
-                                                    <Button variant="destructive" asChild className="w-full">
-                                                        <a href={documento.url_documento} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
-                                                            <Download className="h-4 w-4" />
-                                                            Recibo
-                                                        </a>
-                                                    </Button>
-                                                )}
-                                                {documento.url_documento_nfe && (
-                                                    <Button variant="destructive" asChild className="w-full">
-                                                        <a href={documento.url_documento_nfe} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
-                                                            <Download className="h-4 w-4" />
-                                                            Recibo (NF-e)
-                                                        </a>
-                                                    </Button>
-                                                )}
-                                                {documento.url_detalhes_documento && (
-                                                    <Button variant="outline" asChild className="w-full">
-                                                        <a href={documento.url_detalhes_documento} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
-                                                            <FileText className="h-4 w-4" />
-                                                            Detalhes do recibo
-                                                        </a>
-                                                    </Button>
-                                                )}
-                                            </>
+                                        {documento.url_documento && (
+                                            <Button variant="destructive" asChild className="w-full">
+                                                <a href={documento.url_documento} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
+                                                    <Download className="h-4 w-4" />
+                                                    Recibo
+                                                </a>
+                                            </Button>
+                                        )}
+                                        {documento.url_documento_nfe && (
+                                            <Button variant="destructive" asChild className="w-full">
+                                                <a href={documento.url_documento_nfe} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
+                                                    <Download className="h-4 w-4" />
+                                                    Recibo (NF-e)
+                                                </a>
+                                            </Button>
+                                        )}
+                                        {documento.url_detalhes_documento && (
+                                            <Button variant="outline" asChild className="w-full">
+                                                <a href={documento.url_detalhes_documento} target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
+                                                    <FileText className="h-4 w-4" />
+                                                    Detalhes do recibo
+                                                </a>
+                                            </Button>
                                         )}
                                         {documento.url_demais_documentos_mes && (
                                             <Button variant="outline" asChild className="w-full">
@@ -422,12 +406,12 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
                                                 </a>
                                             </Button>
                                         )}
-                                        <Button variant="outline" asChild className="w-full">
-                                            <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk=" target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2">
+                                        {type === 'deputado-federal' && <Button variant="outline" asChild className="w-full">
+                                            <a href="https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=d09fwabTnLk=" target="_blank" rel="nofollow noopener noreferrer" className="flex items-center gap-2 hidden md:flex">
                                                 <ExternalLink className="h-4 w-4" />
                                                 Visualizar NFe
                                             </a>
-                                        </Button>
+                                        </Button>}
                                     </div>
                                 </div>
                             </CardContent>

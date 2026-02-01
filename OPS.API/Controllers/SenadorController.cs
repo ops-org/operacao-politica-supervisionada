@@ -103,6 +103,13 @@ namespace OPS.API.Controllers
         }
 
         [HttpGet]
+        [Route("{id:int}/CustoAnual")]
+        public async Task<dynamic> CustoAnual(int id)
+        {
+            return await _senadorRepository.CustoAnual(id);
+        }
+
+        [HttpGet]
         [Route("{id:int}/MaioresNotas")]
         public async Task<dynamic> MaioresNotas(int id)
         {

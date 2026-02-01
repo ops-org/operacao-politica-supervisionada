@@ -554,6 +554,67 @@ namespace OPS.Core.Repositories
             }
         }
 
+        public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
+        {
+            var result = new List<ParlamentarCustoAnualDTO>();
+            //using (AppDb banco = new AppDb())
+            {
+                var strSql = @"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					from senado.sf_despesa d
+					WHERE d.id_sf_senador = @id
+					group by d.ano
+					order by d.ano
+				";
+
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var dto = new ParlamentarCustoAnualDTO
+                        {
+                            Ano = Convert.ToInt32(reader["ano"]),
+                            CotaParlamentar = Convert.ToDecimal(reader["valor_total"])
+                        };
+                        result.Add(dto);
+                    }
+                }
+
+                strSql = @"
+					SELECT d.ano, SUM(d.valor) AS valor_total
+					FROM senado.sf_senador_verba_gabinete d
+					WHERE d.id_sf_senador = @id
+					group by d.ano
+					order by d.ano
+				";
+
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
+
+                        if (dto != null)
+                        {
+                            dto.VerbaGabinete = Convert.ToDecimal(reader["valor_total"]);
+                        }
+                        else
+                        {
+                            dto = new ParlamentarCustoAnualDTO
+                            {
+                                Ano = ano,
+                                VerbaGabinete = Convert.ToDecimal(reader["valor_total"])
+                            };
+                            result.Add(dto);
+                        }
+                    }
+                }
+            }
+
+            return result.OrderBy(x => x.Ano).ToList();
+        }
+
         public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro = null)
         {
             // using (AppDb banco = new AppDb())
