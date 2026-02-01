@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Compression;
@@ -6,15 +7,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
+using OPS.API.Configuration;
+using OPS.API.Services;
 using OPS.Core.Repositories;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Interceptors;
 
 namespace OPS.API
 {
@@ -84,9 +88,6 @@ namespace OPS.API
                 options.Providers.Add<BrotliCompressionProvider>();
             });
 
-            // https://github.com/KevinDockx/HttpCacheHeaders
-            services.AddHttpCacheHeaders();
-            //services.AddMvc().AddNewtonsoftJson();
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -97,6 +98,22 @@ namespace OPS.API
                 });
 
             services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+
+            // Configure CacheSettings
+            services.Configure<CacheSettings>(Configuration.GetSection("CacheSettings"));
+            
+            // Configure Hybrid Cache
+            services.AddHybridCache(options =>
+            {
+                options.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromDays(15),
+                    LocalCacheExpiration = TimeSpan.FromDays(15),
+                };
+            });
+
+            // Register HybridCacheService
+            services.AddScoped<IHybridCacheService, HybridCacheService>();
 
             // Add Swagger services
             services.AddSwaggerGen(c =>
@@ -184,8 +201,6 @@ namespace OPS.API
 
             // Enable compression
             app.UseResponseCompression();
-
-            app.UseHttpCacheHeaders();
 
             // Enable Swagger in development
             if (env.IsDevelopment())

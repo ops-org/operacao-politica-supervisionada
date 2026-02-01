@@ -1093,7 +1093,7 @@ namespace OPS.Core.Repositories
 					LEFT JOIN estado e on e.id = d.id_estado
                     LEFT JOIN camara.cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo;
 
-                    SELECT COUNT(1) FROM camara.cf_despesa l WHERE (1=1) ");
+                    SELECT COUNT(*) FROM camara.cf_despesa l WHERE (1=1) ");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
 
@@ -1291,7 +1291,7 @@ namespace OPS.Core.Repositories
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("valor_total desc"));
             sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine("SELECT COUNT(1) FROM camara.cf_despesa l WHERE (1=1) ");
+            sqlSelect.AppendLine("SELECT COUNT(*) FROM camara.cf_despesa l WHERE (1=1) ");
         }
 
         public async Task<dynamic> TipoDespesa()
@@ -1800,7 +1800,7 @@ AND co.periodo_ate IS null
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
-                    @"SELECT COUNT(1) FROM camara.cf_sessao s WHERE (1=1) ");
+                    @"SELECT COUNT(*) FROM camara.cf_sessao s WHERE (1=1) ");
 
                 sqlSelect.Append(sqlWhere);
 

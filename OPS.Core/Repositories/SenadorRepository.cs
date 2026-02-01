@@ -1104,7 +1104,7 @@ namespace OPS.Core.Repositories
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
                 sqlSelect.AppendLine(
-                    @"SELECT count(1) from senado.sf_despesa l WHERE (1=1) ");
+                    @"SELECT count(*) from senado.sf_despesa l WHERE (1=1) ");
 
                 sqlSelect.Append(sqlWhere);
 
@@ -1256,7 +1256,7 @@ namespace OPS.Core.Repositories
             sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(defaultSort));
             sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-            sqlSelect.AppendLine("SELECT COUNT(1) from senado.sf_despesa l WHERE (1=1) ");
+            sqlSelect.AppendLine("SELECT COUNT(*) from senado.sf_despesa l WHERE (1=1) ");
         }
 
         public async Task<dynamic> TipoDespesa()
@@ -1507,7 +1507,7 @@ WHERE (1=1)
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(" valor_total desc"));
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
-                sqlSelect.AppendLine($" SELECT COUNT(1) FROM ({sqlToCount}); ");
+                sqlSelect.AppendLine($" SELECT COUNT(*) FROM ({sqlToCount}) AS t; ");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))

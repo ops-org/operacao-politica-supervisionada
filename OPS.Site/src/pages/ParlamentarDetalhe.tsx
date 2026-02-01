@@ -730,7 +730,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <CardTitle className="text-xl">Principais Fornecedores ({!isState ? 'CEAPS' : 'CEAP'})</CardTitle>
                                     </div>
                                     <Link
-                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Periodo=${isSenator ? '0' : '57'}&Agrupamento=3`}
+                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Periodo=0&Agrupamento=3`}
                                         className="px-3 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg active:scale-95"
                                     >
                                         Lista completa
@@ -801,7 +801,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <CardTitle className="text-xl">Maiores Notas/Recibos</CardTitle>
                                     </div>
                                     <Link
-                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Periodo=${isSenator ? '0' : '57'}&Agrupamento=6`}
+                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Periodo=0&Agrupamento=6`}
                                         className="px-3 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg active:scale-95"
                                     >
                                         Lista completa

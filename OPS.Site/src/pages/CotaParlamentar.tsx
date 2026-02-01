@@ -29,6 +29,7 @@ const legislaturas = [
   { value: "55", label: "55ª (fev/2015 à jan/2019)" },
   { value: "54", label: "54ª (fev/2011 à jan/2015)" },
   { value: "53", label: "53ª (fev/2007 à jan/2011)" },
+  { value: "0", label: "Todas" },
 ];
 
 const agrupamentoOptions = [

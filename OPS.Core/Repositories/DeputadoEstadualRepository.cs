@@ -1046,7 +1046,7 @@ namespace OPS.Core.Repositories
                     LEFT JOIN assembleias.cl_despesa_tipo t on t.id = l.id_cl_despesa_tipo
                     LEFT JOIN assembleias.cl_despesa_especificacao de on de.id = l.id_cl_despesa_especificacao;
 
-                    SELECT COUNT(1) FROM assembleias.cl_despesa l WHERE (1=1) ");
+                    SELECT COUNT(*) FROM assembleias.cl_despesa l WHERE (1=1) ");
 
                 sqlSelect.AppendLine(sqlWhere.ToString());
                 AdicionaFiltroPeriodo(request, sqlSelect);

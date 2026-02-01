@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using OPS.Core.Repositories;
 
@@ -16,29 +18,33 @@ namespace OPS.API.Controllers
         private IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
         public FornecedorRepository dao { get; }
+        private readonly HybridCache _hybridCache;
 
-        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env, FornecedorRepository fornecedorRepository)
+        public FornecedorController(IConfiguration configuration, IWebHostEnvironment env, FornecedorRepository fornecedorRepository, HybridCache hybridCache)
         {
             Environment = env;
             Configuration = configuration;
             dao = fornecedorRepository;
+            _hybridCache = hybridCache;
         }
 
         [HttpGet]
         [Route("{id:int}")]
-        //[IgnoreCacheOutput]
         public async Task<dynamic> Consulta(int id)
         {
-            var _fornecedor = await dao.Consulta(id);
-            var _quadro_societario = await dao.QuadroSocietario(id);
+            var cacheKey = $"fornecedor-consulta-{id}";
+            return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
+            {
+                var _fornecedor = await dao.Consulta(id);
+                var _quadro_societario = await dao.QuadroSocietario(id);
 
-            return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
-
+                return new { fornecedor = _fornecedor, quadro_societario = _quadro_societario };
+            });
         }
 
         [HttpPost]
         [Route("Consulta")]
-        public dynamic Consulta(Dictionary<string, string> jsonData)
+        public async Task<dynamic> Consulta(Dictionary<string, string> jsonData)
         {
             if (jsonData == null) throw new ArgumentNullException(nameof(jsonData));
 
@@ -46,7 +52,11 @@ namespace OPS.API.Controllers
             if (jsonData.ContainsKey("cnpj")) cnpj = jsonData["cnpj"];
             if (jsonData.ContainsKey("nome")) nome = jsonData["nome"];
 
-            return dao.Consulta(cnpj, nome);
+            var cacheKey = $"fornecedor-consulta-{JsonSerializer.Serialize(jsonData)}";
+            return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
+            {
+                return dao.Consulta(cnpj, nome);
+            });
         }
 
         //[HttpGet]
@@ -65,14 +75,22 @@ namespace OPS.API.Controllers
         [Route("{id:int}/RecebimentosPorAno")]
         public async Task<dynamic> RecebimentosPorAno(int id)
         {
-            return await dao.RecebimentosPorAno(id);
+            var cacheKey = $"fornecedor-recebimentos-por-ano-{id}";
+            return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
+            {
+                return await dao.RecebimentosPorAno(id);
+            });
         }
 
         [HttpGet]
         [Route("{id:int}/MaioresGastos")]
         public async Task<dynamic> MaioresGastos(int id)
         {
-            return await dao.MaioresGastos(id);
+            var cacheKey = $"fornecedor-maiores-gastos-{id}";
+            return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
+            {
+                return await dao.MaioresGastos(id);
+            });
         }
 
         private const string urlBaseReceitaFederal = "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/";
