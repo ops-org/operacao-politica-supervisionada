@@ -125,29 +125,29 @@ namespace OPS.Core.Repositories
                 .Where(fs => fs.IdFornecedor == id)
                 .Select(fs => new
                 {
-                    fs.Nome,
-                    fs.CnpjCpf,
-                    fs.PaisOrigem,
-                    fs.DataEntradaSociedade,
-                    FaixaEtaria = fs.FornecedorFaixaEtaria != null ? fs.FornecedorFaixaEtaria.Nome : null,
-                    Qualificacao = fs.FornecedorSocioQualificacao != null ? fs.FornecedorSocioQualificacao.Descricao : null,
-                    fs.NomeRepresentante,
-                    fs.CpfRepresentante,
-                    QualificacaoRepresentante = fs.FornecedorSocioRepresentanteQualificacao != null ? fs.FornecedorSocioRepresentanteQualificacao.Descricao : null
+                    nome = fs.Nome,
+                    cnpj_cpf = fs.CnpjCpf,
+                    pais_origem = fs.PaisOrigem,
+                    data_entrada_sociedade = fs.DataEntradaSociedade,
+                    faixa_etaria = fs.FornecedorFaixaEtaria != null ? fs.FornecedorFaixaEtaria.Nome : null,
+                    qualificacao = fs.FornecedorSocioQualificacao != null ? fs.FornecedorSocioQualificacao.Descricao : null,
+                    nome_representante = fs.NomeRepresentante,
+                    cpf_representante = fs.CpfRepresentante,
+                    qualificacao_representante = fs.FornecedorSocioRepresentanteQualificacao != null ? fs.FornecedorSocioRepresentanteQualificacao.Descricao : null
                 })
                 .ToListAsync();
 
             var quadroSocietarioParsed = quadroSocietario.Select(fs => new
             {
-                fs.Nome,
-                CnpjCpf = Utils.FormatCnpjCpf(fs.CnpjCpf),
-                fs.PaisOrigem,
-                DataEntradaSociedade = Utils.FormataData(fs.DataEntradaSociedade),
-                fs.FaixaEtaria,
-                fs.Qualificacao,
-                fs.NomeRepresentante,
-                CpfRepresentante = Utils.FormatCnpjCpf(fs.CpfRepresentante),
-                fs.QualificacaoRepresentante
+                nome = fs.nome,
+                cnpj_cpf = Utils.FormatCnpjCpf(fs.cnpj_cpf),
+                pais_origem = fs.pais_origem,
+                data_entrada_sociedade = Utils.FormataData(fs.data_entrada_sociedade),
+                faixa_etaria = fs.faixa_etaria,
+                qualificacao = fs.qualificacao,
+                nome_representante = fs.nome_representante,
+                cpf_representante = Utils.FormatCnpjCpf(fs.cpf_representante),
+                qualificacao_representante = fs.qualificacao_representante
             })
             .ToList();
 

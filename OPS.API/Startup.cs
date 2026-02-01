@@ -95,6 +95,13 @@ namespace OPS.API
                     //options.JsonSerializerOptions.PropertyNamingPolicy = null;
 
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                    
+                    // Configure to ignore null values
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                    
+                    // Write enums as strings
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
 
             services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
