@@ -22,64 +22,32 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { ExternalLink, Phone, Mail, Users, TrendingUp, Calendar, MapPin, Briefcase, User, DollarSign, Building2, ArrowRight, Receipt } from "lucide-react";
+import { PoliticianType } from "@/types/politician";
 import {
-    apiClient,
-    fetchDeputadoDetalhe,
-    fetchMaioresFornecedores,
+    fetchPoliticianData,
     fetchCustoAnual,
-    fetchSenadorDetalhe,
-    fetchDeputadoEstadualData,
-    DeputadoDetalhe as DeputadoFederalType,
-    SenadorDetalhe as SenadorType,
-    DeputadoEstadual as DeputadoEstadualType
+    Parlamentar as ParlamentarType,
+    Fornecedor as FornecedorType,
+    CustoAnual as CustoAnualType,
+    MaioresNotas as TopNotasType
 } from "@/lib/api";
 
-interface UnifiedParliamentarian {
-    id: string;
-    type: "deputado-federal" | "deputado-estadual" | "senador";
-    nome_parlamentar: string;
-    nome_civil: string;
-    sigla_partido: string;
-    nome_partido: string;
-    sigla_estado: string;
-    nome_estado: string;
-    foto_url: string;
-    pagina_oficial_url: string;
-    valor_total: string;
-    condicao?: string;
-    situacao?: string;
-    email?: string;
-    telefone?: string;
-    sala?: string;
-    predio?: string;
-    secretarios_ativos?: string;
-    naturalidade?: string;
-    nascimento?: string;
-    falecimento?: string;
-    profissao?: string;
-    escolaridade?: string;
-    municipio_nascimento?: string;
-    estado_nascimento?: string;
-    site?: string;
 
-    // Summary values
-    valor_total_ceap?: string;
-    valor_total_remuneracao?: string;
-    valor_total_salario?: string;
-    valor_total_auxilio_moradia?: string;
-}
-
-const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-estadual" | "senador" }) => {
+const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
     const { id } = useParams();
-    const [data, setData] = useState<UnifiedParliamentarian | null>(null);
-    const [fornecedores, setFornecedores] = useState<any[]>([]);
-    const [chartData, setChartData] = useState<any[]>([]);
-    const [maioresNotas, setMaioresNotas] = useState<any[]>([]);
+    const [data, setData] = useState<ParlamentarType | null>(null);
+    const [fornecedores, setFornecedores] = useState<FornecedorType[]>([]);
+    const [chartData, setChartData] = useState<CustoAnualType[]>([]);
+    const [maioresNotas, setMaioresNotas] = useState<TopNotasType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const valueSummaryRef = useRef<HTMLDivElement>(null);
     const fornecedoresRef = useRef<HTMLDivElement>(null);
     const custosAnoRef = useRef<HTMLDivElement>(null);
+
+    const isFederal = type === "deputado-federal";
+    const isState = type === "deputado-estadual";
+    const isSenator = type === "senador";
 
     usePageTitle(data ? data.nome_parlamentar : "Parlamentar");
 
@@ -93,108 +61,24 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
 
             try {
                 setLoading(true);
-                if (type === "deputado-federal") {
-                    const [dep, forn, cust, notas] = await Promise.all([
-                        fetchDeputadoDetalhe(id),
-                        fetchMaioresFornecedores(id),
-                        fetchCustoAnual(id, type),
-                        apiClient.get<any[]>(`/api/deputado/${id}/MaioresNotas`)
-                    ]);
+                const response = await fetchPoliticianData(id, type);
 
-                    setData({
-                        id: dep.id_cf_deputado.toString(),
-                        type: "deputado-federal",
-                        nome_parlamentar: dep.nome_parlamentar,
-                        nome_civil: dep.nome_civil,
-                        sigla_partido: dep.sigla_partido,
-                        nome_partido: dep.nome_partido,
-                        sigla_estado: dep.sigla_estado,
-                        nome_estado: dep.nome_estado,
-                        foto_url: `https://static.ops.org.br/depfederal/${dep.id_cf_deputado}_120x160.jpg`,
-                        pagina_oficial_url: `https://www.camara.leg.br/deputados/${dep.id_cf_deputado}`,
-                        valor_total: dep.valor_total,
-                        condicao: dep.condicao,
-                        situacao: dep.situacao,
-                        email: dep.email,
-                        telefone: dep.telefone,
-                        sala: dep.sala,
-                        predio: dep.predio,
-                        secretarios_ativos: dep.secretarios_ativos,
-                        naturalidade: dep.nome_municipio_nascimento,
-                        nascimento: dep.nascimento,
-                        falecimento: dep.falecimento,
-                        profissao: dep.profissao,
-                        escolaridade: dep.escolaridade,
-                        municipio_nascimento: dep.nome_municipio_nascimento,
-                        estado_nascimento: dep.sigla_estado_nascimento,
-                        valor_total_ceap: dep.valor_total_ceap,
-                        valor_total_remuneracao: dep.valor_total_remuneracao,
-                        valor_total_salario: dep.valor_total_salario,
-                        valor_total_auxilio_moradia: dep.valor_total_auxilio_moradia
-                    });
-                    setFornecedores(forn);
-                    setChartData(cust);
-                    setMaioresNotas(notas);
-                } else if (type === "senador") {
-                    const [sen, custos, notas, forn] = await Promise.all([
-                        fetchSenadorDetalhe(id),
-                        fetchCustoAnual(id, type),
-                        apiClient.get<any[]>(`/senador/${id}/MaioresNotas`),
-                        apiClient.get<any[]>(`/senador/${id}/MaioresFornecedores`)
-                    ]);
-
-                    setData({
-                        id: sen.id_sf_senador.toString(),
-                        type: "senador",
-                        nome_parlamentar: sen.nome_parlamentar,
-                        nome_civil: sen.nome_civil,
-                        sigla_partido: sen.sigla_partido,
-                        nome_partido: sen.nome_partido,
-                        sigla_estado: sen.sigla_estado,
-                        nome_estado: sen.nome_estado,
-                        foto_url: `https://static.ops.org.br/senador/${sen.id_sf_senador}_240x300.jpg`,
-                        pagina_oficial_url: `http://www25.senado.leg.br/web/senadores/senador/-/perfil/${sen.id_sf_senador}`,
-                        valor_total: sen.valor_total,
-                        condicao: sen.condicao,
-                        email: sen.email,
-                        naturalidade: sen.naturalidade,
-                        nascimento: sen.nascimento,
-                        valor_total_ceap: sen.valor_total_ceaps,
-                        valor_total_remuneracao: sen.valor_total_remuneracao
-                    });
-                    setFornecedores(forn);
-                    setMaioresNotas(notas);
-                    setChartData(custos);
-                } else if (type === "deputado-estadual") {
-                    const [res, custos] = await Promise.all([
-                        fetchDeputadoEstadualData(id),
-                        fetchCustoAnual(id, type)
-                    ]);
-
-                    const dep = res.deputado;
-                    setData({
-                        id: dep.id_cl_deputado.toString(),
-                        type: "deputado-estadual",
-                        nome_parlamentar: dep.nome_parlamentar,
-                        nome_civil: dep.nome_civil,
-                        sigla_partido: dep.sigla_partido,
-                        nome_partido: dep.nome_partido,
-                        sigla_estado: dep.sigla_estado,
-                        nome_estado: dep.nome_estado,
-                        foto_url: dep.foto || "",
-                        pagina_oficial_url: dep.perfil || "",
-                        valor_total: dep.valor_total,
-                        email: dep.email,
-                        telefone: dep.telefone,
-                        site: dep.site,
-                        naturalidade: dep.naturalidade,
-                        nascimento: dep.nascimento,
-                        profissao: dep.profissao
-                    });
-                    setFornecedores(res.maioresFornecedores);
-                    setMaioresNotas(res.maioresNotas);
-                    setChartData(custos);
+                setData(response.detalhes);
+                setFornecedores(response.maioresFornecedores || []);
+                // Handle different data structures for chart data
+                if (Array.isArray(response.custoAnual)) {
+                    setChartData(response.custoAnual);
+                } else if (response.custoAnual && 'categories' in response.custoAnual && 'series' in response.custoAnual) {
+                    // Convert GastoPorAno to chart format
+                    const gastosData = response.custoAnual as any;
+                    setChartData(gastosData.categories.map((cat: string, index: number) => ({
+                        ano: cat,
+                        valor: gastosData.series[index] || 0
+                    })));
+                } else {
+                    setChartData([]);
                 }
+                setMaioresNotas(response.maioresNotas || []);
             } catch (err) {
                 console.error(err);
                 setError(err instanceof Error ? err.message : "Erro ao carregar dados do parlamentar");
@@ -238,9 +122,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
         );
     }
 
-    const isFederal = type === "deputado-federal";
-    const isState = type === "deputado-estadual";
-    const isSenator = type === "senador";
+
 
     const breadcrumbLabel = isSenator ? "Senadores" : isFederal ? "Deputados Federais" : "Deputados Estaduais";
     const breadcrumbLink = isSenator ? "/senador" : isFederal ? "/deputado-federal" : "/deputado-estadual";
@@ -474,7 +356,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <CardContent className="p-6">
                                             <div className="flex items-center justify-between">
                                                 <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Custos Salariais</p>
+                                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">Salário</p>
                                                     <p className="text-2xl font-black text-purple-900 font-mono tracking-tighter">R$ {data.valor_total_salario}</p>
                                                 </div>
                                                 <div className="p-3 bg-purple-500/10 text-purple-600 rounded-2xl shadow-inner border border-purple-500/10 group-hover:scale-110 transition-transform">
@@ -644,7 +526,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <Bar dataKey="cota_parlamentar" stackId="a" fill="hsl(var(--chart-2))" radius={[0, 0, 0, 0]} name="Cota Parlamentar" className="transition-all duration-300 hover:opacity-80" />
                                         {isFederal && (
                                             <>
-                                                <Bar dataKey="salario_patronal" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Custos Salariais" className="transition-all duration-300 hover:opacity-80" />
+                                                <Bar dataKey="salario_patronal" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Salário" className="transition-all duration-300 hover:opacity-80" />
                                                 <Bar dataKey="auxilio_moradia" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Auxílio Moradia" className="transition-all duration-300 hover:opacity-80" />
                                             </>
                                         )}
@@ -683,7 +565,7 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                         <>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
-                                                <span className="text-muted-foreground">Custos Salariais</span>
+                                                <span className="text-muted-foreground">Salário</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }}></div>
@@ -830,18 +712,12 @@ const ParlamentarDetalhe = ({ type }: { type: "deputado-federal" | "deputado-est
                                                         </Link>
                                                     </TableCell>
                                                     <TableCell className="text-right py-4 px-6">
-                                                        {isFederal ? (
-                                                            <Link
-                                                                to={`${breadcrumbLink}/ceap/${row.id_cf_despesa}`}
-                                                                className="text-foreground hover:text-primary transition-colors font-black font-mono"
-                                                            >
-                                                                R$&nbsp;{row.valor_liquido}
-                                                            </Link>
-                                                        ) : (
-                                                            <span className="font-black font-mono text-foreground group-hover:text-primary transition-colors">
-                                                                R$&nbsp;{row.valor_liquido || row.valor}
-                                                            </span>
-                                                        )}
+                                                        <Link
+                                                            to={`${breadcrumbLink}/ceap/${row.id_despesa}`}
+                                                            className="text-foreground hover:text-primary transition-colors font-black font-mono"
+                                                        >
+                                                            R$&nbsp;{row.valor_liquido}
+                                                        </Link>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

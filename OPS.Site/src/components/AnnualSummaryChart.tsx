@@ -42,13 +42,33 @@ export const AnnualSummaryChart = ({ data }: AnnualSummaryChartProps) => {
           tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
         />
         <Tooltip
-          formatter={(value: number) => [formatCurrency(value), 'Valor']}
-          contentStyle={{
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '12px',
-            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-            textAlign: 'right',
+          content={({ active, payload, label }) => {
+            if (active && payload && payload.length) {
+              return (
+                <div
+                  style={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                    padding: '8px 12px',
+                    color: 'hsl(var(--foreground))'
+                  }}
+                >
+                  <div style={{ fontSize: '12px', marginBottom: '4px', opacity: 0.8 }}>
+                    Ano: {label}
+                  </div>
+                  <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                    Valor
+                  </div>
+                  <div style={{ fontWeight: 'bold' }}>
+                    {formatCurrency(payload[0].value as number)}
+                  </div>
+                  
+                </div>
+              );
+            }
+            return null;
           }}
           cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
         />

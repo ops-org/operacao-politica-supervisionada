@@ -62,9 +62,6 @@ const FornecedorDetalhe = () => {
         loadData();
     }, [id]);
 
-    {/* Full-screen loading overlay */ }
-    <LoadingOverlay isLoading={loading} content="Carregando informações do fornecedor..." />
-
     if (error) {
         return (
             <ErrorState
@@ -80,9 +77,13 @@ const FornecedorDetalhe = () => {
 
     const { fornecedor, quadro_societario } = data;
     const enderecoCompleto = `${fornecedor.logradouro}, ${fornecedor.numero}${fornecedor.complemento ? ' - ' + fornecedor.complemento : ''}, ${fornecedor.cep} - ${fornecedor.bairro}, ${fornecedor.cidade}, ${fornecedor.estado}`;
+    const hasAdditionalInfo = fornecedor.motivo_situacao_cadastral || fornecedor.situacao_especial || fornecedor.data_situacao_especial || fornecedor.ente_federativo_responsavel;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
+            {/* Full-screen loading overlay */}
+            <LoadingOverlay isLoading={loading} content="Carregando informações do fornecedor..." />
+
             <Header />
             <main className="container mx-auto px-4 py-8">
                 {/* Breadcrumb */}
@@ -166,7 +167,7 @@ const FornecedorDetalhe = () => {
                                                     <span>
                                                         Abertura: <span className="text-foreground">{fornecedor.data_de_abertura}</span>
                                                         {fornecedor.situacao_cadastral !== "ATIVA" && (
-                                                            <> • Situação em: <span className="text-foreground">{fornecedor.data_da_situacao_cadastral}</span></>
+                                                            <> • Encerramento: <span className="text-foreground">{fornecedor.data_da_situacao_cadastral}</span></>
                                                         )}
                                                     </span>
                                                 </div>
@@ -447,17 +448,17 @@ const FornecedorDetalhe = () => {
                                         </div>
 
                                         {/* Additional Information */}
-                                        <div className="space-y-4">
+                                        {hasAdditionalInfo && <div className="space-y-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="h-px bg-border flex-1"></div>
                                                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide whitespace-nowrap">Informações Cadastrais</h4>
                                                 <div className="h-px bg-border flex-1"></div>
                                             </div>
                                             <div className="grid grid-cols-1 gap-4 text-sm">
-                                                <div>
+                                                {fornecedor.motivo_situacao_cadastral && <div>
                                                     <span className="font-medium">Situação Cadastral:</span>
                                                     <p className="text-muted-foreground">{fornecedor.data_da_situacao_cadastral}</p>
-                                                </div>
+                                                </div>}
                                                 {fornecedor.motivo_situacao_cadastral && (
                                                     <div>
                                                         <span className="font-medium">Motivo:</span>
@@ -483,7 +484,7 @@ const FornecedorDetalhe = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
+                                        </div>}
                                     </div>
                                 </div>
                             </CardContent>

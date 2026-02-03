@@ -61,7 +61,7 @@ const typeConfigs = {
     subtitle: "Consulte e analise as despesas dos deputados federais",
     apiType: "deputado",
     detailRoute: "/deputado-federal",
-    imageBaseUrl: "//static.ops.org.br/deputado",
+    imageBaseUrl: "https://static.ops.org.br/deputado",
     documentRoute: "/deputado-federal",
     defaultPeriod: "57"
   },
@@ -70,7 +70,7 @@ const typeConfigs = {
     subtitle: "Consulte e analise as despesas dos deputados estaduais",
     apiType: "deputadoestadual",
     detailRoute: "/deputado-estadual",
-    imageBaseUrl: "//static.ops.org.br/deputadoestadual",
+    imageBaseUrl: "https://static.ops.org.br/deputadoestadual",
     documentRoute: "/deputado-estadual",
     defaultPeriod: "57"
   },
@@ -79,7 +79,7 @@ const typeConfigs = {
     subtitle: "Consulte e analise as despesas dos senadores",
     apiType: "senador",
     detailRoute: "/senador",
-    imageBaseUrl: "//static.ops.org.br/senador",
+    imageBaseUrl: "https://static.ops.org.br/senador",
     documentRoute: "/senador",
     defaultPeriod: "57"
   }
@@ -129,7 +129,7 @@ const getColumnConfigs = (agrupamento: string): ColumnConfig[] => {
         { key: "nome_parlamentar", label: "Parlamentar", sortable: false, columnIndex: 0 },
         { key: "nome_fornecedor", label: "Fornecedor", sortable: false, columnIndex: 0 },
         { key: "despesa_tipo", label: "Tipo de Despesa", sortable: false, columnIndex: 0 },
-        { key: "valor_liquido", label: "Valor", sortable: true, columnIndex: 3, align: 'right' }
+        { key: "valor_total", label: "Valor", sortable: true, columnIndex: 3, align: 'right' }
       ];
     default:
       return getColumnConfigs("1");
@@ -726,7 +726,7 @@ export default function CotaParlamentar({ type }: { type?: "deputado-federal" | 
                           // if (column.key === 'total_notas') {
                           //   cellContent = parseInt(cellContent.replace(/\./g, '')).toLocaleString("pt-BR");
                           // } else 
-                          if (column.key === 'valor_total' || column.key === 'valor_liquido') {
+                          if (column.key === 'valor_total') {
                             if (parlamentar.id_despesa)
                               return (
                                 <TableCell key={column.key} className="py-4 px-6 text-right">

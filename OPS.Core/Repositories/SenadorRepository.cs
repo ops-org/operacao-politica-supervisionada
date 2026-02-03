@@ -13,13 +13,13 @@ using OPS.Infraestrutura;
 
 namespace OPS.Core.Repositories
 {
-    public class SenadorRepository : BaseRepository
+    public class SenadorRepository : BaseRepository, IParlamentarRepository
     {
         public SenadorRepository(AppDbContext context) : base(context)
         {
         }
 
-        public async Task<dynamic> Consultar(int id)
+        public async Task<ParlamentarDetalheDTO> Consultar(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -70,25 +70,25 @@ namespace OPS.Core.Repositories
                             case "2": participacao = "2º Suplente"; break;
                         }
 
-                        return new
+                        return new ParlamentarDetalheDTO
                         {
-                            id_sf_senador = reader["id_sf_senador"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            nome_civil = reader["nome_civil"].ToString(),
-                            nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
-                            sexo = reader["sexo"].ToString(),
-                            id_partido = reader["id_partido"],
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            nome_partido = reader["nome_partido"].ToString(),
-                            id_estado = reader["id_estado"],
-                            sigla_partido = reader["sigla_partido"].ToString(),
-                            nome_estado = reader["nome_estado"].ToString(),
-                            email = reader["email"].ToString(),
-                            condicao = $"{participacao} ({exercicio})",
-                            naturalidade = reader["naturalidade"].ToString() + (!string.IsNullOrEmpty(reader["silga_estado_naturalidade"].ToString()) ? "(" + reader["silga_estado_naturalidade"].ToString() + ")" : ""),
-                            valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
-                            valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
-                            valor_total = Utils.FormataValor(reader["valor_total"]),
+                            IdParlamentar = Convert.ToInt32(reader["id_sf_senador"]),
+                            NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                            NomeCivil = reader["nome_civil"].ToString(),
+                            Nascimento = Utils.NascimentoFormatado(reader["nascimento"]),
+                            Sexo = reader["sexo"].ToString(),
+                            IdPartido = reader["id_partido"] as int?,
+                            SiglaEstado = reader["sigla_estado"].ToString(),
+                            NomePartido = reader["nome_partido"].ToString(),
+                            IdEstado = reader["id_estado"] as int?,
+                            SiglaPartido = reader["sigla_partido"].ToString(),
+                            NomeEstado = reader["nome_estado"].ToString(),
+                            Email = reader["email"].ToString(),
+                            Condicao = $"{participacao} ({exercicio})",
+                            Naturalidade = reader["naturalidade"].ToString() + (!string.IsNullOrEmpty(reader["silga_estado_naturalidade"].ToString()) ? "(" + reader["silga_estado_naturalidade"].ToString() + ")" : ""),
+                            ValorTotalCeap = Utils.FormataValor(reader["valor_total_ceaps"]),
+                            ValorTotalRemuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
+                            ValorTotal = Utils.FormataValor(reader["valor_total"]),
                         };
                     }
 
@@ -97,7 +97,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> Lista(FiltroParlamentarDTO request)
+        public async Task<List<ParlamentarListaDTO>> Lista(FiltroParlamentarDTO request)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -147,25 +147,23 @@ namespace OPS.Core.Repositories
 				");
 
                 TextInfo textInfo = new CultureInfo("pt-BR", false).TextInfo;
-                var lstRetorno = new List<dynamic>();
+                var lstRetorno = new List<ParlamentarListaDTO>();
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
-                        lstRetorno.Add(new
+                        lstRetorno.Add(new ParlamentarListaDTO
                         {
-                            id_sf_senador = reader["id_sf_senador"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            nome_civil = reader["nome_civil"].ToString(),
-                            sigla_partido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
-                            nome_partido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            nome_estado = reader["nome_estado"].ToString(),
-                            ativo = reader["ativo"].ToString() == "S",
-                            situacao = reader["ativo"].ToString() == "S" ? "Em exercício" : "Fora de Exercício",
-
-                            valor_total_ceaps = Utils.FormataValor(reader["valor_total_ceaps"]),
-                            valor_total_remuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
+                            IdParlamentar = Convert.ToInt32(reader["id_sf_senador"]),
+                            NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                            NomeCivil = reader["nome_civil"].ToString(),
+                            SiglaPartido = !string.IsNullOrEmpty(reader["sigla_partido"].ToString()) ? reader["sigla_partido"].ToString() : "S.PART.",
+                            NomePartido = !string.IsNullOrEmpty(reader["nome_partido"].ToString()) ? reader["nome_partido"].ToString() : "SEM PARTIDO",
+                            SiglaEstado = reader["sigla_estado"].ToString(),
+                            NomeEstado = reader["nome_estado"].ToString(),
+                            Ativo = reader["ativo"].ToString() == "S",
+                            ValorTotalCeap = Utils.FormataValor(reader["valor_total_ceaps"]),
+                            ValorTotalRemuneracao = Utils.FormataValor(reader["valor_total_remuneracao"]),
                         });
                     }
                 }
@@ -173,7 +171,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> MaioresFornecedores(int id)
+        public async Task<List<DeputadoFornecedorDTO>> MaioresFornecedores(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -201,15 +199,15 @@ namespace OPS.Core.Repositories
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
-                    List<dynamic> lstRetorno = new List<dynamic>();
+                    List<DeputadoFornecedorDTO> lstRetorno = new List<DeputadoFornecedorDTO>();
                     while (await reader.ReadAsync())
                     {
-                        lstRetorno.Add(new
+                        lstRetorno.Add(new DeputadoFornecedorDTO
                         {
-                            id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
+                            IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                            CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                            NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                            ValorTotal = Utils.FormataValor(reader["valor_total"])
                         });
                     }
 
@@ -218,7 +216,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> MaioresNotas(int id)
+        public async Task<List<ParlamentarNotaDTO>> MaioresNotas(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -247,16 +245,16 @@ namespace OPS.Core.Repositories
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
-                    List<dynamic> lstRetorno = new List<dynamic>();
+                    List<ParlamentarNotaDTO> lstRetorno = new List<ParlamentarNotaDTO>();
                     while (await reader.ReadAsync())
                     {
-                        lstRetorno.Add(new
+                        lstRetorno.Add(new ParlamentarNotaDTO()
                         {
-                            id_sf_despesa = reader["id_sf_despesa"].ToString(),
-                            id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            valor = Utils.FormataValor(reader["valor"])
+                            IdDespesa = reader["id_sf_despesa"].ToString(),
+                            IdFornecedor = reader["id_fornecedor"].ToString(),
+                            CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                            NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                            ValorLiquido = Utils.FormataValor(reader["valor"])
                         });
                     }
 
@@ -308,19 +306,19 @@ namespace OPS.Core.Repositories
 
                         var documento = new DocumentoDetalheDTO
                         {
-                            IdDespesa = reader["id_despesa"],
+                            IdDespesa = Convert.ToInt64(reader["id_despesa"]),
                             DataEmissao = Utils.FormataData(reader["data_emissao"]),
                             ValorLiquido = Utils.FormataValor(Convert.ToDecimal(reader["valor_liquido"])),
                             Ano = ano,
                             Mes = mes,
                             Competencia = $"{mes:00}/{ano:0000}",
-                            IdDespesaTipo = reader["id_despesa_tipo"],
+                            IdDespesaTipo = Convert.ToInt32(reader["id_despesa_tipo"]),
                             DescricaoDespesa = reader["descricao_despesa_tipo"].ToString(),
-                            IdParlamentar = reader["id_parlamentar"],
+                            IdParlamentar = Convert.ToInt32(reader["id_parlamentar"]),
                             NomeParlamentar = reader["nome_parlamentar"].ToString(),
                             SiglaEstado = reader["sigla_estado"].ToString(),
                             SiglaPartido = reader["sigla_partido"].ToString(),
-                            IdFornecedor = reader["id_fornecedor"],
+                            IdFornecedor = Convert.ToInt64(reader["id_fornecedor"]),
                             CnpjCpf = cnpjCpf,
                             NomeFornecedor = reader["nome_fornecedor"].ToString()
                         };
@@ -337,7 +335,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> DocumentosDoMesmoDia(int id)
+        public async Task<List<DocumentoRelacionadoDTO>> DocumentosDoMesmoDia(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -366,14 +364,14 @@ namespace OPS.Core.Repositories
                     limit 50
 				 ");
 
-                var lstRetorno = new List<dynamic>();
+                var lstRetorno = new List<DocumentoRelacionadoDTO>();
 
                 DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
                 while (await reader.ReadAsync())
                 {
-                    lstRetorno.Add(new
+                    lstRetorno.Add(new DocumentoRelacionadoDTO
                     {
-                        IdDespesa = Convert.ToInt64(reader["id_despesa"]),
+                        IdDespesa = Convert.ToInt32(reader["id_despesa"]),
                         IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
                         CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                         NomeFornecedor = reader["nome_fornecedor"].ToString(),
@@ -386,7 +384,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> DocumentosDaSubcotaMes(int id)
+        public async Task<List<DocumentoRelacionadoDTO>> DocumentosDaSubcotaMes(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -416,14 +414,14 @@ namespace OPS.Core.Repositories
 					limit 50
 				 ");
 
-                var lstRetorno = new List<dynamic>();
+                var lstRetorno = new List<DocumentoRelacionadoDTO>();
 
                 DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
                 while (await reader.ReadAsync())
                 {
-                    lstRetorno.Add(new
+                    lstRetorno.Add(new DocumentoRelacionadoDTO
                     {
-                        IdDespesa = Convert.ToInt64(reader["id_despesa"]),
+                        IdDespesa = Convert.ToInt32(reader["id_despesa"]),
                         IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
                         CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
                         NomeFornecedor = reader["nome_fornecedor"].ToString(),
@@ -436,7 +434,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> GastosPorAno(int id)
+        public async Task<GraficoBarraDTO> GastosPorAno(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -449,8 +447,8 @@ namespace OPS.Core.Repositories
 					order by d.ano
 				");
 
-                var categories = new List<dynamic>();
-                var series = new List<dynamic>();
+                var categories = new List<int>();
+                var series = new List<decimal>();
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
@@ -461,67 +459,15 @@ namespace OPS.Core.Repositories
                     }
                 }
 
-                return new
+                return new GraficoBarraDTO
                 {
-                    categories,
-                    series
+                    Categories = categories,
+                    Series = series
                 };
-
-                //using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
-                //{
-                //    var lstValoresMensais = new decimal?[12];
-                //    string anoControle = string.Empty;
-                //    bool existeGastoNoAno = false;
-                //    var categories = new List<dynamic>();
-                //    var series = new List<dynamic>();
-
-                //    while (await reader.ReadAsync())
-                //    {
-                //        if (reader["ano"].ToString() != anoControle)
-                //        {
-                //            if (existeGastoNoAno)
-                //            {
-                //                categories.Add(anoControle);
-                //                series.Add(new
-                //                {
-                //                    name = anoControle.ToString(),
-                //                    data = lstValoresMensais
-                //                });
-
-                //                lstValoresMensais = new decimal?[12];
-                //                existeGastoNoAno = false;
-                //            }
-
-                //            anoControle = reader["ano"].ToString();
-                //        }
-
-                //        if (Convert.ToDecimal(reader["valor_total"]) > 0)
-                //        {
-                //            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
-                //            existeGastoNoAno = true;
-                //        }
-                //    }
-
-                //    if (existeGastoNoAno)
-                //    {
-                //        categories.Add(anoControle);
-                //        series.Add(new
-                //        {
-                //            name = anoControle.ToString(),
-                //            data = lstValoresMensais
-                //        });
-                //    }
-
-                //    return new
-                //    {
-                //        categories,
-                //        series
-                //    };
-                //}
             }
         }
 
-        public async Task<dynamic> GastosComPessoalPorAno(int id)
+        public async Task<GraficoBarraDTO> GastosComPessoalPorAno(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -534,8 +480,8 @@ namespace OPS.Core.Repositories
 					order by d.ano
 				");
 
-                var categories = new List<dynamic>();
-                var series = new List<dynamic>();
+                var categories = new List<int>();
+                var series = new List<decimal>();
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
@@ -546,10 +492,10 @@ namespace OPS.Core.Repositories
                     }
                 }
 
-                return new
+                return new GraficoBarraDTO
                 {
-                    categories,
-                    series
+                    Categories = categories,
+                    Series = series
                 };
             }
         }
@@ -700,10 +646,10 @@ namespace OPS.Core.Repositories
                     {
                         lstRetorno.Add(new DropDownDTO
                         {
-                            id = int.Parse(reader["id"].ToString()),
-                            tokens = new[] { reader["nome_completo"].ToString() },
-                            text = reader["nome"].ToString(),
-                            helpText = $"{reader["sigla_partido"]} / {reader["sigla_estado"]}"
+                            Id = int.Parse(reader["id"].ToString()),
+                            Tokens = new[] { reader["nome_completo"].ToString() },
+                            Text = reader["nome"].ToString(),
+                            HelpText = $"{reader["sigla_partido"]} / {reader["sigla_estado"]}"
                         });
                     }
                 }
@@ -737,406 +683,351 @@ namespace OPS.Core.Repositories
             throw new BusinessException("Parâmetro request.Agrupamento não informado!");
         }
 
-        private async Task<dynamic> LancamentosParlamentar(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoParlamentarDTO>> LancamentosParlamentar(DataTablesRequest request)
         {
-            // using (AppDb banco = new AppDb())
+            var sqlWhere = GetWhereFilter(request);
+            var sqlSortAndPaging = GetSortAndPaging(request);
+
+            var sql = $@"
+SELECT
+    d.id as id_sf_senador
+    , d.nome as nome_parlamentar
+    , e.sigla as sigla_estado
+    , p.sigla as sigla_partido
+    , l1.total_notas
+    , l1.valor_total
+FROM (
+	SELECT 
+	    count(l.id) AS total_notas
+	    , sum(l.valor) as valor_total
+	    , l.id_sf_senador
+	from senado.sf_despesa l
+	WHERE (1=1)
+	{sqlWhere}
+	GROUP BY id_sf_senador
+) l1
+LEFT JOIN senado.sf_senador d on d.id = l1.id_sf_senador
+LEFT JOIN partido p on p.id = d.id_partido
+LEFT JOIN estado e on e.id = d.id_estado
+{sqlSortAndPaging};
+
+SELECT COUNT(DISTINCT id_sf_senador) 
+FROM senado.sf_despesa l 
+WHERE (1=1) 
+{sqlWhere};";
+
+            var lstRetorno = new List<LancamentoParlamentarDTO>();
+            using (DbDataReader reader = await ExecuteReaderAsync(sql))
             {
-                var sqlWhere = new StringBuilder();
-                AdicionaFiltroPeriodo(request, sqlWhere);
-                AdicionaFiltroSenador(request, sqlWhere);
-                AdicionaFiltroDespesa(request, sqlWhere);
-                AdicionaFiltroFornecedor(request, sqlWhere);
-                AdicionaFiltroPartidoSenador(request, sqlWhere);
-                AdicionaFiltroEstadoSenador(request, sqlWhere);
-
-                var sqlSelect = new StringBuilder();
-
-                sqlSelect.AppendLine(@"
-                    SELECT
-						 d.id as id_sf_senador
-						, d.nome as nome_parlamentar
-						, e.sigla as sigla_estado
-						, p.sigla as sigla_partido
-						, l1.total_notas
-						, l1.valor_total
-					FROM (
-					    SELECT 
-						    count(l.id) AS total_notas
-					    , sum(l.valor) as valor_total
-					    , l.id_sf_senador
-					    from senado.sf_despesa l
-					    WHERE (1=1)
-				");
-
-                sqlSelect.AppendLine(sqlWhere.ToString());
-
-                sqlSelect.AppendLine(@"
-					    GROUP BY id_sf_senador
-                    ) l1
-					LEFT JOIN senado.sf_senador d on d.id = l1.id_sf_senador
-					LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-				");
-
-                AdicionaResultadoComum(request, sqlSelect);
-                sqlSelect.AppendLine(sqlWhere.ToString());
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    lstRetorno.Add(new LancamentoParlamentarDTO
                     {
-                        lstRetorno.Add(new
-                        {
-                            id_sf_senador = reader["id_sf_senador"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            sigla_partido = reader["sigla_partido"].ToString(),
-                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
-
-                    var TotalCount = reader.GetTotalRowsFound();
-                    return new
-                    {
-                        recordsTotal = TotalCount,
-                        recordsFiltered = TotalCount,
-                        data = lstRetorno
-                    };
+                        IdParlamentar = Convert.ToInt32(reader["id_sf_senador"]),
+                        NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                        SiglaEstado = reader["sigla_estado"].ToString(),
+                        SiglaPartido = reader["sigla_partido"].ToString(),
+                        TotalNotas = Convert.ToInt32(reader["total_notas"]),
+                        ValorTotal = Utils.FormataValor(reader["valor_total"])
+                    });
                 }
+
+                var TotalCount = reader.GetTotalRowsFound();
+                return new DataTablesResponseDTO<LancamentoParlamentarDTO>
+                {
+                    recordsTotal = TotalCount,
+                    recordsFiltered = TotalCount,
+                    data = lstRetorno
+                };
             }
         }
 
-        private async Task<dynamic> LancamentosFornecedor(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoFornecedorDTO>> LancamentosFornecedor(DataTablesRequest request)
         {
-            // using (AppDb banco = new AppDb())
+            var sqlWhere = GetWhereFilter(request);
+            var sqlSortAndPaging = GetSortAndPaging(request);
+
+            var sql = $@"
+SELECT
+	l1.id_fornecedor
+	, pj.nome AS nome_fornecedor
+	, l1.total_notas
+	, l1.valor_total
+    , pj.cnpj_cpf
+FROM (
+	SELECT 
+		l.id_fornecedor
+		, count(l.id) AS total_notas
+		, sum(l.valor) as valor_total
+	from senado.sf_despesa l
+	WHERE (1=1)
+    {sqlWhere}
+	GROUP BY l.id_fornecedor
+) l1
+LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
+{sqlSortAndPaging};
+
+SELECT COUNT(DISTINCT id_fornecedor) 
+FROM senado.sf_despesa l 
+WHERE (1=1) 
+{sqlWhere};";
+
+            var lstRetorno = new List<LancamentoFornecedorDTO>();
+            using (DbDataReader reader = await ExecuteReaderAsync(sql))
             {
-                var sqlSelect = new StringBuilder();
-
-                sqlSelect.AppendLine(@"
-                    SELECT
-						l1.id_fornecedor
-						, pj.nome AS nome_fornecedor
-						, l1.total_notas
-						, l1.valor_total
-                        , pj.cnpj_cpf
-					FROM (
-					    SELECT 
-						    l.id_fornecedor
-						    , count(l.id) AS total_notas
-						    , sum(l.valor) as valor_total
-					    from senado.sf_despesa l
-					    WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-                AdicionaFiltroSenador(request, sqlSelect);
-                AdicionaFiltroDespesa(request, sqlSelect);
-                AdicionaFiltroFornecedor(request, sqlSelect);
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-					    GROUP BY l.id_fornecedor
-                    ) l1
-					LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
-				");
-
-                AdicionaResultadoComum(request, sqlSelect);
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    lstRetorno.Add(new LancamentoFornecedorDTO
                     {
-                        lstRetorno.Add(new
-                        {
-                            id_fornecedor = reader["id_fornecedor"],
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
-
-                    var TotalCount = reader.GetTotalRowsFound();
-                    return new
-                    {
-                        recordsTotal = TotalCount,
-                        recordsFiltered = TotalCount,
-                        data = lstRetorno
-                    };
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                        NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                        TotalNotas = Utils.FormataValor(reader["total_notas"], 0),
+                        ValorTotal = Utils.FormataValor(reader["valor_total"])
+                    });
                 }
+
+                var TotalCount = reader.GetTotalRowsFound();
+                return new DataTablesResponseDTO<LancamentoFornecedorDTO>
+                {
+                    recordsTotal = TotalCount,
+                    recordsFiltered = TotalCount,
+                    data = lstRetorno
+                };
             }
         }
 
-        private async Task<dynamic> LancamentosDespesa(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoDespesaDTO>> LancamentosDespesa(DataTablesRequest request)
         {
-            // using (AppDb banco = new AppDb())
+            var sqlWhere = GetWhereFilter(request);
+            var sqlSortAndPaging = GetSortAndPaging(request);
+
+            var sql = $@"
+SELECT
+	l1.id_sf_despesa_tipo
+	, td.descricao
+	, l1.total_notas
+	, l1.valor_total
+FROM (
+	SELECT 
+		count(l.id) AS total_notas
+		, sum(l.valor) as valor_total
+		, l.id_sf_despesa_tipo
+	from senado.sf_despesa l
+	WHERE (1=1)
+    {sqlWhere}
+	GROUP BY id_sf_despesa_tipo
+) l1
+LEFT JOIN senado.sf_despesa_tipo td on td.id = l1.id_sf_despesa_tipo
+{sqlSortAndPaging};
+
+SELECT COUNT(DISTINCT id_sf_despesa_tipo) 
+FROM senado.sf_despesa l 
+WHERE (1=1) 
+{sqlWhere};";
+
+
+            var lstRetorno = new List<LancamentoDespesaDTO>();
+            using (DbDataReader reader = await ExecuteReaderAsync(sql))
             {
-                var sqlSelect = new StringBuilder();
-
-                sqlSelect.AppendLine(@"
-                    SELECT
-						l1.id_sf_despesa_tipo
-						, td.descricao
-						, l1.total_notas
-						, l1.valor_total
-					FROM (
-					    SELECT 
-						    count(l.id) AS total_notas
-						    , sum(l.valor) as valor_total
-						    , l.id_sf_despesa_tipo
-					    from senado.sf_despesa l
-					    WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-                AdicionaFiltroSenador(request, sqlSelect);
-                AdicionaFiltroDespesa(request, sqlSelect);
-                AdicionaFiltroFornecedor(request, sqlSelect);
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-					    GROUP BY id_sf_despesa_tipo
-                    ) l1
-					LEFT JOIN senado.sf_despesa_tipo td on td.id = l1.id_sf_despesa_tipo
-				");
-
-                AdicionaResultadoComum(request, sqlSelect);
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    lstRetorno.Add(new LancamentoDespesaDTO
                     {
-                        lstRetorno.Add(new
-                        {
-                            id_sf_despesa_tipo = reader["id_sf_despesa_tipo"],
-                            descricao = reader["descricao"].ToString(),
-                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
-
-                    var TotalCount = reader.GetTotalRowsFound();
-                    return new
-                    {
-                        recordsTotal = TotalCount,
-                        recordsFiltered = TotalCount,
-                        data = lstRetorno
-                    };
+                        IdDespesaTipo = Convert.ToInt32(reader["id_sf_despesa_tipo"]),
+                        Descricao = reader["descricao"].ToString(),
+                        TotalNotas = Utils.FormataValor(reader["total_notas"], 0),
+                        ValorTotal = Utils.FormataValor(reader["valor_total"])
+                    });
                 }
+
+                var TotalCount = reader.GetTotalRowsFound();
+                return new DataTablesResponseDTO<LancamentoDespesaDTO>
+                {
+                    recordsTotal = TotalCount,
+                    recordsFiltered = TotalCount,
+                    data = lstRetorno
+                };
             }
         }
 
-        private async Task<dynamic> LancamentosPartido(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoPartidoDTO>> LancamentosPartido(DataTablesRequest request)
         {
-            // using (AppDb banco = new AppDb())
+            var sqlWhere = GetWhereFilter(request);
+            var sqlSortAndPaging = GetSortAndPaging(request);
+
+            var sql = $@"
+SELECT
+	p.id as id_partido
+	, p.nome as nome_partido
+	, sum(l1.total_notas) as total_notas
+	, sum(l1.valor_total) as valor_total
+FROM (
+	SELECT
+		count(l.id) AS total_notas
+		, sum(l.valor) as valor_total
+		, l.id_sf_senador
+	from senado.sf_despesa l
+	WHERE (1=1)
+    {sqlWhere}
+    GROUP BY id_sf_senador
+) l1
+INNER JOIN senado.sf_senador d on d.id = l1.id_sf_senador
+LEFT JOIN partido p on p.id = d.id_partido
+GROUP BY p.id, p.nome
+{sqlSortAndPaging};
+
+SELECT COUNT(DISTINCT d.id_partido) 
+FROM senado.sf_despesa l 
+INNER JOIN senado.sf_senador d on d.id = l.id_sf_senador
+WHERE (1=1) 
+{sqlWhere};";
+
+            var lstRetorno = new List<LancamentoPartidoDTO>();
+            using (DbDataReader reader = await ExecuteReaderAsync(sql))
             {
-                var sqlSelect = new StringBuilder();
-
-                sqlSelect.AppendLine(@"
-					SELECT
-						p.id as id_partido
-					    , p.nome as nome_partido
-					    , sum(l1.total_notas) as total_notas
-                        , count(l1.id_sf_senador) as total_senadores
-                        , sum(l1.valor_total) / count(l1.id_sf_senador) as valor_medio_por_senador
-					    , sum(l1.valor_total) as valor_total
-					FROM (
-						SELECT
-							count(l.id) AS total_notas
-						    , sum(l.valor) as valor_total
-						    , l.id_sf_senador
-						from senado.sf_despesa l
-						WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-                AdicionaFiltroSenador(request, sqlSelect);
-                AdicionaFiltroDespesa(request, sqlSelect);
-                AdicionaFiltroFornecedor(request, sqlSelect);
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-						GROUP BY id_sf_senador
-					) l1
-					INNER JOIN senado.sf_senador d on d.id = l1.id_sf_senador
-					LEFT JOIN partido p on p.id = d.id_partido
-					GROUP BY p.id, p.nome
-				");
-
-                AdicionaResultadoComum(request, sqlSelect);
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    lstRetorno.Add(new LancamentoPartidoDTO
                     {
-                        lstRetorno.Add(new
-                        {
-                            id_partido = reader["id_partido"],
-                            nome_partido = reader["nome_partido"].ToString(),
-                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
-                            total_senadores = Utils.FormataValor(reader["total_senadores"], 0),
-                            valor_medio_por_senador = Utils.FormataValor(reader["valor_medio_por_senador"]),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
-
-                    var TotalCount = reader.GetTotalRowsFound();
-                    return new
-                    {
-                        recordsTotal = TotalCount,
-                        recordsFiltered = TotalCount,
-                        data = lstRetorno
-                    };
+                        IdPartido = Convert.ToInt32(reader["id_partido"]),
+                        NomePartido = reader["nome_partido"].ToString(),
+                        TotalNotas = Utils.FormataValor(reader["total_notas"], 0),
+                        ValorTotal = Utils.FormataValor(reader["valor_total"])
+                    });
                 }
+
+                var TotalCount = reader.GetTotalRowsFound();
+                return new DataTablesResponseDTO<LancamentoPartidoDTO>
+                {
+                    recordsTotal = TotalCount,
+                    recordsFiltered = TotalCount,
+                    data = lstRetorno
+                };
             }
         }
 
-        private async Task<dynamic> LancamentosEstado(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoEstadoDTO>> LancamentosEstado(DataTablesRequest request)
         {
-            // using (AppDb banco = new AppDb())
+            var sqlWhere = GetWhereFilter(request);
+            var sqlSortAndPaging = GetSortAndPaging(request);
+
+            var sql = $@"
+SELECT
+	COALESCE(e.id, 0) as id_estado
+	, e.nome as nome_estado
+	, sum(l1.total_notas) as total_notas
+	, sum(l1.valor_total) as valor_total
+FROM (
+	SELECT
+		count(l.id) AS total_notas
+		, sum(l.valor) as valor_total
+		, l.id_sf_senador
+	from senado.sf_despesa l
+	WHERE (1=1)
+    {sqlWhere}
+    GROUP BY id_sf_senador
+) l1
+JOIN senado.sf_senador d on d.id = l1.id_sf_senador
+LEFT JOIN estado e on e.id = d.id_estado
+GROUP BY e.id, e.nome
+{sqlSortAndPaging};
+
+SELECT COUNT(DISTINCT d.id_estado) 
+FROM senado.sf_despesa l 
+JOIN senado.sf_senador d on d.id = l.id_sf_senador
+WHERE (1=1) 
+{sqlWhere};";
+
+
+            var lstRetorno = new List<LancamentoEstadoDTO>();
+            using (DbDataReader reader = await ExecuteReaderAsync(sql))
             {
-                var sqlSelect = new StringBuilder();
-
-                sqlSelect.AppendLine(@"
-					SELECT
-						e.id as id_estado
-					    , e.nome as nome_estado
-					    , count(l1.total_notas) as total_notas
-					    , sum(l1.valor_total) as valor_total
-					FROM (
-						SELECT
-							count(l.id) AS total_notas
-						    , sum(l.valor) as valor_total
-						    , l.id_sf_senador
-						from senado.sf_despesa l
-						WHERE (1=1)
-				");
-
-                AdicionaFiltroPeriodo(request, sqlSelect);
-                AdicionaFiltroSenador(request, sqlSelect);
-                AdicionaFiltroDespesa(request, sqlSelect);
-                AdicionaFiltroFornecedor(request, sqlSelect);
-                AdicionaFiltroPartidoSenador(request, sqlSelect);
-                AdicionaFiltroEstadoSenador(request, sqlSelect);
-
-                sqlSelect.AppendLine(@"
-						GROUP BY id_sf_senador
-					) l1
-					JOIN senado.sf_senador d on d.id = l1.id_sf_senador
-					LEFT JOIN estado e on e.id = d.id_estado
-					GROUP BY e.id, e.nome
-				");
-
-                AdicionaResultadoComum(request, sqlSelect);
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    lstRetorno.Add(new LancamentoEstadoDTO
                     {
-                        lstRetorno.Add(new
-                        {
-                            id_estado = reader["id_estado"],
-                            nome_estado = reader["nome_estado"].ToString(),
-                            total_notas = Utils.FormataValor(reader["total_notas"], 0),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
-
-                    var TotalCount = reader.GetTotalRowsFound();
-                    return new
-                    {
-                        recordsTotal = TotalCount,
-                        recordsFiltered = TotalCount,
-                        data = lstRetorno
-                    };
+                        IdEstado = Convert.ToInt32(reader["id_estado"]),
+                        NomeEstado = reader["nome_estado"].ToString(),
+                        TotalNotas = Convert.ToInt32(reader["total_notas"]),
+                        ValorTotal = Utils.FormataValor(reader["valor_total"])
+                    });
                 }
+
+                var TotalCount = reader.GetTotalRowsFound();
+                return new DataTablesResponseDTO<LancamentoEstadoDTO>
+                {
+                    recordsTotal = TotalCount,
+                    recordsFiltered = TotalCount,
+                    data = lstRetorno
+                };
             }
         }
 
-        private async Task<dynamic> LancamentosNotaFiscal(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoDocumentoDTO>> LancamentosNotaFiscal(DataTablesRequest request)
         {
-            var sqlWhere = new StringBuilder();
-            AdicionaFiltroPeriodo(request, sqlWhere);
-            AdicionaFiltroSenador(request, sqlWhere);
-            AdicionaFiltroDespesa(request, sqlWhere);
-            AdicionaFiltroFornecedor(request, sqlWhere);
-            AdicionaFiltroPartidoSenador(request, sqlWhere);
-            AdicionaFiltroEstadoSenador(request, sqlWhere);
+            var sqlWhere = GetWhereFilter(request);
+            var sqlSortAndPaging = GetSortAndPaging(request, "l.ano_mes DESC, l.data_emissao DESC, l.valor DESC");
 
-            // using (AppDb banco = new AppDb())
+            var sql = $@"
+SELECT
+    l.data_emissao
+    , pj.nome AS nome_fornecedor
+    , d.nome as nome_parlamentar
+    , l.valor_total
+    , d.id as id_senador
+    , l.id_fornecedor
+    , l.id as id_sf_despesa
+    , pj.cnpj_cpf
+    , e.sigla as sigla_estado
+    , p.sigla as sigla_partido
+    , t.descricao as despesa_tipo
+FROM (
+	SELECT id, id_sf_senador, id_sf_despesa_tipo, id_fornecedor, data_emissao, valor as valor_total
+	FROM senado.sf_despesa l
+	WHERE (1=1)
+    {sqlWhere}
+    {sqlSortAndPaging}
+) l
+JOIN senado.sf_senador d on d.id = l.id_sf_senador
+LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
+LEFT JOIN partido p on p.id = d.id_partido
+LEFT JOIN estado e on e.id = d.id_estado
+LEFT JOIN senado.sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo;
+
+SELECT count(*) 
+FROM senado.sf_despesa l 
+WHERE (1=1) 
+{sqlWhere}";
+
+            var lstRetorno = new List<LancamentoDocumentoDTO>();
+            using (DbDataReader reader = await ExecuteReaderAsync(sql))
             {
-                var sqlSelect = new StringBuilder();
-
-                sqlSelect.AppendLine(@"
-					SELECT
-						l.data_emissao
-						, pj.nome AS nome_fornecedor
-						, d.nome as nome_parlamentar
-						, l.valor as valor_total
-                        , d.id as id_senador
-                        , l.id_fornecedor
-                        , l.id as id_sf_despesa
-                        , pj.cnpj_cpf
-                        , e.sigla as sigla_estado
-						, p.sigla as sigla_partido
-                        , t.descricao as despesa_tipo
-					from senado.sf_despesa l
-					JOIN senado.sf_senador d on d.id = l.id_sf_senador
-					LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
-                    LEFT JOIN partido p on p.id = d.id_partido
-					LEFT JOIN estado e on e.id = d.id_estado
-                    LEFT JOIN senado.sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo
-					WHERE (1=1)
-				");
-
-                sqlSelect.Append(sqlWhere);
-
-                sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor DESC"));
-                sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
-
-                sqlSelect.AppendLine(
-                    @"SELECT count(*) from senado.sf_despesa l WHERE (1=1) ");
-
-                sqlSelect.Append(sqlWhere);
-
-                var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString()))
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    lstRetorno.Add(new LancamentoDocumentoDTO
                     {
-                        lstRetorno.Add(new
-                        {
-                            id_sf_despesa = reader["id_sf_despesa"],
-                            data_emissao = Utils.FormataData(reader["data_emissao"]),
-                            id_fornecedor = reader["id_fornecedor"],
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            nome_fornecedor = reader["nome_fornecedor"].ToString(),
-                            id_sf_senador = reader["id_senador"],
-                            nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            sigla_estado = reader["sigla_estado"].ToString(),
-                            sigla_partido = reader["sigla_partido"].ToString(),
-                            despesa_tipo = reader["despesa_tipo"].ToString(),
-                            valor_total = Utils.FormataValor(reader["valor_total"])
-                        });
-                    }
-
-                    var TotalCount = reader.GetTotalRowsFound();
-                    return new
-                    {
-                        recordsTotal = TotalCount,
-                        recordsFiltered = TotalCount,
-                        data = lstRetorno
-                    };
+                        IdDespesa = reader["id_sf_despesa"],
+                        DataEmissao = Utils.FormataData(reader["data_emissao"]),
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                        NomeFornecedor = reader["nome_fornecedor"].ToString(),
+                        IdParlamentar = Convert.ToInt32(reader["id_senador"]),
+                        NomeParlamentar = reader["nome_parlamentar"].ToString(),
+                        SiglaEstado = reader["sigla_estado"].ToString(),
+                        SiglaPartido = reader["sigla_partido"].ToString(),
+                        DespesaTipo = reader["despesa_tipo"].ToString(),
+                        ValorTotal = Utils.FormataValor(reader["valor_total"])
+                    });
                 }
+
+                var TotalCount = reader.GetTotalRowsFound();
+                return new DataTablesResponseDTO<LancamentoDocumentoDTO>
+                {
+                    recordsTotal = TotalCount,
+                    recordsFiltered = TotalCount,
+                    data = lstRetorno
+                };
             }
         }
 
@@ -1251,15 +1142,31 @@ namespace OPS.Core.Repositories
             }
         }
 
-        private void AdicionaResultadoComum(DataTablesRequest request, StringBuilder sqlSelect, string defaultSort = "valor_total desc")
+        private string GetWhereFilter(DataTablesRequest request)
         {
-            sqlSelect.AppendFormat(" ORDER BY {0} ", request.GetSorting(defaultSort));
-            sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
+            StringBuilder sql = new StringBuilder();
 
-            sqlSelect.AppendLine("SELECT COUNT(*) from senado.sf_despesa l WHERE (1=1) ");
+            AdicionaFiltroPeriodo(request, sql);
+            AdicionaFiltroSenador(request, sql);
+            AdicionaFiltroDespesa(request, sql);
+            AdicionaFiltroFornecedor(request, sql);
+            AdicionaFiltroPartidoSenador(request, sql);
+            AdicionaFiltroEstadoSenador(request, sql);
+
+            return sql.ToString();
         }
 
-        public async Task<dynamic> TipoDespesa()
+        private string GetSortAndPaging(DataTablesRequest request, string defaultSorting = "valor_total desc")
+        {
+            var sql = new StringBuilder();
+
+            sql.AppendFormat(" ORDER BY {0} ", request.GetSorting(defaultSorting));
+            sql.AppendFormat(" LIMIT {1} OFFSET {0} ", request.Start, request.Length);
+
+            return sql.ToString();
+        }
+
+        public async Task<List<TipoDespesaDTO>> TipoDespesa()
         {
             // using (AppDb banco = new AppDb())
             {
@@ -1267,15 +1174,15 @@ namespace OPS.Core.Repositories
                 strSql.AppendLine("SELECT id, descricao from senado.sf_despesa_tipo ");
                 strSql.AppendFormat("ORDER BY descricao ");
 
-                var lstRetorno = new List<dynamic>();
+                var lstRetorno = new List<TipoDespesaDTO>();
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
                 {
                     while (await reader.ReadAsync())
                     {
-                        lstRetorno.Add(new
+                        lstRetorno.Add(new TipoDespesaDTO
                         {
-                            id = reader["id"].ToString(),
-                            text = reader["descricao"].ToString(),
+                            Id = reader["id"].ToString(),
+                            Text = reader["descricao"].ToString(),
                         });
                     }
                 }

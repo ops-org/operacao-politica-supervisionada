@@ -14,23 +14,21 @@ import { Link } from "react-router-dom";
 import { fetchEstados, fetchPartidos, DropDownOptions } from "@/lib/api";
 import { apiClient } from "@/lib/api";
 import { Search, RotateCcw, Users, MapPin, Building2, DollarSign, TrendingUp, User } from "lucide-react";
+import { PoliticianType, POLITICIAN_TYPES, getPoliticianLabel } from "@/types/politician";
 
-// Unified interfaces
 interface ParlamentarBase {
-  id_cf_deputado?: number;
-  id_sf_senador?: number;
-  id_cl_deputado?: number;
+  id_parlamentar: string;
   nome_parlamentar: string;
   nome_civil: string;
   sigla_partido: string;
   nome_partido: string;
   sigla_estado: string;
   nome_estado: string;
-  situacao: string;
-  ativo: boolean;
-  valor_total_ceap?: string;
-  valor_total_ceaps?: string;
+  foto_url?: string;
+  partido: string[];
+  valor_total_ceap: string;
   valor_total_remuneracao: string;
+  ativo: boolean;
 }
 
 interface FilterState {
@@ -46,11 +44,7 @@ const typeConfigs = {
   "deputado-federal": {
     title: "Deputados Federais",
     subtitle: "Resumo dos deputados federais, seus respectivos gastos com a cota parlamentar (CEAP) e com Verba de Gabinete.",
-    apiEndpoint: "/api/deputado/lista",
-    detailRoute: "/deputado-federal",
-    imageBaseUrl: "//static.ops.org.br/depfederal",
-    idField: "id_cf_deputado" as keyof ParlamentarBase,
-    ceapField: "valor_total_ceap" as keyof ParlamentarBase,
+    imageBaseUrl: "https://static.ops.org.br/depfederal",
     remunerationLabel: "Verba de Gabinete",
     documentTitle: "Deputado Federal",
     noResultsMessage: "Nenhum deputado encontrado",
@@ -61,11 +55,7 @@ const typeConfigs = {
   "senador": {
     title: "Senadores",
     subtitle: "Lista dos senadores, seus respectivos gastos com a cota parlamentar (CEAPS) e com Folha de pagamento (Própria e de seus secretários).",
-    apiEndpoint: "/senador/lista",
-    detailRoute: "/senador",
-    imageBaseUrl: "//static.ops.org.br/senador",
-    idField: "id_sf_senador" as keyof ParlamentarBase,
-    ceapField: "valor_total_ceaps" as keyof ParlamentarBase,
+    imageBaseUrl: "https://static.ops.org.br/senador",
     remunerationLabel: "Folha de pagamento",
     documentTitle: "Senador",
     noResultsMessage: "Nenhum senador encontrado",
@@ -76,17 +66,13 @@ const typeConfigs = {
   "deputado-estadual": {
     title: "Deputados Estaduais",
     subtitle: "Resumo dos deputados estaduais, seus respectivos gastos com a cota parlamentar (CEAP) e com Verba de Gabinete.",
-    apiEndpoint: "/api/deputadoestadual/lista",
-    detailRoute: "/deputado-estadual",
-    imageBaseUrl: "//static.ops.org.br/depestadual",
-    idField: "id_cl_deputado" as keyof ParlamentarBase,
-    ceapField: "valor_total_ceap" as keyof ParlamentarBase,
+    imageBaseUrl: "https://static.ops.org.br/depestadual",
     remunerationLabel: "Verba de Gabinete",
     documentTitle: "Deputado Estadual",
     noResultsMessage: "Nenhum deputado estadual encontrado",
     noResultsHint: "Tente ajustar os filtros de busca para encontrar os deputados estaduais desejados.",
-    statsLabel: "Total de Deputados Estaduais",
-    activeLabel: "Deputados Estaduais Ativos"
+    statsLabel: "Total de Deputados",
+    activeLabel: "Deputados Ativos"
   }
 } as const;
 
@@ -188,15 +174,14 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
     const totalParlamentares = parlamentares.length;
     const ativos = parlamentares.filter(d => d.ativo).length;
     const totalCeap = parlamentares.reduce((sum, d) => {
-      const ceapValue = d[config.ceapField] as string;
-      return sum + parseBrazilianCurrency(ceapValue || "0");
+      return sum + parseBrazilianCurrency(d.valor_total_ceap || "0");
     }, 0);
     const totalRemuneracao = parlamentares.reduce((sum, d) => {
       return sum + parseBrazilianCurrency(d.valor_total_remuneracao);
     }, 0);
 
     return { totalParlamentares, ativos, totalCeap, totalRemuneracao };
-  }, [parlamentares, parseBrazilianCurrency, config.ceapField]);
+  }, [parlamentares, parseBrazilianCurrency]);
 
   const pesquisar = async () => {
     setSearching(true);
@@ -216,14 +201,10 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
         }
       });
 
-      const response = await apiClient.post<ParlamentarBase[]>(config.apiEndpoint, filtro);
+      const response = await apiClient.post<ParlamentarBase[]>(`/api/${type}/lista`, filtro);
       setParlamentares(response);
     } catch (err) {
-      const errorMessage = parlamentarType === "deputado-federal"
-        ? "deputados"
-        : parlamentarType === "deputado-estadual"
-          ? "deputados estaduais"
-          : "senadores";
+      const errorMessage = getPoliticianLabel(parlamentarType);
       setError(err instanceof Error ? err.message : `Erro ao buscar ${errorMessage}`);
     } finally {
       setSearching(false);
@@ -237,19 +218,6 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
       partido: [],
     });
   };
-
-  const getParlamentarId = (parlamentar: ParlamentarBase): string => {
-    const id = parlamentar[config.idField];
-    return id ? id.toString() : "";
-  };
-
-  const getParlamentarImageKey = (parlamentar: ParlamentarBase, index?: number): string => {
-    const id = getParlamentarId(parlamentar);
-    return parlamentarType === "senador" && index !== undefined ? `${id}-${index}` : id;
-  };
-
-  {/* Full-screen loading overlay */ }
-  <LoadingOverlay isLoading={searching} content="Carregando informações do documento..." />
 
   if (error) {
     return (
@@ -279,6 +247,9 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
+      {/* Full-screen loading overlay */}
+      <LoadingOverlay isLoading={searching} content="Carregando informações do documento..." />
+
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
@@ -294,17 +265,17 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
               {/* Type Selector */}
               <div className="inline-flex rounded-lg border p-1 bg-card shadow-sm">
                 <Button
-                  variant={parlamentarType === "deputado-federal" ? "default" : "ghost"}
+                  variant={parlamentarType === POLITICIAN_TYPES.DEPUTADO_FEDERAL ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setParlamentarType("deputado-federal")}
+                  onClick={() => setParlamentarType(POLITICIAN_TYPES.DEPUTADO_FEDERAL)}
                   className="px-4 py-2"
                 >
                   Deputados Federais
                 </Button>
                 <Button
-                  variant={parlamentarType === "senador" ? "default" : "ghost"}
+                  variant={parlamentarType === POLITICIAN_TYPES.SENADOR ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setParlamentarType("senador")}
+                  onClick={() => setParlamentarType(POLITICIAN_TYPES.SENADOR)}
                   className="px-4 py-2"
                 >
                   Senadores
@@ -462,9 +433,9 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {parlamentares.map((parlamentar, index) => (
               <Link
-                key={`${getParlamentarId(parlamentar)}-${parlamentar.nome_parlamentar}-${index}`}
-                to={`${config.detailRoute}/${getParlamentarId(parlamentar)}`}
-                title="Clique para visualizar o perfil do parlamentar"
+                key={`${parlamentar.id_parlamentar}-${parlamentar.nome_parlamentar}-${index}`}
+                to={`/${type}/${parlamentar.id_parlamentar}`}
+                title={`Clique para visualizar o perfil do ${getPoliticianLabel(parlamentarType)}`}
                 className="block"
               >
                 <Card
@@ -495,14 +466,14 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                       <div className="flex gap-4">
                         {/* Image with Lazy Loading */}
                         <div className="flex-shrink-0">
-                          <div className="relative" data-image-id={getParlamentarImageKey(parlamentar, index)}>
+                          <div className="relative" data-image-id={parlamentar.id_parlamentar}>
                             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
-                            {!visibleImages.has(getParlamentarImageKey(parlamentar, index)) ? (
+                            {!visibleImages.has(parlamentar.id_parlamentar) ? (
                               <div className="h-32 w-24 rounded-2xl bg-muted animate-pulse relative z-10 border-2 border-background shadow-xl" />
                             ) : (
                               <Avatar className="h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-transform duration-500 relative z-10">
                                 <AvatarImage
-                                  src={`${config.imageBaseUrl}/${getParlamentarId(parlamentar)}.jpg`}
+                                  src={`${config.imageBaseUrl}/${parlamentar.id_parlamentar}.jpg`}
                                   alt={parlamentar.nome_parlamentar}
                                 />
                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
@@ -539,13 +510,13 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                         <div className="space-y-1">
                           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Cota Parlamentar</p>
                           <p className="font-black text-sm text-purple-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-left">
-                            {formatCurrency((parlamentar[config.ceapField] as string) || "0")}
+                            {parlamentar.valor_total_ceap}
                           </p>
                         </div>
                         <div className="space-y-1 text-right">
                           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 truncate">{config.remunerationLabel}</p>
                           <p className="font-black text-sm text-orange-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
-                            {formatCurrency(parlamentar.valor_total_remuneracao)}
+                            {parlamentar.valor_total_remuneracao}
                           </p>
                         </div>
                       </div>

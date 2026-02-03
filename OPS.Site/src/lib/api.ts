@@ -1,7 +1,5 @@
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-}
+import { PoliticianType, getApiType, POLITICIAN_TYPES, getImageUrl } from "@/types/politician";
+import { Key } from "readline";
 
 interface FetchOptions {
   method?: 'GET' | 'POST';
@@ -21,7 +19,7 @@ const getApiBaseUrl = (): string => {
   if (import.meta.env.PROD) {
     return 'https://api.ops.org.br';
   }
-  
+
   // Fallback for local development
   return '/api';
 };
@@ -86,12 +84,12 @@ export interface ParliamentSearchRequest {
 }
 
 export const fetchParliamentMembers = async (
-  type: "deputado-federal" | "deputado-estadual" | "senador",
+  type: PoliticianType,
   busca: string = "",
   periodo: string = "57"
 ): Promise<DropDownOptions[]> => {
 
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
+  const apiType = getApiType(type);
   const endpoint = `/api/${apiType}/pesquisa`;
 
   const payload: ParliamentSearchRequest = {
@@ -127,53 +125,17 @@ export const fetchFornecedores = async (searchParams: FornecedorSearchRequest): 
   return result || [];
 };
 
-export interface DeputadoDetalhe {
-  id_cf_deputado: number;
-  id_partido: number;
-  sigla_estado: string;
-  nome_partido: string;
-  id_estado: number;
-  sigla_partido: string;
-  nome_estado: string;
-  nome_parlamentar: string;
-  nome_civil: string;
-  condicao: string;
-  situacao: string;
-  sexo: string;
-  id_cf_gabinete: number;
-  predio: string;
-  sala: string;
-  andar: string;
-  telefone: string;
-  email: string;
-  escolaridade: string;
-  profissao: string;
-  nascimento: string;
-  falecimento: string;
-  sigla_estado_nascimento: string;
-  nome_municipio_nascimento: string;
-  valor_total_ceap: string;
-  secretarios_ativos: string;
-  valor_mensal_secretarios: string;
-  valor_total_remuneracao: string;
-  valor_total_salario: string;
-  valor_total_auxilio_moradia: string;
-  valor_total: string;
-}
-
-export const fetchDeputadoDetalhe = async (id: string): Promise<DeputadoDetalhe> => {
-  return await apiClient.get<DeputadoDetalhe>(`/api/deputado/${id}`);
-};
-
 export interface Fornecedor {
   id_fornecedor: string;
   cnpj_cpf: string;
-  nome_fornecedor: string;
-  valor_total: string;
+  nome: any;
+  nome_fantasia: any;
+  estado: string;
+  valor_total_contratado: string;
 }
 
-export const fetchMaioresFornecedores = async (id: string): Promise<Fornecedor[]> => {
-  return await apiClient.get<Fornecedor[]>(`/api/deputado/${id}/MaioresFornecedores`);
+export const fetchMaioresFornecedores = async (id: string, type: PoliticianType): Promise<Fornecedor[]> => {
+  return await apiClient.get<Fornecedor[]>(`/api/${type}/${id}/MaioresFornecedores`);
 };
 
 export interface CustoAnual {
@@ -188,29 +150,27 @@ export interface CustoAnual {
 
 export const fetchCustoAnual = async (
   id: string,
-  type: "deputado-federal" | "deputado-estadual" | "senador"): Promise<CustoAnual[]> => {
+  type: PoliticianType): Promise<CustoAnual[]> => {
 
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
+  const apiType = getApiType(type);
   return await apiClient.get<CustoAnual[]>(`/api/${apiType}/${id}/CustoAnual`);
 };
 
 export interface TopSpender {
-  id_cf_deputado?: number;
-  id_cl_deputado?: number;
-  id_sf_senador?: number;
+  id?: number;
   nome_parlamentar: string;
   valor_total: string;
   sigla_partido_estado: string;
 }
 
 export interface TopSpendersResponse {
-  senado: TopSpender[];
-  camara_federal: TopSpender[];
-  camara_estadual: TopSpender[];
+  senadores: TopSpender[];
+  deputados_federais: TopSpender[];
+  deputados_estaduais: TopSpender[];
 }
 
 export const fetchTopSpenders = async (): Promise<TopSpendersResponse> => {
-  return await apiClient.get<TopSpendersResponse>("/api/inicio/parlamentarresumogastos");
+  return await apiClient.get<TopSpendersResponse>("/api/Inicio/ParlamentarResumoGastos");
 };
 
 export interface FornecedorDetalhe {
@@ -297,33 +257,12 @@ export interface AnnualSummary {
   series: number[];
 }
 
-export const fetchCamaraResumoAnual = async (): Promise<AnnualSummary> => {
-  return await apiClient.get<AnnualSummary>('/api/deputado/camararesumoanual');
+export const fetchResumoAnual = async (type: PoliticianType): Promise<AnnualSummary> => {
+  return await apiClient.get<AnnualSummary>(`/api/${type}/resumoanual`);
 };
 
-export interface SenadorDetalhe {
-  id_sf_senador: number;
-  nome_parlamentar: string;
-  sigla_partido: string;
-  sigla_estado: string;
-  nome_partido: string;
-  nome_estado: string;
-  nome_civil: string;
-  condicao: string;
-  naturalidade: string;
-  nascimento: string;
-  valor_total_remuneracao: string;
-  valor_total_ceaps: string;
-  valor_total: string;
-  email: string;
-}
-
-export const fetchSenadorDetalhe = async (id: string): Promise<SenadorDetalhe> => {
-  return await apiClient.get<SenadorDetalhe>(`/api/senador/${id}`);
-};
-
-export const fetchSenadoResumoAnual = async (): Promise<AnnualSummary> => {
-  return await apiClient.get<AnnualSummary>('/api/senador/senadoresumoanual');
+export const fetchParlamentar = async (id: string, type: PoliticianType): Promise<Parlamentar> => {
+  return await apiClient.get<Parlamentar>(`/api/${type}/${id}`);
 };
 
 export interface DocumentoDetalhe {
@@ -379,28 +318,16 @@ export interface DocumentoDaSubquota {
   valor_liquido: string;
 }
 
-export const fetchDocumentoDetalhe = async (
-  id: string,
-  type: "deputado-federal" | "deputado-estadual" | "senador" = "deputado-federal"
-): Promise<DocumentoDetalhe> => {
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
-  return await apiClient.get<DocumentoDetalhe>(`/api/${apiType}/documento/${id}`);
+export const fetchDocumentoDetalhe = async (id: string, type: PoliticianType): Promise<DocumentoDetalhe> => {
+  return await apiClient.get<DocumentoDetalhe>(`/api/${type}/documento/${id}`);
 };
 
-export const fetchDocumentosDoMesmoDia = async (
-  id: string,
-  type: "deputado-federal" | "deputado-estadual" | "senador" = "deputado-federal"
-): Promise<DocumentoDoDia[]> => {
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
-  return await apiClient.get<DocumentoDoDia[]>(`/api/${apiType}/${id}/documentosdomesmodia`);
+export const fetchDocumentosDoMesmoDia = async (id: string, type: PoliticianType): Promise<DocumentoDoDia[]> => {
+  return await apiClient.get<DocumentoDoDia[]>(`/api/${type}/${id}/documentosdomesmodia`);
 };
 
-export const fetchDocumentosDaSubquotaMes = async (
-  id: string,
-  type: "deputado-federal" | "deputado-estadual" | "senador" = "deputado-federal"
-): Promise<DocumentoDaSubquota[]> => {
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
-  return await apiClient.get<DocumentoDaSubquota[]>(`/api/${apiType}/${id}/documentosdasubcotames`);
+export const fetchDocumentosDaSubquotaMes = async (id: string, type: PoliticianType): Promise<DocumentoDaSubquota[]> => {
+  return await apiClient.get<DocumentoDaSubquota[]>(`/api/${type}/${id}/documentosdasubcotames`);
 };
 
 export interface TipoDespesa {
@@ -453,18 +380,13 @@ export interface DespesaCotaParlamentarApiResponse {
 
 export type SortOrder = 'asc' | 'desc';
 
-export const fetchTiposDespesa = async (
-  type: "deputado-federal" | "deputado-estadual" | "senador"
-): Promise<TipoDespesa[]> => {
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
-  const endpoint = `/api/${apiType}/tipodespesa`;
-
-  const result = await apiClient.get<TipoDespesa[]>(endpoint);
+export const fetchTiposDespesa = async (type: PoliticianType): Promise<TipoDespesa[]> => {
+  const result = await apiClient.get<TipoDespesa[]>(`/api/${type}/tipodespesa`);
   return result || [];
 };
 
 export const fetchDespesasCotaParlamentar = async (
-  type: "deputado-federal" | "deputado-estadual" | "senador",
+  type: PoliticianType,
   page: number,
   limit: number,
   sortField: number | null,
@@ -472,8 +394,7 @@ export const fetchDespesasCotaParlamentar = async (
   filters?: Filters
 ): Promise<DespesaCotaParlamentarApiResponse> => {
 
-  const apiType = type.replace("deputado-federal", "deputado").replace("deputado-estadual", "deputadoestadual");
-  const endpoint = `/api/${apiType}/lancamentos`;
+  const endpoint = `/api/${type}/lancamentos`;
 
   const order = sortField !== null ? [{
     column: sortField,
@@ -501,112 +422,113 @@ export const fetchDespesasCotaParlamentar = async (
   return {
     records_total: result.records_total || 0,
     records_filtered: result.records_filtered || 0,
-    data: parseData(result) || []
+    data: result.data || []
   };
-
-  function parseData(apiResult: any): DespesaCotaParlamentar[] {
-    let parsedData = apiResult.data || [];
-
-    if (type === 'deputado-federal') {
-      parsedData = parsedData.map(d => ({
-        ...d,
-        id_parlamentar: d.id_cf_deputado,
-        id_despesa: d.id_cf_despesa,
-        id_despesa_tipo: d.id_sf_despesa_tipo
-      }));
-    }
-
-    if (type === 'deputado-estadual') {
-      parsedData = parsedData.map(d => ({
-        ...d,
-        id_parlamentar: d.id_cl_deputado,
-        id_despesa: d.id_cl_despesa,
-        id_despesa_tipo: d.id_cl_despesa_tipo
-      }));
-    }
-
-    if (type === 'senador') {
-      parsedData = parsedData.map(d => ({
-        ...d,
-        id_parlamentar: d.id_sf_senador,
-        id_despesa: d.id_sf_despesa,
-        id_despesa_tipo: d.id_sf_despesa_tipo,
-        valor_liquido: d.valor_total // TODO: Rename on API (Sem Agrupamento)
-      }));
-    }
-
-    return parsedData;
-  }
 };
-
-export interface DeputadoEstadual {
-  id_cl_deputado: number;
-  nome_parlamentar: string;
-  nome_civil: string;
-  sigla_partido: string;
-  nome_partido: string;
-  sigla_estado: string;
-  nome_estado: string;
-  profissao?: string;
-  naturalidade?: string;
-  nascimento?: string;
-  telefone: string;
-  email: string;
-  perfil?: string;
-  site?: string;
-  foto?: string;
-  valor_total: string;
-}
 
 export interface GastoPorAno {
   categories: string[];
   series: number[];
 }
 
-export interface FornecedorEstadual {
-  id_fornecedor: number;
-  cnpj_cpf: string;
-  nome_fornecedor: string;
-  valor_total: number;
-}
-
-export interface NotaEstadual {
-  id_cl_despesa: number;
+export interface MaioresNotas {
+  id_despesa: number;
   id_fornecedor: number;
   cnpj_cpf: string;
   nome_fornecedor: string;
   valor_liquido: number;
 }
 
-export const fetchDeputadoEstadualDetalhe = async (id: string): Promise<DeputadoEstadual> => {
-  return await apiClient.get<DeputadoEstadual>(`/api/deputadoestadual/${id}`);
+export const fetchMaioresNotas = async (id: string, type: PoliticianType): Promise<MaioresNotas[]> => {
+  return await apiClient.get<MaioresNotas[]>(`/api/${type}/${id}/MaioresNotas`);
 };
 
-export const fetchDeputadoEstadualGastosPorAno = async (id: string): Promise<GastoPorAno> => {
-  return await apiClient.get<GastoPorAno>(`/api/deputadoestadual/${id}/GastosPorAno`);
+export const fetchMaioresFornecedoresByType = async (id: string, type: PoliticianType): Promise<Fornecedor[]> => {
+  return await apiClient.get<Fornecedor[]>(`/api/${type}/${id}/MaioresFornecedores`);
 };
 
-export const fetchDeputadoEstadualMaioresFornecedores = async (id: string): Promise<FornecedorEstadual[]> => {
-  return await apiClient.get<FornecedorEstadual[]>(`/api/deputadoestadual/${id}/MaioresFornecedores`);
-};
+export interface ParlamentarDetalhes {
+  detalhes: Parlamentar;
+  maioresFornecedores: Fornecedor[];
+  custoAnual: CustoAnual[];
+  maioresNotas: MaioresNotas[];
+}
 
-export const fetchDeputadoEstadualMaioresNotas = async (id: string): Promise<NotaEstadual[]> => {
-  return await apiClient.get<NotaEstadual[]>(`/api/deputadoestadual/${id}/MaioresNotas`);
-};
+export interface Parlamentar {
+  type: PoliticianType;
 
-export const fetchDeputadoEstadualData = async (id: string) => {
-  const [deputado, gastosPorAno, maioresFornecedores, maioresNotas] = await Promise.all([
-    fetchDeputadoEstadualDetalhe(id),
-    fetchDeputadoEstadualGastosPorAno(id),
-    fetchDeputadoEstadualMaioresFornecedores(id),
-    fetchDeputadoEstadualMaioresNotas(id)
+  id_parlamentar: number;
+  nome_parlamentar: string;
+  nome_civil: string;
+  id_partido: number;
+  sigla_partido: string;
+  nome_partido: string;
+  id_estado: number;
+  sigla_estado: string;
+  nome_estado: string;
+  foto_url: string;
+  pagina_oficial_url: string;
+  condicao?: string;
+  situacao?: string;
+  email?: string;
+  telefone?: string;
+  sala?: string;
+  predio?: string;
+  id_gabinete: number;
+  andar: string;
+  perfil: string;
+  foto: string;
+  naturalidade?: string;
+  nascimento?: string;
+  falecimento?: string;
+  profissao?: string;
+  escolaridade?: string;
+  municipio_nascimento?: string;
+  estado_nascimento?: string;
+  site?: string;
+  sexo?: string;
+  sigla_estado_nascimento?: string;
+  nome_municipio_nascimento?: string;
+  ativo: boolean;
+
+  // Summary values
+  valor_total: string;
+  valor_total_ceap: string;
+  valor_total_remuneracao?: string;
+  valor_total_salario?: string;
+  valor_total_auxilio_moradia?: string;
+  valor_total_verbas?: string;
+  valor_mensal_secretarios?: string;
+  secretarios_ativos?: number;
+}
+
+export const fetchPoliticianData = async (id: string, type: PoliticianType): Promise<ParlamentarDetalhes> => {
+  const [parlamentar, topFornecedores, custosAnuais, topNotas] = await Promise.all([
+    fetchParlamentar(id, type),
+    fetchMaioresFornecedoresByType(id, type),
+    fetchCustoAnual(id, type),
+    fetchMaioresNotas(id, type)
   ]);
 
+  let foto_url = parlamentar.foto || getImageUrl(type, parlamentar.id_parlamentar);
+  let pagina_oficial_url = parlamentar.perfil || "";
+
+  if (type === POLITICIAN_TYPES.DEPUTADO_FEDERAL) {
+    pagina_oficial_url = `https://www.camara.leg.br/deputados/${parlamentar.id_parlamentar}`;
+  } else if (type === POLITICIAN_TYPES.SENADOR) {
+    pagina_oficial_url = `https://www25.senado.leg.br/web/senadores/senador/${parlamentar.id_parlamentar}`;
+  }
+
   return {
-    deputado,
-    gastosPorAno,
-    maioresFornecedores,
-    maioresNotas
+    detalhes: {
+      ...parlamentar,
+      type,
+      foto_url,
+      pagina_oficial_url
+    },
+    maioresFornecedores: topFornecedores,
+    custoAnual: custosAnuais,
+    maioresNotas: topNotas
   };
 };
 
@@ -671,7 +593,7 @@ export const fetchRemuneracao = async (
   sortField: number | null,
   sortOrder: 'asc' | 'desc',
   filters: any,
-  type?: "deputado-federal" | "senador"
+  type: PoliticianType
 ): Promise<RemuneracaoApiResponse> => {
   const order = sortField !== null ? [{
     column: sortField,
@@ -693,15 +615,12 @@ export const fetchRemuneracao = async (
     }
   });
 
-  // Determine endpoint based on type
-  const endpoint = type === "deputado-federal" ? "/deputado/remuneracao" : "/senador/remuneracao";
-
-  const result = await apiClient.post<any>(endpoint, payload);
+  const result = await apiClient.post<any>(`/${type}/remuneracao`, payload);
   return result;
 };
 
-export const fetchRemuneracaoDetalhe = async (id: string): Promise<RemuneracaoDetalhe> => {
-  return await apiClient.get<RemuneracaoDetalhe>(`/senador/remuneracao/${id}`);
+export const fetchRemuneracaoDetalhe = async (id: string, type: PoliticianType): Promise<RemuneracaoDetalhe> => {
+  return await apiClient.get<RemuneracaoDetalhe>(`/${type}/remuneracao/${id}`);
 };
 
 export const fetchVinculos = async (): Promise<DropDownOptions[]> => {
@@ -737,6 +656,16 @@ export interface ImportacaoData {
   ultima_despesa: string;
   ultima_importacao: string;
 }
+
+export interface BuscaResponse {
+  senadores: any[];
+  deputados_federais: any[];
+  deputados_estaduais: any[];
+}
+
+export const fetchBusca = async (query: string): Promise<BuscaResponse> => {
+  return await apiClient.get<BuscaResponse>(`/inicio/busca?value=${encodeURIComponent(query)}`);
+};
 
 export const fetchImportacao = async (): Promise<ImportacaoData[]> => {
   return await apiClient.get<ImportacaoData[]>("/inicio/importacao");

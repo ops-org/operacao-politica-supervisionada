@@ -1,22 +1,27 @@
-﻿namespace OPS.Core.DTOs
+﻿﻿using System.Text.Json.Serialization;
+
+namespace OPS.Core.DTOs
 {
     public class FiltroDropDownDTO
     {
         /// <summary>
         /// Filtro digitado pelo usuario
         /// </summary>
-        public string q { get; set; }
+        [JsonPropertyName("q")]
+        public string Q { get; set; }
 
         /// <summary>
         /// Filtro para carregamento especial (navegação/URL)
         /// </summary>
-        public string qs { get; set; }
+        [JsonPropertyName("qs")]
+        public string Qs { get; set; }
 
         /// <summary>
         /// Pagina pesquisada
         /// </summary>
-        public int? page { get; set; }
+        [JsonPropertyName("page")]
+        public int? Page { get; set; }
 
-        public readonly int count = 30;
-    }
+        [JsonPropertyName("count")]
+        public int Count { get; } = 30;    }
 }

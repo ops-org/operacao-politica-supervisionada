@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using OPS.Core.DTOs;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 
@@ -13,7 +14,7 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<IEnumerable<dynamic>> InfoImportacao()
+        public async Task<IEnumerable<ImportacaoInfoDTO>> InfoImportacao()
         {
             var results = await _context.Importacoes
                 .GroupJoin(_context.Estados,
@@ -25,17 +26,16 @@ namespace OPS.Core.Repositories
                     (x, e) => new { x.i, e })
                 .OrderBy(x => x.e.Nome)
                 .ThenBy(x => x.i.Id)
-                .Select(x => new
+                .Select(x => new ImportacaoInfoDTO
                 {
-                    id = x.i.Id,
-                    sigla = x.e.Sigla,
-                    nome = x.e.Nome != null ? x.e.Nome : x.i.Chave,
-                    url = x.i.Url,
-                    info = x.i.Info,
-                    ultima_despesa = Utils.FormataData(x.i.UltimaDespesa),
-                    ultima_importacao = Utils.FormataData(x.i.DespesasFim)
-                })
-                .ToListAsync();
+                    Id = x.i.Id,
+                    Sigla = x.e != null ? x.e.Sigla : null,
+                    Nome = x.e.Nome != null ? x.e.Nome : x.i.Chave,
+                    Url = x.i.Url,
+                    Info = x.i.Info,
+                    UltimaDespesa = Utils.FormataData(x.i.UltimaDespesa),
+                    UltimaImportacao = Utils.FormataData(x.i.DespesasFim)
+                })                .ToListAsync();
 
             return results;
         }
@@ -47,49 +47,49 @@ namespace OPS.Core.Repositories
         /// 4 Senadores MAIS gastadores (CEAPS)
         /// </summary>
         /// <returns></returns>
-        public async Task<object> ParlamentarResumoGastos()
+        public async Task<ParlamentarResumoGastosDTO> ParlamentarResumoGastos()
         {
             var deputadosFederais = await _context.DeputadoCampeaoGastosCamara
                 .OrderByDescending(d => d.ValorTotal)
                 .Take(4)
-                .Select(d => new
+                .Select(d => new ParlamentarResumoDTO
                 {
-                    id_cf_deputado = d.IdDeputado,
-                    nome_parlamentar = d.NomeParlamentar,
-                    valor_total = "R$ " + Utils.FormataValor(d.ValorTotal),
-                    sigla_partido_estado = d.SiglaPartido + " / " + d.SiglaEstado
+                    Id = d.IdDeputado,
+                    NomeParlamentar = d.NomeParlamentar,
+                    ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal),
+                    SiglaPartidoEstado = d.SiglaPartido + " / " + d.SiglaEstado
                 })
                 .ToListAsync();
 
             var deputadosEstaduais = await _context.DeputadoCampeaoGastos
                 .OrderByDescending(d => d.ValorTotal)
                 .Take(4)
-                .Select(d => new
+                .Select(d => new ParlamentarResumoDTO
                 {
-                    id_cl_deputado = d.IdDeputado,
-                    nome_parlamentar = d.NomeParlamentar,
-                    valor_total = "R$ " + Utils.FormataValor(d.ValorTotal),
-                    sigla_partido_estado = d.SiglaPartido + " / " + d.SiglaEstado
+                    Id = d.IdDeputado,
+                    NomeParlamentar = d.NomeParlamentar,
+                    ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal),
+                    SiglaPartidoEstado = d.SiglaPartido + " / " + d.SiglaEstado
                 })
                 .ToListAsync();
 
             var senadores = await _context.SenadoresCampeaoGasto
                 .OrderByDescending(s => s.ValorTotal)
                 .Take(4)
-                .Select(s => new
+                .Select(s => new ParlamentarResumoDTO
                 {
-                    id_sf_senador = s.IdSenador,
-                    nome_parlamentar = s.NomeParlamentar,
-                    valor_total = "R$ " + Utils.FormataValor(s.ValorTotal),
-                    sigla_partido_estado = s.SiglaPartido + " / " + s.SiglaEstado
+                    Id = s.IdSenador,
+                    NomeParlamentar = s.NomeParlamentar,
+                    ValorTotal = "R$ " + Utils.FormataValor(s.ValorTotal),
+                    SiglaPartidoEstado = s.SiglaPartido + " / " + s.SiglaEstado
                 })
                 .ToListAsync();
 
-            return new
+            return new ParlamentarResumoGastosDTO()
             {
-                senado = senadores,
-                camara_federal = deputadosFederais,
-                camara_estadual = deputadosEstaduais
+                Senadores = senadores,
+                DeputadosFederais = deputadosFederais,
+                DeputadosEstaduais = deputadosEstaduais
             };
         }
     }

@@ -11,64 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Building2, MapPin, DollarSign } from "lucide-react";
-import { apiClient } from "@/lib/api";
-
-interface Senador {
-    id_sf_senador: number;
-    nome_parlamentar: string;
-    nome_civil: string;
-    sigla_partido: string;
-    nome_partido: string;
-    sigla_estado: string;
-    nome_estado: string;
-    valor_total_ceaps: string;
-    situacao: string;
-    ativo: boolean;
-    valor_total_remuneracao: string;
-}
-
-interface Deputado {
-    id_cf_deputado: number;
-    nome_parlamentar: string;
-    nome_civil: string;
-    sigla_partido: string;
-    nome_partido: string;
-    sigla_estado: string;
-    nome_estado: string;
-    valor_total_ceap: string;
-    situacao: string;
-    ativo: boolean;
-    valor_total_remuneracao: string;
-}
-
-interface DeputadoEstadual {
-    id_cl_deputado: number;
-    nome_parlamentar: string;
-    nome_civil: string;
-    sigla_partido: string;
-    nome_partido: string;
-    sigla_estado: string;
-    nome_estado: string;
-    valor_total_ceap: string;
-    valor_total_verba_gabinete: string;
-    situacao: string;
-    ativo: boolean;
-}
-
-interface Fornecedor {
-    id_fornecedor: string;
-    cnpj: string;
-    nome_fantasia: string;
-    nome: string;
-    estado: string;
-    valor_total_ceap: string;
-}
+import { apiClient, Fornecedor as FornecedorType, Parlamentar as ParlamentarType } from "@/lib/api";
 
 interface BuscaResponse {
-    deputado_federal: Deputado[];
-    deputado_estadual: DeputadoEstadual[];
-    senador: Senador[];
-    fornecedor: Fornecedor[];
+    deputado_federal: ParlamentarType[];
+    deputado_estadual: ParlamentarType[];
+    senador: ParlamentarType[];
+    fornecedor: FornecedorType[];
 }
 
 const pluralize = (count: number, singular: string, plural: string) => {
@@ -107,7 +56,6 @@ const Busca = () => {
         setSearched(true);
 
         try {
-            console.log("busca", queryToUse)
             const response = await apiClient.get<BuscaResponse>(`/inicio/busca?value=${encodeURIComponent(queryToUse)}`);
             setResults(response);
         } catch (error) {
@@ -131,7 +79,7 @@ const Busca = () => {
 
     useEffect(() => {
         const q = searchParams.get("q");
-        console.log("searchParams", q, query)
+        
         if (q != query) {
             setQuery(q);
         }
@@ -281,8 +229,8 @@ const Busca = () => {
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {results.senador.map((senador) => (
                                                 <Link
-                                                    key={senador.id_sf_senador}
-                                                    to={`/senador/${senador.id_sf_senador}`}
+                                                    key={senador.id_parlamentar}
+                                                    to={`/senador/${senador.id_parlamentar}`}
                                                     title="Clique para visualizar o perfil do senador(a)"
                                                     className="block"
                                                 >
@@ -313,7 +261,7 @@ const Busca = () => {
                                                                             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                                                                             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!senador.ativo ? "grayscale opacity-80" : ""}`}>
                                                                                 <AvatarImage
-                                                                                    src={`//static.ops.org.br/senador/${senador.id_sf_senador}_120x160.jpg`}
+                                                                                    src={`https://static.ops.org.br/senador/${senador.id_parlamentar}_120x160.jpg`}
                                                                                     alt={senador.nome_parlamentar}
                                                                                 />
                                                                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
@@ -349,7 +297,7 @@ const Busca = () => {
                                                                     <div className="space-y-1">
                                                                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Cota Parlamentar</p>
                                                                         <p className="font-black text-sm text-purple-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-left">
-                                                                            R$ {senador.valor_total_ceaps}
+                                                                            R$ {senador.valor_total_ceap}
                                                                         </p>
                                                                     </div>
                                                                     <div className="space-y-1 text-right">
@@ -381,8 +329,8 @@ const Busca = () => {
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {results.deputado_federal.map((deputado) => (
                                                 <Link
-                                                    key={deputado.id_cf_deputado}
-                                                    to={`/deputado-federal/${deputado.id_cf_deputado}`}
+                                                    key={deputado.id_parlamentar}
+                                                    to={`/deputado-federal/${deputado.id_parlamentar}`}
                                                     title="Clique para visualizar o perfil do deputado(a)"
                                                     className="block"
                                                 >
@@ -413,7 +361,7 @@ const Busca = () => {
                                                                             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                                                                             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!deputado.ativo ? "grayscale opacity-80" : ""}`}>
                                                                                 <AvatarImage
-                                                                                    src={`//static.ops.org.br/depfederal/${deputado.id_cf_deputado}.jpg`}
+                                                                                    src={`https://static.ops.org.br/depfederal/${deputado.id_parlamentar}.jpg`}
                                                                                     alt={deputado.nome_parlamentar}
                                                                                 />
                                                                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
@@ -481,8 +429,8 @@ const Busca = () => {
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {results.deputado_estadual.map((deputado) => (
                                                 <Link
-                                                    key={deputado.id_cl_deputado}
-                                                    to={`/deputado-estadual/${deputado.id_cl_deputado}`}
+                                                    key={deputado.id_parlamentar}
+                                                    to={`/deputado-estadual/${deputado.id_parlamentar}`}
                                                     title="Clique para visualizar o perfil do deputado(a) estadual"
                                                     className="block"
                                                 >
@@ -513,7 +461,7 @@ const Busca = () => {
                                                                             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                                                                             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!deputado.ativo ? "grayscale opacity-80" : ""}`}>
                                                                                 <AvatarImage
-                                                                                    src={`//static.ops.org.br/depestadual/${deputado.id_cl_deputado}.jpg`}
+                                                                                    src={`https://static.ops.org.br/depestadual/${deputado.id_parlamentar}.jpg`}
                                                                                     alt={deputado.nome_parlamentar}
                                                                                 />
                                                                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
@@ -595,18 +543,18 @@ const Busca = () => {
                                                                 </div>
 
                                                                 <div className="flex-1 min-w-0">
+                                                                     <h3 className="font-black text-lg leading-tight text-foreground group-hover:text-primary transition-colors truncate tracking-tight uppercase">
+                                                                        {fornecedor.nome_fantasia || fornecedor.nome}
+                                                                    </h3>
                                                                     <div className="flex items-center gap-3 mb-1">
                                                                         <span className="font-mono text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded-full border border-primary/10">
-                                                                            {fornecedor.cnpj}
+                                                                            {fornecedor.cnpj_cpf}
                                                                         </span>
                                                                         <Badge variant="outline" className="flex items-center gap-1 font-bold border-muted-foreground/20 text-[9px] uppercase tracking-tighter px-2 py-0">
                                                                             <MapPin className="w-2.5 h-2.5" />
                                                                             {fornecedor.estado}
                                                                         </Badge>
                                                                     </div>
-                                                                    <h3 className="font-black text-lg leading-tight text-foreground group-hover:text-primary transition-colors truncate tracking-tight uppercase">
-                                                                        {fornecedor.nome_fantasia || fornecedor.nome}
-                                                                    </h3>
                                                                     {fornecedor.nome_fantasia && fornecedor.nome_fantasia !== fornecedor.nome && (
                                                                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest opacity-80 truncate mt-1">
                                                                             {fornecedor.nome}
@@ -615,11 +563,11 @@ const Busca = () => {
                                                                 </div>
 
                                                                 <div className="flex md:flex-col items-end gap-1 md:gap-0 justify-between md:justify-center min-w-[150px] pt-4 md:pt-0 border-t md:border-t-0 border-border/50">
-                                                                    {fornecedor.valor_total_ceap && (
+                                                                    {fornecedor.valor_total_contratado && (
                                                                         <div className="text-right">
                                                                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Valor Total CEAP</p>
                                                                             <p className="font-black text-xl text-primary font-mono tracking-tighter group-hover:scale-105 transition-transform origin-right">
-                                                                                R$ {fornecedor.valor_total_ceap}
+                                                                                R$ {fornecedor.valor_total_contratado}
                                                                             </p>
                                                                         </div>
                                                                     )}
@@ -652,8 +600,8 @@ const Busca = () => {
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {results.senador.map((senador) => (
                                                 <Link
-                                                    key={senador.id_sf_senador}
-                                                    to={`/senador/${senador.id_sf_senador}`}
+                                                    key={senador.id_parlamentar}
+                                                    to={`/senador/${senador.id_parlamentar}`}
                                                     title="Clique para visualizar o perfil do senador(a)"
                                                     className="block"
                                                 >
@@ -684,7 +632,7 @@ const Busca = () => {
                                                                             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                                                                             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!senador.ativo ? "grayscale opacity-80" : ""}`}>
                                                                                 <AvatarImage
-                                                                                    src={`//static.ops.org.br/senador/${senador.id_sf_senador}_120x160.jpg`}
+                                                                                    src={`https://static.ops.org.br/senador/${senador.id_parlamentar}_120x160.jpg`}
                                                                                     alt={senador.nome_parlamentar}
                                                                                 />
                                                                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
@@ -720,7 +668,7 @@ const Busca = () => {
                                                                     <div className="space-y-1">
                                                                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Cota Parlamentar</p>
                                                                         <p className="font-black text-sm text-purple-600 font-mono tracking-tighter group-hover:scale-105 transition-transform origin-left">
-                                                                            R$ {senador.valor_total_ceaps}
+                                                                            R$ {senador.valor_total_ceap}
                                                                         </p>
                                                                     </div>
                                                                     <div className="space-y-1 text-right">
@@ -754,8 +702,8 @@ const Busca = () => {
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {results.deputado_federal.map((deputado) => (
                                                 <Link
-                                                    key={deputado.id_cf_deputado}
-                                                    to={`/deputado-federal/${deputado.id_cf_deputado}`}
+                                                    key={deputado.id_parlamentar}
+                                                    to={`/deputado-federal/${deputado.id_parlamentar}`}
                                                     title="Clique para visualizar o perfil do deputado(a)"
                                                     className="block"
                                                 >
@@ -786,7 +734,7 @@ const Busca = () => {
                                                                             <div className="absolute -inset-1 bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                                                                             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!deputado.ativo ? "grayscale opacity-80" : ""}`}>
                                                                                 <AvatarImage
-                                                                                    src={`//static.ops.org.br/depfederal/${deputado.id_cf_deputado}.jpg`}
+                                                                                    src={`https://static.ops.org.br/depfederal/${deputado.id_parlamentar}.jpg`}
                                                                                     alt={deputado.nome_parlamentar}
                                                                                 />
                                                                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
@@ -856,8 +804,8 @@ const Busca = () => {
                                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {results.deputado_estadual.map((deputado) => (
                                                 <Link
-                                                    key={deputado.id_cl_deputado}
-                                                    to={`/deputado-estadual/${deputado.id_cl_deputado}`}
+                                                    key={deputado.id_parlamentar}
+                                                    to={`/deputado-estadual/${deputado.id_parlamentar}`}
                                                     title="Clique para visualizar o perfil do deputado(a) estadual"
                                                     className="block"
                                                 >
@@ -888,7 +836,7 @@ const Busca = () => {
                                                                             <div className="absolute -inset-1 bg-gradient-to-br from-purple-600 to-purple-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                                                                             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!deputado.ativo ? "grayscale opacity-80" : ""}`}>
                                                                                 <AvatarImage
-                                                                                    src={`//static.ops.org.br/depestadual/${deputado.id_cl_deputado}.jpg`}
+                                                                                    src={`https://static.ops.org.br/depestadual/${deputado.id_parlamentar}.jpg`}
                                                                                     alt={deputado.nome_parlamentar}
                                                                                 />
                                                                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">

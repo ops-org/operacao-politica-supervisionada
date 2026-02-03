@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -37,7 +37,7 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("ParlamentarResumoGastos")]
-        public async Task<dynamic> ParlamentarResumoGastos()
+        public async Task<ParlamentarResumoGastosDTO> ParlamentarResumoGastos()
         {
             const string cacheKey = "inicio-parlamentar-resumo-gastos";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async token =>
@@ -48,26 +48,29 @@ namespace OPS.API.Controllers
 
         [HttpGet]
         [Route("Busca")]
-        public async Task<dynamic> Busca([FromQuery] string value)
+        public async Task<InicioBuscaDTO> Busca([FromQuery] string value)
         {
+            if (string.IsNullOrWhiteSpace(value))
+                return new InicioBuscaDTO();
+
             var cacheKey = $"inicio-busca-{value}";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async token =>
             {
                 var filtro = new FiltroParlamentarDTO() { NomeParlamentar = value };
 
-                return new
+                return new InicioBuscaDTO
                 {
-                    deputado_federal = await _deputadoRepository.Lista(filtro),
-                    deputado_estadual = await _deputadoEstadualRepository.Lista(filtro),
-                    senador = await _senadorRepository.Lista(filtro),
-                    fornecedor = await _fornecedorRepository.Busca(value)
+                    DeputadoFederal = await _deputadoRepository.Lista(filtro),
+                    DeputadoEstadual = await _deputadoEstadualRepository.Lista(filtro),
+                    Senador = await _senadorRepository.Lista(filtro),
+                    Fornecedor = await _fornecedorRepository.Busca(value)
                 };
             });
         }
 
         [HttpGet]
         [Route("Importacao")]
-        public async Task<dynamic> Importacao()
+        public async Task<IEnumerable<ImportacaoInfoDTO>> Importacao()
         {
             const string cacheKey = "inicio-importacao";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async token =>

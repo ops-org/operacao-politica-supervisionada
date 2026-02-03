@@ -1,11 +1,22 @@
-﻿namespace OPS.Core.DTOs
+﻿using System.Text.Json.Serialization;
+
+namespace OPS.Core.DTOs
 {
     public class DropDownDTO
     {
-        public int id { get; set; }
-        public string text { get; set; }
-        public string helpText { get; set; }
-        public string image { get; set; }
-        public string[] tokens { get; set; }
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
+
+        [JsonPropertyName("help_text")]
+        public string HelpText { get; set; }
+
+        [JsonPropertyName("image")]
+        public string Image { get; set; }
+
+        [JsonPropertyName("tokens")]
+        public string[] Tokens { get; set; }
     }
 }

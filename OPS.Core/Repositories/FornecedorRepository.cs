@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using OPS.Core.DTOs;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -19,7 +20,7 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<dynamic> Consulta(int id)
+        public async Task<FornecedorInfoDTO> Consulta(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -68,44 +69,44 @@ namespace OPS.Core.Repositories
                 {
                     if (await reader.ReadAsync())
                     {
-                        var fornecedor = new
+                        var fornecedor = new FornecedorInfoDTO
                         {
-                            id_fornecedor = reader["id_fornecedor"].ToString(),
-                            cnpj_cpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
-                            data_de_abertura = Utils.FormataData(reader["data_de_abertura"]),
-                            categoria = reader["categoria"].ToString(),
-                            tipo = reader["tipo"].ToString(),
-                            nome = reader["nome"].ToString(),
-                            nome_fantasia = reader["nome_fantasia"].ToString(),
-                            atividade_principal = reader["atividade_principal"].ToString(),
-                            natureza_juridica = reader["natureza_juridica"].ToString(),
-                            logradouro = reader["logradouro"].ToString(),
-                            numero = reader["numero"].ToString(),
-                            complemento = reader["complemento"].ToString(),
-                            cep = reader["cep"].ToString(),
-                            bairro = reader["bairro"].ToString(),
-                            cidade = reader["cidade"].ToString(),
-                            estado = reader["estado"].ToString(),
-                            situacao_cadastral = reader["situacao_cadastral"].ToString(),
-                            data_da_situacao_cadastral = reader["data_da_situacao_cadastral"].ToString().Split(" ")[0],
-                            motivo_situacao_cadastral = reader["motivo_situacao_cadastral"].ToString(),
-                            situacao_especial = reader["situacao_especial"].ToString(),
-                            data_situacao_especial = reader["data_situacao_especial"].ToString(),
-                            endereco_eletronico = reader["endereco_eletronico"].ToString(),
-                            telefone = reader["telefone1"].ToString(),
-                            telefone2 = reader["telefone2"].ToString(),
-                            ente_federativo_responsavel = reader["ente_federativo_responsavel"].ToString(),
-                            capital_social = Utils.FormataValor(reader["capital_social"]),
-                            doador = reader["doador"],
-                            obtido_em = Utils.FormataData(reader["obtido_em"]),
+                            IdFornecedor = reader["id_fornecedor"].ToString(),
+                            CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString()),
+                            DataDeAbertura = Utils.FormataData(reader["data_de_abertura"]),
+                            Categoria = reader["categoria"].ToString(),
+                            Tipo = reader["tipo"].ToString(),
+                            Nome = reader["nome"].ToString(),
+                            NomeFantasia = reader["nome_fantasia"].ToString(),
+                            AtividadePrincipal = reader["atividade_principal"].ToString(),
+                            NaturezaJuridica = reader["natureza_juridica"].ToString(),
+                            Logradouro = reader["logradouro"].ToString(),
+                            Numero = reader["numero"].ToString(),
+                            Complemento = reader["complemento"].ToString(),
+                            Cep = reader["cep"].ToString(),
+                            Bairro = reader["bairro"].ToString(),
+                            Cidade = reader["cidade"].ToString(),
+                            Estado = reader["estado"].ToString(),
+                            SituacaoCadastral = reader["situacao_cadastral"].ToString(),
+                            DataDaSituacaoCadastral = Utils.FormataData(reader["data_da_situacao_cadastral"].ToString()),
+                            MotivoSituacaoCadastral = reader["motivo_situacao_cadastral"].ToString(),
+                            SituacaoEspecial = reader["situacao_especial"].ToString(),
+                            DataSituacaoEspecial = reader["data_situacao_especial"].ToString(),
+                            EnderecoEletronico = reader["endereco_eletronico"].ToString(),
+                            Telefone = reader["telefone1"].ToString(),
+                            Telefone2 = reader["telefone2"].ToString(),
+                            EnteFederativoResponsavel = reader["ente_federativo_responsavel"].ToString(),
+                            CapitalSocial = Utils.FormataValor(reader["capital_social"]),
+                            Doador = Convert.ToBoolean(reader["doador"]),
+                            ObtidoEm = Utils.FormataData(reader["obtido_em"]),
                             Origem = reader["origem"].ToString(),
-                            atividade_secundaria = new List<string>()
+                            AtividadeSecundaria = new List<string>()
                         };
 
                         await reader.NextResultAsync();
                         while (await reader.ReadAsync())
                         {
-                            fornecedor.atividade_secundaria.Add($"{reader["codigo"]} - {reader["descricao"]}");
+                            fornecedor.AtividadeSecundaria.Add($"{reader["codigo"]} - {reader["descricao"]}");
                         }
 
                         return fornecedor;
@@ -116,7 +117,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> QuadroSocietario(int id)
+        public async Task<IEnumerable<QuadroSocietarioDTO>> QuadroSocietario(int id)
         {
             var quadroSocietario = await _context.FornecedorSocios
                 .Include(fs => fs.FornecedorSocioQualificacao)
@@ -137,17 +138,17 @@ namespace OPS.Core.Repositories
                 })
                 .ToListAsync();
 
-            var quadroSocietarioParsed = quadroSocietario.Select(fs => new
+            var quadroSocietarioParsed = quadroSocietario.Select(fs => new QuadroSocietarioDTO
             {
-                nome = fs.nome,
-                cnpj_cpf = Utils.FormatCnpjCpf(fs.cnpj_cpf),
-                pais_origem = fs.pais_origem,
-                data_entrada_sociedade = Utils.FormataData(fs.data_entrada_sociedade),
-                faixa_etaria = fs.faixa_etaria,
-                qualificacao = fs.qualificacao,
-                nome_representante = fs.nome_representante,
-                cpf_representante = Utils.FormatCnpjCpf(fs.cpf_representante),
-                qualificacao_representante = fs.qualificacao_representante
+                Nome = fs.nome,
+                CnpjCpf = Utils.FormatCnpjCpf(fs.cnpj_cpf),
+                PaisOrigem = fs.pais_origem,
+                DataEntradaSociedade = Utils.FormataData(fs.data_entrada_sociedade),
+                FaixaEtaria = fs.faixa_etaria,
+                Qualificacao = fs.qualificacao,
+                NomeRepresentante = fs.nome_representante,
+                CpfRepresentante = Utils.FormatCnpjCpf(fs.cpf_representante),
+                QualificacaoRepresentante = fs.qualificacao_representante
             })
             .ToList();
 
@@ -330,7 +331,7 @@ LIMIT 10 ");
             }
         }
 
-        public async Task<dynamic> RecebimentosPorAno(int id)
+        public async Task<GraficoBarraDTO> RecebimentosPorAno(int id)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -360,8 +361,8 @@ group by ano
 order by ano
 				";
 
-                var categories = new List<dynamic>();
-                var series = new List<dynamic>();
+                var categories = new List<int>();
+                var series = new List<decimal>();
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
                 {
@@ -372,10 +373,10 @@ order by ano
                     }
                 }
 
-                return new
+                return new GraficoBarraDTO()
                 {
-                    categories,
-                    series
+                    Categories = categories,
+                    Series = series
                 };
             }
         }
@@ -484,7 +485,7 @@ order by ano
             return fornecedores;
         }
 
-        public async Task<List<dynamic>> Busca(string value)
+        public async Task<List<FornecedorListaDTO>> Busca(string value)
         {
             var strSql = new StringBuilder();
             strSql.AppendLine(@"
@@ -519,19 +520,18 @@ order by ano
                     limit 100
 				");
 
-            var lstRetorno = new List<dynamic>();
+            var lstRetorno = new List<FornecedorListaDTO>();
             using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
             {
                 while (await reader.ReadAsync())
                 {
-                    lstRetorno.Add(new
+                    lstRetorno.Add(new FornecedorListaDTO
                     {
-                        id_fornecedor = reader["id_fornecedor"],
-                        cnpj = Utils.FormatCnpjCpf(reader["cnpj"].ToString()),
-                        nome = reader["nome"].ToString(),
-                        nome_fantasia = reader["nome_fantasia"].ToString(),
-                        estado = reader["estado"].ToString(),
-                        valor_total_ceap = Utils.FormataValor(reader["valor_total_ceap"])
+                        IdFornecedor = Convert.ToInt32(reader["id_fornecedor"]),
+                        CnpjCpf = Utils.FormatCnpjCpf(reader["cnpj"].ToString()),
+                        Nome = reader["nome"].ToString(),
+                        Estado = reader["estado"].ToString(),
+                        ValorTotalContratado = Utils.FormataValor(reader["valor_total_ceap"])
                     });
                 }
             }

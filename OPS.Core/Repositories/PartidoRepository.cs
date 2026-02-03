@@ -24,10 +24,10 @@ namespace OPS.Core.Repositories
                 .OrderBy(x => x.Nome)
                 .Select(x => new DropDownDTO()
                 {
-                    id = x.Id,
-                    text = x.Nome,
-                    helpText = $"{x.Sigla} - {x.Legenda}",
-                    image = $"/img/partidos/{x.Imagem}"
+                    Id = x.Id,
+                    Text = x.Nome,
+                    HelpText = $"{x.Sigla} - {x.Legenda}",
+                    Image = $"/img/partidos/{x.Imagem}"
                 }).ToListAsync();
 
             return lista;

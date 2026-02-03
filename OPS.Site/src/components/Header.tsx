@@ -38,7 +38,7 @@ export const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2" title="Operação Política Supervisionada">
           <div className="flex h-18 w-18 items-center justify-center rounded-full font-bold text-lg">
-            <img src="//static.ops.org.br/logo.png" width="64" height="40" alt="OPS"></img>
+            <img src="https://static.ops.org.br/logo.png" width="64" height="40" alt="OPS"></img>
           </div>
           {/* <span className="hidden font-semibold text-foreground sm:inline-block">
             Operação Política Supervisionada

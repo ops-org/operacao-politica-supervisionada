@@ -31,7 +31,7 @@ const typeConfigs = {
         subtitle: "Consulte e analise os dados de remuneração dos deputados federais",
         apiType: "deputado",
         detailRoute: "/deputado-federal",
-        imageBaseUrl: "//static.ops.org.br/deputado",
+        imageBaseUrl: "https://static.ops.org.br/deputado",
         defaultAno: (new Date().getFullYear() - 1).toString()
     },
     "senador": {
@@ -39,7 +39,7 @@ const typeConfigs = {
         subtitle: "Consulte e analise os dados de remuneração no Senado Federal com visualizações interativas e filtros avançados",
         apiType: "senador",
         detailRoute: "/senador",
-        imageBaseUrl: "//static.ops.org.br/senador",
+        imageBaseUrl: "https://static.ops.org.br/senador",
         defaultAno: (new Date().getFullYear() - 1).toString()
     }
 } as const;
@@ -692,7 +692,6 @@ export default function FolhaPagamento({ type }: { type?: "deputado-federal" | "
                                                         const Icon = option.icon;
                                                         const isSelected = selectedFilters.agrupar === option.value;
 
-                                                        console.log(agrupamentoOptions.length);
                                                         return (
                                                             <div className="relative" key={option.value}>
                                                                 <RadioGroupItem

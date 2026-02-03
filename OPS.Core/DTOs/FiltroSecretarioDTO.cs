@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace OPS.Core.DTOs
 {
@@ -8,18 +9,28 @@ namespace OPS.Core.DTOs
         //public int count { get; set; }
         //public int page { get; set; }
 
-        public int draw { get; set; }
-        public int start { get; set; }
-        public int length { get; set; }
-        public Dictionary<string, object> order { get; set; }
+        [JsonPropertyName("draw")]
+        public int Draw { get; set; }
 
+        [JsonPropertyName("start")]
+        public int Start { get; set; }
+
+        [JsonPropertyName("length")]
+        public int Length { get; set; }
+
+        [JsonPropertyName("order")]
+        public Dictionary<string, object> Order { get; set; }
+
+        [JsonPropertyName("nome_parlamentar")]
         public string NomeParlamentar { get; set; }
+
+        [JsonPropertyName("ativo")]
         public bool Ativo { get; set; }
 
         public FiltroSecretarioDTO()
         {
-            this.start = 0;
-            this.length = 500;
+            this.Start = 0;
+            this.Length = 500;
         }
     }
 }

@@ -23,7 +23,7 @@ const NotFound = () => {
           <div className="relative group mb-10 w-full max-w-md mx-auto">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
             <img
-              src="//static.ops.net.br/img/404.gif"
+              src="https://static.ops.net.br/img/404.gif"
               alt="Travolta está desesperadamente perdido"
               className="relative rounded-xl shadow-2xl w-full transform transition duration-500 hover:scale-[1.01]"
             />

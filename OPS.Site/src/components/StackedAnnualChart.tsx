@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cart
 
 interface StackedChartData {
   year: string;
-  ceaps: number;
+  ceap: number;
   remuneracao: number;
 }
 

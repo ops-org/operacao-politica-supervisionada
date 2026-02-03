@@ -4,7 +4,7 @@ import { TopSpendersSection } from "@/components/TopSpendersSection";
 import { Footer } from "@/components/Footer";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Card, CardContent } from "@/components/ui/card";
-import { fetchCamaraResumoAnual, fetchSenadoResumoAnual, AnnualSummary } from "@/lib/api";
+import { AnnualSummary, fetchResumoAnual } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { TrendingUp, Users, BarChart3 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -26,8 +26,8 @@ const Index = () => {
     const fetchData = async () => {
       try {
         const [camaraResponse, senadoResponse] = await Promise.all([
-          fetchCamaraResumoAnual(),
-          fetchSenadoResumoAnual()
+          fetchResumoAnual('deputado-federal'),
+          fetchResumoAnual('senador')
         ]);
 
         setCamaraData(transformApiData(camaraResponse));
@@ -42,16 +42,9 @@ const Index = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <LoadingOverlay isLoading={loading} content="Carregando dados da plataforma..." />
-      </div>
-    );
-  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
+      <LoadingOverlay isLoading={loading} content="Carregando dados da plataforma..." />
       <Header />
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}

@@ -1,18 +1,28 @@
-﻿namespace OPS.Core.DTOs
+﻿using System.Text.Json.Serialization;
+
+namespace OPS.Core.DTOs
 {
     public class FiltroUsuarioDTO
     {
-        public string filter { get; set; }
-        public string sorting { get; set; }
-        public int count { get; set; }
-        public int page { get; set; }
+        [JsonPropertyName("filter")]
+        public string Filter { get; set; }
 
-        public string uf { get; set; }
+        [JsonPropertyName("sorting")]
+        public string Sorting { get; set; }
+
+        [JsonPropertyName("count")]
+        public int Count { get; set; }
+
+        [JsonPropertyName("page")]
+        public int Page { get; set; }
+
+        [JsonPropertyName("uf")]
+        public string Uf { get; set; }
 
         public FiltroUsuarioDTO()
         {
-            this.count = 1;
-            this.page = 1;
+            this.Count = 1;
+            this.Page = 1;
         }
     }
 }

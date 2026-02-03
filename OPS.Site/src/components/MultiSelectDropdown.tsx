@@ -130,7 +130,7 @@ export const MultiSelectDropdown = ({
                     <div className="flex items-center space-x-3">
                       {item.image && (
                         <img 
-                          src={item.image.replace("/img/", "//static.ops.org.br/")} 
+                          src={item.image.replace("/img/", "https://static.ops.org.br/")} 
                           alt={item.text}
                           className="w-8 h-8 rounded object-scale-down flex-shrink-0"
                         />

@@ -20,10 +20,10 @@ namespace OPS.Core.Repositories
                 .OrderBy(x => x.Nome)
                 .Select(x => new DropDownDTO()
                 {
-                    id = x.Id,
-                    text = x.Nome + " (" + x.Sigla + ")",
-                    helpText = "Região " + x.Regiao,
-                    image = $"/img/estados/{x.Sigla.ToLower(System.Globalization.CultureInfo.CurrentCulture)}.png"
+                    Id = x.Id,
+                    Text = x.Nome + " (" + x.Sigla + ")",
+                    HelpText = "Região " + x.Regiao,
+                    Image = $"/img/estados/{x.Sigla.ToLower(System.Globalization.CultureInfo.CurrentCulture)}.png"
                 }).ToListAsync();
 
             return lista;

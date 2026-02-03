@@ -1,10 +1,9 @@
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
-using OPS.API.Extensions;
 using OPS.API.Services;
 using OPS.Core.DTOs;
 using OPS.Core.Repositories;
@@ -15,68 +14,27 @@ namespace OPS.API.Controllers
     [Route("[controller]")]
     [Route("deputado-federal")]
     // [CacheOutput(ServerTimeSpan = 43200 /* 12h */)]
-    public class DeputadoController : Controller
+    public class DeputadoController : ParlamentarBaseController<DeputadoRepository>
     {
         private IWebHostEnvironment Environment { get; }
         private IConfiguration Configuration { get; }
-        private readonly DeputadoRepository _deputadoRepository;
-        private readonly IHybridCacheService _hybridCacheService;
 
         public DeputadoController(IConfiguration configuration, IWebHostEnvironment env, DeputadoRepository deputadoRepository, IHybridCacheService hybridCacheService)
+            : base(deputadoRepository, hybridCacheService)
         {
             Environment = env;
             Configuration = configuration;
-            _deputadoRepository = deputadoRepository;
-            _hybridCacheService = hybridCacheService;
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<dynamic> Consultar(int id)
-        {
-            var cacheKey = $"deputado-consultar-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.Consultar(id);
-            });
-        }
+        protected override string CachePrefix => "deputado";
 
-        [HttpPost("Lista")]
-        public async Task<dynamic> Lista(FiltroParlamentarDTO filtro)
+        [HttpGet("{id:int}/GastosComPessoalPorAno")]
+        public async Task<dynamic> GastosComPessoalPorAno(int id)
         {
-            var cacheKey = $"deputado-lista-{JsonSerializer.Serialize(filtro)}";
+            var cacheKey = $"deputado-gastos-pessoal-por-ano-{id}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Lista(filtro);
-            });
-        }
-
-        [HttpPost("Pesquisa")]
-        public async Task<dynamic> Pesquisa(MultiSelectRequest filtro)
-        {
-            var cacheKey = $"deputado-pesquisa-{JsonSerializer.Serialize(filtro)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.Pesquisa(filtro);
-            });
-        }
-
-        [HttpPost("Lancamentos")]
-        public async Task<dynamic> Lancamentos(DataTablesRequest request)
-        {
-            var cacheKey = $"deputado-lancamentos-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.Lancamentos(request);
-            });
-        }
-
-        [HttpGet("TipoDespesa")]
-        public async Task<dynamic> TipoDespesa()
-        {
-            const string cacheKey = "deputado-tipo-despesa";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.TipoDespesa();
+                return await _repository.GastosComPessoalPorAno(id);
             });
         }
 
@@ -86,7 +44,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-funcionario-pesquisa-{JsonSerializer.Serialize(filtro)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.FuncionarioPesquisa(filtro);
+                return await _repository.FuncionarioPesquisa(filtro);
             });
         }
 
@@ -96,7 +54,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-funcionarios-{JsonSerializer.Serialize(request)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Funcionarios(request);
+                return await _repository.Funcionarios(request);
             });
         }
 
@@ -106,7 +64,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-funcionarios-ativos-{id}-{JsonSerializer.Serialize(request)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.FuncionariosAtivosPorDeputado(id, request);
+                return await _repository.FuncionariosAtivosPorDeputado(id, request);
             });
         }
 
@@ -116,86 +74,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-funcionarios-historico-{id}-{JsonSerializer.Serialize(request)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.FuncionariosPorDeputado(id, request);
-            });
-        }
-
-        [HttpGet("{id:int}/GastosPorAno")]
-        public async Task<dynamic> GastosPorAno(int id)
-        {
-            var cacheKey = $"deputado-gastos-por-ano-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.GastosPorAno(id);
-            });
-        }
-
-        [HttpGet("{id:int}/GastosComPessoalPorAno")]
-        public async Task<dynamic> GastosComPessoalPorAno(int id)
-        {
-            var cacheKey = $"deputado-gastos-pessoal-por-ano-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.GastosComPessoalPorAno(id);
-            });
-        }
-
-        [HttpGet("Documento/{id:int}")]
-        public async Task<ActionResult<DocumentoDetalheDTO>> Documento(int id)
-        {
-            var cacheKey = $"deputado-documento-{id}";
-            var result = await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.Documento(id);
-            });
-
-            if (result != null)
-                return Ok(result);
-            else
-                return NotFound();
-        }
-
-        [HttpGet("{id:int}/DocumentosDoMesmoDia")]
-        public async Task<dynamic> DocumentosDoMesmoDia(int id)
-        {
-            var cacheKey = $"deputado-documentos-mesmo-dia-{id}";
-            var result = await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.DocumentosDoMesmoDia(id);
-            });
-
-            return Ok(result);
-        }
-
-        [HttpGet("{id:int}/DocumentosDaSubcotaMes")]
-        public async Task<dynamic> DocumentosDaSubcotaMes(int id)
-        {
-            var cacheKey = $"deputado-documentos-subcota-mes-{id}";
-            var result = await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.DocumentosDaSubcotaMes(id);
-            });
-
-            return Ok(result);
-        }
-
-        [HttpGet("{id:int}/MaioresNotas")]
-        public async Task<dynamic> MaioresNotas(int id)
-        {
-            var cacheKey = $"deputado-maiores-notas-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.MaioresNotas(id);
-            });
-        }
-
-        [HttpGet("{id:int}/MaioresFornecedores")]
-        public async Task<dynamic> MaioresFornecedores(int id)
-        {
-            var cacheKey = $"deputado-maiores-fornecedores-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.MaioresFornecedores(id);
+                return await _repository.FuncionariosPorDeputado(id, request);
             });
         }
 
@@ -205,27 +84,27 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-resumo-presenca-{id}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.ResumoPresenca(id);
+                return await _repository.ResumoPresenca(id);
             });
         }
 
-        [HttpGet("CamaraResumoMensal")]
+        [HttpGet("ResumoMensal")]
         public async Task<dynamic> CamaraResumoMensal()
         {
             const string cacheKey = "deputado-camara-resumo-mensal";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.CamaraResumoMensal();
+                return await _repository.CamaraResumoMensal();
             });
         }
 
-        [HttpGet("CamaraResumoAnual")]
+        [HttpGet("ResumoAnual")]
         public async Task<dynamic> CamaraResumoAnual()
         {
             const string cacheKey = "deputado-camara-resumo-anual";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.CamaraResumoAnual();
+                return await _repository.CamaraResumoAnual();
             });
         }
 
@@ -235,7 +114,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-frequencia-{id}-{JsonSerializer.Serialize(request)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Frequencia(id, request);
+                return await _repository.Frequencia(id, request);
             });
         }
 
@@ -245,7 +124,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-frequencia-{JsonSerializer.Serialize(request)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Frequencia(request);
+                return await _repository.Frequencia(request);
             });
         }
 
@@ -273,7 +152,7 @@ namespace OPS.API.Controllers
             const string cacheKey = "deputado-grupo-funcional";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.GrupoFuncional();
+                return await _repository.GrupoFuncional();
             });
         }
 
@@ -284,7 +163,7 @@ namespace OPS.API.Controllers
             const string cacheKey = "deputado-cargo";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Cargo();
+                return await _repository.Cargo();
             });
         }
 
@@ -295,7 +174,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-remuneracao-{JsonSerializer.Serialize(request)}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Remuneracao(request);
+                return await _repository.Remuneracao(request);
             });
         }
 
@@ -306,18 +185,7 @@ namespace OPS.API.Controllers
             var cacheKey = $"deputado-remuneracao-{id}";
             return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
             {
-                return await _deputadoRepository.Remuneracao(id);
-            });
-        }
-
-        [HttpGet]
-        [Route("{id:int}/CustoAnual")]
-        public async Task<dynamic> CustoAnual(int id)
-        {
-            var cacheKey = $"deputado-custo-anual-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
-            {
-                return await _deputadoRepository.CustoAnual(id);
+                return await _repository.Remuneracao(id);
             });
         }
     }

@@ -21,7 +21,7 @@ public class DespesaAssembleias
     public short? IdDespesaEspecificacao { get; set; }
 
     [Column("id_fornecedor")]
-    public int? IdFornecedor { get; set; }
+    public int IdFornecedor { get; set; }
 
     [Column("data_emissao")]
     public DateOnly? DataEmissao { get; set; }

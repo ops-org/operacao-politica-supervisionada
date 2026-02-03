@@ -17,38 +17,38 @@ export const TopSpendersSection = () => {
       try {
         const response = await fetchTopSpenders();
 
-        const senadores = response.senado.map((item: TopSpender) => {
+        const senadores = response.senadores.map((item: TopSpender) => {
           const { party, state } = parsePartyState(item.sigla_partido_estado);
           return {
             name: item.nome_parlamentar,
             party,
             state,
             amount: item.valor_total,
-            id: item.id_sf_senador,
+            id: item.id,
             type: "senador" as const
           };
         });
 
-        const deputadosFederais = response.camara_federal.map((item: TopSpender) => {
+        const deputadosFederais = response.deputados_federais.map((item: TopSpender) => {
           const { party, state } = parsePartyState(item.sigla_partido_estado);
           return {
             name: item.nome_parlamentar,
             party,
             state,
             amount: item.valor_total,
-            id: item.id_cf_deputado,
+            id: item.id,
             type: "deputado-federal" as const
           };
         });
 
-        const deputadosEstaduais = response.camara_estadual.map((item: TopSpender) => {
+        const deputadosEstaduais = response.deputados_estaduais.map((item: TopSpender) => {
           const { party, state } = parsePartyState(item.sigla_partido_estado);
           return {
             name: item.nome_parlamentar,
             party,
             state,
             amount: item.valor_total,
-            id: item.id_cl_deputado,
+            id: item.id,
             type: "deputado-estadual" as const
           };
         });

@@ -3,19 +3,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
+import { PoliticianType, getImageUrl, getDetailUrl } from "@/types/politician";
 
 interface TopSpenderCardProps {
   name: string;
   party: string;
   state: string;
   amount: string;
-  imageUrl?: string;
-  type: "deputado-estadual" | "deputado-federal" | "senador";
+  type: PoliticianType;
   id: number;
   ativo?: boolean;
 }
 
-export const TopSpenderCard = ({ name, party, state, amount, imageUrl, type, id, ativo = true }: TopSpenderCardProps) => {
+export const TopSpenderCard = ({ name, party, state, amount, type, id, ativo = true }: TopSpenderCardProps) => {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -25,22 +25,8 @@ export const TopSpenderCard = ({ name, party, state, amount, imageUrl, type, id,
       .toUpperCase();
   };
 
-  const getDetailUrl = () => {
-    return `/${type}/${id}`;
-  };
-
-  const getImageUrl = () => {
-    if (type === "deputado-federal") {
-      return `//static.ops.org.br/depfederal/${id}_120x160.jpg`;
-    } else if (type === "deputado-estadual") {
-      return null; // `//static.ops.org.br/depestadual/${id}_120x160.jpg`;
-    } else {
-      return `//static.ops.org.br/senador/${id}_120x160.jpg`;
-    }
-  };
-
   return (
-    <Link to={getDetailUrl()} className="group block">
+    <Link to={getDetailUrl(type, id)} className="group block">
       <Card className={`group relative shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 cursor-pointer border-t-4 ${ativo ? "border-t-primary/20 hover:border-t-primary" : "border-t-slate-300"}`}>
         {/* Card Header with Status Gradient */}
         <div className={`absolute top-0 left-0 right-0 h-24 z-0 ${ativo
@@ -54,10 +40,14 @@ export const TopSpenderCard = ({ name, party, state, amount, imageUrl, type, id,
         <CardContent className="flex items-center gap-5 p-5 relative z-10">
           <div className="relative">
             <div className={`absolute -inset-1 bg-gradient-to-br ${ativo ? "from-primary to-accent" : "from-slate-400 to-slate-200"} rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500`}></div>
-            <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!ativo ? "grayscale opacity-80" : ""}`}>
+             <Avatar className={`h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-all duration-500 relative z-10 ${!ativo ? "grayscale opacity-80" : ""}`}>
               <AvatarImage
-                src={getImageUrl()}
+                src={getImageUrl(type, id)}
                 alt={name}
+                onError={(e) => {
+                  // Handle CORS errors and other image loading issues
+                  console.log(`Image load failed for ${name}:`, getImageUrl(type, id));
+                }}
               />
               <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">
                 {getInitials(name)}
