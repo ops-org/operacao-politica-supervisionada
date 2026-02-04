@@ -452,7 +452,7 @@ order by ano
         //		}
 
 
-        public dynamic Consulta(string cnpj, string nome)
+        public List<FornecedorListaDTO> Consulta(string cnpj, string nome)
         {
             var query = _context.Fornecedores.AsQueryable();
 
@@ -474,11 +474,11 @@ order by ano
             var fornecedores = query
                 .OrderBy(f => f.Nome)
                 .Take(100)
-                .Select(f => new
+                .Select(f => new FornecedorListaDTO
                 {
-                    id_fornecedor = f.Id.ToString(),
-                    cnpj_cpf = Utils.FormatCnpjCpf(f.CnpjCpf),
-                    nome = f.Nome
+                    IdFornecedor = f.Id,
+                    CnpjCpf = Utils.FormatCnpjCpf(f.CnpjCpf),
+                    Nome = f.Nome
                 })
                 .ToList();
 

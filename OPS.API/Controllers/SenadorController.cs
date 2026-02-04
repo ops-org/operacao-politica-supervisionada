@@ -56,23 +56,6 @@ namespace OPS.API.Controllers
             });
         }
 
-        [HttpGet("Imagem/{id}")]
-        public VirtualFileResult Imagem(string id)
-        {
-            if (!string.IsNullOrEmpty(Environment.ContentRootPath))
-            {
-                var file = @"images/senador/" + id + ".jpg";
-                var filePath = System.IO.Path.Combine(Environment.ContentRootPath, file);
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    return File(file, "image/jpeg");
-                }
-            }
-
-            return File(@"images/sem_foto.jpg", "image/jpeg");
-        }
-
         [HttpGet("Lotacao")]
         public async Task<object> Lotacao()
         {

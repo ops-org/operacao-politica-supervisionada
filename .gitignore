@@ -31,3 +31,4 @@ appsettings.*.json
 /OPS.Site/public/img/depfederal
 /OPS.Site/public/img/senador
 .idea/
+/qodana.yaml

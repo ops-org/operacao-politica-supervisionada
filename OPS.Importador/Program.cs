@@ -1,12 +1,10 @@
 ﻿using System.Globalization;
 using System.Net;
-using System.Text.Json;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using OfficeOpenXml;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Acre;
@@ -39,7 +37,6 @@ using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.Fornecedores;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -51,9 +48,6 @@ namespace OPS.Importador
         public static Task Main(string[] args)
         {
             ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
-
-            //SqlMapper.AddTypeHandler(typeof(DateTime), new NpgsqlDateTimeHandler());
-            //SqlMapper.AddTypeHandler(typeof(DateTime?), new NpgsqlDateTimeHandler());
 
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
             Serilog.Debugging.SelfLog.Enable(Console.Error);
@@ -124,8 +118,7 @@ namespace OPS.Importador
             services.AddScoped<FileManager>();
             services.AddScoped<HttpLogger>();
             services.AddDbContext<AppDbContext>(options => options
-                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)),
-                   ServiceLifetime.Transient);
+                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), ServiceLifetime.Transient);
 
             //services.AddRedaction();
 
@@ -145,11 +138,7 @@ namespace OPS.Importador
                     };
 
                     handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                    handler.ServerCertificateCustomValidationCallback =
-                        (httpRequestMessage, cert, cetChain, policyErrors) =>
-                        {
-                            return true;
-                        };
+                    handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => { return true; };
 
                     return handler;
                 })
@@ -218,49 +207,14 @@ namespace OPS.Importador
             SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
 
-            Padrao.ConnectionString = configuration.GetConnectionString("AuditoriaContext");
-            // Npgsql logging is handled differently - remove MySQL-specific logging
-            // MySqlConnectorLogManager.Provider = new SerilogLoggerProvider();
-
             try
             {
-                // new ParametrosRepository().CarregarPadroes();
-
                 var logger = serviceProvider.GetService<ILogger<Program>>();
-                DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger).GetSqlResiliencePolicies());
+                //DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger).GetSqlResiliencePolicies());
 
                 logger.LogInformation("Iniciando Importação");
 
                 var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-
-                //var pfs = dbContext.FornecedorDeParas.Where(f => f.CnpjIncorreto != null && f.CnpjIncorreto.Length == 15 && f.CnpjCorreto == null).ToList();
-                //var httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("ResilientClient");
-
-                //foreach (var pf in pfs)
-                //{
-                //    var isValid = Utils.IsCnpj(pf.CnpjIncorreto.Substring(1));
-                //    if (isValid)
-                //    {
-                //        HttpResponseMessage response = httpClient.GetAsync($"https://minhareceita.org/{pf.CnpjIncorreto.Substring(1)}").GetAwaiter().GetResult();
-
-                //        if (response.IsSuccessStatusCode)
-                //        {
-                //            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                //            var fornecedor = JsonSerializer.Deserialize<Fornecedores.MinhaReceita.FornecedorInfo>(responseString);
-
-                //            Console.WriteLine(pf.CnpjIncorreto.Substring(1) + " - " + pf.NomeFornecedor + " *** " + fornecedor.RazaoSocial);
-                //            pf.CnpjCorreto = pf.CnpjIncorreto.Substring(1);
-                //            dbContext.SaveChanges();
-                //            //dbContext.FornecedorDeParas
-                //            //    .Where(x => x.CnpjIncorreto == pf.CnpjIncorreto)
-                //            //    .ExecuteUpdate(setters => setters.SetProperty(x => x.CnpjCorreto, "0" + pf.CnpjIncorreto));
-                //        }
-                //        else
-                //        {
-                //            Console.WriteLine(pf.CnpjIncorreto.Substring(1) + " - " + pf.NomeFornecedor + " *** Não encontrado");
-                //        }
-                //    }
-                //}
 
                 dbContext.Database.ExecuteSqlRawAsync(@"
                     INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
@@ -293,7 +247,7 @@ namespace OPS.Importador
                         typeof(ImportacaoAmazonas), // crawler mensal/deputado (Apenas BR)
                         typeof(ImportacaoBahia), // crawler anual
                         typeof(ImportacaoCeara), // crawler mensal
-                        //typeof(ImportacaoDistritoFederal), // xlsx  (Apenas BR)
+                        typeof(ImportacaoDistritoFederal), // xlsx  (Apenas BR)
                         typeof(ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
                         typeof(ImportacaoGoias), // crawler mensal/deputado
                         typeof(ImportacaoMaranhao), // Valores mensais por categoria
@@ -316,61 +270,61 @@ namespace OPS.Importador
                         typeof(ImportacaoTocantins), // crawler & pdf mensal/deputado
                     };
 
-                    var tasks = new List<Task>();
-                    foreach (var type in types)
+                var tasks = new List<Task>();
+                foreach (var type in types)
+                {
+                    tasks.Add(Task.Factory.StartNew(() =>
                     {
-                        tasks.Add(Task.Factory.StartNew(() =>
+                        var estado = type.Name.Replace("Importador", "");
+                        using (logger.BeginScope(new Dictionary<string, object> { ["Code"] = Utils.GetStateCode(estado), ["Estado"] = estado, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
                         {
-                            var estado = type.Name.Replace("Importador", "");
-                            using (logger.BeginScope(new Dictionary<string, object> { ["Code"] = Utils.GetStateCode(estado), ["Estado"] = estado, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
-                            {
-                                logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
-                                var watch = System.Diagnostics.Stopwatch.StartNew();
+                            logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
+                            var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                                var importador = (ImportadorBase)serviceProvider.GetService(type);
-                                importador.ImportarCompleto().Wait();
+                            var importador = (ImportadorBase)serviceProvider.GetService(type);
+                            importador.ImportarCompleto().Wait();
 
-                                watch.Stop();
-                                logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}", type.Name, watch.Elapsed);
-                            }
-                        }));
-                    }
-                    Task.WaitAll(tasks.ToArray());
-
-                    //var importadorBase = serviceProvider.GetService<ImportadorDespesasBase>();
-                    //importadorBase.AtualizaCampeoesGastos();
-                    //importadorBase.AtualizaResumoMensal();
-                    //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
-
-                    //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-                    //importador.ColetaDadosDeputados();
-                    //importador.AtualizaParlamentarValores();
-                    //importador.ColetaRemuneracaoSecretarios();
-
-
-                    //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
-                    //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-                    //var mesConsulta = new DateTime(2024, 07, 01);
-
-                    //do
-                    //{
-                    //    importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
-
-                    //    mesConsulta = mesConsulta.AddMonths(1);
-                    //} while (mesConsulta < mesAtual);
-
-
-                    //var cand = new Candidatos();
-                    //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
-                    //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
-                    //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
-                    //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
-                    //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
-
-                    var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
-                    objFornecedor.ConsultarDadosCNPJ().Wait();
-                    //objFornecedor.ConsultarDadosCNPJ(somenteNovos: false).Wait();
+                            watch.Stop();
+                            logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}", type.Name, watch.Elapsed);
+                        }
+                    }));
                 }
+                Task.WaitAll(tasks.ToArray());
+
+                //var importadorBase = serviceProvider.GetService<ImportadorDespesasBase>();
+                //importadorBase.AtualizaCampeoesGastos();
+                //importadorBase.AtualizaResumoMensal();
+                //var importador = serviceProvider.GetService<ImportadorDespesasCamaraFederal>();
+
+                //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
+                //importador.ColetaDadosDeputados();
+                //importador.AtualizaParlamentarValores();
+                //importador.ColetaRemuneracaoSecretarios();
+
+
+                //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
+                //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
+                //var mesConsulta = new DateTime(2024, 07, 01);
+
+                //do
+                //{
+                //    importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
+
+                //    mesConsulta = mesConsulta.AddMonths(1);
+                //} while (mesConsulta < mesAtual);
+
+
+                //var cand = new Candidatos();
+                //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
+                //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
+                //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
+                //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
+                //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
+
+                var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
+                objFornecedor.ConsultarDadosCNPJ().Wait();
+                //objFornecedor.ConsultarDadosCNPJ(somenteNovos: false).Wait();
+            }
             catch (Exception ex)
             {
                 // Log.Logger will likely be internal type "Serilog.Core.Pipeline.SilentLogger".
@@ -392,184 +346,6 @@ namespace OPS.Importador
             Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
             Console.ReadKey();
             return Task.CompletedTask;
-        }
-
-
-
-        //private static void ImportarPartidos()
-        //{
-        //    // (outra fonnte) https://legis.senado.leg.br/dadosabertos/senador/partidos
-        //    var file = @"C:\Users\Lenovo\Downloads\convertcsv.csv";
-
-        //    var factory = new AppDbContext(null, Padrao.ConnectionString);
-        //    using (var dbContext = factory.CreateDbContext())
-        //    {
-        //        using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
-        //        {
-        //            using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
-        //            {
-        //                using (var client = new System.Net.Http.HttpClient())
-        //                {
-        //                    client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (compatible; OPS_bot/1.0; +https://ops.org.br)");
-
-        //                    while (csv.Read())
-        //                    {
-        //                        if (csv[2] == "LOGO") continue;
-
-        //                        if (csv[2] != "")
-        //                        {
-        //                            try
-        //                            {
-        //                                MatchCollection m1 = Regex.Matches(csv[2], @"<a\s+(?:[^>]*?\s+)?href=""([^""]*)""", RegexOptions.Singleline);
-        //                                if (m1.Count > 0)
-        //                                {
-        //                                    var link = m1[0].Groups[1].Value;
-
-        //                                    var arquivo = @"C:\ProjetosVanderlei\operacao-politica-supervisionada\OPS\wwwroot\partidos\" + csv[3].ToLower() + ".png";
-        //                                    if (!File.Exists(arquivo))
-        //                                        client.DownloadFile(link, arquivo).Wait();
-        //                                }
-        //                            }
-        //                            catch (Exception ex)
-        //                            {
-        //                                Console.WriteLine(ex.Message);
-        //                            }
-        //                        }
-
-        //                        var parameters = new[]
-        //                        {
-        //                            ("@legenda", csv[0] != "-" ? (object)csv[0] : null),
-        //                            ("@sigla", csv[2] != "??" ? (object)csv[2] : null),
-        //                            ("@nome", csv[3]),
-        //                            ("@sede", csv[4] != "??" ? (object)csv[4] : null),
-        //                            ("@fundacao", AjustarData(csv[5])),
-        //                            ("@registro_solicitacao", AjustarData(csv[6])),
-        //                            ("@registro_provisorio", AjustarData(csv[7])),
-        //                            ("@registro_definitivo", AjustarData(csv[8])),
-        //                            ("@extincao", AjustarData(csv[9])),
-        //                            ("@motivo", csv[10])
-        //                        };
-
-        //                        dbContext.Database.ExecuteSqlRaw(@"
-        //                            INSERT INTO partido_todos (
-        //                                legenda, sigla, nome, sede, fundacao, registro_solicitacao, registro_provisorio, registro_definitivo, extincao, motivo
-        //                            ) VALUES (
-        //                                @legenda, @sigla, @nome, @sede, @fundacao, @registro_solicitacao, @registro_provisorio, @registro_definitivo, @extincao, @motivo
-        //                            )", parameters);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        private static async Task BaixarNotas()
-        {
-            var sql = @"SELECT l.id, d.id_deputado, l.ano, l.id_documento
-FROM camara.cf_despesa l
-JOIN cf_deputado d ON d.id = l.id_cf_deputado
-WHERE l.ano >= 2023
-AND l.id_cf_despesa_tipo = 120
-AND l.tipo_link = 1
-AND l.id > 10501020
-ORDER BY 1";
-
-            using (var client = new System.Net.Http.HttpClient())
-            using (var connection = new NpgsqlConnection(Padrao.ConnectionString))
-            {
-                await connection.OpenAsync();
-                var results = await connection.QueryAsync(sql);
-                foreach (var item in results)
-                {
-                    try
-                    {
-                        var url = $"https://www.camara.leg.br/cota-parlamentar/documentos/publ/{item.id_deputado}/{item.ano}/{item.id_documento}.pdf";
-                        var arquivo = $@"C:\temp\NotasFiscais\{item.id_deputado}-{item.ano}-{item.id_documento}.pdf";
-
-                        if (!File.Exists(arquivo))
-                        {
-                            Console.WriteLine($"Baixando {item.id} {url}...");
-                            await client.DownloadFile(url, arquivo);
-                            await Task.Delay(1000);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                }
-            }
-        }
-
-        private static DateTime? AjustarData(string d)
-        {
-            if (!d.Contains(" ??/??/?? ") && d != "ATUAL" && d != " - ")
-            {
-                d = d.Replace("??", "01");
-                if (d.Length == 10)
-                    return DateTime.Parse(d);
-                else
-                    return DateTime.ParseExact(d, "dd/MM/yy", CultureInfo.InvariantCulture);
-            }
-
-            return null;
-        }
-
-        private static async Task AjustarFornecedores()
-        {
-            var sql = @"SELECT id, cnpj_cpf from fornecedor f
-WHERE LENGTH(f.cnpj_cpf) = 14
-AND f.cnpj_cpf ILIKE '***%'";
-
-            using (var connection = new NpgsqlConnection(Padrao.ConnectionString))
-            {
-                await connection.OpenAsync();
-                var results = await connection.QueryAsync(sql);
-                foreach (var item in results)
-                {
-                    try
-                    {
-                        var cnpjIncorreto = item.cnpj_cpf.ToString();
-                        var sqlFind = $@"SELECT id_fornecedor, cnpj from fornecedor_info WHERE cnpj ILIKE '{cnpjIncorreto.Replace("*", "_")}'";
-                        var results1 = await connection.QueryAsync(sqlFind);
-
-                        if (results1.Count() == 1)
-                        {
-                            var idFornecodorIncorreto = item.id.ToString();
-                            var idFornecodorCorreto = results1.First().id_fornecedor.ToString();
-
-
-                            var cnpjCorreto = results1.First().cnpj.ToString();
-
-                            Console.WriteLine($"Corrigindo Fornecedor {idFornecodorIncorreto} -> {idFornecodorCorreto} CNPJ: {cnpjIncorreto} -> {cnpjCorreto}");
-
-                            var sqlUpdate = $@"
-UPDATE cl_despesa SET id_fornecedor = {idFornecodorCorreto}  WHERE id_fornecedor = {idFornecodorIncorreto};
-UPDATE cf_despesa SET id_fornecedor = {idFornecodorCorreto}  WHERE id_fornecedor = {idFornecodorIncorreto};
-UPDATE sf_despesa SET id_fornecedor = {idFornecodorCorreto}  WHERE id_fornecedor = {idFornecodorIncorreto};
-
-UPDATE fornecedor SET 
-    valor_total_ceap_camara = NULL,
-    valor_total_ceap_senado = NULL,
-    valor_total_ceap_assembleias = NULL
-WHERE id = {idFornecodorIncorreto};
-
-UPDATE fornecedor_de_para SET 
-    id_fornecedor_correto = {idFornecodorCorreto},
-    cnpj_correto = '{cnpjCorreto}'
-WHERE cnpj_incorreto = '{cnpjIncorreto}';
-
-";
-                            await connection.ExecuteAsync(sqlUpdate);
-                        }
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                }
-            }
         }
     }
 }

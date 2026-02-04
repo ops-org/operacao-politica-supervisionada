@@ -1280,7 +1280,12 @@ WHERE (1=1)
             if (request == null) throw new BusinessException("Parâmetro request não informado!");
             string strSelectFiels, sqlGroupBy;
 
-            AgrupamentoRemuneracaoSenado eAgrupamento = (AgrupamentoRemuneracaoSenado)Convert.ToInt32(request.Filters["ag"].ToString());
+            AgrupamentoRemuneracaoSenado eAgrupamento;
+            if (request.Filters?.TryGetValue("ag", out object agrupamento) ?? false)
+                eAgrupamento = (AgrupamentoRemuneracaoSenado)Convert.ToInt32(agrupamento);
+            else
+                eAgrupamento = AgrupamentoRemuneracaoSenado.AnoMes;
+
             switch (eAgrupamento)
             {
                 case AgrupamentoRemuneracaoSenado.Lotacao:
@@ -1325,34 +1330,37 @@ WHERE (1=1)
 
             var sqlWhere = new StringBuilder();
 
-            if (request.Filters.ContainsKey("lt") && !string.IsNullOrEmpty(request.Filters["lt"].ToString()))
+            if (request.Filters != null)
             {
-                sqlWhere.AppendLine("	AND r.id_lotacao IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["lt"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND r.id_cargo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["cr"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("ct") && !string.IsNullOrEmpty(request.Filters["ct"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND r.id_categoria IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["ct"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("vn") && !string.IsNullOrEmpty(request.Filters["vn"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND r.id_vinculo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["vn"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("sn") && !string.IsNullOrEmpty(request.Filters["sn"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND s.id IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["sn"].ToString()) + ") ");
-            }
+                if (request.Filters.ContainsKey("lt") && !string.IsNullOrEmpty(request.Filters["lt"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.id_lotacao IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["lt"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.id_cargo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["cr"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("ct") && !string.IsNullOrEmpty(request.Filters["ct"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.id_categoria IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["ct"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("vn") && !string.IsNullOrEmpty(request.Filters["vn"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.id_vinculo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["vn"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("sn") && !string.IsNullOrEmpty(request.Filters["sn"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND s.id IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["sn"].ToString()) + ") ");
+                }
 
-            if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND r.ano_mes = " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + " ");
-            }
-            else //if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
+                if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.ano_mes = " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + " ");
+                }
+                else //if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
+                }
             }
 
             if (eAgrupamento == AgrupamentoRemuneracaoSenado.Senador)

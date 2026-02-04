@@ -2,8 +2,6 @@
 
 public static class Padrao
 {
-    public static string ConnectionString;
-
     /// <summary>
     /// Quantidade padrão de Itens a Exibir nas Grids
     /// </summary>

@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPS.API.Tests", "OPS.API.Tests\OPS.API.Tests.csproj", "{D891E7FF-0A18-C4E4-1552-5ECC1FACE07A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{5B447A54-81E3-4901-BE55-A7EC77E352ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B447A54-81E3-4901-BE55-A7EC77E352ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B447A54-81E3-4901-BE55-A7EC77E352ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D891E7FF-0A18-C4E4-1552-5ECC1FACE07A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D891E7FF-0A18-C4E4-1552-5ECC1FACE07A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D891E7FF-0A18-C4E4-1552-5ECC1FACE07A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D891E7FF-0A18-C4E4-1552-5ECC1FACE07A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

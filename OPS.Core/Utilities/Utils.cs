@@ -2,18 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using OPS.Core.DTOs;
-using RestSharp;
 
 namespace OPS.Core.Utilities
 {
@@ -82,6 +75,7 @@ namespace OPS.Core.Utilities
                 }
             return "";
         }
+
         public static object ParseDateTime(object d)
         {
             if (d is null) return DBNull.Value;
@@ -221,101 +215,10 @@ namespace OPS.Core.Utilities
                 });
         }
 
-        public static async Task SendMailAsync(string apiKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
-        {
-            var lstEmailTo = new MailAddressCollection() { objEmailTo };
-            await SendMailAsync(apiKey, lstEmailTo, subject, body, ReplyTo, htmlContent);
-        }
-
-        public static async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
-        {
-            var lstTo = new List<SendGridMessageTo>();
-            foreach (MailAddress objEmailTo in lstEmailTo)
-            {
-                lstTo.Add(new SendGridMessageTo()
-                {
-                    email = objEmailTo.Address,
-                    name = objEmailTo.DisplayName
-                });
-            }
-
-            var param = new SendGridMessage()
-            {
-                personalizations = new List<SendGridMessagePersonalization>{
-                    new SendGridMessagePersonalization()
-                    {
-                        to = lstTo,
-                        subject = subject
-                    }
-                },
-                content = new List<SendGridMessageContent>(){
-                    new SendGridMessageContent()
-                    {
-                        type = htmlContent ? "text/html" : "text/plain",
-                        value = body
-                    }
-                },
-                from = new SendGridMessageFrom()
-                {
-                    email = "envio@ops.net.br",
-                    name = "[OPS] Operação Política Supervisionada"
-                }
-            };
-
-            if (ReplyTo != null)
-            {
-                param.reply_to = new SendGridMessageReplyTo()
-                {
-                    email = ReplyTo.Address,
-                    name = ReplyTo.DisplayName
-                };
-            }
-
-            var restClient = new RestClient("https://api.sendgrid.com/v3/mail/send");
-            //restClient.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true; // Noncompliant: trust all certificates
-
-            var request = new RestRequest();
-            request.AddHeader("content-type", "application/json");
-            request.AddHeader("authorization", "Bearer " + apiKey);
-            request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
-            RestResponse response = await restClient.PostAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.Accepted)
-            {
-                var responseBody = JsonSerializer.Deserialize<dynamic>(response.Content);
-
-                throw new Exception(responseBody["errors"][0]["message"].ToString());
-            }
-        }
-
-        public static string SingleSpacedTrim(string s)
-        {
-            return new Regex(@"\s{2,}").Replace(s, " ");
-        }
-
         public static byte[] SHA1Hash(string input)
         {
             using var sha1 = SHA1.Create();
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
-        }
-
-        public static string EncodeTo64(string toEncode)
-        {
-            byte[] toEncodeAsBytes = Encoding.ASCII.GetBytes(toEncode);
-            return Convert.ToBase64String(toEncodeAsBytes);
-        }
-
-        public static string DecodeFrom64(string encodedData)
-        {
-            byte[] encodedDataAsBytes = Convert.FromBase64String(encodedData);
-            return Encoding.ASCII.GetString(encodedDataAsBytes);
-        }
-
-        public static string ReadAllText(string file)
-        {
-            using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var textReader = new StreamReader(fileStream))
-                return textReader.ReadToEnd();
         }
 
         public static string ToTitleCase(this string text)
@@ -357,23 +260,6 @@ namespace OPS.Core.Utilities
             byte[] bytes = Encoding.GetEncoding(WindowsCodepage1252).GetBytes(text);
             return Encoding.Latin1.GetString(bytes);
         }
-
-        //public static string GetIPAddress()
-        //{
-        //    System.Web.HttpContext context = System.Web.HttpContext.Current;
-        //    string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-
-        //    if (!string.IsNullOrEmpty(ipAddress))
-        //    {
-        //        string[] addresses = ipAddress.Split(',');
-        //        if (addresses.Length != 0)
-        //        {
-        //            return addresses[0];
-        //        }
-        //    }
-
-        //    return context.Request.ServerVariables["REMOTE_ADDR"];
-        //}
 
         public static string NullIfEmpty(this string value)
         {
@@ -446,7 +332,6 @@ namespace OPS.Core.Utilities
                 return null;
             }
         }
-
 
         public static List<int> ObterNumerosLegislatura(int ano, int? mes = null)
         {

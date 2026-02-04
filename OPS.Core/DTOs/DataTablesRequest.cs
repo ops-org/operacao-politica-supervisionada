@@ -41,16 +41,16 @@ namespace OPS.Core.DTOs
 
         public string GetSorting(Dictionary<int, string> dcColumns, string defaultSort = "")
         {
-            if (Order.Any())
+            if (Order?.Count > 0 && dcColumns != null)
             {
                 var lstSort = new List<string>();
                 foreach (var item in Order)
                 {
-                    if (dcColumns.ContainsKey(item.Column))
-                        lstSort.Add(string.Format("{0} {1}", dcColumns[item.Column], item.Dir));
+                    if (dcColumns.TryGetValue(item.Column, out string column))
+                        lstSort.Add(string.Format("{0} {1}", column, item.Dir));
                 }
 
-                if (lstSort.Any())
+                if (lstSort.Count > 0)
                     return Utils.MySqlEscape(string.Join(",", lstSort));
             }
 
@@ -59,7 +59,7 @@ namespace OPS.Core.DTOs
 
         public string GetSorting(string defaultSort = "")
         {
-            if (Order.Any())
+            if (Order?.Count > 0)
             {
                 var lstSort = new List<string>();
                 foreach (var item in Order)
@@ -67,7 +67,7 @@ namespace OPS.Core.DTOs
                     lstSort.Add(string.Format("{0} {1}", item.Column + 1, item.Dir));
                 }
 
-                if (lstSort.Any())
+                if (lstSort.Count > 0)
                     return Utils.MySqlEscape(string.Join(",", lstSort));
             }
 
@@ -80,7 +80,5 @@ namespace OPS.Core.DTOs
     {
         public int Column { get; set; }
         public string Dir { get; set; }
-
-
     }
 }

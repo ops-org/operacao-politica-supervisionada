@@ -1339,8 +1339,8 @@ WHERE (1=1)
         {
             var dcFielsSort = new Dictionary<int, string>(){
                 {1, "p.nome_parlamentar" },
-                {2, "p.quantidade_secretarios" },
-                {3, "p.custo_secretarios" },
+                {2, "p.secretarios_ativos" },
+                {3, "p.valor_mensal_secretarios" },
                 {4, "p.custo_total_secretarios" },
             };
 
@@ -1351,9 +1351,8 @@ WHERE (1=1)
 					SELECT
 						p.id as id_cf_deputado
 						, p.nome_parlamentar
-						, p.quantidade_secretarios
-						, p.custo_secretarios
-						, p.custo_total_secretarios
+						, p.secretarios_ativos
+						, p.valor_mensal_secretarios
 					FROM camara.cf_deputado p
 					where p.quantidade_secretarios > 0
 				");
@@ -1378,8 +1377,7 @@ WHERE (1=1)
                             id_parlamentar = reader["id_cf_deputado"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
                             quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
-                            custo_secretarios = Utils.FormataValor(reader["custo_secretarios"]),
-                            custo_total_secretarios = Utils.FormataValor(reader["custo_total_secretarios"])
+                            custo_total_secretarios = Utils.FormataValor(reader["valor_mensal_secretarios"]) // TODO: Seria o valor mensal ou total?
                         });
                     }
 
@@ -1544,16 +1542,16 @@ AND co.periodo_ate IS null
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-					SELECT 
-						EXTRACT(YEAR FROM s.data) as ano
-						, sum(IF(sp.presente = 1, 1, 0)) as presenca
-						, sum(IF(sp.presente = 0 and sp.justificativa = '', 1, 0)) as ausencia
-						, sum(IF(sp.presente = 0 and sp.justificativa <> '', 1, 0)) as ausencia_justificada
-					FROM camara.cf_sessao_presenca sp
-					inner JOIN camara.cf_sessao s on s.id = sp.id_cf_sessao
-					where sp.id_cf_deputado = @id
-					group by sp.id_cf_deputado, EXTRACT(YEAR FROM s.data)
-					order by EXTRACT(YEAR FROM s.data)
+SELECT 
+    EXTRACT(YEAR FROM s.data) as ano
+    , sum(CASE WHEN sp.presente THEN 1 ELSE 0 END) as presenca
+    , sum(CASE WHEN NOT sp.presente AND sp.justificativa = '' THEN 1 ELSE 0 END) as ausencia
+    , sum(CASE WHEN NOT sp.presente AND sp.justificativa <> '' THEN 1 ELSE 0 END) as ausencia_justificada
+FROM camara.cf_sessao_presenca sp
+INNER JOIN camara.cf_sessao s ON s.id = sp.id_cf_sessao
+WHERE sp.id_cf_deputado = @id
+GROUP BY sp.id_cf_deputado, EXTRACT(YEAR FROM s.data)
+ORDER BY EXTRACT(YEAR FROM s.data)
 				");
 
                 var categories = new List<dynamic>();
@@ -1830,7 +1828,7 @@ AND co.periodo_ate IS null
 					FROM camara.cf_sessao_presenca sp
 					INNER JOIN camara.cf_deputado d on d.id = sp.id_cf_deputado
 					WHERE sp.id_cf_sessao = {0}
-				", new { id });
+				", id);
 
                 sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "d.nome_parlamentar asc")));
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
@@ -1947,7 +1945,12 @@ AND co.periodo_ate IS null
             if (request == null) throw new BusinessException("Parâmetro request não informado!");
             string strSelectFiels, sqlGroupBy;
 
-            AgrupamentoRemuneracaoCamara eAgrupamento = (AgrupamentoRemuneracaoCamara)Convert.ToInt32(request.Filters["ag"].ToString());
+            AgrupamentoRemuneracaoCamara eAgrupamento;
+            if (request.Filters.TryGetValue("ag", out object agrupamento))
+                eAgrupamento = (AgrupamentoRemuneracaoCamara)Convert.ToInt32(agrupamento);
+            else
+                eAgrupamento = AgrupamentoRemuneracaoCamara.AnoMes;
+
             switch (eAgrupamento)
             {
                 case AgrupamentoRemuneracaoCamara.GrupoFuncional:

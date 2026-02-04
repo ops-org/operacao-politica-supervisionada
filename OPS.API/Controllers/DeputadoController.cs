@@ -128,23 +128,6 @@ namespace OPS.API.Controllers
             });
         }
 
-        [HttpGet("Imagem/{id}")]
-        public VirtualFileResult Imagem(string id)
-        {
-            if (!string.IsNullOrEmpty(Environment.ContentRootPath))
-            {
-                var file = @"images/depfederal/" + id + ".jpg";
-                var filePath = System.IO.Path.Combine(Environment.ContentRootPath, file);
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    return File(file, "image/jpeg");
-                }
-            }
-
-            return File(@"images/sem_foto.jpg", "image/jpeg");
-        }
-
         [HttpGet]
         [Route("GrupoFuncional")]
         public async Task<dynamic> GrupoFuncional()

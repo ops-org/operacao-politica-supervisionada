@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using OPS.Core.DTOs;
+using OPS.Core.Services;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum;
 using OPS.Infraestrutura;
@@ -44,7 +45,7 @@ namespace OPS.Importador.Fornecedores
 
         public async Task ConsultarDadosCNPJ(bool somenteNovos = true)
         {
-            var telegram = new TelegramApi(appSettings.TelegramApiToken);
+            var telegram = new TelegramService(httpClient, appSettings.TelegramApiToken);
             var telegraMessage = new TelegramMessage()
             {
                 ChatId = "-1001378778982", // OPS - Alertas
@@ -143,7 +144,7 @@ namespace OPS.Importador.Fornecedores
             }
         }
 
-        private async Task<int> ProcessarFornecedores(List<FornecedorQueryResult> fornecedores, TelegramApi telegram, TelegramMessage telegraMessage)
+        private async Task<int> ProcessarFornecedores(List<FornecedorQueryResult> fornecedores, TelegramService telegram, TelegramMessage telegraMessage)
         {
             int totalImportados = 0;
             int atual = 0;
