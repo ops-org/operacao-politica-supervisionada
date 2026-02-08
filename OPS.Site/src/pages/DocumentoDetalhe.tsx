@@ -114,7 +114,7 @@ const DespesaDocumentoDetalhe: React.FC<DocumentoDetalheProps> = ({ type = "depu
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-            <LoadingOverlay isLoading={true} />;
+            <LoadingOverlay isLoading={loading} />
 
             <Header />
             <main className="container mx-auto px-4 py-8">
