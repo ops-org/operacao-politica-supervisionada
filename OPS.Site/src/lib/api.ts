@@ -128,10 +128,8 @@ export const fetchFornecedores = async (searchParams: FornecedorSearchRequest): 
 export interface Fornecedor {
   id_fornecedor: string;
   cnpj_cpf: string;
-  nome: any;
-  nome_fantasia: any;
-  estado: string;
-  valor_total_contratado: string;
+  nome_fornecedor: any;
+  valor_total: string;
 }
 
 export const fetchMaioresFornecedores = async (id: string, type: PoliticianType): Promise<Fornecedor[]> => {

@@ -174,6 +174,7 @@ namespace OPS.Core.Repositories
                         string cnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString());
                         var ano = Convert.ToInt32(reader["ano"]);
                         var mes = Convert.ToInt16(reader["mes"]);
+                        var emissao = Convert.ToDateTime(reader["data_emissao"].ToString());
 
                         var documento = new DocumentoDetalheDTO
                         {
@@ -181,7 +182,7 @@ namespace OPS.Core.Repositories
                             IdDocumento = reader["id_documento"] != DBNull.Value ? Convert.ToInt64(reader["id_documento"]) : (long?)null,
                             NumeroDocumento = reader["numero_documento"].ToString(),
                             TipoDocumento = sTipoDocumento,
-                            DataEmissao = Utils.FormataData(Convert.ToDateTime(reader["data_emissao"].ToString())),
+                            DataEmissao = Utils.FormataData(emissao),
                             ValorDocumento = Utils.FormataValor(Convert.ToDecimal(reader["valor_documento"])),
                             ValorGlosa = Utils.FormataValor(Convert.ToDecimal(reader["valor_glosa"])),
                             ValorLiquido = Utils.FormataValor(Convert.ToDecimal(reader["valor_liquido"])),
@@ -209,10 +210,10 @@ namespace OPS.Core.Repositories
                         if (tipoLink == 2)// NF-e
                             documento.UrlDocumento = $"{urlCamara}nota-fiscal-eletronica?ideDocumentoFiscal={documento.IdDocumento}";
                         else if (tipoLink == 1)// Recibo
-                            documento.UrlDocumento = $"{urlCamara}documentos/publ/{documento.IdDeputado}/{documento.Ano}/{documento.IdDocumento}.pdf";
+                            documento.UrlDocumento = $"{urlCamara}documentos/publ/{documento.IdDeputado}/{emissao.Year}/{documento.IdDocumento}.pdf";
 
-                        documento.UrlDemaisDocumentosMes = $"{urlCamara}sumarizado?nuDeputadoId=${documento.IdParlamentar}&dataInicio={documento.Competencia}&dataFim={documento.Competencia}&despesa={documento.IdDespesaTipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=";
-                        documento.UrlDetalhesDocumento = $"{urlCamara}documento?nuDeputadoId=${documento.IdParlamentar}&numMes={documento.Mes}&numAno=${documento.Ano}&despesa={documento.IdDespesaTipo}&cnpjFornecedor={documento.CnpjCpf}&idDocumento={documento.NumeroDocumento}";
+                        documento.UrlDemaisDocumentosMes = $"{urlCamara}sumarizado?nuDeputadoId={documento.IdParlamentar}&dataInicio={documento.Competencia}&dataFim={documento.Competencia}&despesa={documento.IdDespesaTipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=";
+                        documento.UrlDetalhesDocumento = $"{urlCamara}documento?nuDeputadoId={documento.IdParlamentar}&numMes={documento.Mes}&numAno=${documento.Ano}&despesa={documento.IdDespesaTipo}&cnpjFornecedor={documento.CnpjCpf}&idDocumento={documento.NumeroDocumento}";
 
                         return documento;
                     }

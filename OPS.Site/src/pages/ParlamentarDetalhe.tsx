@@ -612,7 +612,7 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                         <CardTitle className="text-xl">Principais Fornecedores ({!isState ? 'CEAPS' : 'CEAP'})</CardTitle>
                                     </div>
                                     <Link
-                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Periodo=0&Agrupamento=3`}
+                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id_parlamentar}&Periodo=0&Agrupamento=3`}
                                         className="px-3 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg active:scale-95"
                                     >
                                         Lista completa
@@ -646,7 +646,7 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                                     <TableCell className="text-right py-4 px-6 font-black font-mono text-foreground group-hover:text-primary transition-colors">
                                                         {isSenator ? (
                                                             <Link
-                                                                to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Fornecedor=${row.id_fornecedor}&Periodo=0&Agrupamento=6`}
+                                                                to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id_parlamentar}&Fornecedor=${row.id_fornecedor}&Periodo=0&Agrupamento=6`}
                                                                 className="hover:underline underline-offset-4"
                                                             >
                                                                 R$&nbsp;{row.valor_total}
@@ -683,7 +683,7 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                         <CardTitle className="text-xl">Maiores Notas/Recibos</CardTitle>
                                     </div>
                                     <Link
-                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id}&Periodo=0&Agrupamento=6`}
+                                        to={`${breadcrumbLink}/ceap?IdParlamentar=${data.id_parlamentar}&Periodo=0&Agrupamento=6`}
                                         className="px-3 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg active:scale-95"
                                     >
                                         Lista completa
