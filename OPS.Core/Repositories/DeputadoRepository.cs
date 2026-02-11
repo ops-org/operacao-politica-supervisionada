@@ -213,7 +213,7 @@ namespace OPS.Core.Repositories
                             documento.UrlDocumento = $"{urlCamara}documentos/publ/{documento.IdDeputado}/{emissao.Year}/{documento.IdDocumento}.pdf";
 
                         documento.UrlDemaisDocumentosMes = $"{urlCamara}sumarizado?nuDeputadoId={documento.IdParlamentar}&dataInicio={documento.Competencia}&dataFim={documento.Competencia}&despesa={documento.IdDespesaTipo}&nomeHospede=&nomePassageiro=&nomeFornecedor=&cnpjFornecedor=&numDocumento=&sguf=";
-                        documento.UrlDetalhesDocumento = $"{urlCamara}documento?nuDeputadoId={documento.IdParlamentar}&numMes={documento.Mes}&numAno=${documento.Ano}&despesa={documento.IdDespesaTipo}&cnpjFornecedor={documento.CnpjCpf}&idDocumento={documento.NumeroDocumento}";
+                        documento.UrlDetalhesDocumento = $"{urlCamara}documento?nuDeputadoId={documento.IdParlamentar}&numMes={documento.Mes}&numAno={documento.Ano}&despesa={documento.IdDespesaTipo}&cnpjFornecedor={documento.CnpjCpf}&idDocumento={documento.NumeroDocumento}";
 
                         return documento;
                     }
