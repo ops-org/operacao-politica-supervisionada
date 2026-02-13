@@ -1361,7 +1361,7 @@ WHERE (1=1)
             {
                 anos,
                 valores,
-                valoresDeflacionados
+                valores_deflacionados = valoresDeflacionados
             };
         }
 

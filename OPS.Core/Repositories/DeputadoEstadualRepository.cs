@@ -564,7 +564,7 @@ namespace OPS.Core.Repositories
             {
                 anos,
                 valores,
-                valoresDeflacionados
+                valores_deflacionados = valoresDeflacionados
             };
         }
 

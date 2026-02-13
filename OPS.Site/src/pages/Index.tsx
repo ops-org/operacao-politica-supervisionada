@@ -13,7 +13,7 @@ const transformarDadosApi = (dados: ResumoAnual) => {
   return dados.anos.map((ano, index) => ({
     ano: ano.toString(),
     valor: Math.round(dados.valores[index]),
-    valorDeflacionado: dados.valoresDeflacionados ? Math.round(dados.valoresDeflacionados[index]) : undefined
+    valor_deflacionado: dados.valores_deflacionados ? Math.round(dados.valores_deflacionados[index]) : undefined
   }));
 };
 

@@ -254,7 +254,7 @@ export const fetchMaioresGastos = async (id: string): Promise<MaiorGasto[]> => {
 export interface ResumoAnual {
   anos: number[];
   valores: number[];
-  valoresDeflacionados?: number[];
+  valores_deflacionados?: number[];
 }
 
 export const fetchResumoAnual = async (type: PoliticianType): Promise<ResumoAnual> => {

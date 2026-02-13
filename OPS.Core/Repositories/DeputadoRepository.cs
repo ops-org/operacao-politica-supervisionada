@@ -1787,7 +1787,7 @@ ORDER BY EXTRACT(YEAR FROM s.data)
             {
                 anos,
                 valores,
-                valoresDeflacionados
+                valores_deflacionados = valoresDeflacionados
             };
         }
 

@@ -36,7 +36,8 @@ export const GraficoResumoAnual = ({ dados }: PropsGraficoResumoAnual) => {
           fontSize={12}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(valor) => `${(valor / 1000)}K`}
+          tickFormatter={formatValue}
+          domain={[0, 'dataMax']}
         />
         <Tooltip
           content={({ active, payload, label }) => {
@@ -84,7 +85,7 @@ export const GraficoResumoAnual = ({ dados }: PropsGraficoResumoAnual) => {
         <Area
           type="monotone"
           name="Deflacionado (IPCA)"
-          dataKey="valorDeflacionado"
+          dataKey="valor_deflacionado"
           fill="hsl(var(--primary))"
           fillOpacity={0.2}
           stroke="hsl(var(--primary))"

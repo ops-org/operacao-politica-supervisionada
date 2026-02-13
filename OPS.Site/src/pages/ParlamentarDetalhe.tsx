@@ -512,14 +512,42 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                         <XAxis dataKey="ano" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
                                         <YAxis tickFormatter={formatValue} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
                                         <Tooltip
-                                            formatter={(value: number, name: string) => [formatCurrency(value), name === 'valor' ? 'Valor' : (name === 'valor_total_deflacionado' ? 'Total Deflacionado (IPCA)' : name)]}
-                                            labelFormatter={(label) => `Ano: ${label}`}
-                                            contentStyle={{
-                                                backgroundColor: 'hsl(var(--card))',
-                                                border: '1px solid hsl(var(--border))',
-                                                borderRadius: '12px',
-                                                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                                                textAlign: 'right',
+                                            content={({ active, payload, label }) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                                                        Ano
+                                                                    </span>
+                                                                    <span className="font-bold text-muted-foreground">
+                                                                        {label}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-2 space-y-1">
+                                                                {payload.map((entrada, index) => (
+                                                                    <div key={`item-${index}`} className="flex items-center gap-2">
+                                                                        <div
+                                                                            className="h-2 w-2 rounded-full"
+                                                                            style={{ backgroundColor: entrada.color }}
+                                                                        />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                                                                {entrada.name}
+                                                                            </span>
+                                                                            <span className="font-bold">
+                                                                                {formatCurrency(entrada.value as number)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
                                             }}
                                             cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
                                         />
@@ -533,8 +561,8 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                         )}
                                         {isState && (
                                             <>
-                                                <Bar dataKey="auxilio_saude" stackId="a" fill="hsl(var(--chart-5))" radius={[0, 0, 0, 0]} name="Auxílio Saúde" className="transition-all duration-300 hover:opacity-80" />
-                                                <Bar dataKey="diarias" stackId="a" fill="hsl(var(--chart-6))" radius={[4, 4, 0, 0]} name="Diárias" className="transition-all duration-300 hover:opacity-80" />
+                                                <Bar dataKey="auxilio_saude" stackId="a" fill="hsl(var(--chart-3))" radius={[0, 0, 0, 0]} name="Auxílio Saúde" className="transition-all duration-300 hover:opacity-80" />
+                                                <Bar dataKey="diarias" stackId="a" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Diárias" className="transition-all duration-300 hover:opacity-80" />
                                             </>
                                         )}
                                         <Line type="monotone" dataKey="valor_total_deflacionado" stroke="#ff4d4f" strokeWidth={3} dot={{ r: 4 }} name="Total Deflacionado (IPCA)" />
