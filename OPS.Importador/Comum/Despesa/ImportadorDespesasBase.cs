@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Net;
+using System.Security.Cryptography.Xml;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -1040,32 +1041,23 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
     {
         if (despesaTemp.DataEmissao != null)
         {
-            var endMonthDate = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 1).AddMonths(1).AddDays(-1);
+            // Calcular diferença em dias entre a data de emissão e o ano da despesa
+            var dataReferencia = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 15);
+            var dataEmissao = despesaTemp.DataEmissao!.Value;
+            var diferencaDias = Math.Abs((dataReferencia.ToDateTime(TimeOnly.MinValue) - dataEmissao.ToDateTime(TimeOnly.MinValue)).Days);
 
-            if (despesaTemp.DataEmissao?.Year != despesaTemp.Ano && despesaTemp.DataEmissao?.AddMonths(3).Year != despesaTemp.Ano)
+            if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
             {
-                // Validar ano com 3 meses de tolerancia.
-                //logger.LogWarning("Despesa com ano incorreto: {@Despesa}", despesaTemp);
+                logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
+                           despesaTemp.NomeCivil, despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
 
-                var dt = despesaTemp.DataEmissao!.Value;
-                despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, dt.Day);
+                var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, dataEmissao.Month);
+                despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dataEmissao.Month, Math.Min(dataEmissao.Day, monthLastDay));
             }
-            else if (despesaTemp.DataEmissao > endMonthDate)
-            {
-                // Validar despesa com data futura.
-                //logger.LogWarning("Despesa com data incorreta/futura: {@Despesa}", despesaTemp);
-
-                var dt = despesaTemp.DataEmissao!.Value;
-                // Tentamos trocar apenas o ano.
-                despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, dt.Day);
-
-                // Caso a data permaneça invalida, alteramos também o mês, se possivel.
-                if (despesaTemp.DataEmissao > endMonthDate && despesaTemp.Mes.HasValue)
-                {
-                    var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
-                    despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, Math.Min(dt.Day, monthLastDay));
-                }
-            }
+        }
+        else
+        {
+            despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 1);
         }
 
         if (despesaTemp.Valor == 0)

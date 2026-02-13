@@ -116,7 +116,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             {
                 if (caminhoArquivo.EndsWith(".zip"))
                 {
-                    DescompactarArquivo(caminhoArquivo);
+                    fileManager.DescompactarArquivo(caminhoArquivo);
                     caminhoArquivo = caminhoArquivo.Replace(".zip", "");
                 }
 
@@ -128,14 +128,6 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                 fileManager.MoverArquivoComErro(caminhoArquivo);
             }
         }
-    }
-
-    protected void DescompactarArquivo(string caminhoArquivo)
-    {
-        logger.LogDebug("Descompactando Arquivo '{CaminhoArquivo}'", caminhoArquivo);
-
-        var zip = new FastZip();
-        zip.ExtractZip(caminhoArquivo, Path.GetDirectoryName(caminhoArquivo), null);
     }
 
     /// <summary>
@@ -291,33 +283,18 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, 1);
                     else
                     {
-                        // Copy from ImportadorDespesasBase.InserirDespesaTemp
-                        var endMonthDate = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 1).AddMonths(1).AddDays(-1);
-
-                        if (despesaTemp.DataEmissao?.Year != despesaTemp.Ano && despesaTemp.DataEmissao?.AddMonths(3).Year != despesaTemp.Ano)
+                        // Calcular diferença em dias entre a data de emissão e o ano da despesa
+                        var dataReferencia = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 15);
+                        var dataEmissao = despesaTemp.DataEmissao!.Value;
+                        var diferencaDias = Math.Abs((dataReferencia.ToDateTime(TimeOnly.MinValue) - dataEmissao.ToDateTime(TimeOnly.MinValue)).Days);
+                        
+                        if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
                         {
-                            // Validar ano com 3 meses de tolerancia.
-                            //logger.LogWarning("Despesa com ano incorreto: {@Despesa}", despesaTemp);
+                            logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
+                                despesaTemp.NomeParlamentar, despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
 
-                            var dt = despesaTemp.DataEmissao!.Value;
-                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, dt.Month);
-                            despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, Math.Min(dt.Day, monthLastDay));
-                        }
-                        else if (despesaTemp.DataEmissao > endMonthDate)
-                        {
-                            // Validar despesa com data futura.
-                            //logger.LogWarning("Despesa com data incorreta/futura: {@Despesa}", despesaTemp);
-
-                            var dt = despesaTemp.DataEmissao!.Value;
-                            // Tentamos trocar apenas o ano.
-                            despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dt.Month, dt.Day);
-
-                            // Caso a data permaneça invalida, alteramos também o mês, se possivel.
-                            if (despesaTemp.DataEmissao > endMonthDate && despesaTemp.Mes.HasValue)
-                            {
-                                var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
-                                despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, Math.Min(dt.Day, monthLastDay));
-                            }
+                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, dataEmissao.Month);
+                            despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dataEmissao.Month, Math.Min(dataEmissao.Day, monthLastDay));
                         }
                     }
 
@@ -371,11 +348,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             if (lstHash.Any())
             {
-                var deletar = lstHash.Values.Select(x => (long)x).ToList();
-                dbContext.DeputadoFederalDespesaTemps
-                    .AsNoTracking()
-                    .Where(u => deletar.Contains(u.Id))
-                    .ExecuteDelete();
+                string idsToDelete = string.Join(",", lstHash.Values.Select(x => x));
+                var deleted = dbContext.Database.ExecuteSqlRaw(
+                    $"DELETE FROM camara.cf_despesa WHERE id IN ({idsToDelete})"
+                );
             }
 
             if (itensProcessadosAno > 0)

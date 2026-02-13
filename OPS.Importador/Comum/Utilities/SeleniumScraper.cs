@@ -174,7 +174,7 @@ namespace OPS.Importador.Comum.Utilities
             options.AddArgument("--disable-gpu");
             options.AddArgument("--no-sandbox");
 
-            var downloadDir = Path.Combine(appSettings.TempFolder, Core.Enumerators.Estados.Piaui.ToString());
+            var downloadDir = Path.Combine(appSettings.TempFolder, "Estados", Core.Enumerators.Estados.Piaui.ToString());
             options.AddUserProfilePreference("download.default_directory", downloadDir);
             options.AddUserProfilePreference("download.prompt_for_download", false);
             options.AddUserProfilePreference("disable-popup-blocking", "true");
@@ -332,10 +332,13 @@ namespace OPS.Importador.Comum.Utilities
             var fileSystemWatcher = new FileSystemWatcher(downloadPath);
             var fileCreatedEvent = new ManualResetEvent(false);
 
-            fileSystemWatcher.Created += (s, e) =>
+            fileSystemWatcher.Renamed += (s, e) =>
             {
-                tempFile = e.FullPath;
-                fileCreatedEvent.Set();
+                if (!e.FullPath.EndsWith(".crdownload", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    tempFile = e.FullPath;
+                    fileCreatedEvent.Set();
+                }
             };
 
             fileSystemWatcher.EnableRaisingEvents = true;

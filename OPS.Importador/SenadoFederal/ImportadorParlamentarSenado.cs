@@ -642,7 +642,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
             foreach (var senatorId in activeSenators)
             {
-                string url = "https://www.senado.leg.br/senadores/img/fotos-oficiais/senador" + senatorId + ".jpg";
+                string url = "https://legis.senado.leg.br/senadores/fotos-oficiais/" + senatorId;
                 string src = sSenadoressImagesPath + senatorId + ".jpg";
                 if (File.Exists(src))
                 {
