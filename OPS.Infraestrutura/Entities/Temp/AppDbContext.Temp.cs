@@ -128,8 +128,10 @@ public static class TempConfigurations
     {
         modelBuilder.Entity<TseCandidato>(entity =>
         {
-            entity.HasNoKey();
-            entity.ToTable("tse_candidato", "temp");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+            entity.ToTable("tse_candidatura", "temp");
         });
     }
 

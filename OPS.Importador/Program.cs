@@ -36,6 +36,7 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
+using OPS.Importador.TribunalSuperiorEleitoral;
 using OPS.Infraestrutura;
 using Polly;
 using Polly.Extensions.Http;
@@ -115,6 +116,7 @@ namespace OPS.Importador
             //services.AddScoped<Presidencia>();
 
             services.AddScoped<Fornecedores.ImportacaoFornecedor>();
+            services.AddScoped<Candidatos>();
             services.AddScoped<FileManager>();
             services.AddScoped<HttpLogger>();
             services.AddDbContext<AppDbContext>(options => options
@@ -234,13 +236,13 @@ namespace OPS.Importador
                     ON CONFLICT DO NOTHING;").GetAwaiter().GetResult();
 
                 var crawler = new SeleniumScraper(serviceProvider);
-                crawler.BaixarArquivosParana();
-                crawler.BaixarArquivosPiaui();
+                //crawler.BaixarArquivosParana();// TODO: Validar não existencia do ano/mes
+                //crawler.BaixarArquivosPiaui();
 
                 var types = new Type[]
                     {
-                        typeof(SenadoFederal.Senado), // csv
-                        typeof(CamaraFederal.Camara), // csv
+                        //typeof(SenadoFederal.Senado), // csv
+                        //typeof(CamaraFederal.Camara), // csv
                         //typeof(ImportacaoAcre), // Portal sem dados detalhados por parlamentar! <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
                         typeof(ImportacaoAlagoas), // Dados em PDF scaneado e de baixa qualidade!
                         typeof(ImportacaoAmapa), // crawler mensal/deputado (Apenas BR)
@@ -313,13 +315,15 @@ namespace OPS.Importador
                 //    mesConsulta = mesConsulta.AddMonths(1);
                 //} while (mesConsulta < mesAtual);
 
+                //var cand = serviceProvider.GetRequiredService<Candidatos>();
 
-                //var cand = new Candidatos();
-                //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
-                //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
-                //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
-                //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
-                //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
+                //// https://divulgacandcontas.tse.jus.br/divulga/#/eleicao
+                //// https://dadosabertos.tse.jus.br/dataset/?groups=candidatos
+                //var anos = new List<int> { 2006, 2010, 2014, 2018, 2022 }; 
+                //foreach (var ano in anos)
+                //{
+                //    cand.ImportarCompleto(ano).Wait();
+                //}
 
                 var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
                 objFornecedor.ConsultarDadosCNPJ().Wait();
