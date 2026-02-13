@@ -19,7 +19,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { ExternalLink, Phone, Mail, Users, TrendingUp, Calendar, MapPin, Briefcase, User, DollarSign, Building2, ArrowRight, Receipt } from "lucide-react";
 import { PoliticianType } from "@/types/politician";
@@ -73,7 +73,8 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                     const gastosData = response.custoAnual as any;
                     setChartData(gastosData.categories.map((cat: string, index: number) => ({
                         ano: cat,
-                        valor: gastosData.series[index] || 0
+                        valor: gastosData.series[index] || 0,
+                        valor_total_deflacionado: gastosData.series2 ? gastosData.series2[index] : (gastosData.series[index] || 0)
                     })));
                 } else {
                     setChartData([]);
@@ -506,12 +507,12 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                             </CardHeader>
                             <CardContent className="p-6">
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={chartData}>
+                                    <ComposedChart data={chartData}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                                         <XAxis dataKey="ano" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
                                         <YAxis tickFormatter={formatValue} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
                                         <Tooltip
-                                            formatter={(value: number, name: string) => [formatCurrency(value), name === 'valor' ? 'Valor' : name]}
+                                            formatter={(value: number, name: string) => [formatCurrency(value), name === 'valor' ? 'Valor' : (name === 'valor_total_deflacionado' ? 'Total Deflacionado (IPCA)' : name)]}
                                             labelFormatter={(label) => `Ano: ${label}`}
                                             contentStyle={{
                                                 backgroundColor: 'hsl(var(--card))',
@@ -536,7 +537,8 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                                 <Bar dataKey="diarias" stackId="a" fill="hsl(var(--chart-6))" radius={[4, 4, 0, 0]} name="Diárias" className="transition-all duration-300 hover:opacity-80" />
                                             </>
                                         )}
-                                    </BarChart>
+                                        <Line type="monotone" dataKey="valor_total_deflacionado" stroke="#ff4d4f" strokeWidth={3} dot={{ r: 4 }} name="Total Deflacionado (IPCA)" />
+                                    </ComposedChart>
                                 </ResponsiveContainer>
 
                                 <div className="flex justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest flex-wrap">
@@ -546,15 +548,6 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
                                                 <span className="text-muted-foreground">Verba de Gabinete</span>
                                             </div>
-                                            {/* <Link
-                                            to={folhaPagamentoUrl}
-                                            className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer group"
-                                            title="Clique para ver detalhes da folha de pagamento"
-                                        >
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
-                                            <span className="text-muted-foreground group-hover:text-primary">Verba de Gabinete</span>
-                                            <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </Link> */}
                                         </>
                                     )}
                                     <div className="flex items-center gap-2">
@@ -585,6 +578,10 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                                             </div>
                                         </>
                                     )}
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff4d4f' }}></div>
+                                        <span className="text-muted-foreground">Total Deflacionado (IPCA)</span>
+                                    </div>
                                 </div>
 
                             </CardContent>

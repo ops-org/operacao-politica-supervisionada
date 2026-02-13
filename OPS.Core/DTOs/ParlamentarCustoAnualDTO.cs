@@ -24,5 +24,8 @@ namespace OPS.Core.DTOs
 
         [JsonPropertyName("diarias")]
         public decimal Diarias { get; set; }
+
+        [JsonPropertyName("valor_total_deflacionado")]
+        public decimal ValorTotalDeflacionado { get; set; }
     }
 }

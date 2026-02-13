@@ -505,10 +505,10 @@ const FornecedorDetalhe = () => {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="py-4">
-                                    <AnnualSummaryChart
-                                        data={recebimentosPorAno.categories.map((year, index) => ({
-                                            year: year.toString(),
-                                            value: Math.round(recebimentosPorAno.series[index] || 0)
+                                    <GraficoResumoAnual
+                                        dados={recebimentosPorAno.categories.map((year, index) => ({
+                                            ano: year.toString(),
+                                            valor: Math.round(recebimentosPorAno.series[index] || 0)
                                         }))}
                                     />
                                 </CardContent>

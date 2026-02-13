@@ -1,70 +1,76 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatValue } from "@/lib/utils";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from "recharts";
+import { ComposedChart, Bar, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
-interface ChartData {
-  year: string;
-  value: number;
+interface DadosGrafico {
+  ano: string;
+  valor: number;
+  valorDeflacionado?: number;
 }
 
-interface AnnualSummaryChartWithCardProps {
-  title: string;
-  subtitle: string;
-  data: ChartData[];
+interface PropsGraficoResumoAnualComCard {
+  titulo: string;
+  subtitulo: string;
+  dados: DadosGrafico[];
 }
 
-interface AnnualSummaryChartProps {
-  data: ChartData[];
+interface PropsGraficoResumoAnual {
+  dados: DadosGrafico[];
 }
 
 
-export const AnnualSummaryChart = ({ data }: AnnualSummaryChartProps) => {
+export const GraficoResumoAnual = ({ dados }: PropsGraficoResumoAnual) => {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart
-        data={data}
-        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+      <ComposedChart data={dados} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
         <XAxis
-          dataKey="year"
-          type="category"
-          axisLine={false}
+          dataKey="ano"
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={12}
           tickLine={false}
-          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-          dy={10}
+          axisLine={false}
         />
         <YAxis
-          type="number"
-          tickFormatter={formatValue}
-          axisLine={false}
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={12}
           tickLine={false}
-          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+          axisLine={false}
+          tickFormatter={(valor) => `${(valor / 1000)}K`}
         />
         <Tooltip
           content={({ active, payload, label }) => {
             if (active && payload && payload.length) {
               return (
-                <div
-                  style={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                    padding: '8px 12px',
-                    color: 'hsl(var(--foreground))'
-                  }}
-                >
-                  <div style={{ fontSize: '12px', marginBottom: '4px', opacity: 0.8 }}>
-                    Ano: {label}
+                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col">
+                      <span className="text-[0.70rem] uppercase text-muted-foreground">
+                        Ano
+                      </span>
+                      <span className="font-bold text-muted-foreground">
+                        {label}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                    Valor
+                  <div className="mt-2 space-y-1">
+                    {payload.map((entrada, index) => (
+                      <div key={`item-${index}`} className="flex items-center gap-2">
+                        <div
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: entrada.color }}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-[0.70rem] uppercase text-muted-foreground">
+                            {entrada.name}
+                          </span>
+                          <span className="font-bold">
+                            {formatCurrency(entrada.value as number)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div style={{ fontWeight: 'bold' }}>
-                    {formatCurrency(payload[0].value as number)}
-                  </div>
-                  
                 </div>
               );
             }
@@ -72,30 +78,41 @@ export const AnnualSummaryChart = ({ data }: AnnualSummaryChartProps) => {
           }}
           cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
         />
-        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-          {data.map((_, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={index === data.length - 1 ? 'hsl(var(--primary))' : `hsl(var(--primary) / ${0.3 + (index / data.length) * 0.7})`}
-              className="transition-all duration-300 hover:opacity-80"
-            />
-          ))}
-        </Bar>
-      </BarChart>
+        <Legend
+          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+        />
+        <Area
+          type="monotone"
+          name="Deflacionado (IPCA)"
+          dataKey="valorDeflacionado"
+          fill="hsl(var(--primary))"
+          fillOpacity={0.2}
+          stroke="hsl(var(--primary))"
+          strokeWidth={2}
+        />
+        <Bar
+          name="Valor Original"
+          dataKey="valor"
+          fill="hsl(var(--primary))"
+          radius={[4, 4, 0, 0]}
+          barSize={40}
+          opacity={0.8}
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   )
 }
 
-export const AnnualSummaryChartWithCard = ({ title, subtitle, data }: AnnualSummaryChartWithCardProps) => {
+export const GraficoResumoAnualComCard = ({ titulo, subtitulo, dados }: PropsGraficoResumoAnualComCard) => {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">
-          {title} <span className="font-normal text-muted-foreground">({subtitle})</span>
+          {titulo} <span className="font-normal text-muted-foreground">({subtitulo})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <AnnualSummaryChart data={data} />
+        <GraficoResumoAnual dados={dados} />
       </CardContent>
     </Card>
   );

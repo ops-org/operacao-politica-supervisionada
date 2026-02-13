@@ -116,6 +116,7 @@ namespace OPS.Importador
 
             services.AddScoped<Fornecedores.ImportacaoFornecedor>();
             services.AddScoped<FileManager>();
+            services.AddScoped<IndiceInflacaoImportador>();
             services.AddScoped<HttpLogger>();
             services.AddDbContext<AppDbContext>(options => options
                    .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), ServiceLifetime.Transient);
@@ -210,9 +211,12 @@ namespace OPS.Importador
             try
             {
                 var logger = serviceProvider.GetService<ILogger<Program>>();
-                //DapperExtensions.SetPolicies(new SqlResiliencePolicyFactory(logger).GetSqlResiliencePolicies());
-
                 logger.LogInformation("Iniciando Importação");
+
+                var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
+                ipcaImportador.ImportarIpca().Wait();
+
+                return Task.CompletedTask; // Temporarily stop here for IPCA only
 
                 var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
 
