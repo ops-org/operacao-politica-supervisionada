@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OPS.Core.Enumerators;
@@ -193,5 +194,13 @@ public class FileManager
 
         File.Move(caminhoArquivoTmp, filename, true);
         return true;
+    }
+
+    public void DescompactarArquivo(string caminhoArquivo, string fileFilter = null)
+    {
+        logger.LogDebug("Descompactando Arquivo '{CaminhoArquivo}'", caminhoArquivo);
+
+        var zip = new FastZip();
+        zip.ExtractZip(caminhoArquivo, Path.GetDirectoryName(caminhoArquivo), fileFilter);
     }
 }

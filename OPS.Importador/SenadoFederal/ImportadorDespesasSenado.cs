@@ -197,25 +197,26 @@ public class ImportadorDespesasSenado : IImportadorDespesas
                     };
                     linhasProcessadasAno++;
 
-                    // Pediodo legal de apresentação de notas é de 90 dias.
-                    var dataVigencia = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes.Value, 1);
-                    if (despesaTemp.Data > dataVigencia.AddDays(90) || despesaTemp.Data < dataVigencia.AddDays(-90))
+                    if (despesaTemp.Data != null)
                     {
-                        if (despesaTemp.Data > dataVigencia.AddDays(180) || despesaTemp.Data < dataVigencia.AddDays(-180))
-                        {
-                            // Diferença de mais de 180 dias (6 meses) entre a data de apresentação da nota (vigencia) e data do documento.
-                            //logger.LogError("Data da despesa muito diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
-                            //   linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
+                        // Pediodo legal de apresentação de notas é de 90 dias.
+                        // Calcular diferença em dias entre a data de emissão e o ano da despesa
+                        var dataReferencia = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes ?? despesaTemp.Data.Value.Month, 15);
+                        var dataEmissao = despesaTemp.Data!.Value;
+                        var diferencaDias = Math.Abs((dataReferencia - dataEmissao).Days);
 
-                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano.Value, despesaTemp.Mes.Value);
-                            despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes.Value, Math.Min(despesaTemp.Data.Value.Day, monthLastDay));
-                        }
-                        else
+                        if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
                         {
-                            // Diferença de mais de 90 dias (3 meses) entre a data de apresentação da nota (vigencia) e data do documento.
-                            //logger.LogWarning("Data da despesa diferente do ano/mês informado. Linha {Linha}, Senador: {Senador}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
-                            //   linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
+                            logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Linha {Linha}, Parlamentar: {Parlamentar}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
+                               linhasProcessadasAno + 2, despesaTemp.Senador, despesaTemp.Data?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
+
+                            var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano.Value, dataEmissao.Month);
+                            despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, dataEmissao.Month, Math.Min(dataEmissao.Day, monthLastDay));
                         }
+                    }
+                    else
+                    {
+                        despesaTemp.Data = new DateTime(despesaTemp.Ano.Value, despesaTemp.Mes ?? despesaTemp.Data.Value.Month, 1);
                     }
 
                     if (!string.IsNullOrEmpty(despesaTemp.CnpjCpf) && !Utils.IsCpf(despesaTemp.CnpjCpf) && !Utils.IsCnpj(despesaTemp.CnpjCpf))

@@ -27,14 +27,14 @@ namespace OPS.Importador.Comum
 
         public virtual async Task ImportarCompleto()
         {
-            //if (importadorParlamentar != null)
-            //{
-            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
-            //    ImportarPerfilParlamentar();
-            //    importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
+            if (importadorParlamentar != null)
+            {
+                importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
+                ImportarPerfilParlamentar();
+                importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
 
-            //    //ImportarImagemParlamentar();
-            //}
+                ImportarImagemParlamentar();
+            }
 
             if (importadorDespesas != null)
             {
@@ -53,8 +53,8 @@ namespace OPS.Importador.Comum
                     //    || importadorDespesas is ImportadorDespesasMaranhao
                     //    || importadorDespesas is ImportadorDespesasRioGrandeDoSul))
                     //{
-                    //   await ImportarDespesas(DateTime.Now.Year - 2);
-                    //await ImportarDespesasAnoAnterior();
+                    //    await ImportarDespesas(DateTime.Now.Year - 2);
+                    //    await ImportarDespesasAnoAnterior();
                     //}
 
                     //await ImportarDespesasAnoAtual();
@@ -62,8 +62,12 @@ namespace OPS.Importador.Comum
                     //for (int ano = 2023; ano <= 2026; ano++)
                     //    await ImportarDespesas(ano);
 
+                    await ImportarDespesas(2025);
                     await ImportarDespesas(2026);
                 }
+
+                //for (int ano = 2008; ano <= 2026; ano++)
+                //    await ImportarDespesas(ano);
 
                 importadorDespesas.AtualizarDatasImportacaoDespesas(dFim: DateTime.UtcNow);
             }
