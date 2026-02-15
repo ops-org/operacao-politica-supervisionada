@@ -17,7 +17,7 @@ class ApiError extends Error {
 const getApiBaseUrl = (): string => {
   // In production (GitHub Pages), use direct API calls
   if (import.meta.env.PROD) {
-     return 'https://api.ops.org.br';
+    return 'https://api.ops.org.br';
   }
 
   // Fallback for local development

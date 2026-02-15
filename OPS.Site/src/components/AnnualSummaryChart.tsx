@@ -5,7 +5,7 @@ import { ComposedChart, Bar, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, C
 interface DadosGrafico {
   ano: string;
   valor: number;
-  valorDeflacionado?: number;
+  valor_deflacionado?: number;
 }
 
 interface PropsGraficoResumoAnualComCard {

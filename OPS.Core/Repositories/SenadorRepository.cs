@@ -429,7 +429,7 @@ namespace OPS.Core.Repositories
                         SiglaEstadoFornecedor = reader["sigla_estado_fornecedor"].ToString(),
                         ValorLiquido = Utils.FormataValor(reader["valor_liquido"])
                     });
-                    }
+                }
                 return lstRetorno;
             }
         }
