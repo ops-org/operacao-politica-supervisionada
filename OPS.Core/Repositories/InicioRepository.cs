@@ -35,7 +35,7 @@ namespace OPS.Core.Repositories
                     Info = x.i.Info,
                     UltimaDespesa = Utils.FormataData(x.i.UltimaDespesa),
                     UltimaImportacao = Utils.FormataData(x.i.DespesasFim)
-                })                .ToListAsync();
+                }).ToListAsync();
 
             return results;
         }
@@ -56,7 +56,7 @@ namespace OPS.Core.Repositories
                 {
                     Id = d.IdDeputado,
                     NomeParlamentar = d.NomeParlamentar,
-                    ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal),
+                    ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal, 2),
                     SiglaPartidoEstado = d.SiglaPartido + " / " + d.SiglaEstado
                 })
                 .ToListAsync();
@@ -68,7 +68,7 @@ namespace OPS.Core.Repositories
                 {
                     Id = d.IdDeputado,
                     NomeParlamentar = d.NomeParlamentar,
-                    ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal),
+                    ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal, 2),
                     SiglaPartidoEstado = d.SiglaPartido + " / " + d.SiglaEstado
                 })
                 .ToListAsync();
@@ -80,7 +80,7 @@ namespace OPS.Core.Repositories
                 {
                     Id = s.IdSenador,
                     NomeParlamentar = s.NomeParlamentar,
-                    ValorTotal = "R$ " + Utils.FormataValor(s.ValorTotal),
+                    ValorTotal = "R$ " + Utils.FormataValor(s.ValorTotal, 2),
                     SiglaPartidoEstado = s.SiglaPartido + " / " + s.SiglaEstado
                 })
                 .ToListAsync();

@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ops
+      - POSTGRES_USER=ops
+      - POSTGRES_PASSWORD=ops_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: OPS.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    ports:
+      - "5200:5200"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: OPS.Site/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

@@ -15,10 +15,22 @@ public partial class AppDbContext
     public DbSet<Pessoa> Pessoas { get; set; }
     public DbSet<PessoaNew> PessoasNew { get; set; }
     public DbSet<Profissao> Profissoes { get; set; }
+    public DbSet<IndiceInflacao> IndicesInflacao { get; set; }
 }
 
 public static class CommonConfigurations
 {
+    public static void ConfigureIndiceInflacao(this ModelBuilder modelBuilder)
+    {
+        // Configure IndiceInflacao
+        modelBuilder.Entity<IndiceInflacao>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.Ano, e.Mes }).IsUnique();
+            entity.ToTable("indice_inflacao", "public");
+        });
+    }
+
     public static void ConfigureEstado(this ModelBuilder modelBuilder)
     {
         // Configure Estado
@@ -116,6 +128,7 @@ public static class CommonConfigurations
 
     public static void ConfigureCommonEntities(this ModelBuilder modelBuilder)
     {
+        modelBuilder.ConfigureIndiceInflacao();
         modelBuilder.ConfigureEstado();
         modelBuilder.ConfigureImportacao();
         modelBuilder.ConfigurePartido();

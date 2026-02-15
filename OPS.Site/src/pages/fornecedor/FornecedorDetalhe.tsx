@@ -6,10 +6,10 @@ import { Footer } from "@/components/Footer";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { FornecedorDetalheSkeleton } from "@/components/FornecedorDetalheSkeleton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, ExternalLink, Building2, MapPin, Phone, Mail, Calendar, DollarSign, Briefcase, Users, TrendingUp, RefreshCw, FileBadge, Copy, ShieldX, ShieldCheck, CircleUserRound, Building, Earth, CakeSlice, ClipboardList, Drama, MapPinned, AlertTriangle, ArrowRight } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, Building2, MapPin, Calendar, Briefcase, Users, TrendingUp, Copy, ShieldX, ShieldCheck, MapPinned, ArrowRight } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -18,10 +18,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { fetchFornecedorDetalhe, fetchRecebimentosPorAno, fetchMaioresGastos, FornecedorDetalheResponse, QuadroSocietario, RecebimentosPorAno, MaiorGasto } from "@/lib/api";
-import { AnnualSummaryChart } from "@/components/AnnualSummaryChart";
+import { fetchFornecedorDetalhe, fetchRecebimentosPorAno, fetchMaioresGastos, FornecedorDetalheResponse, RecebimentosPorAno, MaiorGasto } from "@/lib/api";
+import { GraficoResumoAnual } from "@/components/AnnualSummaryChart";
 import { formatBrazilianPhone } from "@/lib/utils";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const FornecedorDetalhe = () => {
     const { id } = useParams();
@@ -505,10 +504,10 @@ const FornecedorDetalhe = () => {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="py-4">
-                                    <AnnualSummaryChart
-                                        data={recebimentosPorAno.categories.map((year, index) => ({
-                                            year: year.toString(),
-                                            value: Math.round(recebimentosPorAno.series[index] || 0)
+                                    <GraficoResumoAnual
+                                        dados={recebimentosPorAno.categories.map((year, index) => ({
+                                            ano: year.toString(),
+                                            valor: Math.round(recebimentosPorAno.series[index] || 0)
                                         }))}
                                     />
                                 </CardContent>

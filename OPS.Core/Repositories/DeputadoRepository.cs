@@ -320,120 +320,126 @@ namespace OPS.Core.Repositories
                         });
                     }
                 }
-
                 return lstRetorno;
             }
         }
 
         public async Task<GraficoBarraDTO> GastosPorAno(int id)
         {
-            //using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-                strSql.AppendLine(@"
-					SELECT d.ano, SUM(d.valor_liquido) AS valor_total
+            var strSql = @"
+					SELECT d.ano, d.mes, SUM(d.valor_liquido) AS valor_total
 					FROM camara.cf_despesa d
 					WHERE d.id_cf_deputado = @id
-					group by d.ano
-					order by d.ano
-				");
+					group by d.ano, d.mes
+					order by d.ano, d.mes
+				";
 
-                var categories = new List<int>();
-                var series = new List<decimal>();
+            var categories = new List<int>();
+            var series = new List<decimal>();
+            var series2 = new List<decimal>();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
+            var indices = await _context.IndicesInflacao
+                .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
+                .ToListAsync();
+
+            var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
+
+            var gastosMensais = new List<(int Ano, int Mes, decimal Valor)>();
+
+            using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+            {
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
+                    gastosMensais.Add((
+                        Convert.ToInt32(reader["ano"]),
+                        Convert.ToInt32(reader["mes"]),
+                        Convert.ToDecimal(reader["valor_total"])
+                    ));
+                }
+            }
+
+            var anos = gastosMensais.Select(g => g.Ano).Distinct().OrderBy(a => a).ToList();
+
+            foreach (var ano in anos)
+            {
+                categories.Add(ano);
+
+                var gastosDoAno = gastosMensais.Where(g => g.Ano == ano).ToList();
+                decimal totalOriginal = gastosDoAno.Sum(g => g.Valor);
+                series.Add(totalOriginal);
+
+                decimal totalDeflacionado = 0;
+                foreach (var gasto in gastosDoAno)
+                {
+                    var indiceMes = indices.FirstOrDefault(i => i.Ano == gasto.Ano && i.Mes == gasto.Mes)?.Indice ?? 0;
+                    if (indiceMes > 0)
                     {
-                        categories.Add(Convert.ToInt32(reader["ano"]));
-                        series.Add(Convert.ToDecimal(reader["valor_total"]));
+                        totalDeflacionado += gasto.Valor * (lastIndice / indiceMes);
+                    }
+                    else
+                    {
+                        totalDeflacionado += gasto.Valor;
                     }
                 }
-
-                return new GraficoBarraDTO
-                {
-                    Categories = categories,
-                    Series = series
-                };
-
-                //using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
-                //{
-                //    List<dynamic> lstRetorno = new List<dynamic>();
-                //    var lstValoresMensais = new decimal?[12];
-                //    string anoControle = string.Empty;
-                //    bool existeGastoNoAno = false;
-
-                //    while (await reader.ReadAsync())
-                //    {
-                //        if (reader["ano"].ToString() != anoControle)
-                //        {
-                //            if (existeGastoNoAno)
-                //            {
-                //                lstRetorno.Add(new
-                //                {
-                //                    name = anoControle.ToString(),
-                //                    data = lstValoresMensais
-                //                });
-
-                //                lstValoresMensais = new decimal?[12];
-                //                existeGastoNoAno = false;
-                //            }
-
-                //            anoControle = reader["ano"].ToString();
-                //        }
-
-                //        if (Convert.ToDecimal(reader["valor_total"]) > 0)
-                //        {
-                //            lstValoresMensais[Convert.ToInt32(reader["mes"]) - 1] = Convert.ToDecimal(reader["valor_total"]);
-                //            existeGastoNoAno = true;
-                //        }
-                //    }
-
-                //    if (existeGastoNoAno)
-                //    {
-                //        lstRetorno.Add(new
-                //        {
-                //            name = anoControle.ToString(),
-                //            data = lstValoresMensais
-                //        });
-                //    }
-
-                //    return lstRetorno;
-                //    // Ex: [{"$id":"1","name":"2015","data":[null,18404.57,25607.82,29331.99,36839.82,24001.68,40811.97,33641.20,57391.30,60477.07,90448.58,13285.14]}]
-                //}
+                series2.Add(totalDeflacionado);
             }
+
+            return new GraficoBarraDTO
+            {
+                Categories = categories,
+                Series = series,
+                Series2 = series2
+            };
         }
 
         public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
         {
             var result = new List<ParlamentarCustoAnualDTO>();
-            //using (AppDb banco = new AppDb())
+
+            var indices = await _context.IndicesInflacao
+                .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
+                .ToListAsync();
+            var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
+
             {
                 var strSql = @"
-					SELECT d.ano, SUM(d.valor_liquido) AS valor_total
+					SELECT d.ano, d.mes, SUM(d.valor_liquido) AS valor_total
 					FROM camara.cf_despesa d
 					WHERE d.id_cf_deputado = @id
-					group by d.ano
+					group by d.ano, d.mes
+                    order by d.ano, d.mes
 				";
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
                     while (await reader.ReadAsync())
                     {
-                        var dto = new ParlamentarCustoAnualDTO
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
+
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
+                        if (dto == null)
                         {
-                            Ano = Convert.ToInt32(reader["ano"]),
-                            CotaParlamentar = Convert.ToDecimal(reader["valor_total"])
-                        };
-                        result.Add(dto);
+                            dto = new ParlamentarCustoAnualDTO { Ano = ano };
+                            result.Add(dto);
+                        }
+                        dto.CotaParlamentar += valor;
+
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
                     }
                 }
 
                 strSql = @"
-					SELECT d.ano, SUM(d.valor) AS valor_total
+					SELECT d.ano, d.mes, SUM(d.valor) AS valor_total
 					FROM camara.cf_deputado_verba_gabinete d
 					WHERE d.id_cf_deputado = @id
-					group by d.ano
+					group by d.ano, d.mes
+                    order by d.ano, d.mes
 				";
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
@@ -441,29 +447,38 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
                         var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.VerbaGabinete = Convert.ToDecimal(reader["valor_total"]);
+                            dto.VerbaGabinete += valor;
                         }
                         else
                         {
                             dto = new ParlamentarCustoAnualDTO
                             {
                                 Ano = ano,
-                                VerbaGabinete = Convert.ToDecimal(reader["valor_total"])
+                                VerbaGabinete = valor
                             };
                             result.Add(dto);
                         }
+
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
                     }
                 }
 
                 strSql = @"
-					SELECT d.ano, SUM(d.valor) AS valor_total
+					SELECT d.ano, d.mes, SUM(d.valor) AS valor_total
 					FROM camara.cf_deputado_remuneracao d
 					WHERE d.id_cf_deputado = @id
-					group by d.ano
+					group by d.ano, d.mes
+                    order by d.ano, d.mes
 				";
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
@@ -471,29 +486,38 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
                         var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.SalarioPatronal = Convert.ToDecimal(reader["valor_total"]);
+                            dto.SalarioPatronal += valor;
                         }
                         else
                         {
                             dto = new ParlamentarCustoAnualDTO
                             {
                                 Ano = ano,
-                                SalarioPatronal = Convert.ToDecimal(reader["valor_total"])
+                                SalarioPatronal = valor
                             };
                             result.Add(dto);
                         }
+
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
                     }
                 }
 
                 strSql = @"
-					SELECT d.ano, SUM(d.valor) AS valor_total
+					SELECT d.ano, d.mes, SUM(d.valor) AS valor_total
 					FROM camara.cf_deputado_auxilio_moradia d
 					WHERE d.id_cf_deputado = @id
-					group by d.ano
+					group by d.ano, d.mes
+                    order by d.ano, d.mes
 				";
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
@@ -501,21 +525,29 @@ namespace OPS.Core.Repositories
                     while (await reader.ReadAsync())
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
                         var dto = result.FirstOrDefault(x => x.Ano == ano);
 
                         if (dto != null)
                         {
-                            dto.AuxilioMoradia = Convert.ToDecimal(reader["valor_total"]);
+                            dto.AuxilioMoradia += valor;
                         }
                         else
                         {
                             dto = new ParlamentarCustoAnualDTO
                             {
                                 Ano = ano,
-                                AuxilioMoradia = Convert.ToDecimal(reader["valor_total"])
+                                AuxilioMoradia = valor
                             };
                             result.Add(dto);
                         }
+
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
                     }
                 }
             }
@@ -1697,36 +1729,66 @@ ORDER BY EXTRACT(YEAR FROM s.data)
 
         public async Task<dynamic> CamaraResumoAnual()
         {
-            //using (AppDb banco = new AppDb())
-            {
-                var strSql = new StringBuilder();
-                strSql.AppendLine($@"
-					select ano, sum(valor) as valor
+            var sql = new StringBuilder();
+            sql.AppendLine($@"
+					select ano, mes, valor
 					FROM camara.cf_despesa_resumo_mensal sf
                     WHERE ano > {DateTime.UtcNow.AddYears(-10).Year}
-					GROUP BY ano
-                    ORDER BY ano
+                    ORDER BY ano, mes
 				");
 
-                var categories = new List<dynamic>();
-                var series = new List<dynamic>();
+            var indices = await _context.IndicesInflacao
+                .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
+                .ToListAsync();
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
+            var ultimoIndice = indices.LastOrDefault()?.Indice ?? 1;
+
+            var gastosMensais = new List<(int Ano, int Mes, decimal Valor)>();
+
+            using (DbDataReader reader = await ExecuteReaderAsync(sql.ToString()))
+            {
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
-                    {
+                    gastosMensais.Add((
+                        Convert.ToInt32(reader["ano"]),
+                        Convert.ToInt32(reader["mes"]),
+                        Convert.ToDecimal(reader["valor"])
+                    ));
+                }
+            }
 
-                        categories.Add(Convert.ToInt32(reader["ano"]));
-                        series.Add(Convert.ToDecimal(reader["valor"]));
+            var anos = gastosMensais.Select(g => g.Ano).Distinct().OrderBy(a => a).ToList();
+            var valores = new List<dynamic>();
+            var valoresDeflacionados = new List<dynamic>();
+
+            foreach (var ano in anos)
+            {
+                var gastosDoAno = gastosMensais.Where(g => g.Ano == ano).ToList();
+                decimal totalAnual = gastosDoAno.Sum(g => g.Valor);
+                valores.Add(totalAnual);
+
+                decimal totalDeflacionado = 0;
+                foreach (var gasto in gastosDoAno)
+                {
+                    var indiceInflacao = indices.FirstOrDefault(i => i.Ano == gasto.Ano && i.Mes == gasto.Mes);
+                    if (indiceInflacao != null)
+                    {
+                        totalDeflacionado += gasto.Valor * (ultimoIndice / indiceInflacao.Indice);
+                    }
+                    else
+                    {
+                        totalDeflacionado += gasto.Valor;
                     }
                 }
-
-                return new
-                {
-                    categories,
-                    series
-                };
+                valoresDeflacionados.Add(totalDeflacionado);
             }
+
+            return new
+            {
+                anos,
+                valores,
+                valores_deflacionados = valoresDeflacionados
+            };
         }
 
         public async Task<dynamic> Frequencia(DataTablesRequest request)
