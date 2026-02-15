@@ -67,7 +67,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
             Map(m => m.DeclaraBens).Name("ST_DECLARAR_BENS").TypeConverter(new StringConverterCustom(StringConversionOptions.Cleaning)).Optional();
             Map(m => m.NumeroProtocoloCandidatura).Name("NR_PROTOCOLO_CANDIDATURA", "NUM_PROTOCOLO_CANDIDATURA").TypeConverter<NumberWithCleanerConverter>().Optional();
             Map(m => m.NumeroProcessoCandidatura).Name("NR_PROCESSO", "NUM_PROCESSO").TypeConverter<NumberWithCleanerConverter>().Optional();
-            Map(m => m.CodigoSituacaoCandidatoPleito).Name("CD_SITUACAO_CANDIDATO_PLEITO").TypeConverter(new StringConverterCustom(StringConversionOptions.Cleaning)).Optional();
+            Map(m => m.CodigoSituacaoCandidatoPleito).Name("CD_SITUACAO_CANDIDATO_PLEITO").TypeConverter<NumberWithCleanerConverter>().Optional();
             Map(m => m.SituacaoCandidatoPleito).Name("DS_SITUACAO_CANDIDATO_PLEITO").TypeConverter(new StringConverterCustom(StringConversionOptions.Cleaning | StringConversionOptions.TitleCase)).Optional();
             Map(m => m.CodigoSituacaoCandidatoUrna).Name("CD_SITUACAO_CANDIDATO_URNA").TypeConverter<NumberWithCleanerConverter>().Optional();
             Map(m => m.SituacaoCandidatoUrna).Name("DS_SITUACAO_CANDIDATO_URNA").TypeConverter(new StringConverterCustom(StringConversionOptions.Cleaning | StringConversionOptions.TitleCase)).Optional();

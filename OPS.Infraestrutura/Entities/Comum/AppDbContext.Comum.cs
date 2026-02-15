@@ -8,18 +8,17 @@ public partial class AppDbContext
 {
     // Common Tables
     public DbSet<Estado> Estados { get; set; }
+    public DbSet<Municipio> Municipios { get; set; }
     public DbSet<Importacao> Importacoes { get; set; }
     public DbSet<Partido> Partidos { get; set; }
     public DbSet<TrechoViagem> TrechoViagens { get; set; }
-    public DbSet<PartidoHistorico> PartidoHistoricos { get; set; }
     public DbSet<Pessoa> Pessoas { get; set; }
-    public DbSet<PessoaNew> PessoasNew { get; set; }
     public DbSet<Profissao> Profissoes { get; set; }
 }
 
 public static class CommonConfigurations
 {
-    public static void ConfigureEstado(this ModelBuilder modelBuilder)
+    public static void ConfigureLocalidade(this ModelBuilder modelBuilder)
     {
         // Configure Estado
         modelBuilder.Entity<Estado>(entity =>
@@ -28,6 +27,16 @@ public static class CommonConfigurations
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasIndex(e => e.Sigla).IsUnique();
             entity.ToTable("estado", "public");
+        });
+
+        // Configure Estado
+        modelBuilder.Entity<Municipio>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+            entity.HasIndex(e => new { e.IdEstado, e.Nome }).IsUnique();
+            entity.ToTable("municipio", "public");
         });
     }
 
@@ -59,17 +68,6 @@ public static class CommonConfigurations
         });
     }
 
-    public static void ConfigurePartidoHistorico(this ModelBuilder modelBuilder)
-    {
-        // Configure PartidoHistorico
-        modelBuilder.Entity<PartidoHistorico>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.ToTable("partido_historico", "public");
-        });
-    }
-
     public static void ConfigurePessoa(this ModelBuilder modelBuilder)
     {
         // Configure Pessoa
@@ -78,28 +76,6 @@ public static class CommonConfigurations
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.ToTable("pessoa", "public");
-        });
-    }
-
-    public static void ConfigurePessoaNew(this ModelBuilder modelBuilder)
-    {
-        // Configure PessoaNew
-        modelBuilder.Entity<PessoaNew>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.HasIndex(e => e.Cpf).IsUnique();
-
-            // Foreign key relationships
-            entity.HasOne(e => e.EstadoNascimento).WithMany().HasForeignKey(e => e.IdEstadoNascimento);
-            entity.HasOne(e => e.Nacionalidade).WithMany().HasForeignKey(e => e.IdNacionalidade);
-            entity.HasOne(e => e.Genero).WithMany().HasForeignKey(e => e.IdGenero);
-            entity.HasOne(e => e.Etnia).WithMany().HasForeignKey(e => e.IdEtnia);
-            entity.HasOne(e => e.EstadoCivil).WithMany().HasForeignKey(e => e.IdEstadoCivil);
-            entity.HasOne(e => e.GrauInstrucao).WithMany().HasForeignKey(e => e.IdGrauInstrucao);
-            entity.HasOne(e => e.Ocupacao).WithMany().HasForeignKey(e => e.IdOcupacao);
-
-            entity.ToTable("pessoa_new", "public");
         });
     }
 
@@ -116,12 +92,10 @@ public static class CommonConfigurations
 
     public static void ConfigureCommonEntities(this ModelBuilder modelBuilder)
     {
-        modelBuilder.ConfigureEstado();
+        modelBuilder.ConfigureLocalidade();
         modelBuilder.ConfigureImportacao();
         modelBuilder.ConfigurePartido();
-        modelBuilder.ConfigurePartidoHistorico();
         modelBuilder.ConfigurePessoa();
-        modelBuilder.ConfigurePessoaNew();
         modelBuilder.ConfigureProfissao();
     }
 }
