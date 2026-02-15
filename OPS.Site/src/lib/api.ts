@@ -229,6 +229,7 @@ export const fetchFornecedorDetalhe = async (id: string): Promise<FornecedorDeta
 export interface RecebimentosPorAno {
   categories: number[];
   series: number[];
+  series2: number[];
 }
 
 export const fetchRecebimentosPorAno = async (id: string): Promise<RecebimentosPorAno> => {

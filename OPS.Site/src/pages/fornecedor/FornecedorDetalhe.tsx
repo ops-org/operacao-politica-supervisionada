@@ -507,7 +507,8 @@ const FornecedorDetalhe = () => {
                                     <GraficoResumoAnual
                                         dados={recebimentosPorAno.categories.map((year, index) => ({
                                             ano: year.toString(),
-                                            valor: Math.round(recebimentosPorAno.series[index] || 0)
+                                            valor: Math.round(recebimentosPorAno.series[index] || 0),
+                                            valor_deflacionado: Math.round(recebimentosPorAno.series2[index] || 0)
                                         }))}
                                     />
                                 </CardContent>

@@ -336,48 +336,32 @@ LIMIT 10 ");
             // using (AppDb banco = new AppDb())
             {
                 string strSql = @"
-SELECT ano, SUM(valor) AS valor
+SELECT ano, mes, SUM(valor) AS valor_total
 FROM (
-    SELECT l.ano, SUM(l.valor_liquido) AS valor
+    SELECT l.ano, l.mes, SUM(l.valor_liquido) AS valor
     FROM camara.cf_despesa l
     WHERE l.id_fornecedor = @id
-    group by l.ano
+    group by l.ano, l.mes
 
     UNION ALL
 
-    SELECT l.ano_mes/100 as ano , SUM(l.valor_liquido) AS valor
+    SELECT l.ano, l.mes, SUM(l.valor_liquido) AS valor
     FROM  assembleias.cl_despesa l
     WHERE l.id_fornecedor = @id
-    group by ano
+    group by l.ano, l.mes
 
     UNION ALL
 
-    SELECT l.ano, SUM(l.valor) AS valor
+    SELECT l.ano, l.mes, SUM(l.valor) AS valor
     from senado.sf_despesa l
     WHERE l.id_fornecedor = @id
-    group by l.ano
+    group by l.ano, l.mes
 ) tmp
-group by ano
-order by ano
+group by ano, mes
+order by ano, mes
 				";
 
-                var categories = new List<int>();
-                var series = new List<decimal>();
-
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        categories.Add(Convert.ToInt32(reader["ano"]));
-                        series.Add(Convert.ToDecimal(reader["valor"]));
-                    }
-                }
-
-                return new GraficoBarraDTO()
-                {
-                    Categories = categories,
-                    Series = series
-                };
+                return await GastosPorAno(id, strSql);
             }
         }
 

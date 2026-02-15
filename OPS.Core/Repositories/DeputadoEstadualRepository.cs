@@ -285,74 +285,30 @@ namespace OPS.Core.Repositories
             }
         }
 
-            public async Task<GraficoBarraDTO> GastosPorAno(int id)
-    {
-        var gastosMensais = await _context.DespesasAssembleias
-            .Where(d => d.IdDeputado == id && d.ValorLiquido > 0 && d.DataEmissao.HasValue)
-            .GroupBy(d => new { d.DataEmissao.Value.Year, d.DataEmissao.Value.Month })
-            .Select(g => new
-            {
-                Ano = g.Key.Year,
-                Mes = g.Key.Month,
-                ValorTotal = g.Sum(d => d.ValorLiquido)
-            })
-            .OrderBy(g => g.Ano).ThenBy(g => g.Mes)
-            .ToListAsync();
-
-        var indices = await _context.IndicesInflacao
-            .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
-            .ToListAsync();
-
-        var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
-
-        var categories = new List<int>();
-        var series = new List<decimal>();
-        var series2 = new List<decimal>();
-
-        var anos = gastosMensais.Select(g => g.Ano).Distinct().OrderBy(a => a).ToList();
-
-        foreach (var ano in anos)
-        {
-            categories.Add(ano);
-
-            var gastosDoAno = gastosMensais.Where(g => g.Ano == ano).ToList();
-            decimal totalOriginal = gastosDoAno.Sum(g => g.ValorTotal);
-            series.Add(totalOriginal);
-
-            decimal totalDeflacionado = 0;
-            foreach (var gasto in gastosDoAno)
-            {
-                var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)gasto.Ano && i.Mes == (short)gasto.Mes)?.Indice ?? 0;
-                if (indiceMes > 0)
-                {
-                    totalDeflacionado += gasto.ValorTotal * (lastIndice / indiceMes);
-                }
-                else
-                {
-                    totalDeflacionado += gasto.ValorTotal;
-                }
-            }
-            series2.Add(totalDeflacionado);
-        }
-
-        return new GraficoBarraDTO
-        {
-            Categories = categories,
-            Series = series,
-            Series2 = series2
-        };
-    }
-            public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
-    {
-        var result = new List<ParlamentarCustoAnualDTO>();
-
-        var indices = await _context.IndicesInflacao
-            .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
-            .ToListAsync();
-        var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
-
+        public async Task<GraficoBarraDTO> GastosPorAno(int id)
         {
             var strSql = @"
+				SELECT d.ano, d.mes, SUM(d.valor) AS valor_total
+				from assembleias.cl_despesa d
+				WHERE d.id_cl_deputado = @id
+				group by d.ano, d.mes
+				order by d.ano, d.mes
+			";
+
+            return await GastosPorAno(id, strSql);
+        }
+
+        public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
+        {
+            var result = new List<ParlamentarCustoAnualDTO>();
+
+            var indices = await _context.IndicesInflacao
+                .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
+                .ToListAsync();
+            var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
+
+            {
+                var strSql = @"
 					SELECT d.ano_mes/100 as ano, d.ano_mes%100 as mes, SUM(d.valor_liquido) AS valor_total
             FROM assembleias.cl_despesa d
             join assembleias.cl_despesa_tipo t on t.id = d.id_cl_despesa_tipo
@@ -362,31 +318,31 @@ namespace OPS.Core.Repositories
             order by d.ano_mes
 				";
 
-            using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
-            {
-                while (await reader.ReadAsync())
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
-                    var ano = Convert.ToInt32(reader["ano"]);
-                    var mes = Convert.ToInt16(reader["mes"]);
-                    var valor = Convert.ToDecimal(reader["valor_total"]);
-
-                    var dto = result.FirstOrDefault(x => x.Ano == ano);
-                    if (dto == null)
+                    while (await reader.ReadAsync())
                     {
-                        dto = new ParlamentarCustoAnualDTO { Ano = ano };
-                        result.Add(dto);
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
+
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
+                        if (dto == null)
+                        {
+                            dto = new ParlamentarCustoAnualDTO { Ano = ano };
+                            result.Add(dto);
+                        }
+                        dto.CotaParlamentar += valor;
+
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
                     }
-                    dto.CotaParlamentar += valor;
-
-                    var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
-                    if (indiceMes > 0)
-                        dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
-                    else
-                        dto.ValorTotalDeflacionado += valor;
                 }
-            }
 
-            strSql = @"
+                strSql = @"
 					SELECT d.ano_mes/100 as ano, d.ano_mes%100 as mes, SUM(d.valor_liquido) AS valor_total
             FROM assembleias.cl_despesa d
             join assembleias.cl_despesa_tipo t on t.id = d.id_cl_despesa_tipo
@@ -396,38 +352,38 @@ namespace OPS.Core.Repositories
             order by d.ano_mes
 				";
 
-            using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
-            {
-                while (await reader.ReadAsync())
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
-                    var ano = Convert.ToInt32(reader["ano"]);
-                    var mes = Convert.ToInt16(reader["mes"]);
-                    var valor = Convert.ToDecimal(reader["valor_total"]);
-                    var dto = result.FirstOrDefault(x => x.Ano == ano);
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
-                    if (dto != null)
-                    {
-                        dto.AuxilioSaude += valor;
-                    }
-                    else
-                    {
-                        dto = new ParlamentarCustoAnualDTO
+                        if (dto != null)
                         {
-                            Ano = ano,
-                            AuxilioSaude = valor
-                        };
-                        result.Add(dto);
+                            dto.AuxilioSaude += valor;
+                        }
+                        else
+                        {
+                            dto = new ParlamentarCustoAnualDTO
+                            {
+                                Ano = ano,
+                                AuxilioSaude = valor
+                            };
+                            result.Add(dto);
+                        }
+
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
                     }
-
-                    var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
-                    if (indiceMes > 0)
-                        dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
-                    else
-                        dto.ValorTotalDeflacionado += valor;
                 }
-            }
 
-            strSql = @"
+                strSql = @"
 					SELECT d.ano_mes/100 as ano, d.ano_mes%100 as mes, SUM(d.valor_liquido) AS valor_total
             FROM assembleias.cl_despesa d
             join assembleias.cl_despesa_tipo t on t.id = d.id_cl_despesa_tipo
@@ -437,40 +393,41 @@ namespace OPS.Core.Repositories
             order by d.ano_mes
 				";
 
-            using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
-            {
-                while (await reader.ReadAsync())
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
                 {
-                    var ano = Convert.ToInt32(reader["ano"]);
-                    var mes = Convert.ToInt16(reader["mes"]);
-                    var valor = Convert.ToDecimal(reader["valor_total"]);
-                    var dto = result.FirstOrDefault(x => x.Ano == ano);
+                    while (await reader.ReadAsync())
+                    {
+                        var ano = Convert.ToInt32(reader["ano"]);
+                        var mes = Convert.ToInt16(reader["mes"]);
+                        var valor = Convert.ToDecimal(reader["valor_total"]);
+                        var dto = result.FirstOrDefault(x => x.Ano == ano);
 
-                    if (dto != null)
-                    {
-                        dto.Diarias += valor;
-                    }
-                    else
-                    {
-                        dto = new ParlamentarCustoAnualDTO
+                        if (dto != null)
                         {
-                            Ano = ano,
-                            Diarias = valor
-                        };
-                        result.Add(dto);
-                    }
+                            dto.Diarias += valor;
+                        }
+                        else
+                        {
+                            dto = new ParlamentarCustoAnualDTO
+                            {
+                                Ano = ano,
+                                Diarias = valor
+                            };
+                            result.Add(dto);
+                        }
 
-                    var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
-                    if (indiceMes > 0)
-                        dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
-                    else
-                        dto.ValorTotalDeflacionado += valor;
+                        var indiceMes = indices.FirstOrDefault(i => i.Ano == (short)ano && i.Mes == (short)mes)?.Indice ?? 0;
+                        if (indiceMes > 0)
+                            dto.ValorTotalDeflacionado += valor * (lastIndice / indiceMes);
+                        else
+                            dto.ValorTotalDeflacionado += valor;
+                    }
                 }
             }
+
+            return result.OrderBy(x => x.Ano).ToList();
         }
 
-        return result.OrderBy(x => x.Ano).ToList();
-    }
         public async Task<dynamic> ResumoMensal()
         {
             var resumoMensal = await _context.DespesaResumosMensais

@@ -82,6 +82,14 @@ export const GraficoResumoAnual = ({ dados }: PropsGraficoResumoAnual) => {
         <Legend
           wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
         />
+        <Bar
+          name="Valor Original"
+          dataKey="valor"
+          fill="hsl(var(--primary))"
+          radius={[4, 4, 0, 0]}
+          barSize={40}
+          opacity={0.8}
+        />
         <Area
           type="monotone"
           name="Deflacionado (IPCA)"
@@ -90,14 +98,6 @@ export const GraficoResumoAnual = ({ dados }: PropsGraficoResumoAnual) => {
           fillOpacity={0.2}
           stroke="hsl(var(--primary))"
           strokeWidth={2}
-        />
-        <Bar
-          name="Valor Original"
-          dataKey="valor"
-          fill="hsl(var(--primary))"
-          radius={[4, 4, 0, 0]}
-          barSize={40}
-          opacity={0.8}
         />
       </ComposedChart>
     </ResponsiveContainer>
