@@ -1,50 +1,51 @@
 import { Header } from "@/components/Header";
-import { AnnualSummaryChartWithCard } from "@/components/AnnualSummaryChart";
+import { GraficoResumoAnualComCard } from "@/components/AnnualSummaryChart";
 import { TopSpendersSection } from "@/components/TopSpendersSection";
 import { Footer } from "@/components/Footer";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnnualSummary, fetchResumoAnual } from "@/lib/api";
+import { ResumoAnual, fetchResumoAnual } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { TrendingUp, Users, BarChart3 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
-const transformApiData = (data: AnnualSummary) => {
-  return data.categories.map((year, index) => ({
-    year: year.toString(),
-    value: Math.round(data.series[index])
+const transformarDadosApi = (dados: ResumoAnual) => {
+  return dados.anos.map((ano, index) => ({
+    ano: ano.toString(),
+    valor: Math.round(dados.valores[index]),
+    valor_deflacionado: dados.valores_deflacionados ? Math.round(dados.valores_deflacionados[index]) : undefined
   }));
 };
 
 const Index = () => {
   usePageTitle("Início");
-  const [camaraData, setCamaraData] = useState<{ year: string, value: number }[]>([]);
-  const [senadoData, setSenadoData] = useState<{ year: string, value: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dadosCamara, setDadosCamara] = useState<{ ano: string, valor: number }[]>([]);
+  const [dadosSenado, setDadosSenado] = useState<{ ano: string, valor: number }[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const buscarDados = async () => {
       try {
-        const [camaraResponse, senadoResponse] = await Promise.all([
+        const [respostaCamara, respostaSenado] = await Promise.all([
           fetchResumoAnual('deputado-federal'),
           fetchResumoAnual('senador')
         ]);
 
-        setCamaraData(transformApiData(camaraResponse));
-        setSenadoData(transformApiData(senadoResponse));
-      } catch (error) {
-        console.error('Error fetching annual summary data:', error);
+        setDadosCamara(transformarDadosApi(respostaCamara));
+        setDadosSenado(transformarDadosApi(respostaSenado));
+      } catch (erro) {
+        console.error('Erro ao buscar resumo anual:', erro);
       } finally {
-        setLoading(false);
+        setCarregando(false);
       }
     };
 
-    fetchData();
+    buscarDados();
   }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-      <LoadingOverlay isLoading={loading} content="Carregando dados da plataforma..." />
+      <LoadingOverlay isLoading={carregando} content="Carregando dados da plataforma..." />
       <Header />
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
@@ -63,19 +64,19 @@ const Index = () => {
           <div className="grid gap-8 lg:grid-cols-2">
             <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300 group">
               <CardContent className="p-0 relative z-10">
-                <AnnualSummaryChartWithCard
-                  title="Câmara dos Deputados"
-                  subtitle="513 deputados"
-                  data={camaraData}
+                <GraficoResumoAnualComCard
+                  titulo="Câmara dos Deputados"
+                  subtitulo="513 deputados"
+                  dados={dadosCamara}
                 />
               </CardContent>
             </Card>
             <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300 group">
               <CardContent className="p-0 relative z-10">
-                <AnnualSummaryChartWithCard
-                  title="Senado Federal"
-                  subtitle="81 senadores"
-                  data={senadoData}
+                <GraficoResumoAnualComCard
+                  titulo="Senado Federal"
+                  subtitulo="81 senadores"
+                  dados={dadosSenado}
                 />
               </CardContent>
             </Card>

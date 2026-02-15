@@ -138,12 +138,13 @@ export const fetchMaioresFornecedores = async (id: string, type: PoliticianType)
 
 export interface CustoAnual {
   ano: number;
-  cota_parlamentar: string;
-  verba_gabinete: string;
-  salario_patronal: string;
-  auxilio_moradia: string;
-  auxilio_saude: string;
-  diarias: string;
+  cota_parlamentar: number;
+  verba_gabinete: number;
+  salario_patronal: number;
+  auxilio_moradia: number;
+  auxilio_saude: number;
+  diarias: number;
+  valor_total_deflacionado: number;
 }
 
 export const fetchCustoAnual = async (
@@ -228,6 +229,7 @@ export const fetchFornecedorDetalhe = async (id: string): Promise<FornecedorDeta
 export interface RecebimentosPorAno {
   categories: number[];
   series: number[];
+  series2: number[];
 }
 
 export const fetchRecebimentosPorAno = async (id: string): Promise<RecebimentosPorAno> => {
@@ -250,13 +252,18 @@ export const fetchMaioresGastos = async (id: string): Promise<MaiorGasto[]> => {
   return await apiClient.get<MaiorGasto[]>(`/api/fornecedor/${id}/MaioresGastos`);
 };
 
-export interface AnnualSummary {
-  categories: number[];
-  series: number[];
+export interface ResumoAnual {
+  anos: number[];
+  valores: number[];
+  valores_deflacionados?: number[];
 }
 
-export const fetchResumoAnual = async (type: PoliticianType): Promise<AnnualSummary> => {
-  return await apiClient.get<AnnualSummary>(`/api/${type}/resumoanual`);
+export const fetchResumoAnual = async (type: PoliticianType): Promise<ResumoAnual> => {
+  const response = await fetch(`${getApiBaseUrl()}/${type}/resumoanual`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch annual summary for ${type}`);
+  }
+  return response.json();
 };
 
 export const fetchParlamentar = async (id: string, type: PoliticianType): Promise<Parlamentar> => {

@@ -6,14 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatValue(value: number) {
-  if (value >= 1000000000) {
-    return `${(value / 1000000000).toFixed(1)}B`;
-  }
-  if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(0)}M`;
-  }
-  return `${(value / 1000).toFixed(0)}K`;
-};
+  return new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
 
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', {

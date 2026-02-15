@@ -10,5 +10,8 @@ namespace OPS.Core.DTOs
 
         [JsonPropertyName("series")]
         public List<decimal> Series { get; set; }
+
+        [JsonPropertyName("series2")]
+        public List<decimal> Series2 { get; set; }
     }
 }
