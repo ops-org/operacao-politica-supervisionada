@@ -47,7 +47,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
             // Apply cleaning if enabled
             if (_options.HasFlag(StringConversionOptions.Cleaning))
             {
-                if (text == "#NE" || text == "#NULO" || text == "#NULO#" || text == "NÃO DIVULGÁVEL")
+                if (text.ToUpper() == "#NE" || text == "#NE#" || text == "#NULO" || text == "#NULO#" || text == "NÃO DIVULGÁVEL")
                 {
                     return null;
                 }
@@ -71,6 +71,8 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
 
     public class NumberWithCleanerConverter : StringConverter
     {
+        private readonly CultureInfo _culture = CultureInfo.CreateSpecificCulture("en-US");
+
         /// <summary>
         /// Converts the string to a valid number or null.
         /// </summary>
@@ -83,11 +85,14 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
             if (string.IsNullOrEmpty(text))
                 return null;
 
-            if (text.All(char.IsDigit))
+            if (Decimal.TryParse(text, _culture, out decimal value) && value > 0)
                 return text;
 
-            if (!(text == "-1" || text == "-2" || text == "-3" || text == "-4"))
-                Console.WriteLine("Revisar Valor Ignorado: " + text);
+            //if (text.All(char.IsDigit))
+            //    return text;
+
+            if (!(text == "-1" || text == "-2" || text == "-3" || text == "-4" || text == "#NULO"))
+                Console.WriteLine("Revisar Numero Ignorado: " + text);
 
             return null;
         }

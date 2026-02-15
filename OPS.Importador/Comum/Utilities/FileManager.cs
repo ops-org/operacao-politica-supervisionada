@@ -61,6 +61,12 @@ public class FileManager
                         logger.LogWarning("Ignorando arquivo antigo {CaminhoArquivo} a partir de {UrlOrigem}", filename, url);
                         return false;
                     }
+
+                    if(url.Contains("cdn.tse.jus.br"))
+                    {
+                        logger.LogWarning("Ignorando arquivo do TSE existente {CaminhoArquivo} a partir de {UrlOrigem}", filename, url);
+                        return false;
+                    }
                 }
             }
         }
