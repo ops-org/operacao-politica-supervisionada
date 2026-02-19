@@ -973,36 +973,39 @@ WHERE (1=1)
         private async Task<DataTablesResponseDTO<LancamentoDocumentoDTO>> LancamentosNotaFiscal(DataTablesRequest request)
         {
             var sqlWhere = GetWhereFilter(request);
-            var sqlSortAndPaging = GetSortAndPaging(request, "l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC");
+            var sqlOrderBy = $" ORDER BY {request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC")} ";
+            var sqlLimit = $" LIMIT {request.Length} OFFSET {request.Start} ";
 
             var sql = $@"
 SELECT 
 	l.data_emissao
+    , l.valor_liquido as valor_total
+    , l.id_cl_deputado
+    , l.id_fornecedor
+    , pj.cnpj_cpf
 	, pj.nome AS nome_fornecedor
 	, d.nome_parlamentar
-	, l.valor_total
     , l.id as id_cl_despesa
     , e.sigla as sigla_estado
     , p.sigla as sigla_partido
     , t.descricao as despesa_tipo
     , de.descricao as despesa_especificacao
     , l.favorecido
-    , l.id_fornecedor
-    , pj.cnpj_cpf
-    , d.id as id_cl_deputado
 FROM (
-	SELECT data_emissao, id, id_cl_deputado, valor_liquido as valor_total, id_cl_despesa_tipo, id_cl_despesa_especificacao, id_fornecedor, favorecido
+	SELECT data_emissao, valor_liquido, id, id_cl_deputado, id_cl_despesa_tipo, id_cl_despesa_especificacao, id_fornecedor, favorecido, l.ano_mes
 	FROM assembleias.cl_despesa l
 	WHERE (1=1)
     {sqlWhere}
-    {sqlSortAndPaging}
+    {sqlOrderBy}
+    {sqlLimit}
 ) l
 INNER JOIN assembleias.cl_deputado d on d.id = l.id_cl_deputado
 LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
 LEFT JOIN partido p on p.id = d.id_partido
 LEFT JOIN estado e on e.id = d.id_estado
 LEFT JOIN assembleias.cl_despesa_tipo t on t.id = l.id_cl_despesa_tipo
-LEFT JOIN assembleias.cl_despesa_especificacao de on de.id = l.id_cl_despesa_especificacao;
+LEFT JOIN assembleias.cl_despesa_especificacao de on de.id = l.id_cl_despesa_especificacao
+{sqlOrderBy};
 
 SELECT COUNT(*) 
 FROM assembleias.cl_despesa l

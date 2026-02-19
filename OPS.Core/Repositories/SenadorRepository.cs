@@ -972,33 +972,36 @@ WHERE (1=1)
         private async Task<DataTablesResponseDTO<LancamentoDocumentoDTO>> LancamentosNotaFiscal(DataTablesRequest request)
         {
             var sqlWhere = GetWhereFilter(request);
-            var sqlSortAndPaging = GetSortAndPaging(request, "l.ano_mes DESC, l.data_emissao DESC, l.valor DESC");
+            var sqlOrderBy = $" ORDER BY {request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor DESC")} ";
+            var sqlLimit = $" LIMIT {request.Length} OFFSET {request.Start} ";
 
             var sql = $@"
 SELECT
     l.data_emissao
+    , l.valor as valor_total
+    , l.id as id_sf_despesa
+    , d.id as id_senador
+    , pj.cnpj_cpf
+    , l.id_fornecedor
     , pj.nome AS nome_fornecedor
     , d.nome as nome_parlamentar
-    , l.valor_total
-    , d.id as id_senador
-    , l.id_fornecedor
-    , l.id as id_sf_despesa
-    , pj.cnpj_cpf
     , e.sigla as sigla_estado
     , p.sigla as sigla_partido
     , t.descricao as despesa_tipo
 FROM (
-	SELECT id, id_sf_senador, id_sf_despesa_tipo, id_fornecedor, data_emissao, valor as valor_total
+	SELECT data_emissao, valor, id, id_sf_senador, id_sf_despesa_tipo, id_fornecedor, l.ano_mes
 	FROM senado.sf_despesa l
 	WHERE (1=1)
     {sqlWhere}
-    {sqlSortAndPaging}
+    {sqlOrderBy}
+    {sqlLimit}
 ) l
 JOIN senado.sf_senador d on d.id = l.id_sf_senador
 LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
 LEFT JOIN partido p on p.id = d.id_partido
 LEFT JOIN estado e on e.id = d.id_estado
-LEFT JOIN senado.sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo;
+LEFT JOIN senado.sf_despesa_tipo t on t.id = l.id_sf_despesa_tipo
+{sqlOrderBy};
 
 SELECT count(*) 
 FROM senado.sf_despesa l 
