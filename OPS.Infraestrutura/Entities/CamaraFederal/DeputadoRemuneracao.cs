@@ -6,15 +6,12 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     [Table("cf_deputado_remuneracao")]
     public class DeputadoRemuneracao
     {
-        [Key, Required]
         [Column("id_cf_deputado")]
         public int IdDeputado { get; set; }
 
-        [Key, Required]
         [Column("ano")]
         public short Ano { get; set; }
 
-        [Key, Required]
         [Column("mes")]
         public short Mes { get; set; }
 

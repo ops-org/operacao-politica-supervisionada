@@ -10,11 +10,19 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         [Column("id_cf_deputado")]
         public int IdDeputado { get; set; }
 
-        [Column("referencia")]
-        public int Referencia { get; set; }
+        [Key]
+        [Column("ano")]
+        public short Ano { get; set; }
 
-        [Column("valor", TypeName = "decimal(10,2)")]
+        [Key]
+        [Column("mes")]
+        public short Mes { get; set; }
+
+        [Column("valor")]
         public decimal? Valor { get; set; }
+
+        [Column("percentual")]
+        public decimal? Percentual { get; set; }
 
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;

@@ -10,24 +10,30 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         [Column("id_cf_deputado")]
         public int IdDeputado { get; set; }
 
-        // [Column("id_trecho_viagem")]
-        // public short? IdTrechoViagem { get; set; }
+        [Column("periodo")]
+        [StringLength(50)]
+        public string? Periodo { get; set; }
 
-        [Column("data_saida")]
-        public DateTime? DataSaida { get; set; }
+        [Column("assunto")]
+        [StringLength(4000)]
+        public string? Assunto { get; set; }
 
-        [Column("data_chegada")]
-        public DateTime? DataChegada { get; set; }
-
-        [Column("descricao")]
+        [Column("destino")]
         [StringLength(255)]
-        public string? Descricao { get; set; }
+        public string? Destino { get; set; }
 
-        [Column("valor", TypeName = "decimal(10,2)")]
-        public decimal? Valor { get; set; }
+        [Column("passagens")]
+        public decimal? Passagens { get; set; }
+
+        [Column("diarias")]
+        public decimal? Diarias { get; set; }
+
+        [Column("relatorio")]
+        [StringLength(255)]
+        public string? Relatorio { get; set; }
 
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;
-        public virtual TrechoViagem? TrechoViagem { get; set; }
+        //public virtual TrechoViagem? TrechoViagem { get; set; }
     }
 }

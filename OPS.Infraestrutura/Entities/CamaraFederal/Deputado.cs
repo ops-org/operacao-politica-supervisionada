@@ -122,6 +122,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual ICollection<DeputadoMissaoOficial> DeputadoMissoesOficiais { get; set; } = new List<DeputadoMissaoOficial>();
         public virtual ICollection<DeputadoRemuneracao> DeputadoRemuneracoes { get; set; } = new List<DeputadoRemuneracao>();
         public virtual ICollection<DeputadoVerbaGabinete> DeputadoVerbasGabinete { get; set; } = new List<DeputadoVerbaGabinete>();
+        public virtual ICollection<DeputadoFederalRemuneracaoDetalhes> DeputadoFederalRemuneracaoDetalhes { get; set; } = new List<DeputadoFederalRemuneracaoDetalhes>();
         public virtual ICollection<SecretarioHistorico> SecretarioHistoricos { get; set; } = new List<SecretarioHistorico>();
     }
 }

@@ -4,16 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace OPS.Infraestrutura.Entities.Temp
 {
-    [Keyless]
     public class CamaraFederalDeputadoFuncionarioTemp
     {
-        [Column("id")]
-        public int? Id { get; set; }
-
         [Column("id_cf_deputado")]
         public int? IdDeputado { get; set; }
 
-        [Required]
+        [Key, Required]
         [Column("chave")]
         public string Chave { get; set; } = null!;
 

@@ -23,6 +23,9 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.2" />
 		<PackageReference Include="Npgsql" Version="10.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.2" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />

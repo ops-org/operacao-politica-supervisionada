@@ -72,6 +72,9 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
 
         [Column("contratacao")]
         public DateOnly? Contratacao { get; set; }
+
+        // Navigation property
+        public virtual Deputado? Deputado { get; set; }
     }
 
 }

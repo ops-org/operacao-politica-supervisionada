@@ -10,25 +10,14 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         [Column("id_cf_deputado")]
         public int IdDeputado { get; set; }
 
-        [Column("endereco")]
-        [StringLength(255)]
-        public string? Endereco { get; set; }
+        [Column("uso_de")]
+        public DateOnly UsoDe { get; set; }
 
-        [Column("bairro")]
-        [StringLength(100)]
-        public string? Bairro { get; set; }
+        [Column("uso_ate")]
+        public DateOnly? UsoAte { get; set; }
 
-        [Column("cidade")]
-        [StringLength(100)]
-        public string? Cidade { get; set; }
-
-        [Column("estado")]
-        [StringLength(2)]
-        public string? Estado { get; set; }
-
-        [Column("cep")]
-        [StringLength(10)]
-        public string? Cep { get; set; }
+        [Column("total_dias")]
+        public int? TotalDias { get; set; }
 
         // Navigation properties
         public virtual Deputado Deputado { get; set; } = null!;
