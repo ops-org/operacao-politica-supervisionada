@@ -6,6 +6,8 @@
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<CodeAnalysisRuleSet>..\.sonarlint\ops-org_operacao-politica-supervisionadacsharp.ruleset</CodeAnalysisRuleSet>
 		<ImplicitUsings>enable</ImplicitUsings>
+        <NoWarn>$(NoWarn);CA1416</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>

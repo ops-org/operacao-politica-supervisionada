@@ -1,10 +1,11 @@
 services:
   db:
     image: postgres:15
+    env_file: .env
     environment:
-      - POSTGRES_DB=ops
-      - POSTGRES_USER=ops
-      - POSTGRES_PASSWORD=ops_pass
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
@@ -26,7 +27,7 @@ services:
       context: .
       dockerfile: OPS.Site/Dockerfile
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - api
 

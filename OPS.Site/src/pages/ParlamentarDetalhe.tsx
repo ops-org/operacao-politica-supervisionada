@@ -19,18 +19,22 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, PieChart, Pie, Cell, Legend } from "recharts";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { ExternalLink, Phone, Mail, Users, TrendingUp, Calendar, MapPin, Briefcase, User, DollarSign, Building2, ArrowRight, Receipt } from "lucide-react";
 import { PoliticianType } from "@/types/politician";
 import {
     fetchPoliticianData,
     fetchCustoAnual,
+    fetchResumoPresenca,
     Parlamentar as ParlamentarType,
     Fornecedor as FornecedorType,
     CustoAnual as CustoAnualType,
-    MaioresNotas as TopNotasType
+    MaioresNotas as TopNotasType,
+    ResumoPresencaResponse
 } from "@/lib/api";
+
+const PRESENCA_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 
 
 const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
@@ -41,6 +45,7 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
     const [maioresNotas, setMaioresNotas] = useState<TopNotasType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [presencaData, setPresencaData] = useState<ResumoPresencaResponse | null>(null);
     const valueSummaryRef = useRef<HTMLDivElement>(null);
     const fornecedoresRef = useRef<HTMLDivElement>(null);
     const custosAnoRef = useRef<HTMLDivElement>(null);
@@ -73,13 +78,23 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                     const gastosData = response.custoAnual as any;
                     setChartData(gastosData.categories.map((cat: string, index: number) => ({
                         ano: cat,
-                        valor: gastosData.series[index] || 0,
-                        valor_total_deflacionado: gastosData.series2 ? gastosData.series2[index] : (gastosData.series[index] || 0)
+                        valor: gastosData.series[index] ?? 0,
+                        valor_total_deflacionado: gastosData.series2?.[index] ?? (gastosData.series[index] ?? 0)
                     })));
                 } else {
                     setChartData([]);
                 }
                 setMaioresNotas(response.maioresNotas || []);
+
+                // Fetch attendance data for federal deputies
+                if (type === "deputado-federal") {
+                    try {
+                        const presenca = await fetchResumoPresenca(id);
+                        setPresencaData(presenca);
+                    } catch (presErr) {
+                        console.warn("Attendance data not available:", presErr);
+                    }
+                }
             } catch (err) {
                 console.error(err);
                 setError(err instanceof Error ? err.message : "Erro ao carregar dados do parlamentar");
@@ -761,6 +776,79 @@ const ParlamentarDetalhe = ({ type }: { type: PoliticianType }) => {
                             </CardContent>
                         </Card>
                     </div>
+
+                    {/* Attendance / Frequência Section — Federal Deputies only */}
+                    {isFederal && presencaData && presencaData.frequencia_anual.categories.length > 0 && (
+                        <div className="mt-8">
+                            <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-xl">
+                                        <Calendar className="h-5 w-5 text-primary" />
+                                        Frequência em Plenário
+                                        <Link
+                                            to="/deputado-federal/frequencia"
+                                            className="ml-auto text-sm font-normal text-primary hover:underline flex items-center gap-1"
+                                        >
+                                            Ver todas as sessões <ArrowRight className="h-3 w-3" />
+                                        </Link>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        {/* Stacked Bar Chart — Attendance per Year */}
+                                        <div className="lg:col-span-2">
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Por Ano</h3>
+                                            <ResponsiveContainer width="100%" height={300}>
+                                                <BarChart data={presencaData.frequencia_anual.categories.map((ano, idx) => ({
+                                                    ano,
+                                                    Presença: presencaData.frequencia_anual.series[0]?.data[idx] || 0,
+                                                    'Ausência Justificada': presencaData.frequencia_anual.series[1]?.data[idx] || 0,
+                                                    Ausência: presencaData.frequencia_anual.series[2]?.data[idx] || 0,
+                                                }))}>
+                                                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                                    <XAxis dataKey="ano" />
+                                                    <YAxis />
+                                                    <Tooltip />
+                                                    <Legend />
+                                                    <Bar dataKey="Presença" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+                                                    <Bar dataKey="Ausência Justificada" stackId="a" fill="#f59e0b" />
+                                                    <Bar dataKey="Ausência" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        {/* Pie Chart — Overall Percentages */}
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Resumo Geral</h3>
+                                            <ResponsiveContainer width="100%" height={300}>
+                                                <PieChart>
+                                                    <Pie
+                                                        data={presencaData.frequencia_total_percentual.map(item => ({
+                                                            name: item.name,
+                                                            value: item.y
+                                                        }))}
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        innerRadius={60}
+                                                        outerRadius={90}
+                                                        paddingAngle={3}
+                                                        dataKey="value"
+                                                        label={({ name, value }) => `${value}%`}
+                                                    >
+                                                        {presencaData.frequencia_total_percentual.map((_, index) => (
+                                                            <Cell key={`cell-${index}`} fill={PRESENCA_COLORS[index % PRESENCA_COLORS.length]} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip formatter={(value: number) => `${value}%`} />
+                                                    <Legend />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
                 </div>
             </main>
             <Footer />

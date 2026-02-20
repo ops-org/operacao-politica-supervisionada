@@ -62,9 +62,9 @@ export const Header = () => {
               {/* <DropdownMenuItem asChild>
                 <Link to="/deputado-federal/folha-pagamento">Folha de Pagamento</Link>
               </DropdownMenuItem> */}
-              {/* <DropdownMenuItem asChild>
-                <Link to="/deputado-federal/frequencia">Frequência (descontinuada)</Link>
-              </DropdownMenuItem> */}
+              <DropdownMenuItem asChild>
+                <Link to="/deputado-federal/frequencia">Frequência em Plenário</Link>
+              </DropdownMenuItem>
               {/* <DropdownMenuItem>Gastos por Partido</DropdownMenuItem>
               <DropdownMenuItem>Ranking de Gastos</DropdownMenuItem> */}
             </DropdownMenuContent>
@@ -189,6 +189,13 @@ export const Header = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Cota parlamentar (CEAP)
+              </Link>
+              <Link
+                to="/deputado-federal/frequencia"
+                className="block px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Frequência em Plenário
               </Link>
             </div>
 

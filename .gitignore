@@ -32,3 +32,4 @@ appsettings.*.json
 /OPS.Site/public/img/senador
 .idea/
 /qodana.yaml
+.env

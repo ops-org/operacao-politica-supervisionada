@@ -1677,11 +1677,12 @@ ORDER BY EXTRACT(YEAR FROM s.data)
 
         public async Task<dynamic> CamaraResumoAnual()
         {
+            var anoInicio = DateTime.UtcNow.AddYears(-10).Year;
             var sql = new StringBuilder();
             sql.AppendLine($@"
 					select ano, mes, valor
 					FROM camara.cf_despesa_resumo_mensal sf
-                    WHERE ano > {DateTime.UtcNow.AddYears(-10).Year}
+                    WHERE ano >= @anoInicio
                     ORDER BY ano, mes
 				");
 
@@ -1693,7 +1694,7 @@ ORDER BY EXTRACT(YEAR FROM s.data)
 
             var gastosMensais = new List<(int Ano, int Mes, decimal Valor)>();
 
-            using (DbDataReader reader = await ExecuteReaderAsync(sql.ToString()))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql.ToString(), new { anoInicio }))
             {
                 while (await reader.ReadAsync())
                 {
@@ -1844,8 +1845,8 @@ ORDER BY EXTRACT(YEAR FROM s.data)
                 sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "d.nome_parlamentar asc")));
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-                sqlSelect.AppendLine(
-                    @"SELECT FOUND_ROWS() as row_count;");
+                sqlSelect.AppendFormat(
+                    @"SELECT COUNT(*) FROM camara.cf_sessao_presenca sp WHERE sp.id_cf_sessao = {0};", id);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), new { id }))
@@ -1889,9 +1890,7 @@ ORDER BY EXTRACT(YEAR FROM s.data)
                         });
                     }
 
-                    await reader.NextResultAsync();
-                    await reader.ReadAsync();
-                    string TotalCount = reader["row_count"].ToString();
+                    var TotalCount = reader.GetTotalRowsFound();
 
                     return new
                     {
