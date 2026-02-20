@@ -23,7 +23,6 @@ interface PropsGraficoResumoAnual {
 export const GraficoResumoAnual = ({ dados }: PropsGraficoResumoAnual) => {
   const isMobile = useIsMobile();
 
-  // No mobile, aumentamos a altura com base no número de itens para evitar compressão
   const alturaGrafico = isMobile ? Math.max(300, dados.length * 60) : 300;
 
   return (

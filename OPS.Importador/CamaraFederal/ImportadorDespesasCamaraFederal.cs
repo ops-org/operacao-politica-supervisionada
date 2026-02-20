@@ -131,15 +131,15 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         }
     }
 
-    /// <summary>
-    /// Baixa e Importa os Dados da CEAP
-    /// </summary>
-    /// <param name="atualDir"></param>
-    /// <param name="ano"></param>
-    /// <param name="completo"></param>
+    
+    
+    
+    
+    
+    
     public Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
     {
-        var downloadUrl = "https://www.camara.leg.br/cotas/Ano-" + ano + ".csv.zip";
+        var downloadUrl = "https:
         var fullFileNameZip = Path.Combine(appSettings.TempFolder, "CamaraFederal", $"Ano-{ano}.csv.zip");
 
         Dictionary<string, string> arquivos = new();
@@ -169,7 +169,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var totalColunas = ColunasCEAP.Length;
         var lstHash = new Dictionary<string, long>();
 
-        //using (var transaction = dbContext.Database.BeginTransaction())
+        
         {
             var sql = $"select id, hash FROM camara.cf_despesa where ano={ano} and hash IS NOT NULL";
             IEnumerable<dynamic> lstHashDB = connection.Query(sql);
@@ -191,9 +191,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             var config = new CsvHelper.Configuration.CsvConfiguration(cultureInfo);
             config.BadDataFound = null;
             config.Delimiter = ";";
-            //config.MissingFieldFound = null;
-            ////config.TrimOptions = TrimOptions.Trim;
-            //config.HeaderValidated = ConfigurationFunctions.HeaderValidated;
+            
+            
+            
 
             using (var reader = new StreamReader(file, Encoding.GetEncoding("UTF-8")))
             using (var csv = new CsvReader(reader, config))
@@ -254,9 +254,9 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         despesaTemp.ValorDocumento = despesaTemp.ValorLiquido + despesaTemp.ValorGlosa;
 
                     if (despesaTemp.UrlDocumento.Contains("/documentos/publ"))
-                        despesaTemp.UrlDocumento = "1"; // Ex: https://www.camara.leg.br/cota-parlamentar/documentos/publ/3453/2022/7342370.pdf
+                        despesaTemp.UrlDocumento = "1"; 
                     else if (despesaTemp.UrlDocumento.Contains("/nota-fiscal-eletronica"))
-                        despesaTemp.UrlDocumento = "2"; // Ex: https://www.camara.leg.br/cota-parlamentar/nota-fiscal-eletronica?ideDocumentoFiscal=7321395
+                        despesaTemp.UrlDocumento = "2"; 
                     else
                     {
                         if (!string.IsNullOrEmpty(despesaTemp.UrlDocumento))
@@ -284,12 +284,12 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                         despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, 1);
                     else
                     {
-                        // Calcular diferença em dias entre a data de emissão e o ano da despesa
+                        
                         var dataReferencia = new DateOnly(despesaTemp.Ano, despesaTemp.Mes ?? despesaTemp.DataEmissao.Value.Month, 15);
                         var dataEmissao = despesaTemp.DataEmissao!.Value;
                         var diferencaDias = Math.Abs((dataReferencia.ToDateTime(TimeOnly.MinValue) - dataEmissao.ToDateTime(TimeOnly.MinValue)).Days);
 
-                        if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
+                        if (diferencaDias > 120) 
                         {
                             logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
                                 despesaTemp.NomeParlamentar, despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
@@ -302,16 +302,16 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                     if (despesaTemp.CnpjCpf.StartsWith("000000000000"))
                     {
-                        if (despesaTemp.CnpjCpf != "00000000000001" // CELULAR FUNCIONAL
-                            && despesaTemp.CnpjCpf != "00000000000002" // LINHA DIRETA
-                            && despesaTemp.CnpjCpf != "00000000000003" // IMÓVEL FUNCIONAL
-                            && despesaTemp.CnpjCpf != "00000000000006" // RAMAL
-                            && despesaTemp.CnpjCpf != "00000000000007" // CORREIOS - SEDEX CONVENCIONAL
-                            && despesaTemp.CnpjCpf != "00000000000008" // PEDÁGIO
-                            && despesaTemp.CnpjCpf != "00000000000009" // TAXI
+                        if (despesaTemp.CnpjCpf != "00000000000001" 
+                            && despesaTemp.CnpjCpf != "00000000000002" 
+                            && despesaTemp.CnpjCpf != "00000000000003" 
+                            && despesaTemp.CnpjCpf != "00000000000006" 
+                            && despesaTemp.CnpjCpf != "00000000000007" 
+                            && despesaTemp.CnpjCpf != "00000000000008" 
+                            && despesaTemp.CnpjCpf != "00000000000009" 
                             )
                         {
-                            if (despesaTemp.CnpjCpf != "00000000000010") // Empresa internacional genérica
+                            if (despesaTemp.CnpjCpf != "00000000000010") 
                                 logger.LogWarning("Validar CPNJ '{CnpjCpf} - {NomeEmpresa}'.", despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
 
                             despesaTemp.CnpjCpf = null;
@@ -324,8 +324,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
                            despesaTemp.NomeParlamentar, despesaTemp.CnpjCpf, despesaTemp.Fornecedor);
                     }
 
-                    // Zerar o valor para ignora-lo (somente aqui) para agrupar os itens iguals e com valores diferentes.
-                    // Para armazenamento na base de dados a hash é gerado com o valor, para que mudanças no total provoquem uma atualização.
+                    
+                    
                     var options = new JsonSerializerOptions
                     {
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
@@ -362,8 +362,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
             ValidaImportacao(ano);
 
-            //dbContext.SaveChanges();
-            //dbContext.Database.CommitTransaction();
+            
+            
 
             dbContext.ChangeTracker.Clear();
         }
@@ -418,10 +418,10 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         var bulkService = new BulkInsertService<DeputadoFederalDespesaTemp>();
         bulkService.BulkInsertNoTracking(dbContext, despesasParaInserir);
 
-        //var uploader = new NpgsqlBulkUploader(dbContext);
-        //uploader.Insert(despesasParaInserir);
+        
+        
 
-        //dbContext.BulkInsert(despesasParaInserir);
+        
 
         if (despesaInserida > 0)
             logger.LogInformation("{Itens} despesas inseridas na tabela temporaria.", despesaInserida);
@@ -444,8 +444,8 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
         InsereDeputadoFaltante();
         InserePassageiroFaltante();
         InsereTrechoViagemFaltante();
-        //InsereTipoDespesaFaltante();
-        //InsereTipoEspecificacaoFaltante();
+        
+        
         InsereMandatoFaltante();
         InsereLegislaturaFaltante();
         InsereFornecedorFaltante();
@@ -506,7 +506,7 @@ UPDATE temp.cf_despesa_temp SET sigla_partido = null WHERE sigla_partido = 'NA';
 
     public void InsereDeputadoFaltante()
     {
-        // Atualiza os deputados já existentes quando efetuarem os primeiros gastos com a cota
+        
         var affected = connection.Execute(@"
 UPDATE camara.cf_deputado d
 SET id_deputado = dt.numero_deputado_id
@@ -517,13 +517,13 @@ AND d.id_deputado IS NULL;
 
         if (affected > 0)
         {
-            //AtualizaInfoDeputados();
-            //AtualizaInfoDeputadosCompleto();
+            
+            
 
             logger.LogInformation("{Itens} parlamentares atualizados!", affected);
         }
 
-        // Insere um novo deputado ou liderança
+        
         affected = connection.Execute(@"
 INSERT INTO camara.cf_deputado (id, id_deputado, nome_parlamentar, cpf)
 SELECT id_deputado, numero_deputado_id, nome_parlamentar, max(cpf)
@@ -537,12 +537,12 @@ AND numero_deputado_id IS NOT null
 GROUP BY id_deputado, numero_deputado_id, nome_parlamentar;
         ");
 
-        //DownloadFotosDeputados(@"C:\GitHub\operacao-politica-supervisionada\OPS\Content\images\Parlamentares\DEPFEDERAL\");
+        
 
         if (affected > 0)
         {
-            //AtualizaInfoDeputados();
-            //AtualizaInfoDeputadosCompleto();
+            
+            
 
             logger.LogInformation("{Itens} parlamentares incluidos!", affected);
         }
@@ -651,7 +651,7 @@ AND m.id_carteira_parlamantar IS NULL;
             logger.LogInformation("{Itens} mandatos atualizados!", affected);
         }
 
-        // TODO: Parlamentar pode ter mais de um partido por mandato, isso se reflete na CEAP
+        
         affected = connection.Execute(@"
 INSERT INTO camara.cf_mandato (id_cf_deputado, id_legislatura, id_carteira_parlamantar, id_estado, id_partido)
 SELECT DISTINCT d.id, dt.codigo_legislatura, dt.numero_carteira_parlamentar, e.id, p.id 
@@ -872,26 +872,26 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
 
     private void InsereDespesaLegislatura()
     {
-        //  var Legislaturas = connection.Query<int>(@"SELECT DISTINCT codigo_legislatura FROM temp.cf_despesa_temp");
-        //  if (!Legislaturas.Any())
-        //  {
-        //      Legislaturas = new List<int>() { legislaturaAtual - 2, legislaturaAtual - 1, legislaturaAtual };
-        //  }
-        //  ;
+        
+        
+        
+        
+        
+        
 
-        //  foreach (var legislatura in Legislaturas)
-        //  {
-        //      connection.Execute(@$"
-        //          TRUNCATE TABLE cf_despesa_{legislatura};
+        
+        
+        
+        
 
-        //          INSERT INTO cf_despesa_{legislatura} 
-        //              (id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, ano_mes, data_emissao, valor_liquido)
-        //          SELECT 
-        //               id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, concat(ano, LPAD(mes, 2, '0')), data_emissao, valor_liquido 
-        //          FROM camara.cf_despesa
-        //          WHERE id_cf_legislatura = {legislatura};
-        //", 3600);
-        //  }
+        
+        
+        
+        
+        
+        
+        
+        
     }
 
     public void LimpaDespesaTemporaria()
@@ -908,7 +908,7 @@ left join camara.cf_mandato m on m.id_cf_deputado = d.id
     {
         try
         {
-            // TODO: Considerar apenas deputados que exerceram mandato
+            
             connection.Execute(@"
 UPDATE camara.cf_deputado d 
 SET valor_total_ceap = COALESCE(subquery.total_valor, 0)
@@ -930,10 +930,10 @@ WHERE d.id = subquery.id_cf_deputado");
         }
     }
 
-    /// <summary>
-    /// Atualiza indicador 'Campeões de gastos',
-    /// Os 4 deputados que mais gastaram com a CEAP desde o ínicio do mandato 55 (02/2015)
-    /// </summary>
+    
+    
+    
+    
     public void AtualizaCampeoesGastos()
     {
         connection.Execute($@"
@@ -970,135 +970,133 @@ GROUP BY ano, mes");
     #endregion Processar Resumo CEAP
 
 
-    //    #region Importação Remuneração
-    //    // Não atualizado
-    //    public void ConsultaRemuneracao(int ano, int mes)
-    //    {
-    //        var meses = new string[] { "janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro" };
+    
+    
+    
+    
+    
 
-    //        string urlOrigem;
-    //        if (ano == 2012)
-    //            urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-{0}-csv.csv", ano, meses[mes - 1]);
-    //        else if (ano == 2013 && mes == 2)
-    //            urlOrigem = "https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/2013/fevereiro-de-2013-1";
-    //        else if (ano == 2013 && mes == 3)
-    //            urlOrigem = "https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/2013/Marco-2013-csv";
-    //        else if (ano >= 2013 && mes == 5)
-    //            urlOrigem = "https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/2013/RemuneracaoMensalServidores052013.csv";
-    //        else if (ano == 2016 && mes == 7)
-    //            urlOrigem = "https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/2016/copy_of_RemuneracaoMensalServidores072016.csv";
-    //        else if (ano == 2015)
-    //            urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/copy_of_2014/{1}-de-{0}-csv", ano, meses[mes - 1]);
-    //        else if (ano > 2013 || (ano == 2013 && (mes >= 7 || mes == 4)))
-    //            urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-de-{0}-csv", ano, meses[mes - 1]);
-    //        else
-    //            urlOrigem = string.Format("https://www2.camara.leg.br/transparencia/recursos-humanos/remuneracao/relatorios-consolidados-por-ano-e-mes/{0}/{1}-de-{0}-csv", ano, meses[mes - 1]);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //        var caminhoArquivo = System.IO.Path.Combine(appSettings.TempFolder, $"CF/RM{ano}{mes:00}.csv");
+    
 
-    //        try
-    //        {
-    //            bool novoArquivoBaixado = BaixarArquivo(urlOrigem, caminhoArquivo);
-    //            if (!novoArquivoBaixado) return;
+    
+    
+    
+    
 
-    //            CarregaRemuneracaoCsv(caminhoArquivo, Convert.ToInt32(ano.ToString() + mes.ToString("00")));
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            logger.LogError(ex, ex.Message);
+    
+    
+    
+    
+    
 
-    //            if (File.Exists(caminhoArquivo))
-    //                File.Delete(caminhoArquivo);
-    //        }
-    //    }
+    
+    
+    
+    
 
-    //    private string CarregaRemuneracaoCsv(string file, int anomes)
-    //    {
-    //        var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-    //        var sb = new StringBuilder();
-    //        string sResumoValores = string.Empty;
+    
+    
+    
+    
+    
 
-    //        int indice = 0;
-    //        int CargoIndividualizadodoServidor = indice++;
-    //        int GrupoFuncional = indice++;
-    //        int FolhadePagamento = indice++;
-    //        int AnoIngresso = indice++;
-    //        int RemuneracaoFixa = indice++;
-    //        int VantagensdeNaturezaPessoal = indice++;
-    //        int FunçaoCargoComissao = indice++;
-    //        int GratificacaoNatalina = indice++;
-    //        int Ferias = indice++;
-    //        int OutrasRemuneracoesEventuaisProvisorias = indice++;
-    //        int AbonodePermanencia = indice++;
-    //        int RedutorConstitucional = indice++;
-    //        int ConstribuicaoPrevidenciária = indice++;
-    //        int ImpostodeRenda = indice++;
-    //        int RemuneracaoAposDescontosObrigatorios = indice++;
-    //        int Diarias = indice++;
-    //        int Auxilios = indice++;
-    //        int VantagensIndenizatórias = indice++;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //        //int linhaAtual = 0;
+    
 
-    //        using (var banco = new AppDb())
-    //        {
-    //            //var lstHash = new List<string>();
-    //            //using (var dReader = banco.ExecuteReader("select hash FROM senado.sf_despesa where ano=" + ano))
-    //            //{
-    //            //    while (dReader.Read())
-    //            //    {
-    //            //        try
-    //            //        {
-    //            //            lstHash.Add(dReader["hash"].ToString());
-    //            //        }
-    //            //        catch (Exception)
-    //            //        {
-    //            //            // Vai ter duplicado mesmo
-    //            //        }
-    //            //    }
-    //            //}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //            //using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens FROM senado.sf_despesa where ano=" + ano))
-    //            //{
-    //            //    if (dReader.Read())
-    //            //    {
-    //            //        sResumoValores = string.Format("[{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
-    //            //    }
-    //            //}
+    
+    
+    
+    
+    
+    
+    
 
-    //            LimpaRemuneracaoTemporaria(banco);
+    
 
-    //            using (var reader = new StreamReader(file, Encoding.GetEncoding("ISO-8859-1")))
-    //            {
-    //                short count = 0;
+    
+    
+    
 
-    //                using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.CreateSpecificCulture("pt-BR")))
-    //                {
-    //                    while (csv.Read())
-    //                    {
-    //                        count++;
-    //                        if (count == 1)
-    //                        {
-    //                            if (
-    //                                    (csv[CargoIndividualizadodoServidor] != "Cargo Individualizado do Servidor") ||
-    //                                    (csv[VantagensIndenizatórias].Trim() != "Vantagens Indenizatórias")
-    //                                )
-    //                            {
-    //                                throw new Exception("Mudança de integração detectada para o CamaraFederal Federal");
-    //                            }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //                            // Pular linha de titulo
-    //                            continue;
-    //                        }
+    
+    
+    
 
-    //                        var cargo = csv[CargoIndividualizadodoServidor].Split(" ");
-    //                        var id = cargo[cargo.Length - 1];
-    //                        if (cargo[0].Trim() == "(*)")
-    //                        {
-    //                            break;
-    //                        }
-
-
+    
+    
+    
+    
+    
+    
 
 
 
@@ -1121,672 +1119,674 @@ GROUP BY ano, mes");
 
 
 
-    //                        //string hash = banco.ParametersHash();
-    //                        //if (lstHash.Remove(hash))
-    //                        //{
-    //                        //    banco.ClearParameters();
-    //                        //    continue;
-    //                        //}
+
+
+    
+    
+    
+    
+    
+    
 
 
 
-    //                        banco.ExecuteNonQuery(
-    //                            @"INSERT INTO temp.cf_remuneracao_temp (
-    //								id, ano_mes, cargo,grupo_funcional,tipo_folha,admissao,
-    //                                remun_basica ,vant_pessoais ,func_comissionada ,grat_natalina ,ferias ,outras_eventuais ,abono_permanencia ,
-    //                                reversao_teto_const ,imposto_renda ,previdencia ,rem_liquida ,diarias ,auxilios ,vant_indenizatorias
-    //							) VALUES (
-    //								@id, @ano_mes,@cargo,@grupo_funcional,@tipo_folha,@admissao,
-    //                                @remun_basica ,@vant_pessoais ,@func_comissionada ,@grat_natalina ,@ferias ,@outras_eventuais ,@abono_permanencia ,
-    //                                @reversao_teto_const ,@imposto_renda ,@previdencia ,@rem_liquida ,@diarias ,@auxilios ,@vant_indenizatorias
-    //							)");
-    //                    }
-    //                }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //                //if (++linhaAtual % 100 == 0)
-    //                //{
-    //                //    Console.WriteLine(linhaAtual);
-    //                //}
-    //            }
+    
+    
+    
+    
+    
 
-    //            //if (lstHash.Count == 0 && linhaAtual == 0)
-    //            //{
-    //            //    sb.AppendFormat("<p>Não há novos itens para importar! #2</p>");
-    //            //    return sb.ToString();
-    //            //}
+    
+    
+    
+    
+    
 
-    //            //if (lstHash.Count > 0)
-    //            //{
-    //            //    foreach (var hash in lstHash)
-    //            //    {
-    //            //        banco.ExecuteNonQuery(string.Format("delete FROM senado.sf_despesa where hash = '{0}'", hash));
-    //            //    }
+    
+    
+    
+    
+    
+    
 
 
-    //            //    Console.WriteLine("Registros para exluir: " + lstHash.Count);
-    //            //    sb.AppendFormat("<p>{0} registros excluidos</p>", lstHash.Count);
-    //            //}
+    
+    
+    
 
-    //            //sb.Append(ProcessarDespesasTemp(banco, completo));
-    //        }
+    
+    
 
-    //        //if (ano == DateTime.Now.Year)
-    //        //{
-    //        //    AtualizaCamaraFederalrValores();
-    //        //    AtualizaCampeoesGastos();
-    //        //    AtualizaResumoMensal();
-    //        //}
+    
+    
+    
+    
+    
+    
 
-    //        //using (var banco = new AppDb())
-    //        //{
-    //        //    using (var dReader = banco.ExecuteReader("select sum(valor) as valor, count(1) as itens FROM senado.sf_despesa where ano=" + ano))
-    //        //    {
-    //        //        if (dReader.Read())
-    //        //        {
-    //        //            sResumoValores += string.Format(" -> [{0}]={1}", dReader["itens"], Utils.FormataValor(dReader["valor"]));
-    //        //        }
-    //        //    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //        //    sb.AppendFormat("<p>Resumo atualização: {0}</p>", sResumoValores);
-    //        //}
+    
+    
 
-    //        return sb.ToString();
-    //    }
+    
+    
 
-    //private void LimpaRemuneracaoTemporaria(AppDb banco)
-    //{
-    //    var affected = banco.Execute(@"
-    //				truncate table temp.cf_remuneracao_temp;
-    //			");
-    //}
+    
+    
+    
+    
+    
+    
 
     
 
     private Dictionary<string, string> colunasBanco = new Dictionary<string, string>();
-    //public void DefineColunasRemuneracaoSecretarios()
-    //{
-    //    colunasBanco = new Dictionary<string, string>();
-    //    // 1 - Remuneração Básica
-    //    colunasBanco.Add("a - Remuneração Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
-    //    colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
-    //    // 2 - Remuneração Eventual/Provisória
-    //    colunasBanco.Add("a - Função ou Cargo em Comissão", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
-    //    colunasBanco.Add("b - Gratificação Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
-    //    colunasBanco.Add("c - Férias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
-    //    colunasBanco.Add("d - Outras Remunerações Eventuais/Provisórias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
-    //    // 3 - Abono Permanência
-    //    colunasBanco.Add("a - Abono Permanência", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
-    //    // 4 - Descontos Obrigatórios(-)
-    //    colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
-    //    colunasBanco.Add("b - Contribuição Previdenciária", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
-    //    colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
-    //    // 5 - Remuneração após Descontos Obrigatórios
-    //    colunasBanco.Add("a - Remuneração após Descontos Obrigatórios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
-    //    // 6 - Outros
-    //    colunasBanco.Add("a - Diárias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
-    //    colunasBanco.Add("b - Auxílios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
-    //    colunasBanco.Add("c - Vantagens Indenizatórias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
-    //}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //    public void ColetaRemuneracaoSecretarios()
-    //    {
-    //        // 1 - Remuneração Básica
-    //        colunasBanco.Add("a - Remuneração Fixa", nameof(DeputadoFederalFuncionarioRemuneracao.RemuneracaoFixa));
-    //        colunasBanco.Add("b - Vantagens de Natureza Pessoal", nameof(DeputadoFederalFuncionarioRemuneracao.VantagensNaturezaPessoal));
-    //        // 2 - Remuneração Eventual/Provisória
-    //        colunasBanco.Add("a - Função ou Cargo em Comissão", nameof(DeputadoFederalFuncionarioRemuneracao.FuncaoOuCargoEmComissao));
-    //        colunasBanco.Add("b - Gratificação Natalina", nameof(DeputadoFederalFuncionarioRemuneracao.GratificacaoNatalina));
-    //        colunasBanco.Add("c - Férias (1/3 Constitucional)", nameof(DeputadoFederalFuncionarioRemuneracao.Ferias));
-    //        colunasBanco.Add("d - Outras Remunerações Eventuais/Provisórias(*)", nameof(DeputadoFederalFuncionarioRemuneracao.OutrasRemuneracoes));
-    //        // 3 - Abono Permanência
-    //        colunasBanco.Add("a - Abono Permanência", nameof(DeputadoFederalFuncionarioRemuneracao.AbonoPermanencia));
-    //        // 4 - Descontos Obrigatórios(-)
-    //        colunasBanco.Add("a - Redutor Constitucional", nameof(DeputadoFederalFuncionarioRemuneracao.RedutorConstitucional));
-    //        colunasBanco.Add("b - Contribuição Previdenciária", nameof(DeputadoFederalFuncionarioRemuneracao.ContribuicaoPrevidenciaria));
-    //        colunasBanco.Add("c - Imposto de Renda", nameof(DeputadoFederalFuncionarioRemuneracao.ImpostoRenda));
-    //        // 5 - Remuneração após Descontos Obrigatórios
-    //        colunasBanco.Add("a - Remuneração após Descontos Obrigatórios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorLiquido));
-    //        // 6 - Outros
-    //        colunasBanco.Add("a - Diárias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorDiarias));
-    //        colunasBanco.Add("b - Auxílios", nameof(DeputadoFederalFuncionarioRemuneracao.ValorAuxilios));
-    //        colunasBanco.Add("c - Vantagens Indenizatórias", nameof(DeputadoFederalFuncionarioRemuneracao.ValorVantagens));
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //        var sqlDeputados = @"
-    //SELECT f.id as id_cf_funcionario, f.chave 
-    //FROM camara.cf_funcionario f
-    //WHERE f.processado = 0
-    //order BY f.id
-    //";
+    
+    
+    
+    
+    
+    
 
-    //        ConcurrentQueue<Dictionary<string, object>> queue;
-    //        // Migrated to IDbConnection - removed AppDb usage
-    //        {
-    //            var dcDeputado = connection.Query<Dictionary<string, object>>(sqlDeputados).ToList();
-    //            queue = new ConcurrentQueue<Dictionary<string, object>>(dcDeputado);
-    //        }
+    
+    
+    
+    
+    
+    
 
-    //        int totalRecords = 10;
-    //        Task[] tasks = new Task[totalRecords];
-    //        for (int i = 0; i < totalRecords; ++i)
-    //        {
-    //            tasks[i] = ProcessaFilaColetaRemuneracaoSecretarios(queue);
-    //        }
+    
+    
+    
+    
+    
+    
 
-    //        Task.WaitAll(tasks);
-    //    }
+    
+    
 
-    //    private async Task ProcessaFilaColetaRemuneracaoSecretarios(ConcurrentQueue<Dictionary<string, object>> queue)
-    //    {
-    //        Dictionary<string, object> secretario = null;
-    //        var context = httpClient.CreateAngleSharpContext();
+    
+    
+    
+    
 
-    //        while (queue.TryDequeue(out secretario))
-    //        {
-    //            if (secretario is null) continue;
+    
+    
+    
 
-    //            logger.LogDebug("Inciando coleta da remuneração para os funcionario {IdFuncionario}", secretario["id_cf_funcionario"]);
-    //            await ConsultarRemuneracaoSecretario(colunasBanco, secretario, context);
-    //        }
-    //    }
+    
+    
+    
+    
 
     static readonly object padlock = new object();
-    //    private async Task ConsultarRemuneracaoSecretario(Dictionary<string, string> colunasBanco, Dictionary<string, object> secretario, IBrowsingContext context)
-    //    {
-    //        var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
-    //        var dataCorte = new DateTime(2008, 2, 1);
-
-    //        using (logger.BeginScope(new Dictionary<string, object> { ["Funcionario"] = Convert.ToInt32(secretario["id_cf_funcionario"]) }))
-    //        {
-    //            try
-    //            {
-    //                var erroColeta = false;
-    //                var idFuncionario = Convert.ToInt32(secretario["id_cf_funcionario"]);
-    //                //var idFuncionarioContratacao = Convert.ToInt32(secretario["id_cf_funcionario_contratacao"]);
-    //                //var idDeputado = Convert.ToInt32(secretario["id_cf_deputado"]);
-    //                var chave = secretario["chave"].ToString();
-
-    //                var folhas = new List<DeputadoFederalFuncionarioRemuneracao>();
-    //                DateTime dtUltimaRemuneracaoColetada;
-    //                IEnumerable<DeputadoFederalFuncionarioContratacao> contratacoes;
-    //                lock (padlock)
-    //                {
-    //                    var sqlUltimaRemuneracao = @"SELECT MAX(referencia) FROM camara.cf_funcionario_remuneracao WHERE id_cf_funcionario = @id_cf_funcionario";
-    //                    var objUltimaRemuneracaoColetada = connection.ExecuteScalar(sqlUltimaRemuneracao, new { id_cf_funcionario = idFuncionario });
-    //                    dtUltimaRemuneracaoColetada = !Convert.IsDBNull(objUltimaRemuneracaoColetada) ? Convert.ToDateTime(objUltimaRemuneracaoColetada) : DateTime.MinValue;
-
-    //                    contratacoes = connection.GetList<DeputadoFederalFuncionarioContratacao>(new { id_cf_funcionario = idFuncionario });
-    //                }
-
-    //                var address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}";
-    //                var document = await context.OpenAsyncAutoRetry(address);
-    //                if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
-    //                {
-    //                    logger.LogError(document.StatusCode + ":" + address);
-    //                    return;
-    //                }
-
-    //                int anoSelecionado = 0, mesSelecionado = 0;
-    //                try
-    //                {
-    //                    Regex myRegex = new Regex(@"ano=(\d{4})&mes=(\d{1,2})", RegexOptions.Singleline);
-    //                    // window.location.href = 'https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/BDEdGyYrxGdG42MO7egk?ano=2021&mes=7';
-    //                    var linkMatch = myRegex.Match(document.Scripts[1].InnerHtml);
-    //                    if (linkMatch.Length > 0)
-    //                    {
-    //                        anoSelecionado = Convert.ToInt32(linkMatch.Groups[1].Value);
-    //                        mesSelecionado = Convert.ToInt32(linkMatch.Groups[2].Value);
-
-    //                        var dataColeta = new DateTime(anoSelecionado, mesSelecionado, 1);
-    //                        if (dataColeta < dataCorte)
-    //                        {
-    //                            return;
-    //                        }
-    //                    }
-    //                    else
-    //                    {
-    //                        if (document.QuerySelector(".remuneracao-funcionario") != null)
-    //                        {
-    //                            logger.LogError("Remuneração indisponível! Mensagem: {MensagemErro}", document.QuerySelector(".remuneracao-funcionario").TextContent.Trim());
-    //                            MarcarComoProcessado(idFuncionario);
-    //                        }
-
-    //                        return;
-    //                    }
-    //                }
-    //                catch (Exception ex)
-    //                {
-    //                    logger.LogError(idFuncionario + ":" + ex.Message);
-    //                    if (document.QuerySelector(".remuneracao-funcionario") != null)
-    //                        logger.LogError(document.QuerySelector(".remuneracao-funcionario").TextContent.Trim());
-
-    //                    //MarcarComoProcessado(db, idFuncionario);
-    //                    return;
-    //                }
-
-    //                var addressFull = address + $"?ano={anoSelecionado}&mes={mesSelecionado}";
-    //                if (document.Location.Href != addressFull)
-    //                {
-    //                    document = await context.OpenAsyncAutoRetry(addressFull);
-    //                    if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
-    //                    {
-    //                        logger.LogError(document.StatusCode + ":" + addressFull);
-    //                        return;
-    //                    }
-    //                }
-
-    //                var anos = (document.GetElementById("anoRemuneracao") as IHtmlSelectElement).Options.OrderByDescending(x => Convert.ToInt32(x.Text));
-    //                if (!anos.Any())
-    //                {
-    //                    logger.LogError("Anos indisponiveis:" + document.Location.Href);
-    //                    return;
-    //                }
-
-
-    //                foreach (var ano in anos)
-    //                {
-    //                    using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano.Value }))
-    //                    {
-    //                        if (ano.OuterHtml.Contains("display: none;")) continue;
-    //                        if (Convert.ToInt32(ano.InnerHtml) < dtUltimaRemuneracaoColetada.Year) continue;
-
-    //                        //Console.WriteLine();
-    //                        //Console.WriteLine($"Ano: {ano.Text}");
-    //                        address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{ano.Value}";
-    //                        if (document.Location.Href != address)
-    //                        {
-    //                            document = await context.OpenAsyncAutoRetry(address);
-
-    //                            if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
-    //                            {
-    //                                logger.LogError(document.StatusCode + ":" + address);
-    //                                erroColeta = true;
-    //                                continue;
-    //                            }
-    //                        }
-
-    //                        var calendario = document.QuerySelectorAll(".linha-tempo li");
-    //                        var meses = (document.GetElementById("mesRemuneracao") as IHtmlSelectElement).Options
-    //                            .Select(x => Convert.ToInt32(x.Value))
-    //                            .OrderByDescending(x => x);
-
-    //                        if (!meses.Any())
-    //                        {
-    //                            logger.LogError("Meses indisponiveis:" + document.Location.Href);
-    //                            erroColeta = true;
-    //                            continue;
-    //                        }
-
-    //                        foreach (var mes in meses)
-    //                        {
-    //                            using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes }))
-    //                            {
-    //                                var dataReferencia = new DateTime(Convert.ToInt32(ano.Text), mes, 1);
-    //                                if (dataReferencia < dataCorte)
-    //                                {
-    //                                    logger.LogDebug("Data de coleta {DataColeta:yyyy-MM-dd} fora do pediodo de corte da coleta {DataCorte:yyyy-MM-dd}", dataReferencia, dataCorte);
-    //                                    continue;
-    //                                }
-
-    //                                var elMesSelecionadoNoCalendario = (calendario[mes - 1] as IHtmlListItemElement);
-    //                                if (elMesSelecionadoNoCalendario.IsHidden || elMesSelecionadoNoCalendario.OuterHtml.Contains("display: none;") || mes > mesSelecionado)
-    //                                {
-    //                                    logger.LogDebug(
-    //                                        "Não há remuneração para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #1",
-    //                                        elMesSelecionadoNoCalendario.TextContent.Trim().Split(" ")[1], mes, ano.Text);
-    //                                    continue;
-    //                                }
-    //                                if (new DateTime(Convert.ToInt32(ano.InnerHtml), mes, 1) <= dtUltimaRemuneracaoColetada)
-    //                                {
-    //                                    logger.LogDebug("Remuneração ja coletada para {MesRemuneracao}/{AnoRemuneracao}", mes, ano.Text);
-    //                                    continue;
-    //                                }
-
-    //                                address = $"https://www.camara.leg.br/transparencia/recursos-humanos/remuneracao/{chave}?ano={ano.Text}&mes={mes}";
-    //                                if (document.Location.Href != address)
-    //                                {
-    //                                    document = await context.OpenAsyncAutoRetry(address);
-    //                                    if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
-    //                                    {
-    //                                        logger.LogError(document.StatusCode + ":" + address);
-    //                                        erroColeta = true;
-    //                                        continue;
-    //                                    }
-    //                                }
-
-    //                                var dadosIndisponiveis = document.QuerySelectorAll(".remuneracao-funcionario");
-    //                                if (dadosIndisponiveis.Any() && dadosIndisponiveis[0].TextContent.Trim() == "Ainda não há dados disponíveis.")
-    //                                {
-    //                                    logger.LogDebug(
-    //                                        "Não há remuneração para {MesRemuneracaoExtenso}[{MesRemuneracao:00}]/{AnoRemuneracao} #2",
-    //                                        elMesSelecionadoNoCalendario.TextContent.Trim().Split(" ")[1], mes, ano.Text);
-    //                                    continue;
-    //                                }
-
-    //                                var folhasPagamento = document.QuerySelectorAll(".remuneracao-funcionario__info");
-    //                                if (!folhasPagamento.Any())
-    //                                {
-    //                                    logger.LogWarning("Dados indisponiveis: " + address);
-    //                                    erroColeta = true;
-    //                                    return; // Erro no funcionario, abortar coleta dele
-    //                                }
-
-    //                                foreach (var folhaPagamento in folhasPagamento)
-    //                                {
-    //                                    var titulo = folhaPagamento.QuerySelector(".remuneracao-funcionario__mes-ano").TextContent;
-
-    //                                    using (logger.BeginScope(new Dictionary<string, object> { ["Folha"] = titulo }))
-    //                                    {
-    //                                        if (titulo.Split("Permanência")[0].Trim() != $"{mes:00}{ano.Text}")
-    //                                        {
-    //                                            throw new NotImplementedException("Algo esta errado!");
-    //                                        }
-
-    //                                        var folha = new DeputadoFederalFuncionarioRemuneracao();
-    //                                        IEnumerable<PropertyInfo> props = folha.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-    //                                        var cabecalho = folhaPagamento.QuerySelectorAll(".remuneracao-funcionario__info-item");
-    //                                        var categoriaFuncional = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Categoria funcional"))?.TextContent.Split(":")[1].Trim();
-    //                                        var dataExercicio = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Data de exercício"))?.TextContent.Split(":")[1].Trim();
-    //                                        var cargo = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Cargo"))?.TextContent.Split(":")[1].Trim();
-    //                                        var nivel = cabecalho.FirstOrDefault(x => x.TextContent.StartsWith("Função/cargo em comissão"))?.TextContent.Split(":")[1].Trim();
-
-    //                                        var linhas = folhaPagamento.QuerySelectorAll(".tabela-responsiva--remuneracao-funcionario tbody tr");
-    //                                        foreach (var linha in linhas)
-    //                                        {
-    //                                            var colunas = linha.QuerySelectorAll("td");
-    //                                            if (!colunas.Any()) continue;
-
-    //                                            var descricao = colunas[0].TextContent.Trim();
-    //                                            var valor = Convert.ToDecimal(colunas[1].TextContent.Trim());
-
-    //                                            var propInfo = folha.GetType().GetProperty(colunasBanco[descricao]);
-    //                                            propInfo.SetValue(folha, valor, null);
-    //                                        }
-
-    //                                        byte tipo = 0;
-    //                                        switch (titulo.Split("-")[1].Trim())
-    //                                        {
-    //                                            case "FOLHA NORMAL":
-    //                                                tipo = 1;
-    //                                                break;
-    //                                            case "FOLHA COMPLEMENTAR":
-    //                                                tipo = 2;
-    //                                                break;
-    //                                            case "FOLHA COMPLEMENTAR ESPECIAL":
-    //                                                tipo = 3;
-    //                                                break;
-    //                                            case "FOLHA DE ADIANTAMENTO GRATIFICAÇÃO NATALINA":
-    //                                                tipo = 4;
-    //                                                break;
-    //                                            case "FOLHA DE GRATIFICAÇÃO NATALINA":
-    //                                                tipo = 5;
-    //                                                break;
-    //                                            default:
-    //                                                throw new NotImplementedException();
-    //                                        }
-
-    //                                        folha.IdFuncionario = idFuncionario;
-
-    //                                        folha.Tipo = tipo;
-    //                                        folha.Nivel = nivel;
-    //                                        folha.Referencia = dataReferencia;
-
-    //                                        if (!string.IsNullOrEmpty(dataExercicio))
-    //                                            folha.Contratacao = DateOnly.Parse(dataExercicio, cultureInfo);
-
-    //                                        folha.ValorBruto =
-    //                                            folha.RemuneracaoFixa +
-    //                                            folha.VantagensNaturezaPessoal +
-    //                                            folha.FuncaoOuCargoEmComissao +
-    //                                            folha.GratificacaoNatalina +
-    //                                            folha.Ferias +
-    //                                            folha.OutrasRemuneracoes +
-    //                                            folha.AbonoPermanencia;
-
-    //                                        var dataContratacao = Convert.ToDateTime(dataExercicio, cultureInfo);
-    //                                        folha.ValorOutros = folha.ValorDiarias + folha.ValorAuxilios + folha.ValorVantagens;
-    //                                        folha.ValorTotal = folha.ValorBruto + folha.ValorOutros;
-
-    //                                        var contratacao = contratacoes.FirstOrDefault(c => c.PeriodoDe == dataContratacao);
-    //                                        if (contratacao == null)
-    //                                            contratacao = contratacoes.FirstOrDefault(c => dataReferencia.IsBetween(c.PeriodoDe, c.PeriodoAte));
-
-    //                                        if (contratacao != null)
-    //                                        {
-    //                                            folha.IdFuncionarioContratacao = contratacao.Id;
-    //                                            folha.IdDeputado = contratacao.IdDeputado;
-
-    //                                            if (contratacao.IdCargo == null)
-    //                                            {
-    //                                                lock (padlock)
-    //                                                {
-    //                                                    contratacao.IdCargo = connection.QuerySingleOrDefault<short?>("SELECT id FROM camara.cf_funcionario_cargo WHERE nome ILIKE @nome", new { nome = cargo });
-
-    //                                                    if (contratacao.IdGrupoFuncional == null && !string.IsNullOrEmpty(categoriaFuncional))
-    //                                                        contratacao.IdGrupoFuncional = connection.QuerySingleOrDefault<short?>("SELECT id FROM camara.cf_funcionario_grupo_funcional WHERE nome ILIKE @nome", new { nome = categoriaFuncional });
-
-    //                                                    if (contratacao.IdNivel == null && !string.IsNullOrEmpty(nivel))
-    //                                                        contratacao.IdNivel = connection.QuerySingleOrDefault<short?>("SELECT id FROM camara.cf_funcionario_nivel WHERE nome ILIKE @nome", new { nome = nivel });
-
-    //                                                    repositoryService.Update(contratacao);
-    //                                                }
-    //                                            }
-    //                                        }
-    //                                        else
-    //                                        {
-    //                                            logger.LogWarning("Não foi identificada a contratação do funcionario {IdFuncionario} em {Mes}/{Ano}", idFuncionario, mes, ano.Text);
-    //                                        }
-
-    //                                        folhas.Add(folha);
-
-    //                                        logger.LogDebug("Inserida remuneração de {Mes}/{Ano} do tipo {TipoRemuneracao}", mes, ano.Text, titulo);
-    //                                    }
-    //                                }
-    //                            }
-    //                        }
-    //                    }
-    //                }
-
-    //                if (!erroColeta)
-    //                {
-    //                    if (folhas.Any())
-    //                    {
-    //                        lock (padlock)
-    //                        {
-    //                            foreach (var folha in folhas)
-    //                            {
-    //                                try
-    //                                {
-    //                                    repositoryService.Insert(folha);
-    //                                }
-    //                                catch (Exception ex)
-    //                                {
-    //                                    if (!ex.Message.Contains("Duplicate"))
-    //                                        throw;
-    //                                    else
-    //                                        logger.LogWarning("Registro duplicado ignorado: {@Folha}", folha);
-    //                                }
-    //                            }
-    //                        }
-
-    //                        logger.LogDebug("Coleta finalizada para o funcionario {IdFuncionario} com {Registros} registros", idFuncionario, folhas.Count());
-    //                    }
-    //                    else
-    //                    {
-    //                        logger.LogWarning("Coleta finalizada para o funcionario {IdFuncionario} sem registros", idFuncionario);
-    //                    }
-
-    //                    MarcarComoProcessado(idFuncionario);
-    //                }
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                Console.WriteLine(secretario["id_cf_funcionario"].ToString() + ":" + ex.Message);
-    //                Thread.Sleep(TimeSpan.FromMinutes(1));
-    //            }
-    //        }
-    //    }
-
-    //    private void MarcarComoProcessado(int idFuncionario)
-    //    {
-    //        lock (padlock)
-    //            connection.Execute("update cf_funcionario set processado = 1 where id = @id", new { id = idFuncionario });
-    //    }
-
-    //    public async Task ColetaDadosFuncionarios()
-    //    {
-    //        var addresses = new string[]
-    //        {
-    //            "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&areaDeAtuacao=&categoriaFuncional=&lotacao=&situacao=Em%20exerc%C3%ADcio&pagina=",
-    //            "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=&areaDeAtuacao=&situacao=Aposentado&pagina=",
-    //            "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=&areaDeAtuacao=&situacao=Licenciado&pagina=",
-    //            "https://www.camara.leg.br/transparencia/recursos-humanos/funcionarios?search=&categoriaFuncional=&areaDeAtuacao=&situacao=Cedido&pagina="
-    //        };
-
-    //        var sqlInsert = @"
-    //insert ignore into cf_funcionario_temp (chave, nome, categoria_funcional, area_atuacao, situacao{0})
-    //values (@chave, @nome, @categoria_funcional, @area_atuacao, @situacao{1})
-    //";
-    //        var context = httpClient.CreateAngleSharpContext();
-
-    //        // Migrated to IDbConnection - removed AppDb usage
-    //        {
-    //            connection.Execute("truncate table cf_funcionario_temp");
-
-    //            foreach (var address in addresses)
-    //            {
-    //                var pagina = 0;
-    //                while (true)
-    //                {
-    //                    var document = await context.OpenAsyncAutoRetry(address + (++pagina).ToString());
-    //                    if (document.StatusCode != HttpStatusCode.OK)
-    //                    {
-    //                        Console.WriteLine(document.StatusCode);
-    //                        Thread.Sleep(TimeSpan.FromSeconds(30));
-
-    //                        document = await context.OpenAsyncAutoRetry(address + (++pagina).ToString());
-    //                        if (document.StatusCode != HttpStatusCode.OK)
-    //                        {
-    //                            Console.WriteLine(document.StatusCode);
-    //                            break;
-    //                        }
-    //                        ;
-    //                    }
-    //                    ;
-
-    //                    var linhas = document.QuerySelectorAll(".l-busca__secao--resultados table.tabela-responsiva tbody tr");
-    //                    foreach (var linha in linhas)
-    //                    {
-    //                        string colunasDB = "", valoresDB = "";
-
-    //                        var colunas = linha.QuerySelectorAll("td");
-    //                        var nome = colunas[0].TextContent.Trim();
-    //                        var categoria = colunas[1].TextContent.Trim();
-    //                        var area = colunas[2].TextContent.Trim();
-    //                        var situacao = colunas[3].TextContent.Trim();
-
-    //                        var chave = (colunas[0].FirstElementChild as IHtmlAnchorElement).GetAttribute("data-target");
-
-    //                        if (categoria.StartsWith("Deputado")) categoria = "Deputado";
-    //                        if (categoria.StartsWith("Ex-deputado")) categoria = "Ex-deputado";
-    //                        if (area == "-") area = null;
-
-    //                        Console.WriteLine();
-    //                        Console.WriteLine($"Funcionario: {nome}");
-
-    //                        var lstInfo = document.QuerySelectorAll(".modal--funcionario" + chave + " .lista-funcionario__item");
-    //                        foreach (var info in lstInfo)
-    //                        {
-    //                            try
-    //                            {
-    //                                var titulo = info.QuerySelector(".lista-funcionario__titulo")?.TextContent.Trim();
-    //                                var valor = info?.TextContent?.Replace(titulo, "").Trim();
-
-    //                                switch (titulo.Replace(":", ""))
-    //                                {
-    //                                    case "Cargo":
-    //                                        colunasDB += ", cargo";
-    //                                        valoresDB += ", @cargo";
-
-    //                                        break;
-    //                                    case "Nível":
-    //                                        colunasDB += ", nivel";
-    //                                        valoresDB += ", @nivel";
-
-    //                                        break;
-    //                                    case "Função comissionada":
-    //                                        colunasDB += ", funcao_comissionada";
-    //                                        valoresDB += ", @funcao_comissionada";
-
-    //                                        break;
-    //                                    case "Local de trabalho":
-    //                                        colunasDB += ", local_trabalho";
-    //                                        valoresDB += ", @local_trabalho";
-
-    //                                        break;
-    //                                    case "Data da designação da função":
-    //                                        colunasDB += ", data_designacao_funcao";
-    //                                        valoresDB += ", @data_designacao_funcao";
-
-    //                                        break;
-    //                                    case "Situação":
-    //                                    case "Categoria funcional":
-    //                                    case "área de atuação":
-    //                                        break;
-    //                                    default:
-    //                                        throw new NotImplementedException($"Vefificar beneficios do funcionario {nome}.");
-    //                                }
-
-    //                                Console.WriteLine($"{titulo}: {valor}");
-    //                            }
-    //                            catch (Exception ex)
-    //                            {
-    //                                logger.LogError(ex, ex.Message);
-    //                            }
-    //                        }
-
-
-
-
-
-
-    //                        connection.Execute(string.Format(sqlInsert, colunasDB, valoresDB));
-    //                    }
-
-    //                    if (linhas.Count() < 20)
-    //                    {
-    //                        logger.LogDebug("Parando na pagina {Pagina}!", pagina);
-    //                        break;
-    //                    }
-    //                }
-    //            }
-
-
-
-    //            ExecuteNonQuery(@"
-    //INSERT ignore INTO cf_funcionario(chave, nome)
-    //SELECT chave, nome FROM camara.cf_funcionario_temp t");
-
-    //            ExecuteNonQuery(@"
-    //INSERT INTO cf_funcionario_contratacao 
-    //	(id_cf_deputado, id_cf_funcionario, id_cf_funcionario_grupo_funcional, id_cf_funcionario_cargo, id_cf_funcionario_nivel, id_cf_funcionario_funcao_comissionada, 
-    //		id_cf_funcionario_area_atuacao, id_cf_funcionario_local_trabalho, id_cf_funcionario_situacao, periodo_de, periodo_ate)
-    //SELECT NULL, f.id, gf.id, c.id, n.id, fc.id, aa.id, lt.id, s.id, t.data_designacao_funcao, null 
-    //FROM camara.cf_funcionario_temp t
-    //JOIN cf_funcionario f ON f.chave = t.chave
-    //LEFT JOIN cf_funcionario_grupo_funcional gf ON gf.nome = t.categoria_funcional
-    //LEFT JOIN cf_funcionario_cargo c ON c.nome = t.cargo
-    //LEFT JOIN cf_funcionario_nivel n ON n.nome = t.nivel
-    //LEFT JOIN cf_funcionario_funcao_comissionada fc ON fc.nome = t.funcao_comissionada
-    //LEFT JOIN cf_funcionario_area_atuacao aa ON aa.nome = t.area_atuacao
-    //LEFT JOIN cf_funcionario_local_trabalho lt ON lt.nome = t.local_trabalho
-    //LEFT JOIN cf_funcionario_situacao s ON s.nome = t.situacao
-    //LEFT JOIN cf_funcionario_contratacao ct ON ct.id_cf_funcionario = f.id
-    //WHERE ct.id IS NULL");
-    //        }
-    //    }
-
-    //    #endregion Importação Remuneração
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
 
     public void AtualizaParlamentarValores()
     {

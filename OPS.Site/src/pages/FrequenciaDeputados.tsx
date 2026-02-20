@@ -34,7 +34,7 @@ const FrequenciaDeputados = () => {
     const [sortField, setSortField] = useState<number | null>(null);
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-    // Drill-down state
+    
     const [expandedSessionId, setExpandedSessionId] = useState<number | null>(null);
     const [sessionDetails, setSessionDetails] = useState<FrequenciaDetalhe[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -122,7 +122,7 @@ const FrequenciaDeputados = () => {
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted/30">
             <Header />
             <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-                {/* Page Header */}
+                {}
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
@@ -137,7 +137,7 @@ const FrequenciaDeputados = () => {
                     </p>
                 </div>
 
-                {/* Stats Cards */}
+                {}
                 {!loading && sessoes.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-200/50 dark:border-emerald-800/50">
@@ -170,7 +170,7 @@ const FrequenciaDeputados = () => {
                     </div>
                 )}
 
-                {/* Session Table */}
+                {}
                 <Card className="shadow-lg border-border/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -283,7 +283,7 @@ const FrequenciaDeputados = () => {
                                                         <TableCell className="text-right font-bold">{sessao.total}</TableCell>
                                                     </TableRow>
 
-                                                    {/* Drill-down: Session Detail */}
+                                                    {}
                                                     {expandedSessionId === sessao.id_cf_sessao && (
                                                         <TableRow key={`detail-${sessao.id_cf_sessao}`}>
                                                             <TableCell colSpan={8} className="p-0">
@@ -342,7 +342,7 @@ const FrequenciaDeputados = () => {
                                     </Table>
                                 </div>
 
-                                {/* Pagination */}
+                                {}
                                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/50">
                                     <p className="text-sm text-muted-foreground">
                                         Mostrando {((page - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(page * ITEMS_PER_PAGE, totalRecords)} de {totalRecords.toLocaleString('pt-BR')} sessões

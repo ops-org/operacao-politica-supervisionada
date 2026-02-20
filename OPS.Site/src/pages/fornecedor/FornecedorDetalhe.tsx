@@ -80,12 +80,12 @@ const FornecedorDetalhe = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-            {/* Full-screen loading overlay */}
+            {}
             <LoadingOverlay isLoading={loading} content="Carregando informações do fornecedor..." />
 
             <Header />
             <main className="container mx-auto px-4 py-8">
-                {/* Breadcrumb */}
+                {}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
                     <Link to="/busca" className="hover:text-foreground transition-colors">
                         Busca
@@ -95,19 +95,19 @@ const FornecedorDetalhe = () => {
                 </div>
 
                 <div className="space-y-8">
-                    {/* Profile Card with Modern Design */}
+                    {}
                     <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300 border-t-4 border-t-primary">
                         <div className={`relative overflow-hidden ${fornecedor.situacao_cadastral === 'ATIVA'
                             ? "bg-gradient-to-r from-primary/10 to-accent/5"
                             : "bg-gradient-to-r from-slate-500/10 to-transparent"
                             }`}>
-                            {/* Animated geometric shapes for premium feel */}
+                            {}
                             <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
                             <div className="absolute bottom-[-50%] left-[-10%] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
 
                             <div className="p-8 relative z-10">
                                 <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                                    {/* Icon Section */}
+                                    {}
                                     <div className="flex-shrink-0">
                                         <div className="relative group">
                                             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-accent rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
@@ -117,7 +117,7 @@ const FornecedorDetalhe = () => {
                                         </div>
                                     </div>
 
-                                    {/* Main Info Section */}
+                                    {}
                                     <div className="flex-1 space-y-4 text-center md:text-left">
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-center md:justify-start gap-3">
@@ -143,7 +143,7 @@ const FornecedorDetalhe = () => {
                                                 >
                                                     {fornecedor.tipo}
                                                 </Badge>}
-                                                {/* Status Badge */}
+                                                {}
                                                 {fornecedor.situacao_cadastral && <div className="flex items-center gap-1.5 ml-2">
                                                     {fornecedor.situacao_cadastral === "ATIVA" ? (
                                                         <Badge className="bg-green-500/10 text-green-600 border-green-500/20 px-3 py-1 flex items-center gap-1">
@@ -160,7 +160,7 @@ const FornecedorDetalhe = () => {
                                             </div>
 
                                             {fornecedor.data_de_abertura && <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium pt-2">
-                                                {/* Operation Period */}
+                                                {}
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="w-4 h-4 text-primary/70" />
                                                     <span>
@@ -178,7 +178,7 @@ const FornecedorDetalhe = () => {
                                         </div>
                                     </div>
 
-                                    {/* Total Recebimentos Display */}
+                                    {}
                                     <div className="text-center md:text-right space-y-2 lg:min-w-[280px]">
                                         <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 shadow-xl shadow-primary/20 text-white transform hover:scale-105 transition-transform duration-300">
                                             <div className="flex items-center justify-center md:justify-end gap-2 mb-1 opacity-90">
@@ -194,11 +194,11 @@ const FornecedorDetalhe = () => {
                             </div>
                         </div>
 
-                        {/* Detailed Info Section */}
+                        {}
                         {fornecedor.categoria == "PJ" && <div className="p-6">
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
-                                    {/* Legal Nature */}
+                                    {}
                                     <div className="flex items-center gap-1.5">
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path d="m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381"></path>
@@ -210,7 +210,7 @@ const FornecedorDetalhe = () => {
                                         <span>{fornecedor.natureza_juridica}</span>
                                     </div>
 
-                                    {/* Capital Social */}
+                                    {}
                                     <div className="flex items-center gap-1.5">
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path d="M9 5v4"></path>
@@ -224,7 +224,7 @@ const FornecedorDetalhe = () => {
                                         <span>Capital Social: R$ {fornecedor.capital_social}</span>
                                     </div>
 
-                                    {/* Email */}
+                                    {}
                                     {fornecedor.endereco_eletronico && (
                                         <div className="flex items-center gap-1.5">
                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,7 +243,7 @@ const FornecedorDetalhe = () => {
                                         </div>
                                     )}
 
-                                    {/* Phone */}
+                                    {}
                                     {fornecedor.telefone && (
                                         <div className="flex items-center gap-1.5">
                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +261,7 @@ const FornecedorDetalhe = () => {
                                         </div>
                                     )}
 
-                                    {/* Address */}
+                                    {}
                                     <div className="flex items-center gap-1.5 lg:col-span-4">
                                         <MapPin className="w-3.5 h-3.5" />
                                         <div className="flex items-center gap-2">
@@ -281,7 +281,7 @@ const FornecedorDetalhe = () => {
                                                 className="h-6 w-6 p-0"
                                                 title="Google Maps"
                                                 onClick={() => {
-                                                    window.open(`https://maps.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}`, '_blank');
+                                                    window.open(`https:
                                                 }}
                                             >
                                                 <MapPinned className="h-2 w-2" />
@@ -292,7 +292,7 @@ const FornecedorDetalhe = () => {
                             </div>
                         </div>}
 
-                        {/* Footer with Update Info */}
+                        {}
                         {fornecedor.obtido_em && <div className="flex flex-col justify-between gap-4 rounded-b-md border-t border-border/50 bg-muted/30 px-6 sm:flex-row sm:items-center py-3">
                             <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                                 <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,11 +304,11 @@ const FornecedorDetalhe = () => {
                                     <a
                                         href={
                                             fornecedor.origem === "Receita Federal"
-                                                ? "https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/cnpjreva_solicitacao.asp"
+                                                ? "https:
                                                 : fornecedor.origem === "Receita WS"
-                                                    ? "https://www.receitaws.com.br/"
+                                                    ? "https:
                                                     : fornecedor.origem === "Minha Receita"
-                                                        ? "https://minhareceita.org/"
+                                                        ? "https:
                                                         : "#"
                                         }
                                         target="_blank"
@@ -323,12 +323,9 @@ const FornecedorDetalhe = () => {
                         </div>}
                     </Card>
 
-                    {/* {!fornecedor.categoria &&  <Alert variant="warning" className="mt-4">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>Este fornecedor foi cadastrado incorretamente ou incompleto devido a LGPD.</AlertDescription>
-                    </Alert>} */}
+                    {}
 
-                    {/* Detailed Information */}
+                    {}
                     {fornecedor.categoria == "PJ" && <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                         <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
                             <div className="flex items-center justify-between">
@@ -361,10 +358,10 @@ const FornecedorDetalhe = () => {
                         {showDetailedInfo && (
                             <CardContent className="p-6">
                                 <div className="space-y-6">
-                                    {/* Two Column Layout */}
+                                    {}
                                     <div className="grid gap-6 lg:grid-cols-2">
 
-                                        {/* Quadro Societário */}
+                                        {}
                                         {quadro_societario && quadro_societario.length > 0 && (
                                             <div className="space-y-3">
                                                 <div className="flex items-center gap-2">
@@ -405,7 +402,7 @@ const FornecedorDetalhe = () => {
                                             </div>
                                         )}
 
-                                        {/* Economic Activities */}
+                                        {}
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="h-px bg-border flex-1"></div>
@@ -414,7 +411,7 @@ const FornecedorDetalhe = () => {
                                             </div>
 
                                             <div className="grid gap-4">
-                                                {/* Primary Activity */}
+                                                {}
                                                 <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <div className="w-2 h-2 bg-primary rounded-full"></div>
@@ -423,7 +420,7 @@ const FornecedorDetalhe = () => {
                                                     <p className="text-sm text-foreground">{fornecedor.atividade_principal}</p>
                                                 </div>
 
-                                                {/* Secondary Activities */}
+                                                {}
                                                 {fornecedor.atividade_secundaria.length > 0 && (
                                                     <div className="bg-muted/30 border border-muted rounded-lg p-4">
                                                         <div className="flex items-center gap-2 mb-3">
@@ -446,7 +443,7 @@ const FornecedorDetalhe = () => {
                                             </div>
                                         </div>
 
-                                        {/* Additional Information */}
+                                        {}
                                         {hasAdditionalInfo && <div className="space-y-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="h-px bg-border flex-1"></div>
@@ -490,9 +487,9 @@ const FornecedorDetalhe = () => {
                         )}
                     </Card>}
 
-                    {/* Charts and Tables */}
+                    {}
                     <div className="grid gap-8 lg:grid-cols-2">
-                        {/* Annual Receipts Chart */}
+                        {}
                         {recebimentosPorAno && (
                             <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                 <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">
@@ -515,7 +512,7 @@ const FornecedorDetalhe = () => {
                             </Card>
                         )}
 
-                        {/* Top Parliamentarians Table */}
+                        {}
                         {maioresGastos.length > 0 && (
                             <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300">
                                 <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/10 border-b">

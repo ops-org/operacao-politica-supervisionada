@@ -1,0 +1,850 @@
+[00:05:38 INF] Iniciando Importação 
+[00:05:38 INF] Iniciando importação de IPCA do BCB 
+[00:05:41 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[00:05:41 ERR] An error occurred using the connection to database '"ops"' on server '"tcp://localhost:5432"'. 
+[00:05:41 ERR] An exception occurred while iterating over the results of a query for context type '"OPS.Infraestrutura.AppDbContext"'."\n""System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.\n ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432\n ---> System.Net.Sockets.SocketException (111): Connection refused\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlConnection.Open()\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)\n   --- End of inner exception stack trace ---\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()" 
+System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (111): Connection refused
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+[00:05:42 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (An exception has been raised that is likely due to a transient failure.)
+ ---> System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (111): Connection refused
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at OPS.Importador.Comum.IndiceInflacaoImportador.ImportarIpca() in /src/OPS.Importador/Comum/IndiceInflacaoImportador.cs:line 45
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
+   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait()
+   at OPS.Importador.Program.Main(String[] args) in /src/OPS.Importador/Program.cs:line 217
+[00:07:01 INF] Iniciando Importação 
+[00:07:01 INF] Iniciando importação de IPCA do BCB 
+[00:07:04 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[00:07:06 ERR] An exception occurred in the database while saving changes for context type '"OPS.Infraestrutura.AppDbContext"'."\n""Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.\n ---> Npgsql.PostgresException (0x80004005): 22003: numeric field overflow\n\nDETAIL: A field with precision 20, scale 10 must round to an absolute value less than 10^10.\n   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)\n   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)\n   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Update.Internal.NpgsqlModificationCommandBatch.Consume(RelationalDataReader reader, Boolean async, CancellationToken cancellationToken)\n  Exception data:\n    Severity: ERROR\n    SqlState: 22003\n    MessageText: numeric field overflow\n    Detail: A field with precision 20, scale 10 must round to an absolute value less than 10^10.\n    File: numeric.c\n    Line: 7561\n    Routine: apply_typmod\n   --- End of inner exception stack trace ---\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Update.Internal.NpgsqlModificationCommandBatch.Consume(RelationalDataReader reader, Boolean async, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)\n   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)" 
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Npgsql.PostgresException (0x80004005): 22003: numeric field overflow
+
+DETAIL: A field with precision 20, scale 10 must round to an absolute value less than 10^10.
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Update.Internal.NpgsqlModificationCommandBatch.Consume(RelationalDataReader reader, Boolean async, CancellationToken cancellationToken)
+  Exception data:
+    Severity: ERROR
+    SqlState: 22003
+    MessageText: numeric field overflow
+    Detail: A field with precision 20, scale 10 must round to an absolute value less than 10^10.
+    File: numeric.c
+    Line: 7561
+    Routine: apply_typmod
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Update.Internal.NpgsqlModificationCommandBatch.Consume(RelationalDataReader reader, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[00:07:06 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (An error occurred while saving the entity changes. See the inner exception for details.)
+ ---> Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Npgsql.PostgresException (0x80004005): 22003: numeric field overflow
+
+DETAIL: A field with precision 20, scale 10 must round to an absolute value less than 10^10.
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Update.Internal.NpgsqlModificationCommandBatch.Consume(RelationalDataReader reader, Boolean async, CancellationToken cancellationToken)
+  Exception data:
+    Severity: ERROR
+    SqlState: 22003
+    MessageText: numeric field overflow
+    Detail: A field with precision 20, scale 10 must round to an absolute value less than 10^10.
+    File: numeric.c
+    Line: 7561
+    Routine: apply_typmod
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Update.Internal.NpgsqlModificationCommandBatch.Consume(RelationalDataReader reader, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at OPS.Importador.Comum.IndiceInflacaoImportador.ImportarIpca() in /src/OPS.Importador/Comum/IndiceInflacaoImportador.cs:line 88
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
+   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait()
+   at OPS.Importador.Program.Main(String[] args) in /src/OPS.Importador/Program.cs:line 217
+[00:08:29 INF] Iniciando Importação 
+[00:08:29 INF] Iniciando importação de IPCA do BCB 
+[00:08:33 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[00:08:35 INF] Importados 553 novos registros de IPCA 
+[00:08:42 INF] Iniciando Importação 
+[00:08:43 INF] Iniciando importação de IPCA do BCB 
+[00:08:45 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[00:08:46 INF] IPCA já está atualizado 
+[00:10:10 INF] Iniciando Importação 
+[00:10:10 INF] Iniciando importação de IPCA do BCB 
+[00:10:12 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[00:10:13 INF] Encontrados 553 registros existentes no banco 
+[00:10:13 INF] Recebidos 553 registros do BCB 
+[00:10:13 INF] IPCA já está atualizado 
+[12:13:09 INF] Iniciando Importação 
+[12:13:09 INF] Iniciando importação de IPCA do BCB 
+[12:13:11 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:13:12 ERR] An error occurred using the connection to database '"ops"' on server '"tcp://db:5432"'. 
+[12:13:12 ERR] An exception occurred while iterating over the results of a query for context type '"OPS.Infraestrutura.AppDbContext"'."\n""System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.\n ---> Npgsql.NpgsqlException (0x80004005): Name or service not known\n ---> System.Net.Sockets.SocketException (00000005, 0xFFFDFFFF): Name or service not known\n   at System.Net.Dns.GetHostEntryOrAddressesCore(String hostName, Boolean justAddresses, AddressFamily addressFamily, Nullable`1 activityOrDefault)\n   at System.Net.Dns.GetHostAddresses(String hostNameOrAddress, AddressFamily family)\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlConnection.Open()\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)\n   --- End of inner exception stack trace ---\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()" 
+System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Name or service not known
+ ---> System.Net.Sockets.SocketException (00000005, 0xFFFDFFFF): Name or service not known
+   at System.Net.Dns.GetHostEntryOrAddressesCore(String hostName, Boolean justAddresses, AddressFamily addressFamily, Nullable`1 activityOrDefault)
+   at System.Net.Dns.GetHostAddresses(String hostNameOrAddress, AddressFamily family)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+[12:13:12 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (An exception has been raised that is likely due to a transient failure.)
+ ---> System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Name or service not known
+ ---> System.Net.Sockets.SocketException (00000005, 0xFFFDFFFF): Name or service not known
+   at System.Net.Dns.GetHostEntryOrAddressesCore(String hostName, Boolean justAddresses, AddressFamily addressFamily, Nullable`1 activityOrDefault)
+   at System.Net.Dns.GetHostAddresses(String hostNameOrAddress, AddressFamily family)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at OPS.Importador.Comum.IndiceInflacaoImportador.ImportarIpca() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Comum/IndiceInflacaoImportador.cs:line 45
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
+   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait()
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 219
+[12:13:48 INF] Iniciando Importação 
+[12:13:48 INF] Iniciando importação de IPCA do BCB 
+[12:13:50 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:13:51 ERR] An error occurred using the connection to database '"ops"' on server '"tcp://db:5432"'. 
+[12:13:51 ERR] An exception occurred while iterating over the results of a query for context type '"OPS.Infraestrutura.AppDbContext"'."\n""System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.\n ---> Npgsql.NpgsqlException (0x80004005): Name or service not known\n ---> System.Net.Sockets.SocketException (00000005, 0xFFFDFFFF): Name or service not known\n   at System.Net.Dns.GetHostEntryOrAddressesCore(String hostName, Boolean justAddresses, AddressFamily addressFamily, Nullable`1 activityOrDefault)\n   at System.Net.Dns.GetHostAddresses(String hostNameOrAddress, AddressFamily family)\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\n   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)\n   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)\n   at Npgsql.NpgsqlConnection.Open()\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)\n   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)\n   --- End of inner exception stack trace ---\n   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)\n   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()" 
+System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Name or service not known
+ ---> System.Net.Sockets.SocketException (00000005, 0xFFFDFFFF): Name or service not known
+   at System.Net.Dns.GetHostEntryOrAddressesCore(String hostName, Boolean justAddresses, AddressFamily addressFamily, Nullable`1 activityOrDefault)
+   at System.Net.Dns.GetHostAddresses(String hostNameOrAddress, AddressFamily family)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+[12:13:51 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (An exception has been raised that is likely due to a transient failure.)
+ ---> System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Name or service not known
+ ---> System.Net.Sockets.SocketException (00000005, 0xFFFDFFFF): Name or service not known
+   at System.Net.Dns.GetHostEntryOrAddressesCore(String hostName, Boolean justAddresses, AddressFamily addressFamily, Nullable`1 activityOrDefault)
+   at System.Net.Dns.GetHostAddresses(String hostNameOrAddress, AddressFamily family)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.Connect(NpgsqlTimeout timeout)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.InitializeReader(Enumerator enumerator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.<>c.<MoveNext>b__21_0(DbContext _, Enumerator enumerator)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   --- End of inner exception stack trace ---
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.Execute[TState,TResult](TState state, Func`3 operation, Func`3 verifySucceeded)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.Enumerator.MoveNext()
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at OPS.Importador.Comum.IndiceInflacaoImportador.ImportarIpca() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Comum/IndiceInflacaoImportador.cs:line 45
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
+   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait()
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 219
+[12:14:49 INF] Iniciando Importação 
+[12:14:49 INF] Iniciando importação de IPCA do BCB 
+[12:14:51 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:14:52 INF] Encontrados 553 registros existentes no banco 
+[12:14:52 INF] Recebidos 553 registros do BCB 
+[12:14:52 INF] IPCA já está atualizado 
+[12:14:52 INF] Coletando Dados Deputados Camara... 
+[12:14:52 FTL] Host terminated unexpectedly 
+Npgsql.PostgresException (0x80004005): 42883: operator does not exist: boolean = integer
+
+POSITION: 254
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(CommandBehavior behavior)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReader(CommandBehavior behavior)
+   at Dapper.SqlMapper.ExecuteReaderWithFlagsFallback(IDbCommand cmd, Boolean wasClosed, CommandBehavior behavior) in /_/Dapper/SqlMapper.cs:line 1185
+   at Dapper.SqlMapper.QueryImpl[T](IDbConnection cnn, CommandDefinition command, Type effectiveType)+MoveNext() in /_/Dapper/SqlMapper.cs:line 1213
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at Dapper.SqlMapper.Query[T](IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Boolean buffered, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 844
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1253
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+  Exception data:
+    Severity: ERROR
+    SqlState: 42883
+    MessageText: operator does not exist: boolean = integer
+    Hint: No operator matches the given name and argument types. You might need to add explicit type casts.
+    Position: 254
+    File: parse_oper.c
+    Line: 647
+    Routine: op_error
+[12:15:38 INF] Iniciando Importação 
+[12:15:38 INF] Iniciando importação de IPCA do BCB 
+[12:15:40 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:15:41 INF] Encontrados 553 registros existentes no banco 
+[12:15:41 INF] Recebidos 553 registros do BCB 
+[12:15:41 INF] IPCA já está atualizado 
+[12:15:41 INF] Coletando Dados Deputados Camara... 
+[12:15:41 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (The given key 'nome_parlamentar' was not present in the dictionary.) (The given key 'nome_parlamentar' was not present in the dictionary.) (The given key 'nome_parlamentar' was not present in the dictionary.) (The given key 'nome_parlamentar' was not present in the dictionary.) (The given key 'nome_parlamentar' was not present in the dictionary.)
+ ---> System.Collections.Generic.KeyNotFoundException: The given key 'nome_parlamentar' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1287
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.WaitAllCore(ReadOnlySpan`1 tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1264
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+ ---> (Inner Exception #1) System.Collections.Generic.KeyNotFoundException: The given key 'nome_parlamentar' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1287<---
+
+ ---> (Inner Exception #2) System.Collections.Generic.KeyNotFoundException: The given key 'nome_parlamentar' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1287<---
+
+ ---> (Inner Exception #3) System.Collections.Generic.KeyNotFoundException: The given key 'nome_parlamentar' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1287<---
+
+ ---> (Inner Exception #4) System.Collections.Generic.KeyNotFoundException: The given key 'nome_parlamentar' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1287<---
+
+[12:16:18 INF] Iniciando Importação 
+[12:16:18 INF] Iniciando importação de IPCA do BCB 
+[12:16:20 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:16:21 INF] Encontrados 553 registros existentes no banco 
+[12:16:21 INF] Recebidos 553 registros do BCB 
+[12:16:21 INF] IPCA já está atualizado 
+[12:16:21 INF] Coletando Dados Deputados Camara... 
+[12:16:21 ERR] Chave 'id_cf_deputado' não encontrada. Chaves disponíveis: "" 
+[12:16:21 ERR] Chave 'id_cf_deputado' não encontrada. Chaves disponíveis: "" 
+[12:16:21 ERR] Chave 'id_cf_deputado' não encontrada. Chaves disponíveis: "" 
+[12:16:21 ERR] Chave 'id_cf_deputado' não encontrada. Chaves disponíveis: "" 
+[12:16:21 ERR] Chave 'id_cf_deputado' não encontrada. Chaves disponíveis: "" 
+[12:16:21 FTL] Host terminated unexpectedly 
+Npgsql.PostgresException (0x80004005): 42883: operator does not exist: boolean <> integer
+
+POSITION: 52
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(CommandBehavior behavior)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReader(CommandBehavior behavior)
+   at Dapper.SqlMapper.ExecuteReaderWithFlagsFallback(IDbCommand cmd, Boolean wasClosed, CommandBehavior behavior) in /_/Dapper/SqlMapper.cs:line 1185
+   at Dapper.SqlMapper.QueryImpl[T](IDbConnection cnn, CommandDefinition command, Type effectiveType)+MoveNext() in /_/Dapper/SqlMapper.cs:line 1213
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at Dapper.SqlMapper.Query[T](IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Boolean buffered, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 844
+   at Dapper.SqlMapper.Query(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Boolean buffered, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 766
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.AtualizaParlamentarValores() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 2439
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1266
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+  Exception data:
+    Severity: ERROR
+    SqlState: 42883
+    MessageText: operator does not exist: boolean <> integer
+    Hint: No operator matches the given name and argument types. You might need to add explicit type casts.
+    Position: 52
+    File: parse_oper.c
+    Line: 647
+    Routine: op_error
+[12:18:24 INF] Iniciando Importação 
+[12:18:24 INF] Iniciando importação de IPCA do BCB 
+[12:18:26 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:18:27 INF] Encontrados 553 registros existentes no banco 
+[12:18:27 INF] Recebidos 553 registros do BCB 
+[12:18:27 INF] IPCA já está atualizado 
+[12:18:27 INF] Coletando Dados Deputados Camara... 
+[12:18:30 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (42P01: relation "cf_deputado" does not exist
+
+POSITION: 8) (42P01: relation "cf_deputado" does not exist
+
+POSITION: 8) (42P01: relation "cf_deputado" does not exist
+
+POSITION: 8) (42P01: relation "cf_deputado" does not exist
+
+POSITION: 8) (42P01: relation "cf_deputado" does not exist
+
+POSITION: 8)
+ ---> Npgsql.PostgresException (0x80004005): 42P01: relation "cf_deputado" does not exist
+
+POSITION: 8
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "cf_deputado" does not exist
+    Position: 8
+    File: parse_relation.c
+    Line: 1392
+    Routine: parserOpenTable
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.WaitAllCore(ReadOnlySpan`1 tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1264
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+ ---> (Inner Exception #1) Npgsql.PostgresException (0x80004005): 42P01: relation "cf_deputado" does not exist
+
+POSITION: 8
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "cf_deputado" does not exist
+    Position: 8
+    File: parse_relation.c
+    Line: 1392
+    Routine: parserOpenTable<---
+
+ ---> (Inner Exception #2) Npgsql.PostgresException (0x80004005): 42P01: relation "cf_deputado" does not exist
+
+POSITION: 8
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "cf_deputado" does not exist
+    Position: 8
+    File: parse_relation.c
+    Line: 1392
+    Routine: parserOpenTable<---
+
+ ---> (Inner Exception #3) Npgsql.PostgresException (0x80004005): 42P01: relation "cf_deputado" does not exist
+
+POSITION: 8
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "cf_deputado" does not exist
+    Position: 8
+    File: parse_relation.c
+    Line: 1392
+    Routine: parserOpenTable<---
+
+ ---> (Inner Exception #4) Npgsql.PostgresException (0x80004005): 42P01: relation "cf_deputado" does not exist
+
+POSITION: 8
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "cf_deputado" does not exist
+    Position: 8
+    File: parse_relation.c
+    Line: 1392
+    Routine: parserOpenTable<---
+
+[12:20:01 INF] Iniciando Importação 
+[12:20:02 INF] Iniciando importação de IPCA do BCB 
+[12:20:05 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:20:06 INF] Encontrados 553 registros existentes no banco 
+[12:20:06 INF] Recebidos 553 registros do BCB 
+[12:20:06 INF] IPCA já está atualizado 
+[12:20:06 INF] Coletando Dados Deputados Camara... 
+[12:20:07 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (A command is already in progress: update camara.cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado) (42703: column "id_cf_deputado" does not exist
+
+POSITION: 148) (42703: column "id_cf_deputado" does not exist
+
+POSITION: 148) (42703: column "id_cf_deputado" does not exist
+
+POSITION: 148) (42703: column "id_cf_deputado" does not exist
+
+POSITION: 148)
+ ---> Npgsql.NpgsqlOperationInProgressException (0x80004005): A command is already in progress: update camara.cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado
+   at Npgsql.ThrowHelper.ThrowNpgsqlOperationInProgressException(NpgsqlCommand command)
+   at Npgsql.Internal.NpgsqlConnector.<StartUserAction>g__DoStartUserAction|285_0(ConnectorState newState, NpgsqlCommand command, CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.StartUserAction(ConnectorState newState, NpgsqlCommand command, CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.StartUserAction(CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.Reset(Boolean async)
+   at Npgsql.NpgsqlConnection.CloseAsync(Boolean async)
+   at Npgsql.NpgsqlConnection.Close()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 3000
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.WaitAllCore(ReadOnlySpan`1 tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1264
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+ ---> (Inner Exception #1) Npgsql.PostgresException (0x80004005): 42703: column "id_cf_deputado" does not exist
+
+POSITION: 148
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "id_cf_deputado" does not exist
+    Hint: Perhaps you meant to reference the column "cf_deputado.id_deputado".
+    Position: 148
+    File: parse_relation.c
+    Line: 3665
+    Routine: errorMissingColumn<---
+
+ ---> (Inner Exception #2) Npgsql.PostgresException (0x80004005): 42703: column "id_cf_deputado" does not exist
+
+POSITION: 148
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "id_cf_deputado" does not exist
+    Hint: Perhaps you meant to reference the column "cf_deputado.id_deputado".
+    Position: 148
+    File: parse_relation.c
+    Line: 3665
+    Routine: errorMissingColumn<---
+
+ ---> (Inner Exception #3) Npgsql.PostgresException (0x80004005): 42703: column "id_cf_deputado" does not exist
+
+POSITION: 148
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "id_cf_deputado" does not exist
+    Hint: Perhaps you meant to reference the column "cf_deputado.id_deputado".
+    Position: 148
+    File: parse_relation.c
+    Line: 3665
+    Routine: errorMissingColumn<---
+
+ ---> (Inner Exception #4) Npgsql.PostgresException (0x80004005): 42703: column "id_cf_deputado" does not exist
+
+POSITION: 148
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column "id_cf_deputado" does not exist
+    Hint: Perhaps you meant to reference the column "cf_deputado.id_deputado".
+    Position: 148
+    File: parse_relation.c
+    Line: 3665
+    Routine: errorMissingColumn<---
+
+[12:21:11 INF] Iniciando Importação 
+[12:21:11 INF] Iniciando importação de IPCA do BCB 
+[12:21:14 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:21:15 INF] Encontrados 553 registros existentes no banco 
+[12:21:15 INF] Recebidos 553 registros do BCB 
+[12:21:15 INF] IPCA já está atualizado 
+[12:21:15 INF] Coletando Dados Deputados Camara... 
+[12:21:16 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (Exception while reading from stream) (Connection already open) (A command is already in progress: update camara.cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado) (Did not write the amount of bytes the message length specified)
+ ---> Npgsql.NpgsqlException (0x80004005): Exception while reading from stream
+ ---> System.IO.IOException: Unable to read data from the transport connection: Software caused connection abort.
+ ---> System.Net.Sockets.SocketException (103): Software caused connection abort
+   at System.Net.Sockets.Socket.Receive(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags)
+   at System.Net.Sockets.NetworkStream.Read(Byte[] buffer, Int32 offset, Int32 count)
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.NetworkStream.Read(Byte[] buffer, Int32 offset, Int32 count)
+   at Npgsql.Internal.NpgsqlReadBuffer.<Ensure>g__EnsureLong|54_0(NpgsqlReadBuffer buffer, Int32 count, Boolean async, Boolean readingNotifications)
+   at Npgsql.Internal.NpgsqlReadBuffer.<Ensure>g__EnsureLong|54_0(NpgsqlReadBuffer buffer, Int32 count, Boolean async, Boolean readingNotifications)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.WaitAllCore(ReadOnlySpan`1 tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1264
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+ ---> (Inner Exception #1) System.InvalidOperationException: Connection already open
+   at Npgsql.ThrowHelper.ThrowInvalidOperationException(String message)
+   at Npgsql.NpgsqlConnection.CheckClosed()
+   at Npgsql.NpgsqlConnection.Open(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2993
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467<---
+
+ ---> (Inner Exception #2) Npgsql.NpgsqlOperationInProgressException (0x80004005): A command is already in progress: update camara.cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado
+   at Npgsql.ThrowHelper.ThrowNpgsqlOperationInProgressException(NpgsqlCommand command)
+   at Npgsql.Internal.NpgsqlConnector.<StartUserAction>g__DoStartUserAction|285_0(ConnectorState newState, NpgsqlCommand command, CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.StartUserAction(ConnectorState newState, NpgsqlCommand command, CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.StartUserAction(CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.Reset(Boolean async)
+   at Npgsql.NpgsqlConnection.CloseAsync(Boolean async)
+   at Npgsql.NpgsqlConnection.Close()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 3000
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467<---
+
+ ---> (Inner Exception #3) System.OverflowException: Did not write the amount of bytes the message length specified
+   at Npgsql.Internal.NpgsqlWriteBuffer.<StartMessage>g__Throw|65_0()
+   at Npgsql.Internal.NpgsqlWriteBuffer.StartMessage(Int32 messageLength)
+   at Npgsql.Internal.NpgsqlConnector.WriteParse(String sql, Byte[] asciiName, List`1 inputParameters, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.<Write>g__WriteExecute|103_0(NpgsqlConnector connector, Boolean async, Boolean flush, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467<---
+
+[12:22:10 INF] Iniciando Importação 
+[12:22:10 INF] Iniciando importação de IPCA do BCB 
+[12:22:12 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:22:13 INF] Encontrados 553 registros existentes no banco 
+[12:22:13 INF] Recebidos 553 registros do BCB 
+[12:22:13 INF] IPCA já está atualizado 
+[12:22:13 INF] Coletando Dados Deputados Camara... 
+[12:22:14 FTL] Host terminated unexpectedly 
+System.AggregateException: One or more errors occurred. (A command is already in progress: update camara.cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado)
+ ---> Npgsql.NpgsqlOperationInProgressException (0x80004005): A command is already in progress: update camara.cf_deputado set passaporte_diplomatico = @passaporte, secretarios_ativos = @secretarios_ativos, processado = @processado where id = @id_cf_deputado
+   at Npgsql.ThrowHelper.ThrowNpgsqlOperationInProgressException(NpgsqlCommand command)
+   at Npgsql.Internal.NpgsqlConnector.<StartUserAction>g__DoStartUserAction|285_0(ConnectorState newState, NpgsqlCommand command, CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.StartUserAction(ConnectorState newState, NpgsqlCommand command, CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.StartUserAction(CancellationToken cancellationToken, Boolean attemptPgCancellation)
+   at Npgsql.Internal.NpgsqlConnector.Reset(Boolean async)
+   at Npgsql.NpgsqlConnection.CloseAsync(Boolean async)
+   at Npgsql.NpgsqlConnection.Close()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 3000
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ProcessaFilaColetaDadosDeputados(ConcurrentQueue`1 queue) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1467
+   --- End of inner exception stack trace ---
+   at System.Threading.Tasks.Task.WaitAllCore(ReadOnlySpan`1 tasks, Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.WaitAll(Task[] tasks)
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1264
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+[12:23:18 INF] Iniciando Importação 
+[12:23:19 INF] Iniciando importação de IPCA do BCB 
+[12:23:20 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:23:21 INF] Encontrados 553 registros existentes no banco 
+[12:23:21 INF] Recebidos 553 registros do BCB 
+[12:23:21 INF] IPCA já está atualizado 
+[12:23:21 INF] Coletando Dados Deputados Camara... 
+[12:23:22 FTL] Host terminated unexpectedly 
+Npgsql.PostgresException (0x80004005): 42P01: relation "cf_deputado" does not exist
+
+POSITION: 9
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.AtualizaParlamentarValores() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 2457
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1266
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "cf_deputado" does not exist
+    Position: 9
+    File: parse_relation.c
+    Line: 1392
+    Routine: parserOpenTable
+[12:30:24 INF] Iniciando Importação 
+[12:30:24 INF] Iniciando importação de IPCA do BCB 
+[12:30:26 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:30:27 INF] Encontrados 553 registros existentes no banco 
+[12:30:27 INF] Recebidos 553 registros do BCB 
+[12:30:27 INF] IPCA já está atualizado 
+[12:30:27 INF] Coletando Dados Deputados Camara... 
+[12:30:27 FTL] Host terminated unexpectedly 
+Npgsql.PostgresException (0x80004005): 23502: null value in column "valor_total_remuneracao" of relation "cf_deputado" violates not-null constraint
+
+DETAIL: Failing row contains (905, 905, 992, 92, null, null, Deputado Federal Comum, null, null, null, dummy@camara.leg.br, null, null, null, null, null, null, null, null, null, f, t, 0.00, 0, 0.00, null, null, null).
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Dapper.SqlMapper.ExecuteCommand(IDbConnection cnn, CommandDefinition& command, Action`2 paramReader) in /_/Dapper/SqlMapper.cs:line 2994
+   at Dapper.SqlMapper.ExecuteImpl(IDbConnection cnn, CommandDefinition& command) in /_/Dapper/SqlMapper.cs:line 685
+   at Dapper.SqlMapper.Execute(IDbConnection cnn, String sql, Object param, IDbTransaction transaction, Nullable`1 commandTimeout, Nullable`1 commandType) in /_/Dapper/SqlMapper.cs:line 556
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.AtualizaParlamentarValores() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 2457
+   at OPS.Importador.CamaraFederal.ImportadorDespesasCamaraFederal.ColetaDadosDeputados() in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/CamaraFederal/ImportadorDespesasCamaraFederal.cs:line 1266
+   at OPS.Importador.Program.Main(String[] args) in /home/victor/Projetos/operacao-politica-supervisionada/OPS.Importador/Program.cs:line 307
+  Exception data:
+    Severity: ERROR
+    SqlState: 23502
+    MessageText: null value in column "valor_total_remuneracao" of relation "cf_deputado" violates not-null constraint
+    Detail: Failing row contains (905, 905, 992, 92, null, null, Deputado Federal Comum, null, null, null, dummy@camara.leg.br, null, null, null, null, null, null, null, null, null, f, t, 0.00, 0, 0.00, null, null, null).
+    SchemaName: camara
+    TableName: cf_deputado
+    ColumnName: valor_total_remuneracao
+    File: execMain.c
+    Line: 2023
+    Routine: ExecConstraints
+[12:30:48 INF] Iniciando Importação 
+[12:30:49 INF] Iniciando importação de IPCA do BCB 
+[12:30:50 WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. 
+[12:30:51 INF] Encontrados 553 registros existentes no banco 
+[12:30:51 INF] Recebidos 553 registros do BCB 
+[12:30:51 INF] IPCA já está atualizado 
+[12:30:51 INF] Coletando Dados Deputados Camara... 
+[12:30:51 INF] Importando Despesas Camara 2025... 
+[12:30:52 INF] Baixando arquivo "C:\\temp\\/CamaraFederal/Ano-2025.csv.zip" a partir de "https://www.camara.leg.br/cotas/Ano-2025.csv.zip" 
+[12:30:59 INF] Arquivo "C:\\temp\\/CamaraFederal/Ano-2025.csv.zip" é novo. 
+[12:31:00 INF] 0 Hashes Carregados 
