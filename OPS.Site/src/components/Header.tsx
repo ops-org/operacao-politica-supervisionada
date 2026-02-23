@@ -62,9 +62,9 @@ export const Header = () => {
               {/* <DropdownMenuItem asChild>
                 <Link to="/deputado-federal/folha-pagamento">Folha de Pagamento</Link>
               </DropdownMenuItem> */}
-              <DropdownMenuItem asChild>
+              {/* <DropdownMenuItem asChild>
                 <Link to="/deputado-federal/frequencia">Frequência em Plenário</Link>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               {/* <DropdownMenuItem>Gastos por Partido</DropdownMenuItem>
               <DropdownMenuItem>Ranking de Gastos</DropdownMenuItem> */}
             </DropdownMenuContent>
