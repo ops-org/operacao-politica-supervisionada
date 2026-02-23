@@ -130,8 +130,8 @@ namespace OPS.Importador
             services.AddScoped<FileManager>();
             services.AddScoped<IndiceInflacaoImportador>();
             services.AddScoped<HttpLogger>();
-            services.AddDbContext<AppDbContext>(options => options
-                   .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), ServiceLifetime.Transient);
+            // services.AddDbContext<AppDbContext>(options => options
+            //        .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), ServiceLifetime.Transient);
 
             //services.AddRedaction();
 

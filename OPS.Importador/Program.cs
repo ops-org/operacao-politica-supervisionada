@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OPS.Importador;
+using OPS.Infraestrutura;
 using Serilog;
 
 namespace OPS.Importador
@@ -8,20 +11,19 @@ namespace OPS.Importador
     {
         public static async Task Main(string[] args)
         {
-            ConfigureApp.SetupEnvironment();
+            var builder = Host.CreateApplicationBuilder(args);
 
-            var configuration = ConfigureApp.BuildConfiguration();
-            ConfigureApp.SetupLogging(configuration);
+            builder.AddServiceDefaults();
+            builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext");
+
+            ConfigureApp.SetupEnvironment();
+            ConfigureApp.ConfigureServices(builder.Services, builder.Configuration);
+
+            var host = builder.Build();
 
             try
             {
-                var services = new ServiceCollection();
-                ConfigureApp.ConfigureServices(services, configuration);
-
-                var serviceProvider = services.BuildServiceProvider();
-                serviceProvider.GetService<ILoggerFactory>().AddSerilog(Log.Logger, true);
-
-                await ImportOrchestrator.RunAppAsync(serviceProvider);
+                await ImportOrchestrator.RunAppAsync(host.Services);
             }
             catch (Exception ex)
             {

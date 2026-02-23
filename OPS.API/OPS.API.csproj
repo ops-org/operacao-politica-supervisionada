@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -26,11 +25,13 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.2" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OPS.Core\OPS.Core.csproj" />
+    <ProjectReference Include="..\OPS.ServiceDefaults\OPS.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
