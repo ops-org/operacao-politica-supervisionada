@@ -20,8 +20,12 @@ RUN dotnet publish "OPS.API.csproj" -c Release -o /app/publish /p:UseAppHost=fal
 # Final stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENV ASPNETCORE_URLS=http://+:5200
+
+# Use the built-in 'app' user (available in .NET 8+)
+USER app
+
+COPY --from=publish --chown=app:app /app/publish .
+ENV ASPNETCORE_HTTP_PORTS=5200
 ENV ASPNETCORE_ENVIRONMENT=Docker
 EXPOSE 5200
 ENTRYPOINT ["dotnet", "OPS.API.dll"]

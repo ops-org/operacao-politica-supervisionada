@@ -41,6 +41,12 @@ namespace OPS.Importador.Comum
 
             if (response == null) return;
 
+            // Ensure data is sorted chronologically
+            response = response.OrderBy(r => {
+                var parts = r.data.Split('/');
+                return new DateTime(int.Parse(parts[2]), int.Parse(parts[1]), 1);
+            }).ToList();
+
             // Get existing indices to avoid duplicates and continue calculation
             var indicesExistentes = _dbContext.IndicesInflacao
                 .OrderBy(i => i.Ano)

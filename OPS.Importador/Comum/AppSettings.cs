@@ -16,7 +16,7 @@ namespace OPS.Importador.Comum
         /// </summary>
         /// <remarks>The specified path should be accessible and writable by the application. If not set,
         /// a default temporary directory may be used depending on the implementation.</remarks>
-        public string TempFolder { get; set; } = "C:\\temp\\";
+        public string TempFolder { get; set; } = "/tmp/ops/";
 
         public string SendGridAPIKey { get; set; }
 

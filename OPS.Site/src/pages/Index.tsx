@@ -48,7 +48,7 @@ const Index = () => {
       <LoadingOverlay isLoading={carregando} content="Carregando dados da plataforma..." />
       <Header />
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
+        {}
         <div className="text-center mt-4 mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
             Resumo Anual da Cota Parlamentar
@@ -59,7 +59,7 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Charts Section */}
+        {}
         <div className="space-y-8">
           <div className="grid gap-8 lg:grid-cols-2">
             <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-xl transition-all duration-300 group">
@@ -83,7 +83,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {}
         <div className="grid gap-8 md:grid-cols-3 mt-6 hidden lg:grid">
           <Card className="shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group overflow-hidden border-t-4 border-t-blue-500/20 hover:border-t-blue-500">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors" />

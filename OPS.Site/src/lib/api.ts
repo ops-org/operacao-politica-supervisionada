@@ -15,12 +15,12 @@ class ApiError extends Error {
 }
 
 const getApiBaseUrl = (): string => {
-  // In production (GitHub Pages), use direct API calls
+  
   if (import.meta.env.PROD) {
-    return 'https://api.ops.org.br';
+    return 'https:
   }
 
-  // Fallback for local development
+  
   return '/api';
 };
 
@@ -69,7 +69,7 @@ export const apiClient = {
   }
 };
 
-// Generic fetch function for parliament members
+
 export interface DropDownOptions {
   id: string;
   text: string;
@@ -369,11 +369,11 @@ export interface DespesaCotaParlamentar {
   despesa_especificacao?: string;
 
   id_despesa_tipo?: number;
-  despesa_tipo?: string; // tipo_despesa
+  despesa_tipo?: string; 
 
   total_notas?: string;
-  valor_total?: string; // Agrupamentos
-  valor_liquido?: string; // Sem Agrupamento
+  valor_total?: string; 
+  valor_liquido?: string; 
   [key: string]: any;
 }
 
@@ -496,7 +496,7 @@ export interface Parlamentar {
   nome_municipio_nascimento?: string;
   ativo: boolean;
 
-  // Summary values
+  
   valor_total: string;
   valor_total_ceap: string;
   valor_total_remuneracao?: string;
@@ -519,9 +519,9 @@ export const fetchPoliticianData = async (id: string, type: PoliticianType): Pro
   let pagina_oficial_url = parlamentar.perfil || "";
 
   if (type === POLITICIAN_TYPES.DEPUTADO_FEDERAL) {
-    pagina_oficial_url = `https://www.camara.leg.br/deputados/${parlamentar.id_parlamentar}`;
+    pagina_oficial_url = `https:
   } else if (type === POLITICIAN_TYPES.SENADOR) {
-    pagina_oficial_url = `https://www25.senado.leg.br/web/senadores/senador/${parlamentar.id_parlamentar}`;
+    pagina_oficial_url = `https:
   }
 
   return {
@@ -613,7 +613,7 @@ export const fetchRemuneracao = async (
     filters: filters
   };
 
-  // Remove empty filter values
+  
   Object.keys(filters).forEach(key => {
     if (filters[key] === "" || filters[key] === null) {
       delete filters[key];
