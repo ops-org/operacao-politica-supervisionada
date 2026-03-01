@@ -8,7 +8,7 @@ using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers
 {
-    public abstract class ParlamentarBaseController<TRepository> : Controller 
+    public abstract class ParlamentarBaseController<TRepository> : Controller
         where TRepository : IParlamentarRepository
     {
         protected readonly TRepository _repository;

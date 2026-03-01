@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OPS.Importador.Comum
+﻿namespace OPS.Importador.Comum
 {
     public class AppSettings
     {
@@ -16,7 +12,7 @@ namespace OPS.Importador.Comum
         /// </summary>
         /// <remarks>The specified path should be accessible and writable by the application. If not set,
         /// a default temporary directory may be used depending on the implementation.</remarks>
-        public string TempFolder { get; set; } = "C:\\temp\\";
+        public string TempFolder { get; set; } = "/tmp/ops/";
 
         public string SendGridAPIKey { get; set; }
 
@@ -27,7 +23,7 @@ namespace OPS.Importador.Comum
         public string ComputerVisionOcrKey { get; set; }
 
         public bool ReuseDownloadFile { get; set; } = true;
-        
+
         public bool ForceImport { get; set; } = false;
 
         public bool StoreBackupFile { get; set; } = true;

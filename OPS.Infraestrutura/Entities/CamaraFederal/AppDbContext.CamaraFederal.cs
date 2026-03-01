@@ -298,6 +298,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<DeputadoAuxilioMoradia>(entity =>
         {
             entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoAuxilioMoradias).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_auxilio_moradia", "camara");
         });
     }
@@ -308,6 +309,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<DeputadoCampeaoGasto>(entity =>
         {
             entity.HasKey(e => e.IdDeputado);
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoCampeaoGastos).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_campeao_gasto", "camara");
         });
     }
@@ -318,6 +320,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.Entity<DeputadoCotaParlamentar>(entity =>
         {
             entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoCotaParlamentares).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_cota_parlamentar", "camara");
         });
     }
@@ -327,7 +330,8 @@ public static class CamaraFederalConfigurations
         // Configure DeputadoImovelFuncional
         modelBuilder.Entity<DeputadoImovelFuncional>(entity =>
         {
-            entity.HasKey(e => e.IdDeputado);
+            entity.HasKey(e => new { e.IdDeputado, e.UsoDe });
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoImoveisFuncionais).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_imovel_funcional", "camara");
         });
     }
@@ -337,7 +341,8 @@ public static class CamaraFederalConfigurations
         // Configure DeputadoMissaoOficial
         modelBuilder.Entity<DeputadoMissaoOficial>(entity =>
         {
-            entity.HasKey(e => e.IdDeputado);
+            entity.HasKey(e => new { e.IdDeputado, e.Periodo });
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoMissoesOficiais).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_missao_oficial", "camara");
         });
     }
@@ -347,7 +352,8 @@ public static class CamaraFederalConfigurations
         // Configure DeputadoRemuneracao
         modelBuilder.Entity<DeputadoRemuneracao>(entity =>
         {
-            entity.HasKey(e => e.IdDeputado);
+            entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoRemuneracoes).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_remuneracao", "camara");
         });
     }
@@ -357,7 +363,8 @@ public static class CamaraFederalConfigurations
         // Configure DeputadoVerbaGabinete
         modelBuilder.Entity<DeputadoVerbaGabinete>(entity =>
         {
-            entity.HasKey(e => e.IdDeputado);
+            entity.HasKey(e => new { e.IdDeputado, e.Ano, e.Mes });
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoVerbasGabinete).HasForeignKey(e => e.IdDeputado);
             entity.ToTable("cf_deputado_verba_gabinete", "camara");
         });
     }
@@ -382,6 +389,17 @@ public static class CamaraFederalConfigurations
         });
     }
 
+    public static void ConfigureDeputadoFederalRemuneracaoDetalhes(this ModelBuilder modelBuilder)
+    {
+        // Configure DeputadoFederalRemuneracaoDetalhes
+        modelBuilder.Entity<DeputadoFederalRemuneracaoDetalhes>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasOne(e => e.Deputado).WithMany(d => d.DeputadoFederalRemuneracaoDetalhes).HasForeignKey(e => e.IdDeputado);
+            entity.ToTable("cf_deputado_remuneracao_detalhes", "camara");
+        });
+    }
 
     // Master method to apply all configurations
     public static void ConfigureCamaraFederalEntities(this ModelBuilder modelBuilder)
@@ -416,6 +434,7 @@ public static class CamaraFederalConfigurations
         modelBuilder.ConfigureDeputadoVerbaGabinete();
         modelBuilder.ConfigureDespesaResumoMensal();
         modelBuilder.ConfigureSecretarioHistorico();
+        modelBuilder.ConfigureDeputadoFederalRemuneracaoDetalhes();
 
     }
 }

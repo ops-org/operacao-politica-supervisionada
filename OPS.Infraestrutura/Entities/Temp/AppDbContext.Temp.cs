@@ -35,7 +35,7 @@ public partial class AppDbContext
     public DbSet<CamaraEstadualRemuneracaoTemp> CamaraEstadualRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualSecretarioRemuneracaoTemp> CamaraEstadualSecretarioRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualEmpenhoTemp> CamaraEstadualEmpenhoTemps { get; set; }
-    public DbSet<CamaraFederalDeputadoFuncionarioTemp> CamaraEstadualDeputadoFuncionarioTemps { get; set; }
+    public DbSet<CamaraFederalDeputadoFuncionarioTemp> CamaraFederalDeputadoFuncionarioTemps { get; set; }
 }
 
 public static class TempConfigurations

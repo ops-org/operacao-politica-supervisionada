@@ -403,7 +403,7 @@ namespace OPS.Importador.Assembleias.DistritoFederal
                         if (!string.IsNullOrEmpty(worksheet.Cells[i, DATA_COMPROVANTE].Value?.ToString()))
                         {
                             if (worksheet.Cells[i, 7].Value is double)
-                                despesaTemp.DataEmissao = DateOnly.FromDateTime( DateTime.FromOADate((double)worksheet.Cells[i, DATA_COMPROVANTE].Value));
+                                despesaTemp.DataEmissao = DateOnly.FromDateTime(DateTime.FromOADate((double)worksheet.Cells[i, DATA_COMPROVANTE].Value));
                             else if (worksheet.Cells[i, 7].Value is DateTime)
                                 despesaTemp.DataEmissao = DateOnly.FromDateTime((DateTime)worksheet.Cells[i, DATA_COMPROVANTE].Value);
                             else if (worksheet.Cells[i, 7].Value.ToString().Contains(" de ")) // 04 de julho de 2023

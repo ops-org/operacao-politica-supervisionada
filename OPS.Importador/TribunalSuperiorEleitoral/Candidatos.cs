@@ -7,7 +7,6 @@ using Microsoft.Extensions.Options;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.TSE;
 
 namespace OPS.Importador.TribunalSuperiorEleitoral
 {
@@ -40,15 +39,15 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
             // context.Database.ExecuteSqlRaw(@"TRUNCATE TABLE temp.tse_candidato, temp.tse_despesa_contratada, temp.tse_despesa_paga, temp.tse_receita, temp.tse_receita_doador_originario RESTART IDENTITY;");
 
             await ImportarCandidatos(ano);
+            await ProcesarCandidatosTemp();
+
             //ImportarDespesasPagas(@"C:\\temp\TribunalSuperiorEleitoral\despesas_pagas_candidatos_2018_BRASIL.csv");
             //ImportarDespesasContratadas(@"C:\\temp\TribunalSuperiorEleitoral\despesas_contratadas_candidatos_2018_BRASIL.csv");
             //ImportarReceitas(@"C:\\temp\TribunalSuperiorEleitoral\receitas_candidatos_2018_BRASIL.csv");
             //ImportarReceitasDoadorOriginario(@"C:\\temp\TribunalSuperiorEleitoral\receitas_candidatos_doador_originario_2018_BRASIL.csv");
-
-            // await ProcesarTemp();
         }
 
-        private async Task ProcesarTemp()
+        private async Task ProcesarCandidatosTemp()
         {
             context.Database.ExecuteSqlRaw(@"
 insert into tse.candidato 

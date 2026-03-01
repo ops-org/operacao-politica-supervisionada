@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.Comum;
 
 namespace OPS.Importador.Comum
 {
@@ -16,7 +15,7 @@ namespace OPS.Importador.Comum
         {
             _logger = serviceProvider.GetRequiredService<ILogger<IndiceInflacaoImportador>>();
             _dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-            
+
             var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
             _httpClient = httpClientFactory.CreateClient("DefaultClient");
         }
@@ -27,9 +26,9 @@ namespace OPS.Importador.Comum
 
             // IPCA - Variação mensal (%) - Série 433
             string url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json";
-            
+
             List<BcbSgsResponse> response;
-            try 
+            try
             {
                 response = await _httpClient.GetFromJsonAsync<List<BcbSgsResponse>>(url);
             }
@@ -40,6 +39,13 @@ namespace OPS.Importador.Comum
             }
 
             if (response == null) return;
+
+            // Ensure data is sorted chronologically
+            response = response.OrderBy(r =>
+            {
+                var parts = r.data.Split('/');
+                return new DateTime(int.Parse(parts[2]), int.Parse(parts[1]), 1);
+            }).ToList();
 
             // Get existing indices to avoid duplicates and continue calculation
             var indicesExistentes = _dbContext.IndicesInflacao
@@ -69,7 +75,7 @@ namespace OPS.Importador.Comum
                 }
 
                 decimal valor = decimal.Parse(item.valor, System.Globalization.CultureInfo.InvariantCulture);
-                
+
                 // If it's the first record ever, we just use 100 as base or calculate from valor
                 // But for simplicity, we start at 100 and compound.
                 lastIndiceValue *= (1 + valor / 100);
@@ -91,7 +97,7 @@ namespace OPS.Importador.Comum
                 await _dbContext.SaveChangesAsync();
                 _logger.LogInformation("Importados {Count} novos registros de IPCA", count);
             }
-            else 
+            else
             {
                 _logger.LogInformation("IPCA já está atualizado");
             }

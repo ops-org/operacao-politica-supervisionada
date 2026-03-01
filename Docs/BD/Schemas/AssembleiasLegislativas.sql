@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS assembleias.cl_despesa
     favorecido character varying(200) COLLATE pg_catalog."default",
     observacao character varying(8000) COLLATE pg_catalog."default",
     hash bytea,
+    ano smallint,
+    mes smallint,
     CONSTRAINT cl_despesa_pkey PRIMARY KEY (id)
 );
 

@@ -14,10 +14,10 @@ import { Link } from "react-router-dom";
 import { fetchEstados, fetchPartidos, DropDownOptions } from "@/lib/api";
 import { apiClient } from "@/lib/api";
 import { Search, RotateCcw, Users, MapPin, Building2, DollarSign, TrendingUp, User } from "lucide-react";
-import { PoliticianType, POLITICIAN_TYPES, getPoliticianLabel } from "@/types/politician";
+import { PoliticianType, POLITICIAN_TYPES, getPoliticianLabel, getImageUrl } from "@/types/politician";
 
 interface ParlamentarBase {
-  id_parlamentar: string;
+  id_parlamentar: number;
   nome_parlamentar: string;
   nome_civil: string;
   sigla_partido: string;
@@ -96,7 +96,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
     estado: [],
     partido: [],
   });
-  const [visibleImages, setVisibleImages] = useState<Set<string>>(new Set());
+  const [visibleImages, setVisibleImages] = useState<Set<number>>(new Set());
 
   const config = typeConfigs[parlamentarType];
 
@@ -122,7 +122,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
     }
   };
 
-  const handleImageVisibility = useCallback((key: string) => {
+  const handleImageVisibility = useCallback((key: number) => {
     setVisibleImages(prev => new Set(prev).add(key));
   }, []);
 
@@ -132,7 +132,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const key = entry.target.getAttribute('data-image-id') || '0';
-            handleImageVisibility(key);
+            handleImageVisibility(parseInt(key));
             observer.unobserve(entry.target);
           }
         });
@@ -202,6 +202,9 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
       });
 
       const response = await apiClient.post<ParlamentarBase[]>(`/api/${type}/lista`, filtro);
+      response.forEach(parlamentar => {
+        parlamentar.foto_url = getImageUrl(type, parlamentar.id_parlamentar);
+      });
       setParlamentares(response);
     } catch (err) {
       const errorMessage = getPoliticianLabel(parlamentarType);
@@ -473,7 +476,7 @@ const ParlamentareLista = ({ type }: { type?: ParlamentarType }) => {
                             ) : (
                               <Avatar className="h-32 w-24 rounded-2xl border-2 border-background shadow-xl group-hover:scale-105 transition-transform duration-500 relative z-10">
                                 <AvatarImage
-                                  src={`${config.imageBaseUrl}/${parlamentar.id_parlamentar}.jpg`}
+                                  src={parlamentar.foto_url}
                                   alt={parlamentar.nome_parlamentar}
                                 />
                                 <AvatarFallback className="rounded-2xl text-xl font-black bg-muted text-muted-foreground uppercase shadow-inner">

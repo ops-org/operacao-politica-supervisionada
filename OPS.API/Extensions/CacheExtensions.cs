@@ -1,8 +1,7 @@
-using Microsoft.Extensions.Caching.Hybrid;
-using OPS.API.Configuration;
-using OPS.API.Services;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Hybrid;
+using OPS.API.Services;
 
 namespace OPS.API.Extensions
 {

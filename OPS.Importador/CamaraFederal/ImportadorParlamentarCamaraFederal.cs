@@ -1,10 +1,8 @@
 ﻿using System.Data;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Npgsql;
 using OPS.Core.Utilities;
 using OPS.Importador.CamaraFederal.Entities;
 using OPS.Importador.Comum;

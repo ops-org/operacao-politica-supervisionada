@@ -30,12 +30,12 @@ namespace OPS.Importador.Assembleias.Roraima
         {
             if (ano <= 2025)
             {
-             await   ImportarDespesas2025Antes(context, ano);
+                await ImportarDespesas2025Antes(context, ano);
             }
 
             if (ano >= 2025)
             {
-              await  ImportarDespesas2025Depois(context, ano);
+                await ImportarDespesas2025Depois(context, ano);
             }
         }
 
@@ -119,7 +119,7 @@ namespace OPS.Importador.Assembleias.Roraima
 
                     using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes, ["Parlamentar"] = nomeParlamentar, ["Arquivo"] = $"CLRR-{ano}-{mes}-{nomeParlamentar}.odt" }))
                     {
-                       await ImportarDespesasArquivo(ano, mes, nomeParlamentar, linkArquivo.Href);
+                        await ImportarDespesasArquivo(ano, mes, nomeParlamentar, linkArquivo.Href);
                     }
                 }
             }
@@ -172,7 +172,7 @@ namespace OPS.Importador.Assembleias.Roraima
 
                 using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = mes, ["Parlamentar"] = nomeParlamentar, ["Arquivo"] = $"CLRR-{ano}-{mes}-{nomeParlamentar}.odt" }))
                 {
-                  await  ImportarDespesasArquivo(ano, mes, nomeParlamentar, urlPdf);
+                    await ImportarDespesasArquivo(ano, mes, nomeParlamentar, urlPdf);
                 }
             }
         }

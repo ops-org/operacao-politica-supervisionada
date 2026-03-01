@@ -1,71 +1,18 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using OPS.API;
 
-namespace OPS.API
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            //try
-            //{
-            CreateHostBuilder(args).Build().Run();
-            //}
-            //catch (Exception ex)
-            //{
-            //    // Log.Logger will likely be internal type "Serilog.Core.Pipeline.SilentLogger".
-            //    if (Log.Logger == null || Log.Logger.GetType().Name == "SilentLogger")
-            //    {
-            //        // Loading configuration or Serilog failed.
-            //        // This will create a logger that can be captured by Azure logger.
-            //        // To enable Azure logger, in Azure Portal:
-            //        // 1. Go to WebApp
-            //        // 2. App Service logs
-            //        // 3. Enable "Application Logging (Filesystem)", "Application Logging (Filesystem)" and "Detailed error messages"
-            //        // 4. Set Retention Period (Days) to 10 or similar value
-            //        // 5. Save settings
-            //        // 6. Under Overview, restart web app
-            //        // 7. Go to Log Stream and observe the logs
-            //        Log.Logger = new LoggerConfiguration()
-            //            .MinimumLevel.Debug()
-            //            .WriteTo.Console()
-            //            .CreateLogger();
-            //    }
+var builder = WebApplication.CreateBuilder(args);
 
-            //    Log.Fatal(ex, "Host terminated unexpectedly");
-            //}
-            //finally
-            //{
-            //    Log.CloseAndFlush();
-            //}
-        }
+builder.AddServiceDefaults();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    var env = hostingContext.HostingEnvironment;
-                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-                    config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
-                    config.AddEnvironmentVariables();
-                })
-                //.UseSerilog((hostingContext, loggerConfiguration) =>
-                //{
-                //    loggerConfiguration
-                //        .ReadFrom.Configuration(hostingContext.Configuration)
-                //        .Enrich.FromLogContext()
-                //        .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name)
-                //        .Enrich.WithProperty("Environment", hostingContext.HostingEnvironment);
-                //})
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .UseStartup<Startup>();
+var startup = new Startup();
+startup.ConfigureServices(builder, builder.Configuration, builder.Services);
 
-                    //#if !DEBUG
-                    //webBuilder.UseUrls("http://*:5000");
-                    //#endif
-                });
-    }
-}
+var app = builder.Build();
+
+app.MapDefaultEndpoints();
+
+startup.Configure(app, app.Environment);
+
+app.Run();

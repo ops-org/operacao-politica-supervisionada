@@ -675,3 +675,75 @@ export const fetchBusca = async (query: string): Promise<BuscaResponse> => {
 export const fetchImportacao = async (): Promise<ImportacaoData[]> => {
   return await apiClient.get<ImportacaoData[]>("/inicio/importacao");
 };
+
+export interface ResumoPresencaResponse {
+  dias: number;
+  presentes: number;
+  ausencias_justificadas: number;
+  ausencias_nao_justificadas: number;
+  presenca_percentual: number;
+}
+
+export const fetchResumoPresenca = async (id: string): Promise<ResumoPresencaResponse> => {
+  return await apiClient.get<ResumoPresencaResponse>(`/deputado/${id}/ResumoPresenca`);
+};
+
+export interface FrequenciaSessao {
+  id_cf_sessao: number;
+  inicio: string;
+  tipo: string;
+  numero: string;
+  presenca: number;
+  presenca_percentual?: number;
+  ausencia: number;
+  ausencia_percentual?: number;
+  ausencia_justificada: number;
+  ausencia_justificada_percentual?: number;
+  total: number;
+}
+
+export interface FrequenciaDetalhe {
+  id_parlamentar: number;
+  nome_parlamentar: string;
+  presenca: string;
+  justificativa?: string;
+}
+
+export interface FrequenciaApiResponse {
+  data: FrequenciaSessao[];
+  recordsTotal: number;
+  recordsFiltered: number;
+}
+
+export interface FrequenciaDetalheApiResponse {
+  data: FrequenciaDetalhe[];
+  recordsTotal: number;
+  recordsFiltered: number;
+}
+
+export const fetchFrequenciaSessoes = async (
+  page: number,
+  limit: number,
+  sortField: number | null,
+  sortOrder: SortOrder
+): Promise<FrequenciaApiResponse> => {
+  const order = sortField !== null ? [{
+    column: sortField,
+    dir: sortOrder
+  }] : [];
+
+  const payload = {
+    draw: page,
+    order: order,
+    start: (page - 1) * limit,
+    length: limit
+  };
+
+  return await apiClient.post<FrequenciaApiResponse>("/deputado/Frequencia", payload);
+};
+
+export const fetchFrequenciaSessaoDetalhe = async (
+  sessionId: number
+): Promise<FrequenciaDetalheApiResponse> => {
+  return await apiClient.post<FrequenciaDetalheApiResponse>(`/deputado/Frequencia/${sessionId}`, {});
+};

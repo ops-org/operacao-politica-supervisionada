@@ -1,0 +1,28 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="CNAME" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="LICENCE" />
+    <File Path="README.md" />
+    <File Path="stylecop.json" />
+  </Folder>
+  <Project Path="OPS.API.Tests/OPS.API.Tests.csproj" />
+  <Project Path="OPS.API/OPS.API.csproj" />
+  <Project Path="OPS.AppHost/OPS.AppHost.csproj" />
+  <Project Path="OPS.Core/OPS.Core.csproj" />
+  <Project Path="OPS.Importador/OPS.Importador.csproj" />
+  <Project Path="OPS.Infraestrutura/OPS.Infraestrutura.csproj" />
+  <Project Path="OPS.ServiceDefaults/OPS.ServiceDefaults.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
+  <Project Path="OPS.Site/OPS.Site.esproj">
+    <Build Solution="Release|Any CPU" />
+  </Project>
+</Solution>

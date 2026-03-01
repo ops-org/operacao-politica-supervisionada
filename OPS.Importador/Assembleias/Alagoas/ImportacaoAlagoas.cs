@@ -1,5 +1,4 @@
-﻿using OPS.Importador.Assembleias.Alagoas;
-using OPS.Importador.Comum;
+﻿using OPS.Importador.Comum;
 
 namespace OPS.Importador.Assembleias.Alagoas
 {

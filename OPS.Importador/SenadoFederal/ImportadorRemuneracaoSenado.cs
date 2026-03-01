@@ -1,14 +1,10 @@
-﻿using System.Data;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Npgsql;
-using OPS.Core.Utilities;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
@@ -29,7 +25,7 @@ namespace OPS.Importador.SenadoFederal
 
         public ImportadorRemuneracaoSenado(IServiceProvider serviceProvider)
         {
-            appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value; 
+            appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
             dbContext = serviceProvider.GetService<AppDbContext>();
             fileManager = serviceProvider.GetService<FileManager>();
             logger = serviceProvider.GetService<ILogger<ImportadorDespesasSenado>>();

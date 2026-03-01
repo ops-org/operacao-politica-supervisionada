@@ -11,34 +11,26 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 using OPS.API.Configuration;
 using OPS.API.Services;
 using OPS.Core.Repositories;
-using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 
 namespace OPS.API
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(WebApplicationBuilder builder, IConfiguration Configuration, IServiceCollection services)
         {
+            // Add Npgsql DbContext using Aspire integration
+            //builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext");
+
             services.AddDbContext<AppDbContext>(options => options
                     .UseNpgsql(Configuration.GetConnectionString("AuditoriaContext"))
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
-
-            //services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(Configuration.GetConnectionString("AuditoriaContext")));
 
             services.AddScoped<DeputadoRepository>();
             services.AddScoped<SenadorRepository>();
@@ -49,16 +41,6 @@ namespace OPS.API
             services.AddScoped<InicioRepository>();
             services.AddScoped<PartidoRepository>();
             services.AddScoped<EstadoRepository>();
-
-            //services.AddCors(options =>
-            //{
-            //    options.AddPolicy("CorsPolicy",
-            //        builder => builder
-            //            .AllowAnyOrigin()
-            //            .AllowAnyMethod()
-            //            .AllowAnyHeader()
-            //            .AllowCredentials());
-            //});
 
             services.AddCors(options =>
             {
@@ -93,19 +75,17 @@ namespace OPS.API
 
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-                    
+
                     // Configure to ignore null values
                     options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-                    
+
                     // Write enums as strings
                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
 
-            services.AddApplicationInsightsTelemetry(Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
-
             // Configure CacheSettings
             services.Configure<CacheSettings>(Configuration.GetSection("CacheSettings"));
-            
+
             // Configure Hybrid Cache
             services.AddHybridCache(options =>
             {

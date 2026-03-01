@@ -129,7 +129,7 @@ const getColumnConfigs = (agrupamento: string): ColumnConfig[] => {
         { key: "nome_parlamentar", label: "Parlamentar", sortable: false, columnIndex: 0 },
         { key: "nome_fornecedor", label: "Fornecedor", sortable: false, columnIndex: 0 },
         { key: "despesa_tipo", label: "Tipo de Despesa", sortable: false, columnIndex: 0 },
-        { key: "valor_total", label: "Valor", sortable: true, columnIndex: 3, align: 'right' }
+        { key: "valor_total", label: "Valor", sortable: true, columnIndex: 1, align: 'right' }
       ];
     default:
       return getColumnConfigs("1");

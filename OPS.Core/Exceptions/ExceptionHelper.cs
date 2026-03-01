@@ -2,6 +2,7 @@
 using System.Globalization;
 
 namespace OPS.Core.Exceptions;
+
 public static class ExceptionHelper
 {
     public static string ToFullDescriptionString(this Exception e)

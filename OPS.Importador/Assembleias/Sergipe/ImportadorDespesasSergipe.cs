@@ -64,7 +64,7 @@ namespace OPS.Importador.Assembleias.Sergipe
 
                     using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month, ["Url"] = urlPdf, ["Arquivo"] = $"CLSE-{ano}-{competencia.Month}.pdf" }))
                     {
-                       await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf);
+                        await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf);
                     }
                 }
             }
@@ -90,7 +90,7 @@ namespace OPS.Importador.Assembleias.Sergipe
         private async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf)
         {
             var filename = $"{tempFolder}/CLSE-{ano}-{mes}.pdf";
-           await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado);
+            await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado);
 
             using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
             {

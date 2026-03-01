@@ -1,5 +1,4 @@
-﻿using OPS.Importador.Assembleias.Rondonia;
-using OPS.Importador.Comum;
+﻿using OPS.Importador.Comum;
 
 namespace OPS.Importador.Assembleias.Rondonia
 {

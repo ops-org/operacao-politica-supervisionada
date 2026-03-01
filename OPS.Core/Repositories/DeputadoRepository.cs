@@ -984,33 +984,36 @@ WHERE (1=1)
         private async Task<DataTablesResponseDTO<LancamentoDocumentoDTO>> LancamentosNotaFiscal(DataTablesRequest request)
         {
             var sqlWhere = GetWhereFilter(request);
-            var sqlSortAndPaging = GetSortAndPaging(request, "l.ano DESC, l.mes DESC, l.data_emissao DESC, l.valor_liquido DESC");
+            var sqlOrderBy = $" ORDER BY {request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC")} ";
+            var sqlLimit = $" LIMIT {request.Length} OFFSET {request.Start} ";
 
             var sql = $@"
 SELECT
 	l.data_emissao
-	, pj.nome AS nome_fornecedor
+    , l.valor_liquido as valor_total
+    , l.id as id_cf_despesa
+    , d.id as id_cf_deputado
 	, d.nome_parlamentar
-	, l.valor_total
-	, l.id as id_cf_despesa
 	, e.sigla as sigla_estado
 	, p.sigla as sigla_partido
 	, l.id_fornecedor
 	, pj.cnpj_cpf
-	, d.id as id_cf_deputado
+	, pj.nome AS nome_fornecedor
 	, t.descricao as despesa_tipo
 FROM (
-	SELECT data_emissao, id, id_cf_deputado, valor_liquido as valor_total, id_cf_despesa_tipo, id_fornecedor
+	SELECT data_emissao, valor_liquido, id, id_cf_deputado, id_cf_despesa_tipo, id_fornecedor, l.ano_mes
 	FROM camara.cf_despesa l 
 	WHERE (1=1)
     {sqlWhere}
-    {sqlSortAndPaging}
+    {sqlOrderBy}
+    {sqlLimit}
 ) l
 INNER JOIN camara.cf_deputado d on d.id = l.id_cf_deputado
 LEFT JOIN fornecedor.fornecedor pj on pj.id = l.id_fornecedor
 LEFT JOIN partido p on p.id = d.id_partido
 LEFT JOIN estado e on e.id = d.id_estado
-LEFT JOIN camara.cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo;
+LEFT JOIN camara.cf_despesa_tipo t on t.id = l.id_cf_despesa_tipo
+{sqlOrderBy};
 
 SELECT COUNT(*) 
 FROM camara.cf_despesa l 
@@ -1674,11 +1677,12 @@ ORDER BY EXTRACT(YEAR FROM s.data)
 
         public async Task<dynamic> CamaraResumoAnual()
         {
+            var anoInicio = DateTime.UtcNow.AddYears(-10).Year;
             var sql = new StringBuilder();
             sql.AppendLine($@"
 					select ano, mes, valor
 					FROM camara.cf_despesa_resumo_mensal sf
-                    WHERE ano > {DateTime.UtcNow.AddYears(-10).Year}
+                    WHERE ano >= @anoInicio
                     ORDER BY ano, mes
 				");
 
@@ -1690,7 +1694,7 @@ ORDER BY EXTRACT(YEAR FROM s.data)
 
             var gastosMensais = new List<(int Ano, int Mes, decimal Valor)>();
 
-            using (DbDataReader reader = await ExecuteReaderAsync(sql.ToString()))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql.ToString(), new { anoInicio }))
             {
                 while (await reader.ReadAsync())
                 {
@@ -1841,8 +1845,8 @@ ORDER BY EXTRACT(YEAR FROM s.data)
                 sqlSelect.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "d.nome_parlamentar asc")));
                 sqlSelect.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-                sqlSelect.AppendLine(
-                    @"SELECT FOUND_ROWS() as row_count;");
+                sqlSelect.AppendFormat(
+                    @"SELECT COUNT(*) FROM camara.cf_sessao_presenca sp WHERE sp.id_cf_sessao = {0};", id);
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), new { id }))
@@ -1886,9 +1890,7 @@ ORDER BY EXTRACT(YEAR FROM s.data)
                         });
                     }
 
-                    await reader.NextResultAsync();
-                    await reader.ReadAsync();
-                    string TotalCount = reader["row_count"].ToString();
+                    var TotalCount = reader.GetTotalRowsFound();
 
                     return new
                     {

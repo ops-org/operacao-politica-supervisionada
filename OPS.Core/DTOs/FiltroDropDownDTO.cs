@@ -1,4 +1,4 @@
-﻿﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace OPS.Core.DTOs
 {
@@ -23,5 +23,6 @@ namespace OPS.Core.DTOs
         public int? Page { get; set; }
 
         [JsonPropertyName("count")]
-        public int Count { get; } = 30;    }
+        public int Count { get; } = 30;
+    }
 }

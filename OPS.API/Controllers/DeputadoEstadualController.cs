@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OPS.API.Services;
-using OPS.Core.DTOs;
 using OPS.Core.Repositories;
 
 namespace OPS.API.Controllers

@@ -13,7 +13,6 @@ using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
 using RestSharp;
 using UglyToad.PdfPig.Content;
-using UglyToad.PdfPig.Graphics;
 using File = System.IO.File;
 using PdfDocument = UglyToad.PdfPig.PdfDocument;
 
@@ -74,7 +73,7 @@ namespace OPS.Importador.Assembleias.Alagoas
 
                             using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = urlPdf, ["Arquivo"] = $"CLAL-{ano}-{competencia.Month}-{nomeParlamentar}.pdf" }))
                             {
-                               await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf, nomeParlamentar, competencia);
+                                await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf, nomeParlamentar, competencia);
                             }
                         }
                     }
@@ -88,7 +87,7 @@ namespace OPS.Importador.Assembleias.Alagoas
         public async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf, string nomeParlamentar, DateOnly competencia)
         {
             var fileName = Path.Combine(tempFolder, $"CLAL-{ano}-{mes}-{nomeParlamentar}.pdf");
-           await fileManager.BaixarArquivo(dbContext, urlPdf, fileName, config.Estado);
+            await fileManager.BaixarArquivo(dbContext, urlPdf, fileName, config.Estado);
 
             var ocrFileName = fileName.Replace(".pdf", ".txt");
             if (!File.Exists(ocrFileName))

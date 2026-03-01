@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS camara.cf_deputado_auxilio_moradia
     id_cf_deputado integer NOT NULL,
     ano smallint,
     mes smallint,
-    valor numeric(10, 2)
+    valor numeric(10, 2),
+    CONSTRAINT cf_deputado_auxilio_moradia_id_cf_deputado_ano_mes_key UNIQUE (id_cf_deputado, ano, mes)
 );
 
 CREATE TABLE IF NOT EXISTS camara.cf_deputado_campeao_gasto
@@ -80,7 +81,8 @@ CREATE TABLE IF NOT EXISTS camara.cf_deputado_cota_parlamentar
     ano smallint NOT NULL,
     mes smallint NOT NULL,
     valor numeric(10, 2) NOT NULL,
-    percentual numeric(10, 2)
+    percentual numeric(10, 2),
+    CONSTRAINT cf_deputado_cota_parlamentar_id_cf_deputado_ano_mes_key UNIQUE (id_cf_deputado, ano, mes)
 );
 
 CREATE TABLE IF NOT EXISTS camara.cf_deputado_imovel_funcional
@@ -88,7 +90,8 @@ CREATE TABLE IF NOT EXISTS camara.cf_deputado_imovel_funcional
     id_cf_deputado integer NOT NULL,
     uso_de date NOT NULL,
     uso_ate date,
-    total_dias smallint
+    total_dias smallint,
+    CONSTRAINT cf_deputado_imovel_funcional_id_cf_deputado_uso_de_uso_ate_key UNIQUE (id_cf_deputado, uso_de, uso_ate)
 );
 
 CREATE TABLE IF NOT EXISTS camara.cf_deputado_missao_oficial
@@ -107,7 +110,8 @@ CREATE TABLE IF NOT EXISTS camara.cf_deputado_remuneracao
     id_cf_deputado integer NOT NULL,
     ano smallint NOT NULL,
     mes smallint NOT NULL,
-    valor numeric(10, 2) NOT NULL
+    valor numeric(10, 2) NOT NULL,
+    CONSTRAINT cf_deputado_remuneracao_id_cf_deputado_ano_mes_key UNIQUE (id_cf_deputado, ano, mes)
 );
 
 CREATE TABLE IF NOT EXISTS camara.cf_deputado_verba_gabinete
@@ -116,7 +120,8 @@ CREATE TABLE IF NOT EXISTS camara.cf_deputado_verba_gabinete
     ano smallint NOT NULL,
     mes smallint NOT NULL,
     valor numeric(10, 2) NOT NULL,
-    percentual numeric(10, 2)
+    percentual numeric(10, 2),
+    CONSTRAINT cf_deputado_verba_gabinete_id_cf_deputado_ano_mes_key UNIQUE (id_cf_deputado, ano, mes)
 );
 
 CREATE TABLE IF NOT EXISTS camara.cf_despesa
