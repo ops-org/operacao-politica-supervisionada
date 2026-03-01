@@ -1,8 +1,6 @@
-using System;
 using System.Globalization;
 using System.Net;
 using Dapper;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -37,7 +35,6 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
-using OPS.Infraestrutura;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;

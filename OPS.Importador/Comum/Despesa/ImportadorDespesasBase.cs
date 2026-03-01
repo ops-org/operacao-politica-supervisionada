@@ -1,12 +1,9 @@
 ﻿using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
-using System.Net;
-using System.Security.Cryptography.Xml;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using AngleSharp.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Dapper;
@@ -16,18 +13,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using OpenQA.Selenium;
-using OpenQA.Selenium.BiDi.Input;
-using OPS.Core;
-using OPS.Core.DTOs;
 using OPS.Core.Enumerators;
 using OPS.Core.Exceptions;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.Fornecedores;
 using RestSharp;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OPS.Importador.Comum.Despesa;
 
@@ -1287,16 +1278,16 @@ LEFT JOIN partido p on p.id = d.id_partido
 LEFT JOIN estado e on e.id = d.id_estado");
     }
 
-//    public void AtualizaResumoMensal()
-//    {
-//        connection.Execute(@"
-//TRUNCATE TABLE assembleias.cl_despesa_resumo_mensal;
-//INSERT INTO assembleias.cl_despesa_resumo_mensal (ano, mes, valor)
-//SELECT ano, mes, sum(valor_liquido)
-//FROM assembleias.cl_despesa
-//GROUP BY ano, mes
-//");
-//    }
+    //    public void AtualizaResumoMensal()
+    //    {
+    //        connection.Execute(@"
+    //TRUNCATE TABLE assembleias.cl_despesa_resumo_mensal;
+    //INSERT INTO assembleias.cl_despesa_resumo_mensal (ano, mes, valor)
+    //SELECT ano, mes, sum(valor_liquido)
+    //FROM assembleias.cl_despesa
+    //GROUP BY ano, mes
+    //");
+    //    }
 }
 
 public class ImportadorCotaParlamentarBaseConfig

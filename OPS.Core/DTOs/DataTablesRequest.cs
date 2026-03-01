@@ -24,7 +24,6 @@ THE SOFTWARE.
 #endregion Copyright
 
 using System.Collections.Generic;
-using System.Linq;
 using OPS.Core.Utilities;
 
 namespace OPS.Core.DTOs

@@ -99,7 +99,7 @@ namespace OPS.Importador.Assembleias.SantaCatarina
                     };
 
                     // Nome da empresa vem no favorecido para despesas que não sõa de diárias e passagens.
-                    if(despesaTemp.TipoVerba != "DIÁRIAS" && despesaTemp.TipoVerba != "PASSAGENS")
+                    if (despesaTemp.TipoVerba != "DIÁRIAS" && despesaTemp.TipoVerba != "PASSAGENS")
                     {
                         despesaTemp.NomeFornecedor = despesaTemp.Favorecido;
                         despesaTemp.Favorecido = null;

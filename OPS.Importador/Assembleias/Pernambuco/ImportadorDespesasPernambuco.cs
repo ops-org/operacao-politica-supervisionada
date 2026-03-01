@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using AngleSharp;
-using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;

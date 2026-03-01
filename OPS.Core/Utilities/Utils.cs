@@ -111,7 +111,7 @@ namespace OPS.Core.Utilities
 
         public static string FormatCNPJ(string cnpj)
         {
-            if(string.IsNullOrEmpty(cnpj)) return null;
+            if (string.IsNullOrEmpty(cnpj)) return null;
 
             try
             {

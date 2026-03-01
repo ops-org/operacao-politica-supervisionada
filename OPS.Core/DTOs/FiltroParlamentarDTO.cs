@@ -1,5 +1,5 @@
-﻿using OPS.Core.Enumerators;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using OPS.Core.Enumerators;
 
 namespace OPS.Core.DTOs
 {

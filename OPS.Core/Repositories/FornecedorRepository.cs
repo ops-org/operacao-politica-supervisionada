@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
@@ -10,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTOs;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OPS.Core.Repositories
 {

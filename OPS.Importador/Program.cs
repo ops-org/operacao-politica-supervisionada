@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using OPS.Importador;
+﻿using Microsoft.Extensions.Hosting;
 using OPS.Infraestrutura;
 using Serilog;
 

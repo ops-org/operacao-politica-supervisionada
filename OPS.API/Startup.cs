@@ -11,13 +11,11 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 using OPS.API.Configuration;
 using OPS.API.Services;
 using OPS.Core.Repositories;
-using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 
 namespace OPS.API
@@ -77,17 +75,17 @@ namespace OPS.API
 
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-                    
+
                     // Configure to ignore null values
                     options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-                    
+
                     // Write enums as strings
                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
 
             // Configure CacheSettings
             services.Configure<CacheSettings>(Configuration.GetSection("CacheSettings"));
-            
+
             // Configure Hybrid Cache
             services.AddHybridCache(options =>
             {

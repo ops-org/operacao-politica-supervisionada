@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Xml;
-using Dapper;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Despesa;

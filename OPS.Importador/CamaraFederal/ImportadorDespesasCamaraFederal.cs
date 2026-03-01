@@ -1,29 +1,20 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
-using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using AngleSharp;
-using AngleSharp.Html.Dom;
 using CsvHelper;
 using Dapper;
-using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OPS.Core.Exceptions;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
-using OPS.Importador.Fornecedores;
 using OPS.Infraestrutura;
-using OPS.Infraestrutura.Entities.CamaraFederal;
 using RestSharp;
 
 namespace OPS.Importador.CamaraFederal;
@@ -1200,7 +1191,7 @@ GROUP BY ano, mes");
     //			");
     //}
 
-    
+
 
     private Dictionary<string, string> colunasBanco = new Dictionary<string, string>();
     //public void DefineColunasRemuneracaoSecretarios()

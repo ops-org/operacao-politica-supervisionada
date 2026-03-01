@@ -125,7 +125,7 @@ public class FileManager
         var caminhoArquivoTmp = filename.Replace(fileExt, $"_tmp{fileExt}");
 
         // Arquivos do Piauí e Paraná são baixados em processo anterior. Quando não existe o arquivo temporário, podemos usar o arquivo existente.
-        if ((estado == Estados.Piaui || estado == Estados.Parana) && !File.Exists(caminhoArquivoTmp)) 
+        if ((estado == Estados.Piaui || estado == Estados.Parana) && !File.Exists(caminhoArquivoTmp))
             return false;
 
         string checksum = ChecksumCalculator.ComputeFileChecksum(caminhoArquivoTmp);

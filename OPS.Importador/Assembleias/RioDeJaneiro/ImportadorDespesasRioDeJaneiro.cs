@@ -2,7 +2,6 @@
 using System.Net;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
-using OPS.Core;
 using OPS.Core.Enumerators;
 using OPS.Core.Exceptions;
 using OPS.Core.Utilities;

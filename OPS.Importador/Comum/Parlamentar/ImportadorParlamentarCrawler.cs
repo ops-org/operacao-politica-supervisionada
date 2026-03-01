@@ -46,7 +46,7 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
                     logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);
                     continue;
                 }
-                
+
                 ColetarDadosPerfil(deputado, subDocument);
             }
 

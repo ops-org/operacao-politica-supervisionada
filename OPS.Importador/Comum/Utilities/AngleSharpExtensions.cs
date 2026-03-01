@@ -3,7 +3,6 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Io.Network;
-using OPS.Core;
 using OPS.Core.Exceptions;
 using Serilog;
 

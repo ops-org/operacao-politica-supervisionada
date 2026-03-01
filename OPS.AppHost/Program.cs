@@ -17,7 +17,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var api = builder.AddProject<Projects.OPS_API>("api");
 
-builder.AddNpmApp("frontend", "../OPS.Site", scriptName: "dev")
+builder.AddJavaScriptApp("frontend", "../OPS.Site", runScriptName: "dev")
     .WithReference(api)
     .WaitFor(api)
     .WithHttpEndpoint(targetPort: 8080)

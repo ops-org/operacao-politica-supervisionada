@@ -1,5 +1,4 @@
-﻿using OPS.Importador.Assembleias.SantaCatarina;
-using OPS.Importador.Comum;
+﻿using OPS.Importador.Comum;
 
 namespace OPS.Importador.Assembleias.SantaCatarina
 {

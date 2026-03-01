@@ -4,7 +4,6 @@ using System.Text.Json;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using Dapper;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;

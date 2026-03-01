@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OPS.API;
-using OPS.Infraestrutura;
 
 var builder = WebApplication.CreateBuilder(args);
 

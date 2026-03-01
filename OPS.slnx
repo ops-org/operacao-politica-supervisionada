@@ -19,7 +19,9 @@
   <Project Path="OPS.Core/OPS.Core.csproj" />
   <Project Path="OPS.Importador/OPS.Importador.csproj" />
   <Project Path="OPS.Infraestrutura/OPS.Infraestrutura.csproj" />
-  <Project Path="OPS.ServiceDefaults/OPS.ServiceDefaults.csproj" />
+  <Project Path="OPS.ServiceDefaults/OPS.ServiceDefaults.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
   <Project Path="OPS.Site/OPS.Site.esproj">
     <Build Solution="Release|Any CPU" />
   </Project>

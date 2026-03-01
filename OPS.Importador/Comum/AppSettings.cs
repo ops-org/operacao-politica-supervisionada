@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OPS.Importador.Comum
+﻿namespace OPS.Importador.Comum
 {
     public class AppSettings
     {
@@ -27,7 +23,7 @@ namespace OPS.Importador.Comum
         public string ComputerVisionOcrKey { get; set; }
 
         public bool ReuseDownloadFile { get; set; } = true;
-        
+
         public bool ForceImport { get; set; } = false;
 
         public bool StoreBackupFile { get; set; } = true;

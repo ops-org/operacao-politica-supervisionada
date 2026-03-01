@@ -1,8 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using OPS.API.Configuration;
-using System;
-using System.Threading.Tasks;
 
 namespace OPS.API.Services
 {
@@ -34,7 +34,7 @@ namespace OPS.API.Services
                 return await factory();
             }
 
-            var options = expiration.HasValue 
+            var options = expiration.HasValue
                 ? new HybridCacheEntryOptions
                 {
                     Expiration = expiration.Value,

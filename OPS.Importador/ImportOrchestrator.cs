@@ -1,9 +1,7 @@
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
-using OPS.Importador.Assembleias.Acre;
 using OPS.Importador.Assembleias.Alagoas;
 using OPS.Importador.Assembleias.Amapa;
 using OPS.Importador.Assembleias.Amazonas;
@@ -13,7 +11,6 @@ using OPS.Importador.Assembleias.DistritoFederal;
 using OPS.Importador.Assembleias.EspiritoSanto;
 using OPS.Importador.Assembleias.Goias;
 using OPS.Importador.Assembleias.Maranhao;
-using OPS.Importador.Assembleias.MatoGrosso;
 using OPS.Importador.Assembleias.MatoGrossoDoSul;
 using OPS.Importador.Assembleias.MinasGerais;
 using OPS.Importador.Assembleias.Para;

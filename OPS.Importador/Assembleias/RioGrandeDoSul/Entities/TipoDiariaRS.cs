@@ -15,7 +15,7 @@ namespace OPS.Importador.Assembleias.RioGrandeDoSul.Entities
     public enum TipoDiariaRS
     {
         [Display(Name = "Estadual")]
-        Estadual = 9, 
+        Estadual = 9,
 
         [Display(Name = "Nacional")]
         Nacional = 39,

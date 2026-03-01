@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OPS.Core.Exceptions;
-using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
 using OPS.Infraestrutura;
 using OPS.Infraestrutura.Entities.CamaraFederal;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace OPS.Importador.CamaraFederal
 {
@@ -399,7 +393,7 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
 
                     continue; // Ignorar dados do servidor, não tem informações de remuneração
                 }
-                    
+
 
                 var titulo = folhaPagamento.QuerySelector("caption").TextContent.Split("\n")?[1]?.Trim();
 
