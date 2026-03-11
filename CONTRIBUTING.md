@@ -20,9 +20,9 @@ Grupo de discussão: [Robops no Telegram](https://t.me/joinchat/ByZCHlJ3VPEc8guz
 ## Como começar?
 
 1. Baixe (clone) o repositório
-2. [BD] Subir um banco dedados MySql
+2. [BD] Subir um banco dedados PostgreSQL
 3. [BD] Importar os arquivos de [Schema](https://github.com/ops-org/operacao-politica-supervisionada/tree/master/Docs/BD/Schemas)
-4. [Backend] Com o SDK do .Net6 instalado, abra a solução com o VisualStudio
+4. [Backend] Com o SDK do .Net10 instalado, abra a solução com o VisualStudio
 5. [Backend] Definir o Projeto OPS.API como principal (`Set as Startup Project`)
 6. [Backend]Iniciar o backend com F5
 7. [FrontEnd] No VSCode, executar os comandos do NPM:
@@ -33,7 +33,7 @@ Grupo de discussão: [Robops no Telegram](https://t.me/joinchat/ByZCHlJ3VPEc8guz
 
 ### Banco de dados
 
-O banco de dados do projeto é o MySql
+O banco de dados do projeto é o PostgreSQL
 
 Um novo banco deve ser criado usando os scripts de criação disponibilizados
 
@@ -50,7 +50,7 @@ As gerais dizem sobre informações sobre entidades, empresas e indivíduos
 Hoje as tabelas espcíficas são denominadas com o seguinte prefixo:
 
 * `cf_`: Câmara Federal
-* `cl_`: Casas Estaduais
+* `cl_`: Assembleias Legislativas Estaduais
 * `sf_`: Senado
 
 ### O Backend
@@ -63,7 +63,7 @@ O backend é escrito em C# e composto por:
 
 ### O FrontEnd
 
-O FrontEnd é uma aplicação VUE, na solução, é o projeto `OPS.Site`
+O FrontEnd é uma aplicação React, na solução, é o projeto `OPS.Site`
 
 ## Padrões e Estilos
 
