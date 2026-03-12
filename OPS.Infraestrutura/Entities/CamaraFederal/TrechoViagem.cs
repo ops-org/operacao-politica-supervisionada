@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("trecho_viagem")]
+    [DebuggerDisplay("TrechoViagem {{Id}} - {{Descricao}}")]
     public class TrechoViagem
     {
         [Key]
@@ -18,3 +20,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual ICollection<DespesaCamara> Despesas { get; set; } = new List<DespesaCamara>();
     }
 }
+

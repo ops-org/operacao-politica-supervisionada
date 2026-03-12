@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
@@ -38,28 +39,18 @@ namespace OPS.Importador
     {
         public static async Task RunAppAsync(IServiceProvider serviceProvider)
         {
-
             var logger = serviceProvider.GetService<ILogger<Program>>();
+            var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+
             logger.LogInformation("Iniciando Importação");
 
-            //var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
-            //ipcaImportador.ImportarIpca().Wait();
+            //await RunImportersAsync(serviceProvider, dbContext, logger);
 
-            var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-            await InitializeDatabaseAsync(dbContext);
-
-            var crawler = new SeleniumScraper(serviceProvider);
-            //crawler.BaixarArquivosParana();
-            crawler.BaixarArquivosPiaui();
-
-            await RunImportersAsync(serviceProvider, logger);
-
-            //var importador = serviceProvider.GetService<CamaraFederal.ImportacaoCamaraFederal>();
-
-            //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-            //importador.ColetaDadosDeputados();
-            //importador.AtualizaParlamentarValores();
-            //importador.ColetaRemuneracaoSecretarios();
+            var importador = serviceProvider.GetService<CamaraFederal.ImportacaoCamaraFederal>();
+            //await importador.ColetaDadosDeputados();
+            await importador.ProcessarFuncionarioTemp();
+            //await importador.AtualizaParlamentarValores();
+            //await importador.ColetaRemuneracaoSecretarios();
 
 
             //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
@@ -83,11 +74,20 @@ namespace OPS.Importador
 
             var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
             await objFornecedor.ConsultarDadosCNPJ();
-            //objFornecedor.ConsultarDadosCNPJ(somenteNovos: false).Wait();
+            //await objFornecedor.ConsultarDadosCNPJ(somenteNovos: false);
+
+            //var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
+            //await ipcaImportador.ImportarIpca();
         }
 
-        private static async Task RunImportersAsync(IServiceProvider serviceProvider, ILogger logger)
+        private static async Task RunImportersAsync(IServiceProvider serviceProvider, AppDbContext dbContext, ILogger logger)
         {
+            await SyncDatabaseAsync(dbContext);
+
+            var crawler = new SeleniumScraper(serviceProvider);
+            //crawler.BaixarArquivosParana();
+            crawler.BaixarArquivosPiaui();
+
             var types = new Type[]
             {
                 typeof(SenadoFederal.Senado), // csv
@@ -144,7 +144,7 @@ namespace OPS.Importador
             await Task.WhenAll(tasks);
         }
 
-        private static async Task InitializeDatabaseAsync(AppDbContext dbContext)
+        private static async Task SyncDatabaseAsync(AppDbContext dbContext)
         {
             await dbContext.Database.ExecuteSqlRawAsync(@"
                 INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)

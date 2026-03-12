@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_despesa_tipo")]
+    [DebuggerDisplay("DespesaTipoSenado {{Id}} - {{Descricao}}")]
     public class DespesaTipoSenado
     {
         [Key]
@@ -18,3 +20,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<DespesaSenado> Despesas { get; set; } = new List<DespesaSenado>();
     }
 }
+

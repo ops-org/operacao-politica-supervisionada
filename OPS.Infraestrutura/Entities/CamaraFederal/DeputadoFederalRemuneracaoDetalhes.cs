@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_deputado_remuneracao_detalhes")]
+    [DebuggerDisplay("DeputadoFederalRemuneracaoDetalhes {{Id}}")]
     public class DeputadoFederalRemuneracaoDetalhes
     {
         [Key]
@@ -78,3 +80,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
     }
 
 }
+

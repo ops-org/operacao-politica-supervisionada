@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.TSE
 {
     [Table("tse_eleicao_cargo")]
+    [DebuggerDisplay("EleicaoCargo {{Id}} - {{Nome}}")]
     public class EleicaoCargo
     {
         [Key]
@@ -15,3 +17,4 @@ namespace OPS.Infraestrutura.Entities.TSE
         public string? Nome { get; set; }
     }
 }
+

@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.TSE
 {
     [Table("tse_eleicao")]
+    [DebuggerDisplay("Eleicao {{Id}} - {{Descricao}}")]
     public class Eleicao
     {
         [Column("id")]
@@ -29,3 +31,4 @@ namespace OPS.Infraestrutura.Entities.TSE
         public string? Abrangencia { get; set; }
     }
 }
+

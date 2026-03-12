@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("indice_inflacao")]
+    [DebuggerDisplay("IndiceInflacao {{Id}}")]
     public class IndiceInflacao
     {
         [Key]
@@ -29,3 +31,4 @@ namespace OPS.Infraestrutura.Entities.Comum
         public decimal Indice { get; set; }
     }
 }
+

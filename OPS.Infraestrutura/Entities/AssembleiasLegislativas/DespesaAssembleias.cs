@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using OPS.Infraestrutura.Entities.Fornecedores;
 
 namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas;
 
 [Table("cl_despesa")]
+[DebuggerDisplay("DespesaAssembleia {Id} - {AnoMes} - R$ {ValorLiquido}")]
 public class DespesaAssembleias
 {
     [Key]

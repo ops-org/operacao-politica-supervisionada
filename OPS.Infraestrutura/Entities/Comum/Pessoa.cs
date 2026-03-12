@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("pessoa")]
+    [DebuggerDisplay("Pessoa {{Id}} - {{Nome}}")]
     public class Pessoa
     {
         [Key]
@@ -19,3 +21,4 @@ namespace OPS.Infraestrutura.Entities.Comum
         public string? Nome { get; set; }
     }
 }
+

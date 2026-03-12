@@ -225,7 +225,11 @@ namespace OPS.Core.Utilities
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower()).Replace("De ", "de ").Replace("Da ", "da ").Replace("Do ", "do ");
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower())
+                .Replace("De ", "de ")
+                .Replace("Da ", "da ")
+                .Replace("Do ", "do ")
+                .Replace("Dos ", "dos ");
         }
 
         public static string ReduceWhitespace(this string text)

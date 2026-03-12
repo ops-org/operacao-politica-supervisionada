@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_funcionario_tipo_folha")]
+    [DebuggerDisplay("FuncionarioTipoFolha {{Id}}")]
     public class FuncionarioTipoFolha
     {
         [Key]
@@ -18,3 +20,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual ICollection<FuncionarioRemuneracao> FuncionarioRemuneracoes { get; set; } = new List<FuncionarioRemuneracao>();
     }
 }
+

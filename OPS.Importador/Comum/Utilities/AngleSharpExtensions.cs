@@ -28,7 +28,20 @@ public static class AngleSharpExtensions
         do
         {
             retries++;
-            var doc = await context.OpenAsync(address); // For StatusCode Error, polly will manage the retries
+            IDocument doc;
+            try
+            {
+                doc = await context.OpenAsync(address); // For StatusCode Error, polly will manage the retries
+            }
+            catch (NullReferenceException ex) when (ex.Source == "AngleSharp")
+            {
+                if (retries >= totalRetries) throw;
+
+                var waitExSeconds = Math.Pow(2, retries);
+                Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, waitExSeconds);
+                await Task.Delay(TimeSpan.FromSeconds(waitExSeconds));
+                continue;
+            }
 
             if (doc.StatusCode == HttpStatusCode.NotFound)
                 return doc;
@@ -55,13 +68,13 @@ public static class AngleSharpExtensions
 
                 // Quando há redirect para pagina de erro, é necessario esperar mais tempo que o normal.
                 Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, 60);
-                Thread.Sleep(TimeSpan.FromMinutes(1));
+                await Task.Delay(TimeSpan.FromMinutes(1));
                 continue;
             }
 
             var waitSeconds = Math.Pow(2, retries);
             Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, waitSeconds);
-            Thread.Sleep(TimeSpan.FromSeconds(waitSeconds));
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
 
         } while (retries < totalRetries);
 
@@ -74,7 +87,20 @@ public static class AngleSharpExtensions
         do
         {
             retries++;
-            var doc = await form.SubmitAsync(fields, createMissing); // For StatusCode Error, polly will manage the retries
+            IDocument doc;
+            try
+            {
+                doc = await form.SubmitAsync(fields, createMissing); // For StatusCode Error, polly will manage the retries
+            }
+            catch (NullReferenceException ex) when (ex.Source == "AngleSharp")
+            {
+                if (retries >= totalRetries) throw;
+
+                var waitExSeconds = Math.Pow(2, retries);
+                Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitExSeconds);
+                await Task.Delay(TimeSpan.FromSeconds(waitExSeconds));
+                continue;
+            }
 
             if (doc.StatusCode == HttpStatusCode.OK)
             {
@@ -85,7 +111,7 @@ public static class AngleSharpExtensions
 
             var waitSeconds = Math.Pow(2, retries);
             Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitSeconds);
-            Thread.Sleep(TimeSpan.FromSeconds(waitSeconds));
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
 
         } while (retries < totalRetries);
 

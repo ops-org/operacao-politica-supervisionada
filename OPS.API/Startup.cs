@@ -28,9 +28,11 @@ namespace OPS.API
             // Add Npgsql DbContext using Aspire integration
             //builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext");
 
-            services.AddDbContext<AppDbContext>(options => options
-                    .UseNpgsql(Configuration.GetConnectionString("AuditoriaContext"))
-                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                DesignTimeDbContextFactory.ConfigureOptions(options, Configuration.GetConnectionString("AuditoriaContext")!);
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            });
 
             services.AddScoped<DeputadoRepository>();
             services.AddScoped<SenadorRepository>();

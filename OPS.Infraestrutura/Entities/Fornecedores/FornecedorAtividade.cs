@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
     [Table("fornecedor_atividade")]
+    [DebuggerDisplay("FornecedorAtividade {{Id}} - {{Nome}}")]
     public class FornecedorAtividade
     {
         [Key]
@@ -24,3 +26,4 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public virtual ICollection<FornecedorAtividadeSecundaria> FornecedorAtividadeSecundarias { get; set; } = new List<FornecedorAtividadeSecundaria>();
     }
 }
+

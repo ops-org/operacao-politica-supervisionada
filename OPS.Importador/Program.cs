@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using AngleSharp;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OPS.Infraestrutura;
 using Serilog;
 
@@ -6,29 +10,40 @@ namespace OPS.Importador
 {
     internal class Program
     {
+
+
         public static async Task Main(string[] args)
         {
-            var builder = Host.CreateApplicationBuilder(args);
+            var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+            {
+                Args = args,
+                EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Development
+            });
 
             builder.AddServiceDefaults();
-            builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext");
+            builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext", configureDbContextOptions: options =>
+                DesignTimeDbContextFactory.ConfigureOptions(options, builder.Configuration.GetConnectionString("AuditoriaContext")!));
 
             ConfigureApp.SetupEnvironment();
+            ConfigureApp.SetupLogging(builder.Configuration);
             ConfigureApp.ConfigureServices(builder.Services, builder.Configuration);
 
             var host = builder.Build();
 
-            try
+            using (var scope = host.Services.CreateScope())
             {
-                await ImportOrchestrator.RunAppAsync(host.Services);
-            }
-            catch (Exception ex)
-            {
-                HandleFatalException(ex);
-            }
-            finally
-            {
-                Log.CloseAndFlush();
+                try
+                {
+                    await ImportOrchestrator.RunAppAsync(scope.ServiceProvider);
+                }
+                catch (Exception ex)
+                {
+                    HandleFatalException(ex);
+                }
+                finally
+                {
+                    Log.CloseAndFlush();
+                }
             }
 
             Console.WriteLine("Concluido! Tecle [ENTER] para sair.");

@@ -39,182 +39,157 @@ using Polly;
 using Polly.Extensions.Http;
 using Serilog;
 
-namespace OPS.Importador
+namespace OPS.Importador;
+
+internal static class ConfigureApp
 {
-    internal static class ConfigureApp
+    public static void SetupEnvironment()
     {
-        public static void SetupEnvironment()
-        {
-            ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
+        ExcelPackage.License.SetNonCommercialOrganization("OPS: Operação Política Supervisionada");
 
-            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-            Serilog.Debugging.SelfLog.Enable(Console.Error);
+        ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+        Serilog.Debugging.SelfLog.Enable(Console.Error);
 
-            CultureInfo ci = new CultureInfo("pt-BR");
-            Thread.CurrentThread.CurrentCulture = ci;
-            Thread.CurrentThread.CurrentUICulture = ci;
+        CultureInfo ci = new CultureInfo("pt-BR");
+        Thread.CurrentThread.CurrentCulture = ci;
+        Thread.CurrentThread.CurrentUICulture = ci;
 
-            SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
-            SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
-        }
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+        SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
+    }
 
-        public static IConfiguration BuildConfiguration()
-        {
-            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+    public static IConfiguration BuildConfiguration()
+    {
+        var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
-            return new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", true, true)
-                .AddJsonFile($"appsettings.{environmentName}.json", true, true)
-                .AddEnvironmentVariables()
-                .Build();
-        }
+        return new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", true, true)
+            .AddJsonFile($"appsettings.{environmentName}.json", true, true)
+            .AddEnvironmentVariables()
+            .Build();
+    }
 
-        public static void SetupLogging(IConfiguration configuration)
-        {
-            var loggerConfiguration = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name)
-                .Enrich.WithProperty("MachineName", Environment.MachineName)
-                .Enrich.WithProperty("Identifier", Guid.NewGuid().ToString())
-                .Enrich.With<InvocationContextEnricher>();
+    public static void SetupLogging(IConfiguration configuration)
+    {
+        var loggerConfiguration = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name)
+            .Enrich.WithProperty("MachineName", Environment.MachineName)
+            .Enrich.WithProperty("Identifier", Guid.NewGuid().ToString())
+            .Enrich.With<InvocationContextEnricher>();
 
-            Log.Logger = loggerConfiguration.CreateLogger();
-        }
+        Log.Logger = loggerConfiguration.CreateLogger();
+    }
 
-        public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddOptions<AppSettings>().Bind(configuration.GetSection("AppSettings"));
+    public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<AppSettings>().Bind(configuration.GetSection("AppSettings"));
 
-            services.AddScoped<SenadoFederal.Senado>();
-            services.AddScoped<CamaraFederal.Camara>();
+        services.AddScoped<SenadoFederal.Senado>();
+        services.AddScoped<CamaraFederal.Camara>();
 
-            services.AddScoped<ImportacaoAcre>();
-            services.AddScoped<ImportacaoAlagoas>();
-            services.AddScoped<ImportacaoAmapa>();
-            services.AddScoped<ImportacaoAmazonas>();
-            services.AddScoped<ImportacaoBahia>();
-            services.AddScoped<ImportacaoCeara>();
-            services.AddScoped<ImportacaoDistritoFederal>();
-            services.AddScoped<ImportacaoEspiritoSanto>();
-            services.AddScoped<ImportacaoGoias>();
-            services.AddScoped<ImportacaoMaranhao>();
-            services.AddScoped<ImportacaoMatoGrosso>();
-            services.AddScoped<ImportacaoMatoGrossoDoSul>();
-            services.AddScoped<ImportacaoMinasGerais>();
-            services.AddScoped<ImportacaoPara>();
-            services.AddScoped<ImportacaoParaiba>();
-            services.AddScoped<ImportacaoParana>();
-            services.AddScoped<ImportacaoPernambuco>();
-            services.AddScoped<ImportacaoPiaui>();
-            services.AddScoped<ImportacaoRioDeJaneiro>();
-            services.AddScoped<ImportacaoRioGrandeDoNorte>();
-            services.AddScoped<ImportacaoRioGrandeDoSul>();
-            services.AddScoped<ImportacaoRondonia>();
-            services.AddScoped<ImportacaoRoraima>();
-            services.AddScoped<ImportacaoSantaCatarina>();
-            services.AddScoped<ImportacaoSaoPaulo>();
-            services.AddScoped<ImportacaoSergipe>();
-            services.AddScoped<ImportacaoTocantins>();
+        services.AddScoped<ImportacaoAcre>();
+        services.AddScoped<ImportacaoAlagoas>();
+        services.AddScoped<ImportacaoAmapa>();
+        services.AddScoped<ImportacaoAmazonas>();
+        services.AddScoped<ImportacaoBahia>();
+        services.AddScoped<ImportacaoCeara>();
+        services.AddScoped<ImportacaoDistritoFederal>();
+        services.AddScoped<ImportacaoEspiritoSanto>();
+        services.AddScoped<ImportacaoGoias>();
+        services.AddScoped<ImportacaoMaranhao>();
+        services.AddScoped<ImportacaoMatoGrosso>();
+        services.AddScoped<ImportacaoMatoGrossoDoSul>();
+        services.AddScoped<ImportacaoMinasGerais>();
+        services.AddScoped<ImportacaoPara>();
+        services.AddScoped<ImportacaoParaiba>();
+        services.AddScoped<ImportacaoParana>();
+        services.AddScoped<ImportacaoPernambuco>();
+        services.AddScoped<ImportacaoPiaui>();
+        services.AddScoped<ImportacaoRioDeJaneiro>();
+        services.AddScoped<ImportacaoRioGrandeDoNorte>();
+        services.AddScoped<ImportacaoRioGrandeDoSul>();
+        services.AddScoped<ImportacaoRondonia>();
+        services.AddScoped<ImportacaoRoraima>();
+        services.AddScoped<ImportacaoSantaCatarina>();
+        services.AddScoped<ImportacaoSaoPaulo>();
+        services.AddScoped<ImportacaoSergipe>();
+        services.AddScoped<ImportacaoTocantins>();
 
-            services.AddScoped<CamaraFederal.ImportacaoCamaraFederal>();
-            services.AddScoped<CamaraFederal.ImportadorDespesasCamaraFederal>();
-            services.AddScoped<SenadoFederal.ImportadorDespesasSenado>();
+        services.AddScoped<CamaraFederal.ImportacaoCamaraFederal>();
+        services.AddScoped<CamaraFederal.ImportadorDespesasCamaraFederal>();
+        services.AddScoped<SenadoFederal.ImportadorDespesasSenado>();
 
-            //services.AddScoped<Presidencia>();
+        //services.AddScoped<Presidencia>();
 
-            services.AddScoped<Fornecedores.ImportacaoFornecedor>();
-            services.AddScoped<FileManager>();
-            services.AddScoped<IndiceInflacaoImportador>();
-            services.AddScoped<HttpLogger>();
-            // services.AddDbContext<AppDbContext>(options => options
-            //        .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), ServiceLifetime.Transient);
+        services.AddScoped<Fornecedores.ImportacaoFornecedor>();
+        services.AddScoped<FileManager>();
+        services.AddScoped<IndiceInflacaoImportador>();
+        services.AddScoped<HttpLogger>();
+        // services.AddDbContext<AppDbContext>(options => options
+        //        .UseNpgsql(configuration.GetConnectionString("AuditoriaContext"), sqlOptions => sqlOptions.CommandTimeout(120)), ServiceLifetime.Transient);
 
-            //services.AddRedaction();
+        //services.AddRedaction();
 
-            ConfigureHttpClients(services);
-        }
+        ConfigureHttpClients(services);
+    }
 
-        private static void ConfigureHttpClients(IServiceCollection services)
-        {
-            services.AddHttpClient<HttpClient>("ResilientClient", config =>
+    private static void ConfigureHttpClients(IServiceCollection services)
+    {
+        services.AddHttpClient("ResilientClient")
+            .AddDefaultOpsConfiguration()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
-                //config.BaseAddress = new Uri("https://localhost:5001/api/");
+                AllowAutoRedirect = false,
+                MaxAutomaticRedirections = 1,
+                ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
+            });
+
+        services.AddHttpClient("DefaultClient")
+            .AddDefaultOpsConfiguration()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AllowAutoRedirect = true
+            });
+    }
+
+    private static IHttpClientBuilder AddDefaultOpsConfiguration(this IHttpClientBuilder builder)
+    {
+        return builder
+            .ConfigureHttpClient(config =>
+            {
                 config.Timeout = TimeSpan.FromHours(1);
                 config.DefaultRequestHeaders.Clear();
                 config.DefaultRequestHeaders.Add("User-Agent", Utils.DefaultUserAgent);
             })
-            .ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                var handler = new HttpClientHandler()
-                {
-                    AllowAutoRedirect = false,
-                    MaxAutomaticRedirections = 1,
-                };
-
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => { return true; };
-
-                return handler;
-            })
-            //.ConfigurePrimaryHttpMessageHandler(() =>
-            //{
-            //    return new SocketsHttpHandler()
-            //    {
-            //        PooledConnectionLifetime = TimeSpan.FromSeconds(60),
-            //        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(20),
-            //        MaxConnectionsPerServer = 10
-            //    };
-            //})
             .AddPolicyHandler((services, request) => HttpPolicyExtensions
-                .HandleTransientHttpError() // HttpRequestException, 5XX and 408
-                                            //.OrResult(response => (int)response.StatusCode == 429) // RetryAfter
+                .HandleTransientHttpError()
                 .Or<TaskCanceledException>()
                 .Or<OperationCanceledException>()
                 .Or<TimeoutException>()
                 .WaitAndRetryAsync(5, retryAttempt =>
-                    {
-                        // Aggressive exponential backoff: 3^(retryAttempt-1) seconds => 1,3,9,27,81
-                        var baseDelaySeconds = Math.Pow(3, retryAttempt - 1);
-                        // Jitter up to 100% of the base delay to avoid thundering herd
-                        var jitterSeconds = System.Random.Shared.NextDouble() * baseDelaySeconds;
-
-                        return TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds);
-                    },
-                    onRetry: (message, timespan, attempt, context) =>
-                    {
-                        services.GetService<ILogger<HttpClient>>()?
-                            .LogWarning("Delaying for {delay} seconds, then making retry {retry}. Url: {Url}", timespan.TotalSeconds, attempt, message?.Result?.RequestMessage?.RequestUri);
-                    }
-                )
-            )
-            .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
-
-            services.AddHttpClient<HttpClient>("DefaultClient", config =>
-            {
-                //config.BaseAddress = new Uri("https://localhost:5001/api/");
-                config.Timeout = TimeSpan.FromHours(1);
-                config.DefaultRequestHeaders.Clear();
-                config.DefaultRequestHeaders.Add("User-Agent", Utils.DefaultUserAgent);
-            })
-            .ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                return new HttpClientHandler()
                 {
-                    AllowAutoRedirect = true,
-                };
-            })
+                    var baseDelaySeconds = Math.Pow(3, retryAttempt - 1);
+                    var jitterSeconds = Random.Shared.NextDouble() * baseDelaySeconds;
+                    return TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds);
+                },
+                onRetry: (message, timespan, attempt, context) =>
+                {
+                    services.GetService<ILogger<HttpClient>>()?
+                        .LogWarning("Delaying for {delay} seconds, then making retry {retry}. Url: {Url}",
+                            timespan.TotalSeconds, attempt, message?.Result?.RequestMessage?.RequestUri);
+                }))
             .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
-            //.AddExtendedHttpClientLogging(options =>
-            //{
-            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
-            //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
-            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
-
-            //    options.LogBody = true;
-            //    ////options.LogContentHeaders = true;
-            //    //options.LogRequestStart = true;
-            //});
-        }
     }
+    //.AddExtendedHttpClientLogging(options =>
+    //{
+    //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
+    //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
+    //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
+
+    //    options.LogBody = true;
+    //    ////options.LogContentHeaders = true;
+    //    //options.LogRequestStart = true;
+    //});
 }

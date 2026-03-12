@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
 {
     [Table("cl_despesa_tipo")]
+    [DebuggerDisplay("DespesaTipoAssembleia {Id} - {Descricao}")]
     public class DespesaTipoAssembleias
     {
         [Key]

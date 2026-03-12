@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using OPS.Infraestrutura.Entities.Comum;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_senador")]
+    [DebuggerDisplay("Senador {Id} - {Nome} ({Codigo})")]
     public class Senador
     {
         [Key]

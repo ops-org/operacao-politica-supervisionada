@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.TSE
 {
     [Table("tse_eleicao_doacao")]
+    [DebuggerDisplay("EleicaoDoacao {{Id}}")]
     public class EleicaoDoacao
     {
         [Key]
@@ -38,3 +40,4 @@ namespace OPS.Infraestrutura.Entities.TSE
         public decimal? ValorReceita { get; set; }
     }
 }
+

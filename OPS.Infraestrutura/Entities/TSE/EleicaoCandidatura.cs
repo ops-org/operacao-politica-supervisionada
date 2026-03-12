@@ -1,10 +1,12 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 namespace OPS.Infraestrutura.Entities.TSE
 {
     [Table("tse_eleicao_candidatura")]
+    [DebuggerDisplay("EleicaoCandidatura {{Id}} - {{Nome}}")]
     public class EleicaoCandidatura
     {
         [Column("numero")]
@@ -56,3 +58,4 @@ namespace OPS.Infraestrutura.Entities.TSE
         public virtual EleicaoCandidato? EleicaoCandidatoVice { get; set; }
     }
 }
+

@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.TSE
 {
     [Table("tse_eleicao_candidato")]
+    [DebuggerDisplay("EleicaoCandidato {{Id}} - {{Nome}}")]
     public class EleicaoCandidato
     {
         [Key]
@@ -23,3 +25,4 @@ namespace OPS.Infraestrutura.Entities.TSE
         public string? Email { get; set; }
     }
 }
+

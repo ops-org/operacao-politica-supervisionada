@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_especificacao_tipo")]
+    [DebuggerDisplay("EspecificacaoTipo {IdDespesaTipo}/{IdEspecificacao} - {Descricao}")]
     public class EspecificacaoTipo
     {
         [Key]
