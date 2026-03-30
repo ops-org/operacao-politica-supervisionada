@@ -3,7 +3,9 @@ using System.Net;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.Acre;
@@ -35,6 +37,7 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
+using OPS.Importador.SenadoFederal;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -69,10 +72,10 @@ internal static class ConfigureApp
             .Build();
     }
 
-    public static void SetupLogging(IConfiguration configuration)
+    public static void SetupLogging(IHostApplicationBuilder builder)
     {
         var loggerConfiguration = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
+            .ReadFrom.Configuration(builder.Configuration)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name)
             .Enrich.WithProperty("MachineName", Environment.MachineName)
@@ -80,6 +83,8 @@ internal static class ConfigureApp
             .Enrich.With<InvocationContextEnricher>();
 
         Log.Logger = loggerConfiguration.CreateLogger();
+
+        builder.Services.AddSerilog();
     }
 
     public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -120,6 +125,7 @@ internal static class ConfigureApp
         services.AddScoped<CamaraFederal.ImportacaoCamaraFederal>();
         services.AddScoped<CamaraFederal.ImportadorDespesasCamaraFederal>();
         services.AddScoped<SenadoFederal.ImportadorDespesasSenado>();
+        services.AddScoped<SenadoFederal.ImportadorRemuneracaoSenado>();
 
         //services.AddScoped<Presidencia>();
 
@@ -157,9 +163,10 @@ internal static class ConfigureApp
     private static IHttpClientBuilder AddDefaultOpsConfiguration(this IHttpClientBuilder builder)
     {
         return builder
-            .ConfigureHttpClient(config =>
+            .ConfigureHttpClient((services, config) =>
             {
-                config.Timeout = TimeSpan.FromHours(1);
+                var appSettings = services.GetRequiredService<IOptions<AppSettings>>().Value;
+                config.Timeout = TimeSpan.FromSeconds(appSettings.PollyDefaultTimeout);
                 config.DefaultRequestHeaders.Clear();
                 config.DefaultRequestHeaders.Add("User-Agent", Utils.DefaultUserAgent);
             })

@@ -21,8 +21,6 @@ namespace OPS.Importador.SenadoFederal
         protected readonly AppDbContext dbContext;
         protected readonly HttpClient httpClient;
 
-        private int linhasProcessadasAno { get; set; }
-
         public ImportadorRemuneracaoSenado(IServiceProvider serviceProvider)
         {
             appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
@@ -187,6 +185,7 @@ namespace OPS.Importador.SenadoFederal
         private void CarregaRemuneracaoCsv(string file, int anomes)
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+            var remuneracoes = new List<Remuneracao>();
             // var lotacoes = dbContext.Lotacoes.Where(x => x.Descricao.Contains("Senador", StringComparison.CurrentCultureIgnoreCase)).ToList();
             //using (var dbContext = dbContextFactory.CreateDbContext())
             {
@@ -253,6 +252,7 @@ namespace OPS.Importador.SenadoFederal
 
                             var custoTotal = (remLiquida ?? 0) - (impostoRenda ?? 0) - (previdencia ?? 0) - (faltas ?? 0) + (diarias ?? 0) + (auxilios ?? 0) + (vantIndenizatorias ?? 0);
 
+
                             var remuneracao = new Remuneracao
                             {
                                 IdVinculo = vinculo.Id,
@@ -282,23 +282,25 @@ namespace OPS.Importador.SenadoFederal
                                 CustoTotal = custoTotal
                             };
 
-                            dbContext.Remuneracoes.Add(remuneracao);
-
-                            if (linha % 1000 == 0)
-                            {
-                                dbContext.SaveChanges();
-                                dbContext.ChangeTracker.Clear();
-                            }
+                            remuneracoes.Add(remuneracao);
                         }
                     }
 
                     logger.LogInformation("{Itens} processados!", linha);
-                    dbContext.SaveChanges();
-                    dbContext.ChangeTracker.Clear();
                 }
 
-                // Update senator total remuneration
-                dbContext.Database.ExecuteSqlRaw(@"
+                dbContext.SaveChanges();
+                dbContext.ChangeTracker.Clear();
+
+                var bulkService = new BulkInsertService<Remuneracao>();
+                bulkService.BulkInsertNoTracking(dbContext, remuneracoes);
+            }
+        }
+
+        public async Task AtualizarDadosCalculados()
+        {
+            // Update senator total remuneration
+            await dbContext.Database.ExecuteSqlRawAsync(@"
 UPDATE senado.sf_senador s
 SET valor_total_remuneracao = COALESCE((
      SELECT SUM(custo_total) AS total
@@ -317,7 +319,6 @@ WHERE l.id_senador IS NOT NULL
 group by l.id_senador, SUBSTRING(ano_mes::TEXT, 1, 4)::INTEGER, SUBSTRING(ano_mes::TEXT, 5, 2)::INTEGER
 
 			    ");
-            }
         }
     }
 }

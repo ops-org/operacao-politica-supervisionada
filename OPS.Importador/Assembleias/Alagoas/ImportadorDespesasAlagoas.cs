@@ -56,6 +56,9 @@ namespace OPS.Importador.Assembleias.Alagoas
                     foreach (var mes in meses)
                     {
                         var mesExtenso = mes.TextContent;
+                        if (mesExtenso.Contains("-"))
+                            mesExtenso = mesExtenso.Split(" ")[2]; // 01 - JANEIRO 2026.pdf 
+
                         var competencia = new DateOnly(ano, ResolveMes(mesExtenso), 1);
                         if (competencia.AddMonths(1) > today) continue;
 

@@ -268,7 +268,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     /// <param name="dirRaiz"></param>
     public async Task DownloadFotos()
     {
-        var sDeputadosImagesPath = System.IO.Path.Combine(appSettings.SiteRootFolder, @"public\img\depfederal\");
+        var sDeputadosImagesPath = System.IO.Path.Combine(appSettings.TempFolder, @"Media\");
 
         var httpClient = new HttpClient(new HttpClientHandler
         {

@@ -486,6 +486,9 @@ namespace OPS.Importador.Assembleias.Tocantins
                 case "15/0//2025": data = "15/08/2025"; break;
                 case "404/10/2025": data = "04/10/2025"; break;
                 case "14/112025": data = "14/11/2025"; break;
+                case "24802/2026": data = "24/02/2026"; break;
+                case "2702/2026": data = "27/02/2026"; break;
+                case "01/022026": data = "01/02/2026"; break;
             }
 
             try

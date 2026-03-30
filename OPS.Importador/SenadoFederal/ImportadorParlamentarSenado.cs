@@ -632,7 +632,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
     public async Task DownloadFotos()
     {
-        var sSenadoressImagesPath = System.IO.Path.Combine(appSettings.SiteRootFolder, @"public\img\senador\");
+        var sSenadoressImagesPath = System.IO.Path.Combine(appSettings.TempFolder, @"Media\");
 
         {
             var activeSenators = dbContext.Senadores

@@ -40,10 +40,10 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public short? IdSituacao { get; set; }
 
         [Column("periodo_de")]
-        public DateTime? PeriodoDe { get; set; }
+        public DateOnly? PeriodoDe { get; set; }
 
         [Column("periodo_ate")]
-        public DateTime? PeriodoAte { get; set; }
+        public DateOnly? PeriodoAte { get; set; }
 
         // Navigation properties
         [ForeignKey("IdDeputado")]

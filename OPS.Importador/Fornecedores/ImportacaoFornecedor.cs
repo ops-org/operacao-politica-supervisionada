@@ -199,139 +199,142 @@ namespace OPS.Importador.Fornecedores
 
                 if (fornecedor == null) continue;
 
-                // Use EF Core transaction for this supplier
-                using var transaction = await dbContext.Database.BeginTransactionAsync();
+                var strategy = dbContext.Database.CreateExecutionStrategy();
 
-                try
+                await strategy.ExecuteAsync(async () =>
                 {
-                    fornecedor.Id = item.Id;
-                    fornecedor.ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
-                    fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8);
+                    using var transaction = await dbContext.Database.BeginTransactionAsync();
 
-                    await dbContext.FornecedorSocios.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
-                    await dbContext.FornecedorAtividadesSecundarias.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
-
-                    if (fornecedor.CodigoAtividadePrincipal > 0)
-                        fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.CodigoAtividadePrincipal, fornecedor.AtividadePrincipal);
-
-                    if (fornecedor.IdNaturezaJuridica > 0)
-                        fornecedor.IdNaturezaJuridica = await LocalizaInsereNaturezaJuridica(lstNaturezaJuridica, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
-
-                    if (fornecedor.MotivoSituacaoCadastral == "SEM MOTIVO")
-                        fornecedor.MotivoSituacaoCadastral = null;
-
-                    var fornecedorInfo = await dbContext.FornecedorInfos.FirstOrDefaultAsync(f => f.IdFornecedor == fornecedor.Id);
-
-                    if (fornecedorInfo == null)
+                    try
                     {
-                        fornecedorInfo = new FornecedorInfo()
+                        fornecedor.Id = item.Id;
+                        fornecedor.ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+                        fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8);
+
+                        await dbContext.FornecedorSocios.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
+                        await dbContext.FornecedorAtividadesSecundarias.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
+
+                        if (fornecedor.CodigoAtividadePrincipal > 0)
+                            fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.CodigoAtividadePrincipal, fornecedor.AtividadePrincipal);
+
+                        if (fornecedor.IdNaturezaJuridica > 0)
+                            fornecedor.IdNaturezaJuridica = await LocalizaInsereNaturezaJuridica(lstNaturezaJuridica, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
+
+                        if (fornecedor.MotivoSituacaoCadastral == "SEM MOTIVO")
+                            fornecedor.MotivoSituacaoCadastral = null;
+
+                        var fornecedorInfo = await dbContext.FornecedorInfos.FirstOrDefaultAsync(f => f.IdFornecedor == fornecedor.Id);
+
+                        if (fornecedorInfo == null)
                         {
-                            IdFornecedor = fornecedor.Id
-                        };
-
-                        dbContext.FornecedorInfos.Add(fornecedorInfo);
-                    }
-
-                    fornecedorInfo.Cnpj = fornecedor.Cnpj;
-                    fornecedorInfo.CnpjRadical = fornecedor.RadicalCnpj;
-                    fornecedorInfo.Tipo = fornecedor.Tipo;
-                    fornecedorInfo.Nome = fornecedor.RazaoSocial;
-                    fornecedorInfo.DataDeAbertura = fornecedor.Abertura;
-                    fornecedorInfo.NomeFantasia = fornecedor.NomeFantasia;
-                    fornecedorInfo.IdFornecedorAtividadePrincipal = fornecedor.IdAtividadePrincipal;
-                    fornecedorInfo.IdFornecedorNaturezaJuridica = fornecedor.IdNaturezaJuridica;
-                    fornecedorInfo.LogradouroTipo = fornecedor.TipoLogradouro;
-                    fornecedorInfo.Logradouro = fornecedor.Logradouro;
-                    fornecedorInfo.Numero = fornecedor.Numero;
-                    fornecedorInfo.Complemento = fornecedor.Complemento;
-                    fornecedorInfo.Cep = fornecedor.Cep;
-                    fornecedorInfo.Bairro = fornecedor.Bairro;
-                    fornecedorInfo.Municipio = fornecedor.Municipio;
-                    fornecedorInfo.Estado = fornecedor.UF;
-                    fornecedorInfo.EnderecoEletronico = fornecedor.Email;
-                    fornecedorInfo.Telefone1 = fornecedor.Telefone1;
-                    fornecedorInfo.Fax = fornecedor.DddFax;
-                    fornecedorInfo.EnteFederativoResponsavel = fornecedor.EnteFederativoResponsavel;
-                    fornecedorInfo.SituacaoCadastral = fornecedor.SituacaoCadastral;
-                    fornecedorInfo.DataDaSituacaoCadastral = fornecedor.DataSituacaoCadastral;
-                    fornecedorInfo.MotivoSituacaoCadastral = fornecedor.MotivoSituacaoCadastral;
-                    fornecedorInfo.SituacaoEspecial = fornecedor.SituacaoEspecial;
-                    fornecedorInfo.DataSituacaoEspecial = fornecedor.DataSituacaoEspecial;
-                    fornecedorInfo.CapitalSocial = fornecedor.CapitalSocial;
-                    fornecedorInfo.Porte = fornecedor.Porte;
-                    fornecedorInfo.OpcaoPeloMei = fornecedor.OpcaoPeloMEI;
-                    fornecedorInfo.DataOpcaoPeloMei = fornecedor.DataOpcaoPeloMEI;
-                    fornecedorInfo.DataExclusaoDoMei = fornecedor.DataExclusaoMEI;
-                    fornecedorInfo.OpcaoPeloSimples = fornecedor.OpcaoPeloSimples;
-                    fornecedorInfo.DataOpcaoPeloSimples = fornecedor.DataOpcaoPeloSimples;
-                    fornecedorInfo.DataExclusaoDoSimples = fornecedor.DataExclusaoSimples;
-                    fornecedorInfo.CodigoMunicipioIbge = fornecedor.CodigoMunicipioIBGE?.ToString();
-                    fornecedorInfo.NomeCidadeNoExterior = fornecedor.NomeCidadeExterior;
-                    fornecedorInfo.ObtidoEm = fornecedor.ObtidoEm;
-                    fornecedorInfo.NomePais = fornecedor.Pais;
-
-                    // Controle da fonte dos dados
-                    fornecedorInfo.Origem = fornecedor.Origem;
-
-                    await dbContext.SaveChangesAsync();
-
-                    dbContext.Fornecedores.Where(x => x.Id == fornecedor.Id)
-                        .ExecuteUpdate(x => x.SetProperty(y => y.Nome, fornecedor.RazaoSocial).SetProperty(y => y.Categoria, "PJ"));
-
-                    // Process secondary activities
-                    if (fornecedor.CnaesSecundarios != null)
-                    {
-                        foreach (var atividadesSecundaria in fornecedor.CnaesSecundarios.DistinctBy(x => x.Id))
-                        {
-                            var idAtividade = await LocalizaInsereAtividade(lstFornecedoresAtividade, atividadesSecundaria.Id, atividadesSecundaria.Descricao);
-
-                            var atividade = new FornecedorAtividadeSecundaria()
+                            fornecedorInfo = new FornecedorInfo()
                             {
-                                IdFornecedor = (int)fornecedor.Id,
-                                IdAtividade = idAtividade
+                                IdFornecedor = fornecedor.Id
                             };
 
-                            dbContext.FornecedorAtividadesSecundarias.Add(atividade);
+                            dbContext.FornecedorInfos.Add(fornecedorInfo);
                         }
 
-                    }
+                        fornecedorInfo.Cnpj = fornecedor.Cnpj;
+                        fornecedorInfo.CnpjRadical = fornecedor.RadicalCnpj;
+                        fornecedorInfo.Tipo = fornecedor.Tipo;
+                        fornecedorInfo.Nome = fornecedor.RazaoSocial;
+                        fornecedorInfo.DataDeAbertura = fornecedor.Abertura;
+                        fornecedorInfo.NomeFantasia = fornecedor.NomeFantasia;
+                        fornecedorInfo.IdFornecedorAtividadePrincipal = fornecedor.IdAtividadePrincipal;
+                        fornecedorInfo.IdFornecedorNaturezaJuridica = fornecedor.IdNaturezaJuridica;
+                        fornecedorInfo.LogradouroTipo = fornecedor.TipoLogradouro;
+                        fornecedorInfo.Logradouro = fornecedor.Logradouro;
+                        fornecedorInfo.Numero = fornecedor.Numero;
+                        fornecedorInfo.Complemento = fornecedor.Complemento;
+                        fornecedorInfo.Cep = fornecedor.Cep;
+                        fornecedorInfo.Bairro = fornecedor.Bairro;
+                        fornecedorInfo.Municipio = fornecedor.Municipio;
+                        fornecedorInfo.Estado = fornecedor.UF;
+                        fornecedorInfo.EnderecoEletronico = fornecedor.Email;
+                        fornecedorInfo.Telefone1 = fornecedor.Telefone1;
+                        fornecedorInfo.Fax = fornecedor.DddFax;
+                        fornecedorInfo.EnteFederativoResponsavel = fornecedor.EnteFederativoResponsavel;
+                        fornecedorInfo.SituacaoCadastral = fornecedor.SituacaoCadastral;
+                        fornecedorInfo.DataDaSituacaoCadastral = fornecedor.DataSituacaoCadastral;
+                        fornecedorInfo.MotivoSituacaoCadastral = fornecedor.MotivoSituacaoCadastral;
+                        fornecedorInfo.SituacaoEspecial = fornecedor.SituacaoEspecial;
+                        fornecedorInfo.DataSituacaoEspecial = fornecedor.DataSituacaoEspecial;
+                        fornecedorInfo.CapitalSocial = fornecedor.CapitalSocial;
+                        fornecedorInfo.Porte = fornecedor.Porte;
+                        fornecedorInfo.OpcaoPeloMei = fornecedor.OpcaoPeloMEI;
+                        fornecedorInfo.DataOpcaoPeloMei = fornecedor.DataOpcaoPeloMEI;
+                        fornecedorInfo.DataExclusaoDoMei = fornecedor.DataExclusaoMEI;
+                        fornecedorInfo.OpcaoPeloSimples = fornecedor.OpcaoPeloSimples;
+                        fornecedorInfo.DataOpcaoPeloSimples = fornecedor.DataOpcaoPeloSimples;
+                        fornecedorInfo.DataExclusaoDoSimples = fornecedor.DataExclusaoSimples;
+                        fornecedorInfo.CodigoMunicipioIbge = fornecedor.CodigoMunicipioIBGE?.ToString();
+                        fornecedorInfo.NomeCidadeNoExterior = fornecedor.NomeCidadeExterior;
+                        fornecedorInfo.ObtidoEm = fornecedor.ObtidoEm;
+                        fornecedorInfo.NomePais = fornecedor.Pais;
 
-                    // Process partners (QSA)
-                    if (fornecedor.Qsa != null)
-                    {
-                        var socios = fornecedor.Qsa.Select(qsa =>
+                        // Controle da fonte dos dados
+                        fornecedorInfo.Origem = fornecedor.Origem;
+
+                        await dbContext.SaveChangesAsync();
+
+                        dbContext.Fornecedores.Where(x => x.Id == fornecedor.Id)
+                            .ExecuteUpdate(x => x.SetProperty(y => y.Nome, fornecedor.RazaoSocial).SetProperty(y => y.Categoria, "PJ"));
+
+                        // Process secondary activities
+                        if (fornecedor.CnaesSecundarios != null)
                         {
-                            qsa.IdFornecedor = fornecedor.Id;
-                            if (qsa.CpfRepresentante == "***000000**")
-                                qsa.CpfRepresentante = null;
-
-                            return new FornecedorSocio
+                            foreach (var atividadesSecundaria in fornecedor.CnaesSecundarios.DistinctBy(x => x.Id))
                             {
-                                IdFornecedor = (int)qsa.IdFornecedor,
-                                CnpjCpf = qsa.CnpjCpf,
-                                Nome = qsa.Nome,
-                                PaisOrigem = qsa.PaisOrigem,
-                                NomeRepresentante = qsa.NomeRepresentante,
-                                CpfRepresentante = qsa.CpfRepresentante,
-                                IdFornecedorSocioQualificacao = qsa.IdSocioQualificacao > 0 ? (short?)qsa.IdSocioQualificacao : null,
-                                IdFornecedorSocioRepresentanteQualificacao = qsa.IdSocioRepresentanteQualificacao > 0 ? (short?)qsa.IdSocioRepresentanteQualificacao : null,
-                                IdFornecedorFaixaEtaria = qsa.IdFaixaEtaria,
-                                DataEntradaSociedade = !string.IsNullOrEmpty(qsa.DataEntradaSociedade) ? DateTime.Parse(qsa.DataEntradaSociedade).Date : null
-                            };
-                        }).ToList();
+                                var idAtividade = await LocalizaInsereAtividade(lstFornecedoresAtividade, atividadesSecundaria.Id, atividadesSecundaria.Descricao);
 
-                        dbContext.FornecedorSocios.AddRange(socios);
-                        //await context.SaveChangesAsync();
-                    }
+                                var atividade = new FornecedorAtividadeSecundaria()
+                                {
+                                    IdFornecedor = (int)fornecedor.Id,
+                                    IdAtividade = idAtividade
+                                };
 
-                    totalImportados++;
+                                dbContext.FornecedorAtividadesSecundarias.Add(atividade);
+                            }
 
-                    // Check for inactive companies with recent activity
-                    if (fornecedor.SituacaoCadastral != "ATIVA" && fornecedor.DataSituacaoEspecial != null)
-                    {
-                        var connection = dbContext.Database.GetDbConnection();
-                        var command = connection.CreateCommand();
-                        command.CommandText = $@"
+                        }
+
+                        // Process partners (QSA)
+                        if (fornecedor.Qsa != null)
+                        {
+                            var socios = fornecedor.Qsa.Select(qsa =>
+                            {
+                                qsa.IdFornecedor = fornecedor.Id;
+                                if (qsa.CpfRepresentante == "***000000**")
+                                    qsa.CpfRepresentante = null;
+
+                                return new FornecedorSocio
+                                {
+                                    IdFornecedor = (int)qsa.IdFornecedor,
+                                    CnpjCpf = qsa.CnpjCpf,
+                                    Nome = qsa.Nome,
+                                    PaisOrigem = qsa.PaisOrigem,
+                                    NomeRepresentante = qsa.NomeRepresentante,
+                                    CpfRepresentante = qsa.CpfRepresentante,
+                                    IdFornecedorSocioQualificacao = qsa.IdSocioQualificacao > 0 ? (short?)qsa.IdSocioQualificacao : null,
+                                    IdFornecedorSocioRepresentanteQualificacao = qsa.IdSocioRepresentanteQualificacao > 0 ? (short?)qsa.IdSocioRepresentanteQualificacao : null,
+                                    IdFornecedorFaixaEtaria = qsa.IdFaixaEtaria,
+                                    DataEntradaSociedade = !string.IsNullOrEmpty(qsa.DataEntradaSociedade) ? DateTime.Parse(qsa.DataEntradaSociedade).Date : null
+                                };
+                            }).ToList();
+
+                            dbContext.FornecedorSocios.AddRange(socios);
+                            //await context.SaveChangesAsync();
+                        }
+
+                        totalImportados++;
+
+                        // Check for inactive companies with recent activity
+                        if (fornecedor.SituacaoCadastral != "ATIVA" && fornecedor.DataSituacaoEspecial != null)
+                        {
+                            var connection = dbContext.Database.GetDbConnection();
+                            var command = connection.CreateCommand();
+                            command.CommandText = $@"
                             SELECT MAX(data) FROM (
                                 SELECT MAX(d.data_emissao) as data FROM camara.cf_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
                                 UNION ALL
@@ -339,31 +342,32 @@ namespace OPS.Importador.Fornecedores
                                 UNION ALL
                                 SELECT MAX(d.data_emissao) as data FROM assembleias.cl_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
                             ) tmp";
-                        var ultimaNota = await command.ExecuteScalarAsync() as DateOnly?;
-                        var cutoffDate = new DateOnly(2023, 1, 1); // Inicio Legislatura // DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
+                            var ultimaNota = await command.ExecuteScalarAsync() as DateOnly?;
+                            var cutoffDate = new DateOnly(2023, 1, 1); // Inicio Legislatura // DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
 
-                        if (ultimaNota != null && ultimaNota >= cutoffDate && fornecedor.DataSituacaoEspecial.HasValue && ultimaNota > DateOnly.FromDateTime(fornecedor.DataSituacaoEspecial.Value))
-                        {
-                            logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
+                            if (ultimaNota != null && ultimaNota >= cutoffDate && fornecedor.DataSituacaoEspecial.HasValue && ultimaNota > DateOnly.FromDateTime(fornecedor.DataSituacaoEspecial.Value))
+                            {
+                                logger.LogInformation("Empresa Inativa [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
 
-                            telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.org.br/fornecedor/{item.Id}'>{item.CnpjCpf} - {item.Nome}</a>";
-                            telegram.SendMessage(telegraMessage);
+                                telegraMessage.Text = $"Empresa Inativa: <a href='https://ops.org.br/fornecedor/{item.Id}'>{item.CnpjCpf} - {item.Nome}</a>";
+                                telegram.SendMessage(telegraMessage);
+                            }
                         }
+
+                        await dbContext.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        dbContext.ChangeTracker.Clear();
+                        InserirControle(0, item.CnpjCpf, "");
+                        logger.LogInformation("Atualizando [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
                     }
-
-                    await dbContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    dbContext.ChangeTracker.Clear();
-                    InserirControle(0, item.CnpjCpf, "");
-                    logger.LogInformation("Atualizando [{Atual}/{Total}] {CNPJ} {NomeEmpresa}", atual, fornecedores.Count, item.CnpjCpf, item.Nome);
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    logger.LogError(ex, "Erro ao processar fornecedor {CNPJ}", item.CnpjCpf);
-                    InserirControle(1, item.CnpjCpf, ex.Message);
-                }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        logger.LogError(ex, "Erro ao processar fornecedor {CNPJ}", item.CnpjCpf);
+                        InserirControle(1, item.CnpjCpf, ex.Message);
+                    }
+                });
             }
 
             return totalImportados;

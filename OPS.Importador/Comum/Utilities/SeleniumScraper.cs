@@ -131,7 +131,7 @@ namespace OPS.Importador.Comum.Utilities
                             var captured = CaptureXhrNetworkEntries(driver, filterUrl: "/api/public/ressarcimento/despesas-ressarcimento/");
                             if (captured != null && captured.Count > 0)
                             {
-                                var outPath = Path.Combine(appSettings.TempFolder, "Parana", $"{dateToImport.Year}_{dateToImport.Month}_{parlamentar}_tmp.json");
+                                var outPath = Path.Combine(appSettings.TempFolder, "Estados", Core.Enumerators.Estados.Parana.ToString(), $"{dateToImport.Year}_{dateToImport.Month}_{parlamentar}_tmp.json");
                                 logger.LogInformation("Captured {Count} matching XHR entries for parlamentar {Parlamentar}", captured.Count, parlamentar);
 
                                 //File.WriteAllText(outPath, JsonSerializer.Serialize(captured, new JsonSerializerOptions { WriteIndented = true }));

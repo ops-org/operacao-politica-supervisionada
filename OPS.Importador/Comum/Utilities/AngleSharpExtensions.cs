@@ -29,6 +29,9 @@ public static class AngleSharpExtensions
         {
             retries++;
             IDocument doc;
+
+            var baseDelaySeconds = Math.Pow(3, retries);
+            var jitterSeconds = Random.Shared.NextDouble() * baseDelaySeconds;
             try
             {
                 doc = await context.OpenAsync(address); // For StatusCode Error, polly will manage the retries
@@ -37,9 +40,8 @@ public static class AngleSharpExtensions
             {
                 if (retries >= totalRetries) throw;
 
-                var waitExSeconds = Math.Pow(2, retries);
-                Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, waitExSeconds);
-                await Task.Delay(TimeSpan.FromSeconds(waitExSeconds));
+                Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, baseDelaySeconds + jitterSeconds);
+                await Task.Delay(TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds));
                 continue;
             }
 
@@ -72,9 +74,9 @@ public static class AngleSharpExtensions
                 continue;
             }
 
-            var waitSeconds = Math.Pow(2, retries);
-            Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, waitSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
+            
+            Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, baseDelaySeconds + jitterSeconds);
+            await Task.Delay(TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds));
 
         } while (retries < totalRetries);
 

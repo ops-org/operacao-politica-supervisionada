@@ -22,9 +22,6 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default
-            http.AddStandardResilienceHandler();
-
             // Turn on service discovery by default
             http.AddServiceDiscovery();
         });
@@ -41,9 +38,6 @@ public static class Extensions
         });
 
         builder.Services.AddOpenTelemetry()
-#if !DEBUG
-            .UseAzureMonitor()
-#endif
             .WithMetrics(metrics =>
             {
                 metrics.AddAspNetCoreInstrumentation()

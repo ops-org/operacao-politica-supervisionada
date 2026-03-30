@@ -1320,7 +1320,7 @@ WHERE (1=1)
 
             AgrupamentoRemuneracaoSenado eAgrupamento;
             if (request.Filters?.TryGetValue("ag", out object agrupamento) ?? false)
-                eAgrupamento = (AgrupamentoRemuneracaoSenado)Convert.ToInt32(agrupamento);
+                eAgrupamento = (AgrupamentoRemuneracaoSenado)Utils.ToInt32(agrupamento);
             else
                 eAgrupamento = AgrupamentoRemuneracaoSenado.AnoMes;
 
@@ -1393,11 +1393,11 @@ WHERE (1=1)
 
                 if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
                 {
-                    sqlWhere.AppendLine("	AND r.ano_mes = " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + " ");
+                    sqlWhere.AppendLine("	AND r.ano_mes = " + Utils.ToInt32(request.Filters["an"]).ToString() + Utils.ToInt32(request.Filters["ms"]).ToString("d2") + " ");
                 }
                 else //if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
                 {
-                    sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "01 AND " + request.Filters["an"].ToString() + "12 ");
+                    sqlWhere.AppendLine("	AND r.ano_mes BETWEEN " + Utils.ToInt32(request.Filters["an"]).ToString() + "01 AND " + Utils.ToInt32(request.Filters["an"]).ToString() + "12 ");
                 }
             }
 

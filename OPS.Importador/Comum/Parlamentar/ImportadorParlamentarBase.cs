@@ -26,10 +26,10 @@ namespace OPS.Importador.Comum.Parlamentar
 
         public ImportadorParlamentarBase(IServiceProvider serviceProvider)
         {
-            logger = serviceProvider.GetService<ILogger<ImportadorParlamentarBase>>();
-            dbContext = serviceProvider.GetService<AppDbContext>();
+            logger = serviceProvider.GetRequiredService<ILogger<ImportadorParlamentarBase>>();
+            dbContext = serviceProvider.GetRequiredService<AppDbContext>();
 
-            httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
+            httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         }
 
         public void Configure(ImportadorParlamentarConfig config)

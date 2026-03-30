@@ -108,13 +108,11 @@ public abstract class ImportadorDespesasBase
         logger.LogWarning("Sem Importação de Imagens");
     }
 
-    private static object _monitorObj = new object();
+    private static readonly object _monitorObj = new object();
 
     public virtual void ProcessarDespesas(int ano)
     {
-        Monitor.Enter(_monitorObj);
-
-        try
+        lock (_monitorObj)
         {
             logger.LogInformation("Iniciando processamento na base de dados!");
             LimpaDespesaTemporaria();
@@ -145,10 +143,6 @@ public abstract class ImportadorDespesasBase
             }
 
             logger.LogInformation("Finalizando processamento na base de dados!");
-        }
-        finally
-        {
-            Monitor.Exit(_monitorObj);
         }
     }
 

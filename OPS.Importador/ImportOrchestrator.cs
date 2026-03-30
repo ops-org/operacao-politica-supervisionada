@@ -30,6 +30,7 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
+using OPS.Importador.SenadoFederal;
 using OPS.Infraestrutura;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -40,29 +41,31 @@ namespace OPS.Importador
         public static async Task RunAppAsync(IServiceProvider serviceProvider)
         {
             var logger = serviceProvider.GetService<ILogger<Program>>();
-            var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-
             logger.LogInformation("Iniciando Importação");
 
-            //await RunImportersAsync(serviceProvider, dbContext, logger);
+            var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
+            await RunImportersAsync(serviceProvider, dbContext, logger);
 
-            var importador = serviceProvider.GetService<CamaraFederal.ImportacaoCamaraFederal>();
+            //var importador = serviceProvider.GetService<CamaraFederal.ImportacaoCamaraFederal>();
             //await importador.ColetaDadosDeputados();
-            await importador.ProcessarFuncionarioTemp();
+            //await importador.ProcessarFuncionarioTemp();
             //await importador.AtualizaParlamentarValores();
             //await importador.ColetaRemuneracaoSecretarios();
 
 
-            //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
+            //var importador = serviceProvider.GetService<ImportadorRemuneracaoSenado>();
             //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-            //var mesConsulta = new DateTime(2024, 07, 01);
+            ////var mesConsulta = new DateTime(2024, 07, 01);
+            //var mesConsulta = new DateTime(2026, 03, 01); // SELECT max(ano_mes) FROM senado.sf_remuneracao
 
             //do
             //{
-            //    importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
+            //    await importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
 
             //    mesConsulta = mesConsulta.AddMonths(1);
             //} while (mesConsulta < mesAtual);
+
+            //await importador.AtualizarDadosCalculados();
 
 
             //var cand = new Candidatos();
@@ -72,21 +75,22 @@ namespace OPS.Importador
             //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
             //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
 
-            var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
-            await objFornecedor.ConsultarDadosCNPJ();
-            //await objFornecedor.ConsultarDadosCNPJ(somenteNovos: false);
+            using var scope = serviceProvider.CreateScope();
+            var objFornecedor = scope.ServiceProvider.GetRequiredService<Fornecedores.ImportacaoFornecedor>();
+            //await objFornecedor.ConsultarDadosCNPJ();
 
             //var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
             //await ipcaImportador.ImportarIpca();
         }
 
-        private static async Task RunImportersAsync(IServiceProvider serviceProvider, AppDbContext dbContext, ILogger logger)
+        private static async Task RunImportersAsync(IServiceProvider serviceProvider, AppDbContext dbContext,
+            ILogger logger)
         {
             await SyncDatabaseAsync(dbContext);
 
-            var crawler = new SeleniumScraper(serviceProvider);
-            //crawler.BaixarArquivosParana();
-            crawler.BaixarArquivosPiaui();
+            // var crawler = new SeleniumScraper(serviceProvider);
+            // crawler.BaixarArquivosParana();
+            // crawler.BaixarArquivosPiaui();
 
             var types = new Type[]
             {
@@ -99,7 +103,7 @@ namespace OPS.Importador
                 typeof(ImportacaoBahia), // crawler anual
                 typeof(ImportacaoCeara), // crawler mensal
                 typeof(ImportacaoDistritoFederal), // xlsx  (Apenas BR)
-                typeof(ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                typeof(ImportacaoEspiritoSanto), // crawler mensal/deputado (Apenas BR)
                 typeof(ImportacaoGoias), // crawler mensal/deputado
                 typeof(ImportacaoMaranhao), // Valores mensais por categoria
                 //typeof(ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
@@ -126,17 +130,26 @@ namespace OPS.Importador
             {
                 tasks.Add(Task.Run(async () =>
                 {
-                    var estado = type.Name.Replace("Importador", "");
-                    using (logger.BeginScope(new Dictionary<string, object> { ["Code"] = Utils.GetStateCode(estado), ["Estado"] = estado, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
+                    using (var scope = serviceProvider.CreateScope())
                     {
-                        logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
-                        var watch = System.Diagnostics.Stopwatch.StartNew();
+                        var estado = type.Name.Replace("Importador", "");
+                        using (logger.BeginScope(new Dictionary<string, object>
+                        {
+                            ["Code"] = Utils.GetStateCode(estado),
+                            ["Estado"] = estado,
+                            ["ProcessIdentifier"] = Guid.NewGuid().ToString()
+                        }))
+                        {
+                            logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
+                            var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                        var importador = (ImportadorBase)serviceProvider.GetService(type);
-                        await importador.ImportarCompleto();
+                            var importador = (ImportadorBase)scope.ServiceProvider.GetRequiredService(type);
+                            await importador.ImportarCompleto();
 
-                        watch.Stop();
-                        logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}", type.Name, watch.Elapsed);
+                            watch.Stop();
+                            logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}",
+                                type.Name, watch.Elapsed);
+                        }
                     }
                 }));
             }
