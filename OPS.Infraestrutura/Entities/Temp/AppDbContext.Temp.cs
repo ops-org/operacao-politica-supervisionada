@@ -31,11 +31,10 @@ public partial class AppDbContext
     public DbSet<ArquivoChecksum> ArquivoChecksums { get; set; }
     public DbSet<DeputadoEstadualDepara> DeputadoEstadualDeparas { get; set; }
     public DbSet<CamaraEstadualDespesaTemp> CamaraEstadualDespesaTemps { get; set; }
-    //public DbSet<CamaraEstadualFuncionarioTemp> CamaraEstadualFuncionarioTemps { get; set; }
     public DbSet<CamaraEstadualRemuneracaoTemp> CamaraEstadualRemuneracaoTemps { get; set; }
-    public DbSet<CamaraEstadualSecretarioRemuneracaoTemp> CamaraEstadualSecretarioRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualEmpenhoTemp> CamaraEstadualEmpenhoTemps { get; set; }
     public DbSet<CamaraFederalDeputadoFuncionarioTemp> CamaraFederalDeputadoFuncionarioTemps { get; set; }
+    public DbSet<CamaraFederalFuncionarioMatchTemp> CamaraFederalFuncionarioMatchTemps { get; set; }
 }
 
 public static class TempConfigurations
@@ -199,30 +198,12 @@ public static class TempConfigurations
         });
     }
 
-    //public static void ConfigureCamaraEstadualFuncionarioTemp(this ModelBuilder modelBuilder)
-    //{
-    //    modelBuilder.Entity<CamaraEstadualFuncionarioTemp>(entity =>
-    //    {
-    //        entity.HasKey(e => e.Chave);
-    //        entity.ToTable("cf_funcionario_temp", "temp");
-    //    });
-    //}
-
     public static void ConfigureCamaraEstadualRemuneracaoTemp(this ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CamaraEstadualRemuneracaoTemp>(entity =>
         {
             entity.HasNoKey();
             entity.ToTable("cf_remuneracao_temp", "temp");
-        });
-    }
-
-    public static void ConfigureCamaraEstadualSecretarioRemuneracaoTemp(this ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CamaraEstadualSecretarioRemuneracaoTemp>(entity =>
-        {
-            entity.HasKey(e => new { e.IdCfSecretario, e.Referencia, e.Descricao });
-            entity.ToTable("cf_secretario_remuneracao_temp", "temp");
         });
     }
 
@@ -245,6 +226,22 @@ public static class TempConfigurations
         });
     }
 
+    public static void ConfigureCamaraFederalFuncionarioMatchTemp(this ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CamaraFederalFuncionarioMatchTemp>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.ToTable("cf_deputado_funcionario_match_temp", "temp");
+
+            // Índices
+            entity.HasIndex(e => e.ChaveOrigem);
+            entity.HasIndex(e => e.ChaveExistente);
+            entity.HasIndex(e => e.MatchRegra);
+            entity.HasIndex(e => e.DataColeta);
+        });
+    }
+
 
     // Master method to apply all configurations
     public static void ConfigureTempEntities(this ModelBuilder modelBuilder)
@@ -254,11 +251,10 @@ public static class TempConfigurations
         modelBuilder.ConfigureCamaraEstadualDespesaTemp();
         modelBuilder.ConfigureCamaraEstadualDespesa();
         modelBuilder.ConfigureCamaraEstadualDespesaTipo();
-        //modelBuilder.ConfigureCamaraEstadualFuncionarioTemp();
         modelBuilder.ConfigureCamaraEstadualRemuneracaoTemp();
-        modelBuilder.ConfigureCamaraEstadualSecretarioRemuneracaoTemp();
         modelBuilder.ConfigureCamaraEstadualEmpenhoTemp();
         modelBuilder.ConfigureCamaraFederalDeputadoFuncionarioTemp();
+        modelBuilder.ConfigureCamaraFederalFuncionarioMatchTemp();
 
         // Senado Federal configurations
         modelBuilder.ConfigureSenadoDespesaTemp();

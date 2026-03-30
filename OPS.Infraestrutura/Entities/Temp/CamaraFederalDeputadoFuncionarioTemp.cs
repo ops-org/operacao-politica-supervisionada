@@ -26,9 +26,12 @@ namespace OPS.Infraestrutura.Entities.Temp
 
         [Required]
         [Column("periodo_de")]
-        public DateTime PeriodoDe { get; set; }
+        public DateOnly PeriodoDe { get; set; }
 
         [Column("periodo_ate")]
-        public DateTime? PeriodoAte { get; set; }
+        public DateOnly? PeriodoAte { get; set; }
+        
+        [Column("data_criacao")]
+        public DateOnly? DataCriacao { get; set; }
     }
 }

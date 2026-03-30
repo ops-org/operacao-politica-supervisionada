@@ -28,6 +28,64 @@ CREATE TABLE IF NOT EXISTS temp.cf_deputado_funcionario_temp
     periodo_ate date
 );
 
+-- ============================================================
+-- Tabela: temp.cf_funcionario_match_temp
+-- Propósito: Armazenar matches de funcionários - apenas registros com match confirmado
+-- ============================================================
+CREATE TABLE IF NOT EXISTS temp.cf_funcionario_match_temp
+(
+    id int NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    
+    -- ==================== CHAVES ====================
+    chave_origem character varying(45) COLLATE pg_catalog."default" NOT NULL,
+        -- Chave original dos dados brutos (fonte: site da Câmara)
+    
+    chave_existente character varying(45) COLLATE pg_catalog."default" NOT NULL,
+        -- Chave do funcionário existente no banco final (cf_funcionario)
+        -- Sempre preenchida (só existe registro se tiver match)
+    
+    -- ==================== DADOS DO FUNCIONÁRIO ====================
+    nome character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    
+    -- ==================== INFORMAÇÕES DO MATCH ====================
+    match_regra smallint NOT NULL DEFAULT 0,
+        -- Regra de matching aplicada:
+        -- 1 = Chave exata (confiança 100%)
+        -- 2 = Período + Deputado + Nome (confiança 80%)
+        -- 3 = Histórico: Nome + Deputado (confiança 60%)
+    
+    -- ==================== CONTROLE ====================
+    data_coleta date NOT NULL,
+    
+    CONSTRAINT cf_funcionario_match_temp_pkey PRIMARY KEY (id)
+);
+
+-- Índices para performance
+CREATE INDEX IF NOT EXISTS idx_cf_func_match_chave_origem 
+    ON temp.cf_funcionario_match_temp(chave_origem);
+
+CREATE INDEX IF NOT EXISTS idx_cf_func_match_chave_existente 
+    ON temp.cf_funcionario_match_temp(chave_existente);
+
+CREATE INDEX IF NOT EXISTS idx_cf_func_match_regra 
+    ON temp.cf_funcionario_match_temp(match_regra);
+
+CREATE INDEX IF NOT EXISTS idx_cf_func_match_data_coleta 
+    ON temp.cf_funcionario_match_temp(data_coleta);
+
+-- Comentários
+COMMENT ON TABLE temp.cf_funcionario_match_temp 
+    IS 'Matches de funcionários - apenas registros com match confirmado';
+
+COMMENT ON COLUMN temp.cf_funcionario_match_temp.chave_origem 
+    IS 'Chave original dos dados brutos (fonte: site da Câmara)';
+
+COMMENT ON COLUMN temp.cf_funcionario_match_temp.chave_existente 
+    IS 'Chave do funcionário existente no banco final';
+
+COMMENT ON COLUMN temp.cf_funcionario_match_temp.match_regra 
+    IS 'Regra aplicada: 1=Chave exata, 2=Período+Deputado+Nome, 3=Histórico';
+
 CREATE TABLE IF NOT EXISTS temp.cf_despesa_temp
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
