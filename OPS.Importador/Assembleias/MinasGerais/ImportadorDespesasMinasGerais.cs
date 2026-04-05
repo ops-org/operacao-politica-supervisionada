@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading;
 using OPS.Core.Enumerators;
 using OPS.Importador.Assembleias.MinasGerais.Entities;
 using OPS.Importador.Comum.Despesa;
@@ -25,7 +26,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
     /// </summary>
     /// <param name="context"></param>
     /// <param name="ano"></param>
-    public override async Task Importar(int ano)
+    public override async Task Importar(int ano, CancellationToken ct = default)
     {
         using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
         {
@@ -44,7 +45,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
                 if (deputado.Matricula == null) continue;
 
                 var address = $"{config.BaseAddress}api/v2/prestacao_contas/verbas_indenizatorias/deputados/{deputado.Matricula}/datas?formato=json";
-                ListaFechamentoVerbaDatas resDiarias = await RestApiGet<ListaFechamentoVerbaDatas>(address);
+                ListaFechamentoVerbaDatas resDiarias = await RestApiGet<ListaFechamentoVerbaDatas>(address, ct);
 
                 foreach (ListaFechamentoVerba data in resDiarias.ListaFechamentoVerba)
                 {
@@ -56,7 +57,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
                     address = $"{config.BaseAddress}api/v2/prestacao_contas/verbas_indenizatorias/deputados/{deputado.Matricula}/{dataReferencia.Year}/{dataReferencia.Month}?formato=json";
                     try
                     {
-                        despesasMensais = await RestApiGetWithSqlTimestampConverter<ListaMensalDespesasMG>(address);
+                        despesasMensais = await RestApiGetWithSqlTimestampConverter<ListaMensalDespesasMG>(address, ct);
                     }
                     catch (HttpRequestException ex)
                     {
@@ -64,7 +65,7 @@ public class ImportadorDespesasMinasGerais : ImportadorDespesasArquivo
                             throw;
 
                         Thread.Sleep(1000);
-                        despesasMensais = await RestApiGetWithSqlTimestampConverter<ListaMensalDespesasMG>(address);
+                        despesasMensais = await RestApiGetWithSqlTimestampConverter<ListaMensalDespesasMG>(address, ct);
                     }
 
                     var despesas = despesasMensais.List.SelectMany(x => x.ListaDetalheVerba);

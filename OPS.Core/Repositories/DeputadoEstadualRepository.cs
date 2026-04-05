@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTOs;
@@ -19,12 +20,12 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<ParlamentarDetalheDTO> Consultar(int id)
+        public async Task<ParlamentarDetalheDTO> Consultar(int id, CancellationToken ct = default)
         {
             var deputado = await _context.DeputadosEstaduais
                 .Include(d => d.Partido)
                 .Include(d => d.Estado)
-                .FirstOrDefaultAsync(d => d.Id == id);
+                .FirstOrDefaultAsync(d => d.Id == id, ct);
 
             if (deputado == null) return null;
 
@@ -52,7 +53,7 @@ namespace OPS.Core.Repositories
             };
         }
 
-        public async Task<List<DeputadoFornecedorDTO>> MaioresFornecedores(int id)
+        public async Task<List<DeputadoFornecedorDTO>> MaioresFornecedores(int id, CancellationToken ct = default)
         {
             var maioresFornecedores = await _context.DespesasAssembleias
                 .Where(d => d.IdDeputado == id && d.ValorLiquido > 0)
@@ -69,7 +70,7 @@ namespace OPS.Core.Repositories
                     f => f.Id,
                     (g, f) => new { g.IdFornecedor, f.CnpjCpf, f.Nome, g.ValorTotal })
                 .OrderByDescending(x => x.ValorTotal)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return maioresFornecedores.Select(f => new DeputadoFornecedorDTO
             {
@@ -80,7 +81,7 @@ namespace OPS.Core.Repositories
             }).ToList();
         }
 
-        public async Task<List<ParlamentarNotaDTO>> MaioresNotas(int id)
+        public async Task<List<ParlamentarNotaDTO>> MaioresNotas(int id, CancellationToken ct = default)
         {
             var maioresNotas = await _context.DespesasAssembleias
                 .Where(d => d.IdDeputado == id && d.ValorLiquido > 0)
@@ -91,7 +92,7 @@ namespace OPS.Core.Repositories
                     f => f.Id,
                     (d, f) => new { d.Id, d.IdFornecedor, f.CnpjCpf, f.Nome, d.ValorLiquido })
                 .OrderByDescending(x => x.ValorLiquido)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return maioresNotas.Select(n => new ParlamentarNotaDTO
             {
@@ -103,7 +104,7 @@ namespace OPS.Core.Repositories
             }).ToList();
         }
 
-        public async Task<DocumentoDetalheDTO> Documento(int id)
+        public async Task<DocumentoDetalheDTO> Documento(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -127,7 +128,7 @@ namespace OPS.Core.Repositories
 				        , pj.id AS id_fornecedor
 				        , pj.cnpj_cpf
 				        , pj.nome AS nome_fornecedor
-                        , l.favorecido        
+                        , l.favorecido
                         , l.observacao
                     FROM assembleias.cl_despesa l
                     LEFT JOIN fornecedor.fornecedor pj ON pj.id = l.id_fornecedor
@@ -139,9 +140,9 @@ namespace OPS.Core.Repositories
 					WHERE l.id = @id
 				 ");
 
-                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
+                await using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }, ct))
                 {
-                    if (await reader.ReadAsync())
+                    if (await reader.ReadAsync(ct))
                     {
                         string cnpjCpf = Utils.FormatCnpjCpf(reader["cnpj_cpf"].ToString());
                         var anoMes = reader["ano_mes"].ToString();
@@ -186,7 +187,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<List<DocumentoRelacionadoDTO>> DocumentosDoMesmoDia(int id)
+        public async Task<List<DocumentoRelacionadoDTO>> DocumentosDoMesmoDia(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -203,7 +204,7 @@ namespace OPS.Core.Repositories
 					FROM (
 						select id, id_cl_deputado, id_fornecedor, data_emissao FROM assembleias.cl_despesa
 						where id = @id
-					) l1 
+					) l1
 					INNER JOIN assembleias.cl_despesa l on
 						l1.id_cl_deputado = l.id_cl_deputado and
 						l1.data_emissao = l.data_emissao and
@@ -216,8 +217,8 @@ namespace OPS.Core.Repositories
 
                 var lstRetorno = new List<DocumentoRelacionadoDTO>();
 
-                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
-                while (await reader.ReadAsync())
+                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }, ct);
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new DocumentoRelacionadoDTO
                     {
@@ -234,7 +235,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<List<DocumentoRelacionadoDTO>> DocumentosDaSubcotaMes(int id)
+        public async Task<List<DocumentoRelacionadoDTO>> DocumentosDaSubcotaMes(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -249,10 +250,10 @@ namespace OPS.Core.Repositories
 						, pji.estado as sigla_estado_fornecedor
 						, l.valor_liquido
 					FROM (
-						select id, id_cl_deputado, id_fornecedor, id_cl_despesa_tipo, ano_mes 
+						select id, id_cl_deputado, id_fornecedor, id_cl_despesa_tipo, ano_mes
                         FROM assembleias.cl_despesa
 						where id = @id
-					) l1 
+					) l1
 					INNER JOIN assembleias.cl_despesa l on
 					    l1.id_cl_deputado = l.id_cl_deputado and
 					    l1.ano_mes = l.ano_mes and
@@ -266,8 +267,8 @@ namespace OPS.Core.Repositories
 
                 var lstRetorno = new List<DocumentoRelacionadoDTO>();
 
-                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id });
-                while (await reader.ReadAsync())
+                DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }, ct);
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new DocumentoRelacionadoDTO
                     {
@@ -284,7 +285,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<GraficoBarraDTO> GastosPorAno(int id)
+        public async Task<GraficoBarraDTO> GastosPorAno(int id, CancellationToken ct = default)
         {
             var strSql = @"
 				SELECT d.ano, d.mes, SUM(d.valor) AS valor_total
@@ -294,16 +295,16 @@ namespace OPS.Core.Repositories
 				order by d.ano, d.mes
 			";
 
-            return await GastosPorAno(id, strSql);
+            return await GastosPorAno(id, strSql, ct);
         }
 
-        public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id)
+        public async Task<List<ParlamentarCustoAnualDTO>> CustoAnual(int id, CancellationToken ct = default)
         {
             var result = new List<ParlamentarCustoAnualDTO>();
 
             var indices = await _context.IndicesInflacao
                 .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
-                .ToListAsync();
+                .ToListAsync(ct);
             var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
 
             {
@@ -317,9 +318,9 @@ namespace OPS.Core.Repositories
             order by d.ano_mes
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }, ct))
                 {
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
                         var mes = Convert.ToInt16(reader["mes"]);
@@ -351,9 +352,9 @@ namespace OPS.Core.Repositories
             order by d.ano_mes
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }, ct))
                 {
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
                         var mes = Convert.ToInt16(reader["mes"]);
@@ -392,9 +393,9 @@ namespace OPS.Core.Repositories
             order by d.ano_mes
 				";
 
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }, ct))
                 {
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         var ano = Convert.ToInt32(reader["ano"]);
                         var mes = Convert.ToInt16(reader["mes"]);
@@ -427,12 +428,12 @@ namespace OPS.Core.Repositories
             return result.OrderBy(x => x.Ano).ToList();
         }
 
-        public async Task<dynamic> ResumoMensal()
+        public async Task<dynamic> ResumoMensal(CancellationToken ct = default)
         {
             var resumoMensal = await _context.DespesaResumosMensais
                 .OrderBy(r => r.Ano)
                 .ThenBy(r => r.Mes)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var lstRetorno = new List<dynamic>();
             var lstValoresMensais = new decimal?[12];
@@ -477,16 +478,16 @@ namespace OPS.Core.Repositories
             return lstRetorno;
         }
 
-        public async Task<dynamic> ResumoAnual()
+        public async Task<dynamic> ResumoAnual(CancellationToken ct = default)
         {
             var resumoMensal = await _context.DespesaResumosMensais
                 .Where(r => r.Valor.HasValue && r.Valor > 0)
                 .OrderBy(r => r.Ano).ThenBy(r => r.Mes)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var indices = await _context.IndicesInflacao
                 .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var ultimoIndice = indices.LastOrDefault()?.Indice ?? 1;
 
@@ -524,15 +525,15 @@ namespace OPS.Core.Repositories
             };
         }
 
-        public async Task<List<ParlamentarListaDTO>> Lista(FiltroParlamentarDTO request)
+        public async Task<List<ParlamentarListaDTO>> Lista(FiltroParlamentarDTO request, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
-                    SELECT 
+                    SELECT
 						d.id as id_cl_deputado
-						, d.nome_parlamentar 
+						, d.nome_parlamentar
 						, d.nome_civil
 						, d.valor_total_ceap
                         , d.valor_total_remuneracao
@@ -574,9 +575,9 @@ namespace OPS.Core.Repositories
 				");
 
                 var lstRetorno = new List<ParlamentarListaDTO>();
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), ct: ct))
                 {
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         lstRetorno.Add(new ParlamentarListaDTO
                         {
@@ -598,14 +599,14 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro = null)
+        public async Task<List<DropDownDTO>> Pesquisa(MultiSelectRequest filtro = null, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT DISTINCT
-						d.id, d.nome_civil, d.nome_parlamentar 
+						d.id, d.nome_civil, d.nome_parlamentar
 					FROM assembleias.cl_deputado d
 				");
 
@@ -647,9 +648,9 @@ namespace OPS.Core.Repositories
                 }
 
                 var lstRetorno = new List<DropDownDTO>();
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), ct: ct))
                 {
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         lstRetorno.Add(new DropDownDTO
                         {
@@ -663,7 +664,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> Lancamentos(DataTablesRequest request)
+        public async Task<dynamic> Lancamentos(DataTablesRequest request, CancellationToken ct = default)
         {
             if (request == null) throw new BusinessException("Parâmetro request não informado!");
 
@@ -671,17 +672,17 @@ namespace OPS.Core.Repositories
             switch (eAgrupamento)
             {
                 case EnumAgrupamentoAuditoria.Parlamentar:
-                    return await LancamentosParlamentar(request);
+                    return await LancamentosParlamentar(request, ct);
                 case EnumAgrupamentoAuditoria.Despesa:
-                    return await LancamentosDespesa(request);
+                    return await LancamentosDespesa(request, ct);
                 case EnumAgrupamentoAuditoria.Fornecedor:
-                    return await LancamentosFornecedor(request);
+                    return await LancamentosFornecedor(request, ct);
                 case EnumAgrupamentoAuditoria.Partido:
-                    return await LancamentosPartido(request);
+                    return await LancamentosPartido(request, ct);
                 case EnumAgrupamentoAuditoria.Estado:
-                    return await LancamentosEstado(request);
+                    return await LancamentosEstado(request, ct);
                 case EnumAgrupamentoAuditoria.Documento:
-                    return await LancamentosNotaFiscal(request);
+                    return await LancamentosNotaFiscal(request, ct);
                 default:
                     break;
             }
@@ -689,13 +690,13 @@ namespace OPS.Core.Repositories
             throw new BusinessException("Parâmetro request.Agrupamento não informado!");
         }
 
-        private async Task<DataTablesResponseDTO<LancamentoParlamentarDTO>> LancamentosParlamentar(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoParlamentarDTO>> LancamentosParlamentar(DataTablesRequest request, CancellationToken ct)
         {
             var sqlWhere = GetWhereFilter(request);
             var sqlSortAndPaging = GetSortAndPaging(request);
 
             var sql = $@"
-SELECT 
+SELECT
 	d.id as id_cl_deputado
     , d.nome_parlamentar
     , e.sigla as sigla_estado
@@ -703,7 +704,7 @@ SELECT
     , l1.total_notas
     , l1.valor_total
 FROM (
-    SELECT 
+    SELECT
 	    count(l.id) AS total_notas
 	    , sum(l.valor_liquido) as valor_total
 	    , l.id_cl_deputado
@@ -717,15 +718,15 @@ LEFT JOIN partido p on p.id = d.id_partido
 LEFT JOIN estado e on e.id = d.id_estado
 {sqlSortAndPaging};
 
-SELECT COUNT(DISTINCT id_cl_deputado) 
+SELECT COUNT(DISTINCT id_cl_deputado)
 FROM assembleias.cl_despesa l
-WHERE (1=1) 
+WHERE (1=1)
 {sqlWhere};";
 
             var lstRetorno = new List<LancamentoParlamentarDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(sql))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql, ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new LancamentoParlamentarDTO
                     {
@@ -748,13 +749,13 @@ WHERE (1=1)
             }
         }
 
-        private async Task<DataTablesResponseDTO<LancamentoFornecedorDTO>> LancamentosFornecedor(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoFornecedorDTO>> LancamentosFornecedor(DataTablesRequest request, CancellationToken ct)
         {
             var sqlWhere = GetWhereFilter(request);
             var sqlSortAndPaging = GetSortAndPaging(request);
 
             var sql = $@"
-SELECT 
+SELECT
 	l1.id_fornecedor
 	, pj.nome AS nome_fornecedor
 	, l1.total_notas
@@ -773,15 +774,15 @@ FROM (
 LEFT JOIN fornecedor.fornecedor pj on pj.id = l1.id_fornecedor
 {sqlSortAndPaging};
 
-SELECT COUNT(DISTINCT id_fornecedor) 
+SELECT COUNT(DISTINCT id_fornecedor)
 FROM assembleias.cl_despesa l
-WHERE (1=1) 
+WHERE (1=1)
 {sqlWhere};";
 
             var lstRetorno = new List<LancamentoFornecedorDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(sql))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql, ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new LancamentoFornecedorDTO
                     {
@@ -803,7 +804,7 @@ WHERE (1=1)
             }
         }
 
-        private async Task<DataTablesResponseDTO<LancamentoDespesaDTO>> LancamentosDespesa(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoDespesaDTO>> LancamentosDespesa(DataTablesRequest request, CancellationToken ct)
         {
             var sqlWhere = GetWhereFilter(request);
             var sqlSortAndPaging = GetSortAndPaging(request);
@@ -827,15 +828,15 @@ from (
 LEFT JOIN assembleias.cl_despesa_tipo td on td.id = l1.id_cl_despesa_tipo
 {sqlSortAndPaging};
 
-SELECT COUNT(DISTINCT id_cl_despesa_tipo) 
+SELECT COUNT(DISTINCT id_cl_despesa_tipo)
 FROM assembleias.cl_despesa l
-WHERE (1=1) 
+WHERE (1=1)
 {sqlWhere};";
 
             var lstRetorno = new List<LancamentoDespesaDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(sql))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql, ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new LancamentoDespesaDTO
                     {
@@ -856,14 +857,14 @@ WHERE (1=1)
             }
         }
 
-        private async Task<DataTablesResponseDTO<LancamentoPartidoDTO>> LancamentosPartido(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoPartidoDTO>> LancamentosPartido(DataTablesRequest request, CancellationToken ct)
         {
             var sqlWhere = GetWhereFilter(request);
             var sqlSortAndPaging = GetSortAndPaging(request);
 
             var sql = $@"
-					
-SELECT 
+
+SELECT
     p.id as id_partido
     , p.nome as nome_partido
     , sum(l1.total_notas) as total_notas
@@ -883,16 +884,16 @@ LEFT JOIN partido p on p.id = d.id_partido
 GROUP BY p.id, p.nome
 {sqlSortAndPaging};
 
-SELECT COUNT(DISTINCT id_partido) 
+SELECT COUNT(DISTINCT id_partido)
 FROM assembleias.cl_despesa l
 INNER JOIN assembleias.cl_deputado d on d.id = l.id_cl_deputado
-WHERE (1=1) 
+WHERE (1=1)
 {sqlWhere};";
 
             var lstRetorno = new List<LancamentoPartidoDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(sql))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql, ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new LancamentoPartidoDTO
                     {
@@ -913,13 +914,13 @@ WHERE (1=1)
             }
         }
 
-        private async Task<DataTablesResponseDTO<LancamentoEstadoDTO>> LancamentosEstado(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoEstadoDTO>> LancamentosEstado(DataTablesRequest request, CancellationToken ct)
         {
             var sqlWhere = GetWhereFilter(request);
             var sqlSortAndPaging = GetSortAndPaging(request);
 
             var sql = $@"
-SELECT 
+SELECT
     e.id AS id_estado
     , e.nome as nome_estado
     , sum(l.total_notas) as total_notas
@@ -939,16 +940,16 @@ LEFT JOIN estado e on e.id = d.id_estado
 GROUP BY e.id, e.nome
 {sqlSortAndPaging};
 
-SELECT COUNT(DISTINCT id_estado) 
+SELECT COUNT(DISTINCT id_estado)
 FROM assembleias.cl_despesa l
 JOIN assembleias.cl_deputado d on d.id = l.id_cl_deputado
-WHERE (1=1) 
+WHERE (1=1)
 {sqlWhere};";
 
             var lstRetorno = new List<LancamentoEstadoDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(sql))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql, ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new LancamentoEstadoDTO
                     {
@@ -969,14 +970,14 @@ WHERE (1=1)
             }
         }
 
-        private async Task<DataTablesResponseDTO<LancamentoDocumentoDTO>> LancamentosNotaFiscal(DataTablesRequest request)
+        private async Task<DataTablesResponseDTO<LancamentoDocumentoDTO>> LancamentosNotaFiscal(DataTablesRequest request, CancellationToken ct)
         {
             var sqlWhere = GetWhereFilter(request);
             var sqlOrderBy = $" ORDER BY {request.GetSorting("l.ano_mes DESC, l.data_emissao DESC, l.valor_liquido DESC")} ";
             var sqlLimit = $" LIMIT {request.Length} OFFSET {request.Start} ";
 
             var sql = $@"
-SELECT 
+SELECT
 	l.data_emissao
     , l.valor_liquido as valor_total
     , l.id_cl_deputado
@@ -1006,15 +1007,15 @@ LEFT JOIN assembleias.cl_despesa_tipo t on t.id = l.id_cl_despesa_tipo
 LEFT JOIN assembleias.cl_despesa_especificacao de on de.id = l.id_cl_despesa_especificacao
 {sqlOrderBy};
 
-SELECT COUNT(*) 
+SELECT COUNT(*)
 FROM assembleias.cl_despesa l
-WHERE (1=1) 
+WHERE (1=1)
 {sqlWhere};";
 
             var lstRetorno = new List<LancamentoDocumentoDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(sql))
+            using (DbDataReader reader = await ExecuteReaderAsync(sql, ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new LancamentoDocumentoDTO()
                     {
@@ -1169,7 +1170,7 @@ WHERE (1=1)
             return sql.ToString();
         }
 
-        public async Task<List<TipoDespesaDTO>> TipoDespesa()
+        public async Task<List<TipoDespesaDTO>> TipoDespesa(CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -1178,9 +1179,9 @@ WHERE (1=1)
                 strSql.AppendFormat("ORDER BY descricao ");
 
                 var lstRetorno = new List<TipoDespesaDTO>();
-                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
+                using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), ct: ct))
                 {
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         lstRetorno.Add(new TipoDespesaDTO
                         {

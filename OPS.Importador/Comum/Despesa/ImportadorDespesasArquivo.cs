@@ -9,7 +9,7 @@ namespace OPS.Importador.Comum.Despesa
         {
         }
 
-        public virtual async Task Importar(int ano)
+        public virtual async Task Importar(int ano, CancellationToken ct = default)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {

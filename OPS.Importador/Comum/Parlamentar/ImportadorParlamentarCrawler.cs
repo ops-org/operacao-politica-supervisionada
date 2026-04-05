@@ -19,7 +19,7 @@ public abstract class ImportadorParlamentarCrawler : ImportadorParlamentarBase, 
         this.config = config;
     }
 
-    public override async Task Importar()
+    public override async Task Importar(CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 

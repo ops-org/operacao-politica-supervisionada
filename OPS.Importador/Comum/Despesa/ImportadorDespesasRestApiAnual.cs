@@ -9,7 +9,7 @@ namespace OPS.Importador.Comum.Despesa
         {
         }
 
-        public async Task Importar(int ano)
+        public async Task Importar(int ano, CancellationToken ct = default)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
@@ -17,12 +17,12 @@ namespace OPS.Importador.Comum.Despesa
 
                 var context = httpClientResilient.CreateAngleSharpContext();
 
-                await ImportarDespesas(context, ano);
+                await ImportarDespesas(context, ano, ct);
                 ProcessarDespesas(ano);
             }
         }
 
-        public abstract Task ImportarDespesas(IBrowsingContext context, int ano);
+        public abstract Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default);
     }
 
     //public class ImportadorDespesasRestApiConfig

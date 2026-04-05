@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Http.Logging;
+﻿using System.Threading;
+using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace OPS.Importador.Comum.Utilities
@@ -69,13 +70,13 @@ namespace OPS.Importador.Comum.Utilities
             //       ReadableResponse(response).GetAwaiter().GetResult());
         }
 
-        static async Task<string> ReadableResponse(HttpResponseMessage response)
+        static async Task<string> ReadableResponse(HttpResponseMessage response, CancellationToken ct = default)
         {
             string contentType = response.Content.Headers.GetValues("Content-Type")?.FirstOrDefault() ?? string.Empty;
             if (contentType == "application/zip")
                 return $"ZIP file {response.Content.Headers.GetValues("Content-Length").FirstOrDefault()} bytes";
 
-            return await response.Content.ReadAsStringAsync();
+            return await response.Content.ReadAsStringAsync(ct);
         }
 
         public void LogRequestFailed(

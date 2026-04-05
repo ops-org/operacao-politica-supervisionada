@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Net;
+using System.Threading;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
@@ -34,7 +35,7 @@ namespace OPS.Importador.Assembleias.RioDeJaneiro
 
         // https://docigp.alerj.rj.gov.br/api/v1/cost-centers?query={"filter":{"text":null,"checkboxes":{"filler":false},"selects":{"filler":false}},"pagination":{"per_page":5,"current_page":1},"order":{}}
         // https://docigp.alerj.rj.gov.br/api/v1/entry-types?query={"filter":{"text":null,"checkboxes":{"filler":false},"selects":{"filler":false}},"pagination":{"total":7,"per_page":10000,"current_page":1,"last_page":1,"from":1,"to":7,"pages":[1]}}
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             // TODO: Criar importação por legislatura
             if (ano != 2023)
@@ -47,13 +48,13 @@ namespace OPS.Importador.Assembleias.RioDeJaneiro
 
             var query = "{\"filter\":{\"text\":null,\"checkboxes\":{\"withMandate\":false,\"withoutMandate\":false,\"withPendency\":false,\"withoutPendency\":false,\"unread\":false,\"joined\":true,\"notJoined\":false,\"filler\":false},\"selects\":{\"filler\":false}},\"pagination\":{\"total\":83,\"per_page\":\"250\",\"current_page\":1,\"last_page\":9,\"from\":1,\"to\":10,\"pages\":[1,2,3,4,5]}}";
             var address = $"{config.BaseAddress}congressmen?query=" + WebUtility.UrlEncode(query);
-            Congressman objDeputadosRJ = await RestApiGet<Congressman>(address);
+            Congressman objDeputadosRJ = await RestApiGet<Congressman>(address, ct);
 
             foreach (CongressmanDetails deputado in objDeputadosRJ.Data)
             {
                 query = "{\"filter\":{\"text\":null,\"checkboxes\":{\"filler\":false},\"selects\":{\"filler\":false}},\"pagination\":{\"per_page\":250,\"current_page\":1},\"order\":{}}";
                 address = $"{config.BaseAddress}congressmen/{deputado.Id}/legislatures/{legislatura}/budgets?query=" + WebUtility.UrlEncode(query);
-                Budgets orcamentoMensal = await RestApiGet<Budgets>(address);
+                Budgets orcamentoMensal = await RestApiGet<Budgets>(address, ct);
 
                 if (orcamentoMensal.Links.Pagination.LastPage > 1)
                     throw new NotImplementedException();
@@ -62,7 +63,7 @@ namespace OPS.Importador.Assembleias.RioDeJaneiro
                 {
                     query = "{\"filter\":{\"text\":null,\"checkboxes\":{\"filler\":false},\"selects\":{\"filler\":false}},\"pagination\":{\"total\":6,\"per_page\":250,\"current_page\":1,\"last_page\":1,\"from\":1,\"to\":6,\"pages\":[1]}}";
                     address = $"{config.BaseAddress}congressmen/{deputado.Id}/legislatures/{legislatura}/budgets/{orcamento.Id}/entries?query=" + WebUtility.UrlEncode(query);
-                    Entries despesas = await RestApiGet<Entries>(address);
+                    Entries despesas = await RestApiGet<Entries>(address, ct);
 
                     if (despesas.Links.Pagination.LastPage > 1)
                         throw new NotImplementedException();

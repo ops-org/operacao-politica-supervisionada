@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTOs;
@@ -17,12 +18,12 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<FornecedorInfoDTO> Consulta(int id)
+        public async Task<FornecedorInfoDTO> Consulta(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
                 using (var reader = await ExecuteReaderAsync(
-                        @"SELECT 
+                        @"SELECT
 							pj.id as id_fornecedor
 							, pj.cnpj_cpf
                             , pj.categoria
@@ -59,12 +60,12 @@ namespace OPS.Core.Repositories
 						WHERE pj.id = @id;
 
                         SELECT fa.codigo, fa.descricao
-                        FROM fornecedor.fornecedor_atividade_secundaria fas 
+                        FROM fornecedor.fornecedor_atividade_secundaria fas
                         INNER JOIN fornecedor.fornecedor_atividade fa on fa.id = fas.id_fornecedor_atividade
                         where id_fornecedor = @id;"
-                    , new { id }))
+                    , new { id }, ct))
                 {
-                    if (await reader.ReadAsync())
+                    if (await reader.ReadAsync(ct))
                     {
                         var fornecedor = new FornecedorInfoDTO
                         {
@@ -100,8 +101,8 @@ namespace OPS.Core.Repositories
                             AtividadeSecundaria = new List<string>()
                         };
 
-                        await reader.NextResultAsync();
-                        while (await reader.ReadAsync())
+                        await reader.NextResultAsync(ct);
+                        while (await reader.ReadAsync(ct))
                         {
                             fornecedor.AtividadeSecundaria.Add($"{reader["codigo"]} - {reader["descricao"]}");
                         }
@@ -114,7 +115,7 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<IEnumerable<QuadroSocietarioDTO>> QuadroSocietario(int id)
+        public async Task<IEnumerable<QuadroSocietarioDTO>> QuadroSocietario(int id, CancellationToken ct = default)
         {
             var quadroSocietario = await _context.FornecedorSocios
                 .Include(fs => fs.FornecedorSocioQualificacao)
@@ -133,7 +134,7 @@ namespace OPS.Core.Repositories
                     cpf_representante = fs.CpfRepresentante,
                     qualificacao_representante = fs.FornecedorSocioRepresentanteQualificacao != null ? fs.FornecedorSocioRepresentanteQualificacao.Descricao : null
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var quadroSocietarioParsed = quadroSocietario.Select(fs => new QuadroSocietarioDTO
             {
@@ -152,7 +153,7 @@ namespace OPS.Core.Repositories
             return quadroSocietarioParsed;
         }
 
-        public async Task<dynamic> SenadoresMaioresGastos(int id)
+        public async Task<dynamic> SenadoresMaioresGastos(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -162,7 +163,7 @@ namespace OPS.Core.Repositories
 						, p.nome as nome_parlamentar
 						, l1.valor_total
 					FROM (
-						select 
+						select
 							SUM(l.valor) AS valor_total
 							, l.id_sf_senador
 						from senado.sf_despesa l
@@ -173,10 +174,10 @@ namespace OPS.Core.Repositories
 					) l1
 					LEFT JOIN senado.sf_senador p ON p.id = l1.id_sf_senador";
 
-                using (var reader = await ExecuteReaderAsync(strSql, new { id }))
+                using (var reader = await ExecuteReaderAsync(strSql, new { id }, ct))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         lstRetorno.Add(new
                         {
@@ -191,18 +192,18 @@ namespace OPS.Core.Repositories
             }
         }
 
-        public async Task<dynamic> MaioresGastos(int id)
+        public async Task<dynamic> MaioresGastos(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
                 var strSql = new StringBuilder();
                 strSql.Append(@"
-SELECT 
-    tmp.id, 
-    tmp.tipo, 
-    tmp.nome_parlamentar, 
-    pr.sigla as sigla_partido, 
-    e.sigla as sigla_estado, 
+SELECT
+    tmp.id,
+    tmp.tipo,
+    tmp.nome_parlamentar,
+    pr.sigla as sigla_partido,
+    e.sigla as sigla_estado,
     tmp.ultima_emissao,
     tmp.valor_total
 FROM (
@@ -215,7 +216,7 @@ FROM (
         , l1.ultima_emissao
 		, l1.valor_total
 	FROM (
-		select 
+		select
             MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor_liquido) AS valor_total
 			, l.id_cf_deputado
@@ -226,7 +227,7 @@ FROM (
 		LIMIT 10
 	) l1
 	JOIN camara.cf_deputado p ON p.id = l1.id_cf_deputado
-	
+
 
 	UNION ALL
 
@@ -239,7 +240,7 @@ FROM (
         , l1.ultima_emissao
 		, l1.valor_total
 	FROM (
-		select 
+		select
             MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor_liquido) AS valor_total
 			, l.id_cl_deputado
@@ -262,7 +263,7 @@ FROM (
         , l1.ultima_emissao
 		, l1.valor_total
 	FROM (
-		select 
+		select
             MAX(l.data_emissao) AS ultima_emissao,
 			SUM(l.valor) AS valor_total
 			, l.id_sf_senador
@@ -279,10 +280,10 @@ LEFT JOIN estado e on e.id = tmp.id_estado
 ORDER BY valor_total desc
 LIMIT 10 ");
 
-                using (var reader = await ExecuteReaderAsync(strSql.ToString(), new { id }))
+                using (var reader = await ExecuteReaderAsync(strSql.ToString(), new { id }, ct))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
-                    while (await reader.ReadAsync())
+                    while (await reader.ReadAsync(ct))
                     {
                         string link_parlamentar = "", link_despesas = "";
                         var tipo = reader["tipo"].ToString();
@@ -328,7 +329,7 @@ LIMIT 10 ");
             }
         }
 
-        public async Task<GraficoBarraDTO> RecebimentosPorAno(int id)
+        public async Task<GraficoBarraDTO> RecebimentosPorAno(int id, CancellationToken ct = default)
         {
             // using (AppDb banco = new AppDb())
             {
@@ -358,7 +359,7 @@ group by ano, mes
 order by ano, mes
 				";
 
-                return await GastosPorAno(id, strSql);
+                return await GastosPorAno(id, strSql, ct);
             }
         }
 
@@ -466,11 +467,11 @@ order by ano, mes
             return fornecedores;
         }
 
-        public async Task<List<FornecedorListaDTO>> Busca(string value)
+        public async Task<List<FornecedorListaDTO>> Busca(string value, CancellationToken ct = default)
         {
             var strSql = new StringBuilder();
             strSql.AppendLine(@"
-					SELECT 
+					SELECT
 						f.id as id_fornecedor
 						, f.cnpj_cpf as cnpj
 						, coalesce(f.nome, fi.nome) as nome
@@ -502,9 +503,9 @@ order by ano, mes
 				");
 
             var lstRetorno = new List<FornecedorListaDTO>();
-            using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString()))
+            using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), ct: ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     lstRetorno.Add(new FornecedorListaDTO
                     {

@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -23,12 +24,12 @@ namespace OPS.Importador.Assembleias.Amazonas
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             // Pagina usa caixas de seleção escondidas, trocadas a cada legislatura.
             var chaveDeputados = ano == 2023 && mes == 1 ? "dadosatual" : "dados";
 
-            var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
+            var document = await context.OpenAsyncAutoRetry(config.BaseAddress, ct: ct);
             var deputados = (document.QuerySelector($"#{chaveDeputados}") as IHtmlSelectElement);
 
             IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
@@ -42,7 +43,7 @@ namespace OPS.Importador.Assembleias.Amazonas
                     dcForm.Add("mes", mes.ToString("00"));
                     dcForm.Add("dados", deputado.Value);
                     dcForm.Add("dadosatual", deputado.Value);
-                    var subDocument = await form.SubmitAsyncAutoRetry(dcForm);
+                    var subDocument = await form.SubmitAsyncAutoRetry(dcForm, ct: ct);
 
                     if (subDocument.QuerySelector(".no-events") != null || subDocument.QuerySelector(".no-events")?.TextContent == "Não há resultados para a sua pesquisa.") continue;
 

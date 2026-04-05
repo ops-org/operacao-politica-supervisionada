@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
 using OPS.Core.Repositories;
@@ -25,8 +26,8 @@ namespace OPS.API.Controllers
             const string cacheKey = "estado-consultar";
             var result = await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
             {
-                return await repository.Consultar();
-            });
+                return await repository.Consultar(HttpContext.RequestAborted);
+            }, cancellationToken: HttpContext.RequestAborted);
 
             return Ok(result);
         }

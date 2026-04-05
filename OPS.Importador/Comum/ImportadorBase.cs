@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OPS.Core.Exceptions;
@@ -25,15 +26,15 @@ namespace OPS.Importador.Comum
             appSettings = serviceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
         }
 
-        public virtual async Task ImportarCompleto()
+        public virtual async Task ImportarCompleto(CancellationToken ct = default)
         {
             if (importadorParlamentar != null)
             {
                 importadorParlamentar.AtualizarDatasImportacaoParlamentar(pInicio: DateTime.UtcNow);
-                ImportarPerfilParlamentar();
+                await ImportarPerfilParlamentar(ct);
                 importadorParlamentar.AtualizarDatasImportacaoParlamentar(pFim: DateTime.UtcNow);
 
-                ImportarImagemParlamentar();
+                await ImportarImagemParlamentar(ct);
             }
 
             if (importadorDespesas != null)
@@ -43,7 +44,7 @@ namespace OPS.Importador.Comum
                 if (importadorDespesas is ImportadorDespesasPiaui || importadorDespesas is ImportadorDespesasRioDeJaneiro) // importadorDespesas is ImportadorDespesasMinasGerais
                 {
                     // Dados por mandato
-                    await ImportarDespesas(2023); // TODO: Primeiro ano do mandato
+                    await ImportarDespesas(2023, ct); // TODO: Primeiro ano do mandato
                 }
                 else
                 {
@@ -62,8 +63,8 @@ namespace OPS.Importador.Comum
                     //for (int ano = 2023; ano <= 2026; ano++)
                     //    await ImportarDespesas(ano);
 
-                    await ImportarDespesas(2025);
-                    await ImportarDespesas(2026);
+                    await ImportarDespesas(2025, ct);
+                    await ImportarDespesas(2026, ct);
                 }
 
                 //for (int ano = 2008; ano <= 2026; ano++)
@@ -98,13 +99,19 @@ namespace OPS.Importador.Comum
         //        }
         //}
 
-        private async Task ImportarDespesas(int ano)
+        private async Task ImportarDespesas(int ano, CancellationToken ct = default)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
             using (logger.BeginScope("Despesas {Ano}", ano))
                 try
                 {
+                    ct.ThrowIfCancellationRequested();
                     await importadorDespesas.Importar(ano);
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogWarning("Operação cancelada: importação de despesas ano {Ano}", ano);
+                    throw;
                 }
                 catch (BusinessException) { }
                 catch (Exception ex)
@@ -118,25 +125,32 @@ namespace OPS.Importador.Comum
                 }
         }
 
-        private async Task ImportarDespesasAnoAtual()
+        private async Task ImportarDespesasAnoAtual(CancellationToken ct = default)
         {
-            await ImportarDespesas(DateTime.Now.Year);
+            await ImportarDespesas(DateTime.Now.Year, ct);
         }
 
-        private async Task ImportarDespesasAnoAnterior()
+        private async Task ImportarDespesasAnoAnterior(CancellationToken ct = default)
         {
             //if (appSettings.ImportacaoIncremental) return;
 
-            await ImportarDespesas(DateTime.Now.Year - 1);
+            await ImportarDespesas(DateTime.Now.Year - 1, ct);
         }
 
-        private void ImportarImagemParlamentar()
+        private async Task ImportarImagemParlamentar(CancellationToken ct = default)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
             using (logger.BeginScope("Foto de Perfil"))
                 try
                 {
-                    importadorParlamentar.DownloadFotos().Wait();
+                    var task = importadorParlamentar.DownloadFotos();
+                    using var _ = ct.Register(() => task.ConfigureAwait(false));
+                    await task;
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogWarning("Operação cancelada: download de fotos");
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -149,13 +163,20 @@ namespace OPS.Importador.Comum
                 }
         }
 
-        private void ImportarPerfilParlamentar()
+        private async Task ImportarPerfilParlamentar(CancellationToken ct = default)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
             using (logger.BeginScope("Perfil do Parlamentar"))
                 try
                 {
-                    importadorParlamentar.Importar().Wait();
+                    ct.ThrowIfCancellationRequested();
+                    var task = importadorParlamentar.Importar();
+                    await task;
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogWarning("Operação cancelada: importação de perfil parlamentar");
+                    throw;
                 }
                 catch (Exception ex)
                 {

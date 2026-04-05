@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading;
 using AngleSharp;
 using Dapper;
 using iTextSharp.text.pdf;
@@ -37,10 +38,10 @@ namespace OPS.Importador.Assembleias.Alagoas
             ocrService = new ComputerVisionOcr(appSettings);
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var document = await context.OpenAsyncAutoRetry($"{config.BaseAddress}/{ano}");
+            var document = await context.OpenAsyncAutoRetry($"{config.BaseAddress}/{ano}", ct: ct);
 
             var parlamentares = document.QuerySelectorAll("#content-core .tileHeadline a");
             foreach (var parlamentar in parlamentares)
@@ -50,7 +51,7 @@ namespace OPS.Importador.Assembleias.Alagoas
 
                 using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = nomeParlamentar }))
                 {
-                    var subdocument = await context.OpenAsyncAutoRetry(urlParlamentarMeses);
+                    var subdocument = await context.OpenAsyncAutoRetry(urlParlamentarMeses, ct: ct);
                     var meses = subdocument.QuerySelectorAll("#content-core .tileHeadline a");
 
                     foreach (var mes in meses)
@@ -65,7 +66,7 @@ namespace OPS.Importador.Assembleias.Alagoas
                         using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month }))
                         {
                             var urlParlamentarMesDocumento = mes.Attributes["href"].Value;
-                            var subsubdocument = await context.OpenAsyncAutoRetry(urlParlamentarMesDocumento);
+                            var subsubdocument = await context.OpenAsyncAutoRetry(urlParlamentarMesDocumento, ct: ct);
 
                             var urlPdf = subsubdocument.QuerySelector("#content-core a").Attributes["href"].Value;
                             if (string.IsNullOrEmpty(urlPdf))
@@ -76,7 +77,7 @@ namespace OPS.Importador.Assembleias.Alagoas
 
                             using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = urlPdf, ["Arquivo"] = $"CLAL-{ano}-{competencia.Month}-{nomeParlamentar}.pdf" }))
                             {
-                                await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf, nomeParlamentar, competencia);
+                                await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf, nomeParlamentar, competencia, ct);
                             }
                         }
                     }
@@ -87,10 +88,10 @@ namespace OPS.Importador.Assembleias.Alagoas
             //ImportarEmpenhosParaComparacao(context, ano);
         }
 
-        public async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf, string nomeParlamentar, DateOnly competencia)
+        public async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf, string nomeParlamentar, DateOnly competencia, CancellationToken ct = default)
         {
             var fileName = Path.Combine(tempFolder, $"CLAL-{ano}-{mes}-{nomeParlamentar}.pdf");
-            await fileManager.BaixarArquivo(dbContext, urlPdf, fileName, config.Estado);
+            await fileManager.BaixarArquivo(dbContext, urlPdf, fileName, config.Estado, ct);
 
             var ocrFileName = fileName.Replace(".pdf", ".txt");
             if (!File.Exists(ocrFileName))

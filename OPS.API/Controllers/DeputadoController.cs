@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -31,100 +32,100 @@ namespace OPS.API.Controllers
         public async Task<dynamic> GastosComPessoalPorAno(int id)
         {
             var cacheKey = $"deputado-gastos-pessoal-por-ano-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.GastosComPessoalPorAno(id);
-            });
+                return await _repository.GastosComPessoalPorAno(id, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost("FuncionarioPesquisa")]
         public async Task<dynamic> FuncionarioPesquisa(MultiSelectRequest filtro)
         {
             var cacheKey = $"deputado-funcionario-pesquisa-{JsonSerializer.Serialize(filtro)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.FuncionarioPesquisa(filtro);
-            });
+                return await _repository.FuncionarioPesquisa(filtro, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost("Funcionarios")]
         public async Task<dynamic> Funcionarios(DataTablesRequest request)
         {
             var cacheKey = $"deputado-funcionarios-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.Funcionarios(request);
-            });
+                return await _repository.Funcionarios(request, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost("{id:int}/FuncionariosAtivos")]
         public async Task<dynamic> FuncionariosAtivosPorDeputado(int id, DataTablesRequest request)
         {
             var cacheKey = $"deputado-funcionarios-ativos-{id}-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.FuncionariosAtivosPorDeputado(id, request);
-            });
+                return await _repository.FuncionariosAtivosPorDeputado(id, request, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost("{id:int}/FuncionariosHistorico")]
         public async Task<dynamic> FuncionariosPorDeputado(int id, DataTablesRequest request)
         {
             var cacheKey = $"deputado-funcionarios-historico-{id}-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.FuncionariosPorDeputado(id, request);
-            });
+                return await _repository.FuncionariosPorDeputado(id, request, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet("{id:int}/ResumoPresenca")]
         public async Task<dynamic> ResumoPresenca(int id)
         {
             var cacheKey = $"deputado-resumo-presenca-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.ResumoPresenca(id);
-            });
+                return await _repository.ResumoPresenca(id, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet("ResumoMensal")]
         public async Task<dynamic> CamaraResumoMensal()
         {
             const string cacheKey = "deputado-camara-resumo-mensal";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.CamaraResumoMensal();
-            });
+                return await _repository.CamaraResumoMensal(ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet("ResumoAnual")]
         public async Task<dynamic> CamaraResumoAnual()
         {
             const string cacheKey = "deputado-camara-resumo-anual";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.CamaraResumoAnual();
-            });
+                return await _repository.CamaraResumoAnual(ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost("Frequencia/{id:int}")]
         public async Task<dynamic> Frequencia(int id, DataTablesRequest request)
         {
             var cacheKey = $"deputado-frequencia-{id}-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.Frequencia(id, request);
-            });
+                return await _repository.Frequencia(id, request, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost("Frequencia")]
         public async Task<dynamic> Frequencia(DataTablesRequest request)
         {
             var cacheKey = $"deputado-frequencia-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.Frequencia(request);
-            });
+                return await _repository.Frequencia(request, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet]
@@ -132,10 +133,10 @@ namespace OPS.API.Controllers
         public async Task<dynamic> GrupoFuncional()
         {
             const string cacheKey = "deputado-grupo-funcional";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.GrupoFuncional();
-            });
+                return await _repository.GrupoFuncional(ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet]
@@ -143,10 +144,10 @@ namespace OPS.API.Controllers
         public async Task<dynamic> Cargo()
         {
             const string cacheKey = "deputado-cargo";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.Cargo();
-            });
+                return await _repository.Cargo(ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpPost]
@@ -154,10 +155,10 @@ namespace OPS.API.Controllers
         public async Task<dynamic> Remuneracao(DataTablesRequest request)
         {
             var cacheKey = $"deputado-remuneracao-{JsonSerializer.Serialize(request)}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.Remuneracao(request);
-            });
+                return await _repository.Remuneracao(request, ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet]
@@ -165,10 +166,10 @@ namespace OPS.API.Controllers
         public async Task<dynamic> Remuneracao(int id)
         {
             var cacheKey = $"deputado-remuneracao-{id}";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync<dynamic>(cacheKey, async (ct) =>
             {
-                return await _repository.Remuneracao(id);
-            });
+                return await _repository.Remuneracao(id, ct);
+            }, ct: HttpContext.RequestAborted);
         }
     }
 }

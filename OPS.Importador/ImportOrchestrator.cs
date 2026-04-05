@@ -32,19 +32,20 @@ using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
 using OPS.Importador.SenadoFederal;
 using OPS.Infraestrutura;
+using System.Threading;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace OPS.Importador
 {
     internal static class ImportOrchestrator
     {
-        public static async Task RunAppAsync(IServiceProvider serviceProvider)
+        public static async Task RunAppAsync(IServiceProvider serviceProvider, CancellationToken ct = default)
         {
             var logger = serviceProvider.GetService<ILogger<Program>>();
             logger.LogInformation("Iniciando Importação");
 
             var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-            await RunImportersAsync(serviceProvider, dbContext, logger);
+            await RunImportersAsync(serviceProvider, dbContext, logger, ct);
 
             //var importador = serviceProvider.GetService<CamaraFederal.ImportacaoCamaraFederal>();
             //await importador.ColetaDadosDeputados();
@@ -79,18 +80,18 @@ namespace OPS.Importador
             var objFornecedor = scope.ServiceProvider.GetRequiredService<Fornecedores.ImportacaoFornecedor>();
             //await objFornecedor.ConsultarDadosCNPJ();
 
-            //var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
-            //await ipcaImportador.ImportarIpca();
+            var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
+            await ipcaImportador.ImportarIpca(ct);
         }
 
         private static async Task RunImportersAsync(IServiceProvider serviceProvider, AppDbContext dbContext,
-            ILogger logger)
+            ILogger logger, CancellationToken ct = default)
         {
-            await SyncDatabaseAsync(dbContext);
+            await SyncDatabaseAsync(dbContext, ct);
 
-            // var crawler = new SeleniumScraper(serviceProvider);
-            // crawler.BaixarArquivosParana();
-            // crawler.BaixarArquivosPiaui();
+            //var crawler = new SeleniumScraper(serviceProvider);
+            //crawler.BaixarArquivosParana();
+            //crawler.BaixarArquivosPiaui();
 
             var types = new Type[]
             {
@@ -144,24 +145,24 @@ namespace OPS.Importador
                             var watch = System.Diagnostics.Stopwatch.StartNew();
 
                             var importador = (ImportadorBase)scope.ServiceProvider.GetRequiredService(type);
-                            await importador.ImportarCompleto();
+                            await importador.ImportarCompleto(ct);
 
                             watch.Stop();
                             logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}",
                                 type.Name, watch.Elapsed);
                         }
                     }
-                }));
+                }, ct));
             }
 
             await Task.WhenAll(tasks);
         }
 
-        private static async Task SyncDatabaseAsync(AppDbContext dbContext)
+        private static async Task SyncDatabaseAsync(AppDbContext dbContext, CancellationToken ct = default)
         {
             await dbContext.Database.ExecuteSqlRawAsync(@"
                 INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                SELECT d.id, d.nome_parlamentar, d.id_estado 
+                SELECT d.id, d.nome_parlamentar, d.id_estado
                 FROM assembleias.cl_deputado d
                 LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_parlamentar AND dp.id_estado = d.id_estado
                 WHERE dp.id IS NULL
@@ -169,12 +170,12 @@ namespace OPS.Importador
                 ON CONFLICT DO NOTHING;
 
                 INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                SELECT d.id, d.nome_civil, d.id_estado 
+                SELECT d.id, d.nome_civil, d.id_estado
                 FROM assembleias.cl_deputado d
                 LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_civil AND dp.id_estado = d.id_estado
                 WHERE dp.id IS NULL
                 AND d.nome_civil IS NOT NULL
-                ON CONFLICT DO NOTHING;");
+                ON CONFLICT DO NOTHING;", ct);
         }
     }
 }

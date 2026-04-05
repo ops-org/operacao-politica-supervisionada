@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -23,9 +24,9 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
         };
     }
 
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
     {
-        var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
+        var document = await context.OpenAsyncAutoRetry(config.BaseAddress, ct: ct);
 
         IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
 
@@ -34,7 +35,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
         dcForm.Add("mes", mes.ToString("00"));
         dcForm.Add("ano", ano.ToString());
         dcForm.Add("nome", "");
-        document = await form.SubmitAsyncAutoRetry(dcForm, true);
+        document = await form.SubmitAsyncAutoRetry(dcForm, true, ct: ct);
 
         var deputados = document.QuerySelectorAll("table#table tbody tr");
         foreach (var deputado in deputados)
@@ -54,7 +55,7 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
                 linkDetalhes = linkDetalhes.Substring(startIndex, endIndex - startIndex);
             }
 
-            var documentDetalhes = await context.OpenAsyncAutoRetry(linkDetalhes);
+            var documentDetalhes = await context.OpenAsyncAutoRetry(linkDetalhes, ct: ct);
             var despesas = documentDetalhes.QuerySelectorAll("table#table tbody tr");
             foreach (var despesa in despesas)
             {

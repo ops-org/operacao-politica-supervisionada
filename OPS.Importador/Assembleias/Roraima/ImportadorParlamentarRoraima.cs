@@ -24,7 +24,7 @@ public class ImportadorParlamentarRoraima : ImportadorParlamentarRestApi
         });
     }
 
-    public override Task Importar()
+    public override async Task Importar(CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
 
@@ -52,18 +52,17 @@ public class ImportadorParlamentarRoraima : ImportadorParlamentarRestApi
             deputado.IdPartido = BuscarIdPartido(parlamentar.Partido);
             deputado.UrlFoto = parlamentar.Fotografia;
 
-            ImportarPerfil(deputado, context).Wait();
+            await ImportarPerfil(deputado, context, ct);
 
             InsertOrUpdate(deputado);
         }
 
         logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
-        return Task.CompletedTask;
     }
 
-    public async Task ImportarPerfil(DeputadoEstadual deputado, IBrowsingContext context)
+    public async Task ImportarPerfil(DeputadoEstadual deputado, IBrowsingContext context, CancellationToken ct = default)
     {
-        var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
+        var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil, ct: ct);
         if (document.StatusCode != HttpStatusCode.OK)
         {
             Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");

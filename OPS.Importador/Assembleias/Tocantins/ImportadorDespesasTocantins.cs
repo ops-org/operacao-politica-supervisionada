@@ -7,6 +7,7 @@ using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
+using System.Threading;
 using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
@@ -28,7 +29,7 @@ namespace OPS.Importador.Assembleias.Tocantins
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
             var dcForm = new Dictionary<string, string>();
@@ -98,7 +99,7 @@ namespace OPS.Importador.Assembleias.Tocantins
             }
         }
 
-        private async Task ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf)
+        private async Task ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf, CancellationToken ct = default)
         {
             var filename = $"{tempFolder}/CLTO-{ano}-{mes}-{gabinete.Value}.pdf";
             await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado);

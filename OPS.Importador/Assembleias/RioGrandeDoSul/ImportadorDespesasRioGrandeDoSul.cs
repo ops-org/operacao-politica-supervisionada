@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using AngleSharp;
 using Dapper;
 using Microsoft.Extensions.Logging;
@@ -28,15 +29,15 @@ namespace OPS.Importador.Assembleias.RioGrandeDoSul
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             CarregarDespesaArquivoHistorico(ano);
 
-            await ImportarDespesasAno(context, ano);
+            await ImportarDespesasAno(context, ano, ct);
             await ImportarDiariasAno(context, ano);
         }
 
-        private async Task ImportarDespesasAno(IBrowsingContext context, int ano)
+        private async Task ImportarDespesasAno(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             var urlParlamentaresListarMes = $"{config.BaseAddress}/ajax-gastosParlamentaresListarMes?ano={ano}";
             ParlamentaresListarMes objParlamentaresListarMes;

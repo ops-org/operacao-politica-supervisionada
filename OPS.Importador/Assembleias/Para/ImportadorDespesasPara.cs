@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.Json;
+using System.Threading;
 using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Importador.Assembleias.Para.Entities;
@@ -21,7 +22,7 @@ namespace OPS.Importador.Assembleias.Para
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             // Verba Indenizatória
             //https://alepa.pa.gov.br/api/dashboard/data?dashboardId=dashboard7&parameters=[{"name":"CPF_Deputados","value":"7BD68C11-DC21-4571-8EF6-AAB6E15355EF","type":"System.String","allowMultiselect":true,"selectAll":true}]&itemId=gridDashboardItem2&query={"Filter":[{"dimensions":[{"@ItemType":"Dimension","@DataMember":"Ano","@DefaultId":"DataItem0","NumericFormat":{"@FormatType":"General"},"@SortOrder":"Descending"}],"values":[[2024]]}]}
@@ -30,11 +31,11 @@ namespace OPS.Importador.Assembleias.Para
 
 
             var addressVerbaIndenizatoria = GetApiUrl(Dashboard.VerbaIndenizatoria, ano);
-            DeputadoPara objVerbaIndenizatoriaPara = await RestApiGet<DeputadoPara>(addressVerbaIndenizatoria);
+            DeputadoPara objVerbaIndenizatoriaPara = await RestApiGet<DeputadoPara>(addressVerbaIndenizatoria, ct);
             ImportarDespesas(objVerbaIndenizatoriaPara, ano);
 
             var addressDiarias = GetApiUrl(Dashboard.DiariasDosParlamentares, ano);
-            DeputadoPara objDiariasPara = await RestApiGet<DeputadoPara>(addressDiarias);
+            DeputadoPara objDiariasPara = await RestApiGet<DeputadoPara>(addressDiarias, ct);
             ImportarDespesas(objDiariasPara, ano);
         }
 

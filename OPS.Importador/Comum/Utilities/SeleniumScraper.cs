@@ -60,7 +60,7 @@ namespace OPS.Importador.Comum.Utilities
                 CheckCaptchaAndWaitSolve(driver, waitCaptcha);
 
                 var today = DateTime.Today;
-                var dateToImport = today.AddMonths(-4);
+                var dateToImport = today.AddMonths(-3);
                 if (appSettings.ForceImport) dateToImport = new DateTime(2023, 1, 1);
 
                 while (dateToImport < today)
@@ -72,10 +72,12 @@ namespace OPS.Importador.Comum.Utilities
                     }
 
                     SetSelectOptionByText(driver, "mes", ResolveMes(dateToImport.Month));
-                    driver.FindElement(OpenQA.Selenium.By.Id("exercicio")).SendKeys(dateToImport.Year.ToString());
+                    var exercicio = driver.FindElement(OpenQA.Selenium.By.Id("exercicio"));
+                    exercicio.Clear();
+                    exercicio.SendKeys(dateToImport.Year.ToString());
 
                     do
-                    {
+                        {
                         // Click Consultar
                         OpenQA.Selenium.IWebElement consultarButton = driver.FindElement(OpenQA.Selenium.By.XPath("//button[contains(normalize-space(.), 'Consultar')]"));
                         consultarButton.Click();

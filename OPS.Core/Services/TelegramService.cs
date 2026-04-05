@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using OPS.Core.DTOs;
 
@@ -16,12 +17,12 @@ namespace OPS.Core.Services
             this.httpClient = httpClient;
         }
 
-        public async Task<string> SendMessage(TelegramMessage message)
+        public async Task<string> SendMessage(TelegramMessage message, CancellationToken ct = default)
         {
             var urlTelegram = $"https://api.telegram.org/bot{_telegramApiToken}/sendMessage";
-            var response = await httpClient.PostAsJsonAsync(urlTelegram, message);
+            var response = await httpClient.PostAsJsonAsync(urlTelegram, message, ct);
 
-            return await response.Content.ReadAsStringAsync();
+            return await response.Content.ReadAsStringAsync(ct);
         }
     }
 

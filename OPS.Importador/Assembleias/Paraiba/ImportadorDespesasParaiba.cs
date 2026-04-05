@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading;
 using System.Web;
 using AngleSharp;
 using AngleSharp.Dom;
@@ -29,10 +30,10 @@ namespace OPS.Importador.Assembleias.Paraiba
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var address = $"{config.BaseAddress}deputados/viap-v2?tipo_viap=deputados&ano_viap={ano}&mes_viap={mes}";
-            var document = await context.OpenAsyncAutoRetry(address);
+            var document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
             IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("#content form");
 
@@ -43,7 +44,7 @@ namespace OPS.Importador.Assembleias.Paraiba
 
                 var dcForm = new Dictionary<string, string>();
                 dcForm.Add("deputado", gabinete.Value);
-                var subDocument = await form.SubmitAsyncAutoRetry(dcForm, true);
+                var subDocument = await form.SubmitAsyncAutoRetry(dcForm, true, ct: ct);
 
                 var linkPlanilha = (subDocument.QuerySelector("#content ul.lista-v a") as IHtmlAnchorElement).Href;
 
@@ -59,7 +60,7 @@ namespace OPS.Importador.Assembleias.Paraiba
 
                 using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilhaLimpa, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
                 {
-                    await fileManager.BaixarArquivo(dbContext, linkPlanilhaLimpa, caminhoArquivo, config.Estado);
+                    await fileManager.BaixarArquivo(dbContext, linkPlanilhaLimpa, caminhoArquivo, config.Estado, ct);
 
                     try
                     {

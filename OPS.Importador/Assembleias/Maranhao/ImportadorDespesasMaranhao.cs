@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Importador.Comum.Despesa;
@@ -23,7 +24,7 @@ namespace OPS.Importador.Assembleias.Maranhao
             deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
 
             if (ano == 2023 && mes == 1) return;
@@ -60,7 +61,7 @@ namespace OPS.Importador.Assembleias.Maranhao
             for (int matricula = 0; matricula < corteMatricula; matricula++)
             {
                 var address = $"{config.BaseAddress}lista-sintetico.html?competencia={ano}-{mes:00}-01&parlamentar={matricula}&dswid=1";
-                var document = await context.OpenAsyncAutoRetry(address);
+                var document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
                 var nomeParlamentar = document.QuerySelector(".titulo-pagina").TextContent.Split("-")[2].Trim();
                 var competencia = DateOnly.Parse(document.QuerySelector(".ui-datatable-header.ui-corner-top").TextContent.Split(':')[1]);

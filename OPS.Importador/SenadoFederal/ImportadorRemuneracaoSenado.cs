@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,8 @@ namespace OPS.Importador.SenadoFederal
         /// </summary>
         /// <param name="ano"></param>
         /// <param name="mes"></param>
-        public async Task ImportarRemuneracao(int ano, int mes)
+        /// <param name="ct"></param>
+        public async Task ImportarRemuneracao(int ano, int mes, CancellationToken ct = default)
         {
             var anomes = Convert.ToInt32($"{ano:0000}{mes:00}");
             var urlOrigem = string.Format("https://www.senado.leg.br/transparencia/LAI/secrh/SF_ConsultaRemuneracaoServidoresParlamentares_{0}.csv", anomes);
@@ -44,6 +46,7 @@ namespace OPS.Importador.SenadoFederal
             try
             {
                 var novoArquivoBaixado = await fileManager.BaixarArquivo(dbContext, urlOrigem, caminhoArquivo, null);
+                ct.ThrowIfCancellationRequested();
                 if (!appSettings.ForceImport && !novoArquivoBaixado)
                 {
                     logger.LogInformation("Importação ignorada para arquivo previamente importado!");
@@ -297,7 +300,7 @@ namespace OPS.Importador.SenadoFederal
             }
         }
 
-        public async Task AtualizarDadosCalculados()
+        public async Task AtualizarDadosCalculados(CancellationToken ct = default)
         {
             // Update senator total remuneration
             await dbContext.Database.ExecuteSqlRawAsync(@"
@@ -318,7 +321,7 @@ JOIN senado.sf_lotacao l ON l.id = r.id_lotacao
 WHERE l.id_senador IS NOT NULL
 group by l.id_senador, SUBSTRING(ano_mes::TEXT, 1, 4)::INTEGER, SUBSTRING(ano_mes::TEXT, 5, 2)::INTEGER
 
-			    ");
+			    ", ct);
         }
     }
 }

@@ -37,9 +37,9 @@ namespace OPS.Importador.Comum.Parlamentar
             this.config = config;
         }
 
-        public abstract Task Importar();
+        public abstract Task Importar(CancellationToken ct = default);
 
-        public virtual Task DownloadFotos()
+        public virtual Task DownloadFotos(CancellationToken ct = default)
         {
             return Task.CompletedTask;
         }

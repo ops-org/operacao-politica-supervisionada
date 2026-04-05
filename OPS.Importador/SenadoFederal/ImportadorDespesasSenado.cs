@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +42,7 @@ public class ImportadorDespesasSenado : IImportadorDespesas
         httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("ResilientClient");
     }
 
-    public async Task Importar(int ano)
+    public async Task Importar(int ano, CancellationToken ct = default)
     {
         logger.LogDebug("Despesas do(a) Senado de {Ano}", ano);
 
@@ -53,6 +54,7 @@ public class ImportadorDespesasSenado : IImportadorDespesas
             var caminhoArquivo = arquivo.Value;
 
             var novoArquivoBaixado = await fileManager.BaixarArquivo(dbContext, urlOrigem, caminhoArquivo, null);
+            ct.ThrowIfCancellationRequested();
             if (!appSettings.ForceImport && !novoArquivoBaixado)
             {
                 logger.LogInformation("Importação ignorada para arquivo previamente importado!");

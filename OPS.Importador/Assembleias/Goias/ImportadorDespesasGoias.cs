@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
@@ -21,17 +22,17 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
         };
     }
 
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
     {
         var address = $"{config.BaseAddress}api/transparencia/verbas_indenizatorias?ano={ano}&mes={mes}&por_pagina=100";
-        List<DespesasGoias> lstDeputadosRS = await RestApiGet<List<DespesasGoias>>(address);
+        List<DespesasGoias> lstDeputadosRS = await RestApiGet<List<DespesasGoias>>(address, ct);
 
         foreach (DespesasGoias item in lstDeputadosRS)
         {
             var id = item.Deputado.Id;
 
             address = $"{config.BaseAddress}api/transparencia/verbas_indenizatorias/exibir?ano={ano}&deputado_id={id}&mes={mes}";
-            DespesasGoias despesa = await RestApiGet<DespesasGoias>(address);
+            DespesasGoias despesa = await RestApiGet<DespesasGoias>(address, ct);
             if (despesa.Grupos is null) continue;
 
             foreach (var grupo in despesa.Grupos)

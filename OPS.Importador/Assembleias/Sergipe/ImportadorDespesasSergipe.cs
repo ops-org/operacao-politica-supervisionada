@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
@@ -25,10 +26,10 @@ namespace OPS.Importador.Assembleias.Sergipe
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             var today = DateTime.Today;
-            var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
+            var document = await context.OpenAsyncAutoRetry(config.BaseAddress, ct: ct);
 
             var elementoAno = document
                 .QuerySelectorAll(".elementor-widget-wrap .elementor-widget-heading")
@@ -64,7 +65,7 @@ namespace OPS.Importador.Assembleias.Sergipe
 
                     using (logger.BeginScope(new Dictionary<string, object> { ["Mes"] = competencia.Month, ["Url"] = urlPdf, ["Arquivo"] = $"CLSE-{ano}-{competencia.Month}.pdf" }))
                     {
-                        await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf);
+                        await ImportarDespesasArquivo(competencia.Year, competencia.Month, urlPdf, ct);
                     }
                 }
             }
@@ -87,10 +88,10 @@ namespace OPS.Importador.Assembleias.Sergipe
             _ => throw new ArgumentOutOfRangeException(nameof(mes), $"Mês invalido: {mes}"),
         };
 
-        private async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf)
+        private async Task ImportarDespesasArquivo(int ano, int mes, string urlPdf, CancellationToken ct = default)
         {
             var filename = $"{tempFolder}/CLSE-{ano}-{mes}.pdf";
-            await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado);
+            await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado, ct);
 
             using (PdfDocument document = PdfDocument.Open(filename, new ParsingOptions() { ClipPaths = true }))
             {

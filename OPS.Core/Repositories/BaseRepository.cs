@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -21,12 +22,12 @@ namespace OPS.Core.Repositories
         }
 
         // Helper methods to execute raw SQL when needed
-        protected async Task<DbDataReader> ExecuteReaderAsync(string sql, object parameters = null)
+        protected async Task<DbDataReader> ExecuteReaderAsync(string sql, object parameters = null, CancellationToken ct = default)
         {
             var connection = _context.Database.GetDbConnection();
             if (connection.State != ConnectionState.Open)
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync(ct);
             }
 
             var command = connection.CreateCommand();
@@ -37,7 +38,7 @@ namespace OPS.Core.Repositories
                 command.Parameters.AddRange(ConvertAnonymousToParameters(parameters));
             }
 
-            return await command.ExecuteReaderAsync();
+            return await command.ExecuteReaderAsync(ct);
         }
 
         public static NpgsqlParameter[] ConvertAnonymousToParameters(object anonymousObject)
@@ -54,7 +55,7 @@ namespace OPS.Core.Repositories
             return parameters.ToArray();
         }
 
-        protected async Task<GraficoBarraDTO> GastosPorAno(int id, string strSql)
+        protected async Task<GraficoBarraDTO> GastosPorAno(int id, string strSql, CancellationToken ct = default)
         {
             var categories = new List<int>();
             var series = new List<decimal>();
@@ -62,15 +63,15 @@ namespace OPS.Core.Repositories
 
             var indices = await _context.IndicesInflacao
                 .OrderBy(i => i.Ano).ThenBy(i => i.Mes)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var lastIndice = indices.LastOrDefault()?.Indice ?? 1;
 
             var gastosMensais = new List<(int Ano, int Mes, decimal Valor)>();
 
-            using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }))
+            using (DbDataReader reader = await ExecuteReaderAsync(strSql, new { id }, ct))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     gastosMensais.Add((
                         Convert.ToInt32(reader["ano"]),

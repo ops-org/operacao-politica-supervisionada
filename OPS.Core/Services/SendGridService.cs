@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using OPS.Core.DTOs;
 using RestSharp;
@@ -11,13 +12,13 @@ namespace OPS.Core.Services;
 
 public class SendGridService
 {
-    public async Task SendMailAsync(string apiKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
+    public async Task SendMailAsync(string apiKey, MailAddress objEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true, CancellationToken ct = default)
     {
         var lstEmailTo = new MailAddressCollection() { objEmailTo };
-        await SendMailAsync(apiKey, lstEmailTo, subject, body, ReplyTo, htmlContent);
+        await SendMailAsync(apiKey, lstEmailTo, subject, body, ReplyTo, htmlContent, ct);
     }
 
-    public async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true)
+    public async Task SendMailAsync(string apiKey, MailAddressCollection lstEmailTo, string subject, string body, MailAddress ReplyTo = null, bool htmlContent = true, CancellationToken ct = default)
     {
         if (lstEmailTo == null) return;
 
@@ -70,7 +71,7 @@ public class SendGridService
         request.AddHeader("content-type", "application/json");
         request.AddHeader("authorization", "Bearer " + apiKey);
         request.AddParameter("application/json", JsonSerializer.Serialize(param), ParameterType.RequestBody);
-        RestResponse response = await restClient.PostAsync(request);
+        RestResponse response = await restClient.PostAsync(request, ct);
 
         if (response.StatusCode != HttpStatusCode.Accepted)
         {

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -22,7 +23,7 @@ public static class AngleSharpExtensions
     }
 
 
-    public static async Task<IDocument> OpenAsyncAutoRetry(this IBrowsingContext context, String address, int totalRetries = 5)
+    public static async Task<IDocument> OpenAsyncAutoRetry(this IBrowsingContext context, String address, int totalRetries = 5, CancellationToken ct = default)
     {
         int retries = 0;
         do
@@ -41,7 +42,7 @@ public static class AngleSharpExtensions
                 if (retries >= totalRetries) throw;
 
                 Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, baseDelaySeconds + jitterSeconds);
-                await Task.Delay(TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds));
+                await Task.Delay(TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds), ct);
                 continue;
             }
 
@@ -70,20 +71,20 @@ public static class AngleSharpExtensions
 
                 // Quando há redirect para pagina de erro, é necessario esperar mais tempo que o normal.
                 Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, 60);
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                await Task.Delay(TimeSpan.FromMinutes(1), ct);
                 continue;
             }
 
-            
+
             Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, address, baseDelaySeconds + jitterSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds));
+            await Task.Delay(TimeSpan.FromSeconds(baseDelaySeconds + jitterSeconds), ct);
 
         } while (retries < totalRetries);
 
         throw new Exception($"Error Get Request: {address}");
     }
 
-    public static async Task<IDocument> SubmitAsyncAutoRetry(this IHtmlFormElement form, IDictionary<string, string> fields, bool createMissing = false, int totalRetries = 3)
+    public static async Task<IDocument> SubmitAsyncAutoRetry(this IHtmlFormElement form, IDictionary<string, string> fields, bool createMissing = false, int totalRetries = 3, CancellationToken ct = default)
     {
         int retries = 0;
         do
@@ -100,7 +101,7 @@ public static class AngleSharpExtensions
 
                 var waitExSeconds = Math.Pow(2, retries);
                 Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitExSeconds);
-                await Task.Delay(TimeSpan.FromSeconds(waitExSeconds));
+                await Task.Delay(TimeSpan.FromSeconds(waitExSeconds), ct);
                 continue;
             }
 
@@ -113,7 +114,7 @@ public static class AngleSharpExtensions
 
             var waitSeconds = Math.Pow(2, retries);
             Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds), ct);
 
         } while (retries < totalRetries);
 

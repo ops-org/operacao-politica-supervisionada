@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,7 @@ namespace OPS.Importador.Fornecedores
             jsonSerializerOptions.Converters.Add(new CultureSpecificDecimalConverter(CultureInfo.GetCultureInfo("en-US")));
         }
 
-        public async Task ConsultarDadosCNPJ(bool somenteNovos = true)
+        public async Task ConsultarDadosCNPJ(bool somenteNovos = true, CancellationToken ct = default)
         {
             var telegram = new TelegramService(httpClient, appSettings.TelegramApiToken);
             var telegraMessage = new TelegramMessage()
@@ -53,7 +54,7 @@ namespace OPS.Importador.Fornecedores
 
             //using (var context = dbContextFactory.CreateDbContext())
             {
-                var fornecedores = await ObterFornecedoresParaConsulta(somenteNovos);
+                var fornecedores = await ObterFornecedoresParaConsulta(somenteNovos, ct);
                 if (fornecedores.Count == 0)
                 {
                     logger.LogInformation("Não há fornecedores para consultar");
@@ -62,7 +63,7 @@ namespace OPS.Importador.Fornecedores
 
                 logger.LogInformation("Consultando CNPJ's Local: {Total} itens.", fornecedores.Count);
 
-                int totalImportados = await ProcessarFornecedores(fornecedores, telegram, telegraMessage);
+                int totalImportados = await ProcessarFornecedores(fornecedores, telegram, telegraMessage, ct);
                 logger.LogInformation("{TotalImportados} de {TotalFornecedores} fornecedores processados", totalImportados, fornecedores.Count);
 
                 // Atualizar dados anonimizados para NULL (ReceitaWS)
@@ -81,11 +82,11 @@ namespace OPS.Importador.Fornecedores
                 	update fornecedor.fornecedor_info set ente_federativo_responsavel=null where ente_federativo_responsavel = '' or ente_federativo_responsavel = '********';
                 	update fornecedor.fornecedor_info set motivo_situacao_cadastral=null where motivo_situacao_cadastral = '' or motivo_situacao_cadastral = '********';
                 	update fornecedor.fornecedor_info set situacao_especial=null where situacao_especial = '' or situacao_especial = '********';
-                ");
+                ", ct);
             }
         }
 
-        private async Task<List<FornecedorQueryResult>> ObterFornecedoresParaConsulta(bool somenteNovos)
+        private async Task<List<FornecedorQueryResult>> ObterFornecedoresParaConsulta(bool somenteNovos, CancellationToken ct)
         {
             if (somenteNovos)
             {
@@ -104,7 +105,7 @@ namespace OPS.Importador.Fornecedores
                         Id = (int)f.Id,
                         Nome = f.Nome
                     })
-                    .ToListAsync();
+                    .ToListAsync(ct);
             }
             else // Atualizar dados antigos
             {
@@ -123,13 +124,13 @@ namespace OPS.Importador.Fornecedores
                 //        Id = (int)f.Id,
                 //        Nome = f.Nome
                 //    })
-                //    .ToListAsync();
+                //    .ToListAsync(ct);
 
                 return await dbContext.Fornecedores.FromSqlInterpolated(
                     $@"select f.cnpj_cpf, f.id, f.nome
                     from fornecedor.fornecedor f
                     where categoria = 'PJ'
-                    and f.id >= 58718    
+                    and f.id >= 58718
                     and (f.valor_total_ceap_camara + f.valor_total_ceap_senado + f.valor_total_ceap_assembleias) > 0
                     order by f.id asc")
                     .Select(f => new FornecedorQueryResult
@@ -138,17 +139,17 @@ namespace OPS.Importador.Fornecedores
                         Id = f.Id,
                         Nome = f.Nome
                     })
-                    .ToListAsync();
+                    .ToListAsync(ct);
             }
         }
 
-        private async Task<int> ProcessarFornecedores(List<FornecedorQueryResult> fornecedores, TelegramService telegram, TelegramMessage telegraMessage)
+        private async Task<int> ProcessarFornecedores(List<FornecedorQueryResult> fornecedores, TelegramService telegram, TelegramMessage telegraMessage, CancellationToken ct)
         {
             int totalImportados = 0;
             int atual = 0;
 
-            var lstFornecedoresAtividade = await dbContext.FornecedorAtividades.ToListAsync();
-            var lstNaturezaJuridica = await dbContext.FornecedorNaturezaJuridicas.ToListAsync();
+            var lstFornecedoresAtividade = await dbContext.FornecedorAtividades.ToListAsync(ct);
+            var lstNaturezaJuridica = await dbContext.FornecedorNaturezaJuridicas.ToListAsync(ct);
 
             foreach (var item in fornecedores)
             {
@@ -165,11 +166,11 @@ namespace OPS.Importador.Fornecedores
 
                 try
                 {
-                    HttpResponseMessage response = await httpClient.GetAsync($"https://minhareceita.org/{item.CnpjCpf}");
+                    HttpResponseMessage response = await httpClient.GetAsync($"https://minhareceita.org/{item.CnpjCpf}", ct);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        string responseString = await response.Content.ReadAsStringAsync();
+                        string responseString = await response.Content.ReadAsStringAsync(ct);
                         fornecedor = JsonSerializer.Deserialize<MinhaReceita.FornecedorInfo>(responseString, jsonSerializerOptions);
 
                         if (fornecedor != null)
@@ -184,7 +185,7 @@ namespace OPS.Importador.Fornecedores
                         }
                         else
                         {
-                            fornecedor = await ConsultaCnpjReceitaWs(item.CnpjCpf);
+                            fornecedor = await ConsultaCnpjReceitaWs(item.CnpjCpf, ct);
 
                             if (fornecedor != null)
                                 fornecedor.Origem = "Receita WS";
@@ -194,7 +195,7 @@ namespace OPS.Importador.Fornecedores
                 catch (Exception ex)
                 {
                     logger.LogError(ex, ex.Message);
-                    fornecedor = await ConsultaCnpjReceitaWs(item.CnpjCpf);
+                    fornecedor = await ConsultaCnpjReceitaWs(item.CnpjCpf, ct);
                 }
 
                 if (fornecedor == null) continue;
@@ -203,7 +204,7 @@ namespace OPS.Importador.Fornecedores
 
                 await strategy.ExecuteAsync(async () =>
                 {
-                    using var transaction = await dbContext.Database.BeginTransactionAsync();
+                    using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
 
                     try
                     {
@@ -211,11 +212,11 @@ namespace OPS.Importador.Fornecedores
                         fornecedor.ObtidoEm = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
                         fornecedor.RadicalCnpj = fornecedor.Cnpj.Substring(0, 8);
 
-                        await dbContext.FornecedorSocios.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
-                        await dbContext.FornecedorAtividadesSecundarias.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync();
+                        await dbContext.FornecedorSocios.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync(ct);
+                        await dbContext.FornecedorAtividadesSecundarias.AsNoTracking().Where(x => x.IdFornecedor == fornecedor.Id).ExecuteDeleteAsync(ct);
 
                         if (fornecedor.CodigoAtividadePrincipal > 0)
-                            fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.CodigoAtividadePrincipal, fornecedor.AtividadePrincipal);
+                            fornecedor.IdAtividadePrincipal = await LocalizaInsereAtividade(lstFornecedoresAtividade, fornecedor.CodigoAtividadePrincipal, fornecedor.AtividadePrincipal, ct);
 
                         if (fornecedor.IdNaturezaJuridica > 0)
                             fornecedor.IdNaturezaJuridica = await LocalizaInsereNaturezaJuridica(lstNaturezaJuridica, fornecedor.IdNaturezaJuridica.ToString("000-0"), fornecedor.NaturezaJuridica);
@@ -223,7 +224,7 @@ namespace OPS.Importador.Fornecedores
                         if (fornecedor.MotivoSituacaoCadastral == "SEM MOTIVO")
                             fornecedor.MotivoSituacaoCadastral = null;
 
-                        var fornecedorInfo = await dbContext.FornecedorInfos.FirstOrDefaultAsync(f => f.IdFornecedor == fornecedor.Id);
+                        var fornecedorInfo = await dbContext.FornecedorInfos.FirstOrDefaultAsync(f => f.IdFornecedor == fornecedor.Id, ct);
 
                         if (fornecedorInfo == null)
                         {
@@ -276,7 +277,7 @@ namespace OPS.Importador.Fornecedores
                         // Controle da fonte dos dados
                         fornecedorInfo.Origem = fornecedor.Origem;
 
-                        await dbContext.SaveChangesAsync();
+                        await dbContext.SaveChangesAsync(ct);
 
                         dbContext.Fornecedores.Where(x => x.Id == fornecedor.Id)
                             .ExecuteUpdate(x => x.SetProperty(y => y.Nome, fornecedor.RazaoSocial).SetProperty(y => y.Categoria, "PJ"));
@@ -286,7 +287,7 @@ namespace OPS.Importador.Fornecedores
                         {
                             foreach (var atividadesSecundaria in fornecedor.CnaesSecundarios.DistinctBy(x => x.Id))
                             {
-                                var idAtividade = await LocalizaInsereAtividade(lstFornecedoresAtividade, atividadesSecundaria.Id, atividadesSecundaria.Descricao);
+                                var idAtividade = await LocalizaInsereAtividade(lstFornecedoresAtividade, atividadesSecundaria.Id, atividadesSecundaria.Descricao, ct);
 
                                 var atividade = new FornecedorAtividadeSecundaria()
                                 {
@@ -342,7 +343,7 @@ namespace OPS.Importador.Fornecedores
                                 UNION ALL
                                 SELECT MAX(d.data_emissao) as data FROM assembleias.cl_despesa d WHERE d.id_fornecedor = {fornecedor.Id}
                             ) tmp";
-                            var ultimaNota = await command.ExecuteScalarAsync() as DateOnly?;
+                            var ultimaNota = await command.ExecuteScalarAsync(ct) as DateOnly?;
                             var cutoffDate = new DateOnly(2023, 1, 1); // Inicio Legislatura // DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
 
                             if (ultimaNota != null && ultimaNota >= cutoffDate && fornecedor.DataSituacaoEspecial.HasValue && ultimaNota > DateOnly.FromDateTime(fornecedor.DataSituacaoEspecial.Value))
@@ -354,8 +355,8 @@ namespace OPS.Importador.Fornecedores
                             }
                         }
 
-                        await dbContext.SaveChangesAsync();
-                        await transaction.CommitAsync();
+                        await dbContext.SaveChangesAsync(ct);
+                        await transaction.CommitAsync(ct);
 
                         dbContext.ChangeTracker.Clear();
                         InserirControle(0, item.CnpjCpf, "");
@@ -363,7 +364,7 @@ namespace OPS.Importador.Fornecedores
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync();
+                        await transaction.RollbackAsync(ct);
                         logger.LogError(ex, "Erro ao processar fornecedor {CNPJ}", item.CnpjCpf);
                         InserirControle(1, item.CnpjCpf, ex.Message);
                     }
@@ -373,16 +374,16 @@ namespace OPS.Importador.Fornecedores
             return totalImportados;
         }
 
-        public async Task<MinhaReceita.FornecedorInfo> ConsultaCnpjReceitaWs(string cnpj)
+        public async Task<MinhaReceita.FornecedorInfo> ConsultaCnpjReceitaWs(string cnpj, CancellationToken ct = default)
         {
             try
             {
                 var url = $"https://www.receitaws.com.br/v1/cnpj/{cnpj}";
-                HttpResponseMessage response = await httpClient.GetAsync(url);
+                HttpResponseMessage response = await httpClient.GetAsync(url, ct);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    string responseString = await response.Content.ReadAsStringAsync();
+                    string responseString = await response.Content.ReadAsStringAsync(ct);
                     var fornecedorWs = JsonSerializer.Deserialize<ReceitaWS.FornecedorReceitaWs>(responseString, jsonSerializerOptions);
 
                     if (fornecedorWs == null || fornecedorWs.Status == "ERROR")
@@ -507,7 +508,7 @@ namespace OPS.Importador.Fornecedores
                         Console.WriteLine(response.ReasonPhrase);
                         System.Threading.Thread.Sleep(60000);
 
-                        return await ConsultaCnpjReceitaWs(cnpj);
+                        return await ConsultaCnpjReceitaWs(cnpj, ct);
                     }
                     else
                     {
@@ -539,7 +540,7 @@ namespace OPS.Importador.Fornecedores
                 logger.LogInformation("Controle Fornecedor: {Controle} - {CnpjCpf} - {Mensagem}", controle, cnpj_cpf, mensagem);
         }
 
-        private async Task<short> LocalizaInsereAtividade(List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao)
+        private async Task<short> LocalizaInsereAtividade(List<FornecedorAtividade> lstFornecedoresAtividade, int codigo, string descricao, CancellationToken ct)
         {
             var codigoFormatado = codigo.ToString(@"00\.00-0-00");
             var item = lstFornecedoresAtividade.FirstOrDefault(x => x.Codigo == codigoFormatado);
@@ -551,7 +552,7 @@ namespace OPS.Importador.Fornecedores
                     Descricao = descricao
                 };
                 dbContext.FornecedorAtividades.Add(atividade);
-                await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync(ct);
 
                 lstFornecedoresAtividade.Add(atividade);
 

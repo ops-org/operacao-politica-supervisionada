@@ -10,7 +10,7 @@ namespace OPS.Importador.Comum.Despesa
         {
         }
 
-        public Task Importar(int ano)
+        public Task Importar(int ano, CancellationToken ct = default)
         {
             CarregarDespesaArquivoHistorico(ano);
 
@@ -21,7 +21,8 @@ namespace OPS.Importador.Comum.Despesa
 
                 ParallelOptions parallelOptions = new ParallelOptions
                 {
-                    MaxDegreeOfParallelism = 1 // TODO: Implement IDbContextFactory and return to 3
+                    MaxDegreeOfParallelism = 1, // TODO: Implement IDbContextFactory and return to 3
+                    CancellationToken = ct
                 };
 
                 var meses = Enumerable.Range(1, 12);
@@ -42,7 +43,7 @@ namespace OPS.Importador.Comum.Despesa
 
                         try
                         {
-                            ImportarDespesas(context, ano, mes).Wait();
+                            ImportarDespesas(context, ano, mes, ct).Wait();
                         }
                         catch (Exception ex)
                         {
@@ -58,7 +59,7 @@ namespace OPS.Importador.Comum.Despesa
             return Task.CompletedTask;
         }
 
-        public abstract Task ImportarDespesas(IBrowsingContext context, int ano, int mes);
+        public abstract Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default);
     }
 
     //public class ImportadorDespesasRestApiConfig

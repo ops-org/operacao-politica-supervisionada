@@ -17,7 +17,7 @@ namespace OPS.Importador.Assembleias.Acre
             };
         }
 
-        public override Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             logger.LogWarning("Portal sem dados detalhados!");
 

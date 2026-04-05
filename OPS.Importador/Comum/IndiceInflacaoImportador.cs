@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Infraestrutura;
@@ -20,7 +21,7 @@ namespace OPS.Importador.Comum
             _httpClient = httpClientFactory.CreateClient("DefaultClient");
         }
 
-        public async Task ImportarIpca()
+        public async Task ImportarIpca(CancellationToken ct = default)
         {
             _logger.LogInformation("Iniciando importação de IPCA do BCB");
 
@@ -30,7 +31,12 @@ namespace OPS.Importador.Comum
             List<BcbSgsResponse> response;
             try
             {
-                response = await _httpClient.GetFromJsonAsync<List<BcbSgsResponse>>(url);
+                response = await _httpClient.GetFromJsonAsync<List<BcbSgsResponse>>(url, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Operação cancelada: importação de IPCA");
+                return;
             }
             catch (Exception ex)
             {
@@ -94,7 +100,7 @@ namespace OPS.Importador.Comum
 
             if (count > 0)
             {
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync(ct);
                 _logger.LogInformation("Importados {Count} novos registros de IPCA", count);
             }
             else

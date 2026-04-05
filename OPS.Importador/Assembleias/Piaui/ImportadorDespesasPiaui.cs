@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading;
 using CsvHelper;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
@@ -23,7 +24,7 @@ namespace OPS.Importador.Assembleias.Piaui
             };
         }
 
-        public override Task Importar(int ano)
+        public override Task Importar(int ano, CancellationToken ct = default)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {

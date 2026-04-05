@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OPS.API.Services;
 using OPS.Core.Repositories;
@@ -22,20 +23,20 @@ namespace OPS.API.Controllers
         public async Task<dynamic> ResumoMensal()
         {
             const string cacheKey = "deputado-estadual-resumo-mensal";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async (ct) =>
             {
-                return await _repository.ResumoMensal();
-            });
+                return await _repository.ResumoMensal(ct);
+            }, ct: HttpContext.RequestAborted);
         }
 
         [HttpGet("ResumoAnual")]
         public async Task<dynamic> ResumoAnual()
         {
             const string cacheKey = "deputado-estadual-resumo-anual";
-            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async () =>
+            return await _hybridCacheService.GetOrCreateAsync(cacheKey, async (ct) =>
             {
-                return await _repository.ResumoAnual();
-            });
+                return await _repository.ResumoAnual(ct);
+            }, ct: HttpContext.RequestAborted);
         }
     }
 }

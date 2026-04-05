@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using CsvHelper;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -86,7 +87,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     #region Importação Dados CEAP CSV
 
-    public async Task Importar(int ano)
+    public async Task Importar(int ano, CancellationToken ct = default)
     {
         logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
 
@@ -98,6 +99,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             var caminhoArquivo = arquivo.Value;
 
             bool novoArquivoBaixado = await fileManager.BaixarArquivo(dbContext, urlOrigem, caminhoArquivo, null);
+            ct.ThrowIfCancellationRequested();
             if (!appSettings.ForceImport && !novoArquivoBaixado)
             {
                 logger.LogInformation("Importação ignorada para arquivo previamente importado!");
