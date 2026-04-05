@@ -1203,7 +1203,7 @@ WHERE (1=1)
         {
             // using (AppDb banco = new AppDb())
             {
-                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from senado.sf_despesa_resumo_mensal", ct))
+                using (DbDataReader reader = await ExecuteReaderAsync(@"select ano, mes, valor from senado.sf_despesa_resumo_mensal", ct: ct))
                 {
                     List<dynamic> lstRetorno = new List<dynamic>();
                     var lstValoresMensais = new decimal?[12];
@@ -1464,7 +1464,7 @@ WHERE (1=1)
                 sqlSelect.AppendLine($" SELECT COUNT(*) FROM ({sqlToCount}) AS t; ");
 
                 var lstRetorno = new List<dynamic>();
-                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), ct))
+                using (DbDataReader reader = await ExecuteReaderAsync(sqlSelect.ToString(), ct: ct))
                 {
                     if (eAgrupamento != AgrupamentoRemuneracaoSenado.AnoMes)
                     {

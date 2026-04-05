@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OPS.API.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="..\.sonarlint\ops-org_operacao-politica-supervisionada\CSharp\SonarLint.xml" Link="SonarLint.xml" />
   </ItemGroup>
 

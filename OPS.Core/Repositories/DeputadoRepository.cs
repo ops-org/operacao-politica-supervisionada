@@ -1336,7 +1336,7 @@ WHERE (1=1)
 						, p.secretarios_ativos
 						, p.valor_mensal_secretarios
 					FROM camara.cf_deputado p
-					where p.quantidade_secretarios > 0
+					where p.secretarios_ativos > 0
 				");
 
                 //if (!string.IsNullOrEmpty(request.NomeParlamentar))
@@ -1347,7 +1347,7 @@ WHERE (1=1)
                 strSql.AppendFormat(" ORDER BY {0} ", request.GetSorting(dcFielsSort, "p.nome_parlamentar"));
                 strSql.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-                strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
+                strSql.AppendLine("SELECT count(1) as row_count FROM camara.cf_deputado where secretarios_ativos > 0; ");
 
                 var lstRetorno = new List<dynamic>();
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), ct: ct))
@@ -1358,7 +1358,7 @@ WHERE (1=1)
                         {
                             id_parlamentar = reader["id_cf_deputado"],
                             nome_parlamentar = reader["nome_parlamentar"].ToString(),
-                            quantidade_secretarios = reader["quantidade_secretarios"].ToString(),
+                            secretarios_ativos = reader["secretarios_ativos"].ToString(),
                             custo_total_secretarios = Utils.FormataValor(reader["valor_mensal_secretarios"]) // TODO: Seria o valor mensal ou total?
                         });
                     }
@@ -1406,12 +1406,10 @@ SELECT DISTINCT
 	, s.chave
 FROM camara.cf_funcionario s
 JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id
-left JOIN camara.cf_funcionario_remuneracao r ON r.id_cf_funcionario = s.id -- AND r.id_cf_deputado = co.id_cf_deputado
+left JOIN camara.cf_funcionario_remuneracao r ON r.id_cf_funcionario = s.id
 JOIN camara.cf_funcionario_cargo ca ON ca.id = co.id_cf_funcionario_cargo
 JOIN camara.cf_funcionario_grupo_funcional gf ON gf.id = co.id_cf_funcionario_grupo_funcional
 WHERE co.id_cf_deputado = @id
-AND r.referencia = '2021-07-01'
-AND ca.nome = r.cargo
 AND co.periodo_ate IS null
 				");
 
@@ -1424,7 +1422,12 @@ AND co.periodo_ate IS null
                 strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
                 strSql.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-                strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
+                strSql.AppendLine(@"
+SELECT count(1) as row_count 
+FROM camara.cf_funcionario s 
+JOIN camara.cf_funcionario_contratacao co ON co.id_cf_funcionario = s.id 
+WHERE co.id_cf_deputado = @id 
+AND co.periodo_ate IS null; ");
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }, ct))
                 {
@@ -1472,22 +1475,27 @@ AND co.periodo_ate IS null
                 var strSql = new StringBuilder();
                 strSql.AppendLine(@"
 					SELECT
-	                    s.nome
-	                    , SUM(r.valor_outros + r.valor_bruto) as custo_total
-	                    , s.link
+                        s.nome
+                        , SUM(r.valor_outros + r.valor_bruto) as custo_total
+                        , s.chave
                     FROM camara.cf_funcionario_remuneracao r
-                    left join (
-	                    select distinct id_cf_deputado, nome, link
-	                    FROM camara.cf_funcionario s
-                    ) s on s.link = r.id_cf_funcionario
+                    join (
+                        select distinct c.id_cf_funcionario, c.id_cf_deputado, s.nome, s.chave
+                        FROM camara.cf_funcionario s
+                        join camara.cf_funcionario_contratacao c on c.id_cf_funcionario = s.id
+                    ) s on s.id_cf_funcionario = r.id_cf_funcionario
                     WHERE s.id_cf_deputado = @id
-                    group by s.link, s.nome
+                    group by s.chave, s.nome
 				");
 
                 strSql.AppendFormat(" ORDER BY {0} ", Utils.MySqlEscape(request.GetSorting(dcFielsSort, "s.nome")));
                 strSql.AppendFormat(" LIMIT {1} OFFSET {0}; ", request.Start, request.Length);
 
-                strSql.AppendLine("SELECT FOUND_ROWS() as row_count; ");
+                strSql.AppendLine(@"
+SELECT count(DISTINCT s.chave) as row_count 
+FROM camara.cf_funcionario s
+join camara.cf_funcionario_contratacao c on c.id_cf_funcionario = s.id
+WHERE c.id_cf_deputado = @id");
 
                 using (DbDataReader reader = await ExecuteReaderAsync(strSql.ToString(), new { id }, ct))
                 {
@@ -1498,7 +1506,7 @@ AND co.periodo_ate IS null
                         {
                             nome = reader["nome"].ToString(),
                             custo_total = Utils.FormataValor(reader["custo_total"]),
-                            link = reader["link"].ToString()
+                            link = reader["chave"].ToString()
                         });
 
 
@@ -1957,7 +1965,7 @@ ORDER BY EXTRACT(YEAR FROM s.data)
             string strSelectFiels, sqlGroupBy;
 
             AgrupamentoRemuneracaoCamara eAgrupamento;
-            if (request.Filters.TryGetValue("ag", out object agrupamento))
+            if (request.Filters?.TryGetValue("ag", out object agrupamento) ?? false)
                 eAgrupamento = (AgrupamentoRemuneracaoCamara)Convert.ToInt32(agrupamento);
             else
                 eAgrupamento = AgrupamentoRemuneracaoCamara.AnoMes;
@@ -2001,29 +2009,32 @@ ORDER BY EXTRACT(YEAR FROM s.data)
 
             var sqlWhere = new StringBuilder();
 
-            if (request.Filters.ContainsKey("gf") && !string.IsNullOrEmpty(request.Filters["gf"].ToString()))
+            if (request.Filters != null)
             {
-                sqlWhere.AppendLine("	AND co.id_cf_funcionario_grupo_funcional IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["gf"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND co.id_cf_funcionario_cargo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["cr"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("df") && !string.IsNullOrEmpty(request.Filters["df"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND co.id_cf_deputado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["df"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("sc") && !string.IsNullOrEmpty(request.Filters["sc"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND co.id_cf_funcionario IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["sc"].ToString()) + ") ");
-            }
-            if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND r.referencia = '" + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "-" + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + "-01' ");
-            }
-            else if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
-            {
-                sqlWhere.AppendLine("	AND EXTRACT(YEAR FROM r.referencia) BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + " AND " + Convert.ToInt32(request.Filters["an"].ToString()) + " ");
+                if (request.Filters.ContainsKey("gf") && !string.IsNullOrEmpty(request.Filters["gf"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND co.id_cf_funcionario_grupo_funcional IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["gf"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("cr") && !string.IsNullOrEmpty(request.Filters["cr"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND co.id_cf_funcionario_cargo IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["cr"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("df") && !string.IsNullOrEmpty(request.Filters["df"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND co.id_cf_deputado IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["df"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("sc") && !string.IsNullOrEmpty(request.Filters["sc"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND co.id_cf_funcionario IN(" + Utils.MySqlEscapeNumberToIn(request.Filters["sc"].ToString()) + ") ");
+                }
+                if (request.Filters.ContainsKey("ms") && !string.IsNullOrEmpty(request.Filters["ms"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND r.referencia = '" + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + "-" + Convert.ToInt32(request.Filters["ms"].ToString()).ToString("d2") + "-01' ");
+                }
+                else if (request.Filters.ContainsKey("an") && !string.IsNullOrEmpty(request.Filters["an"].ToString()))
+                {
+                    sqlWhere.AppendLine("	AND EXTRACT(YEAR FROM r.referencia) BETWEEN " + Convert.ToInt32(request.Filters["an"].ToString()).ToString() + " AND " + Convert.ToInt32(request.Filters["an"].ToString()) + " ");
+                }
             }
 
             if (eAgrupamento == AgrupamentoRemuneracaoCamara.Deputado)

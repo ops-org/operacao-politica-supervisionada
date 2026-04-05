@@ -288,7 +288,7 @@ namespace OPS.Core.Repositories
         public async Task<GraficoBarraDTO> GastosPorAno(int id, CancellationToken ct = default)
         {
             var strSql = @"
-				SELECT d.ano, d.mes, SUM(d.valor) AS valor_total
+				SELECT d.ano, d.mes, SUM(d.valor_liquido) AS valor_total
 				from assembleias.cl_despesa d
 				WHERE d.id_cl_deputado = @id
 				group by d.ano, d.mes
