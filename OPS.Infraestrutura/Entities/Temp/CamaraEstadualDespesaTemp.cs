@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace OPS.Infraestrutura.Entities.Temp
 {
-    [DebuggerDisplay("Id={Id}, Cpf={Cpf}, IdDeputado={IdDeputado}, Nome={Nome}, NomeCivil={NomeCivil}, Empresa={Empresa}, CnpjCpf={CnpjCpf}, DataEmissao={DataEmissao}, TipoVerba={TipoVerba}, TipoDespesa={TipoDespesa}, Valor={Valor}, Ano={Ano}, Mes={Mes}, Documento={Documento}, Favorecido={Favorecido}, Observacao={Observacao}")]
+    [DebuggerDisplay("Id={Id}, Cpf={Cpf}, IdDeputado={IdDeputado}, Nome={Nome}, NomeCivil={NomeCivil}, CnpjCpf={CnpjCpf}, NomeFornecedor={NomeFornecedor}, DataEmissao={DataEmissao}, TipoVerba={TipoVerba}, TipoDespesa={TipoDespesa}, Valor={Valor}, Ano={Ano}, Mes={Mes}, Documento={Documento}, Favorecido={Favorecido}, Observacao={Observacao}")]
     public class CamaraEstadualDespesaTemp
     {
         [Key]

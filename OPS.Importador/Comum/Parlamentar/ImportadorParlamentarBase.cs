@@ -7,6 +7,7 @@ using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 using RestSharp;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador.Comum.Parlamentar
 {
@@ -183,12 +184,15 @@ namespace OPS.Importador.Comum.Parlamentar
 
         public T RestApiGet<T>(string address)
         {
-            var restClient = CreateHttpClient();
+            using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = address }))
+            {
+                var restClient = CreateHttpClient();
 
-            var request = new RestRequest(address);
-            request.AddHeader("Accept", "application/json");
+                var request = new RestRequest(address);
+                request.AddHeader("Accept", "application/json");
 
-            return restClient.Get<T>(request);
+                return restClient.Get<T>(request);
+            }
         }
 
         public T RestApiGetWithSqlTimestampConverter<T>(string address)

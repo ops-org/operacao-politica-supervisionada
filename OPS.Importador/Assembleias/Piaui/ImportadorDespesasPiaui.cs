@@ -77,7 +77,7 @@ namespace OPS.Importador.Assembleias.Piaui
             competenciaFinal = $"{ano + 4}12";
         }
 
-        public override void ImportarDespesas(string caminhoArquivo, int ano)
+        public override void ImportarDespesas(string caminhoArquivo, int ano, int? mes = null)
         {
             throw new NotImplementedException();
         }

@@ -38,6 +38,12 @@ namespace OPS.Importador.Assembleias.Tocantins
             dcForm.Add("transparencia.mes", mes.ToString());
             dcForm.Add("transparencia.parlamentar", "");
             IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.py-4");
+            if(form == null)
+            {
+                logger.LogError("Formulario não localizado para o ano {Ano}/{Mes}.", ano, mes);
+                return;
+            }
+
             document = await form.SubmitAsyncAutoRetry(dcForm);
 
             form = document.QuerySelector<IHtmlFormElement>("form.py-4");
@@ -45,7 +51,7 @@ namespace OPS.Importador.Assembleias.Tocantins
 
             if (gabinetes.Options[2].Text == "Não existem registros para o ano selecionado")
             {
-                logger.LogError("Não existem registros para o ano {Ano}.", mes);
+                logger.LogError("Não existem registros para o ano {Ano}/{Mes}.", ano, mes);
                 return;
             }
 

@@ -145,19 +145,33 @@ internal static class ConfigureApp
     {
         services.AddHttpClient("ResilientClient")
             .AddDefaultOpsConfiguration()
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            .ConfigurePrimaryHttpMessageHandler((sp) =>
             {
-                AllowAutoRedirect = false,
-                MaxAutomaticRedirections = 1,
-                ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
+                var config = sp.GetRequiredService<IConfiguration>();
+                var proxySettings = config.GetSection("ProxySettings").Get<ProxySettings>() ?? new ProxySettings();
+
+                return new ResilientProxyHandler(proxySettings, allowRedirect: false);
             });
+        //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        //{
+        //    AllowAutoRedirect = false,
+        //    MaxAutomaticRedirections = 1,
+        //    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
+        //});
 
         services.AddHttpClient("DefaultClient")
             .AddDefaultOpsConfiguration()
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            .ConfigurePrimaryHttpMessageHandler((sp) =>
             {
-                AllowAutoRedirect = true
+                var config = sp.GetRequiredService<IConfiguration>();
+                var proxySettings = config.GetSection("ProxySettings").Get<ProxySettings>() ?? new ProxySettings();
+
+                return new ResilientProxyHandler(proxySettings, allowRedirect: true);
             });
+        //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        //{
+        //    AllowAutoRedirect = true
+        //});
     }
 
     private static IHttpClientBuilder AddDefaultOpsConfiguration(this IHttpClientBuilder builder)

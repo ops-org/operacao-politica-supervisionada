@@ -40,7 +40,7 @@ namespace OPS.Importador.Assembleias.SaoPaulo
             return arquivos;
         }
 
-        public override void ImportarDespesas(string caminhoArquivo, int ano)
+        public override void ImportarDespesas(string caminhoArquivo, int ano, int? mes = null)
         {
             var doc = new XmlDocument();
             doc.Load(caminhoArquivo);
@@ -52,7 +52,7 @@ namespace OPS.Importador.Assembleias.SaoPaulo
                 var deputado = fileNode.SelectSingleNode("Deputado").InnerText.Trim().ToTitleCase();
                 var tipoDespesa = fileNode.SelectSingleNode("Tipo").InnerText.Trim();
                 //var ano = fileNode.SelectSingleNode("Ano").InnerText.Trim();
-                var mes = fileNode.SelectSingleNode("Mes").InnerText.Trim();
+                var mesArquivo = fileNode.SelectSingleNode("Mes").InnerText.Trim();
                 var cnpj = fileNode.SelectSingleNode("CNPJ")?.InnerText?.Trim();
                 var fornecedor = fileNode.SelectSingleNode("Fornecedor").InnerText.Trim();
                 var valor = fileNode.SelectSingleNode("Valor").InnerText.Trim();
@@ -66,7 +66,7 @@ namespace OPS.Importador.Assembleias.SaoPaulo
                     CnpjCpf = cnpj,
                     TipoDespesa = tipoDespesa,
                     Valor = !string.IsNullOrEmpty(valor) ? Convert.ToDecimal(valor, cultureInfo) : 0,
-                    DataEmissao = new DateOnly(ano, Convert.ToInt32(mes), 1),
+                    DataEmissao = new DateOnly(ano, Convert.ToInt32(mesArquivo), 1),
                     Origem = caminhoArquivo
                 };
 

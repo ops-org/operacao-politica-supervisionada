@@ -91,7 +91,7 @@ namespace OPS.Importador.Assembleias.DistritoFederal
             _ => throw new ArgumentException(message: "ano invalido!", paramName: nameof(ano)),
         };
 
-        public override void ImportarDespesas(string caminhoArquivo, int ano)
+        public override void ImportarDespesas(string caminhoArquivo, int ano, int? mes = null)
         {
             if (caminhoArquivo.EndsWith(".xlsx"))
                 CarregaDadosXlsx(caminhoArquivo, ano);

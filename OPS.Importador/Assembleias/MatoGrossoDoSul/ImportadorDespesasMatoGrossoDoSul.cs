@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using System.Threading;
@@ -37,7 +38,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
         var pagina = 0;
 
-        var address = $"http://consulta.transparencia.al.ms.gov.br/ceap/";
+        var address = $"https://consulta.transparencia.al.ms.gov.br/ceap/";
         var document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
         Thread.Sleep(TimeSpan.FromSeconds(3));
@@ -57,15 +58,16 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         dcForm.Add("verbaindenizatoria_ano_referencia_autocomp", ano.ToString());
         dcForm.Add("verbaindenizatoria_ano_referencia_input_2", ano.ToString());
         dcForm.Add("NM_operador", "and");
-        dcForm.Add("nmgp_tab_label", "deputados_nome%3F%23%3FNome%3F%40%3Fcategoriadespesas_descricao%3F%23%3FCategoria%2FDespesa%3F%40%3Fverbaindenizatoria_mes_referencia%3F%23%3FM%EAs%3F%40%3Fverbaindenizatoria_ano_referencia%3F%23%3FAno%3F%40%3F");
+        dcForm.Add("nmgp_tab_label", "deputados_nome?#?Nome?@?categoriadespesas_descricao?#?Categoria/Despesa?@?verbaindenizatoria_mes_referencia?#?Mês?@?verbaindenizatoria_ano_referencia?#?Ano?@?");
         dcForm.Add("bprocessa", "pesq");
         dcForm.Add("nmgp_save_name_bot", "");
         dcForm.Add("NM_filters_del_bot", "");
         dcForm.Add("form_condicao", "3");
+
         document = await form.SubmitAsyncAutoRetry(dcForm, true, ct: ct);
 
         form = document.QuerySelector<IHtmlFormElement>("form");
-        document = await form.SubmitAsync(ct);
+        document = await form.SubmitAsync(new Dictionary<string, string>());
 
         if (document.QuerySelector("#sc_grid_body").TextContent.Trim() == "Registros não encontrados") return;
 

@@ -6,6 +6,7 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Io.Network;
 using OPS.Core.Exceptions;
 using Serilog;
+using Serilog.Context;
 
 namespace OPS.Importador.Comum.Utilities;
 
@@ -47,7 +48,7 @@ public static class AngleSharpExtensions
             }
 
             if (doc.StatusCode == HttpStatusCode.NotFound)
-                return doc;
+                throw new Exception($"Error Get Request returns NotFound: {address}");
 
             if (doc.StatusCode == HttpStatusCode.OK)
             {
@@ -86,37 +87,40 @@ public static class AngleSharpExtensions
 
     public static async Task<IDocument> SubmitAsyncAutoRetry(this IHtmlFormElement form, IDictionary<string, string> fields, bool createMissing = false, int totalRetries = 3, CancellationToken ct = default)
     {
-        int retries = 0;
-        do
+        using (LogContext.PushProperty("Url", form.BaseUri.ToString()))
         {
-            retries++;
-            IDocument doc;
-            try
+            int retries = 0;
+            do
             {
-                doc = await form.SubmitAsync(fields, createMissing); // For StatusCode Error, polly will manage the retries
-            }
-            catch (NullReferenceException ex) when (ex.Source == "AngleSharp")
-            {
-                if (retries >= totalRetries) throw;
+                retries++;
+                IDocument doc;
+                try
+                {
+                    doc = await form.SubmitAsync(fields, createMissing); // For StatusCode Error, polly will manage the retries
+                }
+                catch (NullReferenceException ex) when (ex.Source == "AngleSharp")
+                {
+                    if (retries >= totalRetries) throw;
 
-                var waitExSeconds = Math.Pow(2, retries);
-                Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitExSeconds);
-                await Task.Delay(TimeSpan.FromSeconds(waitExSeconds), ct);
-                continue;
-            }
+                    var waitExSeconds = Math.Pow(2, retries);
+                    Log.Warning(ex, "AngleSharp NRE occurred. Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitExSeconds);
+                    await Task.Delay(TimeSpan.FromSeconds(waitExSeconds), ct);
+                    continue;
+                }
 
-            if (doc.StatusCode == HttpStatusCode.OK)
-            {
-                var html = doc.ToHtml();
-                if (!string.IsNullOrEmpty(html) && html != "<html><head></head><body></body></html>") // Validate empty response and page error redirect
-                    return doc;
-            }
+                if (doc.StatusCode == HttpStatusCode.OK)
+                {
+                    var html = doc.ToHtml();
+                    if (!string.IsNullOrEmpty(html) && html != "<html><head></head><body></body></html>") // Validate empty response and page error redirect
+                        return doc;
+                }
 
-            var waitSeconds = Math.Pow(2, retries);
-            Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(waitSeconds), ct);
+                var waitSeconds = Math.Pow(2, retries);
+                Log.Information("Try {Retries} of {MaxRetries} on {Address}. Wait for {WaitSeconds} seconds.", retries, totalRetries, form.BaseUri.ToString(), waitSeconds);
+                await Task.Delay(TimeSpan.FromSeconds(waitSeconds), ct);
 
-        } while (retries < totalRetries);
+            } while (retries < totalRetries);
+        }
 
         throw new Exception($"Error Submit Form: {form.BaseUri.ToString()}");
     }

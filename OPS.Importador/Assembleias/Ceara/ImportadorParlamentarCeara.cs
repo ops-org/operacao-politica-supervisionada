@@ -40,10 +40,10 @@ public class ImportadorParlamentarCeara : ImportadorParlamentarCrawler
         if (string.IsNullOrEmpty(deputado.NomeCivil))
             deputado.NomeCivil = BuscarTexto(detalhes, "Nome Completo").ToTitleCase();
 
-        deputado.Profissao = BuscarTexto(detalhes, "Profissão")?.ToTitleCase();
-        deputado.Email = BuscarTexto(detalhes, "E-mails");
-        deputado.Site = BuscarTexto(detalhes, "Site Pessoal");
-        deputado.Telefone = BuscarTexto(detalhes, "Telefones");
+        deputado.Profissao = BuscarTexto(detalhes, "Profissão")?.ToTitleCase().NullIfEmpty();
+        deputado.Email = BuscarTexto(detalhes, "E-mails").NullIfEmpty();
+        deputado.Site = BuscarTexto(detalhes, "Site Pessoal").NullIfEmpty();
+        deputado.Telefone = BuscarTexto(detalhes, "Telefones").NullIfEmpty();
     }
 
     public string BuscarTexto(IHtmlCollection<IElement> detalhes, string textoBuscar)

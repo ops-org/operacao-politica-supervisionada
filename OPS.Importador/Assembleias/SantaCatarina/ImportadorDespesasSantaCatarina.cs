@@ -44,7 +44,7 @@ namespace OPS.Importador.Assembleias.SantaCatarina
             return arquivos;
         }
 
-        public override void ImportarDespesas(string caminhoArquivo, int ano)
+        public override void ImportarDespesas(string caminhoArquivo, int ano, int? mes = null)
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
