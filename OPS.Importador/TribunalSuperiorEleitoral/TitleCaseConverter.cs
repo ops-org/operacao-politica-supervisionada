@@ -3,6 +3,7 @@ using Castle.Core.Logging;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using OPS.Core.Utilities;
 
 namespace OPS.Importador.TribunalSuperiorEleitoral
 {
@@ -39,7 +40,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
         {
             if (string.IsNullOrEmpty(text))
             {
-                return text;
+                return null;
             }
 
             string result = text;
@@ -47,7 +48,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
             // Apply cleaning if enabled
             if (_options.HasFlag(StringConversionOptions.Cleaning))
             {
-                if (text.ToUpper() == "#NE" || text == "#NE#" || text == "#NULO" || text == "#NULO#" || text == "NÃO DIVULGÁVEL")
+                if (text.ToUpper() == "#NE" || text == "#NE#" || text == "#NULO" || text == "#NULO#" || text == "NÃO DIVULGÁVEL" || text == "NAO DIVULGAVEL")
                 {
                     return null;
                 }
@@ -65,7 +66,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
                 result = text.ToLower();
             }
 
-            return result;
+            return result.NullIfEmpty();
         }
     }
 
@@ -85,7 +86,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
             if (string.IsNullOrEmpty(text))
                 return null;
 
-            if (Decimal.TryParse(text, _culture, out decimal value) && value > 0)
+            if (Decimal.TryParse(text, _culture, out decimal value) && value >= 0)
                 return text;
 
             //if (text.All(char.IsDigit))

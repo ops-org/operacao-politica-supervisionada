@@ -28,7 +28,7 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
                 return base.ConvertFromString(null, row, memberMapData);
             }
 
-            var success = DateTime.TryParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
+            var success = DateTime.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
 
             if (dateTime == DateTime.MinValue)
             {

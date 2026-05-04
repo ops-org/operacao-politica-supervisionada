@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,7 +22,6 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
         private readonly AppDbContext context;
         private readonly FileManager fileManager;
         private readonly string basePath;
-        private readonly string candidatosBasePath = "https://cdn.tse.jus.br/estatistica/sead/odsele/";
 
         public Candidatos(ILogger<Candidatos> logger, AppDbContext context, FileManager fileManager, IOptions<AppSettings> appSettings)
         {
@@ -34,11 +34,11 @@ namespace OPS.Importador.TribunalSuperiorEleitoral
         }
 
 
-        public async Task ImportarCompleto(int ano)
+        public async Task ImportarCompleto()
         {
-            // context.Database.ExecuteSqlRaw(@"TRUNCATE TABLE temp.tse_candidato, temp.tse_despesa_contratada, temp.tse_despesa_paga, temp.tse_receita, temp.tse_receita_doador_originario RESTART IDENTITY;");
+            //context.Database.ExecuteSqlRaw(@"TRUNCATE TABLE temp.tse_candidatura, temp.tse_despesa_contratada, temp.tse_despesa_paga, temp.tse_receita, temp.tse_receita_doador_originario RESTART IDENTITY;");
 
-            await ImportarCandidatos(ano);
+            //await ImportarCandidatos();
             await ProcesarCandidatosTemp();
 
             //ImportarDespesasPagas(@"C:\\temp\TribunalSuperiorEleitoral\despesas_pagas_candidatos_2018_BRASIL.csv");
@@ -92,9 +92,9 @@ join tse.coligacao_partidaria cp on cp.sequencial = c.codigo_legenda and lower(u
 ON CONFLICT DO NOTHING;");
 
             context.Database.ExecuteSqlRaw(@"
-INSERT INTO tse.coligacao_partidaria (tse_key, tse_sequencial_coligacao, tse_nome, tse_tipo_descricao)
-select distinct codigo_legenda, codigo_legenda, legenda, tipo_agremiacao
-from temp.tse_candidatos 
+INSERT INTO tse.coligacao_partidaria (sequencial, nome, tipo_descricao)
+select distinct codigo_legenda, legenda, tipo_agremiacao
+from temp.tse_candidatura 
 order by tipo_agremiacao, legenda
 ON CONFLICT DO NOTHING;
 ");
@@ -230,7 +230,7 @@ left join estado uf on uf.sigla = c.sigla_unidade_eleitoral
 -- left join municipio m on m.id_estado = uf.id and lower(unaccent(m.nome)) = lower(unaccent(c.codigo_municipio))
 join partido pr on pr.legenda = c.numero_partido::int2 and pr.sigla = c.sigla_partido
 left join tse.coligacao_partidaria cp on cp.sequencial = c.codigo_legenda and lower(unaccent(cp.nome)) = lower(unaccent(c.legenda))
-where concat(c.numero_sequencial, '_', c.cpf, '_', c.numero_protocolo_candidatura, '_', c.turno) = '170000614098_44901895400__1';
+ON CONFLICT DO NOTHING;
 ");
         }
 
@@ -241,27 +241,36 @@ where concat(c.numero_sequencial, '_', c.cpf, '_', c.numero_protocolo_candidatur
         // consulta_vagas/consulta_vagas_2018.zip
         // motivo_cassacao/motivo_cassacao_2018.zip
 
-        public async Task ImportarCandidatos(int ano)
+        public async Task ImportarCandidatos()
         {
             var cultureInfo = new CultureInfo("pt-BR");
-            string url = string.Concat(candidatosBasePath, "consulta_cand/consulta_cand_", ano, ".zip");
-            string filename = Path.Combine(basePath, $"consulta_cand_{ano}.zip");
+            //string url = string.Concat(candidatosBasePath, "consulta_cand/consulta_cand_", ano, ".zip");
+            //string filename = Path.Combine(basePath, $"consulta_cand_{ano}.zip");
 
-            var hasChanges = await fileManager.BaixarArquivo(context, url, filename, null);
-            if (!hasChanges && !appSettings.ForceImport) return;
+            //var hasChanges = await fileManager.BaixarArquivo(context, url, filename, null);
+            //if (!hasChanges && !appSettings.ForceImport) return;
 
-            var filenameCSV = string.Concat("consulta_cand_", ano, "_BRASIL.csv");
-            fileManager.DescompactarArquivo(filename, filenameCSV);
-            filename = Path.Combine(basePath, filenameCSV);
+            //var filenameCSV = string.Concat("consulta_cand_", ano, "_BRASIL.csv");
+            //fileManager.DescompactarArquivo(filename, filenameCSV);
+            //filename = Path.Combine(basePath, filenameCSV);
+
+            string filename = Path.Combine(basePath, "candidatura.csv");
 
             using (var reader = new StreamReader(filename, Encoding.GetEncoding("ISO-8859-1")))
-            using (var csv = new CsvReader(reader, cultureInfo))
             {
-                csv.Context.RegisterClassMap<TseCandidatoMap>();
-                var records = csv.GetRecords<TseCandidato>();
+                var csvConfig = new CsvConfiguration(cultureInfo)
+                {
+                    Delimiter = ","
+                };
 
-                var bulkService = new BulkInsertService<TseCandidato>();
-                bulkService.BulkInsertNoTracking(context, records);
+                using (var csv = new CsvReader(reader, csvConfig))
+                {
+                    csv.Context.RegisterClassMap<TseCandidatoMap>();
+                    var records = csv.GetRecords<TseCandidato>().ToList();
+
+                    var bulkService = new BulkInsertService<TseCandidato>();
+                    bulkService.BulkInsertNoTracking(context, records);
+                }
             }
         }
 

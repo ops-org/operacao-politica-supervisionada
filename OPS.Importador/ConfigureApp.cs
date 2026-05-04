@@ -38,6 +38,7 @@ using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
 using OPS.Importador.SenadoFederal;
+using OPS.Importador.TribunalSuperiorEleitoral;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -127,7 +128,7 @@ internal static class ConfigureApp
         services.AddScoped<SenadoFederal.ImportadorDespesasSenado>();
         services.AddScoped<SenadoFederal.ImportadorRemuneracaoSenado>();
 
-        //services.AddScoped<Presidencia>();
+        services.AddScoped<Candidatos>();
 
         services.AddScoped<Fornecedores.ImportacaoFornecedor>();
         services.AddScoped<FileManager>();

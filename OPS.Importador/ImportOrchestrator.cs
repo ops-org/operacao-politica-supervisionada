@@ -68,13 +68,10 @@ namespace OPS.Importador
 
             //await importador.AtualizarDadosCalculados();
 
-
-            //var cand = new Candidatos();
-            //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
-            //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
-            //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
-            //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
-            //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
+            // https://divulgacandcontas.tse.jus.br/divulga/#/eleicao
+            // https://dadosabertos.tse.jus.br/dataset/?groups=candidatos
+            var cand = serviceProvider.GetRequiredService<TribunalSuperiorEleitoral.Candidatos>();
+            await cand.ImportarCompleto();
 
             using var scope = serviceProvider.CreateScope();
             var objFornecedor = scope.ServiceProvider.GetRequiredService<Fornecedores.ImportacaoFornecedor>();

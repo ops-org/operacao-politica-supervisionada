@@ -65,7 +65,7 @@ namespace OPS.Infraestrutura.Entities.Temp
         /// Número do turno. Aparece no TSE como: NUM_TURNO (1994_BR), NR_TURNO (1996).
         /// </summary>
         [Column("turno")]
-        public string? Turno { get; set; }
+        public string? Turno { get; set; }   
 
         /// <summary>
         /// Sigla da Unidade Eleitoral (Em caso de eleição majoritária é a sigla da UF que o candidato concorre (texto) e em caso de eleição municipal é o código TSE do município (número)). Assume os valores especiais BR, ZZ e VT para designar, respectivamente, o Brasil, Exterior e Voto em Trânsito. Aparece no TSE como: SIGLA_UE (1994_BR), SG_UE (1996).
