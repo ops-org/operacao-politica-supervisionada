@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
 {
     [Table("cl_despesa_especificacao")]
+    [DebuggerDisplay("DespesaEspecificacaoAssembleias {{Id}} - {{Descricao}}")]
     public class DespesaEspecificacaoAssembleias
     {
         [Key]
@@ -22,3 +24,4 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
         public virtual ICollection<DespesaAssembleias> Despesas { get; set; } = new List<DespesaAssembleias>();
     }
 }
+

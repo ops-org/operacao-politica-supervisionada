@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
@@ -22,7 +23,7 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
     private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+    public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
     {
         List<RubricasPE> rubricas;
         //try
@@ -46,7 +47,7 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
         //}
 
 
-        var deputados = await RestApiGetWithCustomDateConverter<List<DeputadoPE>>($"{config.BaseAddress}dep/deputados.php?leg=-16"); // 2023-2026
+        var deputados = await RestApiGetWithCustomDateConverter<List<DeputadoPE>>($"{config.BaseAddress}dep/deputados.php?leg=-16", ct); // 2023-2026
         if (!deputados.Any())
         {
             logger.LogWarning("Nenhum parlamentar foi encontrado.");
@@ -55,11 +56,11 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
         foreach (var deputado in deputados)
         {
-            var meses = await RestApiGetWithCustomDateConverter<List<DespesaMesesPE>>($"{config.BaseAddress}adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}");
+            var meses = await RestApiGetWithCustomDateConverter<List<DespesaMesesPE>>($"{config.BaseAddress}adm/verbaindenizatoria-dep-meses.php?dep={deputado.Id}&ano={ano}", ct);
             foreach (var mesComDespesa in meses)
             {
                 var address = $"{config.BaseAddress}adm/verbaindenizatoria.php?dep={deputado.Id}&ano={ano}&mes={mesComDespesa.Mes}";
-                var documentos = await RestApiGetWithCustomDateConverter<List<DespesaDocumentosPE>>(address);
+                var documentos = await RestApiGetWithCustomDateConverter<List<DespesaDocumentosPE>>(address, ct);
                 if (!documentos.Any())
                 {
                     logger.LogWarning("Não da documentos para o parlamentar {Parlamentar} em {Mes}/{Ano}", deputado.Nome, mesComDespesa.Mes, ano);
@@ -68,7 +69,7 @@ public class ImportadorDespesasPernambuco : ImportadorDespesasRestApiAnual
 
                 foreach (var documento in documentos)
                 {
-                    var despesas = await RestApiGetWithCustomDateConverter<List<DespesaPE>>($"{config.BaseAddress}adm/verbaindenizatorianotas.php?docid={documento.Docid}");
+                    var despesas = await RestApiGetWithCustomDateConverter<List<DespesaPE>>($"{config.BaseAddress}adm/verbaindenizatorianotas.php?docid={documento.Docid}", ct);
                     if (!despesas.Any())
                     {
                         logger.LogWarning("Não da despesas para o parlamentar {Parlamentar} em {Mes}/{Ano}", deputado.Nome, mesComDespesa.Mes, ano);

@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -32,13 +33,13 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
         deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
     }
 
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
     {
-        await ImportarCotaParlamentar(context, ano, mes);
-        await ImportarDiarias(context, ano, mes);
+        await ImportarCotaParlamentar(context, ano, mes, ct);
+        await ImportarDiarias(context, ano, mes, ct);
     }
 
-    private async Task ImportarDiarias(IBrowsingContext context, int ano, int mes)
+    private async Task ImportarDiarias(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
     {
         var address = $"https://transparencia.al.ro.leg.br/Deputados/Diarias/?nome=&ano={ano}&mes={mes}";
         var document = await context.OpenAsyncAutoRetry(address);
@@ -82,7 +83,7 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
         }
     }
 
-    private async Task ImportarCotaParlamentar(IBrowsingContext context, int ano, int mes)
+    private async Task ImportarCotaParlamentar(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
     {
         var address = $"https://transparencia.al.ro.leg.br/Deputados/VerbaIndenizatoria/";
         var document = await context.OpenAsyncAutoRetry(address);

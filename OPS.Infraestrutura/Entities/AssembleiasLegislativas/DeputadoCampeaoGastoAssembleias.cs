@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
 {
     [Table("cl_deputado_campeao_gasto")]
+    [DebuggerDisplay("DeputadoCampeaoGastoAssembleias {{Id}} - {{NomeParlamentar}}")]
     public class DeputadoCampeaoGastoAssembleias
     {
         [Key]
@@ -29,3 +31,4 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
         public virtual DeputadoEstadual Deputado { get; set; } = null!;
     }
 }
+

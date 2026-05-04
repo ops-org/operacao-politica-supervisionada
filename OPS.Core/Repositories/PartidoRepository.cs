@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTOs;
@@ -15,7 +16,7 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<IEnumerable<DropDownDTO>> Consultar()
+        public async Task<IEnumerable<DropDownDTO>> Consultar(CancellationToken ct = default)
         {
             var cuttofDate = DateTime.SpecifyKind(new System.DateTime(2008, 1, 1), DateTimeKind.Utc);
 
@@ -28,7 +29,7 @@ namespace OPS.Core.Repositories
                     Text = x.Nome,
                     HelpText = $"{x.Sigla} - {x.Legenda}",
                     Image = $"/img/partidos/{x.Imagem}"
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             return lista;
         }

@@ -7,6 +7,7 @@ using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 using RestSharp;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador.Comum.Parlamentar
 {
@@ -26,10 +27,10 @@ namespace OPS.Importador.Comum.Parlamentar
 
         public ImportadorParlamentarBase(IServiceProvider serviceProvider)
         {
-            logger = serviceProvider.GetService<ILogger<ImportadorParlamentarBase>>();
-            dbContext = serviceProvider.GetService<AppDbContext>();
+            logger = serviceProvider.GetRequiredService<ILogger<ImportadorParlamentarBase>>();
+            dbContext = serviceProvider.GetRequiredService<AppDbContext>();
 
-            httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
+            httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         }
 
         public void Configure(ImportadorParlamentarConfig config)
@@ -37,9 +38,9 @@ namespace OPS.Importador.Comum.Parlamentar
             this.config = config;
         }
 
-        public abstract Task Importar();
+        public abstract Task Importar(CancellationToken ct = default);
 
-        public virtual Task DownloadFotos()
+        public virtual Task DownloadFotos(CancellationToken ct = default)
         {
             return Task.CompletedTask;
         }
@@ -183,12 +184,15 @@ namespace OPS.Importador.Comum.Parlamentar
 
         public T RestApiGet<T>(string address)
         {
-            var restClient = CreateHttpClient();
+            using (logger.BeginScope(new Dictionary<string, object> { ["Url"] = address }))
+            {
+                var restClient = CreateHttpClient();
 
-            var request = new RestRequest(address);
-            request.AddHeader("Accept", "application/json");
+                var request = new RestRequest(address);
+                request.AddHeader("Accept", "application/json");
 
-            return restClient.Get<T>(request);
+                return restClient.Get<T>(request);
+            }
         }
 
         public T RestApiGetWithSqlTimestampConverter<T>(string address)

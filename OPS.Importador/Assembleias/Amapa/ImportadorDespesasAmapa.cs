@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
@@ -27,10 +28,10 @@ namespace OPS.Importador.Assembleias.Amapa
             deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var address = $"{config.BaseAddress}transparencia/gabinete_ceap_json.php?ano_verbaB={ano}&mes_verbaB={mes:00}";
-            var document = await context.OpenAsyncAutoRetry(address);
+            var document = await context.OpenAsyncAutoRetry(address, ct: ct);
             var gabinetes = document.QuerySelectorAll("option").ToList();
 
             foreach (var item in gabinetes)
@@ -45,7 +46,7 @@ namespace OPS.Importador.Assembleias.Amapa
                 }
 
                 address = $"{config.BaseAddress}transparencia/pagina.php?pg=ceap&acao=buscar&ano_verbaB={ano}&mes_verbaB={mes:00}&idgabineteB={gabinete.Value}";
-                document = await context.OpenAsyncAutoRetry(address);
+                document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
                 if (document.QuerySelector(".ls-alert-warning")?.TextContent == "Nenhum: resultado foi encontrado!") continue;
 
@@ -60,7 +61,7 @@ namespace OPS.Importador.Assembleias.Amapa
                     var linkDetalhes = (primeiraColuna.QuerySelector("a") as IHtmlAnchorElement);
 
 
-                    var subDocument = await context.OpenAsyncAutoRetry(linkDetalhes.Href);
+                    var subDocument = await context.OpenAsyncAutoRetry(linkDetalhes.Href, ct: ct);
                     var linhasDespesasDetalhes = subDocument.QuerySelectorAll(".ls-table tbody tr");
                     foreach (var detalhes in linhasDespesasDetalhes)
                     {

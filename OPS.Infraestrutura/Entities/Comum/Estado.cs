@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("estado")]
+    [DebuggerDisplay("Estado {Id} - {Sigla} - {Nome}")]
     public class Estado
     {
         [Key]

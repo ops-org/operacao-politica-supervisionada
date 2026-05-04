@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_remuneracao")]
+    [DebuggerDisplay("Remuneracao {{Id}} - {{Nome}}")]
     public class Remuneracao
     {
         [Key]
@@ -95,3 +97,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual TipoFolha TipoFolha { get; set; } = null!;
     }
 }
+

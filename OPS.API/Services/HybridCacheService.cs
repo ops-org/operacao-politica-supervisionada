@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
@@ -8,9 +9,9 @@ namespace OPS.API.Services
 {
     public interface IHybridCacheService
     {
-        Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null);
-        Task RemoveAsync(string key);
-        Task RemoveByPrefixAsync(string prefix);
+        Task<T> GetOrCreateAsync<T>(string key, Func<CancellationToken, Task<T>> factory, TimeSpan? expiration = null, CancellationToken ct = default);
+        Task RemoveAsync(string key, CancellationToken ct = default);
+        Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default);
         bool IsEnabled { get; }
     }
 
@@ -27,11 +28,11 @@ namespace OPS.API.Services
 
         public bool IsEnabled => _cacheSettings.Enabled;
 
-        public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
+        public async Task<T> GetOrCreateAsync<T>(string key, Func<CancellationToken, Task<T>> factory, TimeSpan? expiration = null, CancellationToken ct = default)
         {
             if (!_cacheSettings.Enabled)
             {
-                return await factory();
+                return await factory(ct);
             }
 
             var options = expiration.HasValue
@@ -46,18 +47,18 @@ namespace OPS.API.Services
                     LocalCacheExpiration = TimeSpan.FromHours(_cacheSettings.LocalCacheExpirationHours)
                 };
 
-            return await _hybridCache.GetOrCreateAsync<T>(key, async _ => await factory(), options: options);
+            return await _hybridCache.GetOrCreateAsync<T>(key, async (cancellationToken) => await factory(cancellationToken), options: options, cancellationToken: ct);
         }
 
-        public async Task RemoveAsync(string key)
+        public async Task RemoveAsync(string key, CancellationToken ct = default)
         {
             if (_cacheSettings.Enabled)
             {
-                await _hybridCache.RemoveAsync(key);
+                await _hybridCache.RemoveAsync(key, ct);
             }
         }
 
-        public async Task RemoveByPrefixAsync(string prefix)
+        public async Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
         {
             // Note: HybridCache doesn't have built-in prefix removal
             // This would need to be implemented with a custom solution

@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_secretario_historico")]
+    [DebuggerDisplay("SecretarioHistorico {{Id}} - {{Nome}}")]
     public class SecretarioHistorico
     {
         [Key]
@@ -49,3 +51,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual Deputado Deputado { get; set; } = null!;
     }
 }
+

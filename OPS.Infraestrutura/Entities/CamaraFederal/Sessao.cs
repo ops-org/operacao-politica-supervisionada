@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_sessao")]
+    [DebuggerDisplay("Sessao {{Id}}")]
     public class Sessao
     {
         [Key]
@@ -44,3 +46,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual ICollection<SessaoPresenca> SessaoPresencas { get; set; } = new List<SessaoPresenca>();
     }
 }
+

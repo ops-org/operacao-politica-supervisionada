@@ -1,7 +1,11 @@
 ﻿using System.Globalization;
+using System.Text;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using CsvHelper;
+using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Despesa;
@@ -9,7 +13,7 @@ using OPS.Importador.Comum.Utilities;
 
 namespace OPS.Importador.Assembleias.Ceara;
 
-public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
+public class ImportadorDespesasCeara : ImportadorDespesasArquivo
 {
     private CultureInfo cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
 
@@ -17,65 +21,115 @@ public class ImportadorDespesasCeara : ImportadorDespesasRestApiMensal
     {
         config = new ImportadorCotaParlamentarBaseConfig()
         {
-            BaseAddress = "https://transparencia.al.ce.gov.br/index.php/despesas/despesas-alece/verba-de-desempenho-parlamentar",
+            BaseAddress = "https://transparencia.al.ce.gov.br/despesas/verba-desempenho-parlamentar",
             Estado = Estados.Ceara,
             ChaveImportacao = ChaveDespesaTemp.NomeParlamentar
         };
     }
 
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+    public override Dictionary<string, string> DefinirUrlOrigemCaminhoDestino(int ano)
     {
-        var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
+        Dictionary<string, string> arquivos = new();
 
-        IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
-
-        var dcForm = new Dictionary<string, string>();
-        dcForm.Add("opcao", "1");
-        dcForm.Add("mes", mes.ToString("00"));
-        dcForm.Add("ano", ano.ToString());
-        dcForm.Add("nome", "");
-        document = await form.SubmitAsyncAutoRetry(dcForm, true);
-
-        var deputados = document.QuerySelectorAll("table#table tbody tr");
-        foreach (var deputado in deputados)
+        for (int mes = 1; mes <= 12; mes++)
         {
-            var colunas = deputado.QuerySelectorAll("td");
-            var nomeParlamentar = colunas.First().TextContent.Trim();
-            //if (string.IsNullOrEmpty(nomeParlamentar)) continue;
+            if (ano == DateTime.Now.Year && mes > DateTime.Today.Month) break;
 
-            var linkDetalhes = colunas.ElementAt(1).QuerySelector("a").Attributes["onclick"].Text();
+            string urlOrigem, caminhoArquivo;
 
-            int srcIndex = linkDetalhes.IndexOf(".src='", StringComparison.Ordinal);
-            if (srcIndex != -1)
+            urlOrigem = $"{config.BaseAddress}/csv?mes={mes:00}&ano={ano}";
+            caminhoArquivo = Path.Combine(tempFolder, $"CLCE-{ano}-{mes}.csv");
+
+            //if (DateTime.Now.AddMonths(-1).Year >= ano && File.Exists(caminhoArquivo)) File.Delete(caminhoArquivo);
+
+            arquivos.Add(urlOrigem, caminhoArquivo);
+        }
+
+        return arquivos;
+    }
+
+    public override void ImportarDespesas(string caminhoArquivo, int ano, int? mes = null)
+    {
+        var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
+
+        int indice = 0;
+        int Empenho = indice++;
+        int Descricao = indice++;
+        int Cnpj = indice++;
+        int Credor = indice++;
+        int Valor = indice++;
+        int ValorTotal = indice++;
+
+        bool linhasTitulo = true;
+        string nomeParlamentar = string.Empty;
+
+        // Nota: Títulos estão em UTF-8, mas o conteúdo em ISO-8859-1.
+        using (var reader = new StreamReader(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1")))
+        using (var csv = new CsvReader(reader, cultureInfo))
+        {
+            while (csv.Read())
             {
-                int startIndex = srcIndex + 6; // Length of ".src='"
-                int endIndex = linkDetalhes.IndexOf("'", startIndex, StringComparison.Ordinal);
+                var linha = csv[Empenho].ToString().Trim();
 
-                linkDetalhes = linkDetalhes.Substring(startIndex, endIndex - startIndex);
-            }
+                if (string.IsNullOrEmpty(linha)) continue; //Linha vazia
 
-            var documentDetalhes = await context.OpenAsyncAutoRetry(linkDetalhes);
-            var despesas = documentDetalhes.QuerySelectorAll("table#table tbody tr");
-            foreach (var despesa in despesas)
-            {
-                var colunasDespesa = despesa.QuerySelectorAll("td");
+                if (linhasTitulo)
+                {
+                    if (linha.StartsWith("Mes/Ano:")) continue; // Linha 1, informação do mês e ano
+
+                    if (linha.StartsWith("DEP")) // Linha 2, Nome do Parlamentar
+                    {
+                        nomeParlamentar = linha;
+                        continue;
+                    }
+
+                    if (linha.Equals("EMPENHO")) // Linha 3, títulos das colunas
+                    {
+
+                        if (
+                            csv[Empenho] != "EMPENHO" ||
+                            csv[Cnpj] != "CNPJ" ||
+                            csv[Credor] != "CREDOR" ||
+                            csv[Valor] != "VALOR"
+                        )
+                            throw new Exception("Mudança de integração detectada para o Câmara Legislativa do Ceara");
+
+                        linhasTitulo = false;
+                        continue;
+                    }
+
+                    throw new NotImplementedException();
+                }
+
+                if (linha.StartsWith("TOTAL GERAL")) // Linha de totalização
+                {
+                    linhasTitulo = true;
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(nomeParlamentar))
+                {
+                    logger.LogWarning("Parlamentar não identificado. Empenho: {Empenho}. Valor: R$ {Valor}. Descrição: {Descricao}", linha, csv[Valor].ToString(), csv[Descricao].ToString());
+                    continue;
+                }
 
                 CamaraEstadualDespesaTemp despesaTemp = new CamaraEstadualDespesaTemp()
                 {
-                    Documento = colunasDespesa.ElementAt(0).TextContent,
-                    Observacao = colunasDespesa.ElementAt(1).TextContent,
-                    CnpjCpf = colunasDespesa.ElementAt(2).TextContent,
-                    NomeFornecedor = colunasDespesa.ElementAt(3).TextContent,
-                    Valor = Convert.ToDecimal(colunasDespesa.ElementAt(4).TextContent, cultureInfo),
+                    Documento = csv[Empenho].ToString(),
+                    Observacao = csv[Descricao].ToString(),
+                    CnpjCpf = csv[Cnpj].ToString().Trim(),
+                    NomeFornecedor = csv[Credor].ToString(),
+                    Valor = Convert.ToDecimal(csv[Valor].ToString(), cultureInfo),
                     Ano = (short)ano,
                     Mes = (short)mes,
-                    DataEmissao = new DateOnly(ano, mes, 1),
-                    TipoDespesa = ObterTipoDespesa(colunasDespesa.ElementAt(1).TextContent),
+                    DataEmissao = new DateOnly(ano, mes.Value, 1),
+                    TipoDespesa = ObterTipoDespesa(csv[Descricao].ToString()),
                     Nome = CorrigeNomeParlamentar(nomeParlamentar)
                 };
 
                 InserirDespesaTemp(despesaTemp);
             }
+
         }
     }
 

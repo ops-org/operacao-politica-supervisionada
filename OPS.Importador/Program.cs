@@ -1,26 +1,39 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using AngleSharp;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OPS.Infraestrutura;
 using Serilog;
 
-namespace OPS.Importador
+namespace OPS.Importador;
+
+internal class Program
 {
-    internal class Program
+    public static async Task Main(string[] args)
     {
-        public static async Task Main(string[] args)
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
-            var builder = Host.CreateApplicationBuilder(args);
+            Args = args,
+            EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Development
+        });
 
-            builder.AddServiceDefaults();
-            builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext");
+        builder.AddServiceDefaults();
+        builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext", configureDbContextOptions: options =>
+            DesignTimeDbContextFactory.ConfigureOptions(options,
+                builder.Configuration.GetConnectionString("AuditoriaContext")!));
 
-            ConfigureApp.SetupEnvironment();
-            ConfigureApp.ConfigureServices(builder.Services, builder.Configuration);
+        ConfigureApp.SetupEnvironment();
+        ConfigureApp.SetupLogging(builder);
+        ConfigureApp.ConfigureServices(builder.Services, builder.Configuration);
 
-            var host = builder.Build();
+        var host = builder.Build();
 
+        using (var scope = host.Services.CreateScope())
+        {
             try
             {
-                await ImportOrchestrator.RunAppAsync(host.Services);
+                await ImportOrchestrator.RunAppAsync(scope.ServiceProvider);
             }
             catch (Exception ex)
             {
@@ -30,21 +43,21 @@ namespace OPS.Importador
             {
                 Log.CloseAndFlush();
             }
-
-            Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
-            Console.ReadKey();
         }
 
-        private static void HandleFatalException(Exception ex)
+        Console.WriteLine("Concluido! Tecle [ENTER] para sair.");
+        Console.ReadKey();
+    }
+
+    private static void HandleFatalException(Exception ex)
+    {
+        if (Log.Logger == null || Log.Logger.GetType().Name == "SilentLogger")
         {
-            if (Log.Logger == null || Log.Logger.GetType().Name == "SilentLogger")
-            {
-                Log.Logger = new LoggerConfiguration()
-                    .WriteTo.Console()
-                    .CreateLogger();
-            }
-
-            Log.Fatal(ex, "Host terminated unexpectedly");
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .CreateLogger();
         }
+
+        Log.Fatal(ex, "Host terminated unexpectedly");
     }
 }

@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
     [Table("fornecedor")]
+    [DebuggerDisplay("Fornecedor {Id} - {Nome} ({CnpjCpf})")]
     public class Fornecedor
     {
         [Key]

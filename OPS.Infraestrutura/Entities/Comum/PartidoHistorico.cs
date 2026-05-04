@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("partido_historico")]
+    [DebuggerDisplay("PartidoHistorico {{Id}} - {{Sigla}}")]
     public class PartidoHistorico
     {
         [Key]
@@ -45,3 +47,4 @@ namespace OPS.Infraestrutura.Entities.Comum
         public string? Motivo { get; set; }
     }
 }
+

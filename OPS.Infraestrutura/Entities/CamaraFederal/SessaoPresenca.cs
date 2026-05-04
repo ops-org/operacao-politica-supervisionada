@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_sessao_presenca")]
+    [DebuggerDisplay("SessaoPresenca {{Id}}")]
     public class SessaoPresenca
     {
         [Key]
@@ -31,3 +33,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual Deputado Deputado { get; set; } = null!;
     }
 }
+

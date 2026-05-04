@@ -1,10 +1,12 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using OPS.Infraestrutura.Entities.SenadoFederal;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("profissao")]
+    [DebuggerDisplay("Profissao {{Id}} - {{Descricao}}")]
     public class Profissao
     {
         [Key]
@@ -19,3 +21,4 @@ namespace OPS.Infraestrutura.Entities.Comum
         public virtual ICollection<SenadorProfissao> SenadorProfissoes { get; set; } = new List<SenadorProfissao>();
     }
 }
+

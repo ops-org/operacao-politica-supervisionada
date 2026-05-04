@@ -27,5 +27,7 @@
         public bool ForceImport { get; set; } = false;
 
         public bool StoreBackupFile { get; set; } = true;
+
+        public int PollyDefaultTimeout { get; set; } = 60;
     }
 }

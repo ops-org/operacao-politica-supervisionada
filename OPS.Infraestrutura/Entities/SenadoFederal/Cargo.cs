@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_cargo")]
+    [DebuggerDisplay("Cargo {{Id}} - {{Descricao}}")]
     public class Cargo
     {
         [Key]
@@ -18,3 +20,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<Remuneracao> Remuneracoes { get; set; } = new List<Remuneracao>();
     }
 }
+

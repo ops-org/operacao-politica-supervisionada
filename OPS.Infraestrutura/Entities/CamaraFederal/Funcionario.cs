@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_funcionario")]
+    [DebuggerDisplay("Funcionario {Id} - {Nome} ({Chave})")]
     public class Funcionario
     {
         [Key]
@@ -19,7 +21,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string Nome { get; set; } = null!;
 
         [Column("processado")]
-        public sbyte Processado { get; set; }
+        public bool Processado { get; set; }
 
         [Column("controle")]
         [StringLength(10)]

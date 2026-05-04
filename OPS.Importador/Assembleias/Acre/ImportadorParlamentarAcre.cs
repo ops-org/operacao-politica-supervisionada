@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
@@ -21,7 +22,7 @@ namespace OPS.Importador.Assembleias.Acre
             });
         }
 
-        public override Task Importar()
+        public override async Task Importar(CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(config, nameof(config));
 
@@ -39,20 +40,19 @@ namespace OPS.Importador.Assembleias.Acre
                 deputado.IdPartido = BuscarIdPartido(parlamentar.Partido);
                 deputado.UrlFoto = parlamentar.Fotografia;
 
-                ObterDetalhesDoPerfil(deputado).GetAwaiter().GetResult();
+                await ObterDetalhesDoPerfil(deputado, ct);
 
                 InsertOrUpdate(deputado);
             }
 
             logger.LogInformation("Parlamentares Inseridos: {Inseridos}; Atualizados {Atualizados};", base.registrosInseridos, base.registrosAtualizados);
-            return Task.CompletedTask;
         }
 
-        private async Task ObterDetalhesDoPerfil(DeputadoEstadual deputado)
+        private async Task ObterDetalhesDoPerfil(DeputadoEstadual deputado, CancellationToken ct)
         {
             var context = httpClient.CreateAngleSharpContext();
 
-            var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
+            var document = await context.OpenAsyncAutoRetry(deputado.UrlPerfil, ct: ct);
             if (document.StatusCode != HttpStatusCode.OK)
             {
                 Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");

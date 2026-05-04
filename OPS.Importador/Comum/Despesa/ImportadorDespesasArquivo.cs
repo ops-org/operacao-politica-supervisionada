@@ -9,7 +9,7 @@ namespace OPS.Importador.Comum.Despesa
         {
         }
 
-        public virtual async Task Importar(int ano)
+        public virtual async Task Importar(int ano, CancellationToken ct = default)
         {
             using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
             {
@@ -17,8 +17,9 @@ namespace OPS.Importador.Comum.Despesa
 
                 Dictionary<string, string> arquivos = DefinirUrlOrigemCaminhoDestino(ano);
 
-                foreach (var arquivo in arquivos)
+                for (int i = 0; i < arquivos.Count(); i++)
                 {
+                    var arquivo = arquivos.ElementAt(i);
                     var _urlOrigem = arquivo.Key;
                     var caminhoArquivo = arquivo.Value;
 
@@ -33,10 +34,10 @@ namespace OPS.Importador.Comum.Despesa
 
                         try
                         {
-                            ImportarDespesas(caminhoArquivo, ano);
+                            ImportarDespesas(caminhoArquivo, ano, i + 1);
                         }
                         catch (Exception ex)
-                        {
+                        {   
                             logger.LogError(ex, ex.Message);
                             fileManager.MoverArquivoComErro(caminhoArquivo);
                         }
@@ -47,6 +48,6 @@ namespace OPS.Importador.Comum.Despesa
             }
         }
 
-        public abstract void ImportarDespesas(string caminhoArquivo, int ano);
+        public abstract void ImportarDespesas(string caminhoArquivo, int ano, int? mes = null);
     }
 }

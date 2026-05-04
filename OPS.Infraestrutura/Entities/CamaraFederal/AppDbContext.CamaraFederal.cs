@@ -178,6 +178,16 @@ public static class CamaraFederalConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            
+            // Configure foreign key relationships
+            entity.HasMany(e => e.FuncionarioContratacoes)
+                  .WithOne(fc => fc.Funcionario)
+                  .HasForeignKey(fc => fc.IdFuncionario);
+                  
+            entity.HasMany(e => e.FuncionarioRemuneracoes)
+                  .WithOne()
+                  .HasForeignKey(fr => fr.IdFuncionario);
+            
             entity.ToTable("cf_funcionario", "camara");
         });
     }
@@ -189,6 +199,10 @@ public static class CamaraFederalConfigurations
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            
+            // Foreign key relationships are now configured with [ForeignKey] attributes
+            // No need for additional Fluent API configuration
+            
             entity.ToTable("cf_funcionario_contratacao", "camara");
         });
     }

@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -30,11 +31,11 @@ namespace OPS.Importador.Assembleias.RioGrandeDoNorte
             //deputados = connection.GetList<DeputadoEstadual>(new { id_estado = config.Estado.GetHashCode() }).ToList();
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var today = DateTime.Today;
             var address = $"{config.BaseAddress}";
-            var document = await context.OpenAsyncAutoRetry(address);
+            var document = await context.OpenAsyncAutoRetry(address, ct: ct);
             var gabinetes = document.QuerySelectorAll("select[name=deputado_id] option").ToList();
             var meses = document.QuerySelectorAll("select[name=mes_id] option").ToList();
 
@@ -46,7 +47,7 @@ namespace OPS.Importador.Assembleias.RioGrandeDoNorte
                 var filename = Path.Combine(tempFolder, "CLRN-{ano}-{mes}-{gabinete.Value}.pdf");
                 if (!File.Exists(filename))
                 {
-                    //var deputado = deputados.Find(x => 
+                    //var deputado = deputados.Find(x =>
                     //    gabinete.Text.Equals( x.NomeImportacao, StringComparison.InvariantCultureIgnoreCase) ||
                     //    gabinete.Text.Equals(x.NomeParlamentar, StringComparison.InvariantCultureIgnoreCase)
                     //);
@@ -82,26 +83,26 @@ namespace OPS.Importador.Assembleias.RioGrandeDoNorte
 
                     dcForm.Add("deputado_id", gabinete.Value);
                     IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.form-default");
-                    var subDocument = await form.SubmitAsyncAutoRetry(dcForm);
+                    var subDocument = await form.SubmitAsyncAutoRetry(dcForm, ct: ct);
 
                     if (subDocument.QuerySelector(".m9 p")?.TextContent == "Não foram encontradas verbas para os filtros informados") continue;
 
                     var linkPdf = subDocument.QuerySelectorAll("a").FirstOrDefault(x => x.TextContent == "Visualizar notas");
                     var urlPdf = (linkPdf as IHtmlAnchorElement).Href;
 
-                    await ImportarDespesasArquivo(ano, mes, gabinete, urlPdf);
+                    await ImportarDespesasArquivo(ano, mes, gabinete, urlPdf, ct);
                 }
                 else
                 {
-                    await ImportarDespesasArquivo(ano, mes, gabinete, "");
+                    await ImportarDespesasArquivo(ano, mes, gabinete, "", ct);
                 }
             }
         }
 
-        private async Task ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf)
+        private async Task ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf, CancellationToken ct = default)
         {
             var filename = Path.Combine(tempFolder, $"CLRN-{ano}-{mes}-{gabinete.Value}.pdf");
-            await httpClientResilient.DownloadFile(urlPdf, filename);
+            await httpClientResilient.DownloadFile(urlPdf, filename, ct);
 
             var paginasPdf = ImportacaoUtils.ReadPdfFile(filename).ToArray();
             decimal valorTotal = 0;

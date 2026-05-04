@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -42,8 +43,8 @@ namespace OPS.API.Controllers
             const string cacheKey = "inicio-parlamentar-resumo-gastos";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async token =>
             {
-                return await _inicioRepository.ParlamentarResumoGastos();
-            });
+                return await _inicioRepository.ParlamentarResumoGastos(HttpContext.RequestAborted);
+            }, cancellationToken: HttpContext.RequestAborted);
         }
 
         [HttpGet]
@@ -60,12 +61,12 @@ namespace OPS.API.Controllers
 
                 return new InicioBuscaDTO
                 {
-                    DeputadoFederal = await _deputadoRepository.Lista(filtro),
-                    DeputadoEstadual = await _deputadoEstadualRepository.Lista(filtro),
-                    Senador = await _senadorRepository.Lista(filtro),
-                    Fornecedor = await _fornecedorRepository.Busca(value)
+                    DeputadoFederal = await _deputadoRepository.Lista(filtro, HttpContext.RequestAborted),
+                    DeputadoEstadual = await _deputadoEstadualRepository.Lista(filtro, HttpContext.RequestAborted),
+                    Senador = await _senadorRepository.Lista(filtro, HttpContext.RequestAborted),
+                    Fornecedor = await _fornecedorRepository.Busca(value, HttpContext.RequestAborted)
                 };
-            });
+            }, cancellationToken: HttpContext.RequestAborted);
         }
 
         [HttpGet]
@@ -75,8 +76,8 @@ namespace OPS.API.Controllers
             const string cacheKey = "inicio-importacao";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async token =>
             {
-                return await _inicioRepository.InfoImportacao();
-            });
+                return await _inicioRepository.InfoImportacao(HttpContext.RequestAborted);
+            }, cancellationToken: HttpContext.RequestAborted);
         }
     }
 }

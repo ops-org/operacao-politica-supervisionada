@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_legislatura")]
+    [DebuggerDisplay("LegislaturaSenado {{Id}}")]
     public class LegislaturaSenado
     {
         [Key]
@@ -20,3 +22,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<MandatoLegislatura> MandatoLegislaturas { get; set; } = new List<MandatoLegislatura>();
     }
 }
+

@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.Json;
+using System.Threading;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
@@ -23,10 +24,10 @@ namespace OPS.Importador.Assembleias.Parana
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             // https://consultas.assembleia.pr.leg.br/#/ressarcimento
-            await ImportarCotaParlamentar(ano);
+            await ImportarCotaParlamentar(ano, ct);
 
             //OpenPageWaitForCaptchaAndClickConsultar(ano, mes);
 
@@ -84,7 +85,7 @@ namespace OPS.Importador.Assembleias.Parana
             }
         }
 
-        private Task ImportarCotaParlamentar(int ano)
+        private Task ImportarCotaParlamentar(int ano, CancellationToken ct = default)
         {
             var options = new JsonSerializerOptions();
             options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
@@ -92,6 +93,7 @@ namespace OPS.Importador.Assembleias.Parana
             var files = Directory.EnumerateFiles(tempFolder, $"{ano}*");
             foreach (var file in files)
             {
+                ct.ThrowIfCancellationRequested();
                 var filename = file.Replace("_tmp", "");
                 _ = fileManager.ProcessarArquivoTemp(dbContext, filename, config.Estado);
 

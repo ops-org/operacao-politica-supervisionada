@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Dapper;
@@ -24,7 +25,7 @@ namespace OPS.Importador.Assembleias.Bahia
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             var pagina = 0;
             var despesasReferencia = new List<string>();
@@ -33,7 +34,7 @@ namespace OPS.Importador.Assembleias.Bahia
                 logger.LogDebug("Consultando Ano {Ano} e pagina {Pagina}!", ano, pagina);
                 // Pagina começa em 0 - HUE
                 var address = $"{config.BaseAddress}transparencia/verbas-idenizatorias?ano={ano}&categoria=&page={pagina++}&size=1000";
-                var document = await context.OpenAsyncAutoRetry(address);
+                var document = await context.OpenAsyncAutoRetry(address, ct: ct);
                 var despesas = document.QuerySelectorAll(".tabela-cab tbody tr");
                 foreach (var despesa in despesas)
                 {
@@ -60,7 +61,7 @@ namespace OPS.Importador.Assembleias.Bahia
                     {
                         try
                         {
-                            var documentDetalhes = await context.OpenAsyncAutoRetry(linkDetalhes);
+                            var documentDetalhes = await context.OpenAsyncAutoRetry(linkDetalhes, ct: ct);
                             var despesasDetalhes = documentDetalhes.QuerySelectorAll(".tabela-cab tbody tr");
                             foreach (var detalhes in despesasDetalhes)
                             {

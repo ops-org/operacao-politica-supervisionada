@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("importacao")]
+    [DebuggerDisplay("Importacao {{Id}}")]
     public class Importacao
     {
         [Key]
@@ -47,3 +49,4 @@ namespace OPS.Infraestrutura.Entities.Comum
         public virtual Estado? Estado { get; set; }
     }
 }
+

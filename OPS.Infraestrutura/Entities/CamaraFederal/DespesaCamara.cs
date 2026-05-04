@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using OPS.Infraestrutura.Entities.Fornecedores;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_despesa")]
+    [DebuggerDisplay("DespesaCamara {Id} - {AnoMes} - R$ {ValorLiquido}")]
     public class DespesaCamara
     {
         [Key]

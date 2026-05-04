@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using CsvHelper;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -86,7 +87,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
     #region Importação Dados CEAP CSV
 
-    public async Task Importar(int ano)
+    public async Task Importar(int ano, CancellationToken ct = default)
     {
         logger.LogDebug("Despesas do(a) Camara Federal de {Ano}", ano);
 
@@ -98,6 +99,7 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
             var caminhoArquivo = arquivo.Value;
 
             bool novoArquivoBaixado = await fileManager.BaixarArquivo(dbContext, urlOrigem, caminhoArquivo, null);
+            ct.ThrowIfCancellationRequested();
             if (!appSettings.ForceImport && !novoArquivoBaixado)
             {
                 logger.LogInformation("Importação ignorada para arquivo previamente importado!");
@@ -1778,24 +1780,4 @@ GROUP BY ano, mes");
     //    }
 
     //    #endregion Importação Remuneração
-
-    public void AtualizaParlamentarValores()
-    {
-        connection.Execute(@"
-UPDATE camara.cf_deputado d
-SET 
-  valor_total_salario = COALESCE(s.salario, 0),
-	valor_total_auxilio_moradia = COALESCE(s.auxilio, 0),
-	valor_total_remuneracao = COALESCE(s.verba, s.rem_func, 0)
-FROM (
-	SELECT 
-		d.id,
-		(SELECT SUM(valor) FROM camara.cf_deputado_remuneracao WHERE id_cf_deputado = d.id) as salario,
-		(SELECT SUM(valor) FROM camara.cf_deputado_auxilio_moradia WHERE id_cf_deputado = d.id) as auxilio,
-		(SELECT SUM(valor) FROM camara.cf_deputado_verba_gabinete WHERE id_cf_deputado = d.id) as verba,
-		(SELECT SUM(valor_total) FROM camara.cf_funcionario_remuneracao WHERE id_cf_deputado = d.id) as rem_func
-	FROM camara.cf_deputado d
-) s
-WHERE d.id = s.id;");
-    }
 }

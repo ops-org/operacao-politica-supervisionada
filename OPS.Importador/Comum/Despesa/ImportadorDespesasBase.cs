@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Dapper;
@@ -108,13 +109,11 @@ public abstract class ImportadorDespesasBase
         logger.LogWarning("Sem Importação de Imagens");
     }
 
-    private static object _monitorObj = new object();
+    private static readonly object _monitorObj = new object();
 
     public virtual void ProcessarDespesas(int ano)
     {
-        Monitor.Enter(_monitorObj);
-
-        try
+        lock (_monitorObj)
         {
             logger.LogInformation("Iniciando processamento na base de dados!");
             LimpaDespesaTemporaria();
@@ -145,10 +144,6 @@ public abstract class ImportadorDespesasBase
             }
 
             logger.LogInformation("Finalizando processamento na base de dados!");
-        }
-        finally
-        {
-            Monitor.Exit(_monitorObj);
         }
     }
 
@@ -1090,7 +1085,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         }
     }
 
-    public async Task<T> RestApiGet<T>(string address)
+    public async Task<T> RestApiGet<T>(string address, CancellationToken ct = default)
     {
         using RestClient client = CreateHttpClient();
 
@@ -1098,10 +1093,10 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         request.Timeout = TimeSpan.FromMinutes(5);
         request.AddHeader("Accept", "application/json");
 
-        return await client.GetAsync<T>(request);
+        return await client.GetAsync<T>(request, ct);
     }
 
-    public async Task<T> RestApiGetWithCustomDateConverter<T>(string address)
+    public async Task<T> RestApiGetWithCustomDateConverter<T>(string address, CancellationToken ct = default)
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new DateTimeOffsetConverterUsingDateTimeParse());
@@ -1116,13 +1111,13 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         //}
 
         using RestClient client = CreateHttpClient();
-        var response = await client.GetAsync(request);
+        var response = await client.GetAsync(request, ct);
 
         return JsonSerializer.Deserialize<T>(response.Content, options);
 
     }
 
-    public async Task<T> RestApiGetWithSqlTimestampConverter<T>(string address)
+    public async Task<T> RestApiGetWithSqlTimestampConverter<T>(string address, CancellationToken ct = default)
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new SqlTimestampConverter());
@@ -1131,13 +1126,13 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         request.AddHeader("Accept", "application/json");
 
         using RestClient client = CreateHttpClient();
-        var response = await client.GetAsync(request);
+        var response = await client.GetAsync(request, ct);
 
         return JsonSerializer.Deserialize<T>(response.Content, options);
 
     }
 
-    public async Task<T> RestApiGetAsync<T>(string address)
+    public async Task<T> RestApiGetAsync<T>(string address, CancellationToken ct = default)
     {
         using RestClient client = CreateHttpClient();
 
@@ -1146,18 +1141,18 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
         try
         {
-            return await client.GetAsync<T>(request);
+            return await client.GetAsync<T>(request, ct);
         }
         catch (TimeoutException)
         {
             logger.LogWarning("Timeout ao acessar '{Address}'. Aguardando 1 minuto para nova tentativa.", address);
-            await Task.Delay(TimeSpan.FromMinutes(1));
+            await Task.Delay(TimeSpan.FromMinutes(1), ct);
 
-            return await client.GetAsync<T>(request);
+            return await client.GetAsync<T>(request, ct);
         }
     }
 
-    public async Task<T> RestApiPostAsync<T>(string address, Dictionary<string, string> parameters)
+    public async Task<T> RestApiPostAsync<T>(string address, Dictionary<string, string> parameters, CancellationToken ct = default)
     {
         using RestClient client = CreateHttpClient();
 
@@ -1167,7 +1162,7 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         foreach (var p in parameters)
             request.AddParameter(p.Key, p.Value);
 
-        return await client.PostAsync<T>(request);
+        return await client.PostAsync<T>(request, ct);
     }
 
     public RestClient CreateHttpClient()

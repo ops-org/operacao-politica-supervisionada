@@ -1,4 +1,5 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
+﻿using System.Threading;
+using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -36,7 +37,7 @@ public class FileManager
         this.httpClientFactory = httpClientFactory;
     }
 
-    public async Task<bool> BaixarArquivo(AppDbContext dbContext, string url, string filename, Estados? estado)
+    public async Task<bool> BaixarArquivo(AppDbContext dbContext, string url, string filename, Estados? estado, CancellationToken ct = default)
     {
         var caminhoArquivoDb = GetCaminhoArquivoDb(filename);
 
@@ -87,9 +88,9 @@ public class FileManager
             File.Delete(caminhoArquivoTmp);
 
         if (estado != Estados.DistritoFederal)
-            await httpClientResilient.DownloadFile(url, caminhoArquivoTmp);
+            await httpClientResilient.DownloadFile(url, caminhoArquivoTmp, ct);
         else
-            await httpClientDefault.DownloadFile(url, caminhoArquivoTmp);
+            await httpClientDefault.DownloadFile(url, caminhoArquivoTmp, ct);
 
         return ProcessarArquivoTemp(dbContext, filename, estado);
     }

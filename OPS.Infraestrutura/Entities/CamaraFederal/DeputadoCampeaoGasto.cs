@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_deputado_campeao_gasto")]
+    [DebuggerDisplay("CampeaoGasto {IdDeputado} - {NomeParlamentar} - R$ {ValorTotal}")]
     public class DeputadoCampeaoGasto
     {
         [Key]

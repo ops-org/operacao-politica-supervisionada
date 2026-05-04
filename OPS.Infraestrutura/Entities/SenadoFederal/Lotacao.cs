@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_lotacao")]
+    [DebuggerDisplay("Lotacao {{Id}} - {{Descricao}}")]
     public class Lotacao
     {
         [Key]
@@ -22,3 +24,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual ICollection<Remuneracao> Remuneracoes { get; set; } = new List<Remuneracao>();
     }
 }
+

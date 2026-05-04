@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using OPS.Infraestrutura.Entities.Comum;
 
 namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
 {
     [Table("cl_deputado")]
+    [DebuggerDisplay("DeputadoEstadual {Id} - {NomeParlamentar} ({Matricula})")]
     public class DeputadoEstadual
     {
         [Key]

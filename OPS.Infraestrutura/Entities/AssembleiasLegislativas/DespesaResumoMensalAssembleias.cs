@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
 {
     [Table("cl_despesa_resumo_mensal")]
+    [DebuggerDisplay("DespesaResumoMensalAssembleias {{Id}} - R${{Valor}}")]
     public class DespesaResumoMensalAssembleias
     {
         [Key]
@@ -19,3 +21,4 @@ namespace OPS.Infraestrutura.Entities.AssembleiasLegislativas
 
     }
 }
+

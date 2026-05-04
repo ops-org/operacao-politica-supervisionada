@@ -60,7 +60,7 @@ namespace OPS.Importador.Comum.Utilities
                 CheckCaptchaAndWaitSolve(driver, waitCaptcha);
 
                 var today = DateTime.Today;
-                var dateToImport = today.AddMonths(-4);
+                var dateToImport = today.AddMonths(-3);
                 if (appSettings.ForceImport) dateToImport = new DateTime(2023, 1, 1);
 
                 while (dateToImport < today)
@@ -72,10 +72,12 @@ namespace OPS.Importador.Comum.Utilities
                     }
 
                     SetSelectOptionByText(driver, "mes", ResolveMes(dateToImport.Month));
-                    driver.FindElement(OpenQA.Selenium.By.Id("exercicio")).SendKeys(dateToImport.Year.ToString());
+                    var exercicio = driver.FindElement(OpenQA.Selenium.By.Id("exercicio"));
+                    exercicio.Clear();
+                    exercicio.SendKeys(dateToImport.Year.ToString());
 
                     do
-                    {
+                        {
                         // Click Consultar
                         OpenQA.Selenium.IWebElement consultarButton = driver.FindElement(OpenQA.Selenium.By.XPath("//button[contains(normalize-space(.), 'Consultar')]"));
                         consultarButton.Click();
@@ -131,7 +133,7 @@ namespace OPS.Importador.Comum.Utilities
                             var captured = CaptureXhrNetworkEntries(driver, filterUrl: "/api/public/ressarcimento/despesas-ressarcimento/");
                             if (captured != null && captured.Count > 0)
                             {
-                                var outPath = Path.Combine(appSettings.TempFolder, "Parana", $"{dateToImport.Year}_{dateToImport.Month}_{parlamentar}_tmp.json");
+                                var outPath = Path.Combine(appSettings.TempFolder, "Estados", Core.Enumerators.Estados.Parana.ToString(), $"{dateToImport.Year}_{dateToImport.Month}_{parlamentar}_tmp.json");
                                 logger.LogInformation("Captured {Count} matching XHR entries for parlamentar {Parlamentar}", captured.Count, parlamentar);
 
                                 //File.WriteAllText(outPath, JsonSerializer.Serialize(captured, new JsonSerializerOptions { WriteIndented = true }));

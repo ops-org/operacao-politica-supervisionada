@@ -12,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
-using Microsoft.OpenApi;
 using OPS.API.Configuration;
 using OPS.API.Services;
 using OPS.Core.Repositories;
@@ -28,9 +27,11 @@ namespace OPS.API
             // Add Npgsql DbContext using Aspire integration
             //builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext");
 
-            services.AddDbContext<AppDbContext>(options => options
-                    .UseNpgsql(Configuration.GetConnectionString("AuditoriaContext"))
-                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                DesignTimeDbContextFactory.ConfigureOptions(options, Configuration.GetConnectionString("AuditoriaContext")!);
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            });
 
             services.AddScoped<DeputadoRepository>();
             services.AddScoped<SenadorRepository>();
@@ -99,29 +100,9 @@ namespace OPS.API
             // Register HybridCacheService
             services.AddScoped<IHybridCacheService, HybridCacheService>();
 
-            // Add Swagger services
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "OPS API",
-                    Version = "v1",
-                    Description = "Operação Política Supervisionada API",
-                    Contact = new OpenApiContact
-                    {
-                        Name = "OPS Team",
-                        Email = "vanderlei@ops.org.br"
-                    }
-                });
 
-                // Include XML comments if file exists
-                var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = System.IO.Path.Combine(System.AppContext.BaseDirectory, xmlFile);
-                if (System.IO.File.Exists(xmlPath))
-                {
-                    c.IncludeXmlComments(xmlPath);
-                }
-            });
+
+            services.AddOpenApi();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -186,16 +167,7 @@ namespace OPS.API
             // Enable compression
             app.UseResponseCompression();
 
-            // Enable Swagger in development
-            if (env.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "OPS API v1");
-                    c.RoutePrefix = string.Empty; // Sets Swagger UI at root
-                });
-            }
+            
 
 
             app.UseStaticFiles(new StaticFileOptions

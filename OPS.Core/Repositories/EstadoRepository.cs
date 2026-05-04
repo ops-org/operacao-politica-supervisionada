@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTOs;
@@ -14,7 +15,7 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<IEnumerable<DropDownDTO>> Consultar()
+        public async Task<IEnumerable<DropDownDTO>> Consultar(CancellationToken ct = default)
         {
             IEnumerable<DropDownDTO> lista = await _context.Estados
                 .OrderBy(x => x.Nome)
@@ -24,7 +25,7 @@ namespace OPS.Core.Repositories
                     Text = x.Nome + " (" + x.Sigla + ")",
                     HelpText = "Região " + x.Regiao,
                     Image = $"/img/estados/{x.Sigla.ToLower(System.Globalization.CultureInfo.CurrentCulture)}.png"
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             return lista;
         }

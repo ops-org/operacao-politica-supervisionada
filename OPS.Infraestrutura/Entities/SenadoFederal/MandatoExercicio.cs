@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_mandato_exercicio")]
+    [DebuggerDisplay("MandatoExercicio {{Id}}")]
     public class MandatoExercicio
     {
         [Key]
@@ -32,3 +34,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual MotivoAfastamento? MotivoAfastamento { get; set; }
     }
 }
+

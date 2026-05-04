@@ -1,10 +1,12 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using OPS.Infraestrutura.Entities.Comum;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_senador_profissao")]
+    [DebuggerDisplay("SenadorProfissao {{Id}} - {{Nome}}")]
     public class SenadorProfissao
     {
         [Key]
@@ -20,3 +22,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual Profissao Profissao { get; set; } = null!;
     }
 }
+

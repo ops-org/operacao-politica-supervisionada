@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_deputado_verba_gabinete")]
+    [DebuggerDisplay("DeputadoVerbaGabinete {{Id}}")]
     public class DeputadoVerbaGabinete
     {
         [Key]
@@ -23,3 +25,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual Senador Senador { get; set; } = null!;
     }
 }
+

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Threading;
+using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Assembleias.RioGrandeDoSul.Entities;
@@ -17,7 +18,7 @@ namespace OPS.Importador.Assembleias.RioGrandeDoSul
             });
         }
 
-        public override Task Importar()
+        public override Task Importar(CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(config, nameof(config));
 

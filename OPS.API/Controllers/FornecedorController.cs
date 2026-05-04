@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -28,17 +29,17 @@ namespace OPS.API.Controllers
         public async Task<FornecedorDetalheDTO> Consulta(int id)
         {
             var cacheKey = $"fornecedor-consulta-{id}";
-            return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
+            return await _hybridCache.GetOrCreateAsync(cacheKey, async (token) =>
             {
-                var _fornecedor = await dao.Consulta(id);
-                var _quadro_societario = await dao.QuadroSocietario(id);
+                var _fornecedor = await dao.Consulta(id, HttpContext.RequestAborted);
+                var _quadro_societario = await dao.QuadroSocietario(id, HttpContext.RequestAborted);
 
                 return new FornecedorDetalheDTO
                 {
                     Fornecedor = _fornecedor,
                     QuadroSocietario = _quadro_societario
                 };
-            });
+            }, cancellationToken: HttpContext.RequestAborted);
         }
 
         [HttpPost]
@@ -66,8 +67,8 @@ namespace OPS.API.Controllers
             var cacheKey = $"fornecedor-recebimentos-por-ano-{id}";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
             {
-                return await dao.RecebimentosPorAno(id);
-            });
+                return await dao.RecebimentosPorAno(id, HttpContext.RequestAborted);
+            }, cancellationToken: HttpContext.RequestAborted);
         }
 
         [HttpGet]
@@ -77,8 +78,8 @@ namespace OPS.API.Controllers
             var cacheKey = $"fornecedor-maiores-gastos-{id}";
             return await _hybridCache.GetOrCreateAsync(cacheKey, async _ =>
             {
-                return await dao.MaioresGastos(id);
-            });
+                return await dao.MaioresGastos(id, HttpContext.RequestAborted);
+            }, cancellationToken: HttpContext.RequestAborted);
         }
 
     }

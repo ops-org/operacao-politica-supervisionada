@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using AngleSharp;
 using DDDN.OdtToHtml;
 using Microsoft.Extensions.Logging;
@@ -26,20 +27,20 @@ namespace OPS.Importador.Assembleias.Roraima
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             if (ano <= 2025)
             {
-                await ImportarDespesas2025Antes(context, ano);
+                await ImportarDespesas2025Antes(context, ano, ct);
             }
 
             if (ano >= 2025)
             {
-                await ImportarDespesas2025Depois(context, ano);
+                await ImportarDespesas2025Depois(context, ano, ct);
             }
         }
 
-        public async Task ImportarDespesas2025Depois(IBrowsingContext context, int ano)
+        public async Task ImportarDespesas2025Depois(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             var url = "https://transparencia.al.rr.leg.br/execucao-orcamentaria-e-financeira/verbas-indenizatorias-a-partir-de-set25/";
             var document = await context.OpenAsyncAutoRetry(url);
@@ -136,7 +137,7 @@ namespace OPS.Importador.Assembleias.Roraima
         }
 
 
-        public async Task ImportarDespesas2025Antes(IBrowsingContext context, int ano)
+        public async Task ImportarDespesas2025Antes(IBrowsingContext context, int ano, CancellationToken ct = default)
         {
             var url = "https://transparencia.al.rr.leg.br/execucao-orcamentaria-e-financeira/verbas-indenizatorias-de-gabinete-ate-ago25/";
             var document = await context.OpenAsyncAutoRetry(url);

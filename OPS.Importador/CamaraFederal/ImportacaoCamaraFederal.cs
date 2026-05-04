@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Dapper;
@@ -34,13 +35,13 @@ namespace OPS.Importador.CamaraFederal
             httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("ResilientClient");
         }
 
-        public void ColetaDadosDeputados()
+        public void ColetaDadosDeputados(CancellationToken ct = default)
         {
             DefineColunasRemuneracaoSecretarios();
 
             var sqlDeputados = @"
 SELECT DISTINCT cd.id as Id, nome_parlamentar as NomeParlamentar
-FROM camara.cf_deputado cd 
+FROM camara.cf_deputado cd
 JOIN camara.cf_mandato m ON m.id_cf_deputado = cd.id
 WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
             var dcDeputado = dbContext.Database.GetDbConnection().Query<(int Id, string NomeParlamentar)>(sqlDeputados).ToList();
@@ -49,7 +50,7 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
             Task[] tasks = new Task[NumeroThreads];
             for (int i = 0; i < NumeroThreads; ++i)
             {
-                tasks[i] = ProcessaFilaColetaDadosDeputados(queue);
+                tasks[i] = ProcessaFilaColetaDadosDeputados(queue, ct);
             }
 
             Task.WaitAll(tasks);
@@ -57,7 +58,7 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
 
         private readonly string[] meses = new string[] { "JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ" };
 
-        private async Task ProcessaFilaColetaDadosDeputados(ConcurrentQueue<(int Id, string NomeParlamentar)> queue)
+        private async Task ProcessaFilaColetaDadosDeputados(ConcurrentQueue<(int Id, string NomeParlamentar)> queue, CancellationToken ct = default)
         {
             var anoCorte = DateTime.Today.Year - 1; // 2008;
             var cultureInfoBR = CultureInfo.CreateSpecificCulture("pt-BR");
@@ -67,6 +68,7 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
 
             while (queue.TryDequeue(out (int Id, string NomeParlamentar) deputado))
             {
+                ct.ThrowIfCancellationRequested();
                 using var scope = serviceProvider.CreateScope();
                 var localDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
@@ -95,9 +97,10 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
                             {
                                 foreach (var ano in anosmandatos)
                                 {
+                                    ct.ThrowIfCancellationRequested();
                                     using (logger.BeginScope(new Dictionary<string, object> { ["Ano"] = ano }))
                                     {
-                                        await ColetaSalarioDeputado(context, idDeputado, ano, localDbContext);
+                                        await ColetaSalarioDeputado(context, idDeputado, ano, localDbContext, ct);
 
                                         address = $"https://www.camara.leg.br/deputados/{idDeputado}?ano={ano}";
                                         document = await context.OpenAsyncAutoRetry(address);
@@ -185,7 +188,7 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
                                                             if ((ano == DateTime.Today.Year))
                                                                 qtdSecretarios = Convert.ToInt32(valor.Split(' ')[0]);
 
-                                                            await ColetaPessoalGabinete(context, idDeputado, ano, localDbContext);
+                                                            await ColetaPessoalGabinete(context, idDeputado, ano, localDbContext, ct);
                                                         }
                                                         break;
                                                     case "Salário mensal bruto":
@@ -231,13 +234,13 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
                                                     case "Auxílio-moradia":
                                                         if (valor != "Não recebe o auxílio")
                                                         {
-                                                            await ColetaAuxilioMoradia(context, idDeputado, ano, localDbContext);
+                                                            await ColetaAuxilioMoradia(context, idDeputado, ano, localDbContext, ct);
                                                         }
                                                         break;
                                                     case "Viagens em missão oficial":
                                                         if (valor != "0")
                                                         {
-                                                            await ColetaMissaoOficial(context, idDeputado, ano, localDbContext);
+                                                            await ColetaMissaoOficial(context, idDeputado, ano, localDbContext, ct);
                                                         }
                                                         break;
                                                     case "Passaporte diplomático":
@@ -289,8 +292,9 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
             }
         }
 
-        private async Task ColetaSalarioDeputado(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext)
+        private async Task ColetaSalarioDeputado(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             var salarios = dbContext.DeputadoRemuneracoes
                 .AsNoTracking()
                 .Where(x => x.IdDeputado == idDeputado && x.Ano == ano)
@@ -331,7 +335,7 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
                     if (salarios.Any(x => x.Mes == mes))
                     {
                         logger.LogDebug("Remuneração de {Mes}/{Ano} do tipo {TipoRemuneracao} já existe, ignorando", mes, ano, idDeputado);
-                        await ColetaSalarioDeputadoDetalhado(context, idDeputado, ano, mes, dbContext);
+                        await ColetaSalarioDeputadoDetalhado(context, idDeputado, ano, mes, dbContext, ct);
                         continue;
                     }
 
@@ -357,15 +361,16 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
                             logger.LogWarning("Registro duplicado ignorado: {@Salario}", salario);
                     }
 
-                    await ColetaSalarioDeputadoDetalhado(context, idDeputado, ano, mes, dbContext);
+                    await ColetaSalarioDeputadoDetalhado(context, idDeputado, ano, mes, dbContext, ct);
                 }
             }
 
             dbContext.SaveChanges();
         }
 
-        private async Task ColetaSalarioDeputadoDetalhado(IBrowsingContext context, int idDeputado, int ano, short mes, AppDbContext dbContext)
+        private async Task ColetaSalarioDeputadoDetalhado(IBrowsingContext context, int idDeputado, int ano, short mes, AppDbContext dbContext, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             var address = $"https://www.camara.leg.br/deputados/{idDeputado}/remuneracao-deputado-detalhado?mesAno={mes:00}{ano}";
             var document = await context.OpenAsyncAutoRetry(address);
             if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
@@ -481,8 +486,9 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
             dbContext.SaveChanges();
         }
 
-        private async Task ColetaPessoalGabinete(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext)
+        private async Task ColetaPessoalGabinete(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             var address = $"https://www.camara.leg.br/deputados/{idDeputado}/pessoal-gabinete?ano={ano}";
             var document = await context.OpenAsyncAutoRetry(address);
             if (document.StatusCode != HttpStatusCode.OK || document.Url.Contains("error"))
@@ -623,8 +629,9 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
         //    //        }
         //    //    }
 
-        private async Task ColetaAuxilioMoradia(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext)
+        private async Task ColetaAuxilioMoradia(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             var auxilios = dbContext.DeputadoAuxilioMoradias
                 .AsNoTracking()
                 .Where(x => x.IdDeputado == idDeputado && x.Ano == ano)
@@ -675,8 +682,9 @@ WHERE (id_legislatura = 57 OR cd.situacao = 'Exercício')";
             dbContext.SaveChanges();
         }
 
-        private async Task ColetaMissaoOficial(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext)
+        private async Task ColetaMissaoOficial(IBrowsingContext context, int idDeputado, int ano, AppDbContext dbContext, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             var missoes = dbContext.DeputadoMissoesOficiais
                 .AsNoTracking()
                 .Where(x => x.IdDeputado == idDeputado)

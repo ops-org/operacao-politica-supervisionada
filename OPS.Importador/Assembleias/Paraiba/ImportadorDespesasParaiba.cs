@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading;
 using System.Web;
 using AngleSharp;
 using AngleSharp.Dom;
@@ -29,10 +30,10 @@ namespace OPS.Importador.Assembleias.Paraiba
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var address = $"{config.BaseAddress}deputados/viap-v2?tipo_viap=deputados&ano_viap={ano}&mes_viap={mes}";
-            var document = await context.OpenAsyncAutoRetry(address);
+            var document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
             IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("#content form");
 
@@ -43,7 +44,7 @@ namespace OPS.Importador.Assembleias.Paraiba
 
                 var dcForm = new Dictionary<string, string>();
                 dcForm.Add("deputado", gabinete.Value);
-                var subDocument = await form.SubmitAsyncAutoRetry(dcForm, true);
+                var subDocument = await form.SubmitAsyncAutoRetry(dcForm, true, ct: ct);
 
                 var linkPlanilha = (subDocument.QuerySelector("#content ul.lista-v a") as IHtmlAnchorElement).Href;
 
@@ -59,7 +60,7 @@ namespace OPS.Importador.Assembleias.Paraiba
 
                 using (logger.BeginScope(new Dictionary<string, object> { ["Parlamentar"] = gabinete.Text, ["Url"] = linkPlanilhaLimpa, ["Arquivo"] = Path.GetFileName(caminhoArquivo) }))
                 {
-                    await fileManager.BaixarArquivo(dbContext, linkPlanilhaLimpa, caminhoArquivo, config.Estado);
+                    await fileManager.BaixarArquivo(dbContext, linkPlanilhaLimpa, caminhoArquivo, config.Estado, ct);
 
                     try
                     {
@@ -103,6 +104,7 @@ namespace OPS.Importador.Assembleias.Paraiba
                     logger.LogError("Valor Não validado: {ValorTotal}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}", valorTotalDeputado, mes, ano, nomeParlamentar);
                     return;
                 }
+
                 if (OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Numero.GetHashCode()).StartsWith("Total de Despesas"))
                 {
                     var valorTotalArquivo = Convert.ToDecimal(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Valor.GetHashCode()), cultureInfo);
@@ -149,47 +151,98 @@ namespace OPS.Importador.Assembleias.Paraiba
             using (var package = new ExcelPackage(reader.BaseStream))
             {
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
-                for (int linha = 7; linha <= worksheet.Dimension.End.Row; linha++)
+
+                var tituloVerificador = worksheet.Cells[6, 2].Value?.ToString();
+
+                if (tituloVerificador.StartsWith("Deputado", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (linha > 1000) //string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Competencia.GetHashCode())))
+                    for (int linha = 7; linha <= worksheet.Dimension.End.Row; linha++)
                     {
-                        logger.LogError("Valor Não validado: {ValorTotal}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}", valorTotalDeputado, mes, ano, nomeParlamentar);
-                        return;
+                        if (linha > 1000) //string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasOds.Competencia.GetHashCode())))
+                        {
+                            logger.LogError("Valor Não validado: {ValorTotal}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}", valorTotalDeputado, mes, ano, nomeParlamentar);
+                            return;
+                        }
+                        if (worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString()?.StartsWith("Total de Despesas") ?? false)
+                        {
+                            var valorTotalArquivo = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo);
+                            ValidaValorTotal(filename, valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
+
+                            return;
+                        }
+                        if (string.IsNullOrEmpty(worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString())) continue;
+
+                        var despesaTemp = new CamaraEstadualDespesaTemp()
+                        {
+                            Nome = nomeParlamentar,
+                            Cpf = gabinete,
+                            Ano = (short)ano,
+                            Mes = (short)mes,
+                            TipoVerba = worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString(),
+                            TipoDespesa = worksheet.Cells[linha, ColunasOds.SubItem.GetHashCode()].Value?.ToString(),
+                            CnpjCpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[linha, ColunasOds.CnpjCpf.GetHashCode()].Value?.ToString()),
+                            NomeFornecedor = worksheet.Cells[linha, ColunasOds.Fornecedor.GetHashCode()].Value?.ToString(),
+                            Documento = worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString(),
+                            Observacao = worksheet.Cells[linha, ColunasOds.Documento.GetHashCode()].Value?.ToString(),
+                            Valor = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo),
+                            Origem = filename
+                        };
+
+                        var dataEmissao = worksheet.Cells[linha, ColunasOds.Data.GetHashCode()].Value?.ToString();
+                        if (!string.IsNullOrEmpty(dataEmissao) && dataEmissao != "#######")
+                            despesaTemp.DataEmissao = DateOnly.Parse(dataEmissao, cultureInfo);
+                        else
+                            despesaTemp.DataEmissao = new DateOnly(ano, mes, 1);
+
+                        InserirDespesaTemp(despesaTemp);
+                        valorTotalDeputado += despesaTemp.Valor;
+                        despesasIncluidas++;
                     }
-                    if (worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString()?.StartsWith("Total de Despesas") ?? false)
+                }
+                else // if (tituloVerificador.StartsWith("Nome", StringComparison.InvariantCultureIgnoreCase)) // Template 2
+                {
+                    for (int linha = 7; linha <= worksheet.Dimension.End.Row; linha++)
                     {
-                        var valorTotalArquivo = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo);
-                        ValidaValorTotal(filename, valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
+                        if (linha > 1000) //string.IsNullOrEmpty(OdsObj.GetCellValueText(sheetName, linha, ColunasXlsx.Competencia.GetHashCode())))
+                        {
+                            logger.LogError("Valor Não validado: {ValorTotal}; Referencia: {Mes}/{Ano}; Parlamentar: {Parlamentar}", valorTotalDeputado, mes, ano, nomeParlamentar);
+                            return;
+                        }
+                        if (worksheet.Cells[linha, ColunasXlsx.Numero.GetHashCode()].Value?.ToString()?.StartsWith("Total de Despesas") ?? false)
+                        {
+                            var valorTotalArquivo = Convert.ToDecimal(worksheet.Cells[linha, ColunasXlsx.Valor.GetHashCode()].Value, cultureInfo);
+                            ValidaValorTotal(filename, valorTotalArquivo, valorTotalDeputado, despesasIncluidas);
 
-                        return;
+                            return;
+                        }
+                        if (string.IsNullOrEmpty(worksheet.Cells[linha, ColunasXlsx.Item.GetHashCode()].Value?.ToString())) continue;
+
+                        var despesaTemp = new CamaraEstadualDespesaTemp()
+                        {
+                            Nome = nomeParlamentar,
+                            Cpf = gabinete,
+                            Ano = (short)ano,
+                            Mes = (short)mes,
+                            TipoVerba = worksheet.Cells[linha, ColunasXlsx.Item.GetHashCode()].Value?.ToString(),
+                            TipoDespesa = worksheet.Cells[linha, ColunasXlsx.SubItem.GetHashCode()].Value?.ToString(),
+                            CnpjCpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[linha, ColunasXlsx.CnpjCpf.GetHashCode()].Value?.ToString()),
+                            NomeFornecedor = worksheet.Cells[linha, ColunasXlsx.Fornecedor.GetHashCode()].Value?.ToString(),
+                            Documento = worksheet.Cells[linha, ColunasXlsx.Numero.GetHashCode()].Value?.ToString(),
+                            Observacao = worksheet.Cells[linha, ColunasXlsx.Documento.GetHashCode()].Value?.ToString(),
+                            Valor = Convert.ToDecimal(worksheet.Cells[linha, ColunasXlsx.Valor.GetHashCode()].Value, cultureInfo),
+                            Origem = filename
+                        };
+
+                        var dataEmissao = worksheet.Cells[linha, ColunasXlsx.Data.GetHashCode()].Value?.ToString();
+                        if (!string.IsNullOrEmpty(dataEmissao) && dataEmissao != "#######")
+                            despesaTemp.DataEmissao = DateOnly.Parse(dataEmissao, cultureInfo);
+                        else
+                            despesaTemp.DataEmissao = new DateOnly(ano, mes, 1);
+
+                        InserirDespesaTemp(despesaTemp);
+                        valorTotalDeputado += despesaTemp.Valor;
+                        despesasIncluidas++;
                     }
-                    if (string.IsNullOrEmpty(worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString())) continue;
-
-                    var despesaTemp = new CamaraEstadualDespesaTemp()
-                    {
-                        Nome = nomeParlamentar,
-                        Cpf = gabinete,
-                        Ano = (short)ano,
-                        Mes = (short)mes,
-                        TipoVerba = worksheet.Cells[linha, ColunasOds.Item.GetHashCode()].Value?.ToString(),
-                        TipoDespesa = worksheet.Cells[linha, ColunasOds.SubItem.GetHashCode()].Value?.ToString(),
-                        CnpjCpf = Utils.RemoveCaracteresNaoNumericos(worksheet.Cells[linha, ColunasOds.CnpjCpf.GetHashCode()].Value?.ToString()),
-                        NomeFornecedor = worksheet.Cells[linha, ColunasOds.Fornecedor.GetHashCode()].Value?.ToString(),
-                        Documento = worksheet.Cells[linha, ColunasOds.Numero.GetHashCode()].Value?.ToString(),
-                        Observacao = worksheet.Cells[linha, ColunasOds.Documento.GetHashCode()].Value?.ToString(),
-                        Valor = Convert.ToDecimal(worksheet.Cells[linha, ColunasOds.Valor.GetHashCode()].Value, cultureInfo),
-                        Origem = filename
-                    };
-
-                    var dataEmissao = worksheet.Cells[linha, ColunasOds.Data.GetHashCode()].Value?.ToString();
-                    if (!string.IsNullOrEmpty(dataEmissao) && dataEmissao != "#######")
-                        despesaTemp.DataEmissao = DateOnly.Parse(dataEmissao, cultureInfo);
-                    else
-                        despesaTemp.DataEmissao = new DateOnly(ano, mes, 1);
-
-                    InserirDespesaTemp(despesaTemp);
-                    valorTotalDeputado += despesaTemp.Valor;
-                    despesasIncluidas++;
                 }
             }
         }
@@ -259,6 +312,22 @@ AND dp.cnpj_correto IS NOT NULL;");
         {
             Competencia = 1,
             Deputado,
+            Item,
+            SubItem,
+            Fornecedor,
+            CnpjCpf,
+            Data,
+            Documento,
+            Numero,
+            Valor
+        }
+
+        private enum ColunasXlsx
+        {
+            Competencia = 1,
+            Nome, //Nome Parlamentar
+            NomeCompleto, // Nome Civil
+            Sigla, // Sigla do Partido
             Item,
             SubItem,
             Fornecedor,

@@ -1,10 +1,12 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {
     [Table("fornecedor_info")]
+    [DebuggerDisplay("FornecedorInfo {{Id}} - {{Nome}}")]
     public class FornecedorInfo
     {
         [Key]
@@ -168,3 +170,4 @@ namespace OPS.Infraestrutura.Entities.Fornecedores
         public virtual FornecedorAtividade? FornecedorAtividadePrincipal { get; set; }
     }
 }
+

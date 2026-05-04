@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
@@ -21,7 +22,7 @@ public class ImportadorParlamentarMinasGerais : ImportadorParlamentarBase
         });
     }
 
-    public override Task Importar()
+    public override Task Importar(CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(config, nameof(config));
         var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");

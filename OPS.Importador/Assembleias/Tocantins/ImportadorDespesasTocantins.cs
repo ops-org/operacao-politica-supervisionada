@@ -7,6 +7,7 @@ using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
+using System.Threading;
 using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
@@ -28,7 +29,7 @@ namespace OPS.Importador.Assembleias.Tocantins
             };
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
             var dcForm = new Dictionary<string, string>();
@@ -37,6 +38,12 @@ namespace OPS.Importador.Assembleias.Tocantins
             dcForm.Add("transparencia.mes", mes.ToString());
             dcForm.Add("transparencia.parlamentar", "");
             IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.py-4");
+            if(form == null)
+            {
+                logger.LogError("Formulario não localizado para o ano {Ano}/{Mes}.", ano, mes);
+                return;
+            }
+
             document = await form.SubmitAsyncAutoRetry(dcForm);
 
             form = document.QuerySelector<IHtmlFormElement>("form.py-4");
@@ -44,7 +51,7 @@ namespace OPS.Importador.Assembleias.Tocantins
 
             if (gabinetes.Options[2].Text == "Não existem registros para o ano selecionado")
             {
-                logger.LogError("Não existem registros para o ano {Ano}.", mes);
+                logger.LogError("Não existem registros para o ano {Ano}/{Mes}.", ano, mes);
                 return;
             }
 
@@ -98,7 +105,7 @@ namespace OPS.Importador.Assembleias.Tocantins
             }
         }
 
-        private async Task ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf)
+        private async Task ImportarDespesasArquivo(int ano, int mes, IHtmlOptionElement gabinete, string urlPdf, CancellationToken ct = default)
         {
             var filename = $"{tempFolder}/CLTO-{ano}-{mes}-{gabinete.Value}.pdf";
             await fileManager.BaixarArquivo(dbContext, urlPdf, filename, config.Estado);
@@ -486,6 +493,9 @@ namespace OPS.Importador.Assembleias.Tocantins
                 case "15/0//2025": data = "15/08/2025"; break;
                 case "404/10/2025": data = "04/10/2025"; break;
                 case "14/112025": data = "14/11/2025"; break;
+                case "24802/2026": data = "24/02/2026"; break;
+                case "2702/2026": data = "27/02/2026"; break;
+                case "01/022026": data = "01/02/2026"; break;
             }
 
             try

@@ -225,7 +225,11 @@ namespace OPS.Core.Utilities
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower()).Replace("De ", "de ").Replace("Da ", "da ").Replace("Do ", "do ");
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower())
+                .Replace("De ", "de ")
+                .Replace("Da ", "da ")
+                .Replace("Do ", "do ")
+                .Replace("Dos ", "dos ");
         }
 
         public static string ReduceWhitespace(this string text)
@@ -283,6 +287,20 @@ namespace OPS.Core.Utilities
                 return value;
 
             return null;
+        }
+
+        public static int ToInt32(this object value)
+        {
+            if (value == null) return 0;
+            if (value is System.Text.Json.JsonElement element)
+            {
+                if (element.ValueKind == System.Text.Json.JsonValueKind.Number)
+                    return element.GetInt32();
+                if (element.ValueKind == System.Text.Json.JsonValueKind.String)
+                    return int.Parse(element.GetString());
+                return 0;
+            }
+            return Convert.ToInt32(value);
         }
 
         public static T? NullIf<T>(this T left, T right) where T : struct

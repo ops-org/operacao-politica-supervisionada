@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -31,12 +32,12 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
         httpClient = serviceProvider.GetService<IHttpClientFactory>().CreateClient("DefaultClient");
     }
 
-    public async Task Importar()
+    public async Task Importar(CancellationToken ct = default)
     {
-        await ImportarDeputados(legislaturaAtual - 1);
+        await ImportarDeputados(legislaturaAtual - 1, ct);
     }
 
-    public async Task ImportarDeputados(int legislaturaInicial)
+    public async Task ImportarDeputados(int legislaturaInicial, CancellationToken ct = default)
     {
         int novos = 0;
         int pagina;
@@ -266,9 +267,9 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
     /// Baixa as imagens dos deputados novos (imagens que ainda não foram baixadas)
     /// </summary>
     /// <param name="dirRaiz"></param>
-    public async Task DownloadFotos()
+    public async Task DownloadFotos(CancellationToken ct = default)
     {
-        var sDeputadosImagesPath = System.IO.Path.Combine(appSettings.SiteRootFolder, @"public\img\depfederal\");
+        var sDeputadosImagesPath = System.IO.Path.Combine(appSettings.TempFolder, @"Media\");
 
         var httpClient = new HttpClient(new HttpClientHandler
         {
@@ -281,6 +282,7 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
 
             foreach (var deputado in deputados)
             {
+                ct.ThrowIfCancellationRequested();
                 string id = deputado.Id.ToString();
                 string src = sDeputadosImagesPath + id + ".jpg";
                 if (File.Exists(src))
@@ -298,11 +300,11 @@ public class ImportadorParlamentarCamaraFederal : IImportadorParlamentar
                 {
                     try
                     {
-                        await httpClient.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src);
+                        await httpClient.DownloadFile("https://www.camara.leg.br/internet/deputado/bandep/" + id + ".jpgmaior.jpg", src, ct);
                     }
                     catch (Exception)
                     {
-                        await httpClient.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src);
+                        await httpClient.DownloadFile("http://www.camara.gov.br/internet/deputado/bandep/" + id + ".jpg", src, ct);
                     }
 
                     ImportacaoUtils.CreateImageThumbnail(src);

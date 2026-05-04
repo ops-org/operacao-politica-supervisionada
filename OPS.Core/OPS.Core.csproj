@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="RestSharp" Version="113.1.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.3" />
+    <PackageReference Include="Dapper" Version="2.1.72" />
+    <PackageReference Include="RestSharp" Version="114.0.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.7" />
   </ItemGroup>
 
   <ItemGroup>

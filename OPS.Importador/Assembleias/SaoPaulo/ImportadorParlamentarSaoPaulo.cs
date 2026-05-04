@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Threading;
+using System.Xml;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
@@ -17,7 +18,7 @@ namespace OPS.Importador.Assembleias.SaoPaulo
             });
         }
 
-        public override Task Importar()
+        public override Task Importar(CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(config, nameof(config));
 

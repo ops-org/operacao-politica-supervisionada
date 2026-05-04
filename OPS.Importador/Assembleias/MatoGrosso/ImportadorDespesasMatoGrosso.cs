@@ -1,4 +1,5 @@
-﻿using AngleSharp;
+﻿using System.Threading;
+using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Importador.Assembleias.MatoGrosso.Entities;
 using OPS.Importador.Comum.Despesa;
@@ -17,10 +18,10 @@ public class ImportadorDespesasMatoGrosso : ImportadorDespesasRestApiAnual
         };
     }
 
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+    public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
     {
         var address = $"{config.BaseAddress}/lista?search=id.exercicio==%272025%27%20and%20id.entidade==%271%27%20and%20data%3E=%272025-01-01%27%20and%20data%3C=%272025-12-31%27&programatica.projeto=4491&programatica.elemento=339093&entidade=1&size=20&sort=data,DESC";
-        EmpenhoResponse objEmpenhos = await RestApiGet<EmpenhoResponse>(address);
+        EmpenhoResponse objEmpenhos = await RestApiGet<EmpenhoResponse>(address, ct);
 
 
         foreach (var empenho in objEmpenhos.Content)

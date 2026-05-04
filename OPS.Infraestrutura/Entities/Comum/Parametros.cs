@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {
     [Table("parametros")]
+    [DebuggerDisplay("Parametros {{Id}} - {{Descricao}}")]
     public class Parametros
     {
         [Key]
@@ -19,3 +21,4 @@ namespace OPS.Infraestrutura.Entities.Comum
         public string Valor { get; set; } = null!;
     }
 }
+

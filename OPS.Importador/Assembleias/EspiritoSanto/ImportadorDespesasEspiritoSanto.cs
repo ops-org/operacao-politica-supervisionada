@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Microsoft.Extensions.Logging;
@@ -26,10 +27,10 @@ namespace OPS.Importador.Assembleias.EspiritoSanto
             deputados = dbContext.DeputadosEstaduais.Where(x => x.IdEstado == config.Estado.GetHashCode()).ToList();
         }
 
-        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes)
+        public override async Task ImportarDespesas(IBrowsingContext context, int ano, int mes, CancellationToken ct = default)
         {
             var address = $"{config.BaseAddress}Transparencia/CotasParlamentares";
-            var document = await context.OpenAsyncAutoRetry(address);
+            var document = await context.OpenAsyncAutoRetry(address, ct: ct);
             var gabinetes = document.QuerySelectorAll("#cboSetor option").ToList();
 
             foreach (var item in gabinetes)
@@ -52,7 +53,7 @@ namespace OPS.Importador.Assembleias.EspiritoSanto
                 }
 
                 address = $"{config.BaseAddress}/Transparencia/Api/CotasParlamentaresNovoTable/{mes}/{mes}/{ano}/{gabinete.Value}/false";
-                document = await context.OpenAsyncAutoRetry(address);
+                document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
                 if (document.QuerySelector(".ls-alert-warning")?.TextContent == "Nenhum: resultado foi encontrado!") continue;
 

@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.SenadoFederal
 {
     [Table("sf_secretario_historico")]
+    [DebuggerDisplay("SecretarioHistorico {{Id}} - {{Nome}}")]
     public class SecretarioHistorico
     {
         [Key]
@@ -20,3 +22,4 @@ namespace OPS.Infraestrutura.Entities.SenadoFederal
         public virtual Senador Senador { get; set; } = null!;
     }
 }
+

@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,7 +44,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         PartidoDeParas = dbContext.PartidoDeParas.ToList();
     }
 
-    public Task Importar()
+    public Task Importar(CancellationToken ct = default)
     {
         //using (var dbContext = dbContextFactory.CreateDbContext())
         //using (var transaction = dbContext.Database.BeginTransaction())
@@ -630,9 +631,9 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         }
     }
 
-    public async Task DownloadFotos()
+    public async Task DownloadFotos(CancellationToken ct = default)
     {
-        var sSenadoressImagesPath = System.IO.Path.Combine(appSettings.SiteRootFolder, @"public\img\senador\");
+        var sSenadoressImagesPath = System.IO.Path.Combine(appSettings.TempFolder, @"Media\");
 
         {
             var activeSenators = dbContext.Senadores
@@ -642,6 +643,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
             foreach (var senatorId in activeSenators)
             {
+                ct.ThrowIfCancellationRequested();
                 string url = "https://legis.senado.leg.br/senadores/fotos-oficiais/" + senatorId;
                 string src = sSenadoressImagesPath + senatorId + ".jpg";
                 if (File.Exists(src))
@@ -657,7 +659,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
 
                 try
                 {
-                    await httpClient.DownloadFile(url, src);
+                    await httpClient.DownloadFile(url, src, ct);
 
                     ImportacaoUtils.CreateImageThumbnail(src, 120, 160);
                     ImportacaoUtils.CreateImageThumbnail(src, 240, 300);
@@ -675,7 +677,7 @@ public class ImportadorParlamentarSenado : IImportadorParlamentar
         }
     }
 
-    public async Task Importar(int legislatura)
+    public async Task Importar(int legislatura, CancellationToken ct = default)
     {
         var restClient = new RestClient(httpClient);
 

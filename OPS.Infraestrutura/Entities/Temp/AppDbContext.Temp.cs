@@ -31,7 +31,7 @@ public partial class AppDbContext
     public DbSet<ArquivoChecksum> ArquivoChecksums { get; set; }
     public DbSet<DeputadoEstadualDepara> DeputadoEstadualDeparas { get; set; }
     public DbSet<CamaraEstadualDespesaTemp> CamaraEstadualDespesaTemps { get; set; }
-    public DbSet<CamaraEstadualFuncionarioTemp> CamaraEstadualFuncionarioTemps { get; set; }
+    //public DbSet<CamaraEstadualFuncionarioTemp> CamaraEstadualFuncionarioTemps { get; set; }
     public DbSet<CamaraEstadualRemuneracaoTemp> CamaraEstadualRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualSecretarioRemuneracaoTemp> CamaraEstadualSecretarioRemuneracaoTemps { get; set; }
     public DbSet<CamaraEstadualEmpenhoTemp> CamaraEstadualEmpenhoTemps { get; set; }
@@ -201,14 +201,14 @@ public static class TempConfigurations
         });
     }
 
-    public static void ConfigureCamaraEstadualFuncionarioTemp(this ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CamaraEstadualFuncionarioTemp>(entity =>
-        {
-            entity.HasKey(e => e.Chave);
-            entity.ToTable("cf_funcionario_temp", "temp");
-        });
-    }
+    //public static void ConfigureCamaraEstadualFuncionarioTemp(this ModelBuilder modelBuilder)
+    //{
+    //    modelBuilder.Entity<CamaraEstadualFuncionarioTemp>(entity =>
+    //    {
+    //        entity.HasKey(e => e.Chave);
+    //        entity.ToTable("cf_funcionario_temp", "temp");
+    //    });
+    //}
 
     public static void ConfigureCamaraEstadualRemuneracaoTemp(this ModelBuilder modelBuilder)
     {
@@ -256,7 +256,7 @@ public static class TempConfigurations
         modelBuilder.ConfigureCamaraEstadualDespesaTemp();
         modelBuilder.ConfigureCamaraEstadualDespesa();
         modelBuilder.ConfigureCamaraEstadualDespesaTipo();
-        modelBuilder.ConfigureCamaraEstadualFuncionarioTemp();
+        //modelBuilder.ConfigureCamaraEstadualFuncionarioTemp();
         modelBuilder.ConfigureCamaraEstadualRemuneracaoTemp();
         modelBuilder.ConfigureCamaraEstadualSecretarioRemuneracaoTemp();
         modelBuilder.ConfigureCamaraEstadualEmpenhoTemp();

@@ -1,9 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_funcionario_remuneracao")]
+    [DebuggerDisplay("FuncionarioRemuneracao {{Id}}")]
     public class FuncionarioRemuneracao
     {
         [Key]
@@ -81,7 +83,7 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public string? Nivel { get; set; }
 
         [Column("contratacao")]
-        public DateTime? Contratacao { get; set; }
+        public DateOnly? Contratacao { get; set; }
 
         // Navigation properties
         public virtual Funcionario Funcionario { get; set; } = null!;
@@ -89,3 +91,4 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         public virtual Deputado? Deputado { get; set; }
     }
 }
+

@@ -24,13 +24,13 @@ namespace OPS.Importador.Assembleias.Para
             });
         }
 
-        public override async Task Importar()
+        public override async Task Importar(CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(config, nameof(config));
 
             var context = httpClient.CreateAngleSharpContext();
 
-            var document = await context.OpenAsyncAutoRetry(config.BaseAddress);
+            var document = await context.OpenAsyncAutoRetry(config.BaseAddress, ct: ct);
             if (document.StatusCode != HttpStatusCode.OK)
             {
                 Console.WriteLine($"{config.BaseAddress} {document.StatusCode}");
@@ -50,7 +50,7 @@ namespace OPS.Importador.Assembleias.Para
                 if (deputado == null) continue;
 
                 deputado.UrlPerfil = $"https://alepa.pa.gov.br/Institucional/Deputado/{matricula}";
-                var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil);
+                var subDocument = await context.OpenAsyncAutoRetry(deputado.UrlPerfil, ct: ct);
                 if (document.StatusCode != HttpStatusCode.OK)
                 {
                     logger.LogError("Erro ao consultar parlamentar: {NomeDeputado} {StatusCode}", deputado.UrlPerfil, subDocument.StatusCode);

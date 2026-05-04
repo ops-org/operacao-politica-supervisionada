@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OPS.Core.DTOs;
@@ -14,7 +16,7 @@ namespace OPS.Core.Repositories
         {
         }
 
-        public async Task<IEnumerable<ImportacaoInfoDTO>> InfoImportacao()
+        public async Task<IEnumerable<ImportacaoInfoDTO>> InfoImportacao(CancellationToken ct = default)
         {
             var results = await _context.Importacoes
                 .GroupJoin(_context.Estados,
@@ -35,7 +37,7 @@ namespace OPS.Core.Repositories
                     Info = x.i.Info,
                     UltimaDespesa = Utils.FormataData(x.i.UltimaDespesa),
                     UltimaImportacao = Utils.FormataData(x.i.DespesasFim)
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             return results;
         }
@@ -47,7 +49,7 @@ namespace OPS.Core.Repositories
         /// 4 Senadores MAIS gastadores (CEAPS)
         /// </summary>
         /// <returns></returns>
-        public async Task<ParlamentarResumoGastosDTO> ParlamentarResumoGastos()
+        public async Task<ParlamentarResumoGastosDTO> ParlamentarResumoGastos(CancellationToken ct = default)
         {
             var deputadosFederais = await _context.DeputadoCampeaoGastosCamara
                 .OrderByDescending(d => d.ValorTotal)
@@ -59,7 +61,7 @@ namespace OPS.Core.Repositories
                     ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal, 2),
                     SiglaPartidoEstado = d.SiglaPartido + " / " + d.SiglaEstado
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var deputadosEstaduais = await _context.DeputadoCampeaoGastos
                 .OrderByDescending(d => d.ValorTotal)
@@ -71,7 +73,7 @@ namespace OPS.Core.Repositories
                     ValorTotal = "R$ " + Utils.FormataValor(d.ValorTotal, 2),
                     SiglaPartidoEstado = d.SiglaPartido + " / " + d.SiglaEstado
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var senadores = await _context.SenadoresCampeaoGasto
                 .OrderByDescending(s => s.ValorTotal)
@@ -83,7 +85,7 @@ namespace OPS.Core.Repositories
                     ValorTotal = "R$ " + Utils.FormataValor(s.ValorTotal, 2),
                     SiglaPartidoEstado = s.SiglaPartido + " / " + s.SiglaEstado
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return new ParlamentarResumoGastosDTO()
             {

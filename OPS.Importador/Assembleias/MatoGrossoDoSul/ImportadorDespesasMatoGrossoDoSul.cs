@@ -1,6 +1,8 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -31,13 +33,13 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
     /// </summary>
     /// <param name="ano"></param>
     /// <returns></returns>
-    public override async Task ImportarDespesas(IBrowsingContext context, int ano)
+    public override async Task ImportarDespesas(IBrowsingContext context, int ano, CancellationToken ct = default)
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("pt-BR");
         var pagina = 0;
 
-        var address = $"http://consulta.transparencia.al.ms.gov.br/ceap/";
-        var document = await context.OpenAsyncAutoRetry(address);
+        var address = $"https://consulta.transparencia.al.ms.gov.br/ceap/";
+        var document = await context.OpenAsyncAutoRetry(address, ct: ct);
 
         Thread.Sleep(TimeSpan.FromSeconds(3));
         IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form");
@@ -56,15 +58,16 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
         dcForm.Add("verbaindenizatoria_ano_referencia_autocomp", ano.ToString());
         dcForm.Add("verbaindenizatoria_ano_referencia_input_2", ano.ToString());
         dcForm.Add("NM_operador", "and");
-        dcForm.Add("nmgp_tab_label", "deputados_nome%3F%23%3FNome%3F%40%3Fcategoriadespesas_descricao%3F%23%3FCategoria%2FDespesa%3F%40%3Fverbaindenizatoria_mes_referencia%3F%23%3FM%EAs%3F%40%3Fverbaindenizatoria_ano_referencia%3F%23%3FAno%3F%40%3F");
+        dcForm.Add("nmgp_tab_label", "deputados_nome?#?Nome?@?categoriadespesas_descricao?#?Categoria/Despesa?@?verbaindenizatoria_mes_referencia?#?Mês?@?verbaindenizatoria_ano_referencia?#?Ano?@?");
         dcForm.Add("bprocessa", "pesq");
         dcForm.Add("nmgp_save_name_bot", "");
         dcForm.Add("NM_filters_del_bot", "");
         dcForm.Add("form_condicao", "3");
-        document = await form.SubmitAsyncAutoRetry(dcForm, true);
+
+        document = await form.SubmitAsyncAutoRetry(dcForm, true, ct: ct);
 
         form = document.QuerySelector<IHtmlFormElement>("form");
-        document = await form.SubmitAsync();
+        document = await form.SubmitAsync(new Dictionary<string, string>());
 
         if (document.QuerySelector("#sc_grid_body").TextContent.Trim() == "Registros não encontrados") return;
 
@@ -202,7 +205,7 @@ public class ImportadorDespesasMatoGrossoDoSul : ImportadorDespesasRestApiAnual
             dcFormPaginacao.Add("nmgp_opcao", "ajax_navigate");
             dcFormPaginacao.Add("opc", "rec");
             dcFormPaginacao.Add("parm", offset.ToString());
-            document = await form.SubmitAsyncAutoRetry(dcFormPaginacao, true);
+            document = await form.SubmitAsyncAutoRetry(dcFormPaginacao, true, ct: ct);
             var htmlZoado = document.Body.InnerHtml.Replace("</script></a></td></tr></tbody></table>", "");
             var json = "{\"setValue\":[{\"field\": \"sc_grid_body" + htmlZoado.Split("sc_grid_body")[1];
             Rootobject parsed = JsonSerializer.Deserialize<Rootobject>(json);

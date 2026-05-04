@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
@@ -29,68 +30,68 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
+using OPS.Importador.SenadoFederal;
 using OPS.Infraestrutura;
+using System.Threading;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace OPS.Importador
 {
     internal static class ImportOrchestrator
     {
-        public static async Task RunAppAsync(IServiceProvider serviceProvider)
+        public static async Task RunAppAsync(IServiceProvider serviceProvider, CancellationToken ct = default)
         {
-
             var logger = serviceProvider.GetService<ILogger<Program>>();
             logger.LogInformation("Iniciando Importação");
 
             var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
-
-            await RunImportersAsync(serviceProvider, dbContext, logger);
+            await RunImportersAsync(serviceProvider, dbContext, logger, ct);
 
             //var importador = serviceProvider.GetService<CamaraFederal.ImportacaoCamaraFederal>();
+            //await importador.ColetaDadosDeputados();
+            //await importador.ProcessarFuncionarioTemp();
+            //await importador.AtualizaParlamentarValores();
+            //await importador.ColetaRemuneracaoSecretarios();
 
+
+            //var importador = serviceProvider.GetService<ImportadorRemuneracaoSenado>();
             //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-            //importador.ColetaDadosDeputados();
-            //importador.AtualizaParlamentarValores();
-            //importador.ColetaRemuneracaoSecretarios();
-
-
-            //var importador = serviceProvider.GetService<ImportadorDespesasSenado>();
-            //var mesAtual = DateTime.Today.AddDays(-(DateTime.Today.Day - 1));
-            //var mesConsulta = new DateTime(2024, 07, 01);
+            ////var mesConsulta = new DateTime(2024, 07, 01);
+            //var mesConsulta = new DateTime(2026, 03, 01); // SELECT max(ano_mes) FROM senado.sf_remuneracao
 
             //do
             //{
-            //    importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
+            //    await importador.ImportarRemuneracao(mesConsulta.Year, mesConsulta.Month);
 
             //    mesConsulta = mesConsulta.AddMonths(1);
             //} while (mesConsulta < mesAtual);
 
+            //await importador.AtualizarDadosCalculados();
 
-            var cand = serviceProvider.GetRequiredService<TribunalSuperiorEleitoral.Candidatos>();
 
-            // https://divulgacandcontas.tse.jus.br/divulga/#/eleicao
-            // https://dadosabertos.tse.jus.br/dataset/?groups=candidatos
-            var anos = new List<int> { 2006, 2010, 2014, 2018, 2022 };
-            foreach (var ano in anos)
-            {
-                await cand.ImportarCompleto(ano);
-            }
+            //var cand = new Candidatos();
+            //cand.ImportarCandidatos(@"C:\\temp\consulta_cand_2018_BRASIL.csv");
+            //cand.ImportarDespesasPagas(@"C:\\temp\despesas_pagas_candidatos_2018_BRASIL.csv");
+            //cand.ImportarDespesasContratadas(@"C:\\temp\despesas_contratadas_candidatos_2018_BRASIL.csv");
+            //cand.ImportarReceitas(@"C:\\temp\receitas_candidatos_2018_BRASIL.csv");
+            //cand.ImportarReceitasDoadorOriginario(@"C:\\temp\receitas_candidatos_doador_originario_2018_BRASIL.csv");
 
-            var objFornecedor = serviceProvider.GetService<Fornecedores.ImportacaoFornecedor>();
-            await objFornecedor.ConsultarDadosCNPJ();
-            //await objFornecedor.ConsultarDadosCNPJ(somenteNovos: false);
+            using var scope = serviceProvider.CreateScope();
+            var objFornecedor = scope.ServiceProvider.GetRequiredService<Fornecedores.ImportacaoFornecedor>();
+            //await objFornecedor.ConsultarDadosCNPJ();
 
-            //var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
-            //await ipcaImportador.ImportarIpca();
+            var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
+            await ipcaImportador.ImportarIpca(ct);
         }
 
-        private static async Task RunImportersAsync(IServiceProvider serviceProvider, AppDbContext dbContext, ILogger logger)
+        private static async Task RunImportersAsync(IServiceProvider serviceProvider, AppDbContext dbContext,
+            ILogger logger, CancellationToken ct = default)
         {
-            await SyncDatabaseAsync(dbContext);
+            await SyncDatabaseAsync(dbContext, ct);
 
-            var crawler = new SeleniumScraper(serviceProvider);
+            //var crawler = new SeleniumScraper(serviceProvider);
             //crawler.BaixarArquivosParana();
-            crawler.BaixarArquivosPiaui();
+            //crawler.BaixarArquivosPiaui();
 
             var types = new Type[]
             {
@@ -103,7 +104,7 @@ namespace OPS.Importador
                 typeof(ImportacaoBahia), // crawler anual
                 typeof(ImportacaoCeara), // crawler mensal
                 typeof(ImportacaoDistritoFederal), // xlsx  (Apenas BR)
-                typeof(ImportacaoEspiritoSanto),  // crawler mensal/deputado (Apenas BR)
+                typeof(ImportacaoEspiritoSanto), // crawler mensal/deputado (Apenas BR)
                 typeof(ImportacaoGoias), // crawler mensal/deputado
                 typeof(ImportacaoMaranhao), // Valores mensais por categoria
                 //typeof(ImportacaoMatoGrosso), // <<<<<< ------------------------------------------------------------------ >>>>>>> sem dados detalhados por parlamentar
@@ -130,29 +131,38 @@ namespace OPS.Importador
             {
                 tasks.Add(Task.Run(async () =>
                 {
-                    var estado = type.Name.Replace("Importador", "");
-                    using (logger.BeginScope(new Dictionary<string, object> { ["Code"] = Utils.GetStateCode(estado), ["Estado"] = estado, ["ProcessIdentifier"] = Guid.NewGuid().ToString() }))
+                    using (var scope = serviceProvider.CreateScope())
                     {
-                        logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
-                        var watch = System.Diagnostics.Stopwatch.StartNew();
+                        var estado = type.Name.Replace("Importador", "");
+                        using (logger.BeginScope(new Dictionary<string, object>
+                        {
+                            ["Code"] = Utils.GetStateCode(estado),
+                            ["Estado"] = estado,
+                            ["ProcessIdentifier"] = Guid.NewGuid().ToString()
+                        }))
+                        {
+                            logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
+                            var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                        var importador = (ImportadorBase)serviceProvider.GetService(type);
-                        await importador.ImportarCompleto();
+                            var importador = (ImportadorBase)scope.ServiceProvider.GetRequiredService(type);
+                            await importador.ImportarCompleto(ct);
 
-                        watch.Stop();
-                        logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}", type.Name, watch.Elapsed);
+                            watch.Stop();
+                            logger.LogInformation("Processamento do(a) {Estado} finalizado em {TimeElapsed:c}",
+                                type.Name, watch.Elapsed);
+                        }
                     }
-                }));
+                }, ct));
             }
 
             await Task.WhenAll(tasks);
         }
 
-        private static async Task SyncDatabaseAsync(AppDbContext dbContext)
+        private static async Task SyncDatabaseAsync(AppDbContext dbContext, CancellationToken ct = default)
         {
             await dbContext.Database.ExecuteSqlRawAsync(@"
                 INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                SELECT d.id, d.nome_parlamentar, d.id_estado 
+                SELECT d.id, d.nome_parlamentar, d.id_estado
                 FROM assembleias.cl_deputado d
                 LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_parlamentar AND dp.id_estado = d.id_estado
                 WHERE dp.id IS NULL
@@ -160,12 +170,12 @@ namespace OPS.Importador
                 ON CONFLICT DO NOTHING;
 
                 INSERT INTO temp.cl_deputado_de_para (id, nome, id_estado)
-                SELECT d.id, d.nome_civil, d.id_estado 
+                SELECT d.id, d.nome_civil, d.id_estado
                 FROM assembleias.cl_deputado d
                 LEFT JOIN temp.cl_deputado_de_para dp ON dp.nome ILIKE d.nome_civil AND dp.id_estado = d.id_estado
                 WHERE dp.id IS NULL
                 AND d.nome_civil IS NOT NULL
-                ON CONFLICT DO NOTHING;");
+                ON CONFLICT DO NOTHING;", ct);
         }
     }
 }
