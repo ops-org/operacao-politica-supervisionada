@@ -284,11 +284,18 @@ public class ImportadorDespesasCamaraFederal : IImportadorDespesas
 
                         if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
                         {
-                            logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
-                                despesaTemp.NomeParlamentar, despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
-
                             var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, dataEmissao.Month);
                             despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dataEmissao.Month, Math.Min(dataEmissao.Day, monthLastDay));
+
+                            diferencaDias = Math.Abs((dataReferencia.ToDateTime(TimeOnly.MinValue) - despesaTemp.DataEmissao.Value.ToDateTime(TimeOnly.MinValue)).Days);
+                            if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
+                            {
+                                monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
+                                despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, Math.Min(dataEmissao.Day, monthLastDay));
+                            }
+
+                            logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Vigência: {Ano}/{Mes}, Data Original: {DataOriginal}, Data Ajustada: {DataAjustada}.",
+                                despesaTemp.NomeParlamentar, despesaTemp.Ano, despesaTemp.Mes, dataEmissao.ToString("yyyy-MM-dd"), despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"));
                         }
                     }
 

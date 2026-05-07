@@ -152,12 +152,12 @@ internal static class ConfigureApp
 
                 return new ResilientProxyHandler(proxySettings, allowRedirect: false);
             });
-        //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        //{
-        //    AllowAutoRedirect = false,
-        //    MaxAutomaticRedirections = 1,
-        //    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
-        //});
+            //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            //{
+            //    AllowAutoRedirect = false,
+            //    MaxAutomaticRedirections = 1,
+            //    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
+            //});
 
         services.AddHttpClient("DefaultClient")
             .AddDefaultOpsConfiguration()
@@ -168,10 +168,10 @@ internal static class ConfigureApp
 
                 return new ResilientProxyHandler(proxySettings, allowRedirect: true);
             });
-        //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        //{
-        //    AllowAutoRedirect = true
-        //});
+            //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            //{
+            //    AllowAutoRedirect = true
+            //});
     }
 
     private static IHttpClientBuilder AddDefaultOpsConfiguration(this IHttpClientBuilder builder)
@@ -180,7 +180,7 @@ internal static class ConfigureApp
             .ConfigureHttpClient((services, config) =>
             {
                 var appSettings = services.GetRequiredService<IOptions<AppSettings>>().Value;
-                config.Timeout = TimeSpan.FromSeconds(appSettings.PollyDefaultTimeout);
+                config.Timeout = TimeSpan.FromSeconds(appSettings.PollyDefaultTimeoutSeconds);
                 config.DefaultRequestHeaders.Clear();
                 config.DefaultRequestHeaders.Add("User-Agent", Utils.DefaultUserAgent);
             })
@@ -198,19 +198,19 @@ internal static class ConfigureApp
                 onRetry: (message, timespan, attempt, context) =>
                 {
                     services.GetService<ILogger<HttpClient>>()?
-                        .LogWarning("Delaying for {delay} seconds, then making retry {retry}. Url: {Url}",
-                            timespan.TotalSeconds, attempt, message?.Result?.RequestMessage?.RequestUri);
+                        .LogWarning("Delaying for {DelaySeconds} seconds, then making retry {Attempt}. {Details}",
+                            timespan.TotalSeconds, attempt, message?.Result?.RequestMessage?.RequestUri?.ToString() ?? message.Exception.Message);
                 }))
             .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
-    }
-    //.AddExtendedHttpClientLogging(options =>
-    //{
-    //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
-    //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
-    //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
+            //.AddExtendedHttpClientLogging(options =>
+            //{
+            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
+            //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
+            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
 
-    //    options.LogBody = true;
-    //    ////options.LogContentHeaders = true;
-    //    //options.LogRequestStart = true;
-    //});
+            //    options.LogBody = true;
+            //    ////options.LogContentHeaders = true;
+            //    //options.LogRequestStart = true;
+            //});
+    }
 }

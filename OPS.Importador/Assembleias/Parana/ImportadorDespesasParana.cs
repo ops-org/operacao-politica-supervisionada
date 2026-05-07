@@ -94,6 +94,8 @@ namespace OPS.Importador.Assembleias.Parana
             foreach (var file in files)
             {
                 ct.ThrowIfCancellationRequested();
+                if (file.Contains("_bkp")) continue;
+
                 var filename = file.Replace("_tmp", "");
                 _ = fileManager.ProcessarArquivoTemp(dbContext, filename, config.Estado);
 
@@ -112,11 +114,15 @@ namespace OPS.Importador.Assembleias.Parana
                     {
                         foreach (var itensDespesa in despesa.ItensDespesa)
                         {
+                            if (itensDespesa.Exercicio != ano)
+                                throw new Exception($"Arquivo {filename} possui dados do ano {itensDespesa.Exercicio} quando o ano {ano} era esperado.");
+
                             var despesaTemp = new CamaraEstadualDespesaTemp()
                             {
                                 Nome = parlamentarDespesa.Parlamentar.NomePolitico.Replace("DEPUTADA", "").Replace("DEPUTADO", "").Trim().ToTitleCase(),
                                 Cpf = parlamentarDespesa.Parlamentar.Codigo.ToString(),
                                 Ano = (short)itensDespesa.Exercicio,
+                                Mes = itensDespesa.Mes,
                                 TipoDespesa = itensDespesa.TipoDespesa.Descricao,
                                 Valor = (decimal)(itensDespesa.Valor - itensDespesa.ValorDevolucao),
                                 DataEmissao = DateOnly.FromDateTime(itensDespesa.Data),

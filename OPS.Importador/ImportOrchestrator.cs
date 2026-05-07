@@ -78,7 +78,7 @@ namespace OPS.Importador
 
             using var scope = serviceProvider.CreateScope();
             var objFornecedor = scope.ServiceProvider.GetRequiredService<Fornecedores.ImportacaoFornecedor>();
-            //await objFornecedor.ConsultarDadosCNPJ();
+            await objFornecedor.ConsultarDadosCNPJ();
 
             var ipcaImportador = serviceProvider.GetRequiredService<IndiceInflacaoImportador>();
             await ipcaImportador.ImportarIpca(ct);
@@ -89,7 +89,7 @@ namespace OPS.Importador
         {
             await SyncDatabaseAsync(dbContext, ct);
 
-            //var crawler = new SeleniumScraper(serviceProvider);
+            var crawler = new SeleniumScraper(serviceProvider);
             //crawler.BaixarArquivosParana();
             //crawler.BaixarArquivosPiaui();
 
@@ -115,7 +115,7 @@ namespace OPS.Importador
                 typeof(ImportacaoParana), // json api mensal/deputado <<<<<< ------------------------------------------------------------------ >>>>>>> capcha
                 typeof(ImportacaoPernambuco), // json api mensal/deputado
                 typeof(ImportacaoPiaui), // csv por legislatura <<<<<< ------------------------------------------------------------------ >>>>>>> (download manual/Selenium) TODO: Buscar empresa/cnpj do PDF com crawler e OCR
-                typeof(ImportacaoRioDeJaneiro), // json api mensal/deputado
+                typeof(ImportacaoRioDeJaneiro), // json api mensal/deputado (Apenas BR)
                 typeof(ImportacaoRioGrandeDoNorte), // crawler & pdf mensal/deputado
                 typeof(ImportacaoRioGrandeDoSul), // crawler mensal/deputado (Apenas BR)
                 typeof(ImportacaoRondonia), // crawler mensal/deputado

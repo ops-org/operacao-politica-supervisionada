@@ -44,6 +44,7 @@ public class ImportadorDespesasGoias : ImportadorDespesasRestApiMensal
                             Nome = despesa.Deputado.Nome.Trim().ToTitleCase(),
                             Cpf = id.ToString(), // gabinete
                             Ano = (short)ano,
+                            Mes = mes,
                             TipoDespesa = grupo.Descricao,
                             Valor = Convert.ToDecimal(lancamento.Fornecedor.ValorIndenizado, cultureInfo),
                             DataEmissao = DateOnly.FromDateTime(lancamento.Fornecedor.Data),

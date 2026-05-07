@@ -186,6 +186,11 @@ public class ImportadorDespesasRondonia : ImportadorDespesasRestApiMensal
                             despesaTemp.CnpjCpf = "70451494849";  // 704.514.948-49
                             despesaTemp.NomeFornecedor = "ARNALDO GUIMARAES NETO";
                         }
+                        else if (linhaPartes[0].Contains("JOAO ALVES DA LUZ 816978137-04"))
+                        {
+                            despesaTemp.CnpjCpf = "81697813704";  // 816.978.137-04
+                            despesaTemp.NomeFornecedor = "JOAO ALVES DA LUZ";
+                        }
                         else
                         {
                             logger.LogError("Fornecedor invalido: {Fornecedor}", linhaPartes[0]);

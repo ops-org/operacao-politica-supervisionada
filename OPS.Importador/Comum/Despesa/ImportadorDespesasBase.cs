@@ -515,103 +515,42 @@ ORDER BY despesa_tipo;
     {
         logger.LogDebug("Inserir parlamentar faltante");
 
-        var chaveImportacao = "nome_parlamentar";
         int affected = 0;
         if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
         {
-            chaveImportacao = "cpf";
-            affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from temp.cl_despesa_temp
-where cpf not in (
-    select cpf 
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND cpf IS NOT NULL
-);");
+            affected = InserirDeputadoFaltantePorCpf("cpf");
+            AtualizaIdDeputadoTemp("t.cpf = d.cpf");
         }
         else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
         {
-            chaveImportacao = "cpf_parcial";
-            affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, cpf_parcial, id_estado)
-select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from temp.cl_despesa_temp
-where cpf not in (
-    select cpf_parcial 
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND cpf_parcial IS NOT NULL
-);");
+            affected = InserirDeputadoFaltantePorCpf("cpf_parcial");
+            AtualizaIdDeputadoTemp("t.cpf = d.cpf_parcial");
         }
         else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
         {
-            chaveImportacao = "matricula";
-            affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, matricula, id_estado)
-select distinct nome, coalesce(nome_civil, nome), cpf::int, {idEstado}
-from temp.cl_despesa_temp
-where cpf not in (
-    select matricula::text 
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND matricula IS NOT NULL
-);");
+            affected = InserirDeputadoFaltantePorMatriculaGabinete("matricula");
+            AtualizaIdDeputadoTemp("t.cpf = d.matricula::text");
         }
         else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
         {
-            chaveImportacao = "gabinete";
-            affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, gabinete, id_estado)
-select distinct nome, coalesce(nome_civil, nome), cast(cpf as int), {idEstado}
-from temp.cl_despesa_temp
-where cpf not in (
-    select gabinete::text
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND gabinete IS NOT NULL
-);");
+            affected = InserirDeputadoFaltantePorMatriculaGabinete("gabinete");
+            AtualizaIdDeputadoTemp("t.cpf = d.gabinete::text");
         }
         else if (config.ChaveImportacao != ChaveDespesaTemp.IdDeputado)
         {
-            connection.Execute(@$"
-UPDATE temp.cl_despesa_temp t
-SET id_cl_deputado = d.id
-FROM temp.cl_deputado_de_para d 
-WHERE unaccent(coalesce(t.nome, t.nome_civil)) ILIKE unaccent(d.nome)
-AND d.id_estado = {idEstado}");
+            var chaveImportacao = "nome_parlamentar";
+            AtualizaIdDeputadoDeParaTemp("unaccent(coalesce(t.nome, t.nome_civil)) ILIKE unaccent(d.nome)");
 
             if (config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
             {
                 chaveImportacao = "nome_civil";
-                affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from temp.cl_despesa_temp
-where id_cl_deputado is null
-and lower(unaccent(nome_civil)) not in (
-    select lower(unaccent(nome_civil))
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND nome_civil IS NOT null
-);");
+                affected = InserirDeputadoFaltantePorNome(chaveImportacao, "nome_civil");
             }
             else if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar)
             {
 
                 chaveImportacao = "nome_parlamentar";
-                affected = connection.Execute(@$"
-INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
-select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
-from temp.cl_despesa_temp
-where id_cl_deputado is null
-and lower(unaccent(nome)) not in (
-    select lower(unaccent(nome_parlamentar))
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND nome_parlamentar IS NOT null
-);");
+                affected = InserirDeputadoFaltantePorNome(chaveImportacao, "nome");
             }
 
             if (affected > 0)
@@ -622,11 +561,7 @@ SELECT id, {chaveImportacao}, id_estado FROM assembleias.cl_deputado
 WHERE {chaveImportacao} IS NOT NULL
 AND id NOT IN (select id from temp.cl_deputado_de_para)");
 
-                connection.Execute(@$"
-UPDATE temp.cl_despesa_temp t
-SET id_cl_deputado = d.id
-FROM temp.cl_deputado_de_para d 
-WHERE coalesce(t.nome, t.nome_civil) ILIKE d.nome AND d.id_estado = {idEstado}");
+                AtualizaIdDeputadoDeParaTemp("unaccent(coalesce(t.nome, t.nome_civil)) ILIKE unaccent(d.nome)");
             }
         }
 
@@ -635,26 +570,10 @@ WHERE coalesce(t.nome, t.nome_civil) ILIKE d.nome AND d.id_estado = {idEstado}")
             logger.LogWarning("{Itens} parlamentares incluidos!", affected);
         }
 
-        string sqlDeputadosNaoLocalizados;
-        if (config.ChaveImportacao == ChaveDespesaTemp.NomeParlamentar || config.ChaveImportacao == ChaveDespesaTemp.NomeCivil)
-        {
-            sqlDeputadosNaoLocalizados = @$"
+        string sqlDeputadosNaoLocalizados = @$"
 SELECT STRING_AGG(DISTINCT nome, ', ')
 FROM temp.cl_despesa_temp
 WHERE id_cl_deputado is null;";
-        }
-        else
-        {
-            sqlDeputadosNaoLocalizados = @$"
-SELECT STRING_AGG(DISTINCT nome, ', ')
-FROM temp.cl_despesa_temp
-WHERE cpf NOT IN (
-    SELECT {chaveImportacao}::text
-    FROM assembleias.cl_deputado 
-    WHERE id_estado = {idEstado} 
-    AND {chaveImportacao} IS NOT null
-);";
-        }
 
         var deputadosNaoLocalizados = connection.ExecuteScalar<string>(sqlDeputadosNaoLocalizados);
 
@@ -662,6 +581,71 @@ WHERE cpf NOT IN (
         {
             throw new Exception($"Deputados não cadastrados: {deputadosNaoLocalizados}");
         }
+    }
+
+    private int InserirDeputadoFaltantePorNome(string colunaDeputado, string colunaTemp)
+    {
+        return connection.Execute(@$"
+INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, cpf, id_estado)
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
+from temp.cl_despesa_temp
+where id_cl_deputado is null
+and lower(unaccent({colunaTemp})) not in (
+    select lower(unaccent({colunaDeputado}))
+    FROM assembleias.cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND {colunaDeputado} IS NOT null
+);");
+    }
+
+    private int InserirDeputadoFaltantePorCpf(string colunaDeputado)
+    {
+        return connection.Execute(@$"
+INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, {colunaDeputado}, id_estado)
+select distinct nome, coalesce(nome_civil, nome), cpf, {idEstado}
+from temp.cl_despesa_temp
+where cpf not in (
+    select {colunaDeputado} 
+    FROM assembleias.cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND {colunaDeputado} IS NOT NULL
+);");
+    }
+
+    private int InserirDeputadoFaltantePorMatriculaGabinete(string colunaDeputado)
+    {
+        return connection.Execute(@$"
+INSERT INTO assembleias.cl_deputado (nome_parlamentar, nome_civil, {colunaDeputado}, id_estado)
+select distinct nome, coalesce(nome_civil, nome), cpf::int, {idEstado}
+from temp.cl_despesa_temp
+where cpf not in (
+    select {colunaDeputado}::text 
+    FROM assembleias.cl_deputado 
+    WHERE id_estado = {idEstado} 
+    AND {colunaDeputado} IS NOT NULL
+);");
+    }
+
+    private void AtualizaIdDeputadoDeParaTemp(string whereCondition)
+    {
+        connection.Execute(@$"
+UPDATE temp.cl_despesa_temp t
+SET id_cl_deputado = d.id
+FROM temp.cl_deputado_de_para d 
+WHERE {whereCondition} 
+AND d.id_estado = {idEstado}
+AND t.id_cl_deputado IS NULL");
+    }
+
+    private void AtualizaIdDeputadoTemp(string whereCondition)
+    {
+        connection.Execute(@$"
+UPDATE temp.cl_despesa_temp t
+SET id_cl_deputado = d.id
+FROM assembleias.cl_deputado d 
+WHERE {whereCondition} 
+AND d.id_estado = {idEstado}
+AND t.id_cl_deputado IS NULL");
     }
 
     public virtual void InsereFornecedorFaltante()
@@ -754,19 +738,19 @@ and d.ano_mes BETWEEN {competenciaInicial} and {competenciaFinal}
 
         logger.LogDebug("Inserir despesa final");
 
-        string condicaoSql = "";
-        if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
-            condicaoSql = "p.cpf = d.cpf";
-        else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
-            condicaoSql = "p.cpf_parcial = d.cpf";
-        else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
-            condicaoSql = "p.matricula::text = d.cpf";
-        else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
-            condicaoSql = "p.gabinete::text = d.cpf";
-        else
-        {
-            condicaoSql = "p.id = d.id_cl_deputado";
-        }
+        //string condicaoSql = "";
+        //if (config.ChaveImportacao == ChaveDespesaTemp.Cpf)
+        //    condicaoSql = "p.cpf = d.cpf";
+        //else if (config.ChaveImportacao == ChaveDespesaTemp.CpfParcial)
+        //    condicaoSql = "p.cpf_parcial = d.cpf";
+        //else if (config.ChaveImportacao == ChaveDespesaTemp.Matricula)
+        //    condicaoSql = "p.matricula::text = d.cpf";
+        //else if (config.ChaveImportacao == ChaveDespesaTemp.Gabinete)
+        //    condicaoSql = "p.gabinete::text = d.cpf";
+        //else
+        //{
+        //    condicaoSql = "p.id = d.id_cl_deputado";
+        //}
 
         var sql = @$"
 INSERT INTO assembleias.cl_despesa (
@@ -799,7 +783,7 @@ SELECT
     COALESCE(d.observacao, CASE WHEN d.cnpj_cpf IS NULL AND d.fornecedor IS NOT NULL THEN CONCAT('Fornecedor Original: ', d.fornecedor) else null END) AS observacao,
     d.hash
 FROM temp.cl_despesa_temp d
-inner join assembleias.cl_deputado p on id_estado = {idEstado} and {condicaoSql}
+inner join assembleias.cl_deputado p on id_estado = {idEstado} and p.id = d.id_cl_deputado
 left join assembleias.cl_despesa_especificacao dts on lower(unaccent(dts.descricao)) = lower(unaccent(d.despesa_tipo))
 ORDER BY d.id
 ON CONFLICT DO NOTHING;
@@ -1038,11 +1022,18 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
 
             if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
             {
-                logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Data: {Data}, Ano/Mês: {Ano}/{Mes}",
-                           despesaTemp.NomeCivil, despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"), despesaTemp.Ano, despesaTemp.Mes);
-
                 var monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, dataEmissao.Month);
                 despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, dataEmissao.Month, Math.Min(dataEmissao.Day, monthLastDay));
+
+                diferencaDias = Math.Abs((dataReferencia.ToDateTime(TimeOnly.MinValue) - despesaTemp.DataEmissao.Value.ToDateTime(TimeOnly.MinValue)).Days);
+                if (diferencaDias > 120) // Validar ano com 120 dias de tolerancia.
+                {
+                    monthLastDay = DateTime.DaysInMonth(despesaTemp.Ano, despesaTemp.Mes.Value);
+                    despesaTemp.DataEmissao = new DateOnly(despesaTemp.Ano, despesaTemp.Mes.Value, Math.Min(dataEmissao.Day, monthLastDay));
+                }
+
+                logger.LogWarning("Data da despesa muito diferente do ano/mês informado. Parlamentar: {Parlamentar}, Vigência: {Ano}/{Mes}, Data Original: {DataOriginal}, Data Ajustada: {DataAjustada}.",
+                    despesaTemp.NomeCivil, despesaTemp.Ano, despesaTemp.Mes, dataEmissao.ToString("yyyy-MM-dd"), despesaTemp.DataEmissao?.ToString("yyyy-MM-dd"));
             }
         }
         else

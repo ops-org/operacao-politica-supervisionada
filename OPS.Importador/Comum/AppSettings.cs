@@ -28,6 +28,6 @@
 
         public bool StoreBackupFile { get; set; } = true;
 
-        public int PollyDefaultTimeout { get; set; } = 60;
+        public int PollyDefaultTimeoutSeconds { get; set; } = 600;
     }
 }
