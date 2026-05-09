@@ -222,7 +222,7 @@ Configurações no `.editorconfig` com regras StyleCop e SonarLint.
 
 ## Contatos e Links
 
-- **Homepage**: http://ops.net.br
+- **Homepage**: http://ops.org.br
 - **Email principal**: luciobig@ops.net.br
 - **Suporte técnico**: suporte@ops.net.br
 - **Facebook**: [Operação Política Supervisionada](https://www.facebook.com/operacaopoliticasupervisionada)

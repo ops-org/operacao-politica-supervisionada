@@ -5,7 +5,7 @@
         /// <summary>
         /// The root directory path used by the application api.
         /// </summary>
-        public string SiteRootFolder { get; set; } = "/var/www/ops.net.br";
+        public string SiteRootFolder { get; set; } = "/var/www/ops.org.br";
 
         /// <summary>
         /// The file system path to the temporary directory used for intermediate files.

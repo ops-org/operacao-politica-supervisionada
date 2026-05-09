@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Utilities;
@@ -30,18 +29,16 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
-using OPS.Importador.SenadoFederal;
 using OPS.Infraestrutura;
-using System.Threading;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace OPS.Importador
 {
-    internal static class ImportOrchestrator
+    public class ImportOrchestrator
     {
         public static async Task RunAppAsync(IServiceProvider serviceProvider, CancellationToken ct = default)
         {
-            var logger = serviceProvider.GetService<ILogger<Program>>();
+            var logger = serviceProvider.GetService<ILogger<ImportOrchestrator>>();
             logger.LogInformation("Iniciando Importação");
 
             var dbContext = serviceProvider.GetRequiredService<AppDbContext>();
@@ -144,7 +141,14 @@ namespace OPS.Importador
                             logger.LogInformation("Iniciando importação do(a) {Estado}.", estado);
                             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                            var importador = (ImportadorBase)scope.ServiceProvider.GetRequiredService(type);
+                            var service = scope.ServiceProvider.GetRequiredService(type);
+                            var importador = service as ImportadorBase;
+                            if (importador == null)
+                            {
+                                logger.LogError("Failed to cast service {ServiceType} (actual type: {ActualType}) to ImportadorBase. Service: {@Service}",
+                                    type.Name, service.GetType().Name, service);
+                                return;
+                            }
                             await importador.ImportarCompleto(ct);
 
                             watch.Stop();

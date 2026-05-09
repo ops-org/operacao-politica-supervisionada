@@ -72,7 +72,7 @@ Além disso, qualquer um pode ser um fiscal dos gastos públicos e este site ofe
 Este projeto é político e social, mas não possui vínculo a partido político e não possui ligação privada ou fim lucrativo.
 
 ## Fale Conosco
-* [Homepage](http://ops.net.br) - Homepage
+* [Homepage](http://ops.org.br) - Homepage
 * [Facebook](https://www.facebook.com/operacaopoliticasupervisionada) - Pagina no Facebook
 * luciobig@ops.net.br - Contato principal
 * suporte@ops.net.br - Contato técnico

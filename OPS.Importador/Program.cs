@@ -1,5 +1,4 @@
-﻿using AngleSharp;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +7,7 @@ using Serilog;
 
 namespace OPS.Importador;
 
-internal class Program
+internal static class Program
 {
     public static async Task Main(string[] args)
     {
@@ -17,8 +16,7 @@ internal class Program
             Args = args,
             EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Development
         });
-
-        builder.AddServiceDefaults();
+        
         builder.AddNpgsqlDbContext<AppDbContext>("AuditoriaContext", configureDbContextOptions: options =>
             DesignTimeDbContextFactory.ConfigureOptions(options,
                 builder.Configuration.GetConnectionString("AuditoriaContext")!));
@@ -41,7 +39,7 @@ internal class Program
             }
             finally
             {
-                Log.CloseAndFlush();
+                await Log.CloseAndFlushAsync();
             }
         }
 
