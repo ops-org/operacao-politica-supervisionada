@@ -2,98 +2,656 @@
 BEGIN;
 
 
-CREATE TABLE IF NOT EXISTS tse.tse_eleicao
-(
-    id bigint,
-    descricao character varying(50) COLLATE pg_catalog."default",
-    data date,
-    turno character varying(50) COLLATE pg_catalog."default",
-    tipo character varying(50) COLLATE pg_catalog."default",
-    abrangencia character varying(50) COLLATE pg_catalog."default"
-);
-
-COMMENT ON TABLE tse.tse_eleicao
-    IS 'CD_ELEICAO, DS_ELEICAO, DT_ELEICAO, NM_TIPO_ELEICAO, NR_TURNO, TP_ABRANGENCIA';
-
-CREATE TABLE IF NOT EXISTS tse.tse_eleicao_candidato
+CREATE TABLE IF NOT EXISTS tse.candidatura
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    cpf character varying(11) COLLATE pg_catalog."default",
-    nome character varying(255) COLLATE pg_catalog."default",
-    email character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT tse_eleicao_candidato_pkey PRIMARY KEY (id)
+    id_pleito_geral integer,
+    id_pleito_regional integer,
+    id_pessoa_fisica integer,
+    id_cargo integer,
+    id_pais integer,
+    id_unidade_federativa integer,
+    id_municipio integer,
+    id_partido integer,
+    id_coligacao_partidaria integer,
+    tse_key text COLLATE pg_catalog."default",
+    tse_candidato_sequencial text COLLATE pg_catalog."default",
+    tse_candidato_numero text COLLATE pg_catalog."default",
+    tse_candidato_nome_urna text COLLATE pg_catalog."default",
+    tse_candidatura_situacao_codigo text COLLATE pg_catalog."default",
+    tse_candidatura_situacao_descricao text COLLATE pg_catalog."default",
+    tse_candidatura_protocolo text COLLATE pg_catalog."default",
+    tse_processo_numero text COLLATE pg_catalog."default",
+    tse_ocupacao_codigo text COLLATE pg_catalog."default",
+    tse_ocupacao_descricao text COLLATE pg_catalog."default",
+    tse_genero_codigo text COLLATE pg_catalog."default",
+    tse_genero_descricao text COLLATE pg_catalog."default",
+    tse_grau_instrucao_codigo text COLLATE pg_catalog."default",
+    tse_grau_instrucao_descricao text COLLATE pg_catalog."default",
+    tse_estado_civil_codigo text COLLATE pg_catalog."default",
+    tse_estado_civil_descricao text COLLATE pg_catalog."default",
+    tse_cor_raca_codigo text COLLATE pg_catalog."default",
+    tse_cor_raca_descricao text COLLATE pg_catalog."default",
+    tse_nacionalidade_codigo text COLLATE pg_catalog."default",
+    tse_nacionalidade_descricao text COLLATE pg_catalog."default",
+    tse_situacao_turno_codigo text COLLATE pg_catalog."default",
+    tse_situacao_turno_descricao text COLLATE pg_catalog."default",
+    tse_reeleicao boolean,
+    tse_bens_declarar boolean,
+    tse_email text COLLATE pg_catalog."default",
+    CONSTRAINT pk_candidatura PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS tse.tse_eleicao_candidatura
+COMMENT ON TABLE tse.candidatura
+    IS 'Entidade responsavel por armazenar "Candidatura".';
+
+CREATE TABLE IF NOT EXISTS tse.candidatura_bem
 (
-    numero bigint NOT NULL,
-    cargo smallint NOT NULL,
-    ano bigint NOT NULL,
-    id_eleicao_candidato integer,
-    id_eleicao_candidato_vice integer,
-    sigla_partido character varying(50) COLLATE pg_catalog."default",
-    sigla_partido_vice character varying(50) COLLATE pg_catalog."default",
-    nome_urna character varying(255) COLLATE pg_catalog."default",
-    nome_urna_vice character varying(255) COLLATE pg_catalog."default",
-    sequencia character varying(50) COLLATE pg_catalog."default",
-    sequencia_vice character varying(50) COLLATE pg_catalog."default",
-    sigla_estado character(2) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT tse_eleicao_candidatura_pkey PRIMARY KEY (numero, cargo, ano, sigla_estado)
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_candidatura integer NOT NULL,
+    tse_key text COLLATE pg_catalog."default",
+    tse_ordem text COLLATE pg_catalog."default",
+    tse_tipo_codigo text COLLATE pg_catalog."default",
+    tse_tipo_descricao text COLLATE pg_catalog."default",
+    tse_descricao text COLLATE pg_catalog."default",
+    tse_valor numeric(20, 6),
+    tse_data_hora_ultima_atualizacao timestamp without time zone,
+    CONSTRAINT pk_candidatura_bem PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS tse.tse_eleicao_cargo
+COMMENT ON TABLE tse.candidatura_bem
+    IS 'Entidade responsavel por armazenar "Candidatura / Bem".';
+
+CREATE TABLE IF NOT EXISTS tse.candidatura_motivo_cassacao
 (
-    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    nome character varying(50) COLLATE pg_catalog."default",
-    CONSTRAINT tse_eleicao_cargo_pkey PRIMARY KEY (id)
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_candidatura integer NOT NULL,
+    id_motivo_cassacao integer NOT NULL,
+    CONSTRAINT pk_candidatura_motivo_cassacao PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS tse.tse_eleicao_doacao
+COMMENT ON TABLE tse.candidatura_motivo_cassacao
+    IS 'Entidade responsavel por armazenar a ligaçao "Candidatura" e "Motivo Cassacao".';
+
+CREATE TABLE IF NOT EXISTS tse.cargo
 (
-    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    id_eleicao_cargo bigint,
-    id_eleicao_candidadto bigint,
-    ano_eleicao numeric(4, 0),
-    num_documento character varying(50) COLLATE pg_catalog."default",
-    cnpj_cpf_doador character varying(14) COLLATE pg_catalog."default",
-    raiz_cnpj_cpf_doador character varying(14) COLLATE pg_catalog."default",
-    data_receita date,
-    valor_receita numeric(10, 2),
-    CONSTRAINT tse_eleicao_doacao_pkey PRIMARY KEY (id)
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    tse_key text COLLATE pg_catalog."default",
+    tse_codigo text COLLATE pg_catalog."default",
+    tse_descricao text COLLATE pg_catalog."default",
+    CONSTRAINT pk_cargo PRIMARY KEY (id)
 );
 
-ALTER TABLE IF EXISTS tse.tse_eleicao_candidatura
-    ADD CONSTRAINT fk_tse_eleicao_candidatura_candidato FOREIGN KEY (id_eleicao_candidato)
-    REFERENCES tse.tse_eleicao_candidato (id) MATCH SIMPLE
+COMMENT ON TABLE tse.cargo
+    IS 'Entidade responsavel por armazenar "Cargo".';
+
+CREATE TABLE IF NOT EXISTS tse.coligacao_partidaria
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    tse_key text COLLATE pg_catalog."default",
+    tse_sequencial_coligacao text COLLATE pg_catalog."default",
+    tse_nome text COLLATE pg_catalog."default",
+    tse_tipo_descricao text COLLATE pg_catalog."default",
+    CONSTRAINT pk_coligacao_partidaria PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.coligacao_partidaria
+    IS 'Entidade responsavel por armazenar "Coligaçao Partidaria".';
+
+CREATE TABLE IF NOT EXISTS tse.coligacao_partidaria_partido
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_coligacao_partidaria integer NOT NULL,
+    id_partido integer NOT NULL,
+    CONSTRAINT pk_coligacao_partidaria_partido PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.coligacao_partidaria_partido
+    IS 'Entidade responsavel por armazenar a ligaçao "Coligaçao Partidaria" e "Partido".';
+
+CREATE TABLE IF NOT EXISTS tse.fonte
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    sigla text COLLATE pg_catalog."default",
+    descricao text COLLATE pg_catalog."default",
+    url text COLLATE pg_catalog."default",
+    repositorio_url text COLLATE pg_catalog."default",
+    obtencao_data_hora timestamp without time zone,
+    importacao_data_hora timestamp without time zone,
+    CONSTRAINT pk_fonte PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.fonte
+    IS 'Entidade responsavel por armazenar a "Fonte".';
+
+CREATE TABLE IF NOT EXISTS tse.fonte_referencia
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_fonte integer NOT NULL,
+    id_coligacao_partidaria integer,
+    id_coligacao_partidaria_composicao integer,
+    id_partido integer,
+    id_pleito_geral integer,
+    id_pleito_regional integer,
+    id_pessoa_fisica integer,
+    id_cargo integer,
+    id_pais integer,
+    id_unidade_federativa integer,
+    id_municipio integer,
+    id_candidatura integer,
+    id_candidatura_bem integer,
+    id_candidatura_motivo_cassacao integer,
+    id_motivo_cassacao integer,
+    id_pleito_geral_cargo integer,
+    id_pleito_regional_cargo integer,
+    registro character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT pk_fonte_referencia PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.fonte_referencia
+    IS 'Entidade responsavel por armazenar a ligaçao "Fonte" e demais entidades".';
+
+CREATE TABLE IF NOT EXISTS tse.motivo_cassacao
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    tse_key text COLLATE pg_catalog."default",
+    tse_codigo text COLLATE pg_catalog."default",
+    tse_descricao text COLLATE pg_catalog."default",
+    CONSTRAINT pk_motivo_cassacao PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.motivo_cassacao
+    IS 'Entidade responsavel por armazenar "Cassacao".';
+
+CREATE TABLE IF NOT EXISTS tse.municipio
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_unidade_federativa integer,
+    tse_key text COLLATE pg_catalog."default",
+    tse_sigla text COLLATE pg_catalog."default",
+    tse_nome text COLLATE pg_catalog."default",
+    CONSTRAINT pk_municipio PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.municipio
+    IS 'Entidade responsavel por armazenar "Municipio".';
+
+CREATE TABLE IF NOT EXISTS tse.pais
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    tse_codigo text COLLATE pg_catalog."default",
+    tse_sigla text COLLATE pg_catalog."default",
+    tse_nome text COLLATE pg_catalog."default",
+    CONSTRAINT pk_pais PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.pais
+    IS 'Entidade responsavel por armazenar "Pais".';
+
+CREATE TABLE IF NOT EXISTS tse.partido
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    tse_key text COLLATE pg_catalog."default",
+    tse_numero text COLLATE pg_catalog."default",
+    tse_sigla text COLLATE pg_catalog."default",
+    tse_nome text COLLATE pg_catalog."default",
+    CONSTRAINT pk_partido PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.partido
+    IS 'Entidade responsavel por armazenar "Partido".';
+
+CREATE TABLE IF NOT EXISTS tse.pessoa_fisica
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_pais_nascimento integer,
+    id_unidade_federativa_nascimento integer,
+    id_municipio_nascimento integer,
+    tse_key text COLLATE pg_catalog."default",
+    tse_cpf text COLLATE pg_catalog."default",
+    tse_nome text COLLATE pg_catalog."default",
+    tse_nome_social text COLLATE pg_catalog."default",
+    tse_data_hora_nascimento timestamp without time zone,
+    tse_numero_titulo_eleitoral text COLLATE pg_catalog."default",
+    CONSTRAINT pk_pessoa_fisica PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.pessoa_fisica
+    IS 'Entidade responsavel por armazenar "Pessoa Fisica".';
+
+CREATE TABLE IF NOT EXISTS tse.pleito_geral
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    tse_key text COLLATE pg_catalog."default",
+    tse_codigo text COLLATE pg_catalog."default",
+    tse_descricao text COLLATE pg_catalog."default",
+    tse_turno text COLLATE pg_catalog."default",
+    tse_data_hora timestamp without time zone,
+    tse_tipo_codigo text COLLATE pg_catalog."default",
+    tse_tipo_descricao text COLLATE pg_catalog."default",
+    CONSTRAINT pk_pleito_geral PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.pleito_geral
+    IS 'Entidade responsavel por armazenar "Pleito Geral".';
+
+CREATE TABLE IF NOT EXISTS tse.pleito_geral_cargo
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_pleito_geral integer NOT NULL,
+    id_cargo integer NOT NULL,
+    tse_quantidade_vagas bigint,
+    CONSTRAINT pk_pleito_geral_cargo PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.pleito_geral_cargo
+    IS 'Entidade responsavel por armazenar a ligaçao "Pleito Geral" e "Cargo".';
+
+CREATE TABLE IF NOT EXISTS tse.pleito_regional
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_pleito_geral integer,
+    tse_key text COLLATE pg_catalog."default",
+    tse_codigo text COLLATE pg_catalog."default",
+    tse_descricao text COLLATE pg_catalog."default",
+    tse_abragencia_tipo_descricao text COLLATE pg_catalog."default",
+    tse_turno text COLLATE pg_catalog."default",
+    tse_data_hora timestamp without time zone,
+    tse_tipo_codigo text COLLATE pg_catalog."default",
+    tse_tipo_descricao text COLLATE pg_catalog."default",
+    CONSTRAINT pk_pleito_regional PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.pleito_regional
+    IS 'Entidade responsavel por armazenar "Pleito Regional".';
+
+CREATE TABLE IF NOT EXISTS tse.pleito_regional_cargo
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_pleito_regional integer NOT NULL,
+    id_cargo integer NOT NULL,
+    tse_quantidade_vagas bigint,
+    CONSTRAINT pk_pleito_regional_cargo PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.pleito_regional_cargo
+    IS 'Entidade responsavel por armazenar a ligaçao "Pleito Regional" e "Cargo".';
+
+CREATE TABLE IF NOT EXISTS tse.unidade_federativa
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    id_pais integer,
+    tse_key text COLLATE pg_catalog."default",
+    tse_sigla text COLLATE pg_catalog."default",
+    tse_nome text COLLATE pg_catalog."default",
+    CONSTRAINT pk_unidade_federativa PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE tse.unidade_federativa
+    IS 'Entidade responsavel por armazenar "Unidade Federativa".';
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_cargo FOREIGN KEY (id_cargo)
+    REFERENCES tse.cargo (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0005
+    ON tse.candidatura(id_cargo);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_coligacao_partidaria FOREIGN KEY (id_coligacao_partidaria)
+    REFERENCES tse.coligacao_partidaria (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0010
+    ON tse.candidatura(id_coligacao_partidaria);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_municipio FOREIGN KEY (id_municipio)
+    REFERENCES tse.municipio (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0008
+    ON tse.candidatura(id_municipio);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_pais FOREIGN KEY (id_pais)
+    REFERENCES tse.pais (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0006
+    ON tse.candidatura(id_pais);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_partido FOREIGN KEY (id_partido)
+    REFERENCES tse.partido (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0009
+    ON tse.candidatura(id_partido);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_pessoa_fisica FOREIGN KEY (id_pessoa_fisica)
+    REFERENCES tse.pessoa_fisica (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0004
+    ON tse.candidatura(id_pessoa_fisica);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_pleito_geral FOREIGN KEY (id_pleito_geral)
+    REFERENCES tse.pleito_geral (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0002
+    ON tse.candidatura(id_pleito_geral);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_pleito_regional FOREIGN KEY (id_pleito_regional)
+    REFERENCES tse.pleito_regional (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0003
+    ON tse.candidatura(id_pleito_regional);
+
+
+ALTER TABLE IF EXISTS tse.candidatura
+    ADD CONSTRAINT fk_candidatura_unidade_federativa FOREIGN KEY (id_unidade_federativa)
+    REFERENCES tse.unidade_federativa (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_0007
+    ON tse.candidatura(id_unidade_federativa);
+
+
+ALTER TABLE IF EXISTS tse.candidatura_bem
+    ADD CONSTRAINT fk_candidatura_bem_candidatura FOREIGN KEY (id_candidatura)
+    REFERENCES tse.candidatura (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_bem_0002
+    ON tse.candidatura_bem(id_candidatura);
+
+
+ALTER TABLE IF EXISTS tse.candidatura_motivo_cassacao
+    ADD CONSTRAINT fk_candidatura_motivo_cassacao_candidatura FOREIGN KEY (id_candidatura)
+    REFERENCES tse.candidatura (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_motivo_cassacao_0001
+    ON tse.candidatura_motivo_cassacao(id_candidatura);
+
+
+ALTER TABLE IF EXISTS tse.candidatura_motivo_cassacao
+    ADD CONSTRAINT fk_candidatura_motivo_cassacao_motivo_cassacao FOREIGN KEY (id_motivo_cassacao)
+    REFERENCES tse.motivo_cassacao (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_candidatura_motivo_cassacao_0002
+    ON tse.candidatura_motivo_cassacao(id_motivo_cassacao);
+
+
+ALTER TABLE IF EXISTS tse.coligacao_partidaria_partido
+    ADD CONSTRAINT fk_coligacao_partidaria_partido_coligacao_partidaria FOREIGN KEY (id_coligacao_partidaria)
+    REFERENCES tse.coligacao_partidaria (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_coligacao_partidaria_partido_0001
+    ON tse.coligacao_partidaria_partido(id_coligacao_partidaria);
+
+
+ALTER TABLE IF EXISTS tse.coligacao_partidaria_partido
+    ADD CONSTRAINT fk_coligacao_partidaria_partido_partido FOREIGN KEY (id_partido)
+    REFERENCES tse.partido (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_coligacao_partidaria_partido_0002
+    ON tse.coligacao_partidaria_partido(id_partido);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_candidatura FOREIGN KEY (id_candidatura)
+    REFERENCES tse.candidatura (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0012
+    ON tse.fonte_referencia(id_candidatura);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_candidatura_bem FOREIGN KEY (id_candidatura_bem)
+    REFERENCES tse.candidatura_bem (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0013
+    ON tse.fonte_referencia(id_candidatura_bem);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_candidatura_motivo_cassacao FOREIGN KEY (id_candidatura_motivo_cassacao)
+    REFERENCES tse.candidatura_motivo_cassacao (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0014
+    ON tse.fonte_referencia(id_candidatura_motivo_cassacao);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_cargo FOREIGN KEY (id_cargo)
+    REFERENCES tse.cargo (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0008
+    ON tse.fonte_referencia(id_cargo);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_coligacao_partidaria FOREIGN KEY (id_coligacao_partidaria)
+    REFERENCES tse.coligacao_partidaria (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0002
+    ON tse.fonte_referencia(id_coligacao_partidaria);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_coligacao_partidaria_composicao FOREIGN KEY (id_coligacao_partidaria_composicao)
+    REFERENCES tse.coligacao_partidaria_partido (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0003
+    ON tse.fonte_referencia(id_coligacao_partidaria_composicao);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_fonte FOREIGN KEY (id_fonte)
+    REFERENCES tse.fonte (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0001
+    ON tse.fonte_referencia(id_fonte);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_motivo_cassacao FOREIGN KEY (id_motivo_cassacao)
+    REFERENCES tse.motivo_cassacao (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0015
+    ON tse.fonte_referencia(id_motivo_cassacao);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_municipio FOREIGN KEY (id_municipio)
+    REFERENCES tse.municipio (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0010
+    ON tse.fonte_referencia(id_municipio);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_pais FOREIGN KEY (id_pais)
+    REFERENCES tse.pais (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0009
+    ON tse.fonte_referencia(id_pais);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_partido FOREIGN KEY (id_partido)
+    REFERENCES tse.partido (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0004
+    ON tse.fonte_referencia(id_partido);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_pessoa_fisica FOREIGN KEY (id_pessoa_fisica)
+    REFERENCES tse.pessoa_fisica (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0007
+    ON tse.fonte_referencia(id_pessoa_fisica);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_pleito_geral FOREIGN KEY (id_pleito_geral)
+    REFERENCES tse.pleito_geral (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0005
+    ON tse.fonte_referencia(id_pleito_geral);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_pleito_geral_cargo FOREIGN KEY (id_pleito_geral_cargo)
+    REFERENCES tse.pleito_geral_cargo (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0016
+    ON tse.fonte_referencia(id_pleito_geral_cargo);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_pleito_regional FOREIGN KEY (id_pleito_regional)
+    REFERENCES tse.pleito_regional (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0006
+    ON tse.fonte_referencia(id_pleito_regional);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_pleito_regional_cargo FOREIGN KEY (id_pleito_regional_cargo)
+    REFERENCES tse.pleito_regional_cargo (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_fonte_referencia_0017
+    ON tse.fonte_referencia(id_pleito_regional_cargo);
+
+
+ALTER TABLE IF EXISTS tse.fonte_referencia
+    ADD CONSTRAINT fk_fonte_referencia_unidade_federativa FOREIGN KEY (id_unidade_federativa)
+    REFERENCES tse.unidade_federativa (id) MATCH FULL
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
 
 
-ALTER TABLE IF EXISTS tse.tse_eleicao_candidatura
-    ADD CONSTRAINT fk_tse_eleicao_candidatura_candidato_vice FOREIGN KEY (id_eleicao_candidato_vice)
-    REFERENCES tse.tse_eleicao_candidato (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS tse.municipio
+    ADD CONSTRAINT fk_municipio_unidade_federativa FOREIGN KEY (id_unidade_federativa)
+    REFERENCES tse.unidade_federativa (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_municipio_0002
+    ON tse.municipio(id_unidade_federativa);
+
+
+ALTER TABLE IF EXISTS tse.pessoa_fisica
+    ADD CONSTRAINT fk_pessoa_fisica_municipio_nascimento FOREIGN KEY (id_municipio_nascimento)
+    REFERENCES tse.municipio (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pessoa_fisica_0004
+    ON tse.pessoa_fisica(id_municipio_nascimento);
+
+
+ALTER TABLE IF EXISTS tse.pessoa_fisica
+    ADD CONSTRAINT fk_pessoa_fisica_pais_nascimento FOREIGN KEY (id_pais_nascimento)
+    REFERENCES tse.pais (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pessoa_fisica_0002
+    ON tse.pessoa_fisica(id_pais_nascimento);
+
+
+ALTER TABLE IF EXISTS tse.pessoa_fisica
+    ADD CONSTRAINT fk_pessoa_fisica_unidade_federativa_nascimento FOREIGN KEY (id_unidade_federativa_nascimento)
+    REFERENCES tse.unidade_federativa (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pessoa_fisica_0003
+    ON tse.pessoa_fisica(id_unidade_federativa_nascimento);
+
+
+ALTER TABLE IF EXISTS tse.pleito_geral_cargo
+    ADD CONSTRAINT fk_pleito_geral_cargo_cargo FOREIGN KEY (id_cargo)
+    REFERENCES tse.cargo (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pleito_geral_cargo_0002
+    ON tse.pleito_geral_cargo(id_cargo);
+
+
+ALTER TABLE IF EXISTS tse.pleito_geral_cargo
+    ADD CONSTRAINT fk_pleito_geral_cargo_pleito_geral FOREIGN KEY (id_pleito_geral)
+    REFERENCES tse.pleito_geral (id) MATCH FULL
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pleito_geral_cargo_0001
+    ON tse.pleito_geral_cargo(id_pleito_geral);
+
+
+ALTER TABLE IF EXISTS tse.pleito_regional
+    ADD CONSTRAINT fk_pleito_regional_pleito_geral FOREIGN KEY (id_pleito_geral)
+    REFERENCES tse.pleito_geral (id) MATCH FULL
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
 
 
-ALTER TABLE IF EXISTS tse.tse_eleicao_candidatura
-    ADD CONSTRAINT fk_tse_eleicao_candidatura_cargo FOREIGN KEY (cargo)
-    REFERENCES tse.tse_eleicao_cargo (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS tse.pleito_regional_cargo
+    ADD CONSTRAINT fk_pleito_regional_cargo_cargo FOREIGN KEY (id_cargo)
+    REFERENCES tse.cargo (id) MATCH FULL
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pleito_regional_cargo_0002
+    ON tse.pleito_regional_cargo(id_cargo);
 
 
-ALTER TABLE IF EXISTS tse.tse_eleicao_doacao
-    ADD CONSTRAINT fk_tse_eleicao_doacao_candidato FOREIGN KEY (id_eleicao_candidadto)
-    REFERENCES tse.tse_eleicao_candidato (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS tse.pleito_regional_cargo
+    ADD CONSTRAINT fk_pleito_regional_cargo_pleito_regional FOREIGN KEY (id_pleito_regional)
+    REFERENCES tse.pleito_regional (id) MATCH FULL
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pleito_regional_cargo_0001
+    ON tse.pleito_regional_cargo(id_pleito_regional);
 
 
-ALTER TABLE IF EXISTS tse.tse_eleicao_doacao
-    ADD CONSTRAINT fk_tse_eleicao_doacao_cargo FOREIGN KEY (id_eleicao_cargo)
-    REFERENCES tse.tse_eleicao_cargo (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS tse.unidade_federativa
+    ADD CONSTRAINT fk_unidade_federativa_pais FOREIGN KEY (id_pais)
+    REFERENCES tse.pais (id) MATCH FULL
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS ix_pais_0002
+    ON tse.unidade_federativa(id_pais);
 
 END;

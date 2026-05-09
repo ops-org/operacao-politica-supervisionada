@@ -1,0 +1,101 @@
+using System.Globalization;
+using Castle.Core.Logging;
+using CsvHelper;
+using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
+using OPS.Core.Utilities;
+
+namespace OPS.Importador.TribunalSuperiorEleitoral
+{
+    [Flags]
+    public enum StringConversionOptions
+    {
+        None = 0,
+        Cleaning = 1,
+        TitleCase = 2,
+        LowerCase = 4
+    }
+
+    public class StringConverterCustom : StringConverter
+    {
+        private readonly StringConversionOptions _options;
+
+        public StringConverterCustom() : this(StringConversionOptions.Cleaning | StringConversionOptions.TitleCase)
+        {
+        }
+
+        public StringConverterCustom(StringConversionOptions options)
+        {
+            _options = options;
+        }
+
+        /// <summary>
+        /// Converts the string based on the specified options.
+        /// </summary>
+        /// <param name="text">The string to convert.</param>
+        /// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
+        /// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
+        /// <returns>The converted string created from the input string.</returns>
+        public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return null;
+            }
+
+            string result = text;
+
+            // Apply cleaning if enabled
+            if (_options.HasFlag(StringConversionOptions.Cleaning))
+            {
+                if (text.ToUpper() == "#NE" || text == "#NE#" || text == "#NULO" || text == "#NULO#" || text == "NÃO DIVULGÁVEL" || text == "NAO DIVULGAVEL")
+                {
+                    return null;
+                }
+            }
+
+            // Apply title case if enabled
+            if (_options.HasFlag(StringConversionOptions.TitleCase))
+            {
+                result = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text.ToLower());
+                result = result.Replace(" De ", " de ").Replace(" Da ", " da ").Replace(" E ", " e ").Replace("(A)", "(a)");
+            }
+            // Apply lower case if enabled (and title case is not enabled)
+            else if (_options.HasFlag(StringConversionOptions.LowerCase))
+            {
+                result = text.ToLower();
+            }
+
+            return result.NullIfEmpty();
+        }
+    }
+
+    public class NumberWithCleanerConverter : StringConverter
+    {
+        private readonly CultureInfo _culture = CultureInfo.CreateSpecificCulture("en-US");
+
+        /// <summary>
+        /// Converts the string to a valid number or null.
+        /// </summary>
+        /// <param name="text">The string to convert.</param>
+        /// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
+        /// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
+        /// <returns>The number or null created from the input string.</returns>
+        public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            if (Decimal.TryParse(text, _culture, out decimal value) && value >= 0)
+                return text;
+
+            //if (text.All(char.IsDigit))
+            //    return text;
+
+            if (!(text == "-1" || text == "-2" || text == "-3" || text == "-4" || text == "#NULO"))
+                Console.WriteLine("Revisar Numero Ignorado: " + text);
+
+            return null;
+        }
+    }
+}
