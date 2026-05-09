@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { useWebMCP } from "@/hooks/useWebMCP";
 
 import Index from "./pages/Index";
 import Busca from "./pages/Busca";
@@ -23,15 +24,19 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <ThemeProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <HashRouter>
-          <ScrollToTop />
-          <Routes>
+const App = () => {
+  // Initialize WebMCP for AI agent discovery
+  useWebMCP();
+
+  return (
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <HashRouter>
+            <ScrollToTop />
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/busca" element={<Busca />} />
             <Route path="/sobre" element={<Sobre />} />
@@ -63,6 +68,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>
-);
+  );
+};
 
 export default App;

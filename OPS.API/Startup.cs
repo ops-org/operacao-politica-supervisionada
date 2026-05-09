@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
 using OPS.API.Configuration;
+using OPS.API.Middleware;
 using OPS.API.Services;
 using OPS.Core.Repositories;
 using OPS.Infraestrutura;
@@ -167,8 +168,11 @@ namespace OPS.API
             // Enable compression
             app.UseResponseCompression();
 
-            
+            // Add Link headers for agent discovery
+            app.UseMiddleware<LinkHeaderMiddleware>();
 
+            // Add markdown content negotiation for agents
+            app.UseMiddleware<MarkdownNegotiationMiddleware>();
 
             app.UseStaticFiles(new StaticFileOptions
             {
