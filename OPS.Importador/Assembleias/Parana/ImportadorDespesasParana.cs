@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using System.Threading;
 using AngleSharp;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;

@@ -135,14 +135,14 @@ public static class FornecedorConfigurations
                   .HasForeignKey<FornecedorInfo>(f => f.IdFornecedor);
         });
 
-        modelBuilder.Entity<FornecedorAtividade>(entity => 
+        modelBuilder.Entity<FornecedorAtividade>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.ToTable("fornecedor_atividade", "fornecedor");
         });
 
-        modelBuilder.Entity<FornecedorNaturezaJuridica>(entity => 
+        modelBuilder.Entity<FornecedorNaturezaJuridica>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();

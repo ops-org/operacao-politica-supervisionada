@@ -37,7 +37,6 @@ using OPS.Importador.Assembleias.Sergipe;
 using OPS.Importador.Assembleias.Tocantins;
 using OPS.Importador.Comum;
 using OPS.Importador.Comum.Utilities;
-using OPS.Importador.SenadoFederal;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -152,12 +151,12 @@ internal static class ConfigureApp
 
                 return new ResilientProxyHandler(proxySettings, allowRedirect: false);
             });
-            //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-            //{
-            //    AllowAutoRedirect = false,
-            //    MaxAutomaticRedirections = 1,
-            //    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
-            //});
+        //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        //{
+        //    AllowAutoRedirect = false,
+        //    MaxAutomaticRedirections = 1,
+        //    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true
+        //});
 
         services.AddHttpClient("DefaultClient")
             .AddDefaultOpsConfiguration()
@@ -168,10 +167,10 @@ internal static class ConfigureApp
 
                 return new ResilientProxyHandler(proxySettings, allowRedirect: true);
             });
-            //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-            //{
-            //    AllowAutoRedirect = true
-            //});
+        //.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        //{
+        //    AllowAutoRedirect = true
+        //});
     }
 
     private static IHttpClientBuilder AddDefaultOpsConfiguration(this IHttpClientBuilder builder)
@@ -202,15 +201,15 @@ internal static class ConfigureApp
                             timespan.TotalSeconds, attempt, message?.Result?.RequestMessage?.RequestUri?.ToString() ?? message.Exception.Message);
                 }))
             .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
-            //.AddExtendedHttpClientLogging(options =>
-            //{
-            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
-            //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
-            //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
+        //.AddExtendedHttpClientLogging(options =>
+        //{
+        //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.None;
+        //    //options.RequestPathLoggingMode = OutgoingPathLoggingMode.Structured;
+        //    //options.RequestPathParameterRedactionMode = HttpRouteParameterRedactionMode.Loose;
 
-            //    options.LogBody = true;
-            //    ////options.LogContentHeaders = true;
-            //    //options.LogRequestStart = true;
-            //});
+        //    options.LogBody = true;
+        //    ////options.LogContentHeaders = true;
+        //    //options.LogRequestStart = true;
+        //});
     }
 }

@@ -77,7 +77,7 @@ namespace OPS.Importador.Comum.Utilities
                     exercicio.SendKeys(dateToImport.Year.ToString());
 
                     do
-                        {
+                    {
                         // Click Consultar
                         OpenQA.Selenium.IWebElement consultarButton = driver.FindElement(OpenQA.Selenium.By.XPath("//button[contains(normalize-space(.), 'Consultar')]"));
                         consultarButton.Click();

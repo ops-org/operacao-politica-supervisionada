@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Net;
 using System.Reflection;
-using System.Threading;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Dapper;

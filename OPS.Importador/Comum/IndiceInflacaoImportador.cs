@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OPS.Infraestrutura;

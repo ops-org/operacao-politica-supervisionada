@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Threading;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;

@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text;
-using System.Threading;
 using System.Web;
 using AngleSharp;
 using AngleSharp.Dom;

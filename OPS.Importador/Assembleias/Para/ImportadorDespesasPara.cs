@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using System.Threading;
 using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Importador.Assembleias.Para.Entities;

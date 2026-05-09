@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Threading;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Dapper;

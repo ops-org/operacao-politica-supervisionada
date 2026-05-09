@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Text.Json;
-using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

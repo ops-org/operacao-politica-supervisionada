@@ -7,7 +7,6 @@ using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Despesa;
 using OPS.Importador.Comum.Utilities;
-using System.Threading;
 using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
@@ -38,7 +37,7 @@ namespace OPS.Importador.Assembleias.Tocantins
             dcForm.Add("transparencia.mes", mes.ToString());
             dcForm.Add("transparencia.parlamentar", "");
             IHtmlFormElement form = document.QuerySelector<IHtmlFormElement>("form.py-4");
-            if(form == null)
+            if (form == null)
             {
                 logger.LogError("Formulario não localizado para o ano {Ano}/{Mes}.", ano, mes);
                 return;

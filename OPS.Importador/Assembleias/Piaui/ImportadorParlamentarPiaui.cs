@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
-using System.Threading;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;

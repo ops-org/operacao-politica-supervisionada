@@ -1,13 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using OPS.API.Configuration;
 using OPS.API.Services;
 using OPS.Core.Repositories;
-using OPS.Infraestrutura;
 
 namespace OPS.API.Tests
 {

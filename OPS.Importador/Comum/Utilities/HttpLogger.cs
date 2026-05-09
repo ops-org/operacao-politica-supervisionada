@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Microsoft.Extensions.Http.Logging;
+﻿using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace OPS.Importador.Comum.Utilities

@@ -37,7 +37,7 @@ namespace OPS.Importador.Comum.Despesa
                             ImportarDespesas(caminhoArquivo, ano, i + 1);
                         }
                         catch (Exception ex)
-                        {   
+                        {
                             logger.LogError(ex, ex.Message);
                             fileManager.MoverArquivoComErro(caminhoArquivo);
                         }

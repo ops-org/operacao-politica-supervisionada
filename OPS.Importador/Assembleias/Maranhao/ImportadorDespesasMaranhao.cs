@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Threading;
 using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Importador.Comum.Despesa;

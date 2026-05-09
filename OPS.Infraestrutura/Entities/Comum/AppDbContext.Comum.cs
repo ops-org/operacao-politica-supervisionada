@@ -63,7 +63,7 @@ public static class CommonConfigurations
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.ToTable("importacao", "public");
-            
+
             // Configure the relationship with Estado
             entity.HasOne(e => e.Estado)
                   .WithMany()

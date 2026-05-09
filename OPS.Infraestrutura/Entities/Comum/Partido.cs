@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
-using OPS.Infraestrutura.Entities.SenadoFederal;
 
 namespace OPS.Infraestrutura.Entities.Comum
 {

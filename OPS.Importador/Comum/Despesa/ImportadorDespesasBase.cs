@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using System.Threading;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Dapper;
@@ -1212,7 +1211,6 @@ and d.ano_mes between {competenciaInicial} and {competenciaFinal}";
         if (dInicio != null)
         {
             importacao.DespesasInicio = dInicio.Value;
-            importacao.DespesasFim = null;
         }
 
         if (dFim != null)

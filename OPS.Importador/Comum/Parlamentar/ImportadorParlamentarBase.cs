@@ -7,7 +7,6 @@ using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Infraestrutura;
 using RestSharp;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OPS.Importador.Comum.Parlamentar
 {

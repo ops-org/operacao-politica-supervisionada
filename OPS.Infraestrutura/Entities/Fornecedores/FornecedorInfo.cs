@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace OPS.Infraestrutura.Entities.Fornecedores
 {

@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
 using AngleSharp;
 using DDDN.OdtToHtml;
 using Microsoft.Extensions.Logging;

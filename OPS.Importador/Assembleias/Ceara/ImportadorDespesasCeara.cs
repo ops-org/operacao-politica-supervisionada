@@ -1,15 +1,10 @@
 ﻿using System.Globalization;
 using System.Text;
-using System.Threading;
-using AngleSharp;
-using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
 using CsvHelper;
 using Microsoft.Extensions.Logging;
 using OPS.Core.Enumerators;
 using OPS.Core.Utilities;
 using OPS.Importador.Comum.Despesa;
-using OPS.Importador.Comum.Utilities;
 
 namespace OPS.Importador.Assembleias.Ceara;
 

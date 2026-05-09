@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text;
-using System.Threading;
 using OPS.Core.Enumerators;
 using OPS.Importador.Assembleias.MinasGerais.Entities;
 using OPS.Importador.Comum.Despesa;

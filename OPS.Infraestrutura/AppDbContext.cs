@@ -1,9 +1,5 @@
-using Castle.Core.Logging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging;
 using OPS.Infraestrutura.Entities.TSE;
-using OPS.Infraestrutura.Interceptors;
 
 namespace OPS.Infraestrutura;
 

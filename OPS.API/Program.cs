@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Hosting;
 using OPS.API;
 using Scalar.AspNetCore;

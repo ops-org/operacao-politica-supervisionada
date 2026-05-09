@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using AngleSharp;
+﻿using AngleSharp;
 using OPS.Core.Enumerators;
 using OPS.Importador.Assembleias.MatoGrosso.Entities;
 using OPS.Importador.Comum.Despesa;

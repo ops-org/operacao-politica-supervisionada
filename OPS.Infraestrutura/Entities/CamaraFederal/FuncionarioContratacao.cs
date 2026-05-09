@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace OPS.Infraestrutura.Entities.CamaraFederal
 {
     [Table("cf_funcionario_contratacao")]
-    [DebuggerDisplay("FuncionarioContratacao {Id} - Funcionario:{IdFuncionario} Deputado:{IdDeputado}")] 
+    [DebuggerDisplay("FuncionarioContratacao {Id} - Funcionario:{IdFuncionario} Deputado:{IdDeputado}")]
     public class FuncionarioContratacao
     {
         [Key]
@@ -48,28 +48,28 @@ namespace OPS.Infraestrutura.Entities.CamaraFederal
         // Navigation properties
         [ForeignKey("IdDeputado")]
         public virtual Deputado? Deputado { get; set; }
-        
+
         [ForeignKey("IdFuncionario")]
         public virtual Funcionario Funcionario { get; set; } = null!;
-        
+
         [ForeignKey("IdGrupoFuncional")]
         public virtual FuncionarioGrupoFuncional? FuncionarioGrupoFuncional { get; set; }
-        
+
         [ForeignKey("IdCargo")]
         public virtual FuncionarioCargo? FuncionarioCargo { get; set; }
-        
+
         [ForeignKey("IdNivel")]
         public virtual FuncionarioNivel? FuncionarioNivel { get; set; }
-        
+
         [ForeignKey("IdFuncaoComissionada")]
         public virtual FuncionarioFuncaoComissionada? FuncionarioFuncaoComissionada { get; set; }
-        
+
         [ForeignKey("IdAreaAtuacao")]
         public virtual FuncionarioAreaAtuacao? FuncionarioAreaAtuacao { get; set; }
-        
+
         [ForeignKey("IdLocalTrabalho")]
         public virtual FuncionarioLocalTrabalho? FuncionarioLocalTrabalho { get; set; }
-        
+
         [ForeignKey("IdSituacao")]
         public virtual FuncionarioSituacao? FuncionarioSituacao { get; set; }
     }

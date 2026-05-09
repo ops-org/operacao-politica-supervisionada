@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace OPS.Infraestrutura;
 
-namespace OPS.Infraestrutura;
-
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// Service for bulk inserting data with EF Core while disabling change tracking for performance
