@@ -52,7 +52,7 @@
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.68.0",
     "react-resizable-panels": "^4.5.9",
-    "react-router-dom": "^7.16.0",
+    "react-router-dom": "^7.18.2",
     "recharts": "^3.5.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
